@@ -1,5 +1,8 @@
-﻿using UnityModManagerNet;
+﻿using System.Reflection;
+using HarmonyLib;
+using UnityModManagerNet;
 using WOTRMultiplayer.Config.UnityMod;
+using static UnityModManagerNet.UnityModManager;
 
 namespace WOTRMultiplayer
 {
@@ -15,12 +18,29 @@ namespace WOTRMultiplayer
 
             entry.OnGUI += OnGui;
             entry.OnSaveGUI += OnSaveGui;
+            entry.OnToggle += OnToggle;
+
+            try
+            {
+                var harmony = new Harmony(entry.Info.Id);
+                harmony.PatchAll(Assembly.GetExecutingAssembly());
+            }
+            catch (System.Exception ex)
+            {
+                Logging.Logger.Error(ex);
+                throw;
+            }
 
             return true;
         }
 
+        private static bool OnToggle(ModEntry entry, bool arg2)
+        {
+            return true;
+        }
+
         private static void OnSaveGui(UnityModManager.ModEntry entry)
-        {N
+        {
             _settings.Save(entry);
         }
 
