@@ -1,0 +1,13 @@
+﻿{
+  "AssemblyName": "WOTRMultiplayer.dll",
+  "Author": "fl01",
+  "DisplayName": "Multiplayer",
+  "EntryMethod": "WOTRMultiplayer.Main.Load",
+  "Id": "WOTRMultiplayer",
+  "HomePage": "",
+  "Repository": "",
+  "Requirements": [],
+  "GameVersion": "1.4.0",
+  "ManagerVersion": "0.23.0",
+  "Version": "0.0.1"
+}
