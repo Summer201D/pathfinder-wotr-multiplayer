@@ -2,7 +2,6 @@
 using HarmonyLib;
 using UnityModManagerNet;
 using WOTRMultiplayer.Config.UnityMod;
-using static UnityModManagerNet.UnityModManager;
 
 namespace WOTRMultiplayer
 {
@@ -18,7 +17,6 @@ namespace WOTRMultiplayer
 
             entry.OnGUI += OnGui;
             entry.OnSaveGUI += OnSaveGui;
-            entry.OnToggle += OnToggle;
 
             try
             {
@@ -31,11 +29,6 @@ namespace WOTRMultiplayer
                 throw;
             }
 
-            return true;
-        }
-
-        private static bool OnToggle(ModEntry entry, bool arg2)
-        {
             return true;
         }
 
