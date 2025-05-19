@@ -25,7 +25,6 @@ namespace WOTRMultiplayer.Menu
             var text = UIUtility.GetSaberBookFormat(StringsConst.MainMenu.MultiplayerMenu);
             multiplayerMenuView.m_Label.text = text;
             var viewModel = new ContextMenuEntityVM(new ContextMenuCollectionEntity(UIUtility.GetSaberBookFormat(text), __instance.OpenCredits));
-            var copy = Object.Instantiate(Game.Instance.UI.CreditsUI.gameObject);
             multiplayerMenuView.Bind(viewModel);
         }
     }
