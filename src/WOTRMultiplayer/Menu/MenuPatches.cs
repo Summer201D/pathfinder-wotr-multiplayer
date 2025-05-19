@@ -23,7 +23,6 @@ namespace WOTRMultiplayer.Menu
             multiplayerMenu.transform.SetSiblingIndex(3);
             var multiplayerMenuView = multiplayerMenu.GetComponent<ContextMenuEntityPCView>();
             var text = UIUtility.GetSaberBookFormat(StringsConst.MainMenu.MultiplayerMenu);
-            multiplayerMenuView.m_Label.text = text;
             var viewModel = new ContextMenuEntityVM(new ContextMenuCollectionEntity(UIUtility.GetSaberBookFormat(text), __instance.OpenCredits));
             multiplayerMenuView.Bind(viewModel);
         }
