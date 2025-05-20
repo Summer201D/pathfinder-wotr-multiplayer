@@ -25,6 +25,11 @@ namespace WOTRMultiplayer.Logging
             Out(exception.ToString(), LogSeverity.Error, name);
         }
 
+        public static void Error(string message, [CallerMemberName] string name = "")
+        {
+            Out(message, LogSeverity.Error, name);
+        }
+
         private static void Out(string message, LogSeverity severity, string name)
         {
             _output.WriteLine($"[{DateTime.UtcNow:yyyy-MM-dd HH:mm:ss.fff}] [{name}] [{severity}] - {message}");
