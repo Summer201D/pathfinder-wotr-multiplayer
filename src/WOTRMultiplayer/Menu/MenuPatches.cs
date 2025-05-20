@@ -10,6 +10,7 @@ using Kingmaker.UI.MVVM._PCView.MainMenu;
 using Kingmaker.UI.MVVM._VM.ContextMenu;
 using Kingmaker.UI.ServiceWindow;
 using Kingmaker.UI.ServiceWindow.Credits;
+using TMPro;
 using UnityEngine;
 using WOTRMultiplayer.Strings;
 
@@ -47,16 +48,35 @@ namespace WOTRMultiplayer.Menu
             var originalWindow = copy.GetComponent<CreditsUIWindow>();
             _mainMenuMultiplayerWindow = copy.AddComponent<MultiplayerWindow>();
             Object.DestroyImmediate(originalWindow);
-            Object.DontDestroyOnLoad(copy);
             var creditsScreen = copy.transform.Find("CreditsScreen")?.gameObject;
-            if (creditsScreen == null)
-            {
-                Logging.Logger.Error("Unable to find CreditsScreen");
-                return null;
-            }
+            SetupLayout(creditsScreen);
 
             _mainMenuMultiplayerWindow.Initialize();
             return _mainMenuMultiplayerWindow;
+        }
+
+        private static void SetupLayout(GameObject screen)
+        {
+            if (screen == null)
+            {
+                Logging.Logger.Error("MP Screen is missing");
+                return;
+            }
+
+            for (int i = screen.transform.childCount - 1; i >= 0; i--)
+            {
+                if (i == 1)
+                {
+                    continue;
+                }
+
+                screen.transform.GetChild(i).SetParent(null);
+            }
+
+            var menuEntity = screen.transform.GetChild(0);
+            var label = menuEntity.GetChild(3);
+            var labelText = label.GetComponent<TextMeshProUGUI>();
+            labelText.text = StringsConst.MultiplayerWindow.HostMenuLabel;
         }
 
         public class MultiplayerWindow : FullScreenTabsWindow
@@ -65,6 +85,8 @@ namespace WOTRMultiplayer.Menu
 
             private List<DOTweenAnimation> _animations = new List<DOTweenAnimation>();
 
+            private bool _isInitialized = false;
+
             public MultiplayerWindow()
             {
                 SubWindowsList = System.Array.Empty<SubPair>();
@@ -72,11 +94,21 @@ namespace WOTRMultiplayer.Menu
 
             public override void Initialize()
             {
+                if (_isInitialized)
+                {
+                    Logging.Logger.Warning("Trying to initialize already initialized window");
+                    return;
+                }
+
+                _isInitialized = true;
                 base.Initialize();
                 IsAnimated = true;
                 var canvas = GetComponent<CanvasGroup>();
                 canvas.alpha = 0f;
                 _animations = GetComponents<DOTweenAnimation>().ToList();
+
+                var closeButton = this.GetComponentInChildren<Owlcat.Runtime.UI.Controls.Button.OwlcatButton>();
+                closeButton.OnLeftClick.AddListener(OnButtonClose);
             }
 
             public override void AppearAnimation()
@@ -103,6 +135,12 @@ namespace WOTRMultiplayer.Menu
             {
                 StopAllCoroutines();
                 base.OnHide();
+            }
+
+            public override void Show(bool state)
+            {
+                Logging.Logger.Info($"Opening MP Window. State={state}");
+                base.Show(state);
             }
         }
     }

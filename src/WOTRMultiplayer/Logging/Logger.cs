@@ -30,6 +30,11 @@ namespace WOTRMultiplayer.Logging
             Out(message, LogSeverity.Error, name);
         }
 
+        public static void Warning(string message, [CallerMemberName] string name = "")
+        {
+            Out(message, LogSeverity.Warning, name);
+        }
+
         private static void Out(string message, LogSeverity severity, string name)
         {
             _output.WriteLine($"[{DateTime.UtcNow:yyyy-MM-dd HH:mm:ss.fff}] [{name}] [{severity}] - {message}");
@@ -45,6 +50,7 @@ namespace WOTRMultiplayer.Logging
         {
             Debug,
             Info,
+            Warning,
             Error
         }
     }

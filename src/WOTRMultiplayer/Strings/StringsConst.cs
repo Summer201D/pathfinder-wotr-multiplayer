@@ -3,11 +3,17 @@
     /// <summary>
     /// should be replaced with localization later on
     /// </summary>
-    public static class StringsConst
+    public class StringsConst
     {
-        public static class MainMenu
+        public class MainMenu
         {
             public const string MultiplayerMenu = "Multiplayer";
+        }
+
+        public class MultiplayerWindow
+        {
+            public const string HostMenuLabel = "Host";
+            public const string JoinMenuLabel = "Join";
         }
     }
 }
