@@ -60,19 +60,22 @@ namespace WOTRMultiplayer.Menu
             private const string HoverGameObjectName = "HoverImage";
 
             private bool _isInitialized = false;
-            private OwlcatButton _button => UnityObject.gameObject.GetComponent<OwlcatButton>();
+            private OwlcatButton _button => MenuItem.gameObject.GetComponent<OwlcatButton>();
+
             private GameObject _activeImage;
             private GameObject _hoverImage;
 
-            public GameObject UnityObject { get; private set; }
+            public GameObject MenuItem { get; private set; }
+            public GameObject MenuContent { get; private set; }
 
-            public bool IsActive => UnityObject.gameObject.activeSelf;
+            public bool IsActive => MenuItem.gameObject.activeSelf;
 
             public event EventHandler OnClicked;
 
-            public MenuItemController(GameObject menuItem)
+            public MenuItemController(GameObject menuItem, GameObject menuContent)
             {
-                UnityObject = menuItem;
+                MenuItem = menuItem;
+                MenuContent = menuContent;
             }
 
             public void Initialize()
@@ -85,8 +88,8 @@ namespace WOTRMultiplayer.Menu
                 _isInitialized = true;
                 _button.OnHover.AddListener(OnHover);
                 _button.OnLeftClick.AddListener(OnClickedInternal);
-                _activeImage = this.UnityObject.transform.Find(SelectedGameObjectName).gameObject;
-                _hoverImage = this.UnityObject.transform.Find(HoverGameObjectName).gameObject;
+                _activeImage = this.MenuItem.transform.Find(SelectedGameObjectName).gameObject;
+                _hoverImage = this.MenuItem.transform.Find(HoverGameObjectName).gameObject;
 
                 Deactivate();
             }
@@ -99,11 +102,13 @@ namespace WOTRMultiplayer.Menu
             public void Activate()
             {
                 _activeImage.SetActive(true);
+                MenuContent.SetActive(true);
             }
 
             public void Deactivate()
             {
                 _activeImage.SetActive(false);
+                MenuContent.SetActive(false);
             }
 
             private void OnClickedInternal()
@@ -116,6 +121,11 @@ namespace WOTRMultiplayer.Menu
         {
             private const string BaseLayoutName = "CreditsScreen";
             private const string SeparatorGameObjectName = "Separator";
+
+            private const string MultiplayerMenuItemsObjectName = "MultiplayerMenuItems";
+            private const string HostMenuItemContentObjectName = "HostMenuItemContent";
+            private const string JoinMenuItemContentObjectName = "JoinMenuItemContent";
+            private const string MenuOverridesObjectName = "MenuEntity_NoOverrides";
 
             public override FullScreenUIType ActiveFullScreenUIType => (FullScreenUIType)555555;
 
@@ -173,6 +183,8 @@ namespace WOTRMultiplayer.Menu
 
             public override void OnHide()
             {
+                _joinMenuController.Deactivate();
+                _hostMenuController.Deactivate();
                 StopAllCoroutines();
                 base.OnHide();
             }
@@ -192,11 +204,46 @@ namespace WOTRMultiplayer.Menu
             private void SetupLayout()
             {
                 var baseLayout = transform.Find(BaseLayoutName)?.gameObject;
+                var (hostItemContent, joinItemContent) = SetupMenuItemsContentLayout(baseLayout);
+                SetupMenuItemsLayout(baseLayout, hostItemContent, joinItemContent);
+            }
+
+            private (GameObject hostItemContent, GameObject joinItemContent) SetupMenuItemsContentLayout(GameObject baseLayout)
+            {
+                var hostItemContent = UnityEngine.Object.Instantiate(baseLayout, baseLayout.transform);
+                hostItemContent.name = HostMenuItemContentObjectName;
+                for (int i = hostItemContent.transform.childCount - 1; i >= 0; i--)
+                {
+                    if (i > 1)
+                    {
+                        continue;
+                    }
+
+                    UnityEngine.Object.DestroyImmediate(hostItemContent.transform.GetChild(i).gameObject);
+                }
+
+                var joinItemContent = UnityEngine.Object.Instantiate(baseLayout, baseLayout.transform);
+                joinItemContent.name = JoinMenuItemContentObjectName;
+                CleanupAllChildren(joinItemContent);
+                return (hostItemContent, joinItemContent);
+            }
+
+            private void CleanupAllChildren(GameObject obj)
+            {
+                for (int i = obj.transform.childCount - 1; i >= 0; i--)
+                {
+                    UnityEngine.Object.DestroyImmediate(obj.transform.GetChild(i).gameObject);
+                }
+            }
+
+            private void SetupMenuItemsLayout(GameObject baseLayout, GameObject hostItemContent, GameObject joinItemContent)
+            {
+                baseLayout.name = MultiplayerMenuItemsObjectName;
                 CleanupBaseLayout(baseLayout);
 
                 var baseMenuItem = SetupBaseMenuItem(baseLayout);
-                _hostMenuController = SetupMenuController(StringsConst.MultiplayerWindow.HostMenuLabel, Screen.width * 0.33f, baseMenuItem, baseLayout.transform);
-                _joinMenuController = SetupMenuController(StringsConst.MultiplayerWindow.JoinMenuLabel, Screen.width * 0.66f, baseMenuItem, baseLayout.transform);
+                _hostMenuController = SetupMenuController(StringsConst.MultiplayerWindow.HostMenuLabel, Screen.width * 0.33f, hostItemContent, baseMenuItem, baseLayout.transform);
+                _joinMenuController = SetupMenuController(StringsConst.MultiplayerWindow.JoinMenuLabel, Screen.width * 0.66f, joinItemContent, baseMenuItem, baseLayout.transform);
                 UnityEngine.Object.DestroyImmediate(baseMenuItem);
 
                 _hostMenuController.OnClicked += OnHostMenuItemClicked;
@@ -219,7 +266,10 @@ namespace WOTRMultiplayer.Menu
             {
                 for (int i = baseLayoutObject.transform.childCount - 1; i >= 0; i--)
                 {
-                    if (i == 1)
+                    var obj = baseLayoutObject.transform.GetChild(i).gameObject;
+                    if (obj.name == HostMenuItemContentObjectName
+                        || obj.name == JoinMenuItemContentObjectName
+                        || obj.name == MenuOverridesObjectName)
                     {
                         continue;
                     }
@@ -241,7 +291,7 @@ namespace WOTRMultiplayer.Menu
                 return baseItem;
             }
 
-            private MenuItemController SetupMenuController(string menuItemName, float positionX, GameObject baseMenuItem, Transform parent)
+            private MenuItemController SetupMenuController(string menuItemName, float positionX, GameObject menuContent, GameObject baseMenuItem, Transform parent)
             {
                 var menuItem = UnityEngine.Object.Instantiate(baseMenuItem, parent);
                 var position = new Vector3(positionX, menuItem.transform.position.y, menuItem.transform.position.z);
@@ -250,7 +300,7 @@ namespace WOTRMultiplayer.Menu
                 var label = menuItem.GetComponentInChildren<TextMeshProUGUI>();
                 label.SetText(menuItemName);
 
-                var controller = new MenuItemController(menuItem);
+                var controller = new MenuItemController(menuItem, menuContent);
                 controller.Initialize();
                 return controller;
             }
