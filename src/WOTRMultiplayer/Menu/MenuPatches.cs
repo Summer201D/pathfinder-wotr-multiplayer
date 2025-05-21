@@ -6,6 +6,7 @@ using HarmonyLib;
 using Kingmaker;
 using Kingmaker.UI.Common;
 using Kingmaker.UI.FullScreenUITypes;
+using Kingmaker.UI.MVVM;
 using Kingmaker.UI.MVVM._PCView.ContextMenu;
 using Kingmaker.UI.MVVM._PCView.MainMenu;
 using Kingmaker.UI.MVVM._VM.ContextMenu;
@@ -138,6 +139,8 @@ namespace WOTRMultiplayer.Menu
 
             public MultiplayerWindow()
             {
+                // I assume this should be used to display menu items content,
+                // but I have no idea how to make it work, so have to rely on my own `MenuItemController.MenuContent` implementation
                 SubWindowsList = System.Array.Empty<SubPair>();
             }
 
