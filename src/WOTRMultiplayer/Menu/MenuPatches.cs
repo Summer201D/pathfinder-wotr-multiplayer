@@ -20,6 +20,7 @@ using Owlcat.Runtime.UI.Controls.Button;
 using Owlcat.Runtime.UI.VirtualListSystem;
 using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 using WOTRMultiplayer.Strings;
 
 namespace WOTRMultiplayer.Menu
@@ -297,11 +298,14 @@ namespace WOTRMultiplayer.Menu
 
                 var buttons = saveLoadDetails.Find("Info").Find("Buttons");
                 // TBD random buttons as placeholders
-                var buttonCopy1 = UnityEngine.Object.Instantiate(buttons.Find("OwlcatButton").gameObject, buttons);
+                var baseButton = buttons.Find("OwlcatButton").gameObject;
+                var layout = baseButton.GetComponent<RectTransform>();
+                layout.sizeDelta = new Vector2(layout.sizeDelta.x - 25, layout.sizeDelta.y);
+                var buttonCopy1 = UnityEngine.Object.Instantiate(baseButton, buttons);
                 buttonCopy1.name = "Button1";
-                var buttonCopy2 = UnityEngine.Object.Instantiate(buttons.Find("OwlcatButton").gameObject, buttons);
+                var buttonCopy2 = UnityEngine.Object.Instantiate(baseButton, buttons);
                 buttonCopy2.name = "Button2";
-                var buttonCopy3 = UnityEngine.Object.Instantiate(buttons.Find("OwlcatButton").gameObject, buttons);
+                var buttonCopy3 = UnityEngine.Object.Instantiate(baseButton, buttons);
                 buttonCopy3.name = "Button3";
                 CleanupAllChildren(buttons.gameObject,
                     x => x.name != "DlcRequiredLabel" && x.name != buttonCopy1.name && x.name != buttonCopy2.name && x.name != buttonCopy3.name);
