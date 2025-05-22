@@ -11,12 +11,13 @@ using Kingmaker.UI.MVVM._PCView.Common;
 using Kingmaker.UI.MVVM._PCView.ContextMenu;
 using Kingmaker.UI.MVVM._PCView.MainMenu;
 using Kingmaker.UI.MVVM._PCView.SaveLoad;
-using Kingmaker.UI.MVVM._VM.Common;
 using Kingmaker.UI.MVVM._VM.ContextMenu;
 using Kingmaker.UI.MVVM._VM.SaveLoad;
+using Kingmaker.UI.MVVM._VM.ServiceWindows.CharacterInfo.Sections.Abilities;
 using Kingmaker.UI.ServiceWindow;
 using Kingmaker.UI.ServiceWindow.Credits;
 using Owlcat.Runtime.UI.Controls.Button;
+using Owlcat.Runtime.UI.VirtualListSystem;
 using TMPro;
 using UnityEngine;
 using WOTRMultiplayer.Strings;
@@ -27,13 +28,6 @@ namespace WOTRMultiplayer.Menu
     public class MenuPatches
     {
         private static MultiplayerWindow _mainMenuMultiplayerWindow;
-
-        [HarmonyPatch(typeof(SaveLoadPCView), "BindViewImplementation")]
-        [HarmonyPostfix]
-        public static void SaveLoadPCView_BindViewImplementation_Prefix(SaveLoadPCView __instance)
-        {
-            Logging.Logger.Info("Applying");
-        }
 
         [HarmonyPatch(typeof(MainMenuSideBarPCView), "BindViewImplementation")]
         [HarmonyPrefix]
@@ -247,26 +241,84 @@ namespace WOTRMultiplayer.Menu
             {
                 var hostItemContent = UnityEngine.Object.Instantiate(baseLayout, baseLayout.transform);
                 hostItemContent.name = HostMenuItemContentObjectName;
-                CleanupAllChildren(hostItemContent);
-                var commonPCView = RootUIContext.Instance.m_CommonView as CommonPCView;
-                var commonPCVM = commonPCView.GetViewModel() as CommonVM;
-
-                var vm = new SaveLoadVM(SaveLoadMode.Load, true, () => { }, RootUIContext.Instance.CommonVM);
-                SaveLoadPCView saveLoad = UnityEngine.Object.Instantiate(commonPCView.m_SaveLoadPCView, hostItemContent.transform);
-                saveLoad.Initialize();
-                saveLoad.Bind(vm);
+                CleanupAllChildren(hostItemContent, x => true);
+                SetupLoadSaveGamesLayout(hostItemContent);
 
                 var joinItemContent = UnityEngine.Object.Instantiate(baseLayout, baseLayout.transform);
                 joinItemContent.name = JoinMenuItemContentObjectName;
-                CleanupAllChildren(joinItemContent);
+                CleanupAllChildren(joinItemContent, x => true);
                 return (hostItemContent, joinItemContent);
             }
 
-            private void CleanupAllChildren(GameObject obj)
+            private void SetupLoadSaveGamesLayout(GameObject hostItemContent)
+            {
+                var commonPCView = RootUIContext.Instance.m_CommonView as CommonPCView;
+                var vm = new SaveLoadVM(SaveLoadMode.Load, true, () => { }, RootUIContext.Instance.CommonVM);
+                foreach (var item in vm.m_SaveSlotVMs)
+                {
+                    item.SetMode((SaveLoadMode)33);
+                    item.m_SaveOrLoadAction = null;
+                    item.m_DeleteAction = null;
+                }
+
+                SaveLoadPCView saveLoad = UnityEngine.Object.Instantiate(commonPCView.m_SaveLoadPCView, hostItemContent.transform);
+                saveLoad.Initialize();
+
+                /// overriding save/load/delete buttons prefab to make sure original loadsave screen is not affected
+                var screen = saveLoad.gameObject.transform.Find("SaveLoadScreen");
+                var collectionView = screen.Find("SaveSlotCollectionPlace").Find("SaveSlotVirtualCollectionView");
+                var virtualView = collectionView.GetComponent<SaveSlotCollectionVirtualView>();
+                var prefab = virtualView.m_SaveSlotPrefab as SaveSlotPCView;
+                var copyPrefabObj = UnityEngine.Object.Instantiate(prefab.gameObject, prefab.transform.parent);
+                var newPrefab = copyPrefabObj.GetComponent<SaveSlotPCView>();
+                virtualView.m_VirtualList.Initialize(new VirtualListElementTemplate<ExpandableTitleVM>(virtualView.m_ExpandableTitleView), new VirtualListElementTemplate<SaveSlotVM>(newPrefab));
+                UnityEngine.Object.DestroyImmediate(newPrefab.m_SaveLoadButton.gameObject);
+                UnityEngine.Object.DestroyImmediate(newPrefab.m_DeleteButton.gameObject);
+                ///
+
+                saveLoad.Bind(vm);
+
+                CleanupLoadSaveGamesLayout(saveLoad);
+            }
+
+            private void CleanupLoadSaveGamesLayout(SaveLoadPCView saveLoadView)
+            {
+                var screen = saveLoadView.gameObject.transform.Find("SaveLoadScreen");
+                var top = screen.Find("Top");
+                CleanupAllChildren(top.gameObject, x => x.name != "Close");
+                // duplicate button comes from loadsave view, but I have no idea how to make visible original one (Z-index?) in case of removing this one
+                // anyway, assigning the same action should work fine
+                var closeButton = top.gameObject.GetComponentInChildren<OwlcatButton>();
+                closeButton.OnLeftClick.AddListener(OnCloseClicked);
+
+                var saveLoadDetails = screen.Find("SaveLoadDetails");
+                var picture = saveLoadDetails.Find("Picture");
+                picture.gameObject.SetActive(false);
+
+                var buttons = saveLoadDetails.Find("Info").Find("Buttons");
+                // TBD random buttons as placeholders
+                var buttonCopy1 = UnityEngine.Object.Instantiate(buttons.Find("OwlcatButton").gameObject, buttons);
+                buttonCopy1.name = "Button1";
+                var buttonCopy2 = UnityEngine.Object.Instantiate(buttons.Find("OwlcatButton").gameObject, buttons);
+                buttonCopy2.name = "Button2";
+                var buttonCopy3 = UnityEngine.Object.Instantiate(buttons.Find("OwlcatButton").gameObject, buttons);
+                buttonCopy3.name = "Button3";
+                CleanupAllChildren(buttons.gameObject,
+                    x => x.name != "DlcRequiredLabel" && x.name != buttonCopy1.name && x.name != buttonCopy2.name && x.name != buttonCopy3.name);
+                buttonCopy1.GetComponentInChildren<TextMeshProUGUI>().text = "Host";
+                buttonCopy2.GetComponentInChildren<TextMeshProUGUI>().text = "Ready";
+                buttonCopy3.GetComponentInChildren<TextMeshProUGUI>().text = "Start";
+            }
+
+            private void CleanupAllChildren(GameObject obj, Func<GameObject, bool> onTrueDelete)
             {
                 for (int i = obj.transform.childCount - 1; i >= 0; i--)
                 {
-                    UnityEngine.Object.DestroyImmediate(obj.transform.GetChild(i).gameObject);
+                    var child = obj.transform.GetChild(i);
+                    if (onTrueDelete(child.gameObject))
+                    {
+                        UnityEngine.Object.DestroyImmediate(child.gameObject);
+                    }
                 }
             }
 
