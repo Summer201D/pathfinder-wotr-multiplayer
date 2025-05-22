@@ -30,6 +30,11 @@ namespace WOTRMultiplayer.Logging
             Out(message, LogSeverity.Error, name);
         }
 
+        public static void Error(string message, Exception exception, [CallerMemberName] string name = "")
+        {
+            Out($"{message}. Exception={exception}", LogSeverity.Error, name);
+        }
+
         public static void Warning(string message, [CallerMemberName] string name = "")
         {
             Out(message, LogSeverity.Warning, name);

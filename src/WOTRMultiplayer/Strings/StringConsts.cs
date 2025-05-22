@@ -3,7 +3,7 @@
     /// <summary>
     /// should be replaced with localization later on
     /// </summary>
-    public class StringsConst
+    public class StringConsts
     {
         public class MainMenu
         {

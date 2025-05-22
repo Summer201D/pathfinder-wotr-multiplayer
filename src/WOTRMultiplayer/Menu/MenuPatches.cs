@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using DG.Tweening;
 using HarmonyLib;
 using Kingmaker;
@@ -20,7 +19,7 @@ using Owlcat.Runtime.UI.Controls.Button;
 using Owlcat.Runtime.UI.VirtualListSystem;
 using TMPro;
 using UnityEngine;
-using UnityEngine.UI;
+using WOTRMultiplayer.Extensions;
 using WOTRMultiplayer.Strings;
 
 namespace WOTRMultiplayer.Menu
@@ -29,6 +28,8 @@ namespace WOTRMultiplayer.Menu
     public class MenuPatches
     {
         private static MultiplayerWindow _mainMenuMultiplayerWindow;
+
+        private static SaveLoadPCView _cachedSaveLoadPCView;
 
         [HarmonyPatch(typeof(MainMenuSideBarPCView), "BindViewImplementation")]
         [HarmonyPrefix]
@@ -43,13 +44,13 @@ namespace WOTRMultiplayer.Menu
                 multiplayerMenu.transform.SetSiblingIndex(3);
                 var multiplayerMenuView = multiplayerMenu.GetComponent<ContextMenuEntityPCView>();
                 var window = GetOrCreateMultiplayerWindow();
-                var text = UIUtility.GetSaberBookFormat(StringsConst.MainMenu.MultiplayerMenu);
+                var text = UIUtility.GetSaberBookFormat(StringConsts.MainMenu.MultiplayerMenu);
                 var viewModel = new ContextMenuEntityVM(new ContextMenuCollectionEntity(UIUtility.GetSaberBookFormat(text), () => window.Show(true)));
                 multiplayerMenuView.Bind(viewModel);
             }
             catch (Exception ex)
             {
-                Logging.Logger.Error(ex);
+                Logging.Logger.Error("Unable to apply patch", ex);
                 throw;
             }
         }
@@ -58,8 +59,11 @@ namespace WOTRMultiplayer.Menu
         {
             if (_mainMenuMultiplayerWindow != null)
             {
+                Logging.Logger.Info($"Reusing existing instance of {nameof(MultiplayerWindow)}");
                 return _mainMenuMultiplayerWindow;
             }
+
+            Logging.Logger.Info($"Creating new instance of {nameof(MultiplayerWindow)}");
 
             var copy = UnityEngine.Object.Instantiate(Game.Instance.UI.CreditsUI.gameObject, Game.Instance.UI.MainMenu.transform);
             var originalWindow = copy.GetComponent<CreditsUIWindow>();
@@ -71,15 +75,115 @@ namespace WOTRMultiplayer.Menu
 
         public class HostMenuItemController : MenuItemController
         {
-            public HostMenuItemController(GameObject menuItem, GameObject menuContent)
-                : base(menuItem, menuContent)
+            private SaveLoadVM _saveLoadViewModel;
+            private bool _setupLayout = true;
+
+            public HostMenuItemController(MultiplayerWindow multiplayerWindow, GameObject menuItem, GameObject menuContent)
+                : base(multiplayerWindow, menuItem, menuContent)
             {
+                var label = menuItem.GetComponentInChildren<TextMeshProUGUI>();
+                label.SetText(StringConsts.MultiplayerWindow.HostMenuLabel);
             }
 
             public override void Activate()
             {
-                ActiveImage.SetActive(true);
-                MenuContent.SetActive(true);
+                Logging.Logger.Info($"Trying to activate {nameof(HostMenuItemController)}. IsActive={IsActive}");
+
+                if (IsActive)
+                {
+                    return;
+                }
+
+                var saveLoad = MenuContent.transform.GetChild(0).GetComponent<SaveLoadPCView>();
+                _saveLoadViewModel = new SaveLoadVM(SaveLoadMode.Load, true, OnCloseSaveLoadVM, RootUIContext.Instance.CommonVM);
+
+                if (_setupLayout)
+                {
+                    /// overriding save/load/delete buttons prefab to make sure original loadsave screen is not affected
+                    var screen = saveLoad.gameObject.transform.Find("SaveLoadScreen");
+                    var collectionView = screen.Find("SaveSlotCollectionPlace").Find("SaveSlotVirtualCollectionView");
+                    var virtualView = collectionView.GetComponent<SaveSlotCollectionVirtualView>();
+                    var prefab = virtualView.m_SaveSlotPrefab as SaveSlotPCView;
+                    var copyPrefabObj = UnityEngine.Object.Instantiate(prefab.gameObject, prefab.transform.parent);
+                    var newPrefab = copyPrefabObj.GetComponent<SaveSlotPCView>();
+                    virtualView.m_VirtualList.Initialize(new VirtualListElementTemplate<ExpandableTitleVM>(virtualView.m_ExpandableTitleView), new VirtualListElementTemplate<SaveSlotVM>(newPrefab));
+                    UnityEngine.Object.DestroyImmediate(newPrefab.m_SaveLoadButton.gameObject);
+                    UnityEngine.Object.DestroyImmediate(newPrefab.m_DeleteButton.gameObject);
+                    ///
+                }
+
+                // it's important to be called inbetween
+                saveLoad.Bind(_saveLoadViewModel);
+
+                if (_setupLayout)
+                {
+                    CleanupLoadSaveGamesLayout(saveLoad);
+                }
+
+                _setupLayout = false;
+                saveLoad.Show();
+                base.Activate();
+            }
+
+            public override void Deactivate()
+            {
+                DisposeSaveLoadVM();
+                base.Deactivate();
+            }
+
+            private void DisposeSaveLoadVM()
+            {
+                _saveLoadViewModel?.Dispose();
+            }
+
+            private void OnCloseSaveLoadVM()
+            {
+                Window.OnCloseClicked();
+            }
+
+            private void CleanupLoadSaveGamesLayout(SaveLoadPCView saveLoadView)
+            {
+                UnityEngine.Object.DestroyImmediate(saveLoadView.gameObject.transform.Find("BackgroundWorldCover").gameObject);
+                UnityEngine.Object.DestroyImmediate(saveLoadView.gameObject.transform.Find("Background").gameObject);
+                var screen = saveLoadView.gameObject.transform.Find("SaveLoadScreen");
+                var top = screen.Find("Top");
+                UnityEngine.Object.DestroyImmediate(top.gameObject);
+
+                var saveLoadDetails = screen.Find("SaveLoadDetails");
+                var picture = saveLoadDetails.Find("Picture");
+                picture.gameObject.SetActive(false);
+
+                var buttons = saveLoadDetails.Find("Info").Find("Buttons");
+                // TBD random buttons as placeholders
+                var baseButton = buttons.Find("OwlcatButton").gameObject;
+                var layout = baseButton.GetComponent<RectTransform>();
+                layout.sizeDelta = new Vector2(layout.sizeDelta.x * 0.92f, layout.sizeDelta.y);
+                var buttonCopy1 = UnityEngine.Object.Instantiate(baseButton, buttons);
+                buttonCopy1.name = "Button1";
+                var buttonCopy2 = UnityEngine.Object.Instantiate(baseButton, buttons);
+                buttonCopy2.name = "Button2";
+                var buttonCopy3 = UnityEngine.Object.Instantiate(baseButton, buttons);
+                buttonCopy3.name = "Button3";
+                buttons.gameObject.CleanupAllChildren(
+                    x => x.name != "DlcRequiredLabel" && x.name != buttonCopy1.name && x.name != buttonCopy2.name && x.name != buttonCopy3.name);
+                buttonCopy1.GetComponentInChildren<TextMeshProUGUI>().text = "Host";
+                buttonCopy2.GetComponentInChildren<TextMeshProUGUI>().text = "Ready";
+                buttonCopy3.GetComponentInChildren<TextMeshProUGUI>().text = "Start";
+            }
+        }
+
+        public class JoinMenuItemController : MenuItemController
+        {
+            public JoinMenuItemController(MultiplayerWindow multiplayerWindow, GameObject menuItem, GameObject menuContent)
+                : base(multiplayerWindow, menuItem, menuContent)
+            {
+                var label = menuItem.GetComponentInChildren<TextMeshProUGUI>();
+                label.SetText(StringConsts.MultiplayerWindow.JoinMenuLabel);
+            }
+
+            public override void Activate()
+            {
+                base.Activate();
             }
         }
 
@@ -89,21 +193,25 @@ namespace WOTRMultiplayer.Menu
             private const string HoverGameObjectName = "HoverImage";
 
             private bool _isInitialized = false;
-            private OwlcatButton _button => MenuItem.gameObject.GetComponent<OwlcatButton>();
+            private OwlcatButton Button => MenuItem.gameObject.GetComponent<OwlcatButton>();
             private GameObject _hoverImage;
 
             public GameObject MenuItem { get; private set; }
             public GameObject MenuContent { get; private set; }
             protected GameObject ActiveImage { get; private set; }
+            protected MultiplayerWindow Window { get; private set; }
 
-            public bool IsActive => MenuItem.gameObject.activeSelf;
+            public bool IsActive => ActiveImage.activeSelf;
 
             public event EventHandler OnClicked;
 
-            public MenuItemController(GameObject menuItem, GameObject menuContent)
+            public MenuItemController(MultiplayerWindow multiplayerWindow, GameObject menuItem, GameObject menuContent)
             {
+                Logging.Logger.Info($"Creating {nameof(MenuItemController)}. Type={this.GetType().Name}");
+
                 MenuItem = menuItem;
                 MenuContent = menuContent;
+                Window = multiplayerWindow;
             }
 
             public void Initialize()
@@ -114,8 +222,8 @@ namespace WOTRMultiplayer.Menu
                 }
 
                 _isInitialized = true;
-                _button.OnHover.AddListener(OnHover);
-                _button.OnLeftClick.AddListener(OnClickedInternal);
+                Button.OnHover.AddListener(OnHover);
+                Button.OnLeftClick.AddListener(OnClickedInternal);
                 ActiveImage = this.MenuItem.transform.Find(SelectedGameObjectName).gameObject;
                 _hoverImage = this.MenuItem.transform.Find(HoverGameObjectName).gameObject;
 
@@ -131,12 +239,17 @@ namespace WOTRMultiplayer.Menu
             {
                 ActiveImage.SetActive(true);
                 MenuContent.SetActive(true);
+
+                Logging.Logger.Info($"Activated {nameof(MenuItemController)}. Type={this.GetType().Name}");
             }
 
-            public void Deactivate()
+            public virtual void Deactivate()
             {
                 ActiveImage.SetActive(false);
                 MenuContent.SetActive(false);
+
+                Logging.Logger.Info($"Deactivated {nameof(MenuItemController)}. Type={this.GetType().Name}");
+
             }
 
             private void OnClickedInternal()
@@ -157,7 +270,7 @@ namespace WOTRMultiplayer.Menu
 
             public override FullScreenUIType ActiveFullScreenUIType => (FullScreenUIType)555555;
 
-            private List<DOTweenAnimation> _animations = new List<DOTweenAnimation>();
+            private List<DOTweenAnimation> _animations = [];
 
             private bool _isInitialized = false;
 
@@ -168,7 +281,7 @@ namespace WOTRMultiplayer.Menu
             {
                 // I assume this should be used to display menu items content,
                 // but I have no idea how to make it work, so have to rely on my own `MenuItemController.MenuContent` implementation
-                SubWindowsList = System.Array.Empty<SubPair>();
+                SubWindowsList = [];
             }
 
             public override void Initialize()
@@ -186,8 +299,8 @@ namespace WOTRMultiplayer.Menu
                 IsAnimated = true;
                 var canvas = GetComponent<CanvasGroup>();
                 canvas.alpha = 0f;
-                _animations = GetComponents<DOTweenAnimation>().ToList();
-                var closeButton = this.GetComponentInChildren<Owlcat.Runtime.UI.Controls.Button.OwlcatButton>();
+                _animations = [.. GetComponents<DOTweenAnimation>()];
+                var closeButton = GetComponentInChildren<OwlcatButton>();
                 closeButton.OnLeftClick.AddListener(OnCloseClicked);
             }
 
@@ -221,13 +334,19 @@ namespace WOTRMultiplayer.Menu
 
             public override void Show(bool state)
             {
-                Logging.Logger.Info($"Opening MP Window. State={state}");
-                _hostMenuController.Activate();
+                Logging.Logger.Info($"Show/Hide {nameof(MultiplayerWindow)}. State={state}");
+                if (state)
+                {
+                    _hostMenuController.Activate();
+                }
+
                 base.Show(state);
             }
 
-            private void OnCloseClicked()
+            public void OnCloseClicked()
             {
+                _hostMenuController?.Deactivate();
+                _joinMenuController?.Deactivate();
                 base.OnButtonClose();
             }
 
@@ -242,98 +361,34 @@ namespace WOTRMultiplayer.Menu
             {
                 var hostItemContent = UnityEngine.Object.Instantiate(baseLayout, baseLayout.transform);
                 hostItemContent.name = HostMenuItemContentObjectName;
-                CleanupAllChildren(hostItemContent, x => true);
+                hostItemContent.CleanupAllChildren(x => true);
                 SetupLoadSaveGamesLayout(hostItemContent);
 
                 var joinItemContent = UnityEngine.Object.Instantiate(baseLayout, baseLayout.transform);
                 joinItemContent.name = JoinMenuItemContentObjectName;
-                CleanupAllChildren(joinItemContent, x => true);
+                joinItemContent.CleanupAllChildren(x => true);
                 return (hostItemContent, joinItemContent);
             }
 
             private void SetupLoadSaveGamesLayout(GameObject hostItemContent)
             {
                 var commonPCView = RootUIContext.Instance.m_CommonView as CommonPCView;
-                var vm = new SaveLoadVM(SaveLoadMode.Load, true, () => { }, RootUIContext.Instance.CommonVM);
-                foreach (var item in vm.m_SaveSlotVMs)
-                {
-                    item.SetMode((SaveLoadMode)33);
-                    item.m_SaveOrLoadAction = null;
-                    item.m_DeleteAction = null;
-                }
-
-                SaveLoadPCView saveLoad = UnityEngine.Object.Instantiate(commonPCView.m_SaveLoadPCView, hostItemContent.transform);
+                // for some reason RootUIContext.Instance.m_CommonView is null after Loading Game -> Exiting to main menu
+                // using cached copy which is always available on the first menu load
+                var objToCopy = _cachedSaveLoadPCView ??= commonPCView?.m_SaveLoadPCView;
+                SaveLoadPCView saveLoad = UnityEngine.Object.Instantiate(objToCopy, hostItemContent.transform);
                 saveLoad.Initialize();
-
-                /// overriding save/load/delete buttons prefab to make sure original loadsave screen is not affected
-                var screen = saveLoad.gameObject.transform.Find("SaveLoadScreen");
-                var collectionView = screen.Find("SaveSlotCollectionPlace").Find("SaveSlotVirtualCollectionView");
-                var virtualView = collectionView.GetComponent<SaveSlotCollectionVirtualView>();
-                var prefab = virtualView.m_SaveSlotPrefab as SaveSlotPCView;
-                var copyPrefabObj = UnityEngine.Object.Instantiate(prefab.gameObject, prefab.transform.parent);
-                var newPrefab = copyPrefabObj.GetComponent<SaveSlotPCView>();
-                virtualView.m_VirtualList.Initialize(new VirtualListElementTemplate<ExpandableTitleVM>(virtualView.m_ExpandableTitleView), new VirtualListElementTemplate<SaveSlotVM>(newPrefab));
-                UnityEngine.Object.DestroyImmediate(newPrefab.m_SaveLoadButton.gameObject);
-                UnityEngine.Object.DestroyImmediate(newPrefab.m_DeleteButton.gameObject);
-                ///
-
-                saveLoad.Bind(vm);
-
-                CleanupLoadSaveGamesLayout(saveLoad);
-            }
-
-            private void CleanupLoadSaveGamesLayout(SaveLoadPCView saveLoadView)
-            {
-                var screen = saveLoadView.gameObject.transform.Find("SaveLoadScreen");
-                var top = screen.Find("Top");
-                CleanupAllChildren(top.gameObject, x => x.name != "Close");
-                // duplicate button comes from loadsave view, but I have no idea how to make visible original one (Z-index?) in case of removing this one
-                // anyway, assigning the same action should work fine
-                var closeButton = top.gameObject.GetComponentInChildren<OwlcatButton>();
-                closeButton.OnLeftClick.AddListener(OnCloseClicked);
-
-                var saveLoadDetails = screen.Find("SaveLoadDetails");
-                var picture = saveLoadDetails.Find("Picture");
-                picture.gameObject.SetActive(false);
-
-                var buttons = saveLoadDetails.Find("Info").Find("Buttons");
-                // TBD random buttons as placeholders
-                var baseButton = buttons.Find("OwlcatButton").gameObject;
-                var layout = baseButton.GetComponent<RectTransform>();
-                layout.sizeDelta = new Vector2(layout.sizeDelta.x - 25, layout.sizeDelta.y);
-                var buttonCopy1 = UnityEngine.Object.Instantiate(baseButton, buttons);
-                buttonCopy1.name = "Button1";
-                var buttonCopy2 = UnityEngine.Object.Instantiate(baseButton, buttons);
-                buttonCopy2.name = "Button2";
-                var buttonCopy3 = UnityEngine.Object.Instantiate(baseButton, buttons);
-                buttonCopy3.name = "Button3";
-                CleanupAllChildren(buttons.gameObject,
-                    x => x.name != "DlcRequiredLabel" && x.name != buttonCopy1.name && x.name != buttonCopy2.name && x.name != buttonCopy3.name);
-                buttonCopy1.GetComponentInChildren<TextMeshProUGUI>().text = "Host";
-                buttonCopy2.GetComponentInChildren<TextMeshProUGUI>().text = "Ready";
-                buttonCopy3.GetComponentInChildren<TextMeshProUGUI>().text = "Start";
-            }
-
-            private void CleanupAllChildren(GameObject obj, Func<GameObject, bool> onTrueDelete)
-            {
-                for (int i = obj.transform.childCount - 1; i >= 0; i--)
-                {
-                    var child = obj.transform.GetChild(i);
-                    if (onTrueDelete(child.gameObject))
-                    {
-                        UnityEngine.Object.DestroyImmediate(child.gameObject);
-                    }
-                }
             }
 
             private void SetupMenuItemsLayout(GameObject baseLayout, GameObject hostItemContent, GameObject joinItemContent)
             {
                 baseLayout.name = MultiplayerMenuItemsObjectName;
-                CleanupBaseLayout(baseLayout);
+                baseLayout.CleanupAllChildren(
+                    x => x.name != HostMenuItemContentObjectName && x.name != JoinMenuItemContentObjectName && x.name != MenuOverridesObjectName);
 
                 var baseMenuItem = SetupBaseMenuItem(baseLayout);
-                _hostMenuController = SetupMenuController(StringsConst.MultiplayerWindow.HostMenuLabel, Screen.width * 0.33f, hostItemContent, baseMenuItem, baseLayout.transform);
-                _joinMenuController = SetupMenuController(StringsConst.MultiplayerWindow.JoinMenuLabel, Screen.width * 0.66f, joinItemContent, baseMenuItem, baseLayout.transform);
+                _hostMenuController = SetupMenuController(MultiplayerMenuItemType.Host, Screen.width * 0.33f, hostItemContent, baseMenuItem, baseLayout.transform);
+                _joinMenuController = SetupMenuController(MultiplayerMenuItemType.Join, Screen.width * 0.66f, joinItemContent, baseMenuItem, baseLayout.transform);
                 UnityEngine.Object.DestroyImmediate(baseMenuItem);
 
                 _hostMenuController.OnClicked += OnHostMenuItemClicked;
@@ -344,30 +399,12 @@ namespace WOTRMultiplayer.Menu
             {
                 _hostMenuController.Activate();
                 _joinMenuController.Deactivate();
-                var c = _hostMenuController.MenuContent.transform.GetChild(0).GetComponent<SaveLoadPCView>();
-                c.Show();
             }
 
             private void OnJoinMenuItemClicked(object sender, EventArgs e)
             {
                 _hostMenuController.Deactivate();
                 _joinMenuController.Activate();
-            }
-
-            private void CleanupBaseLayout(GameObject baseLayoutObject)
-            {
-                for (int i = baseLayoutObject.transform.childCount - 1; i >= 0; i--)
-                {
-                    var obj = baseLayoutObject.transform.GetChild(i).gameObject;
-                    if (obj.name == HostMenuItemContentObjectName
-                        || obj.name == JoinMenuItemContentObjectName
-                        || obj.name == MenuOverridesObjectName)
-                    {
-                        continue;
-                    }
-
-                    UnityEngine.Object.DestroyImmediate(baseLayoutObject.transform.GetChild(i).gameObject);
-                }
             }
 
             private GameObject SetupBaseMenuItem(GameObject baseLayoutObject)
@@ -383,18 +420,33 @@ namespace WOTRMultiplayer.Menu
                 return baseItem;
             }
 
-            private MenuItemController SetupMenuController(string menuItemName, float positionX, GameObject menuContent, GameObject baseMenuItem, Transform parent)
+            private MenuItemController SetupMenuController(
+                MultiplayerMenuItemType menuItemType,
+                float positionX,
+                GameObject menuContent,
+                GameObject baseMenuItem,
+                Transform parent)
             {
                 var menuItem = UnityEngine.Object.Instantiate(baseMenuItem, parent);
                 var position = new Vector3(positionX, menuItem.transform.position.y, menuItem.transform.position.z);
                 menuItem.transform.SetPositionAndRotation(position, menuItem.transform.rotation);
 
-                var label = menuItem.GetComponentInChildren<TextMeshProUGUI>();
-                label.SetText(menuItemName);
+                MenuItemController controller = menuItemType switch
+                {
+                    MultiplayerMenuItemType.Host => new HostMenuItemController(this, menuItem, menuContent),
+                    MultiplayerMenuItemType.Join => new JoinMenuItemController(this, menuItem, menuContent),
+                    _ => throw new InvalidOperationException($"Unknown menuItemType. Value={menuItemType}")
+                };
 
-                var controller = new MenuItemController(menuItem, menuContent);
                 controller.Initialize();
+
                 return controller;
+            }
+
+            private enum MultiplayerMenuItemType
+            {
+                Host,
+                Join
             }
         }
     }
