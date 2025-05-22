@@ -7,10 +7,13 @@ using Kingmaker;
 using Kingmaker.UI.Common;
 using Kingmaker.UI.FullScreenUITypes;
 using Kingmaker.UI.MVVM;
+using Kingmaker.UI.MVVM._PCView.Common;
 using Kingmaker.UI.MVVM._PCView.ContextMenu;
 using Kingmaker.UI.MVVM._PCView.MainMenu;
 using Kingmaker.UI.MVVM._PCView.SaveLoad;
+using Kingmaker.UI.MVVM._VM.Common;
 using Kingmaker.UI.MVVM._VM.ContextMenu;
+using Kingmaker.UI.MVVM._VM.SaveLoad;
 using Kingmaker.UI.ServiceWindow;
 using Kingmaker.UI.ServiceWindow.Credits;
 using Owlcat.Runtime.UI.Controls.Button;
@@ -24,17 +27,12 @@ namespace WOTRMultiplayer.Menu
     public class MenuPatches
     {
         private static MultiplayerWindow _mainMenuMultiplayerWindow;
-        private static SaveLoadPCView _saveLoadView;
 
-        [HarmonyPatch(typeof(SaveLoadPCView), "DoInitialize")]
-        [HarmonyPrefix]
+        [HarmonyPatch(typeof(SaveLoadPCView), "BindViewImplementation")]
+        [HarmonyPostfix]
         public static void SaveLoadPCView_BindViewImplementation_Prefix(SaveLoadPCView __instance)
         {
             Logging.Logger.Info("Applying");
-            if (_saveLoadView == null)
-            {
-                _saveLoadView = __instance;
-            }
         }
 
         [HarmonyPatch(typeof(MainMenuSideBarPCView), "BindViewImplementation")]
@@ -42,15 +40,23 @@ namespace WOTRMultiplayer.Menu
         public static void MainMenuSideBarPCView_BindViewImplementation_Prefix(MainMenuSideBarPCView __instance)
         {
             Logging.Logger.Info("Applying");
-            var menuButtons = __instance.transform.GetChild(0);
-            var menuItemToCopy = menuButtons.GetChild(3).gameObject;
-            var multiplayerMenu = UnityEngine.Object.Instantiate(menuItemToCopy, menuButtons.transform);
-            multiplayerMenu.transform.SetSiblingIndex(3);
-            var multiplayerMenuView = multiplayerMenu.GetComponent<ContextMenuEntityPCView>();
-            var window = GetOrCreateMultiplayerWindow();
-            var text = UIUtility.GetSaberBookFormat(StringsConst.MainMenu.MultiplayerMenu);
-            var viewModel = new ContextMenuEntityVM(new ContextMenuCollectionEntity(UIUtility.GetSaberBookFormat(text), () => window.Show(true)));
-            multiplayerMenuView.Bind(viewModel);
+            try
+            {
+                var menuButtons = __instance.transform.GetChild(0);
+                var menuItemToCopy = menuButtons.GetChild(3).gameObject;
+                var multiplayerMenu = UnityEngine.Object.Instantiate(menuItemToCopy, menuButtons.transform);
+                multiplayerMenu.transform.SetSiblingIndex(3);
+                var multiplayerMenuView = multiplayerMenu.GetComponent<ContextMenuEntityPCView>();
+                var window = GetOrCreateMultiplayerWindow();
+                var text = UIUtility.GetSaberBookFormat(StringsConst.MainMenu.MultiplayerMenu);
+                var viewModel = new ContextMenuEntityVM(new ContextMenuCollectionEntity(UIUtility.GetSaberBookFormat(text), () => window.Show(true)));
+                multiplayerMenuView.Bind(viewModel);
+            }
+            catch (Exception ex)
+            {
+                Logging.Logger.Error(ex);
+                throw;
+            }
         }
 
         private static MultiplayerWindow GetOrCreateMultiplayerWindow()
@@ -68,6 +74,20 @@ namespace WOTRMultiplayer.Menu
             return _mainMenuMultiplayerWindow;
         }
 
+        public class HostMenuItemController : MenuItemController
+        {
+            public HostMenuItemController(GameObject menuItem, GameObject menuContent)
+                : base(menuItem, menuContent)
+            {
+            }
+
+            public override void Activate()
+            {
+                ActiveImage.SetActive(true);
+                MenuContent.SetActive(true);
+            }
+        }
+
         public class MenuItemController
         {
             private const string SelectedGameObjectName = "SelectedImage";
@@ -75,12 +95,11 @@ namespace WOTRMultiplayer.Menu
 
             private bool _isInitialized = false;
             private OwlcatButton _button => MenuItem.gameObject.GetComponent<OwlcatButton>();
-
-            private GameObject _activeImage;
             private GameObject _hoverImage;
 
             public GameObject MenuItem { get; private set; }
             public GameObject MenuContent { get; private set; }
+            protected GameObject ActiveImage { get; private set; }
 
             public bool IsActive => MenuItem.gameObject.activeSelf;
 
@@ -102,7 +121,7 @@ namespace WOTRMultiplayer.Menu
                 _isInitialized = true;
                 _button.OnHover.AddListener(OnHover);
                 _button.OnLeftClick.AddListener(OnClickedInternal);
-                _activeImage = this.MenuItem.transform.Find(SelectedGameObjectName).gameObject;
+                ActiveImage = this.MenuItem.transform.Find(SelectedGameObjectName).gameObject;
                 _hoverImage = this.MenuItem.transform.Find(HoverGameObjectName).gameObject;
 
                 Deactivate();
@@ -113,15 +132,15 @@ namespace WOTRMultiplayer.Menu
                 _hoverImage.SetActive(state);
             }
 
-            public void Activate()
+            public virtual void Activate()
             {
-                _activeImage.SetActive(true);
+                ActiveImage.SetActive(true);
                 MenuContent.SetActive(true);
             }
 
             public void Deactivate()
             {
-                _activeImage.SetActive(false);
+                ActiveImage.SetActive(false);
                 MenuContent.SetActive(false);
             }
 
@@ -228,15 +247,14 @@ namespace WOTRMultiplayer.Menu
             {
                 var hostItemContent = UnityEngine.Object.Instantiate(baseLayout, baseLayout.transform);
                 hostItemContent.name = HostMenuItemContentObjectName;
-                for (int i = hostItemContent.transform.childCount - 1; i >= 0; i--)
-                {
-                    if (i > 1)
-                    {
-                        continue;
-                    }
+                CleanupAllChildren(hostItemContent);
+                var commonPCView = RootUIContext.Instance.m_CommonView as CommonPCView;
+                var commonPCVM = commonPCView.GetViewModel() as CommonVM;
 
-                    UnityEngine.Object.DestroyImmediate(hostItemContent.transform.GetChild(i).gameObject);
-                }
+                var vm = new SaveLoadVM(SaveLoadMode.Load, true, () => { }, RootUIContext.Instance.CommonVM);
+                SaveLoadPCView saveLoad = UnityEngine.Object.Instantiate(commonPCView.m_SaveLoadPCView, hostItemContent.transform);
+                saveLoad.Initialize();
+                saveLoad.Bind(vm);
 
                 var joinItemContent = UnityEngine.Object.Instantiate(baseLayout, baseLayout.transform);
                 joinItemContent.name = JoinMenuItemContentObjectName;
@@ -270,6 +288,8 @@ namespace WOTRMultiplayer.Menu
             {
                 _hostMenuController.Activate();
                 _joinMenuController.Deactivate();
+                var c = _hostMenuController.MenuContent.transform.GetChild(0).GetComponent<SaveLoadPCView>();
+                c.Show();
             }
 
             private void OnJoinMenuItemClicked(object sender, EventArgs e)
