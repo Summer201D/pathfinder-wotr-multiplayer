@@ -16,5 +16,10 @@ namespace WOTRMultiplayer.Extensions
                 }
             }
         }
+
+        public static void CleanupAllChildren(this GameObject obj)
+        {
+            obj.CleanupAllChildren(x => true);
+        }
     }
 }

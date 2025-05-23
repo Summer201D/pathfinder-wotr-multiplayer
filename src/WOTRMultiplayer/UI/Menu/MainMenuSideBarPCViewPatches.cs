@@ -4,6 +4,8 @@ using Kingmaker;
 using Kingmaker.UI.Common;
 using Kingmaker.UI.MVVM._PCView.ContextMenu;
 using Kingmaker.UI.MVVM._PCView.MainMenu;
+using Kingmaker.UI.MVVM._PCView.Settings;
+using Kingmaker.UI.MVVM._PCView.Settings.Entities;
 using Kingmaker.UI.MVVM._VM.ContextMenu;
 using Kingmaker.UI.ServiceWindow.Credits;
 using WOTRMultiplayer.Strings;
@@ -13,6 +15,21 @@ namespace WOTRMultiplayer.UI.Menu
     [HarmonyPatch]
     public class MainMenuSideBarPCViewPatches
     {
+        public static SettingsEntityDropdownPCView DropdownPrefab;
+
+        [HarmonyPatch(typeof(SettingsPCView), "Initialize")]
+        [HarmonyPostfix]
+        public static void SettingsEntityDropdownPCView_BindViewImplementation_Prefix(SettingsPCView __instance)
+        {
+            if (DropdownPrefab == null)
+            {
+                DropdownPrefab = __instance.m_SettingsViews.m_SettingsEntityDropdownViewPrefab;
+            }
+
+            Logging.Logger.Warning("Applying");
+        }
+
+
         [HarmonyPatch(typeof(MainMenuSideBarPCView), "BindViewImplementation")]
         [HarmonyPrefix]
         public static void MainMenuSideBarPCView_BindViewImplementation_Prefix(MainMenuSideBarPCView __instance)

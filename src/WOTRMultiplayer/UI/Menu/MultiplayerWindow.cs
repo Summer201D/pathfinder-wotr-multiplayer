@@ -1,13 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
 using DG.Tweening;
+using Kingmaker.UI;
+using Kingmaker.UI.Common;
 using Kingmaker.UI.FullScreenUITypes;
 using Kingmaker.UI.MVVM;
 using Kingmaker.UI.MVVM._PCView.Common;
 using Kingmaker.UI.MVVM._PCView.SaveLoad;
+using Kingmaker.UI.MVVM._PCView.Settings.Entities;
 using Kingmaker.UI.ServiceWindow;
 using Owlcat.Runtime.UI.Controls.Button;
+using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 using WOTRMultiplayer.Extensions;
 using WOTRMultiplayer.UI.Menu.Items;
 
@@ -17,7 +22,8 @@ namespace WOTRMultiplayer.UI.Menu
     {
         private static SaveLoadPCView _cachedSaveLoadPCView;
 
-        private const string BaseLayoutName = "CreditsScreen";
+        private const string BaseLayoutName = "MultiplayerScreen";
+
         private const string SeparatorGameObjectName = "Separator";
 
         private const string MultiplayerMenuItemsObjectName = "MultiplayerMenuItems";
@@ -109,7 +115,8 @@ namespace WOTRMultiplayer.UI.Menu
 
         private void SetupLayout()
         {
-            var baseLayout = transform.Find(BaseLayoutName)?.gameObject;
+            var baseLayout = transform.Find("CreditsScreen")?.gameObject;
+            baseLayout.name = BaseLayoutName;
             var (hostItemContent, joinItemContent) = SetupMenuItemsContentLayout(baseLayout);
             SetupMenuItemsLayout(baseLayout, hostItemContent, joinItemContent);
         }
@@ -120,11 +127,131 @@ namespace WOTRMultiplayer.UI.Menu
             hostItemContent.name = HostMenuItemContentObjectName;
             hostItemContent.CleanupAllChildren(x => true);
             SetupLoadSaveGamesLayout(hostItemContent);
+            SetupLobbyInfo(baseLayout, hostItemContent);
 
             var joinItemContent = Instantiate(baseLayout, baseLayout.transform);
             joinItemContent.name = JoinMenuItemContentObjectName;
             joinItemContent.CleanupAllChildren(x => true);
             return (hostItemContent, joinItemContent);
+        }
+
+        private void SetupLobbyInfo(GameObject baseLayout, GameObject hostItemContent)
+        {
+            var saveLoadView = hostItemContent.transform.GetChild(0);
+            var screen = saveLoadView.gameObject.transform.Find("SaveLoadScreen");
+            var container = screen.Find("SaveLoadDetails");
+
+            var lobbyWindowObject = Instantiate(baseLayout, container.transform);
+            lobbyWindowObject.transform.SetSiblingIndex(2);
+            lobbyWindowObject.name = "MultiplayerLobby";
+            lobbyWindowObject.CleanupAllChildren();
+            var title = container.Find("Title");
+            var lobbyWindowObjectPosition = new Vector3(title.position.x, lobbyWindowObject.transform.position.y * 1.1f, lobbyWindowObject.transform.position.z);
+            lobbyWindowObject.transform.SetPositionAndRotation(lobbyWindowObjectPosition, lobbyWindowObject.transform.rotation);
+            var parentContainerRect = container.GetComponent<RectTransform>();
+            var lobbyWindowObjectRect = lobbyWindowObject.GetComponent<RectTransform>();
+            lobbyWindowObjectRect.sizeDelta = new Vector2(parentContainerRect.sizeDelta.x * 0.9f, parentContainerRect.sizeDelta.y * 0.72f);
+
+            var lobbyContent = InstantiateDefaultGameObject(lobbyWindowObjectRect.transform);
+            DestroyImmediate(lobbyContent.GetComponent<UnityEngine.UI.Image>());
+            lobbyContent.CleanupAllChildren();
+            var background = InstantiateDefaultGameObject(lobbyContent.transform);
+            DestroyImmediate(background.GetComponent<UnityEngine.UI.Image>());
+            background.name = "Background";
+            var saveList = screen.Find("SaveSlotCollectionPlace").Find("SaveSlotVirtualCollectionView");
+            Instantiate(saveList.Find("decoration").gameObject, background.transform);
+            Instantiate(saveList.Find("Decoration").gameObject, background.transform);
+
+            //playersTitle.horizontalAlignment = HorizontalAlignmentOptions.Center;
+            //var backgroundImageToCopy = this.gameObject.transform.Find("BackgroundGroup").Find("PapperBackgroundImage").gameObject;
+            //var backgroundImage = Instantiate(backgroundImageToCopy.gameObject, background.transform);
+            //var backgroundImageRectangle = backgroundImage.GetComponent<RectTransform>();
+            //backgroundImageRectangle.sizeDelta = lobbyWindowObjectRect.sizeDelta;
+
+            // TBD test info
+            var players = new List<string> { "Cat", "Dog", "Squirrel", "Rat" };
+            var defaultTextMesh = title.GetComponentInChildren<TextMeshProUGUI>();
+            var verticalContent = InstantiateDefaultGameObject(lobbyContent.transform);
+            verticalContent.name = "VerticalContent";
+            var vertical = verticalContent.AddComponent<VerticalLayoutGroupWorkaround>();
+            var playersTitleObject = InstantiateDefaultGameObject(verticalContent.transform);
+            var playersTitle = playersTitleObject.AddComponent<TextMeshProUGUI>();
+            playersTitle.material = defaultTextMesh.material;
+            playersTitle.color = defaultTextMesh.color;
+            playersTitle.horizontalAlignment = HorizontalAlignmentOptions.Center;
+            playersTitle.SetText("Players");
+
+            foreach (var playerName in players)
+            {
+                var playerInfoObject = InstantiateDefaultGameObject(verticalContent.transform);
+                playerInfoObject.AddComponent<HorizontalLayoutGroupWorkaround>();
+                var ele = playerInfoObject.AddComponent<LayoutElement>();
+                ele.preferredHeight = 60;
+                var cz = playerInfoObject.AddComponent<ContentSizeFitterExtended>();
+                cz.m_VerticalFit = ContentSizeFitterExtended.FitMode.PreferredSize;
+
+                var player = InstantiateDefaultGameObject(playerInfoObject.transform);
+                var playerTitle = player.AddComponent<TextMeshProUGUI>();
+                playerTitle.material = defaultTextMesh.material;
+                playerTitle.color = defaultTextMesh.color;
+                playerTitle.SetText(playerName);
+            }
+
+            var characterControlTitleObject = InstantiateDefaultGameObject(verticalContent.transform);
+            var characterControlTitle = characterControlTitleObject.AddComponent<TextMeshProUGUI>();
+            characterControlTitle.material = defaultTextMesh.material;
+            characterControlTitle.color = defaultTextMesh.color;
+            characterControlTitle.horizontalAlignment = HorizontalAlignmentOptions.Center;
+            characterControlTitle.SetText("Characters");
+
+
+            var characterInfoLayout = InstantiateDefaultGameObject(verticalContent.transform);
+            var h = characterInfoLayout.AddComponent<HorizontalLayoutGroupWorkaround>();
+            h.childAlignment = TextAnchor.MiddleCenter;
+            for (int i = 1; i <= 6; i++)
+            {
+                var specificCharInfo = InstantiateDefaultGameObject(characterInfoLayout.transform);
+                specificCharInfo.AddComponent<VerticalLayoutGroupWorkaround>();
+
+                var characterPortrait = InstantiateDefaultGameObject(specificCharInfo.transform);
+                var portrait = characterPortrait.AddComponent<TextMeshProUGUI>();
+                portrait.material = defaultTextMesh.material;
+                portrait.color = defaultTextMesh.color;
+                portrait.SetText($"portrait");
+
+                var dropdownContainerObject = Instantiate(MainMenuSideBarPCViewPatches.DropdownPrefab.gameObject, specificCharInfo.transform);
+                DestroyImmediate(dropdownContainerObject.GetComponent<SettingsEntityDropdownPCView>());
+                DestroyImmediate(dropdownContainerObject.GetComponent<ContentSizeFitterExtended>());
+                DestroyImmediate(dropdownContainerObject.GetComponent<VerticalLayoutGroupWorkaround>());
+                DestroyImmediate(dropdownContainerObject.GetComponent<LayoutElement>());
+
+                dropdownContainerObject.CleanupAllChildren(x => x.name != "Dropdown");
+                var dropdownObject = dropdownContainerObject.transform.Find("Dropdown");
+                var rect = dropdownObject.GetComponent<RectTransform>();
+                rect.anchorMin = new Vector2(1, 0);
+                rect.anchorMax = new Vector2(1, 0);
+                rect.anchoredPosition = Vector2.zero;
+                rect.sizeDelta = new Vector2(lobbyWindowObjectRect.sizeDelta.x / 6, rect.sizeDelta.y);
+                var dropdown = dropdownObject.GetComponent<TMP_Dropdown>();
+                var templateRect = dropdownObject.Find("Template").GetComponent<RectTransform>();
+                templateRect.sizeDelta = new Vector2(Math.Abs(templateRect.sizeDelta.x * 5), templateRect.sizeDelta.y);
+                dropdown.ClearOptions();
+                dropdown.AddOptions(players);
+                dropdown.onValueChanged.AddListener(OnValueChanged);
+            }
+        }
+
+        private void OnValueChanged(int x)
+        {
+            Logging.Logger.Info($"Value changed. Index={x}");
+        }
+
+        private GameObject InstantiateDefaultGameObject(Transform parent)
+        {
+            var obj = Instantiate(this.gameObject.transform.Find("Black").gameObject, parent);
+            DestroyImmediate(obj.GetComponent<UnityEngine.UI.Image>());
+
+            return obj;
         }
 
         private void SetupLoadSaveGamesLayout(GameObject hostItemContent)

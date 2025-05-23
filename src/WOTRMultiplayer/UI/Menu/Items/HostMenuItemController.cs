@@ -7,7 +7,6 @@ using TMPro;
 using UnityEngine;
 using WOTRMultiplayer.Extensions;
 using WOTRMultiplayer.Strings;
-using WOTRMultiplayer.UI.Menu;
 
 namespace WOTRMultiplayer.UI.Menu.Items
 {
@@ -89,9 +88,11 @@ namespace WOTRMultiplayer.UI.Menu.Items
 
             var saveLoadDetails = screen.Find("SaveLoadDetails");
             var picture = saveLoadDetails.Find("Picture");
-            picture.gameObject.SetActive(false);
+            Object.DestroyImmediate(picture.gameObject);
 
-            var buttons = saveLoadDetails.Find("Info").Find("Buttons");
+            var info = saveLoadDetails.Find("Info");
+            info.gameObject.CleanupAllChildren(x => x.name != "Buttons");
+            var buttons = info.Find("Buttons");
             // TBD random buttons as placeholders
             var baseButton = buttons.Find("OwlcatButton").gameObject;
             var layout = baseButton.GetComponent<RectTransform>();

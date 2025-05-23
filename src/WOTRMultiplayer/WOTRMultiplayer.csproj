@@ -43,6 +43,9 @@
 		<Reference Include="UnityEngine.IMGUIModule">
 			<HintPath>..\..\..\..\Games\Steam\steamapps\common\Pathfinder Second Adventure\Wrath_Data\Managed\UnityEngine.IMGUIModule.dll</HintPath>
 		</Reference>
+		<Reference Include="UnityEngine.TextRenderingModule">
+		  <HintPath>..\..\..\..\Games\Steam\steamapps\common\Pathfinder Second Adventure\Wrath_Data\Managed\UnityEngine.TextRenderingModule.dll</HintPath>
+		</Reference>
 		<Reference Include="UnityEngine.UI">
 		  <HintPath>..\..\..\..\Games\Steam\steamapps\common\Pathfinder Second Adventure\Wrath_Data\Managed\UnityEngine.UI.dll</HintPath>
 		</Reference>

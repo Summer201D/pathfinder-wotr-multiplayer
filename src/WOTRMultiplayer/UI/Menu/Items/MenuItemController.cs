@@ -7,8 +7,8 @@ namespace WOTRMultiplayer.UI.Menu.Items
 {
     public abstract class MenuItemController
     {
-        private const string SelectedGameObjectName = "SelectedImage";
-        private const string HoverGameObjectName = "HoverImage";
+        public const string SelectedGameObjectName = "SelectedImage";
+        public const string HoverGameObjectName = "HoverImage";
 
         private bool _isInitialized = false;
         private OwlcatButton Button => MenuItem.gameObject.GetComponent<OwlcatButton>();
