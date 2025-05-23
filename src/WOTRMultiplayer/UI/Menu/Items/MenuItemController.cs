@@ -1,8 +1,9 @@
 ﻿using System;
 using Owlcat.Runtime.UI.Controls.Button;
 using UnityEngine;
+using WOTRMultiplayer.UI.Menu;
 
-namespace WOTRMultiplayer.Menu.Items
+namespace WOTRMultiplayer.UI.Menu.Items
 {
     public abstract class MenuItemController
     {
@@ -24,7 +25,7 @@ namespace WOTRMultiplayer.Menu.Items
 
         public MenuItemController(MultiplayerWindow multiplayerWindow, GameObject menuItem, GameObject menuContent)
         {
-            Logging.Logger.Info($"Creating {nameof(MenuItemController)}. Type={this.GetType().Name}");
+            Logging.Logger.Info($"Creating {nameof(MenuItemController)}. Type={GetType().Name}");
 
             MenuItem = menuItem;
             MenuContent = menuContent;
@@ -41,8 +42,8 @@ namespace WOTRMultiplayer.Menu.Items
             _isInitialized = true;
             Button.OnHover.AddListener(OnHover);
             Button.OnLeftClick.AddListener(OnClickedInternal);
-            ActiveImage = this.MenuItem.transform.Find(SelectedGameObjectName).gameObject;
-            _hoverImage = this.MenuItem.transform.Find(HoverGameObjectName).gameObject;
+            ActiveImage = MenuItem.transform.Find(SelectedGameObjectName).gameObject;
+            _hoverImage = MenuItem.transform.Find(HoverGameObjectName).gameObject;
 
             Deactivate();
         }
@@ -57,7 +58,7 @@ namespace WOTRMultiplayer.Menu.Items
             ActiveImage.SetActive(true);
             MenuContent.SetActive(true);
 
-            Logging.Logger.Info($"Activated {nameof(MenuItemController)}. Type={this.GetType().Name}");
+            Logging.Logger.Info($"Activated {nameof(MenuItemController)}. Type={GetType().Name}");
         }
 
         public virtual void Deactivate()
@@ -65,7 +66,7 @@ namespace WOTRMultiplayer.Menu.Items
             ActiveImage.SetActive(false);
             MenuContent.SetActive(false);
 
-            Logging.Logger.Info($"Deactivated {nameof(MenuItemController)}. Type={this.GetType().Name}");
+            Logging.Logger.Info($"Deactivated {nameof(MenuItemController)}. Type={GetType().Name}");
 
         }
 

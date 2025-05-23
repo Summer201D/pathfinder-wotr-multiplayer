@@ -7,8 +7,9 @@ using TMPro;
 using UnityEngine;
 using WOTRMultiplayer.Extensions;
 using WOTRMultiplayer.Strings;
+using WOTRMultiplayer.UI.Menu;
 
-namespace WOTRMultiplayer.Menu.Items
+namespace WOTRMultiplayer.UI.Menu.Items
 {
     public class HostMenuItemController : MenuItemController
     {
@@ -41,11 +42,11 @@ namespace WOTRMultiplayer.Menu.Items
                 var collectionView = screen.Find("SaveSlotCollectionPlace").Find("SaveSlotVirtualCollectionView");
                 var virtualView = collectionView.GetComponent<SaveSlotCollectionVirtualView>();
                 var prefab = virtualView.m_SaveSlotPrefab as SaveSlotPCView;
-                var copyPrefabObj = UnityEngine.Object.Instantiate(prefab.gameObject, prefab.transform.parent);
+                var copyPrefabObj = Object.Instantiate(prefab.gameObject, prefab.transform.parent);
                 var newPrefab = copyPrefabObj.GetComponent<SaveSlotPCView>();
                 virtualView.m_VirtualList.Initialize(new VirtualListElementTemplate<ExpandableTitleVM>(virtualView.m_ExpandableTitleView), new VirtualListElementTemplate<SaveSlotVM>(newPrefab));
-                UnityEngine.Object.DestroyImmediate(newPrefab.m_SaveLoadButton.gameObject);
-                UnityEngine.Object.DestroyImmediate(newPrefab.m_DeleteButton.gameObject);
+                Object.DestroyImmediate(newPrefab.m_SaveLoadButton.gameObject);
+                Object.DestroyImmediate(newPrefab.m_DeleteButton.gameObject);
                 ///
             }
 
@@ -80,11 +81,11 @@ namespace WOTRMultiplayer.Menu.Items
 
         private void CleanupLoadSaveGamesLayout(SaveLoadPCView saveLoadView)
         {
-            UnityEngine.Object.DestroyImmediate(saveLoadView.gameObject.transform.Find("BackgroundWorldCover").gameObject);
-            UnityEngine.Object.DestroyImmediate(saveLoadView.gameObject.transform.Find("Background").gameObject);
+            Object.DestroyImmediate(saveLoadView.gameObject.transform.Find("BackgroundWorldCover").gameObject);
+            Object.DestroyImmediate(saveLoadView.gameObject.transform.Find("Background").gameObject);
             var screen = saveLoadView.gameObject.transform.Find("SaveLoadScreen");
             var top = screen.Find("Top");
-            UnityEngine.Object.DestroyImmediate(top.gameObject);
+            Object.DestroyImmediate(top.gameObject);
 
             var saveLoadDetails = screen.Find("SaveLoadDetails");
             var picture = saveLoadDetails.Find("Picture");
@@ -95,11 +96,11 @@ namespace WOTRMultiplayer.Menu.Items
             var baseButton = buttons.Find("OwlcatButton").gameObject;
             var layout = baseButton.GetComponent<RectTransform>();
             layout.sizeDelta = new Vector2(layout.sizeDelta.x * 0.92f, layout.sizeDelta.y);
-            var buttonCopy1 = UnityEngine.Object.Instantiate(baseButton, buttons);
+            var buttonCopy1 = Object.Instantiate(baseButton, buttons);
             buttonCopy1.name = "Button1";
-            var buttonCopy2 = UnityEngine.Object.Instantiate(baseButton, buttons);
+            var buttonCopy2 = Object.Instantiate(baseButton, buttons);
             buttonCopy2.name = "Button2";
-            var buttonCopy3 = UnityEngine.Object.Instantiate(baseButton, buttons);
+            var buttonCopy3 = Object.Instantiate(baseButton, buttons);
             buttonCopy3.name = "Button3";
             buttons.gameObject.CleanupAllChildren(
                 x => x.name != "DlcRequiredLabel" && x.name != buttonCopy1.name && x.name != buttonCopy2.name && x.name != buttonCopy3.name);

@@ -8,10 +8,10 @@ using Kingmaker.UI.MVVM._VM.ContextMenu;
 using Kingmaker.UI.ServiceWindow.Credits;
 using WOTRMultiplayer.Strings;
 
-namespace WOTRMultiplayer.Menu
+namespace WOTRMultiplayer.UI.Menu
 {
     [HarmonyPatch]
-    public class MenuPatches
+    public class MainMenuSideBarPCViewPatches
     {
         [HarmonyPatch(typeof(MainMenuSideBarPCView), "BindViewImplementation")]
         [HarmonyPrefix]

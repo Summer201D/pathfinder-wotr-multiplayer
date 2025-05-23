@@ -9,9 +9,9 @@ using Kingmaker.UI.ServiceWindow;
 using Owlcat.Runtime.UI.Controls.Button;
 using UnityEngine;
 using WOTRMultiplayer.Extensions;
-using WOTRMultiplayer.Menu.Items;
+using WOTRMultiplayer.UI.Menu.Items;
 
-namespace WOTRMultiplayer.Menu
+namespace WOTRMultiplayer.UI.Menu
 {
     public class MultiplayerWindow : FullScreenTabsWindow
     {
@@ -64,7 +64,7 @@ namespace WOTRMultiplayer.Menu
         public override void AppearAnimation()
         {
             base.AppearAnimation();
-            this.gameObject.SetActive(true);
+            gameObject.SetActive(true);
             foreach (var animation in _animations)
             {
                 animation.DOPlayForward();
@@ -78,7 +78,7 @@ namespace WOTRMultiplayer.Menu
             {
                 animation.DOPlayBackwards();
             }
-            this.gameObject.SetActive(false);
+            gameObject.SetActive(false);
         }
 
         public override void OnHide()
@@ -104,7 +104,7 @@ namespace WOTRMultiplayer.Menu
         {
             _hostMenuController?.Deactivate();
             _joinMenuController?.Deactivate();
-            base.OnButtonClose();
+            OnButtonClose();
         }
 
         private void SetupLayout()
@@ -116,12 +116,12 @@ namespace WOTRMultiplayer.Menu
 
         private (GameObject hostItemContent, GameObject joinItemContent) SetupMenuItemsContentLayout(GameObject baseLayout)
         {
-            var hostItemContent = UnityEngine.Object.Instantiate(baseLayout, baseLayout.transform);
+            var hostItemContent = Instantiate(baseLayout, baseLayout.transform);
             hostItemContent.name = HostMenuItemContentObjectName;
             hostItemContent.CleanupAllChildren(x => true);
             SetupLoadSaveGamesLayout(hostItemContent);
 
-            var joinItemContent = UnityEngine.Object.Instantiate(baseLayout, baseLayout.transform);
+            var joinItemContent = Instantiate(baseLayout, baseLayout.transform);
             joinItemContent.name = JoinMenuItemContentObjectName;
             joinItemContent.CleanupAllChildren(x => true);
             return (hostItemContent, joinItemContent);
@@ -133,7 +133,7 @@ namespace WOTRMultiplayer.Menu
             // for some reason RootUIContext.Instance.m_CommonView is null after Loading Game -> Exiting to main menu
             // using cached copy which is always available on the first menu load
             var objToCopy = _cachedSaveLoadPCView ??= commonPCView?.m_SaveLoadPCView;
-            SaveLoadPCView saveLoad = UnityEngine.Object.Instantiate(objToCopy, hostItemContent.transform);
+            SaveLoadPCView saveLoad = Instantiate(objToCopy, hostItemContent.transform);
             saveLoad.Initialize();
         }
 
@@ -146,7 +146,7 @@ namespace WOTRMultiplayer.Menu
             var baseMenuItem = SetupBaseMenuItem(baseLayout);
             _hostMenuController = SetupMenuController(MultiplayerMenuItemType.Host, Screen.width * 0.33f, hostItemContent, baseMenuItem, baseLayout.transform);
             _joinMenuController = SetupMenuController(MultiplayerMenuItemType.Join, Screen.width * 0.66f, joinItemContent, baseMenuItem, baseLayout.transform);
-            UnityEngine.Object.DestroyImmediate(baseMenuItem);
+            DestroyImmediate(baseMenuItem);
 
             _hostMenuController.OnClicked += OnHostMenuItemClicked;
             _joinMenuController.OnClicked += OnJoinMenuItemClicked;
@@ -168,11 +168,11 @@ namespace WOTRMultiplayer.Menu
         {
             var baseItem = baseLayoutObject.transform.GetChild(0).gameObject;
 
-            UnityEngine.Object.DestroyImmediate(baseItem.GetComponent<OwlcatMultiButton>());
+            DestroyImmediate(baseItem.GetComponent<OwlcatMultiButton>());
             baseItem.AddComponent<OwlcatButton>();
 
             var endSeparator = baseItem.transform.Find(SeparatorGameObjectName);
-            UnityEngine.Object.DestroyImmediate(endSeparator.gameObject);
+            DestroyImmediate(endSeparator.gameObject);
 
             return baseItem;
         }
@@ -184,7 +184,7 @@ namespace WOTRMultiplayer.Menu
             GameObject baseMenuItem,
             Transform parent)
         {
-            var menuItem = UnityEngine.Object.Instantiate(baseMenuItem, parent);
+            var menuItem = Instantiate(baseMenuItem, parent);
             var position = new Vector3(positionX, menuItem.transform.position.y, menuItem.transform.position.z);
             menuItem.transform.SetPositionAndRotation(position, menuItem.transform.rotation);
 

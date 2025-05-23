@@ -1,8 +1,9 @@
 ﻿using TMPro;
 using UnityEngine;
 using WOTRMultiplayer.Strings;
+using WOTRMultiplayer.UI.Menu;
 
-namespace WOTRMultiplayer.Menu.Items
+namespace WOTRMultiplayer.UI.Menu.Items
 {
     public class JoinMenuItemController : MenuItemController
     {
