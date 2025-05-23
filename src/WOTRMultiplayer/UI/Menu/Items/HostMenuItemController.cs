@@ -6,20 +6,24 @@ using Kingmaker.UI.MVVM._VM.ServiceWindows.CharacterInfo.Sections.Abilities;
 using Owlcat.Runtime.UI.VirtualListSystem;
 using TMPro;
 using UnityEngine;
+using WOTRMultiplayer.Extensions;
 using WOTRMultiplayer.Strings;
 
 namespace WOTRMultiplayer.UI.Menu.Items
 {
     public class HostMenuItemController : MenuItemController, IObserver<SaveSlotVM>
     {
+        public const string HostMenuItemContentObjectName = "HostMenuItemContent";
+
         private SaveLoadVM _saveLoadViewModel;
         private bool _setupLayout = true;
+        private GameObject _menuContent;
 
-        public HostMenuItemController(MultiplayerWindow multiplayerWindow, GameObject menuItem, GameObject menuContent)
-            : base(multiplayerWindow, menuItem, menuContent)
+        public override GameObject MenuContent => _menuContent;
+
+        public HostMenuItemController(MultiplayerWindow multiplayerWindow, GameObject menuItem)
+            : base(multiplayerWindow, menuItem)
         {
-            var label = menuItem.GetComponentInChildren<TextMeshProUGUI>();
-            label.SetText(StringConsts.MultiplayerWindow.HostMenuLabel);
         }
 
         public override void Activate()
@@ -55,6 +59,44 @@ namespace WOTRMultiplayer.UI.Menu.Items
 
             saveLoad.Show();
             base.Activate();
+        }
+
+        protected override void InitializeInternal(GameObject baseLayout)
+        {
+            var label = this.MenuItem.GetComponentInChildren<TextMeshProUGUI>();
+            label.SetText(StringConsts.MultiplayerWindow.HostMenuLabel);
+
+            _menuContent = UnityEngine.Object.Instantiate(baseLayout, baseLayout.transform);
+            _menuContent.name = HostMenuItemContentObjectName;
+            _menuContent.CleanupAllChildren();
+
+            SetupLoadSaveGamesLayout();
+            SetupLobbyInfo(baseLayout);
+        }
+
+        private void SetupLobbyInfo(GameObject baseLayout)
+        {
+            var saveLoadView = this.MenuContent.transform.GetChild(0);
+            var screen = saveLoadView.gameObject.transform.Find("SaveLoadScreen");
+            var container = screen.Find("SaveLoadDetails");
+
+            var lobbyWindowObject = UnityEngine.Object.Instantiate(baseLayout, container.transform);
+            lobbyWindowObject.name = "MultiplayerLobby";
+            lobbyWindowObject.CleanupAllChildren();
+            var title = container.Find("Title");
+            var lobbyWindowObjectPosition = new Vector3(title.position.x, lobbyWindowObject.transform.position.y * 1.1f, lobbyWindowObject.transform.position.z);
+            lobbyWindowObject.transform.SetPositionAndRotation(lobbyWindowObjectPosition, lobbyWindowObject.transform.rotation);
+            var parentContainerRect = container.GetComponent<RectTransform>();
+            var lobbyWindowObjectRect = lobbyWindowObject.GetComponent<RectTransform>();
+            lobbyWindowObjectRect.sizeDelta = new Vector2(parentContainerRect.sizeDelta.x * 0.9f, parentContainerRect.sizeDelta.y * 0.72f);
+
+            var lobbyContent = Main.Multiplayer.ElementFactory.CreateLobbyWindowContent(lobbyWindowObject.transform);
+        }
+
+        private void SetupLoadSaveGamesLayout()
+        {
+            SaveLoadPCView saveLoad = Main.Multiplayer.ElementFactory.CreateSaveLoadPCView(this.MenuContent.transform);
+            saveLoad.Initialize();
         }
 
         public override void Deactivate()

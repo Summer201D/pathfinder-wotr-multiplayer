@@ -1,5 +1,6 @@
 ﻿using TMPro;
 using UnityEngine;
+using WOTRMultiplayer.Extensions;
 using WOTRMultiplayer.Strings;
 using WOTRMultiplayer.UI.Menu;
 
@@ -7,16 +8,30 @@ namespace WOTRMultiplayer.UI.Menu.Items
 {
     public class JoinMenuItemController : MenuItemController
     {
-        public JoinMenuItemController(MultiplayerWindow multiplayerWindow, GameObject menuItem, GameObject menuContent)
-            : base(multiplayerWindow, menuItem, menuContent)
+        public const string JoinMenuItemContentObjectName = "JoinMenuItemContent";
+
+        private GameObject _menuContent;
+
+        public override GameObject MenuContent =>  _menuContent;
+
+        public JoinMenuItemController(MultiplayerWindow multiplayerWindow, GameObject menuItem)
+            : base(multiplayerWindow, menuItem)
         {
-            var label = menuItem.GetComponentInChildren<TextMeshProUGUI>();
-            label.SetText(StringConsts.MultiplayerWindow.JoinMenuLabel);
         }
 
         public override void Activate()
         {
             base.Activate();
+        }
+
+        protected override void InitializeInternal(GameObject baseLayout)
+        {
+            var label = this.MenuItem.GetComponentInChildren<TextMeshProUGUI>();
+            label.SetText(StringConsts.MultiplayerWindow.HostMenuLabel);
+
+            _menuContent = UnityEngine.Object.Instantiate(baseLayout, baseLayout.transform);
+            _menuContent.name = JoinMenuItemContentObjectName;
+            _menuContent.CleanupAllChildren();
         }
     }
 }

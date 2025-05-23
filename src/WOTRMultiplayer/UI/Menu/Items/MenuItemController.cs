@@ -1,7 +1,6 @@
 ﻿using System;
 using Owlcat.Runtime.UI.Controls.Button;
 using UnityEngine;
-using WOTRMultiplayer.UI.Menu;
 
 namespace WOTRMultiplayer.UI.Menu.Items
 {
@@ -15,7 +14,7 @@ namespace WOTRMultiplayer.UI.Menu.Items
         private GameObject _hoverImage;
 
         public GameObject MenuItem { get; private set; }
-        public GameObject MenuContent { get; private set; }
+        public abstract GameObject MenuContent { get; }
         protected GameObject ActiveImage { get; private set; }
         protected MultiplayerWindow Window { get; private set; }
 
@@ -23,16 +22,15 @@ namespace WOTRMultiplayer.UI.Menu.Items
 
         public event EventHandler OnClicked;
 
-        public MenuItemController(MultiplayerWindow multiplayerWindow, GameObject menuItem, GameObject menuContent)
+        public MenuItemController(MultiplayerWindow multiplayerWindow, GameObject menuItem)
         {
             Logging.Logger.Info($"Creating {nameof(MenuItemController)}. Type={GetType().Name}");
 
             MenuItem = menuItem;
-            MenuContent = menuContent;
             Window = multiplayerWindow;
         }
 
-        public void Initialize()
+        public void Initialize(GameObject baseLayout)
         {
             if (_isInitialized)
             {
@@ -40,12 +38,19 @@ namespace WOTRMultiplayer.UI.Menu.Items
             }
 
             _isInitialized = true;
+
+            InitializeInternal(baseLayout);
+
             Button.OnHover.AddListener(OnHover);
             Button.OnLeftClick.AddListener(OnClickedInternal);
             ActiveImage = MenuItem.transform.Find(SelectedGameObjectName).gameObject;
             _hoverImage = MenuItem.transform.Find(HoverGameObjectName).gameObject;
 
             Deactivate();
+        }
+
+        protected virtual void InitializeInternal(GameObject baseLayout)
+        {
         }
 
         private void OnHover(bool state)
