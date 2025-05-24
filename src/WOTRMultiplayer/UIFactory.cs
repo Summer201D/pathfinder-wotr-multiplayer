@@ -18,7 +18,7 @@ namespace WOTRMultiplayer
     public class UIFactory
     {
         public const string DropdownGameObjectName = "Dropdown";
-        public const int LobbySectionTitleHeight = 60;
+        public const int LobbySectionTitleHeight = 50;
         private GameObject _dropdownPrefab;
         private SaveLoadPCView _saveLoadPCView;
         private GameObject _defaultGameObject;
@@ -199,8 +199,7 @@ namespace WOTRMultiplayer
             var verticalContent = CreateDefaultGameObject(lobbyContent.transform);
             verticalContent.name = LobbyInfoController.LobbyContentObjectName;
             var rootVertical = verticalContent.AddComponent<VerticalLayoutGroup>();
-            verticalContent.AddComponent<Image>();
-
+            rootVertical.padding = new RectOffset(0, 0, 0, 20);
             CreateLobbyPlayersSection(verticalContent.transform);
 
             var width = parent.GetComponent<RectTransform>().sizeDelta.x;
@@ -212,9 +211,12 @@ namespace WOTRMultiplayer
         private void CreateLobbyPlayersSection(Transform parent)
         {
             var playersSectionObject = CreateDefaultGameObject(parent);
-            playersSectionObject.AddComponent<Image>().color = Color.green;
+            var playersSectionRect = playersSectionObject.GetComponent<RectTransform>();
+            playersSectionRect.pivot = new Vector2(0.5f, 1f); // upper center
             playersSectionObject.name = LobbyInfoController.PlayersSectionObjectName;
             var playersSectionVertical = playersSectionObject.AddComponent<VerticalLayoutGroup>();
+            var playersSectionSizeFitter = playersSectionObject.AddComponent<ContentSizeFitter>();
+            playersSectionSizeFitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
 
             var playersTitleObject = CreateDefaultGameObject(playersSectionObject.transform);
             playersTitleObject.name = LobbyInfoController.PlayersSectionObjectName;
@@ -234,7 +236,8 @@ namespace WOTRMultiplayer
         private void CreateLobbyCharactersSection(float width, Transform parent)
         {
             var charactersSectionObject = CreateDefaultGameObject(parent);
-            charactersSectionObject.AddComponent<Image>().color = Color.red;
+            var charactersSectionRect = charactersSectionObject.GetComponent<RectTransform>();
+            charactersSectionRect.pivot = new Vector2(0.5f, 0f); // bottom (almost) center
             charactersSectionObject.name = LobbyInfoController.CharactersSectionObjectName;
             var charactersSectionVertical = charactersSectionObject.AddComponent<VerticalLayoutGroup>();
             var charactersSectionSizeFitter = charactersSectionObject.AddComponent<ContentSizeFitter>();
