@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using Kingmaker.UI.MVVM._VM.SaveLoad;
 using TMPro;
 using UnityEngine;
@@ -47,8 +49,8 @@ namespace WOTRMultiplayer.UI.Lobby
         public void SaveSlotSelected(SaveSlotVM value)
         {
             Logging.Logger.Info($"Selected SaveSlo={value.SaveName.Value}");
-            //var players = new List<string>() { "1", "2", "3", "4" };
-            //UpdatePlayers(players);
+            var players = Enumerable.Range(0, 1).Select(c => Guid.NewGuid().ToString().Split('-').First()).ToList();
+            UpdatePlayers(players);
             UpdateCharacters(value);
         }
 
@@ -56,25 +58,39 @@ namespace WOTRMultiplayer.UI.Lobby
         {
             PlayersSectionContent.CleanupAllChildren();
             var defaultMesh = Main.Multiplayer.Factory.GetDefaultMesh();
+            var rnd = new System.Random();
             foreach (var playerName in players)
             {
                 var playerContainerObject = Main.Multiplayer.Factory.CreateDefaultGameObject(PlayersSectionContent.transform);
                 playerContainerObject.name = LobbyInfoController.PlayerContainerObjectName;
-                playerContainerObject.AddComponent<HorizontalLayoutGroup>();
-
-                var player = Main.Multiplayer.Factory.CreateDefaultGameObject(playerContainerObject.transform);
-                player.name = LobbyInfoController.PlayerNameObjectName;
-                var playerTitle = player.AddComponent<TextMeshProUGUI>();
-                playerTitle.material = defaultMesh.Material;
-                playerTitle.color = defaultMesh.Color;
-                playerTitle.SetText(playerName);
+                var playerContainerHorizontal = playerContainerObject.AddComponent<HorizontalLayoutGroup>();
+                playerContainerHorizontal.childAlignment = TextAnchor.LowerRight;
 
                 var playerStatusObject = Main.Multiplayer.Factory.CreateDefaultGameObject(playerContainerObject.transform);
                 playerStatusObject.name = LobbyInfoController.PlayerStatusObjectName;
                 var playerStatus = playerStatusObject.AddComponent<TextMeshProUGUI>();
+                playerStatus.alignment = TextAlignmentOptions.Right;
                 playerStatus.material = defaultMesh.Material;
-                playerStatus.color = Color.red;
-                playerStatus.SetText("X");
+                var isOK = rnd.Next(0, 2) == 0;
+                if (isOK)
+                {
+                    playerStatus.color = Color.green;
+                    playerStatus.SetText("+");
+                }
+                else
+                {
+                    playerStatus.color = Color.red;
+                    playerStatus.SetText("-");
+                }
+
+                var player = Main.Multiplayer.Factory.CreateDefaultGameObject(playerContainerObject.transform);
+                player.name = LobbyInfoController.PlayerNameObjectName;
+                var playerNameBox = player.AddComponent<TextMeshProUGUI>();
+                playerNameBox.alignment = TextAlignmentOptions.Left;
+                playerNameBox.material = defaultMesh.Material;
+                playerNameBox.color = defaultMesh.Color;
+                playerNameBox.SetText(playerName);
+
             }
         }
 
