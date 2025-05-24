@@ -18,7 +18,7 @@ namespace WOTRMultiplayer
     public class UIFactory
     {
         public const string DropdownGameObjectName = "Dropdown";
-
+        public const int LobbySectionTitleHeight = 60;
         private GameObject _dropdownPrefab;
         private SaveLoadPCView _saveLoadPCView;
         private GameObject _defaultGameObject;
@@ -196,55 +196,82 @@ namespace WOTRMultiplayer
             //var backgroundImageRectangle = backgroundImage.GetComponent<RectTransform>();
             //backgroundImageRectangle.sizeDelta = lobbyWindowObjectRect.sizeDelta;
 
-            // TBD test info
             var verticalContent = CreateDefaultGameObject(lobbyContent.transform);
             verticalContent.name = LobbyInfoController.LobbyContentObjectName;
-            var vertical = verticalContent.AddComponent<VerticalLayoutGroup>();
-            var playersTitleObject = CreateDefaultGameObject(verticalContent.transform);
+            var rootVertical = verticalContent.AddComponent<VerticalLayoutGroup>();
+            verticalContent.AddComponent<Image>();
+
+            CreateLobbyPlayersSection(verticalContent.transform);
+
+            var width = parent.GetComponent<RectTransform>().sizeDelta.x;
+            CreateLobbyCharactersSection(width, verticalContent.transform);
+
+            return lobbyContent;
+        }
+
+        private void CreateLobbyPlayersSection(Transform parent)
+        {
+            var playersSectionObject = CreateDefaultGameObject(parent);
+            playersSectionObject.AddComponent<Image>().color = Color.green;
+            playersSectionObject.name = LobbyInfoController.PlayersSectionObjectName;
+            var playersSectionVertical = playersSectionObject.AddComponent<VerticalLayoutGroup>();
+
+            var playersTitleObject = CreateDefaultGameObject(playersSectionObject.transform);
             playersTitleObject.name = LobbyInfoController.PlayersSectionObjectName;
             var playersTitle = playersTitleObject.AddComponent<TextMeshProUGUI>();
+            var playersTitleLayout = playersTitleObject.AddComponent<LayoutElement>();
+            playersTitleLayout.preferredHeight = LobbySectionTitleHeight;
             playersTitle.material = _defaultTextMesh.Material;
             playersTitle.color = _defaultTextMesh.Color;
             playersTitle.horizontalAlignment = HorizontalAlignmentOptions.Center;
-            playersTitle.SetText(StringConsts.LobbyInfoWindow.PlayersSectionTitle);
+            playersTitle.SetText(UIUtility.GetSaberBookFormat(StringConsts.LobbyInfoWindow.PlayersSectionTitle));
 
-            var playersInfoContainer = CreateDefaultGameObject(verticalContent.transform);
-            playersInfoContainer.AddComponent<VerticalLayoutGroup>();
-            playersInfoContainer.name = LobbyInfoController.PlayersInfoContainerObjectName;
+            var playersSectionContentObject = CreateDefaultGameObject(playersSectionObject.transform);
+            playersSectionContentObject.name = LobbyInfoController.PlayersSectionContentObjectName;
+            var playersSectionContentVertical = playersSectionContentObject.AddComponent<VerticalLayoutGroup>();
+        }
 
-            var characterControlTitleObject = CreateDefaultGameObject(verticalContent.transform);
-            var characterControlTitle = characterControlTitleObject.AddComponent<TextMeshProUGUI>();
+        private void CreateLobbyCharactersSection(float width, Transform parent)
+        {
+            var charactersSectionObject = CreateDefaultGameObject(parent);
+            charactersSectionObject.AddComponent<Image>().color = Color.red;
+            charactersSectionObject.name = LobbyInfoController.CharactersSectionObjectName;
+            var charactersSectionVertical = charactersSectionObject.AddComponent<VerticalLayoutGroup>();
+            var charactersSectionSizeFitter = charactersSectionObject.AddComponent<ContentSizeFitter>();
+            charactersSectionSizeFitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+
+            var charactersSectionTitleObject = CreateDefaultGameObject(charactersSectionObject.transform);
+            var charactersSectionTitleLayout = charactersSectionTitleObject.AddComponent<LayoutElement>();
+            charactersSectionTitleLayout.preferredHeight = LobbySectionTitleHeight;
+            charactersSectionTitleObject.name = LobbyInfoController.CharactersSectionTitleObjectName;
+            var characterControlTitle = charactersSectionTitleObject.AddComponent<TextMeshProUGUI>();
             characterControlTitle.material = _defaultTextMesh.Material;
             characterControlTitle.color = _defaultTextMesh.Color;
             characterControlTitle.horizontalAlignment = HorizontalAlignmentOptions.Center;
-            characterControlTitle.SetText(StringConsts.LobbyInfoWindow.CharactersSectionTitle);
-
-            var characterInfoLayout = CreateDefaultGameObject(verticalContent.transform);
-            characterInfoLayout.name = LobbyInfoController.CharactersInfoContainerObjectName;
-            characterInfoLayout.AddComponent<HorizontalLayoutGroup>();
-            var preferedX = parent.gameObject.GetComponent<RectTransform>().sizeDelta.x / UIFactory.GetMaxCharactersCount();
+            characterControlTitle.SetText(UIUtility.GetSaberBookFormat(StringConsts.LobbyInfoWindow.CharactersSectionTitle));
+            var charactersSectionContentObject = CreateDefaultGameObject(charactersSectionObject.transform);
+            charactersSectionContentObject.name = LobbyInfoController.CharactersSectionContentObjectName;
+            var charactersSectionContentHorizontal = charactersSectionContentObject.AddComponent<HorizontalLayoutGroup>();
+            var preferedWidth = width / UIFactory.GetMaxCharactersCount();
             for (int characterIndex = 0; characterIndex < UIFactory.GetMaxCharactersCount(); characterIndex++)
             {
-                var specificCharInfo = CreateDefaultGameObject(characterInfoLayout.transform);
-                specificCharInfo.name = LobbyInfoController.SpecificCharacterContainerObjectName;
-                specificCharInfo.AddComponent<VerticalLayoutGroup>();
+                var characterObject = CreateDefaultGameObject(charactersSectionContentObject.transform);
+                characterObject.name = LobbyInfoController.CharacterContainerObjectName;
+                var characterVertical = characterObject.AddComponent<VerticalLayoutGroup>();
+                characterObject.AddComponent<ContentSizeFitter>().verticalFit = ContentSizeFitter.FitMode.PreferredSize;
 
-                var characterPortrait = CreateDefaultGameObject(specificCharInfo.transform);
+                var characterPortrait = CreateDefaultGameObject(characterObject.transform);
                 characterPortrait.name = LobbyInfoController.CharacterPortraitObjectName;
                 characterPortrait.AddComponent<Image>();
-                var element = characterPortrait.AddComponent<LayoutElement>();
-                element.preferredWidth = preferedX;
-                element.preferredHeight = preferedX;
+                var portraitLayoutElement = characterPortrait.AddComponent<LayoutElement>();
+                portraitLayoutElement.preferredWidth = preferedWidth;
+                portraitLayoutElement.preferredHeight = preferedWidth * 1.2f;
 
-                var dropdownContainerObject = Main.Multiplayer.Factory.CreateDropdown(preferedX, specificCharInfo.transform);
+                var dropdownContainerObject = Main.Multiplayer.Factory.CreateDropdown(preferedWidth, characterObject.transform);
                 var characterIndexComponent = dropdownContainerObject.AddComponent<CharacterIndexMonoBehavior>();
                 characterIndexComponent.CharacterIndex = characterIndex;
                 dropdownContainerObject.name = LobbyInfoController.CharacterOwnerObjectName;
-                var dropdownObject = dropdownContainerObject.transform.Find(UIFactory.DropdownGameObjectName);
-                var dropdown = dropdownObject.GetComponent<TMP_Dropdown>();
             }
-
-            return lobbyContent;
         }
 
         public void StoreDefaultTextMesh(TextMeshProUGUI defaultTextMesh)

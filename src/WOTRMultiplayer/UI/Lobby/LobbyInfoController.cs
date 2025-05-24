@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using Kingmaker.UI;
+﻿using System.Collections.Generic;
 using Kingmaker.UI.MVVM._VM.SaveLoad;
 using TMPro;
 using UnityEngine;
@@ -15,18 +12,33 @@ namespace WOTRMultiplayer.UI.Lobby
     {
         public const string LobbyScreenRootObjectName = "LobbyScreen";
         public const string LobbyContentObjectName = "LobbyContent";
-        public const string PlayersSectionObjectName = "PlayersSectionTitle";
-        public const string PlayersInfoContainerObjectName = "PlayersInfoContainer";
+
+        public const string PlayersSectionObjectName = "PlayersSection";
+        public const string PlayersSectionTitleObjectName = "PlayersSectionTitle";
+        public const string PlayersSectionContentObjectName = "PlayersSectionContent";
+
         public const string PlayerContainerObjectName = "PlayerContainer";
         public const string PlayerNameObjectName = "PlayerName";
-        public const string CharactersInfoContainerObjectName = "CharactersInfoContainer";
-        public const string SpecificCharacterContainerObjectName = "SpecificCharacterContainer";
+        public const string PlayerStatusObjectName = "PlayerStatus";
+
+        public const string CharactersSectionObjectName = "CharactersSection";
+        public const string CharactersSectionTitleObjectName = "CharactersSectionTitle";
+        public const string CharactersSectionContentObjectName = "CharactersSectionContent";
+
+        public const string CharacterContainerObjectName = "CharacterContainer";
         public const string CharacterPortraitObjectName = "CharacterPortrait";
         public const string CharacterOwnerObjectName = "CharacterOwner";
 
         private readonly GameObject _content;
-        private GameObject PlayersInfoContainer => _content.transform.Find(LobbyContentObjectName).Find(PlayersInfoContainerObjectName).gameObject;
-        private GameObject CharactersInfoContainer => _content.transform.Find(LobbyContentObjectName).Find(CharactersInfoContainerObjectName).gameObject;
+        private GameObject PlayersSectionContent => _content.transform
+            .Find(LobbyContentObjectName)
+            .Find(PlayersSectionObjectName)
+            .Find(PlayersSectionContentObjectName).gameObject;
+
+        private GameObject CharactersInfoContainer => _content.transform
+            .Find(LobbyContentObjectName)
+            .Find(CharactersSectionObjectName)
+            .Find(CharactersSectionContentObjectName).gameObject;
         public LobbyInfoController(GameObject content)
         {
             _content = content;
@@ -35,37 +47,38 @@ namespace WOTRMultiplayer.UI.Lobby
         public void SaveSlotSelected(SaveSlotVM value)
         {
             Logging.Logger.Info($"Selected SaveSlo={value.SaveName.Value}");
-            var players = new List<string>()
-            {
-                Guid.NewGuid().ToString().Split('-').First(),
-                Guid.NewGuid().ToString().Split('-').First(),
-                Guid.NewGuid().ToString().Split('-').First(),
-                Guid.NewGuid().ToString().Split('-').First(),
-            };
-            UpdatePlayers(players);
-            UpdateCharacters(value, players);
+            //var players = new List<string>() { "1", "2", "3", "4" };
+            //UpdatePlayers(players);
+            UpdateCharacters(value);
         }
 
         public void UpdatePlayers(List<string> players)
         {
-            PlayersInfoContainer.CleanupAllChildren();
+            PlayersSectionContent.CleanupAllChildren();
             var defaultMesh = Main.Multiplayer.Factory.GetDefaultMesh();
             foreach (var playerName in players)
             {
-                var playerInfoObject = Main.Multiplayer.Factory.CreateDefaultGameObject(PlayersInfoContainer.transform);
-                playerInfoObject.name = LobbyInfoController.PlayerContainerObjectName;
-                playerInfoObject.AddComponent<HorizontalLayoutGroupWorkaround>();
+                var playerContainerObject = Main.Multiplayer.Factory.CreateDefaultGameObject(PlayersSectionContent.transform);
+                playerContainerObject.name = LobbyInfoController.PlayerContainerObjectName;
+                playerContainerObject.AddComponent<HorizontalLayoutGroup>();
 
-                var player = Main.Multiplayer.Factory.CreateDefaultGameObject(playerInfoObject.transform);
+                var player = Main.Multiplayer.Factory.CreateDefaultGameObject(playerContainerObject.transform);
                 player.name = LobbyInfoController.PlayerNameObjectName;
                 var playerTitle = player.AddComponent<TextMeshProUGUI>();
                 playerTitle.material = defaultMesh.Material;
                 playerTitle.color = defaultMesh.Color;
                 playerTitle.SetText(playerName);
+
+                var playerStatusObject = Main.Multiplayer.Factory.CreateDefaultGameObject(playerContainerObject.transform);
+                playerStatusObject.name = LobbyInfoController.PlayerStatusObjectName;
+                var playerStatus = playerStatusObject.AddComponent<TextMeshProUGUI>();
+                playerStatus.material = defaultMesh.Material;
+                playerStatus.color = Color.red;
+                playerStatus.SetText("X");
             }
         }
 
-        private void UpdateCharacters(SaveSlotVM saveSlotVM, List<string> players)
+        private void UpdateCharacters(SaveSlotVM saveSlotVM)
         {
             for (int characterIndex = 0; characterIndex < UIFactory.GetMaxCharactersCount(); characterIndex++)
             {
@@ -76,13 +89,13 @@ namespace WOTRMultiplayer.UI.Lobby
                 var img = portrait.GetComponent<Image>();
                 img.sprite = sprite;
                 img.color = sprite == null ? Color.clear : Color.white;
-                // TBD test stuff
-                var dropdownObject = dropdown.transform.Find(UIFactory.DropdownGameObjectName);
-                var tmpDropdown = dropdownObject.GetComponent<TMP_Dropdown>();
-                tmpDropdown.onValueChanged.RemoveAllListeners();
-                tmpDropdown.ClearOptions();
-                tmpDropdown.AddOptions(players);
-                tmpDropdown.onValueChanged.AddListener(index => OnCharacterOwnerChanged(tmpDropdown));
+                //// TBD test stuff
+                //var dropdownObject = dropdown.transform.Find(UIFactory.DropdownGameObjectName);
+                //var tmpDropdown = dropdownObject.GetComponent<TMP_Dropdown>();
+                //tmpDropdown.onValueChanged.RemoveAllListeners();
+                //tmpDropdown.ClearOptions();
+                //tmpDropdown.AddOptions(players);
+                //tmpDropdown.onValueChanged.AddListener(index => OnCharacterOwnerChanged(tmpDropdown));
             }
         }
 
