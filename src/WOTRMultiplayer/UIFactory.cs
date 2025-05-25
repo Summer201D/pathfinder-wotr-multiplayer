@@ -23,7 +23,7 @@ namespace WOTRMultiplayer
         private SaveLoadPCView _saveLoadPCView;
         private GameObject _defaultGameObject;
         private GameObject _topDecoration;
-        private GameObject _bottomDecoration;
+        private GameObject _borderDecoration;
         private DefaultMesh _defaultTextMesh;
         private readonly object _actionLock = new();
 
@@ -68,40 +68,79 @@ namespace WOTRMultiplayer
 
             if (_saveLoadPCView == null)
             {
-                Logging.Logger.Info($"Storing {nameof(SaveLoadPCView)} prefab");
-                _saveLoadPCView = UnityEngine.Object.Instantiate(view);
-                UnityEngine.Object.DontDestroyOnLoad(_saveLoadPCView);
+                lock (_actionLock)
+                {
+                    if (_saveLoadPCView == null)
+                    {
+                        Logging.Logger.Info($"Storing {nameof(SaveLoadPCView)} prefab");
+                        _saveLoadPCView = UnityEngine.Object.Instantiate(view);
+                        UnityEngine.Object.DontDestroyOnLoad(_saveLoadPCView);
+                    }
+                }
             }
         }
 
         public void StoreDefaultGameObject(GameObject gameObject)
         {
+            if (gameObject == null)
+            {
+                return;
+            }
+
             if (_defaultGameObject == null)
             {
-                Logging.Logger.Info($"Storing default prefab");
-                _defaultGameObject = UnityEngine.Object.Instantiate(gameObject);
-                UnityEngine.Object.DestroyImmediate(_defaultGameObject.GetComponent<UnityEngine.UI.Image>());
-                UnityEngine.Object.DontDestroyOnLoad(_defaultGameObject);
+                lock (_actionLock)
+                {
+                    if (_defaultGameObject == null)
+                    {
+                        Logging.Logger.Info($"Storing default prefab");
+                        _defaultGameObject = UnityEngine.Object.Instantiate(gameObject);
+                        UnityEngine.Object.DestroyImmediate(_defaultGameObject.GetComponent<UnityEngine.UI.Image>());
+                        UnityEngine.Object.DontDestroyOnLoad(_defaultGameObject);
+                    }
+                }
             }
         }
 
         public void StoreTopDecoration(GameObject gameObject)
         {
+            if (gameObject == null)
+            {
+                return;
+            }
+
             if (_topDecoration == null)
             {
-                Logging.Logger.Info($"Storing top decoration prefab");
-                _topDecoration = UnityEngine.Object.Instantiate(gameObject);
-                UnityEngine.Object.DontDestroyOnLoad(_topDecoration);
+                lock (_actionLock)
+                {
+                    if (_topDecoration == null)
+                    {
+                        Logging.Logger.Info($"Storing top decoration prefab");
+                        _topDecoration = UnityEngine.Object.Instantiate(gameObject);
+                        UnityEngine.Object.DontDestroyOnLoad(_topDecoration);
+                    }
+                }
             }
         }
 
-        public void StoreBottomDecoration(GameObject gameObject)
+        public void StoreBorderDecoration(GameObject gameObject)
         {
-            if (_bottomDecoration == null)
+            if (gameObject == null)
             {
-                Logging.Logger.Info($"Storing bottom decoration prefab");
-                _bottomDecoration = UnityEngine.Object.Instantiate(gameObject);
-                UnityEngine.Object.DontDestroyOnLoad(_bottomDecoration);
+                return;
+            }
+
+            if (_borderDecoration == null)
+            {
+                lock (_actionLock)
+                {
+                    if (_borderDecoration == null)
+                    {
+                        Logging.Logger.Info($"Storing border decoration prefab");
+                        _borderDecoration = UnityEngine.Object.Instantiate(gameObject);
+                        UnityEngine.Object.DontDestroyOnLoad(_borderDecoration);
+                    }
+                }
             }
         }
 
@@ -171,14 +210,14 @@ namespace WOTRMultiplayer
             return copy;
         }
 
-        private GameObject CreateTopDecoration(Transform parent)
-        {
-            return UnityEngine.Object.Instantiate(_topDecoration, parent);
-        }
+        //private GameObject CreateTopDecoration(Transform parent)
+        //{
+        //    return UnityEngine.Object.Instantiate(_topDecoration, parent);
+        //}
 
-        private GameObject CreateBottomDecoration(Transform parent)
+        private GameObject CreateBorderDecoration(Transform parent)
         {
-            return UnityEngine.Object.Instantiate(_bottomDecoration, parent);
+            return UnityEngine.Object.Instantiate(_borderDecoration, parent);
         }
 
         public GameObject CreateLobbyWindowContent(Transform parent)
@@ -188,8 +227,8 @@ namespace WOTRMultiplayer
             lobbyContent.CleanupAllChildren();
             var background = CreateDefaultGameObject(lobbyContent.transform);
             background.name = "Background";
-            CreateTopDecoration(background.transform);
-            CreateBottomDecoration(background.transform);
+            //CreateTopDecoration(background.transform);
+            CreateBorderDecoration(background.transform);
             //playersTitle.horizontalAlignment = HorizontalAlignmentOptions.Center;
             //var backgroundImageToCopy = this.gameObject.transform.Find("BackgroundGroup").Find("PapperBackgroundImage").gameObject;
             //var backgroundImage = Instantiate(backgroundImageToCopy.gameObject, background.transform);
@@ -279,14 +318,11 @@ namespace WOTRMultiplayer
 
         public void StoreDefaultTextMesh(TextMeshProUGUI defaultTextMesh)
         {
-            if (_defaultTextMesh == null)
+            _defaultTextMesh ??= new DefaultMesh
             {
-                _defaultTextMesh = new DefaultMesh
-                {
-                    Color = defaultTextMesh.color,
-                    Material = defaultTextMesh.material,
-                };
-            }
+                Color = defaultTextMesh.color,
+                Material = defaultTextMesh.material,
+            };
         }
 
         public DefaultMesh GetDefaultMesh()
