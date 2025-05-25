@@ -2,6 +2,7 @@
 using HarmonyLib;
 using UnityModManagerNet;
 using WOTRMultiplayer.Config.UnityMod;
+using WOTRMultiplayer.UI;
 
 namespace WOTRMultiplayer
 {

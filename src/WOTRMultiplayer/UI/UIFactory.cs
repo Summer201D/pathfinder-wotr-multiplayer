@@ -9,11 +9,10 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 using WOTRMultiplayer.Extensions;
-using WOTRMultiplayer.UI;
 using WOTRMultiplayer.UI.Lobby;
 using WOTRMultiplayer.Unity;
 
-namespace WOTRMultiplayer
+namespace WOTRMultiplayer.UI
 {
     public class UIFactory
     {
@@ -95,7 +94,7 @@ namespace WOTRMultiplayer
                     {
                         Logging.Logger.Info($"Storing default prefab");
                         _defaultGameObject = UnityEngine.Object.Instantiate(gameObject);
-                        UnityEngine.Object.DestroyImmediate(_defaultGameObject.GetComponent<UnityEngine.UI.Image>());
+                        UnityEngine.Object.DestroyImmediate(_defaultGameObject.GetComponent<Image>());
                         UnityEngine.Object.DontDestroyOnLoad(_defaultGameObject);
                     }
                 }
@@ -294,8 +293,8 @@ namespace WOTRMultiplayer
             var charactersSectionContentObject = CreateDefaultGameObject(charactersSectionObject.transform);
             charactersSectionContentObject.name = LobbyInfoController.CharactersSectionContentObjectName;
             var charactersSectionContentHorizontal = charactersSectionContentObject.AddComponent<HorizontalLayoutGroup>();
-            var preferedWidth = width / UIFactory.GetMaxCharactersCount();
-            for (int characterIndex = 0; characterIndex < UIFactory.GetMaxCharactersCount(); characterIndex++)
+            var preferedWidth = width / GetMaxCharactersCount();
+            for (int characterIndex = 0; characterIndex < GetMaxCharactersCount(); characterIndex++)
             {
                 var characterObject = CreateDefaultGameObject(charactersSectionContentObject.transform);
                 characterObject.name = LobbyInfoController.CharacterContainerObjectName;
@@ -328,13 +327,6 @@ namespace WOTRMultiplayer
         public DefaultMesh GetDefaultMesh()
         {
             return _defaultTextMesh;
-        }
-
-        public class DefaultMesh
-        {
-            public Material Material { get; set; }
-
-            public Color Color { get; set; }
         }
     }
 }
