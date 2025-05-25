@@ -5,6 +5,7 @@ using Kingmaker.UI.MVVM._VM.SaveLoad;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using WOTRMultiplayer.Entities;
 using WOTRMultiplayer.Extensions;
 using WOTRMultiplayer.Unity;
 
@@ -41,6 +42,7 @@ namespace WOTRMultiplayer.UI.Lobby
             .Find(LobbyContentObjectName)
             .Find(CharactersSectionObjectName)
             .Find(CharactersSectionContentObjectName).gameObject;
+
         public LobbyInfoController(GameObject content)
         {
             _content = content;
@@ -49,47 +51,45 @@ namespace WOTRMultiplayer.UI.Lobby
         public void SaveSlotSelected(SaveSlotVM value)
         {
             Logging.Logger.Info($"Selected SaveSlo={value.SaveName.Value}");
-            var players = Enumerable.Range(0, new System.Random().Next(1, 15)).Select(c => Guid.NewGuid().ToString().Split('-').First()).ToList();
+            var rnd = new System.Random();
+            var players = Enumerable.Range(0, new System.Random().Next(1, 8))
+                .Select(c => new NetworkPlayer(Guid.NewGuid().ToString().Split('-').First(), rnd.Next(0, 2) == 0 ? NetworkPlayerReadinessStatus.NotReady : NetworkPlayerReadinessStatus.Ready))
+                .ToList();
             UpdatePlayers(players);
             UpdateCharacters(value);
         }
 
-        public void UpdatePlayers(List<string> players)
+        public void UpdatePlayers(List<NetworkPlayer> players)
         {
             PlayersSectionContent.CleanupAllChildren();
-            var defaultMesh = Main.Multiplayer.Factory.GetDefaultMesh();
-            var rnd = new System.Random();
-            foreach (var playerName in players)
+            foreach (var player in players)
             {
-                var playerContainerObject = Main.Multiplayer.Factory.CreateDefaultGameObject(PlayersSectionContent.transform);
-                playerContainerObject.name = LobbyInfoController.PlayerContainerObjectName;
-                var playerContainerHorizontal = playerContainerObject.AddComponent<HorizontalLayoutGroup>();
-                playerContainerHorizontal.childAlignment = TextAnchor.LowerRight;
+                CreatePlayerObject(player);
+            }
+        }
 
-                var player = Main.Multiplayer.Factory.CreateDefaultGameObject(playerContainerObject.transform);
-                player.name = LobbyInfoController.PlayerNameObjectName;
-                var playerNameBox = player.AddComponent<TextMeshProUGUI>();
-                playerNameBox.alignment = TextAlignmentOptions.Right;
-                playerNameBox.material = defaultMesh.Material;
-                playerNameBox.color = defaultMesh.Color;
-                playerNameBox.SetText(playerName);
+        private void CreatePlayerObject(NetworkPlayer player)
+        {
+            var defaultMesh = Main.Multiplayer.Factory.GetDefaultMesh();
+            var playerContainerObject = Main.Multiplayer.Factory.CreateDefaultGameObject(PlayersSectionContent.transform);
+            playerContainerObject.name = LobbyInfoController.PlayerContainerObjectName;
+            var playerContainerHorizontal = playerContainerObject.AddComponent<HorizontalLayoutGroup>();
+            var playerContainerSizeFitter = playerContainerObject.AddComponent<ContentSizeFitter>();
+            playerContainerSizeFitter.horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
+            playerContainerSizeFitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
 
-                var playerStatusObject = Main.Multiplayer.Factory.CreateDefaultGameObject(playerContainerObject.transform);
-                playerStatusObject.name = LobbyInfoController.PlayerStatusObjectName;
-                var playerStatus = playerStatusObject.AddComponent<TextMeshProUGUI>();
-                playerStatus.alignment = TextAlignmentOptions.Left;
-                playerStatus.material = defaultMesh.Material;
-                var isOK = rnd.Next(0, 2) == 0;
-                if (isOK)
-                {
-                    playerStatus.color = Color.green;
-                    playerStatus.SetText("+");
-                }
-                else
-                {
-                    playerStatus.color = Color.red;
-                    playerStatus.SetText("-");
-                }
+            var playerObject = Main.Multiplayer.Factory.CreateDefaultGameObject(playerContainerObject.transform);
+            var playerElement = playerObject.AddComponent<LayoutElement>();
+            playerElement.preferredHeight = 50;
+            playerObject.name = LobbyInfoController.PlayerNameObjectName;
+            var playerNameBox = playerObject.AddComponent<TextMeshProUGUI>();
+            playerNameBox.alignment = TextAlignmentOptions.Center;
+            playerNameBox.material = defaultMesh.Material;
+            playerNameBox.color = defaultMesh.Color;
+            playerNameBox.SetText(player.Name);
+            if (player.Status == NetworkPlayerReadinessStatus.NotReady)
+            {
+                playerNameBox.fontStyle = FontStyles.Strikethrough;
             }
         }
 

@@ -80,6 +80,7 @@ namespace WOTRMultiplayer.UI.Menu.Items
             var saveLoadView = this.MenuContent.transform.GetChild(0);
             var screen = saveLoadView.gameObject.transform.Find("SaveLoadScreen");
             var container = screen.Find("SaveLoadDetails");
+            var parentContainerRect = container.GetComponent<RectTransform>();
 
             var lobbyWindowObject = UnityEngine.Object.Instantiate(baseLayout, container.transform);
             lobbyWindowObject.name = "MultiplayerLobby";
@@ -87,7 +88,6 @@ namespace WOTRMultiplayer.UI.Menu.Items
             var title = container.Find("Title");
             var lobbyWindowObjectPosition = new Vector3(title.position.x, lobbyWindowObject.transform.position.y * 1.1f, lobbyWindowObject.transform.position.z);
             lobbyWindowObject.transform.SetPositionAndRotation(lobbyWindowObjectPosition, lobbyWindowObject.transform.rotation);
-            var parentContainerRect = container.GetComponent<RectTransform>();
             var lobbyWindowObjectRect = lobbyWindowObject.GetComponent<RectTransform>();
             lobbyWindowObjectRect.sizeDelta = new Vector2(parentContainerRect.sizeDelta.x * 0.9f, parentContainerRect.sizeDelta.y * 0.72f);
 
