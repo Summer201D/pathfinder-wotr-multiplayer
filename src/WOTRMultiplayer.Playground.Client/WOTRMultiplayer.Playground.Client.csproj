@@ -7,7 +7,6 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-	  <ProjectReference Include="..\WOTRMultiplayer.Networking\WOTRMultiplayer.Networking.csproj" />
 	  <ProjectReference Include="..\WOTRMultiplayer\WOTRMultiplayer.csproj" />
 	</ItemGroup>
 
