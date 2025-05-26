@@ -13,7 +13,7 @@ namespace WOTRMultiplayer
             _networkServer = networkServer;
         }
 
-        public void Create(MultiplayerSettings settings)
+        public void Start(MultiplayerSettings settings)
         {
             _networkServer.Start(settings.NetworkInterfaceBinding, settings.Port);
         }

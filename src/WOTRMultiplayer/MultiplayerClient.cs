@@ -23,7 +23,7 @@ namespace WOTRMultiplayer
             _networkServerClient
                 .Register<NetworkClientNameRequest>(OnNameRequested);
 
-            _networkServerClient.Connect(endpoint.Address.ToString(), endpoint.Port);
+            _networkServerClient.ConnectAsync(endpoint.Address.ToString(), endpoint.Port).Wait();
         }
 
         private void OnNameRequested(NetworkClientNameRequest request)

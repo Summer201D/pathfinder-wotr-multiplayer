@@ -11,10 +11,11 @@ namespace WOTRMultiplayer.Networking
         private AsyncTcpClient _client;
         private readonly ConcurrentDictionary<Type, Action<object>> _handlers = new();
 
-        public void Connect(string host, int port)
+        public async Task ConnectAsync(string host, int port)
         {
             _client = SocketFactory.CreateClient<AsyncTcpClient>(new Messages.ProtobufClientPacket(), host, port);
             _client.PacketReceive = OnPackedReceived;
+            var status = await _client.Connect();
         }
 
         public NetworkServerClient Register<T>(Action<T> handler)

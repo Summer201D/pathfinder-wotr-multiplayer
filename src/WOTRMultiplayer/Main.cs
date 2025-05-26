@@ -18,7 +18,9 @@ namespace WOTRMultiplayer
             Logging.Logger.Initialize(_settings);
             Logging.Logger.Info("Loading mod");
 
-            Multiplayer = new Multiplayer(new UIFactory());
+            var host = new MultiplayerHost(new Networking.NetworkServer());
+            var client = new MultiplayerClient(new Networking.NetworkServerClient());
+            Multiplayer = new Multiplayer(new UIFactory(), host, client);
 
             entry.OnGUI += OnGui;
             entry.OnSaveGUI += OnSaveGui;

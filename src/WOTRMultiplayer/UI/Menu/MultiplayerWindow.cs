@@ -13,10 +13,7 @@ namespace WOTRMultiplayer.UI.Menu
     public class MultiplayerWindow : FullScreenTabsWindow
     {
         private const string BaseLayoutName = "MultiplayerScreen";
-
         private const string SeparatorGameObjectName = "Separator";
-
-        private const string MultiplayerMenuItemsObjectName = "MultiplayerMenuItems";
         private const string MenuOverridesObjectName = "MenuEntity_NoOverrides";
 
         public override FullScreenUIType ActiveFullScreenUIType => (FullScreenUIType)555555;

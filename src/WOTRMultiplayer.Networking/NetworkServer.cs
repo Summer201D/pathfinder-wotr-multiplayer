@@ -12,14 +12,26 @@ namespace WOTRMultiplayer.Networking
 
         public bool IsActive => _server.AppServer?.Status == ServerStatus.Start;
 
+        public NetworkServer()
+        {
+
+        }
+
         public void Start(string networkInterfaceBinding, int port)
         {
             _server = new ServerBuilder<NetworkServer, NetworkClientToken, ProtobufPacket>();
+            _server.ServerOptions.DefaultListen.StartRegionPort = 1024;
+            _server.ServerOptions.DefaultListen.EndRegionPort = ushort.MaxValue;
+            _server.OnOpened(OnOpened);
             _server.OnLog(OnServerLog)
                 .OnConnected(OnConnected)
                 .OnDisconnect(OnDisconnected);
 
             _server.Run();
+        }
+
+        private void OnOpened(IServer server)
+        {
         }
 
         public void Stop()
