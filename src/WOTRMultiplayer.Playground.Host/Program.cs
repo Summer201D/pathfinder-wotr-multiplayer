@@ -1,19 +1,19 @@
 ﻿using System;
 using WOTRMultiplayer.Networking;
 
-namespace WOTRMultiplayer.ClientPlayground
+namespace WOTRMultiplayer.Playground.Host
 {
     internal class Program
     {
         static void Main(string[] args)
         {
             Console.WriteLine("Hello World!");
-            Console.WriteLine("Press enter to join");
+            Console.WriteLine("Press enter to host");
             Console.ReadLine();
 
-            var networkClient = new NetworkServerClient();
-            var client = new MultiplayerClient(networkClient);
-            client.Join("127.0.0.1:1024", null);
+            var networkServer = new NetworkServer();
+            var host = new MultiplayerHost(networkServer);
+            host.Start(new MultiplayerSettings());
             var input = string.Empty;
 
             Console.Write(@$"
