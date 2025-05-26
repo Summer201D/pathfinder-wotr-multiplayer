@@ -21,9 +21,10 @@ namespace WOTRMultiplayer.Networking
             _server = new ServerBuilder<NetworkServer, NetworkClientToken, ProtobufPacket>();
         }
 
-        public void Register<T>(Action<T> handler)
+        public NetworkServer Register<T>(Action<T> handler)
         {
             _server.OnMessageReceive<T>(args => handler(args.Message));
+            return this;
         }
 
         public void Start(string networkInterfaceBinding, int port)

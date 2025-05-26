@@ -11,6 +11,8 @@ namespace WOTRMultiplayer
         public MultiplayerClient(NetworkServerClient networkServerClient)
         {
             _networkServerClient = networkServerClient;
+
+            RegisterMessageHandlers();
         }
 
         public void Join(string address, MultiplayerSettings settings)
@@ -20,10 +22,14 @@ namespace WOTRMultiplayer
                 return;
             }
 
-            _networkServerClient
-                .Register<NetworkClientNameRequest>(OnNameRequested);
 
             _networkServerClient.ConnectAsync(endpoint.Address.ToString(), endpoint.Port).Wait();
+        }
+
+        private void RegisterMessageHandlers()
+        {
+            _networkServerClient
+                .Register<NetworkClientNameRequest>(OnNameRequested);
         }
 
         private void OnNameRequested(NetworkClientNameRequest request)

@@ -12,11 +12,12 @@ namespace WOTRMultiplayer
         public MultiplayerHost(NetworkServer networkServer)
         {
             _networkServer = networkServer;
+
+            RegisterMessageHandlers();
         }
 
         public void Start(MultiplayerSettings settings)
         {
-            RegisterMessageHandlers();
 
             _networkServer.Start(settings.NetworkInterfaceBinding, settings.Port);
         }
