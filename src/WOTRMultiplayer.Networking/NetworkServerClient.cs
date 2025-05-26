@@ -1,14 +1,49 @@
-﻿using BeetleX.Clients;
+﻿using System;
+using System.Collections.Concurrent;
+using System.Threading.Tasks;
+using BeetleX;
+using BeetleX.Clients;
 
 namespace WOTRMultiplayer.Networking
 {
     public class NetworkServerClient
     {
-        private AwaiterClient _client;
+        private AsyncTcpClient _client;
+        private readonly ConcurrentDictionary<Type, Action<object>> _handlers = new();
 
         public void Connect(string host, int port)
         {
-            _client = new AwaiterClient(host, port, new Messages.ProtobufClientPacket());
+            _client = SocketFactory.CreateClient<AsyncTcpClient>(new Messages.ProtobufClientPacket(), host, port);
+            _client.PacketReceive = OnPackedReceived;
+        }
+
+        public NetworkServerClient Register<T>(Action<T> handler)
+            where T : class
+        {
+            _handlers.TryAdd(typeof(T), message => handler((T)message));
+
+            return this;
+        }
+
+        public Task Send(object message)
+        {
+            return _client.Send(message);
+        }
+
+        private void OnPackedReceived(IClient client, object message)
+        {
+            if (!_handlers.TryGetValue(message.GetType(), out var handler))
+            {
+                return;
+            }
+
+            try
+            {
+                handler(message);
+            }
+            catch (Exception ex)
+            {
+            }
         }
     }
 }

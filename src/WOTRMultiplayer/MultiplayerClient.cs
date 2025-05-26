@@ -1,5 +1,6 @@
 ﻿using System.Net;
 using WOTRMultiplayer.Networking;
+using WOTRMultiplayer.Networking.Messages.System;
 
 namespace WOTRMultiplayer
 {
@@ -16,11 +17,19 @@ namespace WOTRMultiplayer
         {
             if (!Networking.Extensions.IPEndPoint.TryParse(address, out IPEndPoint endpoint))
             {
-
                 return;
             }
 
+            _networkServerClient
+                .Register<NetworkClientNameRequest>(OnNameRequested);
+
             _networkServerClient.Connect(endpoint.Address.ToString(), endpoint.Port);
+        }
+
+        private void OnNameRequested(NetworkClientNameRequest request)
+        {
+            var nameResponse = new NetworkClientNameResponse() { Name = "AAA" };
+            _networkServerClient.Send(nameResponse);
         }
     }
 }
