@@ -20,7 +20,7 @@ namespace WOTRMultiplayer.Networking
         public Action<long> OnClientConnected { get; set; }
         public Action<long> OnClientDisconnected { get; set; }
         public Action<EndPoint> OnServerStarted { get; set; }
-        public bool IsActive => _server.AppServer?.Status == ServerStatus.Start;
+        public bool IsActive => Server.AppServer?.Status == ServerStatus.Start;
 
         public NetworkServer(ILogger<NetworkServer> logger)
         {
@@ -52,6 +52,7 @@ namespace WOTRMultiplayer.Networking
             var session = Server.AppServer.GetSession(clientId);
             if (session == null)
             {
+                _logger.LogWarning("Client doesn't exist. ClientId={clientId}", clientId);
                 return;
             }
 
@@ -80,7 +81,14 @@ namespace WOTRMultiplayer.Networking
 
             _logger.LogInformation("Server started. Endpoint={endpoint}", endpoint);
 
-            OnServerStarted?.Invoke(endpoint);
+            try
+            {
+                OnServerStarted?.Invoke(endpoint);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Unable to handle OnServerStarted");
+            }
         }
 
         private void OnServerLog(IServer server, ServerLogEventArgs args)
@@ -90,18 +98,33 @@ namespace WOTRMultiplayer.Networking
         private void OnDisconnected(ISession session, NetworkClientToken clientToken)
         {
             _logger.LogInformation("Client disconnected. ClientId={clientId}", session.ID);
-            OnClientDisconnected?.Invoke(session.ID);
+            try
+            {
+                OnClientDisconnected?.Invoke(session.ID);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Unable to handle OnDisconnected");
+            }
         }
 
         private void OnConnected(ISession session, NetworkClientToken clientToken)
         {
             _logger.LogInformation("Client connected. ClientId={clientId}", session.ID);
-            OnClientConnected?.Invoke(session.ID);
+            try
+            {
+                OnClientConnected?.Invoke(session.ID);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Unable to handle OnClientConnected");
+            }
         }
 
         public void Dispose()
         {
-            _server.Dispose();
+            _logger.LogInformation("Dispose");
+            _server?.Dispose();
         }
     }
 }

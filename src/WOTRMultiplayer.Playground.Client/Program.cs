@@ -15,7 +15,7 @@ namespace WOTRMultiplayer.Playground.Client
 
 
             var client = serviceProvider.GetService<IMultiplayerClient>();
-            client.Join("127.0.0.1:1024", null);
+            client.Join("127.0.0.1:1024", new MP.MultiplayerSettings { PlayerName = "hello" });
             var input = string.Empty;
 
             Console.Write(@$"

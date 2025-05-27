@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using DG.Tweening;
 using Kingmaker.UI.FullScreenUITypes;
@@ -22,12 +23,16 @@ namespace WOTRMultiplayer.UI.Menu
 
         public Action OnDispose { get; set; }
 
+        public ConcurrentQueue<Action> MainThreadQueue { get; } = new ConcurrentQueue<Action>();
+
         private List<DOTweenAnimation> _animations = [];
 
         private bool _isInitialized = false;
 
         private IHostMenuItemController _hostMenuController;
         private IJoinMenuItemController _joinMenuController;
+
+        private readonly object _actionLock = new object();
 
         public MultiplayerWindow()
         {
@@ -40,6 +45,14 @@ namespace WOTRMultiplayer.UI.Menu
         {
             _hostMenuController = hostMenuItemController;
             _joinMenuController = joinMenuItemController;
+        }
+
+        void Update()
+        {
+            while (MainThreadQueue.TryDequeue(out var action))
+            {
+                action();
+            }
         }
 
         public override void Initialize()

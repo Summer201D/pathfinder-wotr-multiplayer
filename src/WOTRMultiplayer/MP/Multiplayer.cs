@@ -5,6 +5,7 @@ using UnityEngine;
 using WOTRMultiplayer.Abstractions.MP;
 using WOTRMultiplayer.Abstractions.UI;
 using WOTRMultiplayer.Abstractions.UI.Controllers.Menu;
+using WOTRMultiplayer.DI;
 using WOTRMultiplayer.UI;
 
 namespace WOTRMultiplayer.MP
@@ -19,14 +20,18 @@ namespace WOTRMultiplayer.MP
 
         public IUIFactory Factory { get; private set; }
 
+        private readonly IMainThreadAccessor _mainThreadAccessor;
+
         public Multiplayer(
             IUIFactory uiFactory,
+            IMainThreadAccessor mainThreadAccessor,
             IHostMenuItemController hostMenuItemController,
             IJoinMenuItemController joinMenuItemController,
             IMultiplayerHost multiplayerHost,
             IMultiplayerClient multiplayerClient)
         {
             Factory = uiFactory;
+            _mainThreadAccessor = mainThreadAccessor;
             _multiplayerHost = multiplayerHost;
             _multiplayerClient = multiplayerClient;
             _hostMenuItemController = hostMenuItemController;
@@ -40,6 +45,7 @@ namespace WOTRMultiplayer.MP
             var multiplayerMenuView = multiplayerMenu.GetComponent<ContextMenuEntityPCView>();
             var element = Factory.CreateCopyOfCreditsScreen();
             _multiplayerWindow = element.AddComponent<UI.Menu.MultiplayerWindow>();
+            _mainThreadAccessor.SetQueue(_multiplayerWindow.MainThreadQueue);
             _multiplayerWindow.AssignMenuItemControllers(_hostMenuItemController, _joinMenuItemController);
             _multiplayerWindow.Initialize();
 

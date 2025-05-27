@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Net;
 using Kingmaker.UI.MVVM._VM.SaveLoad;
 using Microsoft.Extensions.Logging;
 using TMPro;
@@ -6,6 +7,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using WOTRMultiplayer.Abstractions.UI;
 using WOTRMultiplayer.Abstractions.UI.Controllers;
+using WOTRMultiplayer.DI;
 using WOTRMultiplayer.Entities;
 using WOTRMultiplayer.Extensions;
 using WOTRMultiplayer.Unity;
@@ -16,6 +18,10 @@ namespace WOTRMultiplayer.UI.Lobby
     {
         public const string LobbyScreenRootObjectName = "LobbyScreen";
         public const string LobbyContentObjectName = "LobbyContent";
+
+        public const string ServerInfoSectionObjectName = "ServerInfoSection";
+        public const string ServerInfoSectionTitleObjectName = "ServerInfoSectionTitle";
+        public const string ServerInfoSectionContentObjectName = "ServerInfoSectionContent";
 
         public const string PlayersSectionObjectName = "PlayersSection";
         public const string PlayersSectionTitleObjectName = "PlayersSectionTitle";
@@ -34,7 +40,13 @@ namespace WOTRMultiplayer.UI.Lobby
         public const string CharacterOwnerObjectName = "CharacterOwner";
         private readonly ILogger<LobbyWindowController> _logger;
         private readonly IUIFactory _uIFactory;
+        private readonly IMainThreadAccessor _mainThreadAccessor;
         private GameObject _content;
+
+        private GameObject ServerInfoSectionContent => _content.transform
+            .Find(LobbyContentObjectName)
+            .Find(ServerInfoSectionObjectName)
+            .Find(ServerInfoSectionContentObjectName).gameObject;
 
         private GameObject PlayersSectionContent => _content.transform
             .Find(LobbyContentObjectName)
@@ -48,10 +60,12 @@ namespace WOTRMultiplayer.UI.Lobby
 
         public LobbyWindowController(
             ILogger<LobbyWindowController> logger,
+            IMainThreadAccessor mainThreadAccessor,
             IUIFactory uIFactory)
         {
             _logger = logger;
             _uIFactory = uIFactory;
+            _mainThreadAccessor = mainThreadAccessor;
         }
 
         public void InitializeContent(Transform parent)
@@ -75,11 +89,38 @@ namespace WOTRMultiplayer.UI.Lobby
 
         public void UpdatePlayers(List<NetworkPlayer> players)
         {
-            PlayersSectionContent.CleanupAllChildren();
-            foreach (var player in players)
+            _mainThreadAccessor.MainThreadQueue.Enqueue(() =>
             {
-                CreatePlayerObject(player);
-            }
+                _logger.LogInformation("Updating player list. PlayersCount={playersCount}", players.Count);
+                PlayersSectionContent.CleanupAllChildren();
+                foreach (var player in players)
+                {
+                    CreatePlayerObject(player);
+                }
+            });
+        }
+
+        public void UpdateServerInfo(EndPoint endPoint)
+        {
+            ServerInfoSectionContent.CleanupAllChildren();
+
+            var defaultMesh = Main.Multiplayer.Factory.GetDefaultMesh();
+            var serverInfoContainerObject = Main.Multiplayer.Factory.CreateDefaultGameObject(ServerInfoSectionContent.transform);
+            serverInfoContainerObject.name = LobbyWindowController.PlayerContainerObjectName;
+            serverInfoContainerObject.AddComponent<HorizontalLayoutGroup>();
+            var serverInfoContainerSizeFitter = serverInfoContainerObject.AddComponent<ContentSizeFitter>();
+            serverInfoContainerSizeFitter.horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
+            serverInfoContainerSizeFitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+
+            var serverAddressObject = Main.Multiplayer.Factory.CreateDefaultGameObject(serverInfoContainerObject.transform);
+            var serverAddressElement = serverAddressObject.AddComponent<LayoutElement>();
+            serverAddressElement.preferredHeight = 40;
+            //serverAddressObject.name = LobbyWindowController.PlayerNameObjectName;
+            var serverAddressBox = serverAddressObject.AddComponent<TextMeshProUGUI>();
+            serverAddressBox.alignment = TextAlignmentOptions.Center;
+            serverAddressBox.material = defaultMesh.Material;
+            serverAddressBox.color = defaultMesh.Color;
+            serverAddressBox.SetText(endPoint.ToString());
         }
 
         private void CreatePlayerObject(NetworkPlayer player)
@@ -87,7 +128,7 @@ namespace WOTRMultiplayer.UI.Lobby
             var defaultMesh = Main.Multiplayer.Factory.GetDefaultMesh();
             var playerContainerObject = Main.Multiplayer.Factory.CreateDefaultGameObject(PlayersSectionContent.transform);
             playerContainerObject.name = LobbyWindowController.PlayerContainerObjectName;
-            var playerContainerHorizontal = playerContainerObject.AddComponent<HorizontalLayoutGroup>();
+            playerContainerObject.AddComponent<HorizontalLayoutGroup>();
             var playerContainerSizeFitter = playerContainerObject.AddComponent<ContentSizeFitter>();
             playerContainerSizeFitter.horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
             playerContainerSizeFitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
@@ -162,6 +203,15 @@ namespace WOTRMultiplayer.UI.Lobby
         private Sprite GetPortraitSprite(int slot, SaveSlotVM saveSlotVM)
         {
             return saveSlotVM.PartyPortraits.Value.Count > slot ? saveSlotVM.PartyPortraits.Value[slot].Portrait : null;
+        }
+
+        public void Reset()
+        {
+            _mainThreadAccessor.MainThreadQueue.Enqueue(() =>
+            {
+                PlayersSectionContent.CleanupAllChildren();
+                ServerInfoSectionContent.CleanupAllChildren();
+            });
         }
     }
 }

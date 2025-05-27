@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Net;
-using WOTRMultiplayer.Networking.Messages.Lobby;
 
 namespace WOTRMultiplayer.Networking.Abstractions
 {

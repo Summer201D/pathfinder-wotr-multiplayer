@@ -27,6 +27,7 @@ namespace WOTRMultiplayer.DI
                 x.AddSerilog(Log.Logger);
             });
 
+            serviceCollection.AddSingleton<IMainThreadAccessor, MainThreadAccessor>();
             serviceCollection.AddSingleton<IMultiplayer, Multiplayer>();
             serviceCollection.AddSingleton<IUIFactory, UIFactory>();
             serviceCollection.AddSingleton<ILobbyWindowController, LobbyWindowController>();

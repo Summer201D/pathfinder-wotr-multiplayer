@@ -1,6 +1,8 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using Microsoft.Extensions.Logging;
 using WOTRMultiplayer.Abstractions.MP;
 using WOTRMultiplayer.Abstractions.UI.Controllers;
 using WOTRMultiplayer.Entities;
@@ -11,6 +13,7 @@ namespace WOTRMultiplayer.MP
 {
     public class MultiplayerHost : IMultiplayerHost
     {
+        private readonly ILogger<MultiplayerHost> _logger;
         private readonly INetworkServer _networkServer;
         private readonly ILobbyWindowController _lobbyWindowController;
 
@@ -19,12 +22,14 @@ namespace WOTRMultiplayer.MP
 
         public bool IsActive => _networkServer.IsActive;
 
-        public MultiplayerHost(INetworkServer networkServer, ILobbyWindowController lobbyWindowController)
+        public MultiplayerHost(
+            ILogger<MultiplayerHost> logger,
+            INetworkServer networkServer,
+            ILobbyWindowController lobbyWindowController)
         {
+            _logger = logger;
             _networkServer = networkServer;
             _lobbyWindowController = lobbyWindowController;
-
-            RegisterHandlers();
         }
 
         public void Start(MultiplayerSettings settings)
@@ -34,11 +39,15 @@ namespace WOTRMultiplayer.MP
                 _networkServer.Dispose();
             }
 
+            RegisterHandlers();
+
             _networkServer.Start();
         }
 
-        public void Reset()
+        public void Stop()
         {
+            _logger.LogInformation("Stop");
+
             lock (_actionlock)
             {
                 _playersList.Clear();
@@ -78,31 +87,31 @@ namespace WOTRMultiplayer.MP
                 // update UI
                 var allAreReady = _playersList.All(p => p.IsReady);
             }
-
         }
 
         private void OnPlayerNameResponse(long playerId, PlayerNameResponse response)
         {
+            _logger.LogInformation("Player name received. PlayerId={playerId}, Name={name}", playerId, response?.Name);
             lock (_actionlock)
             {
                 var existingPlayer = GetPlayer(playerId);
                 if (existingPlayer == null)
                 {
-                    // warn
+                    _logger.LogWarning("Can't process player name update because player doesn't exist. PlayerId={playerId}, Name={name}", playerId, response?.Name);
                     return;
                 }
 
                 if (string.IsNullOrEmpty(response.Name))
                 {
-                    // warn
-                    // generate new or disconnect?
+                    _logger.LogWarning("Can't process player name update because player name is missing. PlayerId={playerId}, Name={name}", playerId, response?.Name);
                     return;
                 }
 
                 existingPlayer.Name = response.Name;
-                _lobbyWindowController.UpdatePlayers(_playersList);
-            // send updates to other clients
+                // send updates to other clients
             }
+
+            _lobbyWindowController.UpdatePlayers(_playersList);
         }
 
         private void OnPlayerConnected(long playerId)
@@ -112,38 +121,47 @@ namespace WOTRMultiplayer.MP
                 var existingPlayer = GetPlayer(playerId);
                 if (existingPlayer != null)
                 {
-                    // warn
+                    _logger.LogWarning("Player already exists. PlayerId={playerId}", playerId);
                     return;
                 }
 
                 var player = new NetworkPlayer(playerId);
                 _playersList.Add(player);
-
+                _logger.LogWarning("Sending player name request. PlayerId={playerId}", playerId);
                 _networkServer.Send(playerId, new PlayerNameRequest());
             }
         }
 
-        private void OnPlayerDisconnected(long clientId)
+        private void OnPlayerDisconnected(long playerId)
         {
             lock (_actionlock)
             {
-                var existingPlayer = GetPlayer(clientId);
+                var existingPlayer = GetPlayer(playerId);
                 if (existingPlayer == null)
                 {
-                    // warn
+                    _logger.LogWarning("Nothing to cleanup since player doesn't exist. PlayerId={playerId}", playerId);
                     return;
                 }
 
                 _playersList.Remove(existingPlayer);
+                if (!string.IsNullOrEmpty(existingPlayer.Name))
+                {
+                    _lobbyWindowController.UpdatePlayers(_playersList);
+                }
 
                 // send updates to other clients
-                // UPDATE UI
             }
         }
 
         private void OnServerStarted(EndPoint point)
         {
-            // update ui
+            _playersList.Add(new NetworkPlayer(0)
+            {
+                Name = Guid.NewGuid().ToString().Split('-').First()
+            });
+
+            _lobbyWindowController.UpdatePlayers(_playersList);
+            _lobbyWindowController.UpdateServerInfo(point);
         }
 
         private NetworkPlayer GetPlayer(long playerId)

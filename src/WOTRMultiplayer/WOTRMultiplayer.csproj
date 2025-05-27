@@ -18,6 +18,7 @@
 			xcopy /q /y ".\System.Numerics.Vectors.dll" "..\..\..\..\..\..\..\Games\Steam\steamapps\common\Pathfinder Second Adventure\Mods\WOTRMultiplayer\*"
 			xcopy /q /y ".\System.Runtime.CompilerServices.Unsafe.dll" "..\..\..\..\..\..\..\Games\Steam\steamapps\common\Pathfinder Second Adventure\Mods\WOTRMultiplayer\*"
 			xcopy /q /y ".\System.Threading.Tasks.Extensions.dll" "..\..\..\..\..\..\..\Games\Steam\steamapps\common\Pathfinder Second Adventure\Mods\WOTRMultiplayer\*"
+			xcopy /q /y ".\System.Collections.Immutable.dll" "..\..\..\..\..\..\..\Games\Steam\steamapps\common\Pathfinder Second Adventure\Mods\WOTRMultiplayer\*"
 
 			xcopy /q /y ".\Serilog.dll" "..\..\..\..\..\..\..\Games\Steam\steamapps\common\Pathfinder Second Adventure\Mods\WOTRMultiplayer\*"
 			xcopy /q /y ".\Serilog.Sinks.Console.dll" "..\..\..\..\..\..\..\Games\Steam\steamapps\common\Pathfinder Second Adventure\Mods\WOTRMultiplayer\*"

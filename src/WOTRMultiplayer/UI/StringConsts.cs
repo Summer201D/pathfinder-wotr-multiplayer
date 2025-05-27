@@ -18,6 +18,7 @@
 
         public class LobbyInfoWindow
         {
+            public const string ServerInfoSectionTitle = "Server";
             public const string PlayersSectionTitle = "Players";
             public const string CharactersSectionTitle = "Characters";
         }

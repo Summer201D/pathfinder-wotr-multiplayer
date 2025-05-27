@@ -6,13 +6,13 @@ using Kingmaker.UI.MVVM._PCView.SaveLoad;
 using Kingmaker.UI.MVVM._PCView.Settings.Entities;
 using Kingmaker.UI.ServiceWindow.Credits;
 using Microsoft.Extensions.Logging;
-using Owlcat.Runtime.UI.Controls.Button;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 using WOTRMultiplayer.Abstractions.UI;
 using WOTRMultiplayer.Extensions;
 using WOTRMultiplayer.UI.Lobby;
+using WOTRMultiplayer.UI.Menu.Items;
 using WOTRMultiplayer.Unity;
 
 namespace WOTRMultiplayer.UI
@@ -138,36 +138,32 @@ namespace WOTRMultiplayer.UI
         public SaveLoadPCView CreateSaveLoadPCView(Transform parent)
         {
             var saveLoadView = UnityEngine.Object.Instantiate(_saveLoadPCView, parent);
+            saveLoadView.name = HostMenuItemController.SaveLoadView;
             UnityEngine.Object.DestroyImmediate(saveLoadView.gameObject.transform.Find("BackgroundWorldCover").gameObject);
             UnityEngine.Object.DestroyImmediate(saveLoadView.gameObject.transform.Find("Background").gameObject);
-            var screen = saveLoadView.gameObject.transform.Find("SaveLoadScreen");
+            var screen = saveLoadView.gameObject.transform.Find(HostMenuItemController.SaveLoadScreen);
             var top = screen.Find("Top");
             UnityEngine.Object.DestroyImmediate(top.gameObject);
 
-            var saveLoadDetails = screen.Find("SaveLoadDetails");
+            var saveLoadDetails = screen.Find(HostMenuItemController.SaveLoadDetails);
             var picture = saveLoadDetails.Find("Picture");
             UnityEngine.Object.DestroyImmediate(picture.gameObject);
-            var info = saveLoadDetails.Find("Info");
-            info.gameObject.CleanupAllChildren(x => x.name != "Buttons");
-            var buttons = info.Find("Buttons");
+            var info = saveLoadDetails.Find(HostMenuItemController.SaveLoadDetailsInfo);
+            info.gameObject.CleanupAllChildren(x => x.name != HostMenuItemController.SaveLoadDetailsInfoButtons);
+            var buttons = info.Find(HostMenuItemController.SaveLoadDetailsInfoButtons);
 
             // TBD random buttons as placeholders
             var baseButton = buttons.Find("OwlcatButton").gameObject;
             var layout = baseButton.GetComponent<RectTransform>();
             layout.sizeDelta = new Vector2(layout.sizeDelta.x * 0.92f, layout.sizeDelta.y);
-            var buttonCopy1 = UnityEngine.Object.Instantiate(baseButton, buttons);
-            buttonCopy1.name = "Button1";
-            var buttonCopy2 = UnityEngine.Object.Instantiate(baseButton, buttons);
-            buttonCopy2.GetComponent<OwlcatButton>().Interactable = false;
-            buttonCopy2.name = "Button2";
-            var buttonCopy3 = UnityEngine.Object.Instantiate(baseButton, buttons);
-            buttonCopy3.GetComponent<OwlcatButton>().Interactable = false;
-            buttonCopy3.name = "Button3";
+            var hostButton = UnityEngine.Object.Instantiate(baseButton, buttons);
+            hostButton.name = HostMenuItemController.HostButtonLabel;
+            var readyButton = UnityEngine.Object.Instantiate(baseButton, buttons);
+            readyButton.name = HostMenuItemController.ReadyButtonLabel;
+            var startButton = UnityEngine.Object.Instantiate(baseButton, buttons);
+            startButton.name = HostMenuItemController.StartButtonLabel;
             buttons.gameObject.CleanupAllChildren(
-                x => x.name != "DlcRequiredLabel" && x.name != buttonCopy1.name && x.name != buttonCopy2.name && x.name != buttonCopy3.name);
-            buttonCopy1.GetComponentInChildren<TextMeshProUGUI>().text = "Host";
-            buttonCopy2.GetComponentInChildren<TextMeshProUGUI>().text = "Ready";
-            buttonCopy3.GetComponentInChildren<TextMeshProUGUI>().text = "Start";
+                x => x.name != "DlcRequiredLabel" && x.name != hostButton.name && x.name != readyButton.name && x.name != startButton.name);
 
             return saveLoadView;
         }
@@ -198,11 +194,6 @@ namespace WOTRMultiplayer.UI
             return copy;
         }
 
-        //private GameObject CreateTopDecoration(Transform parent)
-        //{
-        //    return UnityEngine.Object.Instantiate(_topDecoration, parent);
-        //}
-
         private GameObject CreateBorderDecoration(Transform parent)
         {
             return UnityEngine.Object.Instantiate(_borderDecoration, parent);
@@ -227,12 +218,39 @@ namespace WOTRMultiplayer.UI
             verticalContent.name = LobbyWindowController.LobbyContentObjectName;
             var rootVertical = verticalContent.AddComponent<VerticalLayoutGroup>();
             rootVertical.padding = new RectOffset(0, 0, 0, 20);
+            CreateLobbyServerInfoSection(verticalContent.transform);
+
             CreateLobbyPlayersSection(verticalContent.transform);
 
             var width = parent.GetComponent<RectTransform>().sizeDelta.x;
             CreateLobbyCharactersSection(width, verticalContent.transform);
 
             return lobbyContent;
+        }
+
+        private void CreateLobbyServerInfoSection(Transform parent)
+        {
+            var serverInfoSectionObject = CreateDefaultGameObject(parent);
+            var serverInfoSectionRect = serverInfoSectionObject.GetComponent<RectTransform>();
+            serverInfoSectionRect.pivot = new Vector2(0.5f, 1f); // upper center
+            serverInfoSectionObject.name = LobbyWindowController.ServerInfoSectionObjectName;
+            serverInfoSectionObject.AddComponent<VerticalLayoutGroup>();
+            var serverInfoSectionSizeFitter = serverInfoSectionObject.AddComponent<ContentSizeFitter>();
+            serverInfoSectionSizeFitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+
+            var serverInfoTitleObject = CreateDefaultGameObject(serverInfoSectionObject.transform);
+            serverInfoTitleObject.name = LobbyWindowController.ServerInfoSectionTitleObjectName;
+            var serverInfoTitle = serverInfoTitleObject.AddComponent<TextMeshProUGUI>();
+            var serverInfoTitleLayout = serverInfoTitleObject.AddComponent<LayoutElement>();
+            serverInfoTitleLayout.preferredHeight = LobbySectionTitleHeight;
+            serverInfoTitle.material = _defaultTextMesh.Material;
+            serverInfoTitle.color = _defaultTextMesh.Color;
+            serverInfoTitle.horizontalAlignment = HorizontalAlignmentOptions.Center;
+            serverInfoTitle.SetText(UIUtility.GetSaberBookFormat(StringConsts.LobbyInfoWindow.ServerInfoSectionTitle));
+
+            var serverInfoSectionContentObject = CreateDefaultGameObject(serverInfoSectionObject.transform);
+            serverInfoSectionContentObject.name = LobbyWindowController.ServerInfoSectionContentObjectName;
+            serverInfoSectionContentObject.AddComponent<VerticalLayoutGroup>();
         }
 
         private void CreateLobbyPlayersSection(Transform parent)
@@ -246,7 +264,7 @@ namespace WOTRMultiplayer.UI
             playersSectionSizeFitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
 
             var playersTitleObject = CreateDefaultGameObject(playersSectionObject.transform);
-            playersTitleObject.name = LobbyWindowController.PlayersSectionObjectName;
+            playersTitleObject.name = LobbyWindowController.PlayersSectionTitleObjectName;
             var playersTitle = playersTitleObject.AddComponent<TextMeshProUGUI>();
             var playersTitleLayout = playersTitleObject.AddComponent<LayoutElement>();
             playersTitleLayout.preferredHeight = LobbySectionTitleHeight;

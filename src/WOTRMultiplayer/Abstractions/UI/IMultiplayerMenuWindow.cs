@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using WOTRMultiplayer.Abstractions.UI.Controllers.Menu;
 
 namespace WOTRMultiplayer.Abstractions.UI
@@ -10,5 +11,7 @@ namespace WOTRMultiplayer.Abstractions.UI
         void AssignMenuItemControllers(IHostMenuItemController hostMenuItemController, IJoinMenuItemController joinMenuItemController);
 
         Action OnDispose { get; set; }
+
+        ConcurrentQueue<Action> MainThreadQueue { get; }
     }
 }

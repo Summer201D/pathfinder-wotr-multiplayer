@@ -44,8 +44,9 @@ namespace WOTRMultiplayer.MP
 
         private void OnPlayerNameRequest(PlayerNameRequest request)
         {
+            _logger.LogInformation("Player name requested");
             var nameResponse = new PlayerNameResponse() { Name = "AAA" };
-            _networkServerClient.SendAsync(nameResponse);
+            _networkServerClient.SendAsync(nameResponse).Wait();
         }
     }
 }

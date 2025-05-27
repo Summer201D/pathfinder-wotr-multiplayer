@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Net;
 using Kingmaker.UI.MVVM._VM.SaveLoad;
 using UnityEngine;
 using WOTRMultiplayer.Entities;
@@ -12,5 +13,7 @@ namespace WOTRMultiplayer.Abstractions.UI.Controllers
         void InitializeContent(Transform parent);
 
         void SaveSlotSelected(SaveSlotVM value);
+        void Reset();
+        void UpdateServerInfo(EndPoint point);
     }
 }

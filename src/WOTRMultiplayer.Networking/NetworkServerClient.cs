@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Threading.Tasks;
 using BeetleX;
 using BeetleX.Clients;
+using Microsoft.Extensions.Logging;
 using WOTRMultiplayer.Networking.Abstractions;
 
 namespace WOTRMultiplayer.Networking
@@ -11,6 +12,12 @@ namespace WOTRMultiplayer.Networking
     {
         private AsyncTcpClient _client;
         private readonly ConcurrentDictionary<Type, Action<object>> _handlers = new();
+        private readonly ILogger<NetworkServerClient> _logger;
+
+        public NetworkServerClient(ILogger<NetworkServerClient> logger)
+        {
+            _logger = logger;
+        }
 
         public async Task ConnectAsync(string host, int port)
         {
@@ -22,6 +29,7 @@ namespace WOTRMultiplayer.Networking
         public INetworkServerClient Register<TMessage>(Action<TMessage> handler)
             where TMessage : class
         {
+            _logger.LogInformation("Registering handler. Type={type}", typeof(TMessage));
             _handlers.TryAdd(typeof(TMessage), message => handler((TMessage)message));
 
             return this;
@@ -34,13 +42,16 @@ namespace WOTRMultiplayer.Networking
 
         public void Dispose()
         {
+            _logger.LogInformation("Disposing");
             _client?.Dispose();
         }
 
         private void OnPackedReceived(IClient client, object message)
         {
-            if (!_handlers.TryGetValue(message.GetType(), out var handler))
+            var type = message.GetType();
+            if (!_handlers.TryGetValue(type, out var handler))
             {
+                _logger.LogWarning("Handler is not configured. Type={type}", type);
                 return;
             }
 
@@ -50,6 +61,7 @@ namespace WOTRMultiplayer.Networking
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Unable to handle message");
             }
         }
     }
