@@ -5,6 +5,8 @@ namespace WOTRMultiplayer.Networking.Abstractions
 {
     public interface INetworkServerClient : IDisposable
     {
+        bool IsActive { get; }
+
         Task ConnectAsync(string host, int port);
 
         INetworkServerClient Register<T>(Action<T> handler)

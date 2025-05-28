@@ -29,12 +29,6 @@ namespace WOTRMultiplayer.UI.Menu.Items
         public const string SaveLoadDetailsInfo = "Info";
         public const string SaveLoadDetailsInfoButtons = "Buttons";
 
-        public const string HostButtonLabel = "Host";
-        public const string HostButtonActiveLabel = "Select save";
-        public const string ReadyButtonLabel = "Ready";
-        public const string ReadyNotReadyButtonLabel = "Not Ready";
-        public const string StartButtonLabel = "Start";
-
         private readonly ILogger<HostMenuItemController> _logger;
         private readonly IMultiplayerHost _multiplayerHost;
         private readonly ILobbyWindowController _lobbyWindowController;
@@ -61,13 +55,13 @@ namespace WOTRMultiplayer.UI.Menu.Items
             .Find(SaveLoadDetailsInfo)
             .Find(SaveLoadDetailsInfoButtons);
 
-        private GameObject HostButtonObject => Buttons.Find(HostButtonLabel)?.gameObject;
+        private GameObject HostButtonObject => Buttons.Find(StringConsts.MultiplayerWindow.HostMenu.HostButtonLabel)?.gameObject;
         private OwlcatButton HostButton => HostButtonObject.GetComponent<OwlcatButton>();
 
-        private GameObject ReadyButtonObject => Buttons.Find(ReadyButtonLabel)?.gameObject;
+        private GameObject ReadyButtonObject => Buttons.Find(StringConsts.MultiplayerWindow.HostMenu.ReadyButtonLabel)?.gameObject;
         private OwlcatButton ReadyButton => ReadyButtonObject.GetComponent<OwlcatButton>();
 
-        private GameObject StartButtonObject => Buttons.Find(StartButtonLabel)?.gameObject;
+        private GameObject StartButtonObject => Buttons.Find(StringConsts.MultiplayerWindow.HostMenu.StartButtonLabel)?.gameObject;
         private OwlcatButton StartButton => StartButtonObject.GetComponent<OwlcatButton>();
 
 
@@ -127,7 +121,7 @@ namespace WOTRMultiplayer.UI.Menu.Items
             SetupButtonClick(HostButton, OnHostButtonClicked);
             HostButton.Interactable = false;
 
-            SetButtonLabel(ReadyButtonObject, ReadyNotReadyButtonLabel);
+            SetButtonLabel(ReadyButtonObject, StringConsts.MultiplayerWindow.HostMenu.ReadyNotReadyButtonLabel);
             SetupButtonClick(ReadyButton, OnReadyButtonClicked);
             ReadyButtonObject.SetActive(false);
             ReadyButton.Interactable = false;
@@ -151,7 +145,7 @@ namespace WOTRMultiplayer.UI.Menu.Items
                 ReadyButtonObject.SetActive(true);
                 ReadyButton.Interactable = true;
                 _multiplayerHost.Start(new MP.MultiplayerSettings());
-                SetButtonLabel(HostButtonObject, HostButtonActiveLabel);
+                SetButtonLabel(HostButtonObject, StringConsts.MultiplayerWindow.HostMenu.HostButtonActiveLabel);
             }
 
             var portraits = selectedSave.PartyPortraits.Value.Select(p => p.Portrait.name).ToList();
@@ -162,7 +156,8 @@ namespace WOTRMultiplayer.UI.Menu.Items
         {
             _logger.LogInformation("OnReadyButton");
             var isReady = _multiplayerHost.ReadyChanged();
-            var label = isReady ? ReadyButtonLabel : ReadyNotReadyButtonLabel;
+            var label = isReady ? StringConsts.MultiplayerWindow.HostMenu.ReadyButtonLabel
+                : StringConsts.MultiplayerWindow.HostMenu.ReadyNotReadyButtonLabel;
             SetButtonLabel(ReadyButtonObject, label);
         }
 
@@ -184,7 +179,7 @@ namespace WOTRMultiplayer.UI.Menu.Items
 
         protected override void InitializeInternal(GameObject baseLayout)
         {
-            var label = this.MenuItem.GetComponentInChildren<TextMeshProUGUI>();
+            var label = MenuItem.GetComponentInChildren<TextMeshProUGUI>();
             label.SetText(StringConsts.MultiplayerWindow.HostMenuLabel);
 
             _menuContent = UnityEngine.Object.Instantiate(baseLayout, baseLayout.transform);

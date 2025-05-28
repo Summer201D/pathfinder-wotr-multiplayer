@@ -1,11 +1,13 @@
 ﻿using System;
 using Kingmaker;
+using Kingmaker.Localization;
 using Kingmaker.UI;
 using Kingmaker.UI.Common;
 using Kingmaker.UI.MVVM._PCView.SaveLoad;
 using Kingmaker.UI.MVVM._PCView.Settings.Entities;
 using Kingmaker.UI.ServiceWindow.Credits;
 using Microsoft.Extensions.Logging;
+using Owlcat.Runtime.UI.Controls.Button;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -20,8 +22,12 @@ namespace WOTRMultiplayer.UI
     public class UIFactory : IUIFactory
     {
         public const string DropdownGameObjectName = "Dropdown";
+        public const string InputPlaceholderObjectName = "PlaceholderText";
+
         public const int LobbySectionTitleHeight = 50;
         private GameObject _dropdownPrefab;
+        private GameObject _inputPrefab;
+        private GameObject _buttonPrefab;
         private SaveLoadPCView _saveLoadPCView;
         private GameObject _defaultGameObject;
         private GameObject _borderDecoration;
@@ -156,15 +162,27 @@ namespace WOTRMultiplayer.UI
             var layout = baseButton.GetComponent<RectTransform>();
             layout.sizeDelta = new Vector2(layout.sizeDelta.x * 0.92f, layout.sizeDelta.y);
             var hostButton = UnityEngine.Object.Instantiate(baseButton, buttons);
-            hostButton.name = HostMenuItemController.HostButtonLabel;
+            hostButton.name = StringConsts.MultiplayerWindow.HostMenu.HostButtonLabel;
             var readyButton = UnityEngine.Object.Instantiate(baseButton, buttons);
-            readyButton.name = HostMenuItemController.ReadyButtonLabel;
+            readyButton.name = StringConsts.MultiplayerWindow.HostMenu.ReadyButtonLabel;
             var startButton = UnityEngine.Object.Instantiate(baseButton, buttons);
-            startButton.name = HostMenuItemController.StartButtonLabel;
+            startButton.name = StringConsts.MultiplayerWindow.HostMenu.StartButtonLabel;
             buttons.gameObject.CleanupAllChildren(
                 x => x.name != "DlcRequiredLabel" && x.name != hostButton.name && x.name != readyButton.name && x.name != startButton.name);
 
             return saveLoadView;
+        }
+
+        public GameObject CreateButton(Transform parent)
+        {
+            var buttonObject = UnityEngine.Object.Instantiate(_buttonPrefab, parent);
+            return buttonObject;
+        }
+
+        public GameObject CreateInput(Transform parent)
+        {
+            var inputObject = UnityEngine.Object.Instantiate(_inputPrefab, parent);
+            return inputObject;
         }
 
         public GameObject CreateDropdown(float sizeDeltaX, Transform parent)
@@ -332,6 +350,64 @@ namespace WOTRMultiplayer.UI
         public Mesh GetDefaultMesh()
         {
             return _defaultTextMesh;
+        }
+
+        public void StoreInputPrefab(GameObject inputObject)
+        {
+            if (inputObject == null)
+            {
+                return;
+            }
+
+            if (_inputPrefab == null)
+            {
+                lock (_actionLock)
+                {
+                    if (_inputPrefab == null)
+                    {
+                        _logger.LogInformation("Storing input prefab");
+
+                        _inputPrefab = UnityEngine.Object.Instantiate(inputObject);
+                        UnityEngine.Object.DontDestroyOnLoad(_inputPrefab);
+                        var placeHolderTextObject = _inputPrefab.transform.Find(InputPlaceholderObjectName);
+                        var localizedTextComponent = placeHolderTextObject.GetComponent<LocalizedUIText>();
+                        if (localizedTextComponent != null)
+                        {
+                            UnityEngine.Object.DestroyImmediate(localizedTextComponent);
+                        }
+                    }
+                }
+            }
+        }
+
+        public void StoreButtonPrefab(GameObject buttonObject)
+        {
+            if (buttonObject == null)
+            {
+                return;
+            }
+
+            if (_buttonPrefab == null)
+            {
+                lock (_actionLock)
+                {
+                    if (_buttonPrefab == null)
+                    {
+                        _logger.LogInformation("Storing button prefab");
+
+                        _buttonPrefab = UnityEngine.Object.Instantiate(buttonObject);
+                        var rectTransform = _buttonPrefab.GetComponent<RectTransform>();
+                        rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
+                        rectTransform.anchorMin = new Vector2(0.5f, 0.5f);
+                        var button = _buttonPrefab.GetComponent<OwlcatButton>();
+                        UnityEngine.Object.DontDestroyOnLoad(_buttonPrefab);
+                        for (var i = 0; i < button.OnLeftClick.GetPersistentEventCount(); i++)
+                        {
+                            button.OnLeftClick.SetPersistentListenerState(i, UnityEngine.Events.UnityEventCallState.Off);
+                        }
+                    }
+                }
+            }
         }
     }
 }

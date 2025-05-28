@@ -14,6 +14,8 @@ namespace WOTRMultiplayer.Networking
         private readonly ConcurrentDictionary<Type, Action<object>> _handlers = new();
         private readonly ILogger<NetworkServerClient> _logger;
 
+        public bool IsActive => _client.IsConnected;
+
         public NetworkServerClient(ILogger<NetworkServerClient> logger)
         {
             _logger = logger;

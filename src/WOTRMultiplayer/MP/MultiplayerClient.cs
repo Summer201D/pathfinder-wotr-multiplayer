@@ -20,12 +20,17 @@ namespace WOTRMultiplayer.MP
             _logger = logger;
             _ipEndPointParser = ipEndPointParser;
             _networkServerClient = networkServerClient;
-
-            RegisterHandlers();
         }
 
         public void Join(string address, MultiplayerSettings settings)
         {
+            if (_networkServerClient.IsActive)
+            {
+                _networkServerClient.Dispose();
+            }
+
+            RegisterHandlers();
+
             if (!_ipEndPointParser.TryParse(address, out IPEndPoint endpoint))
             {
                 return;

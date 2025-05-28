@@ -1,5 +1,6 @@
 ﻿using System;
 using HarmonyLib;
+using Kingmaker;
 using Kingmaker.UI.MVVM;
 using Kingmaker.UI.MVVM._PCView.Common;
 using Kingmaker.UI.MVVM._PCView.MainMenu;
@@ -38,6 +39,9 @@ namespace WOTRMultiplayer.UI.Menu
             {
                 var commonPCView = (RootUIContext.Instance.m_CommonView as CommonPCView)?.m_SaveLoadPCView;
                 Main.Multiplayer.Factory.StoreSaveLoadPCViewPrefab(commonPCView);
+                var creditsSearchPanel = Game.Instance.UI.CreditsUI.transform.Find("CreditsScreen").Find("SearchPanel");
+                Main.Multiplayer.Factory.StoreInputPrefab(creditsSearchPanel.Find("Input_Field").gameObject);
+                Main.Multiplayer.Factory.StoreButtonPrefab(creditsSearchPanel.Find("SearchButton").gameObject);
                 if (commonPCView != null)
                 {
                     var screen = commonPCView.gameObject.transform.Find("SaveLoadScreen");

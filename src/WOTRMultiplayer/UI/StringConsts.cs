@@ -14,6 +14,21 @@
         {
             public const string HostMenuLabel = "Host";
             public const string JoinMenuLabel = "Join";
+
+            public class JoinMenu
+            {
+                public const string JoinButtonLabel = "Join";
+                public const string ServerInputPlaceholder = "Enter Server IP address";
+            }
+
+            public class HostMenu
+            {
+                public const string HostButtonLabel = "Host";
+                public const string HostButtonActiveLabel = "Select save";
+                public const string ReadyButtonLabel = "Ready";
+                public const string ReadyNotReadyButtonLabel = "Not Ready";
+                public const string StartButtonLabel = "Start";
+            }
         }
 
         public class LobbyInfoWindow
