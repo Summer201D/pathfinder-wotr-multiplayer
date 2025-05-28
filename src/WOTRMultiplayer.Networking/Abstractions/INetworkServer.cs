@@ -12,7 +12,12 @@ namespace WOTRMultiplayer.Networking.Abstractions
 
         INetworkServer Register<TMessage>(Action<long, TMessage> messageHandler)
             where TMessage : class;
+
         void Send(long playerId, object message);
+
+        void SendAll(object message);
+
+        void SendAllExcept(long clientId, object message);
 
         void Start();
     }

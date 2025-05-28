@@ -4,9 +4,11 @@ using WOTRMultiplayer.Abstractions.MP;
 
 namespace WOTRMultiplayer.Playground.Client
 {
-    internal class Program
+    public class Program
     {
-        static void Main(string[] args)
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "Playground")]
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0059:Unnecessary assignment of a value", Justification = "Playground")]
+        public static void Main(string[] args)
         {
             Console.WriteLine("Hello World!");
             var serviceProvider = DI.DIFactory.Create(new Config.UnityMod.UnityModManagerSettings { UseDebugConsole = false });

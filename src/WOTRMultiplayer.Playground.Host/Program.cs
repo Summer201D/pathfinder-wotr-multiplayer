@@ -2,13 +2,14 @@
 using Microsoft.Extensions.DependencyInjection;
 using WOTRMultiplayer.Abstractions.MP;
 using WOTRMultiplayer.MP;
-using WOTRMultiplayer.Networking;
 
 namespace WOTRMultiplayer.Playground.Host
 {
-    internal class Program
+    public class Program
     {
-        static void Main(string[] args)
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "Playground")]
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0059:Unnecessary assignment of a value", Justification = "Playground")]
+        public static void Main(string[] args)
         {
             Console.WriteLine("Hello World!");
             Console.WriteLine("Press enter to host");

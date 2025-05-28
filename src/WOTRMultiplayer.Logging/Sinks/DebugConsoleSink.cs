@@ -30,7 +30,7 @@ namespace WOTRMultiplayer.Logging.Sinks
         {
             if (_theme.CanBuffer)
             {
-                StringWriter stringWriter = new StringWriter(new StringBuilder(256));
+                StringWriter stringWriter = new(new StringBuilder(256));
                 _formatter.Format(logEvent, stringWriter);
                 string value = stringWriter.ToString();
                 lock (_syncRoot)

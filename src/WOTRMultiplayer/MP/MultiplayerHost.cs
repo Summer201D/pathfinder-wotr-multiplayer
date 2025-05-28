@@ -178,6 +178,9 @@ namespace WOTRMultiplayer.MP
 
         public void NotifySaveChanged(string saveGameName, List<string> portraits)
         {
+            _logger.LogInformation("Notifying save game changed. Name={saveGameName}, Portraits={portraits}", saveGameName, string.Join(";", portraits));
+            var message = new NotifySaveChanged { SaveGameName = saveGameName, Portraits = portraits };
+            _networkServer.SendAll(message);
         }
     }
 }

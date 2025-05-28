@@ -19,9 +19,7 @@ namespace WOTRMultiplayer.Logging.Sinks
             string outputTemplate = "[{Timestamp:HH:mm:ss} {Level:u3}] {Message:lj}{NewLine}{Exception}",
             IFormatProvider formatProvider = null,
             LoggingLevelSwitch levelSwitch = null,
-            LogEventLevel? standardErrorFromLevel = null,
-            ConsoleTheme theme = null,
-            bool applyThemeToRedirectedOutput = false)
+            LogEventLevel? standardErrorFromLevel = null)
         {
             var consoleTheme = SystemConsoleTheme.Colored;
             var args = new object[] { consoleTheme, outputTemplate, formatProvider };

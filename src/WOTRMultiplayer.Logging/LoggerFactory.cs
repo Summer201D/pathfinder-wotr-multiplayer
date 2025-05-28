@@ -8,7 +8,7 @@ namespace WOTRMultiplayer.Logging
     public static class LoggerFactory
     {
         private static TextWriter _debugConsole;
-        private static object _consoleSinkRoot = new();
+        private readonly static object _consoleSinkRoot = new();
 
         public static ILogger Create(bool addConsoleSink)
         {
