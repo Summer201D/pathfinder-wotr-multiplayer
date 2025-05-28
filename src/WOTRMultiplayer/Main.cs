@@ -36,7 +36,7 @@ namespace WOTRMultiplayer
                 var harmony = new Harmony(entry.Info.Id);
                 harmony.PatchAll(Assembly.GetExecutingAssembly());
             }
-            catch (System.Exception ex)
+            catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to load mod");
                 throw;

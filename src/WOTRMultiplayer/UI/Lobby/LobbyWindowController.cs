@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 using Kingmaker.UI.MVVM._VM.SaveLoad;
 using Microsoft.Extensions.Logging;
@@ -89,6 +90,8 @@ namespace WOTRMultiplayer.UI.Lobby
                 {
                     CreatePlayerObject(player);
                 }
+
+                UpdateCharacterOwnerDropdown(players);
             });
         }
 
@@ -141,35 +144,50 @@ namespace WOTRMultiplayer.UI.Lobby
             }
         }
 
+        private void UpdateCharacterOwnerDropdown(List<NetworkPlayer> networkPlayers)
+        {
+            var players = networkPlayers.Select(x => x.Name).ToList();
+            for (int characterIndex = 0; characterIndex < UIFactory.GetMaxCharactersCount(); characterIndex++)
+            {
+                var characterContainer = CharactersInfoContainer.transform.GetChild(characterIndex);
+                if (characterContainer == null)
+                {
+                    _logger.LogInformation("Unable to update character owner dropdow due to missing character container. Index={characterIndex}", characterIndex);
+                    return;
+                }
+
+                var dropdown = characterContainer.Find(CharacterOwnerObjectName);
+                var dropdownObject = dropdown.transform.Find(UIFactory.DropdownGameObjectName);
+                var tmpDropdown = dropdownObject.GetComponent<TMP_Dropdown>();
+                tmpDropdown.onValueChanged.RemoveAllListeners();
+                tmpDropdown.ClearOptions();
+                tmpDropdown.AddOptions(players);
+                tmpDropdown.onValueChanged.RemoveAllListeners();
+                tmpDropdown.onValueChanged.AddListener(index => OnCharacterOwnerChanged(tmpDropdown));
+            }
+        }
         public void UpdateCharacters(SaveSlotVM saveSlotVM)
         {
             for (int characterIndex = 0; characterIndex < UIFactory.GetMaxCharactersCount(); characterIndex++)
             {
                 var sprite = GetPortraitSprite(characterIndex, saveSlotVM);
                 UpdateCharacterPortrait(characterIndex, sprite);
-                //// TBD test stuff
-                //var dropdownObject = dropdown.transform.Find(UIFactory.DropdownGameObjectName);
-                //var tmpDropdown = dropdownObject.GetComponent<TMP_Dropdown>();
-                //tmpDropdown.onValueChanged.RemoveAllListeners();
-                //tmpDropdown.ClearOptions();
-                //tmpDropdown.AddOptions(players);
-                //tmpDropdown.onValueChanged.AddListener(index => OnCharacterOwnerChanged(tmpDropdown));
             }
         }
 
         private void UpdateCharacterPortrait(int characterIndex, Sprite portraitSprite)
         {
-            var specificCharacterContainer = CharactersInfoContainer.transform.GetChild(characterIndex);
-            if (specificCharacterContainer == null)
+            var characterContainer = CharactersInfoContainer.transform.GetChild(characterIndex);
+            if (characterContainer == null)
             {
                 _logger.LogInformation("Character doesn't exist. Index={characterIndex}", characterIndex);
+                return;
             }
 
-            var portrait = specificCharacterContainer.Find(CharacterPortraitObjectName);
-            var dropdown = specificCharacterContainer.Find(CharacterOwnerObjectName);
-            var img = portrait.GetComponent<Image>();
-            img.sprite = portraitSprite;
-            img.color = portraitSprite == null ? Color.clear : Color.white;
+            var portraitObject = characterContainer.Find(CharacterPortraitObjectName);
+            var portraitImage = portraitObject.GetComponent<Image>();
+            portraitImage.sprite = portraitSprite;
+            portraitImage.color = portraitSprite == null ? Color.clear : Color.white;
             _logger.LogInformation("Updated character portrait. Index={characterIndex}, SpriteName={spriteName}", characterIndex, portraitSprite?.name);
         }
 

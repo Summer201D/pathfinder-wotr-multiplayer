@@ -201,19 +201,17 @@ namespace WOTRMultiplayer.UI.Menu.Items
             var container = screen.Find(SaveLoadDetails);
             var replacedContainer = UnityEngine.Object.Instantiate(container, screen.transform);
             replacedContainer.name = SaveLoadDetails;
+            container.name = "OLD_" + SaveLoadDetails;
+            container.gameObject.CleanupAllChildren(x => x.name != "FakeButton");
+            container.gameObject.SetActive(false);
             replacedContainer.gameObject.SetActive(true);
-            UnityEngine.Object.DestroyImmediate(container.gameObject);
             var parentContainerRect = replacedContainer.GetComponent<RectTransform>();
 
             var lobbyWindowObject = UnityEngine.Object.Instantiate(baseLayout, replacedContainer.transform);
             lobbyWindowObject.name = "MultiplayerLobby";
             lobbyWindowObject.CleanupAllChildren();
             var title = replacedContainer.Find(SaveLoadDetailsTitle);
-            var replacedTitle = UnityEngine.Object.Instantiate(title.gameObject, replacedContainer);
-            replacedTitle.name = SaveLoadDetailsTitle;
-            replacedTitle.transform.SetAsFirstSibling();
-            UnityEngine.Object.DestroyImmediate(title.gameObject);
-            var lobbyWindowObjectPosition = new Vector3(replacedTitle.transform.position.x, lobbyWindowObject.transform.position.y * 1.1f, lobbyWindowObject.transform.position.z);
+            var lobbyWindowObjectPosition = new Vector3(title.transform.position.x, lobbyWindowObject.transform.position.y * 1.1f, lobbyWindowObject.transform.position.z);
             lobbyWindowObject.transform.SetPositionAndRotation(lobbyWindowObjectPosition, lobbyWindowObject.transform.rotation);
             var lobbyWindowObjectRect = lobbyWindowObject.GetComponent<RectTransform>();
             lobbyWindowObjectRect.sizeDelta = new Vector2(parentContainerRect.sizeDelta.x * 0.9f, parentContainerRect.sizeDelta.y * 0.72f);
