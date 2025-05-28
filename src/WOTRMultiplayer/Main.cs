@@ -10,6 +10,8 @@ using WOTRMultiplayer.DI;
 
 namespace WOTRMultiplayer
 {
+    // SettingsRoot.Game.TurnBased.EnableTurnBasedMode
+
     public class Main
     {
         private static UnityModManagerSettings _settings;

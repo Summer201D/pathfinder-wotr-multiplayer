@@ -3,10 +3,11 @@ using Microsoft.Extensions.Logging;
 using Owlcat.Runtime.UI.Controls.Button;
 using UnityEngine;
 using WOTRMultiplayer.Abstractions.UI;
+using WOTRMultiplayer.Abstractions.UI.Controllers.Menu;
 
 namespace WOTRMultiplayer.UI.Menu.Items
 {
-    public abstract class MenuItemController
+    public abstract class MenuItemController : IMultiplayerMenuItemController
     {
         public const string SelectedGameObjectName = "SelectedImage";
         public const string HoverGameObjectName = "HoverImage";
@@ -92,6 +93,16 @@ namespace WOTRMultiplayer.UI.Menu.Items
         private void OnClickedInternal()
         {
             OnClicked?.Invoke(this, EventArgs.Empty);
+        }
+
+        protected virtual ModalActionConfirmation GetDeactivationConfirmationInternal()
+        {
+            return null;
+        }
+
+        public ModalActionConfirmation GetDeactivationConfirmation()
+        {
+            return GetDeactivationConfirmationInternal();
         }
     }
 }

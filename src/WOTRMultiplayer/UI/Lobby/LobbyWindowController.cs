@@ -166,6 +166,7 @@ namespace WOTRMultiplayer.UI.Lobby
                 tmpDropdown.onValueChanged.AddListener(index => OnCharacterOwnerChanged(tmpDropdown));
             }
         }
+
         public void UpdateCharacters(SaveSlotVM saveSlotVM)
         {
             for (int characterIndex = 0; characterIndex < UIFactory.GetMaxCharactersCount(); characterIndex++)

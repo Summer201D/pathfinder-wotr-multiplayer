@@ -201,9 +201,12 @@ namespace WOTRMultiplayer.UI.Menu.Items
             var container = screen.Find(SaveLoadDetails);
             var replacedContainer = UnityEngine.Object.Instantiate(container, screen.transform);
             replacedContainer.name = SaveLoadDetails;
+            // hack to replace container to get rid of existing unity references
+            // fakebutton must be kept intact
             container.name = "OLD_" + SaveLoadDetails;
             container.gameObject.CleanupAllChildren(x => x.name != "FakeButton");
             container.gameObject.SetActive(false);
+
             replacedContainer.gameObject.SetActive(true);
             var parentContainerRect = replacedContainer.GetComponent<RectTransform>();
 
@@ -254,6 +257,19 @@ namespace WOTRMultiplayer.UI.Menu.Items
 
         public void OnCompleted()
         {
+        }
+
+        protected override ModalActionConfirmation GetDeactivationConfirmationInternal()
+        {
+            if (!_multiplayerHost.IsActive)
+            {
+                return base.GetDeactivationConfirmationInternal();
+            }
+
+            return new ModalActionConfirmation
+            {
+                Text = "You are currently hosting a game. Proceeding with this action will result in its termination."
+            };
         }
     }
 }

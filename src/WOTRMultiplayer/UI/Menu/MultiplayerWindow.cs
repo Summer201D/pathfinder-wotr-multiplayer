@@ -2,6 +2,8 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using DG.Tweening;
+using Kingmaker.PubSubSystem;
+using Kingmaker.UI;
 using Kingmaker.UI.FullScreenUITypes;
 using Kingmaker.UI.ServiceWindow;
 using Owlcat.Runtime.UI.Controls.Button;
@@ -99,8 +101,6 @@ namespace WOTRMultiplayer.UI.Menu
 
         public override void OnHide()
         {
-            _joinMenuController.Deactivate();
-            _hostMenuController.Deactivate();
             StopAllCoroutines();
             base.OnHide();
         }
@@ -108,18 +108,31 @@ namespace WOTRMultiplayer.UI.Menu
         public override void Show(bool state)
         {
             Log.Logger.Information("Show/Hide {windowTypeName}, State={state}", nameof(MultiplayerWindow), state);
-            if (state)
+            if (!state)
             {
-                _hostMenuController.Activate();
+                IMultiplayerMenuItemController controllerToAsk = _hostMenuController.IsActive ?
+                    _hostMenuController
+                    : _joinMenuController;
+                OnDisposeMenuItem(controllerToAsk, this.Hide);
+                return;
             }
 
+            _hostMenuController.Activate();
             base.Show(state);
+        }
+
+        private void Hide(MessageModalBase.ButtonType button)
+        {
+            if (button == MessageModalBase.ButtonType.Yes)
+            {
+                _joinMenuController.Deactivate();
+                _hostMenuController.Deactivate();
+                base.Show(false);
+            }
         }
 
         public void OnCloseClicked()
         {
-            _hostMenuController?.Deactivate();
-            _joinMenuController?.Deactivate();
             OnButtonClose();
         }
 
@@ -148,14 +161,45 @@ namespace WOTRMultiplayer.UI.Menu
 
         private void OnHostMenuItemClicked(object sender, EventArgs e)
         {
-            _hostMenuController.Activate();
-            _joinMenuController.Deactivate();
+            OnDisposeMenuItem(_joinMenuController, this.ActivateHostMenu);
         }
 
         private void OnJoinMenuItemClicked(object sender, EventArgs e)
         {
-            _hostMenuController.Deactivate();
-            _joinMenuController.Activate();
+            OnDisposeMenuItem(_hostMenuController, this.ActivateJoinMenu);
+        }
+
+        private void OnDisposeMenuItem(IMultiplayerMenuItemController menuItemController, Action<MessageModalBase.ButtonType> onResult)
+        {
+            var confirmation = menuItemController.GetDeactivationConfirmation();
+            if (confirmation != null)
+            {
+                EventBus.RaiseEvent<IMessageModalUIHandler>(delegate (IMessageModalUIHandler w)
+                {
+                    w.HandleOpen(confirmation.Text, MessageModalBase.ModalType.Dialog, onResult, null, null, null, null, null, null, 0, uint.MaxValue, null);
+                }, true);
+                return;
+            }
+
+            onResult(MessageModalBase.ButtonType.Yes);
+        }
+
+        private void ActivateJoinMenu(MessageModalBase.ButtonType button)
+        {
+            if (button == MessageModalBase.ButtonType.Yes)
+            {
+                _hostMenuController.Deactivate();
+                _joinMenuController.Activate();
+            }
+        }
+
+        private void ActivateHostMenu(MessageModalBase.ButtonType button)
+        {
+            if (button == MessageModalBase.ButtonType.Yes)
+            {
+                _hostMenuController.Activate();
+                _joinMenuController.Deactivate();
+            }
         }
 
         private GameObject SetupBaseMenuItem(GameObject baseLayoutObject)

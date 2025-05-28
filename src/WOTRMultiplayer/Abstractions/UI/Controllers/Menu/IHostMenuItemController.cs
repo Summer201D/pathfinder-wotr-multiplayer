@@ -1,4 +1,4 @@
-﻿using System;
+﻿using WOTRMultiplayer.UI;
 
 namespace WOTRMultiplayer.Abstractions.UI.Controllers.Menu
 {
