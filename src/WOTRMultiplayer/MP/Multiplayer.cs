@@ -5,8 +5,8 @@ using UnityEngine;
 using WOTRMultiplayer.Abstractions.MP;
 using WOTRMultiplayer.Abstractions.UI;
 using WOTRMultiplayer.Abstractions.UI.Controllers.Menu;
-using WOTRMultiplayer.DI;
 using WOTRMultiplayer.UI;
+using WOTRMultiplayer.Unity;
 
 namespace WOTRMultiplayer.MP
 {

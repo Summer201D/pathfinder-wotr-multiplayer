@@ -11,6 +11,7 @@ using WOTRMultiplayer.Networking.Extensions;
 using WOTRMultiplayer.UI;
 using WOTRMultiplayer.UI.Lobby;
 using WOTRMultiplayer.UI.Menu.Items;
+using WOTRMultiplayer.Unity;
 
 namespace WOTRMultiplayer.DI
 {

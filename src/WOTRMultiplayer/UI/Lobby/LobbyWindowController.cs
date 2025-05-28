@@ -7,7 +7,6 @@ using UnityEngine;
 using UnityEngine.UI;
 using WOTRMultiplayer.Abstractions.UI;
 using WOTRMultiplayer.Abstractions.UI.Controllers;
-using WOTRMultiplayer.DI;
 using WOTRMultiplayer.Entities;
 using WOTRMultiplayer.Extensions;
 using WOTRMultiplayer.Unity;
@@ -77,14 +76,7 @@ namespace WOTRMultiplayer.UI.Lobby
             }
 
             _content = _uIFactory.CreateLobbyWindowContent(parent);
-        }
-
-        public void SaveSlotSelected(SaveSlotVM value)
-        {
-            _logger.LogInformation("Selected SaveSlo={saveSlot}", value);
-            var rnd = new System.Random();
-            //UpdatePlayers(players);
-            UpdateCharacters(value);
+            _content.SetActive(false);
         }
 
         public void UpdatePlayers(List<NetworkPlayer> players)
@@ -102,6 +94,8 @@ namespace WOTRMultiplayer.UI.Lobby
 
         public void UpdateServerInfo(EndPoint endPoint)
         {
+            _content.SetActive(true);
+
             ServerInfoSectionContent.CleanupAllChildren();
 
             var defaultMesh = Main.Multiplayer.Factory.GetDefaultMesh();
@@ -147,7 +141,7 @@ namespace WOTRMultiplayer.UI.Lobby
             }
         }
 
-        private void UpdateCharacters(SaveSlotVM saveSlotVM)
+        public void UpdateCharacters(SaveSlotVM saveSlotVM)
         {
             for (int characterIndex = 0; characterIndex < UIFactory.GetMaxCharactersCount(); characterIndex++)
             {
@@ -208,6 +202,7 @@ namespace WOTRMultiplayer.UI.Lobby
         {
             _mainThreadAccessor.MainThreadQueue.Enqueue(() =>
             {
+                _content.SetActive(false);
                 PlayersSectionContent.CleanupAllChildren();
                 ServerInfoSectionContent.CleanupAllChildren();
             });

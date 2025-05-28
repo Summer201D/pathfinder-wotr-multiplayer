@@ -55,6 +55,14 @@ namespace WOTRMultiplayer.MP
             _networkServer.Dispose();
         }
 
+        public bool ReadyChanged()
+        {
+            var player = _playersList.First(p => p.Id == 0); // host should be always present
+            var readyChanged = new PlayerReadyStatusChanged { IsReady = !player.IsReady };
+            OnPlayerReadyStatusChanged(player.Id, readyChanged);
+            return readyChanged.IsReady;
+        }
+
         private void RegisterHandlers()
         {
             _networkServer.OnClientConnected = OnPlayerConnected;
@@ -159,13 +167,17 @@ namespace WOTRMultiplayer.MP
                 Name = Guid.NewGuid().ToString().Split('-').First()
             });
 
-            _lobbyWindowController.UpdatePlayers(_playersList);
             _lobbyWindowController.UpdateServerInfo(point);
+            _lobbyWindowController.UpdatePlayers(_playersList);
         }
 
         private NetworkPlayer GetPlayer(long playerId)
         {
             return _playersList.FirstOrDefault(p => p.Id == playerId);
+        }
+
+        public void NotifySaveChanged(string saveGameName, List<string> portraits)
+        {
         }
     }
 }

@@ -11,9 +11,8 @@ namespace WOTRMultiplayer.Abstractions.UI.Controllers
         void UpdatePlayers(List<NetworkPlayer> playersList);
 
         void InitializeContent(Transform parent);
-
-        void SaveSlotSelected(SaveSlotVM value);
         void Reset();
         void UpdateServerInfo(EndPoint point);
+        void UpdateCharacters(SaveSlotVM value);
     }
 }

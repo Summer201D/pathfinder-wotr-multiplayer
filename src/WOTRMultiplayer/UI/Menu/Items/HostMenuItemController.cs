@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Linq;
+using Kingmaker.UI.Common;
 using Kingmaker.UI.MVVM;
 using Kingmaker.UI.MVVM._PCView.SaveLoad;
 using Kingmaker.UI.MVVM._VM.SaveLoad;
@@ -22,11 +24,14 @@ namespace WOTRMultiplayer.UI.Menu.Items
         public const string SaveLoadView = "SaveLoadView";
         public const string SaveLoadScreen = "SaveLoadScreen";
         public const string SaveLoadDetails = "SaveLoadDetails";
+        public const string SaveLoadDetailsTitle = "Title";
         public const string SaveLoadDetailsInfo = "Info";
         public const string SaveLoadDetailsInfoButtons = "Buttons";
 
         public const string HostButtonLabel = "Host";
+        public const string HostButtonActiveLabel = "Select save";
         public const string ReadyButtonLabel = "Ready";
+        public const string ReadyNotReadyButtonLabel = "Not Ready";
         public const string StartButtonLabel = "Start";
 
         private readonly ILogger<HostMenuItemController> _logger;
@@ -37,6 +42,15 @@ namespace WOTRMultiplayer.UI.Menu.Items
         private GameObject _menuContent;
 
         protected override GameObject MenuContent => _menuContent;
+
+        private TextMeshProUGUI Title => _menuContent
+            .transform
+            .Find(SaveLoadView)
+            .Find(SaveLoadScreen)
+            .Find(SaveLoadDetails)
+            .Find(SaveLoadDetailsTitle)
+            .gameObject
+            .GetComponentInChildren<TextMeshProUGUI>();
 
         private Transform Buttons => _menuContent
             .transform
@@ -108,27 +122,45 @@ namespace WOTRMultiplayer.UI.Menu.Items
         {
             SetButtonLabel(HostButtonObject, "Host");
             SetupButtonClick(HostButton, OnHostButtonClicked);
-            HostButton.Interactable = true;
+            HostButton.Interactable = false;
 
-            SetButtonLabel(ReadyButtonObject, "Ready");
+            SetButtonLabel(ReadyButtonObject, ReadyNotReadyButtonLabel);
             SetupButtonClick(ReadyButton, OnReadyButtonClicked);
+            ReadyButtonObject.SetActive(false);
             ReadyButton.Interactable = false;
 
             SetButtonLabel(StartButtonObject, "Start");
             SetupButtonClick(StartButton, OnStartButtonClicked);
+            StartButtonObject.SetActive(false);
             StartButton.Interactable = false;
         }
 
         private void OnHostButtonClicked()
         {
             _logger.LogInformation("OnHostButton");
-            HostButton.Interactable = false;
-            _multiplayerHost.Start(new MP.MultiplayerSettings());
+            var selectedSave = _saveLoadViewModel.SelectedSaveSlot.Value;
+            var titleText = UIUtility.GetSaberBookFormat(selectedSave.SaveName.Value);
+            Title.SetText(titleText);
+            _lobbyWindowController.UpdateCharacters(_saveLoadViewModel.SelectedSaveSlot.Value);
+            if (!_multiplayerHost.IsActive)
+            {
+                StartButtonObject.SetActive(true);
+                ReadyButtonObject.SetActive(true);
+                ReadyButton.Interactable = true;
+                _multiplayerHost.Start(new MP.MultiplayerSettings());
+                SetButtonLabel(HostButtonObject, HostButtonActiveLabel);
+            }
+
+            var portraits = selectedSave.PartyPortraits.Value.Select(p => p.Portrait.name).ToList();
+            _multiplayerHost.NotifySaveChanged(selectedSave.SaveName.Value, portraits);
         }
 
         private void OnReadyButtonClicked()
         {
             _logger.LogInformation("OnReadyButton");
+            var isReady = _multiplayerHost.ReadyChanged();
+            var label = isReady ? ReadyButtonLabel : ReadyNotReadyButtonLabel;
+            SetButtonLabel(ReadyButtonObject, label);
         }
 
         private void OnStartButtonClicked()
@@ -158,20 +190,30 @@ namespace WOTRMultiplayer.UI.Menu.Items
 
             SetupLoadSaveGamesLayout();
             SetupLobbyInfo(baseLayout);
+
+            Title.SetText(string.Empty);
         }
 
         private void SetupLobbyInfo(GameObject baseLayout)
         {
             var saveLoadView = _menuContent.transform.GetChild(0);
             var screen = saveLoadView.gameObject.transform.Find("SaveLoadScreen");
-            var container = screen.Find("SaveLoadDetails");
-            var parentContainerRect = container.GetComponent<RectTransform>();
+            var container = screen.Find(SaveLoadDetails);
+            var replacedContainer = UnityEngine.Object.Instantiate(container, screen.transform);
+            replacedContainer.name = SaveLoadDetails;
+            replacedContainer.gameObject.SetActive(true);
+            UnityEngine.Object.DestroyImmediate(container.gameObject);
+            var parentContainerRect = replacedContainer.GetComponent<RectTransform>();
 
-            var lobbyWindowObject = UnityEngine.Object.Instantiate(baseLayout, container.transform);
+            var lobbyWindowObject = UnityEngine.Object.Instantiate(baseLayout, replacedContainer.transform);
             lobbyWindowObject.name = "MultiplayerLobby";
             lobbyWindowObject.CleanupAllChildren();
-            var title = container.Find("Title");
-            var lobbyWindowObjectPosition = new Vector3(title.position.x, lobbyWindowObject.transform.position.y * 1.1f, lobbyWindowObject.transform.position.z);
+            var title = replacedContainer.Find(SaveLoadDetailsTitle);
+            var replacedTitle = UnityEngine.Object.Instantiate(title.gameObject, replacedContainer);
+            replacedTitle.name = SaveLoadDetailsTitle;
+            replacedTitle.transform.SetAsFirstSibling();
+            UnityEngine.Object.DestroyImmediate(title.gameObject);
+            var lobbyWindowObjectPosition = new Vector3(replacedTitle.transform.position.x, lobbyWindowObject.transform.position.y * 1.1f, lobbyWindowObject.transform.position.z);
             lobbyWindowObject.transform.SetPositionAndRotation(lobbyWindowObjectPosition, lobbyWindowObject.transform.rotation);
             var lobbyWindowObjectRect = lobbyWindowObject.GetComponent<RectTransform>();
             lobbyWindowObjectRect.sizeDelta = new Vector2(parentContainerRect.sizeDelta.x * 0.9f, parentContainerRect.sizeDelta.y * 0.72f);
@@ -195,7 +237,6 @@ namespace WOTRMultiplayer.UI.Menu.Items
 
         private void DisposeSaveLoadVM()
         {
-            OnCompleted();
             _saveLoadViewModel?.Dispose();
         }
 
@@ -206,11 +247,7 @@ namespace WOTRMultiplayer.UI.Menu.Items
 
         public void OnNext(SaveSlotVM value)
         {
-            if (value != null)
-            {
-                _lobbyWindowController.SaveSlotSelected(value);
-                return;
-            }
+            HostButton.Interactable = value != null;
         }
 
         public void OnError(Exception error)

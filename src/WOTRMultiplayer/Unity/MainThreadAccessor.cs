@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 
-namespace WOTRMultiplayer.DI
+namespace WOTRMultiplayer.Unity
 {
     public class MainThreadAccessor : IMainThreadAccessor
     {
