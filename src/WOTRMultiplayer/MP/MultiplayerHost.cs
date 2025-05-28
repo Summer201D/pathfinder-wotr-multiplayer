@@ -167,7 +167,7 @@ namespace WOTRMultiplayer.MP
                 Name = Guid.NewGuid().ToString().Split('-').First()
             });
 
-            _lobbyWindowController.UpdateServerInfo(point);
+            _lobbyWindowController.UpdateServerInfo(point.ToString());
             _lobbyWindowController.UpdatePlayers(_playersList);
         }
 

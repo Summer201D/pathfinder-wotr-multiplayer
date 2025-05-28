@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using System.Net;
 using Kingmaker.UI.MVVM._VM.SaveLoad;
 using Microsoft.Extensions.Logging;
 using TMPro;
@@ -95,7 +94,7 @@ namespace WOTRMultiplayer.UI.Lobby
             });
         }
 
-        public void UpdateServerInfo(EndPoint endPoint)
+        public void UpdateServerInfo(string serverAddress)
         {
             _content.SetActive(true);
 
@@ -116,7 +115,7 @@ namespace WOTRMultiplayer.UI.Lobby
             serverAddressBox.alignment = TextAlignmentOptions.Center;
             serverAddressBox.material = defaultMesh.Material;
             serverAddressBox.color = defaultMesh.Color;
-            serverAddressBox.SetText(endPoint.ToString());
+            serverAddressBox.SetText(serverAddress);
         }
 
         private void CreatePlayerObject(NetworkPlayer player)
