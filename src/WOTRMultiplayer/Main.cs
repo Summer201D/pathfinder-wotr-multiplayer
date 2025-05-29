@@ -22,10 +22,21 @@ namespace WOTRMultiplayer
 
         public static bool Load(UnityModManager.ModEntry entry)
         {
-            _settings = UnityModManager.ModSettings.Load<UnityModManagerSettings>(entry);
-            _serviceProvider = DIFactory.Create(_settings);
-            _logger = _serviceProvider.GetService<ILogger<Main>>();
+            try
+            {
+                _settings = UnityModManager.ModSettings.Load<UnityModManagerSettings>(entry);
+                _serviceProvider = DIFactory.Create(_settings);
+                _logger = _serviceProvider.GetService<ILogger<Main>>();
+            }
+            catch (Exception ex)
+            {
+                // somethign when wrong and our logger is not available here
+                entry.Logger.Error($"Unable to initialize mod. Error={ex}");
+                throw;
+            }
+
             _logger.LogInformation("Loading mod");
+
             try
             {
                 Multiplayer = _serviceProvider.GetService<IMultiplayer>();

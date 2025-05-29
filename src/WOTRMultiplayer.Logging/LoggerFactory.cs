@@ -13,17 +13,19 @@ namespace WOTRMultiplayer.Logging
         public static ILogger Create(bool addConsoleSink)
         {
             var template = "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level}] {SourceContext}: {Message:lj}{NewLine}{Exception}";
-            var logConfig = new LoggerConfiguration()
-                .WriteTo.Console()
-                .WriteTo.File("./Mods/WOTRMultiplayer/logs/wotr-multiplayer.log", outputTemplate: template, rollingInterval: RollingInterval.Day)
-                .Enrich.FromLogContext()
-                .Enrich.With(new ClassNameEnricher())
-                ;
+            var logConfig = new LoggerConfiguration();
 
             if (addConsoleSink)
             {
                 ConfigureConsoleSink(logConfig, template);
             }
+
+            logConfig
+                .WriteTo.Console(outputTemplate: template)
+                .WriteTo.File("./Mods/WOTRMultiplayer/logs/wotr-multiplayer.log", outputTemplate: template, rollingInterval: RollingInterval.Day)
+                .Enrich.FromLogContext()
+                .Enrich.With(new ClassNameEnricher())
+                ;
 
             return logConfig.CreateLogger();
         }

@@ -14,23 +14,27 @@ namespace WOTRMultiplayer.Logging
         public const uint OPEN_EXISTING = 0x3;
 
         [DllImport("kernel32.dll", EntryPoint = "AllocConsole", SetLastError = true, CharSet = CharSet.Auto, CallingConvention = CallingConvention.StdCall)]
-        private static extern int AllocConsole();
+        private static extern bool AllocConsole();
 
         [DllImport("kernel32.dll", SetLastError = true)]
         private static extern IntPtr CreateFile(string lpFileName, uint dwDesiredAccess, uint dwShareMode, uint lpSecurityAttributes, uint dwCreationDisposition, uint dwFlagsAndAttributes, uint hTemplateFile);
 
         public static TextWriter SpawnConsole()
         {
-            AllocConsole();
+            if (!AllocConsole())
+            {
+                throw new InvalidOperationException("Unable to alloc console");
+            }
 
-            var stdHandle = CreateFile("CONOUT$", GENERIC_WRITE, FILE_SHARE_WRITE, 0, OPEN_EXISTING, 0, 0);
-            var safeFileHandle = new SafeFileHandle(stdHandle, true);
+            var fileHandle = CreateFile("CONOUT$", GENERIC_WRITE, FILE_SHARE_WRITE, 0, OPEN_EXISTING, 0, 0);
+            var safeFileHandle = new SafeFileHandle(fileHandle, true);
             var fileStream = new FileStream(safeFileHandle, FileAccess.Write);
             var encoding = Encoding.GetEncoding(MY_CODE_PAGE);
             var standardOutput = new StreamWriter(fileStream, encoding)
             {
                 AutoFlush = true
             };
+
             return standardOutput;
         }
     }

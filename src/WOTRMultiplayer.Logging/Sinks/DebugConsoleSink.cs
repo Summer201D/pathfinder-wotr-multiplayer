@@ -11,19 +11,16 @@ namespace WOTRMultiplayer.Logging.Sinks
     public class DebugConsoleSink : ILogEventSink
     {
         private readonly TextWriter _output;
-        private readonly LogEventLevel? _standardErrorFromLevel;
         private readonly ConsoleTheme _theme;
         private readonly ITextFormatter _formatter;
         private readonly object _syncRoot;
-        private const int DefaultWriteBufferCapacity = 256;
 
-        public DebugConsoleSink(TextWriter output, ConsoleTheme theme, ITextFormatter formatter, LogEventLevel? standardErrorFromLevel, object syncRoot)
+        public DebugConsoleSink(TextWriter output, ConsoleTheme theme, ITextFormatter formatter, object syncRoot)
         {
             _output = output;
-            _standardErrorFromLevel = standardErrorFromLevel;
-            _theme = theme ?? throw new ArgumentNullException("theme");
+            _theme = theme ?? throw new ArgumentNullException(nameof(theme));
             _formatter = formatter;
-            _syncRoot = syncRoot ?? throw new ArgumentNullException("syncRoot");
+            _syncRoot = syncRoot ?? throw new ArgumentNullException(nameof(syncRoot));
         }
 
         public void Emit(LogEvent logEvent)

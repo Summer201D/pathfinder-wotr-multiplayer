@@ -15,11 +15,12 @@ namespace WOTRMultiplayer.UI.Menu
     {
         [HarmonyPatch(typeof(SettingsPCView), "Initialize")]
         [HarmonyPostfix]
-        public static void SettingsEntityDropdownPCView_BindViewImplementation_Prefix(SettingsPCView __instance)
+        public static void SettingsPCView_Initialize_Prefix(SettingsPCView __instance)
         {
+            Log.Logger.Information("{methodName}: Applying", nameof(SettingsPCView_Initialize_Prefix));
+
             try
             {
-                Log.Logger.Information("Applying");
                 Main.Multiplayer.Factory.StoreDropdownPrefab(__instance.m_SettingsViews.m_SettingsEntityDropdownViewPrefab);
             }
             catch (Exception ex)
@@ -34,7 +35,8 @@ namespace WOTRMultiplayer.UI.Menu
         [HarmonyPrefix]
         public static void MainMenuSideBarPCView_BindViewImplementation_Prefix(MainMenuSideBarPCView __instance)
         {
-            Log.Logger.Information("Applying");
+            Log.Logger.Information("{methodName}: Applying", nameof(MainMenuSideBarPCView_BindViewImplementation_Prefix));
+
             try
             {
                 var commonPCView = (RootUIContext.Instance.m_CommonView as CommonPCView)?.m_SaveLoadPCView;
