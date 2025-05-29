@@ -231,7 +231,7 @@ namespace WOTRMultiplayer.UI.Menu.Items
         public override void Deactivate()
         {
             _multiplayerHost.Stop();
-            Lobby.Reset();
+            Lobby.ResetData();
             DisposeSaveLoadVM();
             base.Deactivate();
         }

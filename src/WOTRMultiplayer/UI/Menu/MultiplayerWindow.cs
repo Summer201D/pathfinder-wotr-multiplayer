@@ -176,10 +176,10 @@ namespace WOTRMultiplayer.UI.Menu
             if (confirmation != null)
             {
                 var onModalClosed = confirmation.ModalType == MessageModalBase.ModalType.Dialog ? onResult : null;
-                EventBus.RaiseEvent<IMessageModalUIHandler>(delegate (IMessageModalUIHandler w)
+                EventBus.RaiseEvent<IMessageModalUIHandler>(window =>
                 {
-                    w.HandleOpen(confirmation.Text, confirmation.ModalType, onModalClosed, null, null, null, null, null, null, 0, uint.MaxValue, null);
-                }, true);
+                    window.HandleOpen(confirmation.Text, confirmation.ModalType, onModalClosed);
+                });
                 return;
             }
 

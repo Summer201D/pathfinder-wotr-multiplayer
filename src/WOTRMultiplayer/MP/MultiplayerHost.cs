@@ -7,7 +7,6 @@ using WOTRMultiplayer.Abstractions.MP;
 using WOTRMultiplayer.Abstractions.UI.Controllers;
 using WOTRMultiplayer.MP.Entities;
 using WOTRMultiplayer.Networking.Abstractions;
-using WOTRMultiplayer.Networking.Messages._100_Lobby;
 using WOTRMultiplayer.Networking.Messages.Lobby;
 
 namespace WOTRMultiplayer.MP

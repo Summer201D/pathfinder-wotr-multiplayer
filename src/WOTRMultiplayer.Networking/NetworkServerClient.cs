@@ -17,7 +17,6 @@ namespace WOTRMultiplayer.Networking
 
         public Action<Exception> OnError { get; set; }
         public Action<EndPoint> OnConnected { get; set; }
-        public Action OnDisconnected { get; set; }
 
         public bool IsActive => (_client?.IsConnected ?? false);
         public bool IsConnecting { get; private set; } = false;
@@ -32,15 +31,9 @@ namespace WOTRMultiplayer.Networking
             _client = SocketFactory.CreateClient<AsyncTcpClient>(new Messages.ProtobufClientPacket(), host, port);
             _client.ClientError = OnClientError;
             _client.Connected = OnClientConnected;
-            _client.Disconnected = OnClientDisconnected;
             _client.PacketReceive = OnPackedReceived;
             IsConnecting = true;
             var status = await _client.Connect();
-        }
-
-        private void OnClientDisconnected(IClient client)
-        {
-            OnDisconnected?.Invoke();
         }
 
         private void OnClientConnected(IClient client)

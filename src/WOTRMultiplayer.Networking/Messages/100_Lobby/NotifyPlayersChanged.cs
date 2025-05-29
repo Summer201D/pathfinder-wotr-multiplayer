@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using ProtoBuf;
 
-namespace WOTRMultiplayer.Networking.Messages._100_Lobby
+namespace WOTRMultiplayer.Networking.Messages.Lobby
 {
     [ProtoContract]
     [BeetleX.Packets.MessageType(104)]

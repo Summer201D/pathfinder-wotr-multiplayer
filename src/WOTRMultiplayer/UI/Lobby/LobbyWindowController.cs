@@ -232,7 +232,7 @@ namespace WOTRMultiplayer.UI.Lobby
             return saveSlotVM.PartyPortraits.Value.Count > slot ? saveSlotVM.PartyPortraits.Value[slot].Portrait : null;
         }
 
-        public void Reset()
+        public void ResetData()
         {
             var current = GetContentOwnedObject();
             var playerSection = PlayersSectionContent;

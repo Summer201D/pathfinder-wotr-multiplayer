@@ -7,7 +7,6 @@ using WOTRMultiplayer.Abstractions.MP;
 using WOTRMultiplayer.Abstractions.UI.Controllers;
 using WOTRMultiplayer.MP.Entities;
 using WOTRMultiplayer.Networking.Abstractions;
-using WOTRMultiplayer.Networking.Messages._100_Lobby;
 using WOTRMultiplayer.Networking.Messages.Lobby;
 using WOTRMultiplayer.UI;
 
@@ -89,7 +88,6 @@ namespace WOTRMultiplayer.MP
 
             _networkServerClient.OnError = OnNetworkClientError;
             _networkServerClient.OnConnected = OnNetworkClientConnected;
-            _networkServerClient.OnDisconnected = OnNetworkClientDisconnected;
         }
 
         private void OnPlayerReadyStatusChanged(PlayerReadyStatusChanged readyStatusChanged)
@@ -123,11 +121,6 @@ namespace WOTRMultiplayer.MP
             _lobbyWindowController.UpdatePlayers(_game.Players);
         }
 
-        private void OnNetworkClientDisconnected()
-        {
-            _logger.LogInformation("Client disconnected");
-        }
-
         private void OnNetworkClientConnected(EndPoint endpoint)
         {
             _game = new NetworkGame(string.Empty);
@@ -139,12 +132,29 @@ namespace WOTRMultiplayer.MP
         {
             if (exception is SocketException socketException)
             {
-                var code = socketException.ErrorCode;
-                var errorText = $"Network error occurred. Error code: {(SocketError)code}";
-                OnNetworkError?.Invoke(errorText);
+                string error = string.Empty;
+                switch (socketException.SocketErrorCode)
+                {
+                    case SocketError.OperationAborted: // client disconnected by a user
+                        _logger.LogWarning("Skipping notification. SocketCode={socketCode}", socketException.SocketErrorCode);
+                        break;
+                    case SocketError.ConnectionReset:
+                        error = "You have been disconnected.";
+                        break;
+                    default:
+                        error = $"Network error occurred. Error code: {socketException.SocketErrorCode}";
+                        break;
+                }
+
+                if (!string.IsNullOrEmpty(error))
+                {
+                    OnNetworkError?.Invoke(error);
+                }
+
                 return;
             }
 
+            // should never happen?
             OnNetworkError?.Invoke("Generic network error occurred");
             _logger.LogError(exception, "Generic network error occurred");
         }

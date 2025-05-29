@@ -19,7 +19,5 @@ namespace WOTRMultiplayer.Abstractions.MP
         Action<string> OnNetworkError { get; set; }
 
         Action OnConnected { get; set; }
-
-        Action OnDisconnected { get; set; }
     }
 }

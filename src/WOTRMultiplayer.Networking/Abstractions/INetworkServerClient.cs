@@ -19,6 +19,5 @@ namespace WOTRMultiplayer.Networking.Abstractions
 
         Action<Exception> OnError { get; set; }
         Action<EndPoint> OnConnected { get; set; }
-        Action OnDisconnected { get; set; }
     }
 }

@@ -11,7 +11,7 @@ namespace WOTRMultiplayer.Abstractions.UI.Controllers
         void UpdatePlayers(List<NetworkPlayer> playersList);
 
         void InitializeContent(LobbyWindowOwner owner, Transform parent);
-        void Reset();
+        void ResetData();
         void UpdateServerInfo(string serverAddress);
         void UpdateCharacters(SaveSlotVM value);
         void SetActiveOwner(LobbyWindowOwner owner);

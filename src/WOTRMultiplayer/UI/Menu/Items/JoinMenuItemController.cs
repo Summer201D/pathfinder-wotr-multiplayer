@@ -179,19 +179,6 @@ namespace WOTRMultiplayer.UI.Menu.Items
 
             _multiplayerClient.OnNetworkError = OnMultiplayerClientError;
             _multiplayerClient.OnConnected = OnMultiplayerClientConnected;
-            _multiplayerClient.OnDisconnected = OnMultiplayerClientDisconnected;
-        }
-
-        private void OnMultiplayerClientDisconnected()
-        {
-            EventBus.RaiseEvent<IMessageModalUIHandler>(delegate (IMessageModalUIHandler w)
-            {
-                w.HandleOpen("You have been disconnected", MessageModalBase.ModalType.Message, null, null, null, null, null, null, null, 0, uint.MaxValue, null);
-            }, true);
-
-            _multiplayerClient.Dispose();
-            ActivateJoinLobbyControls();
-            Lobby.Reset();
         }
 
         private void OnMultiplayerClientConnected()
@@ -202,14 +189,17 @@ namespace WOTRMultiplayer.UI.Menu.Items
 
         private void OnMultiplayerClientError(string errorMessage)
         {
-            _logger.LogError("Multiplayer client error");
+            _logger.LogError("Multiplayer client error. ErrorText={errorMessage}", errorMessage);
 
-            SetButtonActive(JoinButtonObject, true);
-
-            EventBus.RaiseEvent<IMessageModalUIHandler>(delegate (IMessageModalUIHandler w)
+            _mainThreadAccessor.MainThreadQueue.Enqueue(() =>
             {
-                w.HandleOpen(errorMessage, MessageModalBase.ModalType.Message, null, null, null, null, null, null, null, 0, uint.MaxValue, null);
-            }, true);
+                EventBus.RaiseEvent<IMessageModalUIHandler>(window =>
+                {
+                    window.HandleOpen(errorMessage, MessageModalBase.ModalType.Message, null);
+                });
+            });
+
+            ActivateJoinLobbyControls();
         }
 
         private void OnReadyButtonClicked()
@@ -243,6 +233,8 @@ namespace WOTRMultiplayer.UI.Menu.Items
         {
             _mainThreadAccessor.MainThreadQueue.Enqueue(() =>
             {
+                Lobby.ResetData();
+                SetButtonActive(JoinButtonObject, true);
                 JoinLobbyControlsObject.SetActive(true);
                 LobbyControls.SetActive(false);
                 LobbyWindow.SetActive(false);
@@ -258,10 +250,10 @@ namespace WOTRMultiplayer.UI.Menu.Items
             var result = _multiplayerClient.Join(address, new MP.MultiplayerSettings());
             if (!result.IsOk)
             {
-                EventBus.RaiseEvent<IMessageModalUIHandler>(delegate (IMessageModalUIHandler w)
+                EventBus.RaiseEvent<IMessageModalUIHandler>(window =>
                 {
-                    w.HandleOpen(result.Message, MessageModalBase.ModalType.Message, null, null, null, null, null, null, null, 0, uint.MaxValue, null);
-                }, true);
+                    window.HandleOpen(result.Message, MessageModalBase.ModalType.Message);
+                });
                 return;
             }
 
@@ -279,7 +271,7 @@ namespace WOTRMultiplayer.UI.Menu.Items
         public override void Deactivate()
         {
             ActivateJoinLobbyControls();
-            Lobby.Reset();
+            Lobby.ResetData();
 
             base.Deactivate();
         }
