@@ -45,18 +45,17 @@ namespace WOTRMultiplayer.UI.Lobby
         private readonly ConcurrentDictionary<LobbyWindowOwner, GameObject> _contents = new();
         private LobbyWindowOwner _activeOwner;
 
-        private GameObject ContentOwner => _contents[_activeOwner];
-        private GameObject ServerInfoSectionContent => ContentOwner.transform
+        private GameObject ServerInfoSectionContent => GetContentOwnedObject().transform
             .Find(LobbyContentObjectName)
             .Find(ServerInfoSectionObjectName)
             .Find(ServerInfoSectionContentObjectName).gameObject;
 
-        private GameObject PlayersSectionContent => ContentOwner.transform
+        private GameObject PlayersSectionContent => GetContentOwnedObject().transform
             .Find(LobbyContentObjectName)
             .Find(PlayersSectionObjectName)
             .Find(PlayersSectionContentObjectName).gameObject;
 
-        private GameObject CharactersInfoContainer => ContentOwner.transform
+        private GameObject CharactersInfoContainer => GetContentOwnedObject().transform
             .Find(LobbyContentObjectName)
             .Find(CharactersSectionObjectName)
             .Find(CharactersSectionContentObjectName).gameObject;
@@ -86,6 +85,11 @@ namespace WOTRMultiplayer.UI.Lobby
 
         public void UpdatePlayers(List<NetworkPlayer> players)
         {
+            if (GetContentOwnedObject() == null)
+            {
+                return;
+            }
+
             _mainThreadAccessor.MainThreadQueue.Enqueue(() =>
             {
                 _logger.LogInformation("Updating player list. PlayersCount={playersCount}", players.Count);
@@ -101,7 +105,12 @@ namespace WOTRMultiplayer.UI.Lobby
 
         public void UpdateServerInfo(string serverAddress)
         {
-            ContentOwner.SetActive(true);
+            if (GetContentOwnedObject() == null)
+            {
+                return;
+            }
+
+            GetContentOwnedObject().SetActive(true);
 
             ServerInfoSectionContent.CleanupAllChildren();
 
@@ -223,7 +232,7 @@ namespace WOTRMultiplayer.UI.Lobby
 
         public void Reset()
         {
-            var current = ContentOwner;
+            var current = GetContentOwnedObject();
             var playerSection = PlayersSectionContent;
             var serverSection = ServerInfoSectionContent;
             _mainThreadAccessor.MainThreadQueue.Enqueue(() =>
@@ -237,6 +246,17 @@ namespace WOTRMultiplayer.UI.Lobby
         public void SetActiveOwner(LobbyWindowOwner owner)
         {
             _activeOwner = owner;
+        }
+
+        public GameObject GetContentOwnedObject()
+        {
+            if (!_contents.TryGetValue(_activeOwner, out var content) || content == null)
+            {
+                _logger.LogWarning("Content doesn't exist for the current owner. Owner={owner}", _activeOwner);
+                return null;
+            }
+
+            return content;
         }
     }
 }

@@ -5,13 +5,13 @@ namespace WOTRMultiplayer.Abstractions.MP
 {
     public interface IMultiplayerHost
     {
-        void Start(MultiplayerSettings multiplayerSettings);
+        void Start(string gameName, List<string> portraits, MultiplayerSettings multiplayerSettings);
 
         void Stop();
 
         bool ReadyChanged();
 
-        void NotifySaveChanged(string saveGameName, List<string> portraits);
+        void NotifyGameCharactersChanged(string saveGameName, List<string> portraits);
 
         bool IsActive { get; }
     }

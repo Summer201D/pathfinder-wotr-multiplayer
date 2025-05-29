@@ -7,6 +7,7 @@ using WOTRMultiplayer.Abstractions.MP;
 using WOTRMultiplayer.Abstractions.UI.Controllers;
 using WOTRMultiplayer.MP.Entities;
 using WOTRMultiplayer.Networking.Abstractions;
+using WOTRMultiplayer.Networking.Messages._100_Lobby;
 using WOTRMultiplayer.Networking.Messages.Lobby;
 
 namespace WOTRMultiplayer.MP
@@ -17,9 +18,9 @@ namespace WOTRMultiplayer.MP
         private readonly INetworkServer _networkServer;
         private readonly ILobbyWindowController _lobbyWindowController;
 
-        private readonly List<NetworkPlayer> _playersList = [];
         private readonly object _actionlock = new();
         public const int LocalHostPlayerId = -1;
+        private NetworkGame _game;
 
         public bool IsActive => _networkServer.IsActive;
 
@@ -33,7 +34,7 @@ namespace WOTRMultiplayer.MP
             _lobbyWindowController = lobbyWindowController;
         }
 
-        public void Start(MultiplayerSettings settings)
+        public void Start(string gameName, List<string> portraits, MultiplayerSettings settings)
         {
             if (_networkServer.IsActive)
             {
@@ -41,6 +42,12 @@ namespace WOTRMultiplayer.MP
             }
 
             RegisterHandlers();
+
+            _game?.Players.Clear();
+            _game?.Portraits.Clear();
+
+            _game = new NetworkGame(gameName);
+            _game.Portraits.AddRange(portraits);
 
             _networkServer.Start();
         }
@@ -51,7 +58,7 @@ namespace WOTRMultiplayer.MP
 
             lock (_actionlock)
             {
-                _playersList.Clear();
+                _game?.Players.Clear();
             }
 
             _networkServer.Dispose();
@@ -59,9 +66,8 @@ namespace WOTRMultiplayer.MP
 
         public bool ReadyChanged()
         {
-            var player = _playersList.First(p => p.Id == LocalHostPlayerId); // host should be always present
-            player.IsReady = !player.IsReady;
-            var readyChanged = new PlayerReadyStatusChanged { IsReady = player.IsReady };
+            var player = _game.Players.First(p => p.Id == LocalHostPlayerId); // host should be always present
+            var readyChanged = new PlayerReadyStatusChanged { PlayerId = LocalHostPlayerId, IsReady = !player.IsReady };
             OnPlayerReadyStatusChanged(player.Id, readyChanged);
             return readyChanged.IsReady;
         }
@@ -85,17 +91,15 @@ namespace WOTRMultiplayer.MP
                 var existingPlayer = GetPlayer(playerId);
                 if (existingPlayer == null)
                 {
-                    // warn
+                    _logger.LogWarning("Can't find existing player. PlayerId={playerId}", playerId);
                     return;
                 }
 
                 existingPlayer.IsReady = readyStatusChanged.IsReady;
 
-                // new event maybe to notify all clients
-                //readyStatusChanged.PlayerId = playerId;
-                //_networkServer.SendAllExcept(playerId, readyStatusChanged);
-                // update UI
-                _lobbyWindowController.UpdatePlayers(_playersList);
+                _lobbyWindowController.UpdatePlayers(_game.Players);
+                _logger.LogWarning("Sending ready status changed. PlayerId={playerId}, IsReady={isReady}", playerId, existingPlayer.IsReady);
+                _networkServer.SendAll(readyStatusChanged);
             }
         }
 
@@ -119,8 +123,14 @@ namespace WOTRMultiplayer.MP
 
                 existingPlayer.Name = response.Name;
 
-                _lobbyWindowController.UpdatePlayers(_playersList);
-                // send updates to other clients
+                _lobbyWindowController.UpdatePlayers(_game.Players);
+
+                var players = _game.Players.Select(x => new Networking.Messages.NetworkPlayer { Id = x.Id, Name = x.Name, IsReady = x.IsReady }).ToList();
+                var playersChanged = new NotifyPlayersChanged { Players = players };
+                _networkServer.SendAll(playersChanged);
+
+                var notifyGameCharactersChanged = CreateNotifyGameCharactersChanged();
+                _networkServer.Send(playerId, notifyGameCharactersChanged);
             }
         }
 
@@ -136,9 +146,9 @@ namespace WOTRMultiplayer.MP
                 }
 
                 var player = new NetworkPlayer(playerId);
-                _playersList.Add(player);
+                _game.Players.Add(player);
                 _logger.LogWarning("Sending player name request. PlayerId={playerId}", playerId);
-                _networkServer.Send(playerId, new PlayerNameRequest());
+                _networkServer.Send(playerId, new PlayerNameRequest { PlayerId = playerId });
             }
         }
 
@@ -153,10 +163,10 @@ namespace WOTRMultiplayer.MP
                     return;
                 }
 
-                _playersList.Remove(existingPlayer);
+                _game.Players.Remove(existingPlayer);
                 if (!string.IsNullOrEmpty(existingPlayer.Name))
                 {
-                    _lobbyWindowController.UpdatePlayers(_playersList);
+                    _lobbyWindowController.UpdatePlayers(_game.Players);
                 }
 
                 // send updates to other clients
@@ -165,25 +175,35 @@ namespace WOTRMultiplayer.MP
 
         private void OnServerStarted(EndPoint point)
         {
-            _playersList.Add(new NetworkPlayer(LocalHostPlayerId)
+            _game.Players.Add(new NetworkPlayer(LocalHostPlayerId)
             {
                 Name = Guid.NewGuid().ToString().Split('-').First()
             });
 
             _lobbyWindowController.UpdateServerInfo(point.ToString());
-            _lobbyWindowController.UpdatePlayers(_playersList);
+            _lobbyWindowController.UpdatePlayers(_game.Players);
         }
 
         private NetworkPlayer GetPlayer(long playerId)
         {
-            return _playersList.FirstOrDefault(p => p.Id == playerId);
+            return _game.Players.FirstOrDefault(p => p.Id == playerId);
         }
 
-        public void NotifySaveChanged(string saveGameName, List<string> portraits)
+        public void NotifyGameCharactersChanged(string gameName, List<string> portraits)
         {
-            _logger.LogInformation("Notifying save game changed. Name={saveGameName}, Portraits={portraits}", saveGameName, string.Join(";", portraits));
-            var message = new NotifySaveChanged { SaveGameName = saveGameName, Portraits = portraits };
+            _game.Name = gameName;
+            _game.Portraits.Clear();
+            _game.Portraits.AddRange(portraits);
+
+            _logger.LogInformation("Notifying game characters changed. Name={gameName}, Portraits={portraits}", gameName, string.Join(";", portraits));
+            var message = CreateNotifyGameCharactersChanged();
             _networkServer.SendAll(message);
+        }
+
+        private NotifyGameCharactersChanged CreateNotifyGameCharactersChanged()
+        {
+            var message = new NotifyGameCharactersChanged { GameName = _game.Name, Portraits = _game.Portraits };
+            return message;
         }
     }
 }

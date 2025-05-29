@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using Microsoft.Extensions.DependencyInjection;
 using WOTRMultiplayer.Abstractions.MP;
 using WOTRMultiplayer.MP;
@@ -17,7 +18,8 @@ namespace WOTRMultiplayer.Playground.Host
 
             var serviceProvider = DI.DIFactory.Create(new Config.UnityMod.UnityModManagerSettings { UseDebugConsole = false });
             var host = serviceProvider.GetService<IMultiplayerHost>();
-            host.Start(new MultiplayerSettings());
+            var portraits = new List<string> { "1", "2" };
+            host.Start("dummy game name", portraits, new MultiplayerSettings());
             var input = string.Empty;
 
             Console.Write(@$"

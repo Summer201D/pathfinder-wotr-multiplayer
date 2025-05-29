@@ -6,5 +6,7 @@ namespace WOTRMultiplayer.Networking.Messages.Lobby
     [BeetleX.Packets.MessageType(100)]
     public class PlayerNameRequest
     {
+        [ProtoMember(1)]
+        public long PlayerId { get; set; }
     }
 }

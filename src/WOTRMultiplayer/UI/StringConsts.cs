@@ -32,7 +32,9 @@
                 public const string ReadyButtonLabel = "Ready";
                 public const string ReadyNotReadyButtonLabel = "Not Ready";
                 public const string LeaveButtonLabel = "Leave";
-                public const string ServerInputPlaceholder = "Enter ServerIP:Port";
+                public const string ServerInputPlaceholder = "Enter ip:port";
+
+                public const string LeaveWhileConnectingMessage = "Can't leave while connecting.\nPlease wait";
             }
 
             public class HostMenu

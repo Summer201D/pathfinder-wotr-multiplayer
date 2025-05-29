@@ -17,10 +17,8 @@ namespace WOTRMultiplayer.UI.Menu.Items
 {
     public class JoinMenuItemController : MenuItemController, IJoinMenuItemController
     {
+        public const string RootContentScreenObjectName = "RootContentScreen";
         public const string JoinMenuItemContentObjectName = "JoinMenuItemContent";
-        public const string JoinLobbyScreenObjectName = "JoinLobbyScreen";
-        public const string LobbyWindowObjectName = "MultiplayerLobby";
-        public const string JoinLobbyActionMenuObjectName = "JoinLobbyActionMenu";
         public const string JoinLobbyControlsMenuObjectName = "JoinLobbyControlsMenu";
         public const string ServerAddressInputObjectName = "ServerAddressInput";
         public const string JoinServerButtonObjectName = "JoinServerButton";
@@ -28,6 +26,8 @@ namespace WOTRMultiplayer.UI.Menu.Items
         public const string LobbyControlsMenuObjectName = "LobbyControlsMenu";
         public const string LobbyControlsMenuReadyButtonObjectName = "ReadyButton";
         public const string LobbyControlsMenuLeaveButtonObjectName = "LeaveButton";
+
+        public const string LobbyWindowObjectName = "LobbyWindow";
 
         private readonly ILogger<JoinMenuItemController> _logger;
         private readonly ILobbyWindowController _lobbyWindowController;
@@ -39,8 +39,7 @@ namespace WOTRMultiplayer.UI.Menu.Items
         protected override GameObject MenuContent => _menuContent;
 
         protected GameObject JoinLobbyControlsObject => _menuContent.transform
-            .Find(JoinLobbyScreenObjectName)
-            .Find(JoinLobbyActionMenuObjectName)
+            .Find(RootContentScreenObjectName)
             .Find(JoinLobbyControlsMenuObjectName)
             .gameObject;
 
@@ -53,9 +52,13 @@ namespace WOTRMultiplayer.UI.Menu.Items
             .gameObject;
 
         protected GameObject LobbyControls => _menuContent.transform
-            .Find(JoinLobbyScreenObjectName)
-            .Find(JoinLobbyActionMenuObjectName)
+            .Find(RootContentScreenObjectName)
             .Find(LobbyControlsMenuObjectName)
+            .gameObject;
+
+        protected GameObject LobbyWindow => _menuContent.transform
+            .Find(RootContentScreenObjectName)
+            .Find(LobbyWindowObjectName)
             .gameObject;
 
         protected GameObject ReadyButtonObject => LobbyControls.transform
@@ -108,39 +111,27 @@ namespace WOTRMultiplayer.UI.Menu.Items
             menuContentRect.sizeDelta = new Vector2(menuContentRect.sizeDelta.x * 0.4f, menuContentRect.sizeDelta.y * 0.88f);
 
             var content = _uIFactory.CreateDefaultGameObject(_menuContent.transform);
-            content.name = JoinLobbyScreenObjectName;
+            content.name = RootContentScreenObjectName;
             content.AddComponent<VerticalLayoutGroup>();
 
             var lobbyWindow = _uIFactory.CreateDefaultGameObject(content.transform);
+            lobbyWindow.name = LobbyWindowObjectName;
             var lobbyWindowLayout = lobbyWindow.AddComponent<LayoutElement>();
             lobbyWindowLayout.preferredHeight = menuContentRect.sizeDelta.y;
-            lobbyWindow.AddComponent<VerticalLayoutGroup>();
-            lobbyWindow.name = "LobbyWindow";
+            var lobbyWindowVertical = lobbyWindow.AddComponent<VerticalLayoutGroup>();
+            lobbyWindowVertical.padding = new RectOffset(0, 0, 0, 20);
             var lobbyWindowRect = lobbyWindow.GetComponent<RectTransform>();
             lobbyWindowRect.sizeDelta = menuContentRect.sizeDelta;
             _lobbyWindowController.InitializeContent(LobbyWindowOwner.JoinMenu, lobbyWindow.transform);
 
-            var actionMenuContainer = _uIFactory.CreateDefaultGameObject(content.transform);
-            actionMenuContainer.name = JoinLobbyActionMenuObjectName;
-
-            actionMenuContainer.GetComponent<RectTransform>().pivot = new Vector2(0.5f, 0f);
-            actionMenuContainer.AddComponent<HorizontalLayoutGroup>();
-            var actionMenuContainerLayout = actionMenuContainer.AddComponent<LayoutElement>();
-            actionMenuContainerLayout.preferredHeight = menuContentRect.sizeDelta.y * 0.07f;
-
             // input + button ?
-            var joinLobbyControlsMenu = _uIFactory.CreateDefaultGameObject(actionMenuContainer.transform);
+            var joinLobbyControlsMenu = _uIFactory.CreateDefaultGameObject(content.transform);
+            joinLobbyControlsMenu.GetComponent<RectTransform>().pivot = new Vector2(0.5f, 0.5f);
             joinLobbyControlsMenu.name = JoinLobbyControlsMenuObjectName;
-            joinLobbyControlsMenu.AddComponent<HorizontalLayoutGroup>();
-
-            var joinLobbyButtonObject = _uIFactory.CreateButton(joinLobbyControlsMenu.transform);
-            joinLobbyButtonObject.name = JoinServerButtonObjectName;
-            var joinLobbyButtonObjectLayout = joinLobbyButtonObject.AddComponent<LayoutElement>();
-            joinLobbyButtonObjectLayout.preferredWidth = menuContentRect.sizeDelta.x * 0.2f;
-            joinLobbyButtonObject.AddComponent<ContentSizeFitter>().horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
-            joinLobbyButtonObject.GetComponentInChildren<TextMeshProUGUI>().SetText(StringConsts.MultiplayerWindow.JoinMenu.JoinButtonLabel);
-            var button = joinLobbyButtonObject.GetComponent<OwlcatButton>();
-            button.OnLeftClick.AddListener(OnJoinButtonClicked);
+            joinLobbyControlsMenu.AddComponent<VerticalLayoutGroup>();
+            joinLobbyControlsMenu.AddComponent<ContentSizeFitter>().verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+            var joinLobbyControlsMenuLayout = joinLobbyControlsMenu.AddComponent<LayoutElement>();
+            joinLobbyControlsMenuLayout.preferredHeight = menuContentRect.sizeDelta.y * 0.10f;
 
             var serverInfoInputObject = _uIFactory.CreateInput(joinLobbyControlsMenu.transform);
             serverInfoInputObject.name = ServerAddressInputObjectName;
@@ -153,11 +144,22 @@ namespace WOTRMultiplayer.UI.Menu.Items
             serverInfoInput.overflowMode = TextOverflowModes.Truncate;
             serverInfoInput.alignment = TextAlignmentOptions.Center;
 
+            var joinLobbyButtonObject = _uIFactory.CreateButton(joinLobbyControlsMenu.transform);
+            joinLobbyButtonObject.name = JoinServerButtonObjectName;
+            var joinLobbyButtonObjectLayout = joinLobbyButtonObject.AddComponent<LayoutElement>();
+            joinLobbyButtonObjectLayout.preferredWidth = menuContentRect.sizeDelta.x * 0.35f;
+            joinLobbyButtonObject.AddComponent<ContentSizeFitter>().horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
+            joinLobbyButtonObject.GetComponentInChildren<TextMeshProUGUI>().SetText(StringConsts.MultiplayerWindow.JoinMenu.JoinButtonLabel);
+            var button = joinLobbyButtonObject.GetComponent<OwlcatButton>();
+            button.OnLeftClick.AddListener(OnJoinButtonClicked);
+
             // leave + ready buttons?
-            var lobbyControlsMenu = _uIFactory.CreateDefaultGameObject(actionMenuContainer.transform);
+            var lobbyControlsMenu = _uIFactory.CreateDefaultGameObject(content.transform);
             lobbyControlsMenu.name = LobbyControlsMenuObjectName;
-            lobbyControlsMenu.SetActive(false);
             lobbyControlsMenu.AddComponent<HorizontalLayoutGroup>();
+            lobbyControlsMenu.GetComponent<RectTransform>().pivot = new Vector2(0.5f, 0f);
+            var lobbyControlsMenuLayout = lobbyControlsMenu.AddComponent<LayoutElement>();
+            lobbyControlsMenuLayout.preferredHeight = menuContentRect.sizeDelta.y * 0.07f;
 
             var readyButtonObject = _uIFactory.CreateButton(lobbyControlsMenu.transform);
             readyButtonObject.name = LobbyControlsMenuReadyButtonObjectName;
@@ -201,6 +203,8 @@ namespace WOTRMultiplayer.UI.Menu.Items
 
         private void OnMultiplayerClientError(string errorMessage)
         {
+            _logger.LogError("Multiplayer client error");
+
             SetButtonActive(JoinButtonObject, true);
 
             EventBus.RaiseEvent<IMessageModalUIHandler>(delegate (IMessageModalUIHandler w)
@@ -232,6 +236,7 @@ namespace WOTRMultiplayer.UI.Menu.Items
 
                 JoinLobbyControlsObject.SetActive(false);
                 LobbyControls.SetActive(true);
+                LobbyWindow.SetActive(true);
             });
         }
 
@@ -241,6 +246,7 @@ namespace WOTRMultiplayer.UI.Menu.Items
             {
                 JoinLobbyControlsObject.SetActive(true);
                 LobbyControls.SetActive(false);
+                LobbyWindow.SetActive(false);
             });
         }
 
@@ -292,7 +298,7 @@ namespace WOTRMultiplayer.UI.Menu.Items
             {
                 return new ModalActionConfirmation
                 {
-                    Text = "Can't leave while connecting. Please wait",
+                    Text = StringConsts.MultiplayerWindow.JoinMenu.LeaveWhileConnectingMessage,
                     ModalType = MessageModalBase.ModalType.Message
                 };
             }

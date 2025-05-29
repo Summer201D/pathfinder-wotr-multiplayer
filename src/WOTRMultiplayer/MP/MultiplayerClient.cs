@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
@@ -8,6 +7,7 @@ using WOTRMultiplayer.Abstractions.MP;
 using WOTRMultiplayer.Abstractions.UI.Controllers;
 using WOTRMultiplayer.MP.Entities;
 using WOTRMultiplayer.Networking.Abstractions;
+using WOTRMultiplayer.Networking.Messages._100_Lobby;
 using WOTRMultiplayer.Networking.Messages.Lobby;
 using WOTRMultiplayer.UI;
 
@@ -20,9 +20,9 @@ namespace WOTRMultiplayer.MP
         private readonly INetworkServerClient _networkServerClient;
         private readonly ILobbyWindowController _lobbyWindowController;
 
-        private readonly List<NetworkPlayer> _playersList = [];
+        private NetworkGame _game;
         private readonly object _actionlock = new();
-        private const int LocalPlayerId = -2;
+        private long _localPlayerId;
 
         public Action<string> OnNetworkError { get; set; }
 
@@ -49,7 +49,7 @@ namespace WOTRMultiplayer.MP
         {
             if (_networkServerClient.IsActive)
             {
-                _networkServerClient.Dispose();
+                Dispose();
             }
 
             if (!_ipEndPointParser.TryParse(address, out IPEndPoint endpoint))
@@ -66,15 +66,14 @@ namespace WOTRMultiplayer.MP
 
             _networkServerClient.ConnectAsync(endpoint.Address.ToString(), endpoint.Port);
 
-            _playersList.Add(new NetworkPlayer(LocalPlayerId) { Name = settings.PlayerName });
             return JoinLobbyResult.Ok();
         }
 
         public bool ReadyChanged()
         {
-            var player = _playersList.First(p => p.Id == LocalPlayerId); // client should be always present
+            var player = _game.Players.First(p => p.Id == _localPlayerId); // local client should be always present
             player.IsReady = !player.IsReady;
-            var readyChanged = new PlayerReadyStatusChanged { IsReady = player.IsReady };
+            var readyChanged = new PlayerReadyStatusChanged { PlayerId = player.Id, IsReady = player.IsReady };
             _networkServerClient.SendAsync(readyChanged).Wait();
             return readyChanged.IsReady;
         }
@@ -83,11 +82,45 @@ namespace WOTRMultiplayer.MP
         {
             _networkServerClient
                 .Register<PlayerNameRequest>(OnPlayerNameRequest)
+                .Register<PlayerReadyStatusChanged>(OnPlayerReadyStatusChanged)
+                .Register<NotifyPlayersChanged>(OnNotifyPlayersChanged)
+                .Register<NotifyGameCharactersChanged>(OnNotifyGameCharactersChanged)
                 ;
 
             _networkServerClient.OnError = OnNetworkClientError;
             _networkServerClient.OnConnected = OnNetworkClientConnected;
             _networkServerClient.OnDisconnected = OnNetworkClientDisconnected;
+        }
+
+        private void OnPlayerReadyStatusChanged(PlayerReadyStatusChanged readyStatusChanged)
+        {
+            lock (_actionlock)
+            {
+                var existingPlayer = GetPlayer(readyStatusChanged.PlayerId);
+                if (existingPlayer == null)
+                {
+                    _logger.LogWarning("Can't find existing player. PlayerId={playerId}", readyStatusChanged.PlayerId);
+                    return;
+                }
+
+                existingPlayer.IsReady = readyStatusChanged.IsReady;
+                _lobbyWindowController.UpdatePlayers(_game.Players);
+            }
+        }
+
+        private void OnNotifyGameCharactersChanged(NotifyGameCharactersChanged changed)
+        {
+            _logger.LogInformation("{messageType} received", nameof(NotifyGameCharactersChanged));
+        }
+
+        private void OnNotifyPlayersChanged(NotifyPlayersChanged changed)
+        {
+            _logger.LogInformation("{messageType} received", nameof(NotifyPlayersChanged));
+            _game.Players.Clear();
+            var players = changed.Players.Select(p => new NetworkPlayer(p.Id) { IsReady = p.IsReady, Name = p.Name }).ToList();
+            _game.Players.AddRange(players);
+
+            _lobbyWindowController.UpdatePlayers(_game.Players);
         }
 
         private void OnNetworkClientDisconnected()
@@ -97,6 +130,7 @@ namespace WOTRMultiplayer.MP
 
         private void OnNetworkClientConnected(EndPoint endpoint)
         {
+            _game = new NetworkGame(string.Empty);
             _lobbyWindowController.UpdateServerInfo(endpoint.ToString());
             OnConnected?.Invoke();
         }
@@ -117,15 +151,24 @@ namespace WOTRMultiplayer.MP
 
         private void OnPlayerNameRequest(PlayerNameRequest request)
         {
-            _logger.LogInformation("Player name requested");
-            var nameResponse = new PlayerNameResponse() { Name = "AAA" };
+            _logger.LogInformation("Player name requested. PlayerId={playerId}", request.PlayerId);
+            _localPlayerId = request.PlayerId;
+
+            var nameResponse = new PlayerNameResponse() { Name = "mp client name" };
             _networkServerClient.SendAsync(nameResponse).Wait();
+            _logger.LogInformation("Player name has been sent. Name={name}", nameResponse.Name);
         }
 
         public void Dispose()
         {
-            _playersList.Clear();
+            _game?.Players.Clear();
+            _game?.Portraits.Clear();
             _networkServerClient?.Dispose();
+        }
+
+        private NetworkPlayer GetPlayer(long playerId)
+        {
+            return _game.Players.FirstOrDefault(p => p.Id == playerId);
         }
     }
 }
