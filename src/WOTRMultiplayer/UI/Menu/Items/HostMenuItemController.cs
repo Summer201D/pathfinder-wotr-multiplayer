@@ -230,7 +230,11 @@ namespace WOTRMultiplayer.UI.Menu.Items
 
         public override void Deactivate()
         {
-            _multiplayerHost.Stop();
+            if (_multiplayerHost.IsInLobby)
+            {
+                _multiplayerHost.Dispose();
+            }
+
             Lobby.ResetData();
             DisposeSaveLoadVM();
             base.Deactivate();
@@ -261,15 +265,15 @@ namespace WOTRMultiplayer.UI.Menu.Items
 
         protected override ModalActionConfirmation GetDeactivationConfirmationInternal()
         {
-            if (!_multiplayerHost.IsActive)
+            if (_multiplayerHost.IsInLobby)
             {
-                return base.GetDeactivationConfirmationInternal();
+                return new ModalActionConfirmation
+                {
+                    Text = StringConsts.MultiplayerWindow.HostMenu.TerminateServerMessage
+                };
             }
 
-            return new ModalActionConfirmation
-            {
-                Text = StringConsts.MultiplayerWindow.HostMenu.TerminateServerMessage
-            };
+            return null;
         }
     }
 }

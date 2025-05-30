@@ -32,6 +32,10 @@ namespace WOTRMultiplayer.MP
 
         public bool IsConnecting => _networkServerClient.IsConnecting;
 
+        private NetworkGameStatus Status => _game?.Status ?? NetworkGameStatus.None;
+
+        public bool IsInLobby => IsActive && Status == NetworkGameStatus.Lobby;
+
         public MultiplayerClient(
             ILogger<MultiplayerClient> logger,
             IIPEndPointParser ipEndPointParser,
@@ -171,8 +175,15 @@ namespace WOTRMultiplayer.MP
 
         public void Dispose()
         {
-            _game?.Players.Clear();
-            _game?.Portraits.Clear();
+            _logger.LogInformation("Disposing");
+
+            if (_game != null)
+            {
+                _game.Players.Clear();
+                _game.Portraits.Clear();
+                _game.Status = NetworkGameStatus.None;
+            }
+
             _networkServerClient?.Dispose();
         }
 

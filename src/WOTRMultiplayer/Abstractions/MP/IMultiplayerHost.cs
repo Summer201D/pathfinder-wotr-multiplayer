@@ -7,11 +7,13 @@ namespace WOTRMultiplayer.Abstractions.MP
     {
         void Start(string gameName, List<string> portraits, MultiplayerSettings multiplayerSettings);
 
-        void Stop();
+        void Dispose();
 
         bool ReadyChanged();
 
         void NotifyGameCharactersChanged(string saveGameName, List<string> portraits);
+
+        bool IsInLobby { get; }
 
         bool IsActive { get; }
     }

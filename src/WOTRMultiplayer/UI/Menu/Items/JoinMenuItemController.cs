@@ -270,6 +270,11 @@ namespace WOTRMultiplayer.UI.Menu.Items
 
         public override void Deactivate()
         {
+            if (_multiplayerClient.IsInLobby)
+            {
+                _multiplayerClient.Dispose();
+            }
+
             ActivateJoinLobbyControls();
             Lobby.ResetData();
 
@@ -278,7 +283,7 @@ namespace WOTRMultiplayer.UI.Menu.Items
 
         protected override ModalActionConfirmation GetDeactivationConfirmationInternal()
         {
-            if (_multiplayerClient.IsActive)
+            if (_multiplayerClient.IsInLobby)
             {
                 return new ModalActionConfirmation
                 {

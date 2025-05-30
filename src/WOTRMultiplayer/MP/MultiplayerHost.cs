@@ -17,11 +17,15 @@ namespace WOTRMultiplayer.MP
         private readonly INetworkServer _networkServer;
         private readonly ILobbyWindowController _lobbyWindowController;
 
+        private NetworkGameStatus Status => _game?.Status ?? NetworkGameStatus.None;
+
         private readonly object _actionlock = new();
         public const int LocalHostPlayerId = -1;
         private NetworkGame _game;
 
         public bool IsActive => _networkServer.IsActive;
+
+        public bool IsInLobby => IsActive && Status == NetworkGameStatus.Lobby;
 
         public MultiplayerHost(
             ILogger<MultiplayerHost> logger,
@@ -51,9 +55,9 @@ namespace WOTRMultiplayer.MP
             _networkServer.Start();
         }
 
-        public void Stop()
+        public void Dispose()
         {
-            _logger.LogInformation("Stop");
+            _logger.LogInformation("Dispose");
 
             lock (_actionlock)
             {

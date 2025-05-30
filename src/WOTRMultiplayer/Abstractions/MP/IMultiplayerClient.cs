@@ -14,6 +14,8 @@ namespace WOTRMultiplayer.Abstractions.MP
 
         bool IsActive { get; }
 
+        bool IsInLobby { get; }
+
         bool IsConnecting { get; }
 
         Action<string> OnNetworkError { get; set; }
