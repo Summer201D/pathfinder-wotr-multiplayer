@@ -22,12 +22,13 @@ namespace WOTRMultiplayer.Playground.Client
 
             Console.Write(@$"
             exit - exit the program
+            ready - toggle client ready status
             {Environment.NewLine}");
             while ((input = Console.ReadLine()) != "exit")
             {
                 switch (input)
                 {
-                    case "1":
+                    case "ready":
                         client.ReadyChanged();
                         break;
                     default:

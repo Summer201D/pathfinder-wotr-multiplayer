@@ -18,6 +18,8 @@ namespace WOTRMultiplayer.Abstractions.MP
 
         void Start();
 
+        void ChangeCharacterOwner(int characterIndex, int playerIndex);
+
         bool IsInLobby { get; }
 
         bool IsActive { get; }

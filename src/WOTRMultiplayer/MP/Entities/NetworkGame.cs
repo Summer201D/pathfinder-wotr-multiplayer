@@ -10,6 +10,8 @@ namespace WOTRMultiplayer.MP.Entities
 
         public List<NetworkPlayer> Players { get; set; } = [];
 
+        public List<NetworkCharacterOwner> CharacterOwners { get; set; } = [];
+
         public string SavePath { get; set; }
 
         public NetworkGame(string savePath)
@@ -22,6 +24,7 @@ namespace WOTRMultiplayer.MP.Entities
         {
             Portraits.Clear();
             Players.Clear();
+            CharacterOwners.Clear();
             SavePath = null;
             Status = NetworkGameStatus.None;
         }

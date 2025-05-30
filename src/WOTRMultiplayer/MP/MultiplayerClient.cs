@@ -18,6 +18,8 @@ namespace WOTRMultiplayer.MP
         private readonly IIPEndPointParser _ipEndPointParser;
         private readonly INetworkServerClient _networkServerClient;
 
+        public const int LocalHostPlayerId = -1;
+
         private NetworkGame _game;
         private readonly object _actionlock = new();
         private long _localPlayerId;
@@ -28,6 +30,7 @@ namespace WOTRMultiplayer.MP
 
         public Action<List<NetworkPlayer>> OnPlayersChanged { get; set; }
         public Action<List<string>> OnGameCharactersChanged { get; set; }
+        public Action<int, int> OnCharacterOwnerChanged { get; set; }
 
         public Action OnDisconnected { get; set; }
 
@@ -58,12 +61,12 @@ namespace WOTRMultiplayer.MP
 
             if (!_ipEndPointParser.TryParse(address, out IPEndPoint endpoint))
             {
-                return ConnectLobbyResult.Error(StringConsts.MultiplayerClient.Errors.InvalidIP);
+                return ConnectLobbyResult.Error(UIStringConsts.MultiplayerClient.Errors.InvalidIP);
             }
 
             if (endpoint.Port <= 0 || endpoint.Port > ushort.MaxValue)
             {
-                return ConnectLobbyResult.Error(StringConsts.MultiplayerClient.Errors.InvalidPort);
+                return ConnectLobbyResult.Error(UIStringConsts.MultiplayerClient.Errors.InvalidPort);
             }
 
             RegisterHandlers();
@@ -87,12 +90,7 @@ namespace WOTRMultiplayer.MP
         {
             _logger.LogInformation("Disposing");
 
-            if (_game != null)
-            {
-                _game.Players.Clear();
-                _game.Portraits.Clear();
-                _game.Status = NetworkGameStatus.None;
-            }
+            _game?.Reset();
 
             _networkServerClient?.Dispose();
         }
@@ -106,10 +104,37 @@ namespace WOTRMultiplayer.MP
                 .Register<NotifyGameCharactersChanged>(OnNotifyGameCharactersChanged)
                 .Register<NotifySaveGameAssigned>(OnNotifySaveGameAssigned)
                 .Register<NotifyGameStatusChanged>(OnNotifyGameStatusChanged)
+                .Register<NotifyCharactersOwnerChanged>(OnNotifyCharactersOwnerChanged)
                 ;
 
             _networkServerClient.OnError = OnNetworkClientError;
             _networkServerClient.OnConnected = OnNetworkClientConnected;
+        }
+
+        private void OnNotifyCharactersOwnerChanged(NotifyCharactersOwnerChanged changed)
+        {
+            _logger.LogInformation("NotifyCharactersOwnerChanged. CharacterIndex={characterIndex}, PlayerName={playerId}");
+
+            _game.CharacterOwners = [.. changed.Owners.Select(o => new NetworkCharacterOwner { CharacterIndex = o.CharacterIndex, PlayerId = o.PlayerId })];
+            try
+            {
+                foreach (var owner in _game.CharacterOwners)
+                {
+                    var player = _game.Players.FirstOrDefault(p => p.Id == owner.PlayerId);
+                    if (player == null)
+                    {
+                        _logger.LogWarning("Unable to find player for owner sync. PlayerId={playerId}", owner.PlayerId);
+                        continue;
+                    }
+
+                    OnCharacterOwnerChanged?.Invoke(owner.CharacterIndex, _game.Players.IndexOf(player));
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Unable to handle {messageType}", nameof(NotifyCharactersOwnerChanged));
+                throw;
+            }
         }
 
         private void OnNotifyGameStatusChanged(NotifyGameStatusChanged changed)
@@ -155,6 +180,9 @@ namespace WOTRMultiplayer.MP
             _game.Players.Clear();
             var players = changed.Players.Select(p => new NetworkPlayer(p.Id) { IsReady = p.IsReady, Name = p.Name }).ToList();
             _game.Players.AddRange(players);
+
+            // add or remove players should cause owner reset
+            _game.CharacterOwners = [.. Enumerable.Range(0, Main.MaxCharacters).Select(x => new NetworkCharacterOwner { CharacterIndex = x, PlayerId = LocalHostPlayerId })];
 
             OnPlayersChanged?.Invoke(_game.Players);
         }

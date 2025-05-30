@@ -27,12 +27,22 @@ namespace WOTRMultiplayer.Playground.Host
 
             Console.Write(@$"
             exit - exit the program
+            ready - toggle host ready status
+            owner_00 - change 0 char owner to 0 player
+            owner_01 - change 0 char owner to 1 player
             {Environment.NewLine}");
             while ((input = Console.ReadLine()) != "exit")
             {
                 switch (input)
                 {
-                    case "1":
+                    case "ready":
+                        host.ReadyChanged();
+                        break;
+                    case "owner_00":
+                        host.ChangeCharacterOwner(0, 0);
+                        break;
+                    case "owner_01":
+                        host.ChangeCharacterOwner(0, 1);
                         break;
                     default:
                         break;

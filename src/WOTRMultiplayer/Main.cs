@@ -20,6 +20,8 @@ namespace WOTRMultiplayer
 
         public static IMultiplayer Multiplayer { get; private set; }
 
+        public const int MaxCharacters = 6;
+
         public static bool Load(UnityModManager.ModEntry entry)
         {
             try

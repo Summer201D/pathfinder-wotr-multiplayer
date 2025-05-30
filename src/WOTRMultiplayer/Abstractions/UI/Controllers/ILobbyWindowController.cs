@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using UnityEngine;
 using WOTRMultiplayer.MP.Entities;
 using WOTRMultiplayer.UI.Lobby;
@@ -13,8 +14,11 @@ namespace WOTRMultiplayer.Abstractions.UI.Controllers
         void ResetData();
         void UpdateServerInfo(string serverAddress);
         void UpdateCharacters(List<string> portraits);
+        void UpdateCharacterOwnerDropdown(int characterIndex, int playerIndex);
         void SetActiveOwner(LobbyWindowOwner owner);
 
         void ResetOwner(LobbyWindowOwner owner);
+
+        Action<int, int> OnCharacterOwnerChanged { get; set; }
     }
 }

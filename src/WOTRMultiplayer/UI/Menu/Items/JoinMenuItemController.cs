@@ -95,6 +95,7 @@ namespace WOTRMultiplayer.UI.Menu.Items
                 return;
             }
 
+            SetupHandlers(true);
             Lobby.SetActiveOwner(LobbyWindowOwner.JoinMenu);
             base.Activate();
         }
@@ -105,6 +106,7 @@ namespace WOTRMultiplayer.UI.Menu.Items
                 _multiplayerClient.Dispose();
             }
 
+            SetupHandlers(false);
             ActivateJoinLobbyControls();
             Lobby.ResetData();
 
@@ -117,14 +119,14 @@ namespace WOTRMultiplayer.UI.Menu.Items
             {
                 return new ModalActionConfirmation
                 {
-                    Text = StringConsts.MultiplayerWindow.JoinMenu.LeaveGameMessage
+                    Text = UIStringConsts.MultiplayerWindow.JoinMenu.LeaveGameMessage
                 };
             }
             else if (_multiplayerClient.IsConnecting)
             {
                 return new ModalActionConfirmation
                 {
-                    Text = StringConsts.MultiplayerWindow.JoinMenu.LeaveWhileConnectingMessage,
+                    Text = UIStringConsts.MultiplayerWindow.JoinMenu.LeaveWhileConnectingMessage,
                     ModalType = MessageModalBase.ModalType.Message
                 };
             }
@@ -135,7 +137,7 @@ namespace WOTRMultiplayer.UI.Menu.Items
         protected override void InitializeInternal(GameObject baseLayout)
         {
             var label = MenuItem.GetComponentInChildren<TextMeshProUGUI>();
-            label.SetText(StringConsts.MultiplayerWindow.JoinMenuLabel);
+            label.SetText(UIStringConsts.MultiplayerWindow.JoinMenuLabel);
 
             _menuContent = UnityEngine.Object.Instantiate(baseLayout, baseLayout.transform);
             _menuContent.name = JoinMenuItemContentObjectName;
@@ -172,7 +174,7 @@ namespace WOTRMultiplayer.UI.Menu.Items
             serverInfoInputObject.name = ServerAddressInputObjectName;
             var serverPlaceholder = serverInfoInputObject.transform.Find(UIFactory.InputPlaceholderObjectName);
             var serverPlaceholderInput = serverPlaceholder.GetComponent<TextMeshProUGUI>();
-            serverPlaceholderInput.SetText(StringConsts.MultiplayerWindow.JoinMenu.ServerInputPlaceholder);
+            serverPlaceholderInput.SetText(UIStringConsts.MultiplayerWindow.JoinMenu.ServerInputPlaceholder);
             serverPlaceholderInput.alignment = TextAlignmentOptions.Center;
             var serverInfoInputLabelObject = serverInfoInputObject.transform.Find(UIFactory.InputLabelObjectName);
             var serverInfoInput = serverInfoInputLabelObject.GetComponent<TextMeshProUGUI>();
@@ -184,7 +186,7 @@ namespace WOTRMultiplayer.UI.Menu.Items
             var joinLobbyButtonObjectLayout = joinLobbyButtonObject.AddComponent<LayoutElement>();
             joinLobbyButtonObjectLayout.preferredWidth = menuContentRect.sizeDelta.x * 0.35f;
             joinLobbyButtonObject.AddComponent<ContentSizeFitter>().horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
-            joinLobbyButtonObject.GetComponentInChildren<TextMeshProUGUI>().SetText(StringConsts.MultiplayerWindow.JoinMenu.JoinButtonLabel);
+            joinLobbyButtonObject.GetComponentInChildren<TextMeshProUGUI>().SetText(UIStringConsts.MultiplayerWindow.JoinMenu.JoinButtonLabel);
             var button = joinLobbyButtonObject.GetComponent<OwlcatButton>();
             button.OnLeftClick.AddListener(OnJoinButtonClicked);
 
@@ -209,34 +211,44 @@ namespace WOTRMultiplayer.UI.Menu.Items
             var leaveButtonObjectLayout = leaveButtonObject.AddComponent<LayoutElement>();
             leaveButtonObjectLayout.preferredWidth = menuContentRect.sizeDelta.x * 0.2f;
             leaveButtonObject.AddComponent<ContentSizeFitter>().horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
-            leaveButtonObject.GetComponentInChildren<TextMeshProUGUI>().SetText(StringConsts.MultiplayerWindow.JoinMenu.LeaveButtonLabel);
+            leaveButtonObject.GetComponentInChildren<TextMeshProUGUI>().SetText(UIStringConsts.MultiplayerWindow.JoinMenu.LeaveButtonLabel);
             var leaveButton = leaveButtonObject.GetComponent<OwlcatButton>();
             leaveButton.OnLeftClick.AddListener(OnLeaveButtonClicked);
-
-            _multiplayerClient.OnNetworkError = OnMultiplayerClientError;
-            _multiplayerClient.OnConnected = OnMultiplayerClientConnected;
-            _multiplayerClient.OnPlayersChanged = OnMultiplayerClientPlayersChanged;
-            _multiplayerClient.OnGameCharactersChanged = OnMultiplayerClientGameCharactersChanged;
         }
 
-        private void OnMultiplayerClientConnected(EndPoint endpoint)
+        private void OnMultiplayerCharacterOwnerChanged(int characterIndex, int playerIndex)
+        {
+            _logger.LogInformation("Updating character owner. CharacterIndex={characterIndex}, PlayerIndex={playerIndex}", characterIndex, playerIndex);
+            Lobby.UpdateCharacterOwnerDropdown(characterIndex, playerIndex);
+        }
+
+        private void SetupHandlers(bool enable)
+        {
+            _multiplayerClient.OnNetworkError = enable ? OnMultiplayerError : null;
+            _multiplayerClient.OnConnected = enable ? OnMultiplayerConnected : null;
+            _multiplayerClient.OnPlayersChanged = enable ? OnMultiplayerPlayersChanged : null;
+            _multiplayerClient.OnGameCharactersChanged = enable ? OnMultiplayerGameCharactersChanged : null;
+            _multiplayerClient.OnCharacterOwnerChanged = enable ? OnMultiplayerCharacterOwnerChanged : null;
+        }
+
+        private void OnMultiplayerConnected(EndPoint endpoint)
         {
             Lobby.UpdateServerInfo(endpoint.ToString());
             SetButtonActive(JoinButtonObject, true);
             ActivateLobbyControls();
         }
 
-        private void OnMultiplayerClientPlayersChanged(List<NetworkPlayer> players)
+        private void OnMultiplayerPlayersChanged(List<NetworkPlayer> players)
         {
             Lobby.UpdatePlayers(players);
         }
 
-        private void OnMultiplayerClientGameCharactersChanged(List<string> portraits)
+        private void OnMultiplayerGameCharactersChanged(List<string> portraits)
         {
             Lobby.UpdateCharacters(portraits);
         }
 
-        private void OnMultiplayerClientError(string errorMessage)
+        private void OnMultiplayerError(string errorMessage)
         {
             _logger.LogError("Multiplayer client error. ErrorText={errorMessage}", errorMessage);
 
@@ -254,8 +266,8 @@ namespace WOTRMultiplayer.UI.Menu.Items
         private void OnReadyButtonClicked()
         {
             var isReady = _multiplayerClient.ReadyChanged();
-            var label = isReady ? StringConsts.MultiplayerWindow.HostMenu.ReadyButtonLabel
-                : StringConsts.MultiplayerWindow.HostMenu.ReadyNotReadyButtonLabel;
+            var label = isReady ? UIStringConsts.MultiplayerWindow.HostMenu.ReadyButtonLabel
+                : UIStringConsts.MultiplayerWindow.HostMenu.ReadyNotReadyButtonLabel;
             ReadyButtonObject.GetComponentInChildren<TextMeshProUGUI>().SetText(label);
         }
 
@@ -270,7 +282,7 @@ namespace WOTRMultiplayer.UI.Menu.Items
         {
             _mainThreadAccessor.MainThreadQueue.Enqueue(() =>
             {
-                ReadyButtonObject.GetComponentInChildren<TextMeshProUGUI>().SetText(StringConsts.MultiplayerWindow.HostMenu.ReadyNotReadyButtonLabel);
+                ReadyButtonObject.GetComponentInChildren<TextMeshProUGUI>().SetText(UIStringConsts.MultiplayerWindow.HostMenu.ReadyNotReadyButtonLabel);
 
                 JoinLobbyControlsObject.SetActive(false);
                 LobbyControls.SetActive(true);

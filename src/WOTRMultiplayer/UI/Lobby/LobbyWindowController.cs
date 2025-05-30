@@ -1,4 +1,5 @@
-﻿using System.Collections.Concurrent;
+﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.Extensions.Logging;
@@ -44,6 +45,8 @@ namespace WOTRMultiplayer.UI.Lobby
         private readonly IPortraitProvider _portraitProvider;
         private readonly ConcurrentDictionary<LobbyWindowOwner, GameObject> _contents = new();
         private LobbyWindowOwner _activeOwner;
+
+        public Action<int, int> OnCharacterOwnerChanged { get; set; }
 
         private GameObject ServerInfoSectionContent => GetContentOwnedObject()?.transform
             .Find(LobbyContentObjectName)
@@ -137,6 +140,25 @@ namespace WOTRMultiplayer.UI.Lobby
             serverAddressBox.SetText(serverAddress);
         }
 
+        public void UpdateCharacterOwnerDropdown(int characterIndex, int playerIndex)
+        {
+            _mainThreadAccessor.MainThreadQueue.Enqueue(() =>
+            {
+                var characterContainer = CharactersInfoContainer.transform.GetChild(characterIndex);
+                if (characterContainer == null)
+                {
+                    _logger.LogInformation("Unable to update character owner dropdow due to missing character container. Index={characterIndex}", characterIndex);
+                    return;
+                }
+
+                var dropdown = characterContainer.Find(CharacterOwnerObjectName);
+                var dropdownObject = dropdown.transform.Find(UIFactory.DropdownGameObjectName);
+                var tmpDropdown = dropdownObject.GetComponent<TMP_Dropdown>();
+                tmpDropdown.value = playerIndex;
+                tmpDropdown.RefreshShownValue();
+            });
+        }
+
         private void CreatePlayerObject(NetworkPlayer player)
         {
             var defaultMesh = Main.Multiplayer.Factory.GetDefaultMesh();
@@ -165,7 +187,7 @@ namespace WOTRMultiplayer.UI.Lobby
         private void UpdateCharacterOwnerDropdown(List<NetworkPlayer> networkPlayers)
         {
             var players = networkPlayers.Select(x => x.Name).ToList();
-            for (int characterIndex = 0; characterIndex < UIFactory.GetMaxCharactersCount(); characterIndex++)
+            for (int characterIndex = 0; characterIndex < Main.MaxCharacters; characterIndex++)
             {
                 var characterContainer = CharactersInfoContainer.transform.GetChild(characterIndex);
                 if (characterContainer == null)
@@ -180,8 +202,7 @@ namespace WOTRMultiplayer.UI.Lobby
                 tmpDropdown.onValueChanged.RemoveAllListeners();
                 tmpDropdown.ClearOptions();
                 tmpDropdown.AddOptions(players);
-                tmpDropdown.onValueChanged.RemoveAllListeners();
-                tmpDropdown.onValueChanged.AddListener(index => OnCharacterOwnerChanged(tmpDropdown));
+                tmpDropdown.onValueChanged.AddListener(index => OnOwnerDropdownChanged(tmpDropdown));
             }
         }
 
@@ -189,7 +210,7 @@ namespace WOTRMultiplayer.UI.Lobby
         {
             _mainThreadAccessor.MainThreadQueue.Enqueue(() =>
             {
-                for (int characterIndex = 0; characterIndex < UIFactory.GetMaxCharactersCount(); characterIndex++)
+                for (int characterIndex = 0; characterIndex < Main.MaxCharacters; characterIndex++)
                 {
                     var portraitName = portraits.Count > characterIndex ? portraits[characterIndex] : null;
                     var sprite = string.IsNullOrEmpty(portraitName) ? null : GetPortraitSprite(portraitName);
@@ -214,7 +235,7 @@ namespace WOTRMultiplayer.UI.Lobby
             _logger.LogInformation("Updated character portrait. Index={characterIndex}, SpriteName={spriteName}", characterIndex, portraitSprite?.name);
         }
 
-        private void OnCharacterOwnerChanged(TMP_Dropdown dropdown)
+        private void OnOwnerDropdownChanged(TMP_Dropdown dropdown)
         {
             var player = dropdown.options.Count >= dropdown.value ? dropdown.options[dropdown.value].text : null;
             if (player == null)
@@ -232,6 +253,7 @@ namespace WOTRMultiplayer.UI.Lobby
             }
 
             _logger.LogInformation("Character owner changed. CharacterIndex={characterIndex}, Player={player}", characterIndexComponent.CharacterIndex, player);
+            OnCharacterOwnerChanged?.Invoke(characterIndexComponent.CharacterIndex, dropdown.value);
         }
 
         private Sprite GetPortraitSprite(string portraitName)

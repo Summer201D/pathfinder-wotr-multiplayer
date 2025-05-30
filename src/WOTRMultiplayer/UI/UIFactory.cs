@@ -42,12 +42,6 @@ namespace WOTRMultiplayer.UI
             _logger = logger;
         }
 
-        public static int GetMaxCharactersCount()
-        {
-            // should be const, but it might need to be modified via harmony for some other mods
-            return 6;
-        }
-
         public void StoreDropdownPrefab(SettingsEntityDropdownPCView view)
         {
             if (view == null)
@@ -165,11 +159,11 @@ namespace WOTRMultiplayer.UI
             var layout = baseButton.GetComponent<RectTransform>();
             layout.sizeDelta = new Vector2(layout.sizeDelta.x * 0.92f, layout.sizeDelta.y);
             var hostButton = UnityEngine.Object.Instantiate(baseButton, buttons);
-            hostButton.name = StringConsts.MultiplayerWindow.HostMenu.HostButtonLabel;
+            hostButton.name = UIStringConsts.MultiplayerWindow.HostMenu.HostButtonLabel;
             var readyButton = UnityEngine.Object.Instantiate(baseButton, buttons);
-            readyButton.name = StringConsts.MultiplayerWindow.HostMenu.ReadyButtonLabel;
+            readyButton.name = UIStringConsts.MultiplayerWindow.HostMenu.ReadyButtonLabel;
             var startButton = UnityEngine.Object.Instantiate(baseButton, buttons);
-            startButton.name = StringConsts.MultiplayerWindow.HostMenu.StartButtonLabel;
+            startButton.name = UIStringConsts.MultiplayerWindow.HostMenu.StartButtonLabel;
             buttons.gameObject.CleanupAllChildren(
                 x => x.name != "DlcRequiredLabel" && x.name != hostButton.name && x.name != readyButton.name && x.name != startButton.name);
 
@@ -265,7 +259,7 @@ namespace WOTRMultiplayer.UI
             serverInfoTitle.material = _defaultTextMesh.Material;
             serverInfoTitle.color = _defaultTextMesh.Color;
             serverInfoTitle.horizontalAlignment = HorizontalAlignmentOptions.Center;
-            serverInfoTitle.SetText(UIUtility.GetSaberBookFormat(StringConsts.LobbyInfoWindow.ServerInfoSectionTitle));
+            serverInfoTitle.SetText(UIUtility.GetSaberBookFormat(UIStringConsts.LobbyInfoWindow.ServerInfoSectionTitle));
 
             var serverInfoSectionContentObject = CreateDefaultGameObject(serverInfoSectionObject.transform);
             serverInfoSectionContentObject.name = LobbyWindowController.ServerInfoSectionContentObjectName;
@@ -290,7 +284,7 @@ namespace WOTRMultiplayer.UI
             playersTitle.material = _defaultTextMesh.Material;
             playersTitle.color = _defaultTextMesh.Color;
             playersTitle.horizontalAlignment = HorizontalAlignmentOptions.Center;
-            playersTitle.SetText(UIUtility.GetSaberBookFormat(StringConsts.LobbyInfoWindow.PlayersSectionTitle));
+            playersTitle.SetText(UIUtility.GetSaberBookFormat(UIStringConsts.LobbyInfoWindow.PlayersSectionTitle));
 
             var playersSectionContentObject = CreateDefaultGameObject(playersSectionObject.transform);
             playersSectionContentObject.name = LobbyWindowController.PlayersSectionContentObjectName;
@@ -315,12 +309,12 @@ namespace WOTRMultiplayer.UI
             characterControlTitle.material = _defaultTextMesh.Material;
             characterControlTitle.color = _defaultTextMesh.Color;
             characterControlTitle.horizontalAlignment = HorizontalAlignmentOptions.Center;
-            characterControlTitle.SetText(UIUtility.GetSaberBookFormat(StringConsts.LobbyInfoWindow.CharactersSectionTitle));
+            characterControlTitle.SetText(UIUtility.GetSaberBookFormat(UIStringConsts.LobbyInfoWindow.CharactersSectionTitle));
             var charactersSectionContentObject = CreateDefaultGameObject(charactersSectionObject.transform);
             charactersSectionContentObject.name = LobbyWindowController.CharactersSectionContentObjectName;
             charactersSectionContentObject.AddComponent<HorizontalLayoutGroup>();
-            var preferedWidth = width / GetMaxCharactersCount();
-            for (int characterIndex = 0; characterIndex < GetMaxCharactersCount(); characterIndex++)
+            var preferedWidth = width / Main.MaxCharacters;
+            for (int characterIndex = 0; characterIndex < Main.MaxCharacters; characterIndex++)
             {
                 var characterObject = CreateDefaultGameObject(charactersSectionContentObject.transform);
                 characterObject.name = LobbyWindowController.CharacterContainerObjectName;

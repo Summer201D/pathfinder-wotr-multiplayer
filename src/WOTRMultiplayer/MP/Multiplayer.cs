@@ -56,7 +56,7 @@ namespace WOTRMultiplayer.MP
 
             Factory.CreateBackgroundArt(_multiplayerWindow.transform.Find("BackgroundGroup"));
 
-            var text = UIUtility.GetSaberBookFormat(StringConsts.MainMenu.MultiplayerMenu);
+            var text = UIUtility.GetSaberBookFormat(UIStringConsts.MainMenu.MultiplayerMenu);
             var viewModel = new ContextMenuEntityVM(new ContextMenuCollectionEntity(UIUtility.GetSaberBookFormat(text), ShowMultiplayerWindow));
             multiplayerMenuView.Bind(viewModel);
             return true;

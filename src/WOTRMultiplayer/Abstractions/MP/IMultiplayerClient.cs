@@ -27,5 +27,7 @@ namespace WOTRMultiplayer.Abstractions.MP
         Action<List<NetworkPlayer>> OnPlayersChanged { get; set; }
 
         Action<List<string>> OnGameCharactersChanged { get; set; }
+
+        Action<int, int> OnCharacterOwnerChanged { get; set; }
     }
 }

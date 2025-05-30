@@ -53,10 +53,41 @@ namespace WOTRMultiplayer.MP
 
             _game = new NetworkGame(savePath);
             _game.Portraits.AddRange(portraits);
+            _game.CharacterOwners = [.. Enumerable.Range(0, Main.MaxCharacters).Select(x => new NetworkCharacterOwner { CharacterIndex = x, PlayerId = LocalHostPlayerId })];
 
             _networkServer.Start();
 
             _logger.LogInformation("Host has been created. SavePath={savePath}, Portraits={portraits}", _game.SavePath, string.Join(";", _game.Portraits));
+        }
+
+        public void ChangeCharacterOwner(int characterIndex, int playerIndex)
+        {
+            lock (_actionlock)
+            {
+                if (_game.Players.Count < playerIndex)
+                {
+                    _logger.LogError("Unable to change character owner as playerIndex is out of range. PlayersCount={playersCount}, PlayerIndex={playerIndex}", _game.Players.Count, playerIndex);
+                    return;
+                }
+
+                var player = _game.Players[playerIndex];
+
+                if (_game.CharacterOwners.Count < characterIndex)
+                {
+                    _logger.LogError("Unable to change character owner as characterIndex is out of range. CharacterOwnersCount={characterOwnersCount}, CharacterIndex={characterIndex}", _game.CharacterOwners.Count, characterIndex);
+                    return;
+                }
+
+                var owner = _game.CharacterOwners[characterIndex];
+                owner.CharacterIndex = characterIndex;
+                owner.PlayerId = player.Id;
+
+                var charactersOwnerChanged = new NotifyCharactersOwnerChanged
+                {
+                    Owners = [.. _game.CharacterOwners.Select(o => new Networking.Messages.NetworkCharacterOwner { CharacterIndex = o.CharacterIndex, PlayerId = o.PlayerId })]
+                };
+                _networkServer.SendAll(charactersOwnerChanged);
+            }
         }
 
         public void Dispose()
