@@ -4,7 +4,6 @@ using System.Linq;
 using System.Net;
 using Microsoft.Extensions.Logging;
 using WOTRMultiplayer.Abstractions.MP;
-using WOTRMultiplayer.Abstractions.UI.Controllers;
 using WOTRMultiplayer.MP.Entities;
 using WOTRMultiplayer.Networking.Abstractions;
 using WOTRMultiplayer.Networking.Messages.Lobby;
@@ -15,13 +14,14 @@ namespace WOTRMultiplayer.MP
     {
         private readonly ILogger<MultiplayerHost> _logger;
         private readonly INetworkServer _networkServer;
-        private readonly ILobbyWindowController _lobbyWindowController;
-
         private NetworkGameStatus Status => _game?.Status ?? NetworkGameStatus.None;
 
         private readonly object _actionlock = new();
         public const int LocalHostPlayerId = -1;
         private NetworkGame _game;
+
+        public Action<List<NetworkPlayer>> OnPlayersChanged { get; set; }
+        public Action<EndPoint> OnConnected { get; set; }
 
         public bool IsActive => _networkServer.IsActive;
 
@@ -29,15 +29,13 @@ namespace WOTRMultiplayer.MP
 
         public MultiplayerHost(
             ILogger<MultiplayerHost> logger,
-            INetworkServer networkServer,
-            ILobbyWindowController lobbyWindowController)
+            INetworkServer networkServer)
         {
             _logger = logger;
             _networkServer = networkServer;
-            _lobbyWindowController = lobbyWindowController;
         }
 
-        public void Start(string gameName, List<string> portraits, MultiplayerSettings settings)
+        public void Create(string gameName, List<string> portraits, MultiplayerSettings settings)
         {
             if (_networkServer.IsActive)
             {
@@ -75,6 +73,22 @@ namespace WOTRMultiplayer.MP
             return readyChanged.IsReady;
         }
 
+        public void NotifyGameCharactersChanged(string gameName, List<string> portraits)
+        {
+            _game.Name = gameName;
+            _game.Portraits.Clear();
+            _game.Portraits.AddRange(portraits);
+
+            _logger.LogInformation("Notifying game characters changed. Name={gameName}, Portraits={portraits}", gameName, string.Join(";", portraits));
+            var message = CreateNotifyGameCharactersChanged();
+            _networkServer.SendAll(message);
+        }
+
+        public void Start()
+        {
+            _logger.LogInformation("Starting game...");
+        }
+
         private void RegisterHandlers()
         {
             _networkServer.OnClientConnected = OnPlayerConnected;
@@ -100,8 +114,8 @@ namespace WOTRMultiplayer.MP
 
                 existingPlayer.IsReady = readyStatusChanged.IsReady;
 
-                UpdatePlayersUI();
-                _logger.LogWarning("Sending ready status changed. PlayerId={playerId}, IsReady={isReady}", playerId, existingPlayer.IsReady);
+                OnPlayersChanged?.Invoke(_game.Players);
+                _logger.LogInformation("Sending ready status changed. PlayerId={playerId}, IsReady={isReady}", playerId, existingPlayer.IsReady);
                 _networkServer.SendAll(readyStatusChanged);
             }
         }
@@ -126,7 +140,7 @@ namespace WOTRMultiplayer.MP
 
                 existingPlayer.Name = response.Name;
 
-                UpdatePlayersUI();
+                OnPlayersChanged?.Invoke(_game.Players);
 
                 var players = _game.Players.Select(x => new Networking.Messages.NetworkPlayer { Id = x.Id, Name = x.Name, IsReady = x.IsReady }).ToList();
                 var playersChanged = new NotifyPlayersChanged { Players = players };
@@ -169,22 +183,22 @@ namespace WOTRMultiplayer.MP
                 _game.Players.Remove(existingPlayer);
                 if (!string.IsNullOrEmpty(existingPlayer.Name))
                 {
-                    UpdatePlayersUI();
+                    OnPlayersChanged?.Invoke(_game.Players);
                 }
 
                 // send updates to other clients
             }
         }
 
-        private void OnServerStarted(EndPoint point)
+        private void OnServerStarted(EndPoint endpoint)
         {
             _game.Players.Add(new NetworkPlayer(LocalHostPlayerId)
             {
                 Name = Guid.NewGuid().ToString().Split('-').First()
             });
 
-            UpdateServerUI(point);
-            UpdatePlayersUI();
+            OnConnected?.Invoke(endpoint);
+            OnPlayersChanged?.Invoke(_game.Players);
         }
 
         private NetworkPlayer GetPlayer(long playerId)
@@ -192,31 +206,10 @@ namespace WOTRMultiplayer.MP
             return _game.Players.FirstOrDefault(p => p.Id == playerId);
         }
 
-        public void NotifyGameCharactersChanged(string gameName, List<string> portraits)
-        {
-            _game.Name = gameName;
-            _game.Portraits.Clear();
-            _game.Portraits.AddRange(portraits);
-
-            _logger.LogInformation("Notifying game characters changed. Name={gameName}, Portraits={portraits}", gameName, string.Join(";", portraits));
-            var message = CreateNotifyGameCharactersChanged();
-            _networkServer.SendAll(message);
-        }
-
         private NotifyGameCharactersChanged CreateNotifyGameCharactersChanged()
         {
             var message = new NotifyGameCharactersChanged { GameName = _game.Name, Portraits = _game.Portraits };
             return message;
-        }
-
-        private void UpdatePlayersUI()
-        {
-            _lobbyWindowController.UpdatePlayers(_game.Players);
-        }
-
-        private void UpdateServerUI(EndPoint endpoint)
-        {
-            _lobbyWindowController.UpdateServerInfo(endpoint.ToString());
         }
     }
 }

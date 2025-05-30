@@ -1,11 +1,14 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Net;
 using WOTRMultiplayer.MP;
+using WOTRMultiplayer.MP.Entities;
 
 namespace WOTRMultiplayer.Abstractions.MP
 {
     public interface IMultiplayerHost
     {
-        void Start(string gameName, List<string> portraits, MultiplayerSettings multiplayerSettings);
+        void Create(string gameName, List<string> portraits, MultiplayerSettings multiplayerSettings);
 
         void Dispose();
 
@@ -13,8 +16,14 @@ namespace WOTRMultiplayer.Abstractions.MP
 
         void NotifyGameCharactersChanged(string saveGameName, List<string> portraits);
 
+        void Start();
+
         bool IsInLobby { get; }
 
         bool IsActive { get; }
+
+        Action<List<NetworkPlayer>> OnPlayersChanged { get; set; }
+
+        Action<EndPoint> OnConnected { get; set; }
     }
 }

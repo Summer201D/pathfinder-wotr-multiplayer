@@ -1,4 +1,6 @@
-﻿using Kingmaker.PubSubSystem;
+﻿using System.Collections.Generic;
+using System.Net;
+using Kingmaker.PubSubSystem;
 using Kingmaker.UI;
 using Microsoft.Extensions.Logging;
 using Owlcat.Runtime.UI.Controls.Button;
@@ -10,6 +12,7 @@ using WOTRMultiplayer.Abstractions.UI;
 using WOTRMultiplayer.Abstractions.UI.Controllers;
 using WOTRMultiplayer.Abstractions.UI.Controllers.Menu;
 using WOTRMultiplayer.Extensions;
+using WOTRMultiplayer.MP.Entities;
 using WOTRMultiplayer.UI.Lobby;
 using WOTRMultiplayer.Unity;
 
@@ -95,6 +98,39 @@ namespace WOTRMultiplayer.UI.Menu.Items
             Lobby.SetActiveOwner(LobbyWindowOwner.JoinMenu);
             base.Activate();
         }
+        public override void Deactivate()
+        {
+            if (_multiplayerClient.IsInLobby)
+            {
+                _multiplayerClient.Dispose();
+            }
+
+            ActivateJoinLobbyControls();
+            Lobby.ResetData();
+
+            base.Deactivate();
+        }
+
+        protected override ModalActionConfirmation GetDeactivationConfirmationInternal()
+        {
+            if (_multiplayerClient.IsInLobby)
+            {
+                return new ModalActionConfirmation
+                {
+                    Text = StringConsts.MultiplayerWindow.JoinMenu.LeaveGameMessage
+                };
+            }
+            else if (_multiplayerClient.IsConnecting)
+            {
+                return new ModalActionConfirmation
+                {
+                    Text = StringConsts.MultiplayerWindow.JoinMenu.LeaveWhileConnectingMessage,
+                    ModalType = MessageModalBase.ModalType.Message
+                };
+            }
+
+            return base.GetDeactivationConfirmationInternal();
+        }
 
         protected override void InitializeInternal(GameObject baseLayout)
         {
@@ -179,12 +215,19 @@ namespace WOTRMultiplayer.UI.Menu.Items
 
             _multiplayerClient.OnNetworkError = OnMultiplayerClientError;
             _multiplayerClient.OnConnected = OnMultiplayerClientConnected;
+            _multiplayerClient.OnPlayersChanged = OnMultiplayerClientPlayersChanged;
         }
 
-        private void OnMultiplayerClientConnected()
+        private void OnMultiplayerClientConnected(EndPoint endpoint)
         {
+            Lobby.UpdateServerInfo(endpoint.ToString());
             SetButtonActive(JoinButtonObject, true);
             ActivateLobbyControls();
+        }
+
+        private void OnMultiplayerClientPlayersChanged(List<NetworkPlayer> players)
+        {
+            Lobby.UpdatePlayers(players);
         }
 
         private void OnMultiplayerClientError(string errorMessage)
@@ -247,7 +290,7 @@ namespace WOTRMultiplayer.UI.Menu.Items
             var rawAddress = ServerAddressObject.transform.Find(UIFactory.InputLabelObjectName).GetComponent<TextMeshProUGUI>().text;
             // thank you for zero-width space
             var address = rawAddress.Trim('\u200B').Trim();
-            var result = _multiplayerClient.Join(address, new MP.MultiplayerSettings());
+            var result = _multiplayerClient.Connect(address, new MP.MultiplayerSettings());
             if (!result.IsOk)
             {
                 EventBus.RaiseEvent<IMessageModalUIHandler>(window =>
@@ -266,40 +309,6 @@ namespace WOTRMultiplayer.UI.Menu.Items
             {
                 button.GetComponent<OwlcatButton>().Interactable = isActive;
             });
-        }
-
-        public override void Deactivate()
-        {
-            if (_multiplayerClient.IsInLobby)
-            {
-                _multiplayerClient.Dispose();
-            }
-
-            ActivateJoinLobbyControls();
-            Lobby.ResetData();
-
-            base.Deactivate();
-        }
-
-        protected override ModalActionConfirmation GetDeactivationConfirmationInternal()
-        {
-            if (_multiplayerClient.IsInLobby)
-            {
-                return new ModalActionConfirmation
-                {
-                    Text = StringConsts.MultiplayerWindow.JoinMenu.LeaveGameMessage
-                };
-            }
-            else if (_multiplayerClient.IsConnecting)
-            {
-                return new ModalActionConfirmation
-                {
-                    Text = StringConsts.MultiplayerWindow.JoinMenu.LeaveWhileConnectingMessage,
-                    ModalType = MessageModalBase.ModalType.Message
-                };
-            }
-
-            return base.GetDeactivationConfirmationInternal();
         }
     }
 }

@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Net;
 using WOTRMultiplayer.MP;
 using WOTRMultiplayer.MP.Entities;
 
@@ -8,7 +10,7 @@ namespace WOTRMultiplayer.Abstractions.MP
     {
         void Dispose();
 
-        JoinLobbyResult Join(string address, MultiplayerSettings settings);
+        ConnectLobbyResult Connect(string address, MultiplayerSettings settings);
 
         bool ReadyChanged();
 
@@ -20,6 +22,8 @@ namespace WOTRMultiplayer.Abstractions.MP
 
         Action<string> OnNetworkError { get; set; }
 
-        Action OnConnected { get; set; }
+        Action<EndPoint> OnConnected { get; set; }
+
+        Action<List<NetworkPlayer>> OnPlayersChanged { get; set; }
     }
 }

@@ -1,23 +1,23 @@
 ﻿namespace WOTRMultiplayer.MP.Entities
 {
-    public class JoinLobbyResult
+    public class ConnectLobbyResult
     {
         public bool IsOk { get; set; }
 
         public string Message { get; set; }
 
-        public static JoinLobbyResult Error(string message)
+        public static ConnectLobbyResult Error(string message)
         {
-            return new JoinLobbyResult
+            return new ConnectLobbyResult
             {
                 Message = message,
                 IsOk = false
             };
         }
 
-        public static JoinLobbyResult Ok()
+        public static ConnectLobbyResult Ok()
         {
-            return new JoinLobbyResult
+            return new ConnectLobbyResult
             {
                 IsOk = true
             };

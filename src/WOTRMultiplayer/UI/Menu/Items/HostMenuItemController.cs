@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using Kingmaker.UI.Common;
 using Kingmaker.UI.MVVM;
 using Kingmaker.UI.MVVM._PCView.SaveLoad;
@@ -15,6 +17,7 @@ using WOTRMultiplayer.Abstractions.MP;
 using WOTRMultiplayer.Abstractions.UI.Controllers;
 using WOTRMultiplayer.Abstractions.UI.Controllers.Menu;
 using WOTRMultiplayer.Extensions;
+using WOTRMultiplayer.MP.Entities;
 using WOTRMultiplayer.UI.Lobby;
 
 namespace WOTRMultiplayer.UI.Menu.Items
@@ -63,7 +66,6 @@ namespace WOTRMultiplayer.UI.Menu.Items
 
         private GameObject StartButtonObject => Buttons.Find(StringConsts.MultiplayerWindow.HostMenu.StartButtonLabel)?.gameObject;
         private OwlcatButton StartButton => StartButtonObject.GetComponent<OwlcatButton>();
-
 
         public HostMenuItemController(
             ILogger<HostMenuItemController> logger,
@@ -114,6 +116,45 @@ namespace WOTRMultiplayer.UI.Menu.Items
             base.Activate();
         }
 
+        public override void Deactivate()
+        {
+            if (_multiplayerHost.IsInLobby)
+            {
+                _multiplayerHost.Dispose();
+            }
+
+            Lobby.ResetData();
+            DisposeSaveLoadVM();
+            base.Deactivate();
+        }
+        public void OnNext(SaveSlotVM value)
+        {
+            HostButton.Interactable = value != null;
+        }
+
+        public void OnError(Exception error)
+        {
+        }
+
+        public void OnCompleted()
+        {
+        }
+
+        protected override void InitializeInternal(GameObject baseLayout)
+        {
+            var label = MenuItem.GetComponentInChildren<TextMeshProUGUI>();
+            label.SetText(StringConsts.MultiplayerWindow.HostMenuLabel);
+
+            _menuContent = UnityEngine.Object.Instantiate(baseLayout, baseLayout.transform);
+            _menuContent.name = HostMenuItemContentObjectName;
+            _menuContent.CleanupAllChildren();
+
+            SetupLoadSaveGamesLayout();
+            SetupLobbyInfo(baseLayout);
+
+            Title.SetText(string.Empty);
+        }
+
         private void SetupButtons()
         {
             SetButtonLabel(HostButtonObject, "Host");
@@ -146,7 +187,7 @@ namespace WOTRMultiplayer.UI.Menu.Items
                 StartButtonObject.SetActive(true);
                 ReadyButtonObject.SetActive(true);
                 ReadyButton.Interactable = true;
-                _multiplayerHost.Start(gameName, portraits, new MP.MultiplayerSettings());
+                _multiplayerHost.Create(gameName, portraits, new MP.MultiplayerSettings());
                 SetButtonLabel(HostButtonObject, StringConsts.MultiplayerWindow.HostMenu.HostButtonActiveLabel);
                 return;
             }
@@ -165,7 +206,8 @@ namespace WOTRMultiplayer.UI.Menu.Items
 
         private void OnStartButtonClicked()
         {
-            _logger.LogInformation("OnReadyButton");
+            _logger.LogInformation("OnStartButton -> loading");
+            _multiplayerHost.Start();
         }
 
         private void SetButtonLabel(GameObject buttonObject, string text)
@@ -177,21 +219,6 @@ namespace WOTRMultiplayer.UI.Menu.Items
         {
             button.OnLeftClick.RemoveAllListeners();
             button.OnLeftClick.AddListener(new UnityAction(handler));
-        }
-
-        protected override void InitializeInternal(GameObject baseLayout)
-        {
-            var label = MenuItem.GetComponentInChildren<TextMeshProUGUI>();
-            label.SetText(StringConsts.MultiplayerWindow.HostMenuLabel);
-
-            _menuContent = UnityEngine.Object.Instantiate(baseLayout, baseLayout.transform);
-            _menuContent.name = HostMenuItemContentObjectName;
-            _menuContent.CleanupAllChildren();
-
-            SetupLoadSaveGamesLayout();
-            SetupLobbyInfo(baseLayout);
-
-            Title.SetText(string.Empty);
         }
 
         private void SetupLobbyInfo(GameObject baseLayout)
@@ -220,24 +247,26 @@ namespace WOTRMultiplayer.UI.Menu.Items
             lobbyWindowObjectRect.sizeDelta = new Vector2(parentContainerRect.sizeDelta.x * 0.9f, parentContainerRect.sizeDelta.y * 0.72f);
 
             Lobby.InitializeContent(LobbyWindowOwner.HostMenu, lobbyWindowObject.transform);
+
+            _multiplayerHost.OnConnected = OnMultiplayerHostConnected;
+            _multiplayerHost.OnPlayersChanged = OnMultiplayerHostPlayersChanged;
+        }
+
+        private void OnMultiplayerHostConnected(EndPoint endpoint)
+        {
+            Lobby.UpdateServerInfo(endpoint.ToString());
+        }
+
+        private void OnMultiplayerHostPlayersChanged(List<NetworkPlayer> players)
+        {
+            Lobby.UpdatePlayers(players);
+            StartButton.Interactable = players.All(p => p.IsReady);
         }
 
         private void SetupLoadSaveGamesLayout()
         {
             SaveLoadPCView saveLoad = Main.Multiplayer.Factory.CreateSaveLoadPCView(_menuContent.transform);
             saveLoad.Initialize();
-        }
-
-        public override void Deactivate()
-        {
-            if (_multiplayerHost.IsInLobby)
-            {
-                _multiplayerHost.Dispose();
-            }
-
-            Lobby.ResetData();
-            DisposeSaveLoadVM();
-            base.Deactivate();
         }
 
         private void DisposeSaveLoadVM()
@@ -248,19 +277,6 @@ namespace WOTRMultiplayer.UI.Menu.Items
         private void OnCloseSaveLoadVM()
         {
             Window.OnCloseClicked();
-        }
-
-        public void OnNext(SaveSlotVM value)
-        {
-            HostButton.Interactable = value != null;
-        }
-
-        public void OnError(Exception error)
-        {
-        }
-
-        public void OnCompleted()
-        {
         }
 
         protected override ModalActionConfirmation GetDeactivationConfirmationInternal()

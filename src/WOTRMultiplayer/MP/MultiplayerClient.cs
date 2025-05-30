@@ -1,10 +1,10 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using Microsoft.Extensions.Logging;
 using WOTRMultiplayer.Abstractions.MP;
-using WOTRMultiplayer.Abstractions.UI.Controllers;
 using WOTRMultiplayer.MP.Entities;
 using WOTRMultiplayer.Networking.Abstractions;
 using WOTRMultiplayer.Networking.Messages.Lobby;
@@ -17,7 +17,6 @@ namespace WOTRMultiplayer.MP
         private readonly ILogger<MultiplayerClient> _logger;
         private readonly IIPEndPointParser _ipEndPointParser;
         private readonly INetworkServerClient _networkServerClient;
-        private readonly ILobbyWindowController _lobbyWindowController;
 
         private NetworkGame _game;
         private readonly object _actionlock = new();
@@ -25,7 +24,10 @@ namespace WOTRMultiplayer.MP
 
         public Action<string> OnNetworkError { get; set; }
 
-        public Action OnConnected { get; set; }
+        public Action<EndPoint> OnConnected { get; set; }
+
+        public Action<List<NetworkPlayer>> OnPlayersChanged { get; set; }
+
         public Action OnDisconnected { get; set; }
 
         public bool IsActive => _networkServerClient.IsActive;
@@ -39,16 +41,14 @@ namespace WOTRMultiplayer.MP
         public MultiplayerClient(
             ILogger<MultiplayerClient> logger,
             IIPEndPointParser ipEndPointParser,
-            ILobbyWindowController lobbyWindowController,
             INetworkServerClient networkServerClient)
         {
             _logger = logger;
             _ipEndPointParser = ipEndPointParser;
             _networkServerClient = networkServerClient;
-            _lobbyWindowController = lobbyWindowController;
         }
 
-        public JoinLobbyResult Join(string address, MultiplayerSettings settings)
+        public ConnectLobbyResult Connect(string address, MultiplayerSettings settings)
         {
             if (_networkServerClient.IsActive)
             {
@@ -57,19 +57,19 @@ namespace WOTRMultiplayer.MP
 
             if (!_ipEndPointParser.TryParse(address, out IPEndPoint endpoint))
             {
-                return JoinLobbyResult.Error(StringConsts.MultiplayerClient.Errors.InvalidIP);
+                return ConnectLobbyResult.Error(StringConsts.MultiplayerClient.Errors.InvalidIP);
             }
 
             if (endpoint.Port <= 0 || endpoint.Port > ushort.MaxValue)
             {
-                return JoinLobbyResult.Error(StringConsts.MultiplayerClient.Errors.InvalidPort);
+                return ConnectLobbyResult.Error(StringConsts.MultiplayerClient.Errors.InvalidPort);
             }
 
             RegisterHandlers();
 
             _networkServerClient.ConnectAsync(endpoint.Address.ToString(), endpoint.Port);
 
-            return JoinLobbyResult.Ok();
+            return ConnectLobbyResult.Ok();
         }
 
         public bool ReadyChanged()
@@ -79,6 +79,20 @@ namespace WOTRMultiplayer.MP
             var readyChanged = new PlayerReadyStatusChanged { PlayerId = player.Id, IsReady = player.IsReady };
             _networkServerClient.SendAsync(readyChanged).Wait();
             return readyChanged.IsReady;
+        }
+
+        public void Dispose()
+        {
+            _logger.LogInformation("Disposing");
+
+            if (_game != null)
+            {
+                _game.Players.Clear();
+                _game.Portraits.Clear();
+                _game.Status = NetworkGameStatus.None;
+            }
+
+            _networkServerClient?.Dispose();
         }
 
         private void RegisterHandlers()
@@ -106,7 +120,7 @@ namespace WOTRMultiplayer.MP
                 }
 
                 existingPlayer.IsReady = readyStatusChanged.IsReady;
-                _lobbyWindowController.UpdatePlayers(_game.Players);
+                OnPlayersChanged?.Invoke(_game.Players);
             }
         }
 
@@ -122,14 +136,13 @@ namespace WOTRMultiplayer.MP
             var players = changed.Players.Select(p => new NetworkPlayer(p.Id) { IsReady = p.IsReady, Name = p.Name }).ToList();
             _game.Players.AddRange(players);
 
-            _lobbyWindowController.UpdatePlayers(_game.Players);
+            OnPlayersChanged?.Invoke(_game.Players);
         }
 
         private void OnNetworkClientConnected(EndPoint endpoint)
         {
             _game = new NetworkGame(string.Empty);
-            _lobbyWindowController.UpdateServerInfo(endpoint.ToString());
-            OnConnected?.Invoke();
+            OnConnected?.Invoke(endpoint);
         }
 
         private void OnNetworkClientError(Exception exception)
@@ -171,20 +184,6 @@ namespace WOTRMultiplayer.MP
             var nameResponse = new PlayerNameResponse() { Name = "mp client name" };
             _networkServerClient.SendAsync(nameResponse).Wait();
             _logger.LogInformation("Player name has been sent. Name={name}", nameResponse.Name);
-        }
-
-        public void Dispose()
-        {
-            _logger.LogInformation("Disposing");
-
-            if (_game != null)
-            {
-                _game.Players.Clear();
-                _game.Portraits.Clear();
-                _game.Status = NetworkGameStatus.None;
-            }
-
-            _networkServerClient?.Dispose();
         }
 
         private NetworkPlayer GetPlayer(long playerId)

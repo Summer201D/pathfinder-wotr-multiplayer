@@ -19,7 +19,7 @@ namespace WOTRMultiplayer.Playground.Host
             var serviceProvider = DI.DIFactory.Create(new Config.UnityMod.UnityModManagerSettings { UseDebugConsole = false });
             var host = serviceProvider.GetService<IMultiplayerHost>();
             var portraits = new List<string> { "1", "2" };
-            host.Start("dummy game name", portraits, new MultiplayerSettings());
+            host.Create("dummy game name", portraits, new MultiplayerSettings());
             var input = string.Empty;
 
             Console.Write(@$"
