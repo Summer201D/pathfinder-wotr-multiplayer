@@ -35,7 +35,7 @@ namespace WOTRMultiplayer.MP
             _networkServer = networkServer;
         }
 
-        public void Create(string gameName, List<string> portraits, MultiplayerSettings settings)
+        public void Create(List<string> portraits, MultiplayerSettings settings)
         {
             if (_networkServer.IsActive)
             {
@@ -47,7 +47,7 @@ namespace WOTRMultiplayer.MP
             _game?.Players.Clear();
             _game?.Portraits.Clear();
 
-            _game = new NetworkGame(gameName);
+            _game = new NetworkGame();
             _game.Portraits.AddRange(portraits);
 
             _networkServer.Start();
@@ -73,13 +73,12 @@ namespace WOTRMultiplayer.MP
             return readyChanged.IsReady;
         }
 
-        public void NotifyGameCharactersChanged(string gameName, List<string> portraits)
+        public void NotifyGameCharactersChanged(List<string> portraits)
         {
-            _game.Name = gameName;
             _game.Portraits.Clear();
             _game.Portraits.AddRange(portraits);
 
-            _logger.LogInformation("Notifying game characters changed. Name={gameName}, Portraits={portraits}", gameName, string.Join(";", portraits));
+            _logger.LogInformation("Notifying game characters changed. Portraits={portraits}", string.Join(";", portraits));
             var message = CreateNotifyGameCharactersChanged();
             _networkServer.SendAll(message);
         }
@@ -208,7 +207,7 @@ namespace WOTRMultiplayer.MP
 
         private NotifyGameCharactersChanged CreateNotifyGameCharactersChanged()
         {
-            var message = new NotifyGameCharactersChanged { GameName = _game.Name, Portraits = _game.Portraits };
+            var message = new NotifyGameCharactersChanged { Portraits = _game.Portraits };
             return message;
         }
     }

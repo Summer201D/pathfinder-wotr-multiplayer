@@ -17,6 +17,7 @@ namespace WOTRMultiplayer.MP
         private readonly IJoinMenuItemController _joinMenuItemController;
         private readonly IMultiplayerClient _multiplayerClient;
         private readonly IMultiplayerHost _multiplayerHost;
+        private readonly IPortraitProvider _portraitProvider;
 
         public IUIFactory Factory { get; private set; }
 
@@ -27,6 +28,7 @@ namespace WOTRMultiplayer.MP
             IMainThreadAccessor mainThreadAccessor,
             IHostMenuItemController hostMenuItemController,
             IJoinMenuItemController joinMenuItemController,
+            IPortraitProvider portraitProvider,
             IMultiplayerHost multiplayerHost,
             IMultiplayerClient multiplayerClient)
         {
@@ -36,10 +38,13 @@ namespace WOTRMultiplayer.MP
             _multiplayerClient = multiplayerClient;
             _hostMenuItemController = hostMenuItemController;
             _joinMenuItemController = joinMenuItemController;
+            _portraitProvider = portraitProvider;
         }
 
         public bool InjectMultiplayerMenuWindow(GameObject menuItemPrototype, Transform parent)
         {
+            _portraitProvider.Initialize();
+
             var multiplayerMenu = UnityEngine.Object.Instantiate(menuItemPrototype, parent);
             multiplayerMenu.transform.SetSiblingIndex(menuItemPrototype.transform.GetSiblingIndex());
             var multiplayerMenuView = multiplayerMenu.GetComponent<ContextMenuEntityPCView>();

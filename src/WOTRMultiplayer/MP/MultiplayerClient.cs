@@ -27,6 +27,7 @@ namespace WOTRMultiplayer.MP
         public Action<EndPoint> OnConnected { get; set; }
 
         public Action<List<NetworkPlayer>> OnPlayersChanged { get; set; }
+        public Action<List<string>> OnGameCharactersChanged { get; set; }
 
         public Action OnDisconnected { get; set; }
 
@@ -127,6 +128,7 @@ namespace WOTRMultiplayer.MP
         private void OnNotifyGameCharactersChanged(NotifyGameCharactersChanged changed)
         {
             _logger.LogInformation("{messageType} received", nameof(NotifyGameCharactersChanged));
+            OnGameCharactersChanged?.Invoke(changed.Portraits);
         }
 
         private void OnNotifyPlayersChanged(NotifyPlayersChanged changed)
@@ -141,7 +143,7 @@ namespace WOTRMultiplayer.MP
 
         private void OnNetworkClientConnected(EndPoint endpoint)
         {
-            _game = new NetworkGame(string.Empty);
+            _game = new NetworkGame();
             OnConnected?.Invoke(endpoint);
         }
 

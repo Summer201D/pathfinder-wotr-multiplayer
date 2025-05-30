@@ -29,12 +29,15 @@ namespace WOTRMultiplayer.DI
             });
 
             serviceCollection.AddSingleton<IMainThreadAccessor, MainThreadAccessor>();
-            serviceCollection.AddSingleton<IMultiplayer, Multiplayer>();
+
+            serviceCollection.AddSingleton<IPortraitProvider, ResourceLibraryPortraitLoader>();
             serviceCollection.AddSingleton<IUIFactory, UIFactory>();
+
             serviceCollection.AddSingleton<ILobbyWindowController, LobbyWindowController>();
             serviceCollection.AddSingleton<IHostMenuItemController, HostMenuItemController>();
             serviceCollection.AddSingleton<IJoinMenuItemController, JoinMenuItemController>();
 
+            serviceCollection.AddSingleton<IMultiplayer, Multiplayer>();
             serviceCollection.AddSingleton<IMultiplayerHost, MultiplayerHost>();
             serviceCollection.AddSingleton<IMultiplayerClient, MultiplayerClient>();
 

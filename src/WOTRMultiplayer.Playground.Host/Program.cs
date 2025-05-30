@@ -18,8 +18,11 @@ namespace WOTRMultiplayer.Playground.Host
 
             var serviceProvider = DI.DIFactory.Create(new Config.UnityMod.UnityModManagerSettings { UseDebugConsole = false });
             var host = serviceProvider.GetService<IMultiplayerHost>();
-            var portraits = new List<string> { "1", "2" };
-            host.Create("dummy game name", portraits, new MultiplayerSettings());
+            var portraits = new List<string> {
+                "KitsuneFemaleRogue_Portrait","SeelahFemalePaladin_Portrait", "RegillMaleGnomeHellknight_Portrait",
+                "WenduagFemaleMongrelRanger_Portrait","EmberFemaleElfWitch_Portrait","NenioFemaleKitsuneWizard_Portrait"
+            };
+            host.Create(portraits, new MultiplayerSettings());
             var input = string.Empty;
 
             Console.Write(@$"

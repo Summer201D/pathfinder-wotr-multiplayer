@@ -8,9 +8,6 @@ namespace WOTRMultiplayer.Networking.Messages.Lobby
     public class NotifyGameCharactersChanged
     {
         [ProtoMember(1)]
-        public string GameName { get; set; }
-
-        [ProtoMember(2)]
         public List<string> Portraits { get; set; } = [];
     }
 }

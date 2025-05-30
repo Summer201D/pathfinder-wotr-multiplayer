@@ -1,7 +1,6 @@
 ﻿using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
-using Kingmaker.UI.MVVM._VM.SaveLoad;
 using Microsoft.Extensions.Logging;
 using TMPro;
 using UnityEngine;
@@ -42,6 +41,7 @@ namespace WOTRMultiplayer.UI.Lobby
         private readonly ILogger<LobbyWindowController> _logger;
         private readonly IUIFactory _uIFactory;
         private readonly IMainThreadAccessor _mainThreadAccessor;
+        private readonly IPortraitProvider _portraitProvider;
         private readonly ConcurrentDictionary<LobbyWindowOwner, GameObject> _contents = new();
         private LobbyWindowOwner _activeOwner;
 
@@ -63,11 +63,13 @@ namespace WOTRMultiplayer.UI.Lobby
         public LobbyWindowController(
             ILogger<LobbyWindowController> logger,
             IMainThreadAccessor mainThreadAccessor,
+            IPortraitProvider portraitProvider,
             IUIFactory uIFactory)
         {
             _logger = logger;
             _uIFactory = uIFactory;
             _mainThreadAccessor = mainThreadAccessor;
+            _portraitProvider = portraitProvider;
         }
 
         public void InitializeContent(LobbyWindowOwner owner, Transform parent)
@@ -183,13 +185,17 @@ namespace WOTRMultiplayer.UI.Lobby
             }
         }
 
-        public void UpdateCharacters(SaveSlotVM saveSlotVM)
+        public void UpdateCharacters(List<string> portraits)
         {
-            for (int characterIndex = 0; characterIndex < UIFactory.GetMaxCharactersCount(); characterIndex++)
+            _mainThreadAccessor.MainThreadQueue.Enqueue(() =>
             {
-                var sprite = GetPortraitSprite(characterIndex, saveSlotVM);
-                UpdateCharacterPortrait(characterIndex, sprite);
-            }
+                for (int characterIndex = 0; characterIndex < UIFactory.GetMaxCharactersCount(); characterIndex++)
+                {
+                    var portraitName = portraits.Count > characterIndex ? portraits[characterIndex] : null;
+                    var sprite = string.IsNullOrEmpty(portraitName) ? null : GetPortraitSprite(portraitName);
+                    UpdateCharacterPortrait(characterIndex, sprite);
+                }
+            });
         }
 
         private void UpdateCharacterPortrait(int characterIndex, Sprite portraitSprite)
@@ -228,9 +234,15 @@ namespace WOTRMultiplayer.UI.Lobby
             _logger.LogInformation("Character owner changed. CharacterIndex={characterIndex}, Player={player}", characterIndexComponent.CharacterIndex, player);
         }
 
-        private Sprite GetPortraitSprite(int slot, SaveSlotVM saveSlotVM)
+        private Sprite GetPortraitSprite(string portraitName)
         {
-            return saveSlotVM.PartyPortraits.Value.Count > slot ? saveSlotVM.PartyPortraits.Value[slot].Portrait : null;
+            var portrait = _portraitProvider.GetPortrait(portraitName);
+            if (portrait == null)
+            {
+                _logger.LogWarning("Unable to load character portrait. PortraitName={portraitName}", portraitName);
+            }
+
+            return portrait;
         }
 
         public void ResetData()

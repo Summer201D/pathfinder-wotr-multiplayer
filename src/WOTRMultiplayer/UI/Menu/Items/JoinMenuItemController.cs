@@ -216,6 +216,7 @@ namespace WOTRMultiplayer.UI.Menu.Items
             _multiplayerClient.OnNetworkError = OnMultiplayerClientError;
             _multiplayerClient.OnConnected = OnMultiplayerClientConnected;
             _multiplayerClient.OnPlayersChanged = OnMultiplayerClientPlayersChanged;
+            _multiplayerClient.OnGameCharactersChanged = OnMultiplayerClientGameCharactersChanged;
         }
 
         private void OnMultiplayerClientConnected(EndPoint endpoint)
@@ -228,6 +229,11 @@ namespace WOTRMultiplayer.UI.Menu.Items
         private void OnMultiplayerClientPlayersChanged(List<NetworkPlayer> players)
         {
             Lobby.UpdatePlayers(players);
+        }
+
+        private void OnMultiplayerClientGameCharactersChanged(List<string> portraits)
+        {
+            Lobby.UpdateCharacters(portraits);
         }
 
         private void OnMultiplayerClientError(string errorMessage)

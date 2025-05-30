@@ -11,6 +11,7 @@ using Microsoft.Extensions.Logging;
 using Owlcat.Runtime.UI.Controls.Button;
 using Owlcat.Runtime.UI.VirtualListSystem;
 using TMPro;
+using UniRx;
 using UnityEngine;
 using UnityEngine.Events;
 using WOTRMultiplayer.Abstractions.MP;
@@ -179,20 +180,20 @@ namespace WOTRMultiplayer.UI.Menu.Items
             var gameName = selectedSave.SaveName.Value;
             var titleText = UIUtility.GetSaberBookFormat(gameName);
             Title.SetText(titleText);
-            Lobby.UpdateCharacters(_saveLoadViewModel.SelectedSaveSlot.Value);
             var portraits = selectedSave.PartyPortraits.Value.Select(p => p.Portrait.name).ToList();
+            Lobby.UpdateCharacters(portraits);
 
             if (!_multiplayerHost.IsActive)
             {
                 StartButtonObject.SetActive(true);
                 ReadyButtonObject.SetActive(true);
                 ReadyButton.Interactable = true;
-                _multiplayerHost.Create(gameName, portraits, new MP.MultiplayerSettings());
+                _multiplayerHost.Create(portraits, new MP.MultiplayerSettings());
                 SetButtonLabel(HostButtonObject, StringConsts.MultiplayerWindow.HostMenu.HostButtonActiveLabel);
                 return;
             }
 
-            _multiplayerHost.NotifyGameCharactersChanged(gameName, portraits);
+            _multiplayerHost.NotifyGameCharactersChanged(portraits);
         }
 
         private void OnReadyButtonClicked()
