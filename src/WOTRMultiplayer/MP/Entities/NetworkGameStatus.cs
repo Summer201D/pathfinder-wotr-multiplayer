@@ -5,6 +5,6 @@
         None,
         Lobby,
         Loading,
-        InGame
+        Playing
     }
 }
