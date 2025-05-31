@@ -43,8 +43,11 @@ namespace WOTRMultiplayer.UI.Menu.Items
         private readonly ILogger<HostMenuItemController> _logger;
         private readonly IMultiplayerHost _multiplayerHost;
         private readonly IMainThreadAccessor _mainThreadAccessor;
-        private SaveLoadVM _saveLoadViewModel;
+
         private GameObject _menuContent;
+
+        private SaveLoadVM _saveLoadViewModel;
+        private SaveLoadPCView _saveLoadView;
 
         protected override GameObject MenuContent => _menuContent;
         protected override LobbyWindowOwner Owner => LobbyWindowOwner.HostMenu;
@@ -124,8 +127,8 @@ namespace WOTRMultiplayer.UI.Menu.Items
             SetupHandlers(true);
 
             saveLoadView.Bind(_saveLoadViewModel);
-
             _saveLoadViewModel.SelectedSaveSlot.Subscribe(this);
+
             saveLoadView.Show();
             base.Activate();
         }
@@ -184,11 +187,13 @@ namespace WOTRMultiplayer.UI.Menu.Items
         private void OnMultiplayerStartGame(SaveInfo info)
         {
             _logger.LogInformation("Starting multiplayer game as a host");
+
             _mainThreadAccessor.Enqueue(() =>
             {
+                base.OnCloseWindow?.Invoke();
+
                 Game.Instance.UI.MainMenu.EnterGame(() =>
                 {
-                    base.OnCloseWindow?.Invoke();
                     Game.Instance.LoadGame(info);
                 });
             });
@@ -313,18 +318,21 @@ namespace WOTRMultiplayer.UI.Menu.Items
 
         private void SetupLoadSaveGamesLayout()
         {
-            SaveLoadPCView saveLoad = Main.Multiplayer.Factory.CreateSaveLoadPCView(_menuContent.transform);
-            saveLoad.Initialize();
+            _saveLoadView = Main.Multiplayer.Factory.CreateSaveLoadPCView(_menuContent.transform);
+            _saveLoadView.Initialize();
         }
 
         private void DisposeSaveLoadVM()
         {
+            _logger.LogInformation("Disposing SaveLoadVM");
             _saveLoadViewModel?.SelectedSaveSlot?.Dispose();
             _saveLoadViewModel?.Dispose();
+            _saveLoadViewModel = null;
         }
 
         private void OnCloseSaveLoadVM()
         {
+            _logger.LogInformation("OnCloseSaveLoadVM");
             Window.OnCloseClicked();
         }
 

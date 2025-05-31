@@ -101,6 +101,7 @@ namespace WOTRMultiplayer.UI.Menu.Items
             Lobby.SetActiveOwner(LobbyWindowOwner.JoinMenu);
             base.Activate();
         }
+
         public override void Deactivate()
         {
             if (_multiplayerClient.IsInLobby)
@@ -238,9 +239,9 @@ namespace WOTRMultiplayer.UI.Menu.Items
             _logger.LogInformation("Starting multiplayer game as a client");
             _mainThreadAccessor.Enqueue(() =>
             {
+                base.OnCloseWindow?.Invoke();
                 Game.Instance.UI.MainMenu.EnterGame(() =>
                 {
-                    base.OnCloseWindow?.Invoke();
                     Game.Instance.LoadGame(info);
                 });
             });
