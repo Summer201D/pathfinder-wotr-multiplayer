@@ -10,4 +10,10 @@
 	  <ProjectReference Include="..\WOTRMultiplayer\WOTRMultiplayer.csproj" />
 	</ItemGroup>
 
+	<ItemGroup>
+	  <Reference Include="Assembly-CSharp">
+	    <HintPath>..\..\..\..\Games\Steam\steamapps\common\Pathfinder Second Adventure\Wrath_Data\Managed\Assembly-CSharp.dll</HintPath>
+	  </Reference>
+	</ItemGroup>
+
 </Project>

@@ -8,7 +8,7 @@ using System.Text.RegularExpressions;
 using Microsoft.Extensions.Logging;
 using WOTRMultiplayer.Abstractions.IO;
 using WOTRMultiplayer.Abstractions.MP;
-using WOTRMultiplayer.Abstractions.Unity;
+using WOTRMultiplayer.Abstractions.Saves;
 using WOTRMultiplayer.MP.Entities;
 using WOTRMultiplayer.Networking.Abstractions;
 using WOTRMultiplayer.Networking.Messages.Lobby;
@@ -21,7 +21,7 @@ namespace WOTRMultiplayer.MP
         private readonly ILogger<MultiplayerClient> _logger;
         private readonly IIPEndPointParser _ipEndPointParser;
         private readonly IFileSystemService _fileSystemService;
-        private readonly IUnityPathService _unityPathService;
+        private readonly ISaveGameService _saveGameService;
         private readonly INetworkServerClient _networkServerClient;
 
         public const int LocalHostPlayerId = -1;
@@ -51,14 +51,14 @@ namespace WOTRMultiplayer.MP
         public MultiplayerClient(
             ILogger<MultiplayerClient> logger,
             IIPEndPointParser ipEndPointParser,
-            IUnityPathService unityPathService,
+            ISaveGameService saveGameService,
             IFileSystemService fileSystemService,
             INetworkServerClient networkServerClient)
         {
             _logger = logger;
             _ipEndPointParser = ipEndPointParser;
             _fileSystemService = fileSystemService;
-            _unityPathService = unityPathService;
+            _saveGameService = saveGameService;
             _networkServerClient = networkServerClient;
         }
 
@@ -157,7 +157,7 @@ namespace WOTRMultiplayer.MP
         {
             _logger.LogInformation("Received save game file content. GameStatus={status} Size={contentSize}", _game.Status, assigned.Content.Length);
 
-            var baseUnityPath = _unityPathService.GetSaveGamePath();
+            var baseUnityPath = _saveGameService.GetSaveGamePath();
             var multiplayerPath = Regex.Replace(baseUnityPath, "(((\\\\|\\/)+)(Saved Games)((\\\\|\\/)+))$", "/Saved Multiplayer Games/");
             _game.SavePath = Path.Combine(multiplayerPath, "latest save.zks");
             _logger.LogInformation("Save game path changed. Path={path}", _game.SavePath);
@@ -167,6 +167,8 @@ namespace WOTRMultiplayer.MP
                 // on error?
                 return;
             }
+            var saveInfo = _saveGameService.LoadSave(_game.SavePath);
+            _logger.LogInformation("Game is ready to be started. SaveName={saveName}, Area={saveArea}", saveInfo.Name, saveInfo.Area.AreaDisplayName);
             // send new is ready? (is ready to play)
         }
 

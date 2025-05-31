@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using Microsoft.Extensions.DependencyInjection;
 using WOTRMultiplayer.Abstractions.MP;
 using WOTRMultiplayer.MP;
@@ -22,7 +23,9 @@ namespace WOTRMultiplayer.Playground.Host
                 "KitsuneFemaleRogue_Portrait","SeelahFemalePaladin_Portrait", "RegillMaleGnomeHellknight_Portrait",
                 "WenduagFemaleMongrelRanger_Portrait","EmberFemaleElfWitch_Portrait","NenioFemaleKitsuneWizard_Portrait"
             };
-            host.Create(string.Empty, portraits, new MultiplayerSettings());
+            var saveGame = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
+                "AppData\\LocalLow\\Owlcat Games\\Pathfinder Wrath Of The Righteous\\Saved Games\\Quick_12.zks");
+            host.Create(saveGame, portraits, new MultiplayerSettings());
             var input = string.Empty;
 
             Console.Write(@$"
@@ -30,6 +33,7 @@ namespace WOTRMultiplayer.Playground.Host
             ready - toggle host ready status
             owner_00 - change 0 char owner to 0 player
             owner_01 - change 0 char owner to 1 player
+            start - start game
             {Environment.NewLine}");
             while ((input = Console.ReadLine()) != "exit")
             {
@@ -43,6 +47,9 @@ namespace WOTRMultiplayer.Playground.Host
                         break;
                     case "owner_01":
                         host.ChangeCharacterOwner(0, 1);
+                        break;
+                    case "start":
+                        host.Start();
                         break;
                     default:
                         break;
