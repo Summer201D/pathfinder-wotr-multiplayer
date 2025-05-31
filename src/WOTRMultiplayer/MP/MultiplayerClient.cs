@@ -178,7 +178,7 @@ namespace WOTRMultiplayer.MP
             }
 
             _game.Save = _saveGameService.LoadSave(savePath);
-            _logger.LogInformation("Game is ready to be started. SaveName={saveName}, Area={saveArea}", _game.Save.Name, _game.Save.Area.AreaDisplayName);
+            _logger.LogInformation("Game is ready to be started. SaveName={saveName}, Area={saveArea}", _game.Save?.Name, _game.Save?.Area.AreaDisplayName);
             _networkServerClient.SendAsync(new PlayerSaveGameSyncChanged { IsSynced = true }).Wait();
         }
 

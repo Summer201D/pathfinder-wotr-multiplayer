@@ -124,7 +124,7 @@ namespace WOTRMultiplayer.Networking
 
         public void Dispose()
         {
-            _logger.LogInformation("Dispose");
+            _logger.LogInformation("Dispose. IsActive={isActive}, ClientsCount={clientsCount}", IsActive, _server?.AppServer?.GetOnlines()?.Length ?? 0);
             _server?.Dispose();
         }
     }
