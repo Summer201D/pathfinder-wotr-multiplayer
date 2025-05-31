@@ -1,6 +1,7 @@
 ﻿using System;
 using HarmonyLib;
 using Kingmaker.UI.MVVM._PCView.Settings;
+using Microsoft.Extensions.Logging;
 using Serilog;
 
 namespace WOTRMultiplayer.UI.Menu
@@ -12,7 +13,8 @@ namespace WOTRMultiplayer.UI.Menu
         [HarmonyPostfix]
         public static void SettingsPCView_Initialize_Prefix(SettingsPCView __instance)
         {
-            Log.Logger.Information("{methodName}: Applying", nameof(SettingsPCView_Initialize_Prefix));
+            var logger = Main.GetLogger<SettingsPCViewPatches>();
+            logger.LogInformation("Applying patch [{patchName}]", nameof(SettingsPCView_Initialize_Prefix));
 
             try
             {

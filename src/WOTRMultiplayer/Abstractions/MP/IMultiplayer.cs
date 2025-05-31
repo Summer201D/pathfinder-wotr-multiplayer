@@ -9,5 +9,7 @@ namespace WOTRMultiplayer.Abstractions.MP
         IUIFactory Factory { get; }
 
         bool InitializeMultiplayer(GameObject menuButtonToCopy, Transform parent);
+
+        bool IsActive { get; }
     }
 }

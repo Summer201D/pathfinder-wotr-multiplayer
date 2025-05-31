@@ -13,7 +13,7 @@ using WOTRMultiplayer.Abstractions.UI;
 using WOTRMultiplayer.Abstractions.UI.Controllers.Menu;
 using WOTRMultiplayer.Extensions;
 
-namespace WOTRMultiplayer.UI.Menu
+namespace WOTRMultiplayer.UI.Menu.Windows
 {
     public class MultiplayerWindow : FullScreenTabsWindow, IMultiplayerMenuWindow
     {
@@ -48,8 +48,8 @@ namespace WOTRMultiplayer.UI.Menu
             _hostMenuController = hostMenuItemController;
             _joinMenuController = joinMenuItemController;
 
-            hostMenuItemController.OnCloseWindow = OnButtonClose;
-            joinMenuItemController.OnCloseWindow = OnButtonClose;
+            hostMenuItemController.OnCloseWindow = Unload;
+            joinMenuItemController.OnCloseWindow = Unload;
         }
 
         void Update()
@@ -68,7 +68,7 @@ namespace WOTRMultiplayer.UI.Menu
                 return;
             }
 
-            Main.Multiplayer.Factory.StoreDefaultGameObject(this.gameObject.transform.Find("Black").gameObject);
+            Main.Multiplayer.Factory.StoreDefaultGameObject(gameObject.transform.Find("Black").gameObject);
 
             SetupLayout();
 
@@ -116,12 +116,24 @@ namespace WOTRMultiplayer.UI.Menu
                 IMultiplayerMenuItemController controllerToAsk = _hostMenuController.IsActive ?
                     _hostMenuController
                     : _joinMenuController;
-                OnDisposeMenuItem(controllerToAsk, this.Hide);
+                OnDisposeMenuItem(controllerToAsk, Hide);
                 return;
             }
 
             _hostMenuController.Activate();
             base.Show(state);
+        }
+
+        private void Unload()
+        {
+            _hostMenuController.OnCloseWindow = null;
+            _hostMenuController.OnClicked = null;
+
+            _joinMenuController.OnClicked = null;
+            _joinMenuController.OnCloseWindow = null;
+
+            OnButtonClose();
+            Dispose();
         }
 
         private void Hide(MessageModalBase.ButtonType button)
@@ -165,12 +177,12 @@ namespace WOTRMultiplayer.UI.Menu
 
         private void OnHostMenuItemClicked(object sender, EventArgs e)
         {
-            OnDisposeMenuItem(_joinMenuController, this.ActivateHostMenu);
+            OnDisposeMenuItem(_joinMenuController, ActivateHostMenu);
         }
 
         private void OnJoinMenuItemClicked(object sender, EventArgs e)
         {
-            OnDisposeMenuItem(_hostMenuController, this.ActivateJoinMenu);
+            OnDisposeMenuItem(_hostMenuController, ActivateJoinMenu);
         }
 
         private void OnDisposeMenuItem(IMultiplayerMenuItemController menuItemController, Action<MessageModalBase.ButtonType> onResult)
@@ -224,6 +236,8 @@ namespace WOTRMultiplayer.UI.Menu
 
         public override void Dispose()
         {
+            OnDispose?.Invoke();
+
             _hostMenuController.Reset(false);
             _joinMenuController.Reset(false);
             base.Dispose();

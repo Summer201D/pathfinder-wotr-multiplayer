@@ -4,7 +4,7 @@ using Kingmaker;
 using Kingmaker.UI.MVVM;
 using Kingmaker.UI.MVVM._PCView.Common;
 using Kingmaker.UI.MVVM._PCView.MainMenu;
-using Serilog;
+using Microsoft.Extensions.Logging;
 using TMPro;
 
 namespace WOTRMultiplayer.UI.Menu
@@ -16,7 +16,8 @@ namespace WOTRMultiplayer.UI.Menu
         [HarmonyPrefix]
         public static void MainMenuSideBarPCView_BindViewImplementation_Prefix(MainMenuSideBarPCView __instance)
         {
-            Log.Logger.Information("{methodName}: Applying", nameof(MainMenuSideBarPCView_BindViewImplementation_Prefix));
+            var logger = Main.GetLogger<MainMenuSideBarPCViewPatches>();
+            logger.LogInformation("Applying patch [{patchName}]", nameof(MainMenuSideBarPCView_BindViewImplementation_Prefix));
 
             try
             {
@@ -39,7 +40,7 @@ namespace WOTRMultiplayer.UI.Menu
                 }
 
                 var menuButtons = __instance.transform.GetChild(0);
-                for (int menuIndex = 0; menuIndex >= 0; menuIndex++)
+                for (int menuIndex = 0; menuIndex < menuButtons.childCount; menuIndex++)
                 {
                     var menuButton = menuButtons.GetChild(menuIndex).gameObject;
                     if (string.Equals(menuButton.name, "Settings"))
@@ -47,7 +48,7 @@ namespace WOTRMultiplayer.UI.Menu
                         var isOk = Main.Multiplayer.InitializeMultiplayer(menuButton, menuButtons.transform);
                         if (!isOk)
                         {
-                            Log.Logger.Error("Unable to inject multiplayer menu");
+                            logger.LogError("Unable to inject multiplayer menu");
                         }
                         break;
                     }
@@ -55,7 +56,7 @@ namespace WOTRMultiplayer.UI.Menu
             }
             catch (Exception ex)
             {
-                Log.Logger.Error(ex, "Unable to apply MainMenuSideBarPCView patch");
+                logger.LogError(ex, "Unable to apply MainMenuSideBarPCView patch");
                 throw;
             }
         }

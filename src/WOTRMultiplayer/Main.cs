@@ -22,6 +22,11 @@ namespace WOTRMultiplayer
 
         public const int MaxCharacters = 6;
 
+        public static ILogger<T> GetLogger<T>()
+        {
+            return _serviceProvider.GetService<ILogger<T>>();
+        }
+
         public static bool Load(UnityModManager.ModEntry entry)
         {
             try

@@ -29,7 +29,7 @@ namespace WOTRMultiplayer.UI
 
         public void Initialize()
         {
-            _portraits = LoadAssets();
+            _portraits = _portraits ??= LoadAssets();
         }
 
         private ConcurrentDictionary<string, UnityEngine.Sprite> LoadAssets()

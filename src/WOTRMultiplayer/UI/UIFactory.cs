@@ -104,8 +104,8 @@ namespace WOTRMultiplayer.UI
                     {
                         _logger.LogInformation("Storing default prefab");
                         _defaultGameObject = UnityEngine.Object.Instantiate(gameObject);
-                        UnityEngine.Object.DestroyImmediate(_defaultGameObject.GetComponent<Image>());
                         UnityEngine.Object.DontDestroyOnLoad(_defaultGameObject);
+                        UnityEngine.Object.DestroyImmediate(_defaultGameObject.GetComponent<Image>());
                     }
                 }
             }
@@ -432,8 +432,8 @@ namespace WOTRMultiplayer.UI
                         _logger.LogInformation("Storing background art");
 
                         _backgroundArtPrefab = UnityEngine.Object.Instantiate(backgroundArt);
-                        UnityEngine.Object.DestroyImmediate(_backgroundArtPrefab.GetComponent<Image>());
                         UnityEngine.Object.DontDestroyOnLoad(_backgroundArtPrefab);
+                        UnityEngine.Object.DestroyImmediate(_backgroundArtPrefab.GetComponent<Image>());
                     }
                 }
             }

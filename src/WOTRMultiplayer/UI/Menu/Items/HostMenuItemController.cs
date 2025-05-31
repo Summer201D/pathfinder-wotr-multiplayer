@@ -178,6 +178,7 @@ namespace WOTRMultiplayer.UI.Menu.Items
         private void OnMultiplayerStartGame(SaveInfo info)
         {
             _logger.LogInformation("Starting multiplayer game as a host");
+            DisposeSaveLoadVM();
             _mainThreadAccessor.Enqueue(() =>
             {
                 Game.Instance.UI.MainMenu.EnterGame(() =>

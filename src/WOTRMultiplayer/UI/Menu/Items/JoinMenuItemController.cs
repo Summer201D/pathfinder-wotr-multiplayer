@@ -110,7 +110,6 @@ namespace WOTRMultiplayer.UI.Menu.Items
 
             SetupHandlers(false);
             ActivateJoinLobbyControls();
-            Lobby.ResetData();
 
             base.Deactivate();
         }
