@@ -94,14 +94,14 @@ namespace WOTRMultiplayer.UI.Menu.Items
 
             Lobby.SetActiveOwner(LobbyWindowOwner.HostMenu);
 
-            var saveLoad = _menuContent.transform.GetChild(0).GetComponent<SaveLoadPCView>();
+            var saveLoadView = _menuContent.transform.GetChild(0).GetComponent<SaveLoadPCView>();
             _saveLoadViewModel = new SaveLoadVM(SaveLoadMode.Load, true, OnCloseSaveLoadVM, RootUIContext.Instance.CommonVM);
 
             if (SetupLayout)
             {
                 SetupLayout = false;
                 /// overriding save/load/delete buttons prefab to make sure original loadsave screen is not affected
-                var screen = saveLoad.gameObject.transform.Find(SaveLoadScreen);
+                var screen = saveLoadView.gameObject.transform.Find(SaveLoadScreen);
                 var collectionView = screen.Find("SaveSlotCollectionPlace").Find("SaveSlotVirtualCollectionView");
                 var virtualView = collectionView.GetComponent<SaveSlotCollectionVirtualView>();
                 var prefab = virtualView.m_SaveSlotPrefab as SaveSlotPCView;
@@ -117,10 +117,10 @@ namespace WOTRMultiplayer.UI.Menu.Items
 
             SetupHandlers(true);
 
-            saveLoad.Bind(_saveLoadViewModel);
-            _saveLoadViewModel.SelectedSaveSlot.Subscribe(this);
+            saveLoadView.Bind(_saveLoadViewModel);
 
-            saveLoad.Show();
+            _saveLoadViewModel.SelectedSaveSlot.Subscribe(this);
+            saveLoadView.Show();
             base.Activate();
         }
 
@@ -178,7 +178,6 @@ namespace WOTRMultiplayer.UI.Menu.Items
         private void OnMultiplayerStartGame(SaveInfo info)
         {
             _logger.LogInformation("Starting multiplayer game as a host");
-            DisposeSaveLoadVM();
             _mainThreadAccessor.Enqueue(() =>
             {
                 Game.Instance.UI.MainMenu.EnterGame(() =>
@@ -315,6 +314,7 @@ namespace WOTRMultiplayer.UI.Menu.Items
 
         private void DisposeSaveLoadVM()
         {
+            _saveLoadViewModel?.SelectedSaveSlot?.Dispose();
             _saveLoadViewModel?.Dispose();
         }
 

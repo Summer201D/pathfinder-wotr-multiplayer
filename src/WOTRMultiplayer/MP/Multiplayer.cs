@@ -72,7 +72,6 @@ namespace WOTRMultiplayer.MP
             {
                 _logger.LogInformation("Multiplayer window is disposing.");
                 viewModel.Dispose();
-                _mainThreadAccessor.SetQueue(null);
             };
 
             return true;
