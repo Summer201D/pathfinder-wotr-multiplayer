@@ -6,11 +6,16 @@ namespace WOTRMultiplayer.Unity
 {
     public class MainThreadAccessor : IMainThreadAccessor
     {
-        public ConcurrentQueue<Action> MainThreadQueue { get; private set; }
+        private ConcurrentQueue<Action> _mainThreadQueue;
 
         public void SetQueue(ConcurrentQueue<Action> mainThreadQueue)
         {
-            MainThreadQueue = mainThreadQueue;
+            _mainThreadQueue = mainThreadQueue;
+        }
+
+        public void Enqueue(Action action)
+        {
+            _mainThreadQueue.Enqueue(action);
         }
     }
 }

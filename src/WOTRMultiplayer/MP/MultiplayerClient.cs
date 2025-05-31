@@ -252,8 +252,8 @@ namespace WOTRMultiplayer.MP
             }
 
             // should never happen?
-            OnNetworkError?.Invoke("Generic network error occurred.");
             _logger.LogError(exception, "Generic network error occurred");
+            OnNetworkError?.Invoke("Generic network error occurred.");
         }
 
         private void OnPlayerNameRequest(PlayerNameRequest request)

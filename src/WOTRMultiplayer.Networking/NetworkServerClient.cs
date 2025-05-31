@@ -88,7 +88,7 @@ namespace WOTRMultiplayer.Networking
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Unable to handle message");
+                _logger.LogError(ex, "Unable to handle message. MessageType={messageType}", type.Name);
             }
         }
     }

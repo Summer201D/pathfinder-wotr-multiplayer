@@ -237,10 +237,13 @@ namespace WOTRMultiplayer.UI.Menu.Items
         private void OnMultiplayerStartGame(SaveInfo info)
         {
             _logger.LogInformation("Starting multiplayer game as a client");
-            _mainThreadAccessor.MainThreadQueue.Enqueue(() =>
+            _mainThreadAccessor.Enqueue(() =>
             {
-                Game.Instance.UI.MainMenu.EnterGame(() => Game.Instance.LoadGame(info));
-                base.OnCloseWindow?.Invoke();
+                Game.Instance.UI.MainMenu.EnterGame(() =>
+                {
+                    base.OnCloseWindow?.Invoke();
+                    Game.Instance.LoadGame(info);
+                });
             });
         }
 
@@ -265,7 +268,7 @@ namespace WOTRMultiplayer.UI.Menu.Items
         {
             _logger.LogError("Multiplayer client error. ErrorText={errorMessage}", errorMessage);
 
-            _mainThreadAccessor.MainThreadQueue.Enqueue(() =>
+            _mainThreadAccessor.Enqueue(() =>
             {
                 EventBus.RaiseEvent<IMessageModalUIHandler>(window =>
                 {
@@ -293,7 +296,7 @@ namespace WOTRMultiplayer.UI.Menu.Items
 
         private void ActivateLobbyControls()
         {
-            _mainThreadAccessor.MainThreadQueue.Enqueue(() =>
+            _mainThreadAccessor.Enqueue(() =>
             {
                 ReadyButtonObject.GetComponentInChildren<TextMeshProUGUI>().SetText(UIStringConsts.MultiplayerWindow.HostMenu.ReadyNotReadyButtonLabel);
 
@@ -305,7 +308,7 @@ namespace WOTRMultiplayer.UI.Menu.Items
 
         private void ActivateJoinLobbyControls()
         {
-            _mainThreadAccessor.MainThreadQueue.Enqueue(() =>
+            _mainThreadAccessor.Enqueue(() =>
             {
                 Lobby.ResetData();
                 SetButtonActive(JoinButtonObject, true);
@@ -336,7 +339,7 @@ namespace WOTRMultiplayer.UI.Menu.Items
 
         private void SetButtonActive(GameObject button, bool isActive)
         {
-            _mainThreadAccessor.MainThreadQueue.Enqueue(() =>
+            _mainThreadAccessor.Enqueue(() =>
             {
                 button.GetComponent<OwlcatButton>().Interactable = isActive;
             });

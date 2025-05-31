@@ -178,10 +178,13 @@ namespace WOTRMultiplayer.UI.Menu.Items
         private void OnMultiplayerStartGame(SaveInfo info)
         {
             _logger.LogInformation("Starting multiplayer game as a host");
-            _mainThreadAccessor.MainThreadQueue.Enqueue(() =>
+            _mainThreadAccessor.Enqueue(() =>
             {
-                Game.Instance.UI.MainMenu.EnterGame(() => Game.Instance.LoadGame(info));
-                base.OnCloseWindow?.Invoke();
+                Game.Instance.UI.MainMenu.EnterGame(() =>
+                {
+                    base.OnCloseWindow?.Invoke();
+                    Game.Instance.LoadGame(info);
+                });
             });
         }
 
@@ -296,7 +299,7 @@ namespace WOTRMultiplayer.UI.Menu.Items
         {
             Lobby.UpdatePlayers(players);
             var canStart = players.All(p => p.IsReady);
-            _mainThreadAccessor.MainThreadQueue.Enqueue(() =>
+            _mainThreadAccessor.Enqueue(() =>
             {
                 StartButton.Interactable = canStart;
             });

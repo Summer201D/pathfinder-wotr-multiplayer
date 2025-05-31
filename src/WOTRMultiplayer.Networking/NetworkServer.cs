@@ -31,7 +31,7 @@ namespace WOTRMultiplayer.Networking
             where TMessage : class
         {
             _logger.LogInformation("Register message handler. Type={type}", typeof(TMessage).Name);
-            Server.OnMessageReceive<TMessage>(args => messageHandler(args.NetSession.ID, args.Message));
+            Server.OnMessageReceive<TMessage>(args => OnHandleMessage(args, messageHandler));
             return this;
         }
 
@@ -69,6 +69,19 @@ namespace WOTRMultiplayer.Networking
         {
             var sessions = Server.AppServer.GetOnlines().Where(s => s.ID != clientId).ToArray();
             Server.AppServer.Send(message, sessions);
+        }
+
+        private void OnHandleMessage<TMessage>(EventMessageReceiveArgs<NetworkServerApp, NetworkClientToken, TMessage> args, Action<long, TMessage> handler)
+        {
+            try
+            {
+                handler(args.NetSession.ID, args.Message);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Unable to handle message. MessageType={messageType}", typeof(TMessage).Name);
+                throw;
+            }
         }
 
         private void OnOpened(IServer server)
