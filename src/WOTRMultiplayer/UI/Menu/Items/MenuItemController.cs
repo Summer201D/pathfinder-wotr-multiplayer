@@ -2,7 +2,6 @@
 using Microsoft.Extensions.Logging;
 using Owlcat.Runtime.UI.Controls.Button;
 using UnityEngine;
-using WOTRMultiplayer.Abstractions.UI;
 using WOTRMultiplayer.Abstractions.UI.Controllers;
 using WOTRMultiplayer.Abstractions.UI.Controllers.Menu;
 using WOTRMultiplayer.UI.Lobby;
@@ -24,7 +23,6 @@ namespace WOTRMultiplayer.UI.Menu.Items
 
         protected GameObject MenuItem { get; private set; }
         protected abstract GameObject MenuContent { get; }
-        protected IMultiplayerMenuWindow Window { get; private set; }
 
         protected abstract LobbyWindowOwner Owner { get; }
 
@@ -32,7 +30,7 @@ namespace WOTRMultiplayer.UI.Menu.Items
 
         public Action<object, EventArgs> OnClicked { get; set; }
 
-        public Action OnCloseWindow { get; set; }
+        public Action OnGameStarted { get; set; }
 
         protected MenuItemController(
             Microsoft.Extensions.Logging.ILogger logger,
@@ -42,7 +40,15 @@ namespace WOTRMultiplayer.UI.Menu.Items
             Lobby = lobbyWindowController;
         }
 
-        public void Initialize(IMultiplayerMenuWindow multiplayerMenuWindow, GameObject baseLayout, GameObject menuItem)
+        public void Dispose()
+        {
+            _logger.LogInformation("Resetting controller");
+            SetupLayout = true;
+            _isInitialized = false;
+            DisposeInternal();
+        }
+
+        public void Initialize(GameObject baseLayout, GameObject menuItem)
         {
             _logger.LogInformation("Trying to initialize");
 
@@ -53,7 +59,6 @@ namespace WOTRMultiplayer.UI.Menu.Items
             }
 
             MenuItem = menuItem;
-            Window = multiplayerMenuWindow;
             _isInitialized = true;
 
             InitializeInternal(baseLayout);
@@ -62,24 +67,17 @@ namespace WOTRMultiplayer.UI.Menu.Items
             Button.OnLeftClick.AddListener(OnClickedInternal);
             ActiveImage = MenuItem.transform.Find(SelectedGameObjectName).gameObject;
             _hoverImage = MenuItem.transform.Find(HoverGameObjectName).gameObject;
-
-            Deactivate();
+            ActiveImage.SetActive(false);
         }
 
-        protected virtual void FullReset()
+        protected virtual void DisposeInternal()
         {
-            Lobby.ResetOwner(Owner);
-        }
+            Button.OnHover.RemoveAllListeners();
+            Button.OnLeftClick.RemoveAllListeners();
+            ActiveImage = null;
+            _hoverImage = null;
 
-        public virtual void Reset(bool isSoftReset)
-        {
-            _logger.LogInformation("Resetting initialization");
-            SetupLayout = true;
-            _isInitialized = false;
-            if (!isSoftReset)
-            {
-                FullReset();
-            }
+            Lobby.ResetOwnerContent(Owner);
         }
 
         protected virtual void InitializeInternal(GameObject baseLayout)

@@ -5,6 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using UnityModManagerNet;
 using WOTRMultiplayer.Abstractions.MP;
+using WOTRMultiplayer.Abstractions.UI;
 using WOTRMultiplayer.Config.UnityMod;
 using WOTRMultiplayer.DI;
 
@@ -52,7 +53,7 @@ namespace WOTRMultiplayer
                 entry.OnSaveGUI += OnSaveGui;
                 entry.OnUnload += OnUnload;
 
-
+                _logger.LogInformation("harmony patching");
                 var harmony = new Harmony(entry.Info.Id);
                 harmony.PatchAll(Assembly.GetExecutingAssembly());
             }
@@ -63,6 +64,12 @@ namespace WOTRMultiplayer
             }
 
             return true;
+        }
+
+        public static void InitializePortraits()
+        {
+            _logger.LogInformation("Initializing portrait sprites");
+            _serviceProvider.GetService<IPortraitProvider>().Initialize();
         }
 
         private static bool OnUnload(UnityModManager.ModEntry entry)

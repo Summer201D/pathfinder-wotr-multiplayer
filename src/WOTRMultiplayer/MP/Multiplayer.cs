@@ -19,7 +19,6 @@ namespace WOTRMultiplayer.MP
         private readonly IJoinMenuItemController _joinMenuItemController;
         private readonly IMultiplayerClient _multiplayerClient;
         private readonly IMultiplayerHost _multiplayerHost;
-        private readonly IPortraitProvider _portraitProvider;
         private readonly Microsoft.Extensions.Logging.ILogger _logger;
 
         public IUIFactory Factory { get; private set; }
@@ -34,7 +33,6 @@ namespace WOTRMultiplayer.MP
             IMainThreadAccessor mainThreadAccessor,
             IHostMenuItemController hostMenuItemController,
             IJoinMenuItemController joinMenuItemController,
-            IPortraitProvider portraitProvider,
             IMultiplayerHost multiplayerHost,
             IMultiplayerClient multiplayerClient)
         {
@@ -45,14 +43,21 @@ namespace WOTRMultiplayer.MP
             _multiplayerClient = multiplayerClient;
             _hostMenuItemController = hostMenuItemController;
             _joinMenuItemController = joinMenuItemController;
-            _portraitProvider = portraitProvider;
         }
 
         public bool InitializeMultiplayer(GameObject menuItemPrototype, Transform parent)
         {
-            _portraitProvider.Initialize();
-            _multiplayerHost.Dispose();
-            _multiplayerClient.Dispose();
+            if (_multiplayerHost.IsActive)
+            {
+                _logger.LogWarning("Multiplayer host has not been properly disposed. Verify exit game/main menu handles");
+                _multiplayerHost.Dispose();
+            }
+
+            if (_multiplayerClient.IsActive)
+            {
+                _logger.LogWarning("Multiplayer client has not been properly disposed. Verify exit game/main menu handlers");
+                _multiplayerClient.Dispose();
+            }
 
             var multiplayerMenu = UnityEngine.Object.Instantiate(menuItemPrototype, parent);
             multiplayerMenu.transform.SetSiblingIndex(menuItemPrototype.transform.GetSiblingIndex());
@@ -67,13 +72,6 @@ namespace WOTRMultiplayer.MP
             var text = UIUtility.GetSaberBookFormat(UIStringConsts.MainMenu.MultiplayerMenu);
             var viewModel = new ContextMenuEntityVM(new ContextMenuCollectionEntity(UIUtility.GetSaberBookFormat(text), ShowMultiplayerWindow));
             multiplayerMenuView.Bind(viewModel);
-
-            _multiplayerWindow.OnDispose = () =>
-            {
-                _logger.LogInformation("Multiplayer window is disposing.");
-                viewModel.Dispose();
-                multiplayerMenuView.Unbind();
-            };
 
             return true;
         }

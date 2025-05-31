@@ -23,8 +23,6 @@ namespace WOTRMultiplayer.UI.Menu.Windows
 
         public override FullScreenUIType ActiveFullScreenUIType => (FullScreenUIType)555555;
 
-        public Action OnDispose { get; set; }
-
         public ConcurrentQueue<Action> MainThreadQueue { get; } = new ConcurrentQueue<Action>();
 
         private List<DOTweenAnimation> _animations = [];
@@ -47,9 +45,6 @@ namespace WOTRMultiplayer.UI.Menu.Windows
         {
             _hostMenuController = hostMenuItemController;
             _joinMenuController = joinMenuItemController;
-
-            hostMenuItemController.OnCloseWindow = Unload;
-            joinMenuItemController.OnCloseWindow = Unload;
         }
 
         void Update()
@@ -68,11 +63,12 @@ namespace WOTRMultiplayer.UI.Menu.Windows
                 return;
             }
 
+            _isInitialized = true;
+
             Main.Multiplayer.Factory.StoreDefaultGameObject(gameObject.transform.Find("Black").gameObject);
 
             SetupLayout();
 
-            _isInitialized = true;
             base.Initialize();
             IsAnimated = true;
             var canvas = GetComponent<CanvasGroup>();
@@ -118,18 +114,6 @@ namespace WOTRMultiplayer.UI.Menu.Windows
             base.Show(state);
         }
 
-        private void Unload()
-        {
-            _hostMenuController.OnCloseWindow = null;
-            _hostMenuController.OnClicked = null;
-
-            _joinMenuController.OnClicked = null;
-            _joinMenuController.OnCloseWindow = null;
-
-            OnButtonClose();
-            Dispose();
-        }
-
         private void Hide(MessageModalBase.ButtonType button)
         {
             if (button == MessageModalBase.ButtonType.Yes)
@@ -151,10 +135,10 @@ namespace WOTRMultiplayer.UI.Menu.Windows
 
             var baseMenuItem = SetupBaseMenuItem(baseLayout);
             var hostMenuItem = CreateMenuItem(Screen.width * 0.33f, baseMenuItem, baseLayout.transform);
-            _hostMenuController.Initialize(this, baseLayout, hostMenuItem);
+            _hostMenuController.Initialize(baseLayout, hostMenuItem);
 
             var joinMenuItem = CreateMenuItem(Screen.width * 0.66f, baseMenuItem, baseLayout.transform);
-            _joinMenuController.Initialize(this, baseLayout, joinMenuItem);
+            _joinMenuController.Initialize(baseLayout, joinMenuItem);
             DestroyImmediate(baseMenuItem);
 
             _hostMenuController.OnClicked = OnHostMenuItemClicked;
@@ -230,10 +214,8 @@ namespace WOTRMultiplayer.UI.Menu.Windows
 
         public override void Dispose()
         {
-            OnDispose?.Invoke();
-
-            _hostMenuController.Reset(false);
-            _joinMenuController.Reset(false);
+            _hostMenuController.Dispose();
+            _joinMenuController.Dispose();
             base.Dispose();
         }
     }

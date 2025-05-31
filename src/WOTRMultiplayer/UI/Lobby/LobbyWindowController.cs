@@ -91,6 +91,7 @@ namespace WOTRMultiplayer.UI.Lobby
             var lobbyContent = _uIFactory.CreateLobbyWindowContent(parent, canUseDropdown);
             lobbyContent.SetActive(false);
             _contents.TryAdd(owner, lobbyContent);
+            _logger.LogInformation("Content has been created. Owner={owner}", owner);
         }
 
         public void UpdatePlayers(List<NetworkPlayer> players)
@@ -179,7 +180,7 @@ namespace WOTRMultiplayer.UI.Lobby
             _activeOwner = owner;
         }
 
-        public void ResetOwner(LobbyWindowOwner owner)
+        public void ResetOwnerContent(LobbyWindowOwner owner)
         {
             _logger.LogInformation("Reset owner content objects. Owner={owner}", owner);
             _contents.TryRemove(owner, out var _);

@@ -102,7 +102,7 @@ namespace WOTRMultiplayer.UI.Menu.Items
             Lobby.SetActiveOwner(LobbyWindowOwner.HostMenu);
 
             var saveLoadView = _menuContent.transform.GetChild(0).GetComponent<SaveLoadPCView>();
-            _saveLoadViewModel = new SaveLoadVM(SaveLoadMode.Load, true, OnCloseSaveLoadVM, RootUIContext.Instance.CommonVM);
+            _saveLoadViewModel = new SaveLoadVM(SaveLoadMode.Load, true, DisposeSaveLoadVM, RootUIContext.Instance.CommonVM);
 
             if (SetupLayout)
             {
@@ -119,15 +119,15 @@ namespace WOTRMultiplayer.UI.Menu.Items
                 UnityEngine.Object.DestroyImmediate(newPrefab.m_DeleteButton.gameObject);
                 ///
 
-                SetupButtons();
             }
 
-            SetButtonLabel(HostButtonObject, UIStringConsts.MultiplayerWindow.HostMenu.HostButtonLabel);
+            SetupButtons();
 
             SetupHandlers(true);
 
             saveLoadView.Bind(_saveLoadViewModel);
             _saveLoadViewModel.SelectedSaveSlot.Subscribe(this);
+            Game.Instance.UI.EscManager.Unsubscribe(_saveLoadViewModel.OnClose);
 
             saveLoadView.Show();
             base.Activate();
@@ -168,6 +168,7 @@ namespace WOTRMultiplayer.UI.Menu.Items
             _menuContent = UnityEngine.Object.Instantiate(baseLayout, baseLayout.transform);
             _menuContent.name = HostMenuItemContentObjectName;
             _menuContent.CleanupAllChildren();
+            _menuContent.SetActive(false);
 
             SetupLoadSaveGamesLayout();
             SetupLobbyInfo(baseLayout);
@@ -190,8 +191,6 @@ namespace WOTRMultiplayer.UI.Menu.Items
 
             _mainThreadAccessor.Enqueue(() =>
             {
-                base.OnCloseWindow?.Invoke();
-
                 Game.Instance.UI.MainMenu.EnterGame(() =>
                 {
                     Game.Instance.LoadGame(info);
@@ -201,6 +200,7 @@ namespace WOTRMultiplayer.UI.Menu.Items
 
         private void SetupButtons()
         {
+            SetButtonLabel(HostButtonObject, UIStringConsts.MultiplayerWindow.HostMenu.HostButtonLabel);
             SetupButtonClick(HostButton, OnHostButtonClicked);
             HostButton.Interactable = false;
 
@@ -325,15 +325,9 @@ namespace WOTRMultiplayer.UI.Menu.Items
         private void DisposeSaveLoadVM()
         {
             _logger.LogInformation("Disposing SaveLoadVM");
-            _saveLoadViewModel?.SelectedSaveSlot?.Dispose();
             _saveLoadViewModel?.Dispose();
+            _saveLoadViewModel?.SelectedSaveSlot?.Dispose();
             _saveLoadViewModel = null;
-        }
-
-        private void OnCloseSaveLoadVM()
-        {
-            _logger.LogInformation("OnCloseSaveLoadVM");
-            Window.OnCloseClicked();
         }
 
         protected override ModalActionConfirmation GetDeactivationConfirmationInternal()

@@ -17,7 +17,7 @@ namespace WOTRMultiplayer.Abstractions.UI.Controllers
         void UpdateCharacterOwnerDropdown(int characterIndex, int playerIndex);
         void SetActiveOwner(LobbyWindowOwner owner);
 
-        void ResetOwner(LobbyWindowOwner owner);
+        void ResetOwnerContent(LobbyWindowOwner owner);
 
         Action<int, int> OnCharacterOwnerChanged { get; set; }
     }

@@ -72,7 +72,7 @@ namespace WOTRMultiplayer.UI
         {
             if (view == null)
             {
-                _logger.LogError("SaveLoadPCView is null");
+                _logger.LogWarning("SaveLoadPCView is null");
                 return;
             }
 

@@ -18,7 +18,7 @@ namespace WOTRMultiplayer.UI.Menu
         public static void EscMenuPCView_BindViewImplementation_Postfix(EscMenuPCView __instance)
         {
             var logger = Main.GetLogger<EscMenuWindowPatches>();
-            logger.LogInformation("Applying patch [{patchName}]", __instance.GetType().Name);
+            logger.LogInformation("Applying patch [{patchName}]", nameof(EscMenuPCView_BindViewImplementation_Postfix));
             var mainMenu = __instance.transform.Find($"Window/ButtonBlock/{multiplayerMenuObjectName}")?.gameObject;
             if (mainMenu == null && Main.Multiplayer.IsActive)
             {

@@ -97,6 +97,8 @@ namespace WOTRMultiplayer.UI.Menu.Items
                 return;
             }
 
+            ActivateJoinLobbyControls();
+
             SetupHandlers(true);
             Lobby.SetActiveOwner(LobbyWindowOwner.JoinMenu);
             base.Activate();
@@ -110,7 +112,6 @@ namespace WOTRMultiplayer.UI.Menu.Items
             }
 
             SetupHandlers(false);
-            ActivateJoinLobbyControls();
 
             base.Deactivate();
         }
@@ -145,6 +146,7 @@ namespace WOTRMultiplayer.UI.Menu.Items
             _menuContent.name = JoinMenuItemContentObjectName;
             _menuContent.AddComponent<VerticalLayoutGroup>().padding = new RectOffset(0, 0, 25, 0);
             _menuContent.CleanupAllChildren();
+            _menuContent.SetActive(false);
 
             var menuContentRect = _menuContent.GetComponent<RectTransform>();
             menuContentRect.sizeDelta = new Vector2(menuContentRect.sizeDelta.x * 0.4f, menuContentRect.sizeDelta.y * 0.88f);
@@ -237,13 +239,9 @@ namespace WOTRMultiplayer.UI.Menu.Items
         private void OnMultiplayerStartGame(SaveInfo info)
         {
             _logger.LogInformation("Starting multiplayer game as a client");
-            _mainThreadAccessor.Enqueue(() =>
+            Game.Instance.UI.MainMenu.EnterGame(() =>
             {
-                base.OnCloseWindow?.Invoke();
-                Game.Instance.UI.MainMenu.EnterGame(() =>
-                {
-                    Game.Instance.LoadGame(info);
-                });
+                Game.Instance.LoadGame(info);
             });
         }
 

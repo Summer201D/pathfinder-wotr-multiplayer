@@ -4,21 +4,18 @@ using WOTRMultiplayer.UI;
 
 namespace WOTRMultiplayer.Abstractions.UI.Controllers.Menu
 {
-    public interface IMultiplayerMenuItemController
+    public interface IMultiplayerMenuItemController : IDisposable
     {
         ModalActionConfirmation GetDeactivationConfirmation();
 
-        void Initialize(IMultiplayerMenuWindow multiplayerWindow, GameObject baseLayout, GameObject menuItem);
+        void Initialize(GameObject baseLayout, GameObject menuItem);
 
         void Activate();
-        void Deactivate();
 
-        void Reset(bool isSoftReset);
+        void Deactivate();
 
         bool IsActive { get; }
 
         Action<object, EventArgs> OnClicked { get; set; }
-
-        Action OnCloseWindow { get; set; }
     }
 }
