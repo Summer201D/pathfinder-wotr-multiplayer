@@ -159,11 +159,11 @@ namespace WOTRMultiplayer.UI
             var layout = baseButton.GetComponent<RectTransform>();
             layout.sizeDelta = new Vector2(layout.sizeDelta.x * 0.92f, layout.sizeDelta.y);
             var hostButton = UnityEngine.Object.Instantiate(baseButton, buttons);
-            hostButton.name = UIStringConsts.MultiplayerWindow.HostMenu.HostButtonLabel;
+            hostButton.name = HostMenuItemController.HostButtonObjectName;
             var readyButton = UnityEngine.Object.Instantiate(baseButton, buttons);
-            readyButton.name = UIStringConsts.MultiplayerWindow.HostMenu.ReadyButtonLabel;
+            readyButton.name = HostMenuItemController.ReadyButtonObjectName;
             var startButton = UnityEngine.Object.Instantiate(baseButton, buttons);
-            startButton.name = UIStringConsts.MultiplayerWindow.HostMenu.StartButtonLabel;
+            startButton.name = HostMenuItemController.StartButtonObjectName;
             buttons.gameObject.CleanupAllChildren(
                 x => x.name != "DlcRequiredLabel" && x.name != hostButton.name && x.name != readyButton.name && x.name != startButton.name);
 
