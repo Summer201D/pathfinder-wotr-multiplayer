@@ -239,9 +239,9 @@ namespace WOTRMultiplayer.UI.Menu.Items
         private void OnMultiplayerStartGame(SaveInfo info)
         {
             _logger.LogInformation("Starting multiplayer game as a client");
-            Game.Instance.UI.MainMenu.EnterGame(() =>
+            _mainThreadAccessor.Enqueue(() =>
             {
-                Game.Instance.LoadGame(info);
+                Game.Instance.RootUiContext.MainMenuVM.EnterLoadGame(info);
             });
         }
 

@@ -191,10 +191,7 @@ namespace WOTRMultiplayer.UI.Menu.Items
 
             _mainThreadAccessor.Enqueue(() =>
             {
-                Game.Instance.UI.MainMenu.EnterGame(() =>
-                {
-                    Game.Instance.LoadGame(info);
-                });
+                Game.Instance.RootUiContext.MainMenuVM.EnterLoadGame(info);
             });
         }
 
