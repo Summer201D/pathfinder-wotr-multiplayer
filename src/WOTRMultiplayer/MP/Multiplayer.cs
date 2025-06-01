@@ -76,13 +76,20 @@ namespace WOTRMultiplayer.MP
             return true;
         }
 
-        private void ShowMultiplayerWindow()
+        public void TerminateMultiplayer()
         {
-            _multiplayerWindow.Show(true);
+            _logger.LogInformation("Disposing both multiplayer host/client");
+            _multiplayerHost.Dispose();
+            _multiplayerClient.Dispose();
         }
 
         public void Dispose()
         {
+        }
+
+        private void ShowMultiplayerWindow()
+        {
+            _multiplayerWindow.Show(true);
         }
     }
 }

@@ -10,6 +10,8 @@ namespace WOTRMultiplayer.Abstractions.MP
 
         bool InitializeMultiplayer(GameObject menuButtonToCopy, Transform parent);
 
+        void TerminateMultiplayer();
+
         bool IsActive { get; }
     }
 }

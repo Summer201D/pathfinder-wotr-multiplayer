@@ -9,7 +9,7 @@ using UnityEngine;
 namespace WOTRMultiplayer.HarmonyPatches
 {
     [HarmonyPatch]
-    public class EscMenuWindowPatches
+    public class EscMenuPCViewPatches
     {
         public const string multiplayerMenuObjectName = "MultiplayerLobbyButton";
 
@@ -17,7 +17,7 @@ namespace WOTRMultiplayer.HarmonyPatches
         [HarmonyPrefix]
         public static void EscMenuPCView_BindViewImplementation_Postfix(EscMenuPCView __instance)
         {
-            var logger = Main.GetLogger<EscMenuWindowPatches>();
+            var logger = Main.GetLogger<EscMenuPCViewPatches>();
             logger.LogInformation("Applying patch [{patchName}]", nameof(EscMenuPCView_BindViewImplementation_Postfix));
             var mainMenu = __instance.transform.Find($"Window/ButtonBlock/{multiplayerMenuObjectName}")?.gameObject;
             if (mainMenu == null && Main.Multiplayer.IsActive)
@@ -31,7 +31,7 @@ namespace WOTRMultiplayer.HarmonyPatches
             }
         }
 
-        private static GameObject CreateMultiplayerMenu(EscMenuPCView view, ILogger<EscMenuWindowPatches> logger)
+        private static GameObject CreateMultiplayerMenu(EscMenuPCView view, ILogger<EscMenuPCViewPatches> logger)
         {
             logger.LogInformation("Creating MultiplayerMenu");
             var optionsButton = view.transform.Find("Window/ButtonBlock/OptionsButton");
