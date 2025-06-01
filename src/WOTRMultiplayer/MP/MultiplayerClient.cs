@@ -204,7 +204,7 @@ namespace WOTRMultiplayer.MP
 
         private void OnNotifyGameCharactersChanged(NotifyGameCharactersChanged changed)
         {
-            _logger.LogInformation("{messageType} received", nameof(NotifyGameCharactersChanged));
+            _logger.LogInformation("{messageType} received. Portraits={portraits}", nameof(NotifyGameCharactersChanged), string.Join(";", changed.Portraits));
             _game.Portraits.Clear();
             _game.Portraits.AddRange(changed.Portraits);
             OnGameCharactersChanged?.Invoke(_game.Portraits);
