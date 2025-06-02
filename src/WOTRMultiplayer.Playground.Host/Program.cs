@@ -5,6 +5,7 @@ using Kingmaker.EntitySystem.Persistence;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using WOTRMultiplayer.Abstractions.IO;
+using WOTRMultiplayer.Abstractions.MP;
 using WOTRMultiplayer.MP;
 using WOTRMultiplayer.Networking.Abstractions;
 
@@ -23,6 +24,7 @@ namespace WOTRMultiplayer.Playground.Host
             var serviceProvider = DI.DIFactory.Create(new Config.UnityMod.UnityModManagerSettings { UseDebugConsole = false });
             var host = new MultiplayerHost(
                 serviceProvider.GetService<ILogger<MultiplayerHost>>(),
+                serviceProvider.GetService<IMultiplayerSettingsProvider>(),
                 serviceProvider.GetService<IFileSystemService>(),
                 serviceProvider.GetService<INetworkServer>());
             var portraits = new List<string> {
@@ -35,7 +37,7 @@ namespace WOTRMultiplayer.Playground.Host
             {
                 FolderName = saveGamePath,
             };
-            host.Create(save, portraits, new MultiplayerSettings());
+            host.Create(save, portraits);
             var input = string.Empty;
 
             Console.Write(@$"

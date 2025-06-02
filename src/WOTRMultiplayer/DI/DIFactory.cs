@@ -39,6 +39,7 @@ namespace WOTRMultiplayer.DI
             serviceCollection.AddSingleton<IFileSystemService, FileSystemService>();
             serviceCollection.AddSingleton<IPortraitProvider, ResourceLibraryPortraitProvider>();
             serviceCollection.AddSingleton<IUIFactory, UIFactory>();
+            serviceCollection.AddSingleton<IUIFactory, UIFactory>();
 
             serviceCollection.AddSingleton<ILobbyWindowController, LobbyWindowController>();
             serviceCollection.AddSingleton<IHostMenuItemController, HostMenuItemController>();
@@ -47,6 +48,7 @@ namespace WOTRMultiplayer.DI
             serviceCollection.AddSingleton<IMultiplayer, Multiplayer>();
             serviceCollection.AddSingleton<IMultiplayerHost, MultiplayerHost>();
             serviceCollection.AddSingleton<IMultiplayerClient, MultiplayerClient>();
+            serviceCollection.AddSingleton<IMultiplayerSettingsProvider, MultiplayerSettingsProvider>();
 
             serviceCollection.ConfigureNetworking();
 

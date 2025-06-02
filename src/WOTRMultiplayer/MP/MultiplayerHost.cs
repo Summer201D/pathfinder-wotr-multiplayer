@@ -17,6 +17,7 @@ namespace WOTRMultiplayer.MP
         private readonly ILogger<MultiplayerHost> _logger;
         private readonly INetworkServer _networkServer;
         private readonly IFileSystemService _fileSystemService;
+        private readonly IMultiplayerSettingsProvider _multiplayerSettingsProvider;
 
         private NetworkGameStage Status => _game?.Stage ?? NetworkGameStage.None;
 
@@ -36,15 +37,17 @@ namespace WOTRMultiplayer.MP
 
         public MultiplayerHost(
             ILogger<MultiplayerHost> logger,
+            IMultiplayerSettingsProvider multiplayerSettingsProvider,
             IFileSystemService fileSystemService,
             INetworkServer networkServer)
         {
             _logger = logger;
             _networkServer = networkServer;
             _fileSystemService = fileSystemService;
+            _multiplayerSettingsProvider = multiplayerSettingsProvider;
         }
 
-        public void Create(SaveInfo save, List<string> portraits, MultiplayerSettings settings)
+        public void Create(SaveInfo save, List<string> portraits)
         {
             if (_networkServer.IsActive)
             {
@@ -309,11 +312,12 @@ namespace WOTRMultiplayer.MP
 
         private void OnServerStarted(EndPoint endpoint)
         {
-            _game.Players.Add(new NetworkPlayer(LocalHostPlayerId)
+            var hostPlayer = new NetworkPlayer(LocalHostPlayerId)
             {
-                Name = Guid.NewGuid().ToString().Split('-').First()
-            });
+                Name = _multiplayerSettingsProvider.Settings.PlayerName
+            };
 
+            _game.Players.Add(hostPlayer);
             _game.Endpoint = endpoint;
 
             OnConnected?.Invoke(endpoint);

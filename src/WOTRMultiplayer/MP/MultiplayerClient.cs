@@ -24,7 +24,7 @@ namespace WOTRMultiplayer.MP
         private readonly IFileSystemService _fileSystemService;
         private readonly ISaveGameService _saveGameService;
         private readonly INetworkServerClient _networkServerClient;
-
+        private readonly IMultiplayerSettingsProvider _multiplayerSettingsProvider;
         public const int LocalHostPlayerId = -1;
 
         private NetworkGame _game;
@@ -55,6 +55,7 @@ namespace WOTRMultiplayer.MP
         public MultiplayerClient(
             ILogger<MultiplayerClient> logger,
             IIPEndPointParser ipEndPointParser,
+            IMultiplayerSettingsProvider multiplayerSettingsProvider,
             ISaveGameService saveGameService,
             IFileSystemService fileSystemService,
             INetworkServerClient networkServerClient)
@@ -64,9 +65,10 @@ namespace WOTRMultiplayer.MP
             _fileSystemService = fileSystemService;
             _saveGameService = saveGameService;
             _networkServerClient = networkServerClient;
+            _multiplayerSettingsProvider = multiplayerSettingsProvider;
         }
 
-        public ConnectLobbyResult Connect(string address, MultiplayerSettings settings)
+        public ConnectLobbyResult Connect(string address)
         {
             if (_networkServerClient.IsActive)
             {
@@ -268,7 +270,7 @@ namespace WOTRMultiplayer.MP
             _logger.LogInformation("Player name requested. PlayerId={playerId}", request.PlayerId);
             _localPlayerId = request.PlayerId;
 
-            var nameResponse = new PlayerNameResponse() { Name = "mp client name" };
+            var nameResponse = new PlayerNameResponse() { Name = _multiplayerSettingsProvider.Settings.PlayerName };
             _networkServerClient.SendAsync(nameResponse).Wait();
             _logger.LogInformation("Player name has been sent. Name={name}", nameResponse.Name);
         }

@@ -228,7 +228,7 @@ namespace WOTRMultiplayer.UI.Menu.Items
                 StartButtonObject.SetActive(true);
                 ReadyButtonObject.SetActive(true);
                 ReadyButton.Interactable = true;
-                _multiplayerHost.Create(selectedSave.Reference, portraits, new MP.MultiplayerSettings());
+                _multiplayerHost.Create(selectedSave.Reference, portraits);
                 SetButtonLabel(HostButtonObject, UIStringConsts.MultiplayerWindow.HostMenu.HostButtonActiveLabel);
                 return;
             }

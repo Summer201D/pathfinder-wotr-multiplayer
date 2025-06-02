@@ -4,6 +4,7 @@ using Kingmaker.EntitySystem.Persistence;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using WOTRMultiplayer.Abstractions.IO;
+using WOTRMultiplayer.Abstractions.MP;
 using WOTRMultiplayer.Abstractions.Saves;
 using WOTRMultiplayer.MP;
 using WOTRMultiplayer.Networking.Abstractions;
@@ -25,10 +26,11 @@ namespace WOTRMultiplayer.Playground.Client
             var client = new MultiplayerClient(
                 serviceProvider.GetService<ILogger<MultiplayerClient>>(),
                 serviceProvider.GetService<IIPEndPointParser>(),
+                serviceProvider.GetService<IMultiplayerSettingsProvider>(),
                 unityPathService,
                 serviceProvider.GetService<IFileSystemService>(),
                 serviceProvider.GetService<INetworkServerClient>());
-            client.Connect("127.0.0.1:1024", new MP.MultiplayerSettings { PlayerName = "hello" });
+            client.Connect("127.0.0.1:1024");
             var input = string.Empty;
 
             Console.Write(@$"

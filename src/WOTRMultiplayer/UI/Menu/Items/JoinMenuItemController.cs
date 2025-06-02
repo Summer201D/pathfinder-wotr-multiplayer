@@ -322,7 +322,7 @@ namespace WOTRMultiplayer.UI.Menu.Items
             var rawAddress = ServerAddressObject.transform.Find(UIFactory.InputLabelObjectName).GetComponent<TextMeshProUGUI>().text;
             // thank you for zero-width space
             var address = rawAddress.Trim('\u200B').Trim();
-            var result = _multiplayerClient.Connect(address, new MP.MultiplayerSettings());
+            var result = _multiplayerClient.Connect(address);
             if (!result.IsOk)
             {
                 EventBus.RaiseEvent<IMessageModalUIHandler>(window =>

@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Net;
 using Kingmaker.EntitySystem.Persistence;
-using WOTRMultiplayer.MP;
 using WOTRMultiplayer.MP.Entities;
 
 namespace WOTRMultiplayer.Abstractions.MP
@@ -11,7 +10,7 @@ namespace WOTRMultiplayer.Abstractions.MP
     {
         void Dispose();
 
-        ConnectLobbyResult Connect(string address, MultiplayerSettings settings);
+        ConnectLobbyResult Connect(string address);
 
         bool ReadyChanged();
 

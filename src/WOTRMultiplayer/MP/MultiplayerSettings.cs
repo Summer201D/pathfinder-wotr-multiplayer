@@ -1,10 +1,7 @@
-﻿using System;
-using System.Linq;
-
-namespace WOTRMultiplayer.MP
+﻿namespace WOTRMultiplayer.MP
 {
     public class MultiplayerSettings
     {
-        public string PlayerName { get; set; } = Guid.NewGuid().ToString().Split('-').First();
+        public string PlayerName { get; set; }
     }
 }

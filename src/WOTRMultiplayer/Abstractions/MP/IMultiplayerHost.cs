@@ -9,7 +9,7 @@ namespace WOTRMultiplayer.Abstractions.MP
 {
     public interface IMultiplayerHost
     {
-        void Create(SaveInfo save, List<string> portraits, MultiplayerSettings multiplayerSettings);
+        void Create(SaveInfo save, List<string> portraits);
 
         void Dispose();
 
