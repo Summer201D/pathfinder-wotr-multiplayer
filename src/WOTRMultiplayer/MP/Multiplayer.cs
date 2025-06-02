@@ -7,7 +7,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Owlcat.Runtime.UI.Controls.Button;
 using UnityEngine;
-using UnityEngine.UI;
 using WOTRMultiplayer.Abstractions.MP;
 using WOTRMultiplayer.Abstractions.UI;
 using WOTRMultiplayer.Abstractions.UI.Controllers;
@@ -109,7 +108,6 @@ namespace WOTRMultiplayer.MP
             _lobbyWindow.AssignLobbyController(_lobbyWindowController);
             _lobbyWindowController.InitializeContent(LobbyWindowOwner.EscMenu, windowContainer.transform, _multiplayerHost.IsActive);
             _lobbyWindow.NetworkGame = () => _multiplayerHost.IsActive ? _multiplayerHost.CurrentGame : _multiplayerClient.CurrentGame;
-            windowContainer.AddComponent<Image>().color = Color.green;
             windowContainer.SetActive(false);
 
             var button = _lobbyMenuItem.GetComponent<OwlcatButton>();

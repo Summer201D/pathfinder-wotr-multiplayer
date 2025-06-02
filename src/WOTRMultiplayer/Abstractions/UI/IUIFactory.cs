@@ -16,7 +16,7 @@ namespace WOTRMultiplayer.Abstractions.UI
         GameObject CreateLobbyWindowContent(Transform parent, bool interactableDropdown);
         SaveLoadPCView CreateSaveLoadPCView(Transform parent);
         (GameObject menuItem, GameObject windowContainer) CreateEscMenuItem(EscMenuPCView view);
-        void CreateBackgroundArt(Transform parent);
+        GameObject CreateBackgroundArt(Transform parent);
         WOTRMultiplayer.UI.Mesh GetDefaultMesh();
         void StoreBorderDecoration(GameObject gameObject);
         void StoreDefaultGameObject(GameObject gameObject);

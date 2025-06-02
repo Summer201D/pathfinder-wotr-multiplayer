@@ -257,6 +257,17 @@ namespace WOTRMultiplayer.UI
             windowContainerRect.sizeDelta = new Vector2(Screen.width * 0.35f, Screen.height * 0.6f);
             windowContainerRect.anchorMin = new Vector2(0.5f, 0.5f);
             windowContainerRect.anchorMax = new Vector2(0.5f, 0.5f);
+            var background = CreateBackgroundArt(windowContainer.transform);
+            var backgroundRect = background.GetComponent<RectTransform>();
+            backgroundRect.anchorMin = windowContainerRect.anchorMin;
+            backgroundRect.anchorMax = windowContainerRect.anchorMax;
+            backgroundRect.sizeDelta = new Vector2(windowContainerRect.sizeDelta.x * 1.1f, windowContainerRect.sizeDelta.y * 1.1f);
+            backgroundRect.pivot = windowContainerRect.pivot;
+            // this one to prevent clicks through window,
+            // I believe this could be achieved by setting something in `background` obj (layer?), but I don't care right now
+            windowContainer.AddComponent<Image>();
+
+            UnityEngine.Object.DestroyImmediate(background.transform.Find("Art").gameObject);
             return (multiplayerMenu, windowContainer);
         }
 
@@ -330,9 +341,9 @@ namespace WOTRMultiplayer.UI
             }
         }
 
-        public void CreateBackgroundArt(Transform parent)
+        public GameObject CreateBackgroundArt(Transform parent)
         {
-            UnityEngine.Object.Instantiate(_backgroundArtPrefab, parent);
+            return UnityEngine.Object.Instantiate(_backgroundArtPrefab, parent);
         }
 
         public void StoreBackgroundArt(GameObject backgroundArt)
@@ -351,7 +362,7 @@ namespace WOTRMultiplayer.UI
                         _logger.LogInformation("Storing background art");
 
                         _backgroundArtPrefab = UnityEngine.Object.Instantiate(backgroundArt);
-                        UnityEngine.Object.DestroyImmediate(_backgroundArtPrefab.GetComponent<Image>());
+                        //UnityEngine.Object.DestroyImmediate(_backgroundArtPrefab.GetComponent<Image>());
                         UnityEngine.Object.DontDestroyOnLoad(_backgroundArtPrefab);
                     }
                 }
