@@ -5,6 +5,7 @@ using Kingmaker.UI.MVVM._PCView.Common;
 using Kingmaker.UI.MVVM._PCView.MainMenu;
 using Microsoft.Extensions.Logging;
 using TMPro;
+using WOTRMultiplayer.MP.Entities;
 
 namespace WOTRMultiplayer.HarmonyPatches
 {
@@ -45,7 +46,8 @@ namespace WOTRMultiplayer.HarmonyPatches
                     var menuButton = menuButtons.GetChild(menuIndex).gameObject;
                     if (string.Equals(menuButton.name, "Settings"))
                     {
-                        var isOk = Main.Multiplayer.InitializeMultiplayer(menuButton, menuButtons.transform);
+                        var context = new InitializeMultiplayerContext(menuButton, menuButtons.transform);
+                        var isOk = Main.Multiplayer.InitializeMultiplayer(context);
                         if (!isOk)
                         {
                             logger.LogError("Unable to inject multiplayer menu");

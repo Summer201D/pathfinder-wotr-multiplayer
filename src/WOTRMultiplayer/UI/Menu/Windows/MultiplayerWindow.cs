@@ -9,11 +9,12 @@ using Microsoft.Extensions.Logging;
 using Owlcat.Runtime.UI.Controls.Button;
 using UnityEngine;
 using WOTRMultiplayer.Abstractions.UI.Controllers.Menu;
+using WOTRMultiplayer.Abstractions.UI.Windows;
 using WOTRMultiplayer.Extensions;
 
 namespace WOTRMultiplayer.UI.Menu.Windows
 {
-    public class MultiplayerWindow : FullScreenTabsWindow
+    public class MultiplayerWindow : FullScreenTabsWindow, IMultiplayerWindow
     {
         private const string BaseLayoutName = "MultiplayerScreen";
         private const string SeparatorGameObjectName = "Separator";

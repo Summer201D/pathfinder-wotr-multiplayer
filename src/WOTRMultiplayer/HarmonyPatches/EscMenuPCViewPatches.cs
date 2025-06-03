@@ -21,7 +21,7 @@ namespace WOTRMultiplayer.HarmonyPatches
                 if (mainMenu == null && Main.Multiplayer.IsActive)
                 {
                     logger.LogInformation("MultiplayerMenu doesn't exist.");
-                    Main.Multiplayer.CreateEscMenuItem(__instance);
+                    Main.Multiplayer.InitializeEscMenuLobbyWindow(new MP.Entities.InitializeEscMenuLobbyWindowContext(__instance));
                 }
                 else if (mainMenu != null && !Main.Multiplayer.IsActive)
                 {

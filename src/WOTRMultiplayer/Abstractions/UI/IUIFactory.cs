@@ -1,21 +1,25 @@
-﻿using Kingmaker.UI.MVVM._PCView.EscMenu;
+﻿using System;
+using Kingmaker.UI.MVVM._PCView.EscMenu;
 using Kingmaker.UI.MVVM._PCView.SaveLoad;
 using Kingmaker.UI.MVVM._PCView.Settings.Entities;
 using TMPro;
 using UnityEngine;
+using WOTRMultiplayer.Abstractions.UI.Windows;
+using WOTRMultiplayer.MP.Entities;
 
 namespace WOTRMultiplayer.Abstractions.UI
 {
     public interface IUIFactory
     {
-        GameObject CreateCopyOfCreditsScreen();
+        IMultiplayerWindow InitializeMultiplayerWindow(InitializeMultiplayerContext context, Action onShow);
+
         GameObject CreateDefaultGameObject(Transform parent);
         GameObject CreateDropdown(float preferedWidth, Transform parent);
         GameObject CreateButton(Transform transform);
         GameObject CreateInput(Transform transform);
         GameObject CreateLobbyWindowContent(Transform parent, bool interactableDropdown);
         SaveLoadPCView CreateSaveLoadPCView(Transform parent);
-        (GameObject menuItem, GameObject windowContainer) CreateEscMenuItem(EscMenuPCView view);
+        ILobbyWindow InitializeEscMenuLobbyWindow(InitializeEscMenuLobbyWindowContext context, bool canUseCharacterDropdown, Action onShow);
         GameObject CreateBackgroundArt(Transform parent);
         WOTRMultiplayer.UI.Mesh GetDefaultMesh();
         void StoreBorderDecoration(GameObject gameObject);
@@ -28,6 +32,6 @@ namespace WOTRMultiplayer.Abstractions.UI
         void StoreSaveLoadPCViewPrefab(SaveLoadPCView view);
         void StoreBackgroundArt(GameObject gameObject);
 
-        void DestroyImmediate(GameObject gameObject);
+        void DestroyLobbyWindow(ILobbyWindow lobbyWindow);
     }
 }

@@ -2,18 +2,24 @@
 using Kingmaker;
 using Kingmaker.UI.ServiceWindow;
 using Microsoft.Extensions.Logging;
+using UnityEngine;
 using WOTRMultiplayer.Abstractions.UI.Controllers;
+using WOTRMultiplayer.Abstractions.UI.Windows;
 using WOTRMultiplayer.MP.Entities;
 using WOTRMultiplayer.UI.Lobby;
 
 namespace WOTRMultiplayer.UI.Menu.Windows
 {
-    public class LobbyWindow : UIWindow
+    public class LobbyWindow : UIWindow, ILobbyWindow
     {
         private ILogger<LobbyWindow> _logger;
         private ILobbyWindowController _lobbyWindowController;
 
         public Func<NetworkGame> NetworkGame { get; set; }
+
+        public GameObject MenuItem { get; set; }
+
+        public GameObject GameObject => this.gameObject;
 
         public void SetLogger(ILogger<LobbyWindow> logger)
         {

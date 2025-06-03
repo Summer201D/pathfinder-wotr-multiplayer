@@ -3,19 +3,26 @@ using Kingmaker;
 using Kingmaker.Localization;
 using Kingmaker.UI;
 using Kingmaker.UI.Common;
-using Kingmaker.UI.MVVM._PCView.EscMenu;
+using Kingmaker.UI.MVVM._PCView.ContextMenu;
 using Kingmaker.UI.MVVM._PCView.SaveLoad;
 using Kingmaker.UI.MVVM._PCView.Settings.Entities;
+using Kingmaker.UI.MVVM._VM.ContextMenu;
 using Kingmaker.UI.ServiceWindow.Credits;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Owlcat.Runtime.UI.Controls.Button;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 using WOTRMultiplayer.Abstractions.UI;
+using WOTRMultiplayer.Abstractions.UI.Controllers;
+using WOTRMultiplayer.Abstractions.UI.Controllers.Menu;
+using WOTRMultiplayer.Abstractions.UI.Windows;
 using WOTRMultiplayer.Extensions;
+using WOTRMultiplayer.MP.Entities;
 using WOTRMultiplayer.UI.Lobby;
 using WOTRMultiplayer.UI.Menu.Items;
+using WOTRMultiplayer.UI.Menu.Windows;
 using WOTRMultiplayer.Unity.Behaviours;
 
 namespace WOTRMultiplayer.UI
@@ -38,10 +45,14 @@ namespace WOTRMultiplayer.UI
         private Mesh _defaultTextMesh;
         private readonly object _actionLock = new();
         private readonly ILogger<UIFactory> _logger;
+        private readonly IServiceProvider _serviceProvider;
+        private readonly IHostMenuItemController _hostMenuItemController;
+        private readonly IJoinMenuItemController _joinMenuItemController;
 
-        public UIFactory(ILogger<UIFactory> logger)
+        public UIFactory(ILogger<UIFactory> logger, IServiceProvider serviceProvider)
         {
             _logger = logger;
+            _serviceProvider = serviceProvider;
         }
 
         public void StoreDropdownPrefab(SettingsEntityDropdownPCView view)
@@ -203,7 +214,25 @@ namespace WOTRMultiplayer.UI
             return dropdownContainerObject;
         }
 
-        public GameObject CreateCopyOfCreditsScreen()
+        public IMultiplayerWindow InitializeMultiplayerWindow(InitializeMultiplayerContext context, Action onShow)
+        {
+            var multiplayerMenu = UnityEngine.Object.Instantiate(context.MenuItemPrototype, context.Parent);
+            multiplayerMenu.transform.SetSiblingIndex(context.MenuItemPrototype.transform.GetSiblingIndex());
+            var multiplayerMenuView = multiplayerMenu.GetComponent<ContextMenuEntityPCView>();
+            var element = CreateCopyOfCreditsScreen();
+            var multiplayerWindow = element.AddComponent<MultiplayerWindow>();
+            multiplayerWindow.SetLogger(_serviceProvider.GetService<ILogger<MultiplayerWindow>>());
+            multiplayerWindow.AssignMenuItemControllers(_serviceProvider.GetService<IHostMenuItemController>(), _serviceProvider.GetService<IJoinMenuItemController>());
+            multiplayerWindow.Initialize();
+
+            CreateBackgroundArt(multiplayerWindow.transform.Find("BackgroundGroup"));
+            var text = UIUtility.GetSaberBookFormat(UIStringConsts.MainMenu.MultiplayerMenu);
+            var viewModel = new ContextMenuEntityVM(new ContextMenuCollectionEntity(UIUtility.GetSaberBookFormat(text), onShow));
+            multiplayerMenuView.Bind(viewModel);
+            return multiplayerWindow;
+        }
+
+        private GameObject CreateCopyOfCreditsScreen()
         {
             var copy = UnityEngine.Object.Instantiate(Game.Instance.UI.CreditsUI.gameObject, Game.Instance.UI.MainMenu.transform);
             var originalWindow = copy.GetComponent<CreditsUIWindow>();
@@ -239,10 +268,10 @@ namespace WOTRMultiplayer.UI
             return lobbyContent;
         }
 
-        public (GameObject menuItem, GameObject windowContainer) CreateEscMenuItem(EscMenuPCView view)
+        public ILobbyWindow InitializeEscMenuLobbyWindow(InitializeEscMenuLobbyWindowContext context, bool canUseCharacterDropdown, Action onShow)
         {
             _logger.LogInformation("Creating MultiplayerMenu");
-            var optionsButton = view.transform.Find("Window/ButtonBlock/OptionsButton");
+            var optionsButton = context.View.transform.Find("Window/ButtonBlock/OptionsButton");
             var multiplayerMenu = UnityEngine.Object.Instantiate(optionsButton.gameObject, optionsButton.transform.parent);
             multiplayerMenu.transform.SetSiblingIndex(optionsButton.GetSiblingIndex());
             multiplayerMenu.name = MultiplayerMenuObjectName;
@@ -250,8 +279,8 @@ namespace WOTRMultiplayer.UI
             UnityEngine.Object.DestroyImmediate(textObject.GetComponent<LocalizedUIText>());
             textObject.GetComponent<TextMeshProUGUI>().SetText(UIStringConsts.EscMenu.LobbyMenuItemTitle);
 
-            _logger.LogInformation("Window container parent set. GameObjectName={name}", view.transform.parent.gameObject.name);
-            var windowContainer = CreateDefaultGameObject(view.transform.parent);
+            _logger.LogInformation("Window container parent set. GameObjectName={name}", context.View.transform.parent.gameObject.name);
+            var windowContainer = CreateDefaultGameObject(context.View.transform.parent);
             windowContainer.name = "EscMultiplayerLobbyWindowContainer";
             var windowContainerRect = windowContainer.GetComponent<RectTransform>();
             windowContainerRect.sizeDelta = new Vector2(Screen.width * 0.35f, Screen.height * 0.6f);
@@ -268,7 +297,16 @@ namespace WOTRMultiplayer.UI
             windowContainer.AddComponent<Image>();
 
             UnityEngine.Object.DestroyImmediate(background.transform.Find("Art").gameObject);
-            return (multiplayerMenu, windowContainer);
+            var lobbyWindow = windowContainer.AddComponent<LobbyWindow>();
+            lobbyWindow.SetLogger(_serviceProvider.GetService<ILogger<LobbyWindow>>());
+            lobbyWindow.MenuItem = multiplayerMenu;
+            _serviceProvider.GetService<ILobbyWindowController>().InitializeContent(LobbyWindowOwner.EscMenu, windowContainer.transform, canUseCharacterDropdown);
+            windowContainer.SetActive(false);
+
+            var button = multiplayerMenu.GetComponent<OwlcatButton>();
+            button.OnLeftClick.RemoveAllListeners();
+            button.OnLeftClick.AddListener(new UnityEngine.Events.UnityAction(onShow));
+            return lobbyWindow;
         }
 
         public void StoreDefaultTextMesh(TextMeshProUGUI defaultTextMesh)
@@ -467,15 +505,29 @@ namespace WOTRMultiplayer.UI
             }
         }
 
-        public void DestroyImmediate(GameObject gameObject)
+        public void DestroyLobbyWindow(ILobbyWindow lobbyWindow)
         {
-            if (gameObject == null)
+            if (lobbyWindow == null)
             {
-                _logger.LogWarning("Trying to delete null object");
+                _logger.LogWarning("Lobby window is null");
                 return;
             }
 
-            UnityEngine.Object.DestroyImmediate(gameObject);
+            if (lobbyWindow.MenuItem == null)
+            {
+                _logger.LogWarning("Lobby MenuItem is null");
+                return;
+            }
+
+            UnityEngine.Object.DestroyImmediate(lobbyWindow.MenuItem);
+
+            if (lobbyWindow.GameObject)
+            {
+                _logger.LogWarning("Lobby GameObject is null");
+                return;
+            }
+
+            UnityEngine.Object.DestroyImmediate(lobbyWindow.GameObject);
         }
     }
 }
