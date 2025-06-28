@@ -282,7 +282,7 @@ namespace WOTRMultiplayer.UI
             UnityEngine.Object.DestroyImmediate(textObject.GetComponent<LocalizedUIText>());
             textObject.GetComponent<TextMeshProUGUI>().SetText(UIStringConsts.EscMenu.LobbyMenuItemTitle);
 
-            _logger.LogInformation("Window container parent set. GameObjectName={name}", context.View.transform.parent.gameObject.name);
+            _logger.LogInformation("Parent of context view. GameObjectName={name}", context.View.transform.parent.gameObject.name);
             var windowContainer = CreateDefaultGameObject(context.View.transform.parent);
             windowContainer.name = "EscMultiplayerLobbyWindowContainer";
             var windowContainerRect = windowContainer.GetComponent<RectTransform>();
