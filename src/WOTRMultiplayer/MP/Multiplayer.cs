@@ -80,19 +80,19 @@ namespace WOTRMultiplayer.MP
         public void MoveCharacter(UnitEntityData unit, ClickGroundHandler.CommandSettings settings)
         {
             var destination = new Vector3(settings.Destination.x, settings.Destination.y, settings.Destination.z);
-            if (_multiplayerClient.IsActive)
-            {
-                _multiplayerClient.MoveCharacter(unit.CharacterName, destination, settings.Delay, settings.Orientation);
-                return;
-            }
-
-            _multiplayerHost.MoveCharacter(unit.CharacterName, destination, settings.Delay, settings.Orientation);
+            var multiplayerParticipant = GetMultiplayerParticipant();
+            multiplayerParticipant.MoveCharacter(unit.CharacterName, destination, settings.Delay, settings.Orientation);
         }
 
         public bool CanControlCharacter(string characterName)
         {
-            // TBD
-            return characterName.StartsWith("Seelah") || characterName.StartsWith("xdd");
+            var multiplayerParticipant = GetMultiplayerParticipant();
+            return multiplayerParticipant.CanControlCharacter(characterName);
+        }
+
+        private IMultiplayerParticipant GetMultiplayerParticipant()
+        {
+            return _multiplayerHost.IsActive ? _multiplayerHost : _multiplayerClient;
         }
 
         private void ShowEscMenuMultiplayerLobby()

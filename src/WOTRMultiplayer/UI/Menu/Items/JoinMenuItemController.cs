@@ -236,6 +236,12 @@ namespace WOTRMultiplayer.UI.Menu.Items
             _multiplayerClient.OnStartGame = enable ? OnMultiplayerStartGame : null;
         }
 
+        protected override void DisposeInternal()
+        {
+            SetupHandlers(false);
+            base.DisposeInternal();
+        }
+
         private void OnMultiplayerStartGame(SaveInfo info)
         {
             _logger.LogInformation("Starting multiplayer game as a client");

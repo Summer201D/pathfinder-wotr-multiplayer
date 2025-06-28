@@ -117,6 +117,18 @@ namespace WOTRMultiplayer.MP
             _networkServerClient?.Dispose();
         }
 
+        public bool CanControlCharacter(string characterName)
+        {
+            var character = _game.Characters.FirstOrDefault(c => c.Name.Contains(characterName)); // should be a strict match later on
+            if (character == null)
+            {
+                _logger.LogWarning("Unable to find character in the list. CharacterName={characterName}", characterName);
+                return false;
+            }
+
+            return character.Owner != null && character.Owner.Id == _localPlayerId;
+        }
+
         private void RegisterHandlers()
         {
             _networkServerClient
@@ -166,7 +178,6 @@ namespace WOTRMultiplayer.MP
 
                     _game.Characters[owner.CharacterIndex].Owner = player;
                     OnCharacterOwnerChanged?.Invoke(owner.CharacterIndex, _game.Players.IndexOf(player));
-
                 }
             }
             catch (Exception ex)

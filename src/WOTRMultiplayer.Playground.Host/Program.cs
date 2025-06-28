@@ -32,7 +32,7 @@ namespace WOTRMultiplayer.Playground.Host
                 serviceProvider.GetService<IFileSystemService>(),
                 serviceProvider.GetService<INetworkServer>());
             var characters = new List<NetworkCharacter> {
-                new() { Name = "KitsuneFemaleRogue_Portrait", Portrait = "KitsuneFemaleRogue_Portrait"},
+                new() { Name = "xdd", Portrait = "KitsuneFemaleRogue_Portrait"},
                 new() { Name = "SeelahFemalePaladin_Portrait", Portrait = "SeelahFemalePaladin_Portrait"},
                 new() { Name = "RegillMaleGnomeHellknight_Portrait", Portrait = "RegillMaleGnomeHellknight_Portrait"},
                 new() { Name = "WenduagFemaleMongrelRanger_Portrait", Portrait = "WenduagFemaleMongrelRanger_Portrait"},
