@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Numerics;
 using Kingmaker.EntitySystem.Persistence;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -26,7 +27,7 @@ namespace WOTRMultiplayer.Playground.Client
             Console.ReadLine();
             var client = new MultiplayerClient(
                 serviceProvider.GetService<ILogger<MultiplayerClient>>(),
-                serviceProvider.GetService<IGameInteractionService>(),
+                new DummyGameInteractionService(),
                 serviceProvider.GetService<IIPEndPointParser>(),
                 serviceProvider.GetService<IMultiplayerSettingsProvider>(),
                 unityPathService,
@@ -52,7 +53,7 @@ namespace WOTRMultiplayer.Playground.Client
             }
         }
 
-        public class DummySaveGameService : ISaveGameService
+        private class DummySaveGameService : ISaveGameService
         {
             public string GetSaveGamePath()
             {
@@ -64,6 +65,13 @@ namespace WOTRMultiplayer.Playground.Client
             public SaveInfo LoadSave(string path)
             {
                 return null;
+            }
+        }
+
+        private class DummyGameInteractionService : IGameInteractionService
+        {
+            public void MoveCharacter(string characterName, Vector3 destination, float delay, float orientation)
+            {
             }
         }
     }

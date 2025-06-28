@@ -81,7 +81,6 @@ namespace WOTRMultiplayer.Playground.Host
             }
         }
 
-
         private class DummyGameInteractionService : IGameInteractionService
         {
             public void MoveCharacter(string characterName, Vector3 destination, float delay, float orientation)
