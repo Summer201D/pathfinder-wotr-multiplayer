@@ -194,6 +194,13 @@ namespace WOTRMultiplayer.UI.Menu.Items
             });
         }
 
+        protected override void DisposeInternal()
+        {
+            SetupHandlers(false);
+
+            base.DisposeInternal();
+        }
+
         private void SetupButtons()
         {
             SetButtonLabel(HostButtonObject, UIStringConsts.MultiplayerWindow.HostMenu.HostButtonLabel);

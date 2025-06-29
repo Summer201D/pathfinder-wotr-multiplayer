@@ -59,8 +59,6 @@ namespace WOTRMultiplayer.HarmonyPatches.PubSub
                 return;
             }
 
-            var logger = Main.GetLogger<ClickGroundHandler>();
-            logger.LogInformation("Move command. CharacterName={characterName} Destination={destination}", unit.CharacterName, settings.Destination);
             Main.Multiplayer.MoveCharacter(unit, settings);
         }
 
@@ -92,10 +90,20 @@ namespace WOTRMultiplayer.HarmonyPatches.PubSub
                 return true;
             }
 
-            var allowedToRun = type != GameModeType.EscMode && type != GameModeType.FullScreenUi;
+            var allowedToRun = Main.Multiplayer.StartGameMode(type);
+            return allowedToRun;
+        }
 
-            var logger = Main.GetLogger<PubSubPatches>();
-            logger.LogInformation("Trying to start GameModeType. Mode={mode}, AllowedToRun={allowedToRun}", type.Name, allowedToRun);
+        [HarmonyPatch(typeof(Game), nameof(Game.StopMode))]
+        [HarmonyPrefix]
+        public static bool Game_StopMode_Prefix(Game __instance, GameModeType type)
+        {
+            if (!Main.Multiplayer.IsActive)
+            {
+                return true;
+            }
+
+            var allowedToRun = Main.Multiplayer.StopGameMode(type);
             return allowedToRun;
         }
     }

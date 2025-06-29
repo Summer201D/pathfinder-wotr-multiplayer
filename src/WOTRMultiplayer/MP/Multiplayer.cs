@@ -1,6 +1,7 @@
 ﻿using System.Numerics;
 using Kingmaker.Controllers.Clicks.Handlers;
 using Kingmaker.EntitySystem.Entities;
+using Kingmaker.GameModes;
 using Microsoft.Extensions.Logging;
 using WOTRMultiplayer.Abstractions.MP;
 using WOTRMultiplayer.Abstractions.UI;
@@ -64,6 +65,7 @@ namespace WOTRMultiplayer.MP
             _multiplayerHost.Dispose();
             _multiplayerClient.Dispose();
             _lobbyWindowController.ResetOwnerContent(LobbyWindowOwner.EscMenu);
+            _lobbyWindowController.OnCharacterOwnerChanged = null;
             _logger.LogInformation("Disposing Esc menu window game objects");
             Factory.DestroyLobbyWindow(_lobbyWindow);
         }
@@ -75,6 +77,8 @@ namespace WOTRMultiplayer.MP
 
             _lobbyWindow.NetworkGame = GetNetworkGame;
             _lobbyWindow.AssignLobbyController(_lobbyWindowController);
+
+            _lobbyWindowController.OnCharacterOwnerChanged = OnLobbyCharacterOwnerChanged;
         }
 
         public void MoveCharacter(UnitEntityData unit, ClickGroundHandler.CommandSettings settings)
@@ -88,6 +92,33 @@ namespace WOTRMultiplayer.MP
         {
             var multiplayerParticipant = GetMultiplayerParticipant();
             return multiplayerParticipant.CanControlCharacter(characterName);
+        }
+
+        public bool StartGameMode(GameModeType type)
+        {
+            var allowedToRun = type != GameModeType.EscMode && type != GameModeType.FullScreenUi;
+            _logger.LogInformation("Trying to start GameModeType. Mode={mode}, AllowedToRun={allowedToRun}", type.Name, allowedToRun);
+
+            if (type == GameModeType.Pause)
+            {
+                var multiplayerParticipant = GetMultiplayerParticipant();
+                multiplayerParticipant.Pause();
+            }
+
+            return allowedToRun;
+        }
+
+        public bool StopGameMode(GameModeType type)
+        {
+            _logger.LogInformation("Trying to stop GameModeType. Mode={mode}", type.Name);
+
+            if (type == GameModeType.Pause)
+            {
+                var multiplayerParticipant = GetMultiplayerParticipant();
+                multiplayerParticipant.Unpause();
+            }
+
+            return true;
         }
 
         private IMultiplayerParticipant GetMultiplayerParticipant()
@@ -110,6 +141,12 @@ namespace WOTRMultiplayer.MP
         private NetworkGame GetNetworkGame()
         {
             return _multiplayerHost.IsActive ? _multiplayerHost.CurrentGame : _multiplayerClient.CurrentGame;
+        }
+
+        private void OnLobbyCharacterOwnerChanged(int characterIndex, int playerIndex)
+        {
+            _logger.LogInformation("OnLobbyCharacterOwnerChanged. CharacterIndex={charIndex}, PlayerIndex={playerIndex}", characterIndex, playerIndex);
+            _multiplayerHost.ChangeCharacterOwner(characterIndex, playerIndex);
         }
     }
 }

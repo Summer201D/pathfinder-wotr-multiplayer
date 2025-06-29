@@ -158,6 +158,21 @@ namespace WOTRMultiplayer.MP
             _networkServerClient.SendAsync(new GameLoaded()).Wait();
         }
 
+        public void Pause()
+        {
+            _logger.LogInformation("Sending pausing notification");
+
+            var message = new GamePauseChanged { IsPaused = true };
+            _networkServerClient.SendAsync(message).Wait();
+        }
+
+        public void Unpause()
+        {
+            _logger.LogInformation("Sending unpausing notification");
+            var message = new GamePauseChanged { IsPaused = false };
+            _networkServerClient.SendAsync(message).Wait();
+        }
+
         private void RegisterHandlers()
         {
             _networkServerClient

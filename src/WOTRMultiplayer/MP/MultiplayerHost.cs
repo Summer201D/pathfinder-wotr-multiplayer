@@ -108,6 +108,7 @@ namespace WOTRMultiplayer.MP
 
                 var character = _game.Characters[characterIndex];
                 character.Owner = player;
+                _logger.LogInformation("New character owner. CharacterName={characterName}, PlayerId={playerId}, PlayerName={playerName}", character.Name, player.Id, player.Name);
 
                 var charactersOwnerChanged = CreateNotifyCharactersOwnerChanged();
                 _networkServer.SendAll(charactersOwnerChanged);
@@ -205,6 +206,20 @@ namespace WOTRMultiplayer.MP
             TryUnpauseGame();
         }
 
+        public void Pause()
+        {
+            _logger.LogInformation("Sending pausing notification");
+            var message = new NotifyGamePauseChanged { IsPaused = true };
+            _networkServer.SendAll(message);
+        }
+
+        public void Unpause()
+        {
+            _logger.LogInformation("Sending unpausing notification");
+            var message = new NotifyGamePauseChanged { IsPaused = false };
+            _networkServer.SendAll(message);
+        }
+
         private void TryUnpauseGame()
         {
             var canUnpause = false;
@@ -217,10 +232,7 @@ namespace WOTRMultiplayer.MP
             if (canUnpause)
             {
                 _logger.LogInformation("Unpausing game");
-
-                var message = new NotifyGamePauseChanged { IsPaused = false };
-                _networkServer.SendAll(message);
-                _gameInteractionService.Pause(message.IsPaused);
+                _gameInteractionService.Pause(false);
             }
         }
 
@@ -292,12 +304,21 @@ namespace WOTRMultiplayer.MP
                 .Register<PlayerSaveGameSyncChanged>(OnPlayerSaveGameSyncChanged)
                 .Register<CharacterMove>(OnCharacterMove)
                 .Register<GameLoaded>(OnGameLoaded)
+                .Register<GamePauseChanged>(OnGamePauseChanged)
                 ;
+        }
+
+        private void OnGamePauseChanged(long playerId, GamePauseChanged pauseChanged)
+        {
+            _logger.LogInformation("Received GamePauseChanged. PlayerId={playerId}, IsPaused={isPaused}", playerId, pauseChanged.IsPaused);
+            var message = new NotifyGamePauseChanged { IsPaused = pauseChanged.IsPaused };
+            _networkServer.SendAllExcept(playerId, message);
+            _gameInteractionService.Pause(pauseChanged.IsPaused);
         }
 
         private void OnCharacterMove(long playerId, CharacterMove move)
         {
-            _logger.LogInformation("Received OnCharacterMove. PlayerId={playerId}, CharacterName={characterName}, DestinationX={x}, DestinationY={y}, DestinationZ={z}", playerId, move.CharacterName, move.DestinationX, move.DestinationY, move.DestinationZ);
+            _logger.LogInformation("Received CharacterMove. PlayerId={playerId}, CharacterName={characterName}, DestinationX={x}, DestinationY={y}, DestinationZ={z}", playerId, move.CharacterName, move.DestinationX, move.DestinationY, move.DestinationZ);
 
             var destination = new Vector3(move.DestinationX, move.DestinationY, move.DestinationZ);
             _gameInteractionService.MoveCharacter(move.CharacterName, destination, move.Delay, move.Orientation);

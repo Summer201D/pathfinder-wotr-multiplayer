@@ -30,5 +30,7 @@ namespace WOTRMultiplayer.Abstractions.MP
         bool CanControlCharacter(string characterName);
 
         void GameLoaded();
+        void Pause();
+        void Unpause();
     }
 }

@@ -1,5 +1,6 @@
 ﻿using Kingmaker.Controllers.Clicks.Handlers;
 using Kingmaker.EntitySystem.Entities;
+using Kingmaker.GameModes;
 using WOTRMultiplayer.Abstractions.UI;
 using WOTRMultiplayer.MP.Entities;
 
@@ -18,6 +19,8 @@ namespace WOTRMultiplayer.Abstractions.MP
         void MoveCharacter(UnitEntityData unit, ClickGroundHandler.CommandSettings settings);
 
         bool CanControlCharacter(string characterName);
+        bool StartGameMode(GameModeType type);
+        bool StopGameMode(GameModeType type);
 
         bool IsActive { get; }
     }

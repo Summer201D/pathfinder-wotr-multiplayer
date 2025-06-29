@@ -25,9 +25,10 @@ namespace WOTRMultiplayer.Playground.Client
             Console.WriteLine("Default save game dir=" + unityPathService.GetSaveGamePath());
             Console.WriteLine("Press enter to join");
             Console.ReadLine();
+            var gameInteractionService = new DummyGameInteractionService();
             var client = new MultiplayerClient(
                 serviceProvider.GetService<ILogger<MultiplayerClient>>(),
-                new DummyGameInteractionService(),
+                gameInteractionService,
                 serviceProvider.GetService<IIPEndPointParser>(),
                 serviceProvider.GetService<IMultiplayerSettingsProvider>(),
                 unityPathService,
@@ -40,6 +41,8 @@ namespace WOTRMultiplayer.Playground.Client
             exit - exit the program
             ready - toggle client ready status
             loaded - send gameloaded
+            pause - pause game
+            unpause - unpause game
             {Environment.NewLine}");
             while ((input = Console.ReadLine()) != "exit")
             {
@@ -50,6 +53,12 @@ namespace WOTRMultiplayer.Playground.Client
                         break;
                     case "loaded":
                         client.GameLoaded();
+                        break;
+                    case "pause":
+                        client.Pause();
+                        break;
+                    case "unpause":
+                        client.Unpause();
                         break;
                     default:
                         break;
@@ -74,6 +83,8 @@ namespace WOTRMultiplayer.Playground.Client
 
         private class DummyGameInteractionService : IGameInteractionService
         {
+            public bool IsPaused { get; set; }
+
             public void MoveCharacter(string characterName, Vector3 destination, float delay, float orientation)
             {
             }

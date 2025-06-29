@@ -25,9 +25,10 @@ namespace WOTRMultiplayer.Playground.Host
             Console.ReadLine();
 
             var serviceProvider = DI.DIFactory.Create(new Config.UnityMod.UnityModManagerSettings { UseDebugConsole = false });
+            var gameInteractionService = new DummyGameInteractionService();
             var host = new MultiplayerHost(
                 serviceProvider.GetService<ILogger<MultiplayerHost>>(),
-                new DummyGameInteractionService(),
+                gameInteractionService,
                 serviceProvider.GetService<IMultiplayerSettingsProvider>(),
                 serviceProvider.GetService<IFileSystemService>(),
                 serviceProvider.GetService<INetworkServer>());
@@ -56,6 +57,8 @@ namespace WOTRMultiplayer.Playground.Host
             start - start game
             move - move xdd to 22.92498, 42.053, -9.376869
             loaded - make host loaded
+            pause - pause game
+            unpause - unpause game
             {Environment.NewLine}");
             while ((input = Console.ReadLine()) != "exit")
             {
@@ -78,6 +81,13 @@ namespace WOTRMultiplayer.Playground.Host
                         break;
                     case "loaded":
                         host.GameLoaded();
+                        host.Unpause();
+                        break;
+                    case "pause":
+                        host.Pause();
+                        break;
+                    case "unpause":
+                        host.Unpause();
                         break;
                     default:
                         break;
@@ -87,6 +97,8 @@ namespace WOTRMultiplayer.Playground.Host
 
         private class DummyGameInteractionService : IGameInteractionService
         {
+            public bool IsPaused { get; set; }
+
             public void MoveCharacter(string characterName, Vector3 destination, float delay, float orientation)
             {
             }

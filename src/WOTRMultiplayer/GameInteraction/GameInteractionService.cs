@@ -17,6 +17,8 @@ namespace WOTRMultiplayer.GameInteraction
             _logger = logger;
         }
 
+        public bool IsPaused => Game.Instance.IsPaused;
+
         public void MoveCharacter(string characterName, Vector3 destination, float delay, float orientation)
         {
             var character = Game.Instance.Player.PartyAndPets.FirstOrDefault(f => string.Equals(f.CharacterName, characterName));
