@@ -430,7 +430,7 @@ namespace WOTRMultiplayer.MP
 
                 var player = new NetworkPlayer(playerId);
                 _game.Players.Add(player);
-                _logger.LogWarning("Sending player name request. PlayerId={playerId}", playerId);
+                _logger.LogInformation("Sending player name request. PlayerId={playerId}", playerId);
                 _networkServer.Send(playerId, new PlayerNameRequest { PlayerId = playerId });
             }
         }
