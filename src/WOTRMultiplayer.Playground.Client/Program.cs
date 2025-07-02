@@ -85,7 +85,7 @@ namespace WOTRMultiplayer.Playground.Client
         {
             public bool IsPaused { get; set; }
 
-            public void LeaveArea()
+            public void LeaveArea(string areaExitId)
             {
             }
 

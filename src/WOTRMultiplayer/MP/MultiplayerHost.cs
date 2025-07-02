@@ -489,10 +489,10 @@ namespace WOTRMultiplayer.MP
             return message;
         }
 
-        public void LeaveArea()
+        public void LeaveArea(string areaExitId)
         {
-            _logger.LogInformation("Sending NotifyPartyLeaveArea");
-            var message = new NotifyPartyLeaveArea();
+            _logger.LogInformation("Sending NotifyPartyLeaveArea. AreaExitId={areaExitId}", areaExitId);
+            var message = new NotifyPartyLeaveArea { AreaExitId = areaExitId };
             _networkServer.SendAll(message);
         }
     }

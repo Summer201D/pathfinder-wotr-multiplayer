@@ -25,25 +25,19 @@ namespace WOTRMultiplayer.GameInteraction
 
         public bool IsPaused => Game.Instance.IsPaused;
 
-        public void LeaveArea()
+        public void LeaveArea(string areaExitId)
         {
             _logger.LogInformation("Leaving area via nearest area transition");
             _mainThreadAccessor.Enqueue(() =>
             {
                 var position = Game.Instance.Player.Position;
                 var allTransitions = Game.Instance.State.MapObjects.All.Select(o => o.View.GetComponent<AreaTransition>()).Where(t => t != null).ToList();
-                var nearestAreaTransition = allTransitions.Aggregate((e1, e2) =>
-                {
-                    if ((e1.transform.position - position).sqrMagnitude <= (e2.transform.position - position).sqrMagnitude)
-                    {
-                        return e2;
-                    }
-                    return e1;
-                });
-                var areaTransition = nearestAreaTransition?.gameObject.GetComponent<MapObjectView>()?.Data.Get<AreaTransitionPart>();
+                var transition = allTransitions.FirstOrDefault(x => string.Equals(x.GetComponent<MapObjectView>().UniqueId, areaExitId));
+                var areaTransition = transition.GetComponent<MapObjectView>()?.Data.Get<AreaTransitionPart>();
                 if (areaTransition == null)
                 {
-                    _logger.LogError("Unable to find nearest area transition. Position={position}", position);
+                    _logger.LogError("Unable to find requested area transition. Position={position}", position);
+                    return;
                 }
 
                 Game.Instance.LoadArea(areaTransition.AreaEnterPoint, areaTransition.Settings.AutoSaveMode, null);

@@ -6,7 +6,7 @@ namespace WOTRMultiplayer.Abstractions.GameInteraction
     {
         bool IsPaused { get; }
 
-        void LeaveArea();
+        void LeaveArea(string areaExitId);
 
         void MoveCharacter(string characterName, Vector3 destination, float delay, float orientation);
 

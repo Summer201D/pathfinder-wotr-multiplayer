@@ -6,5 +6,7 @@ namespace WOTRMultiplayer.Networking.Messages.Game
     [BeetleX.Packets.MessageType(1005)]
     public class NotifyPartyLeaveArea
     {
+        [ProtoMember(1)]
+        public string AreaExitId { get; set; }
     }
 }

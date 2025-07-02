@@ -195,8 +195,8 @@ namespace WOTRMultiplayer.MP
 
         private void OnNotifyPartyLeaveArea(NotifyPartyLeaveArea area)
         {
-            _logger.LogInformation("OnNotifyPartyLeaveArea");
-            _gameInteractionService.LeaveArea();
+            _logger.LogInformation("OnNotifyPartyLeaveArea. AreaExitId={areaExitId}", area.AreaExitId);
+            _gameInteractionService.LeaveArea(area.AreaExitId);
         }
 
         private void OnNotifyGamePauseChanged(NotifyGamePauseChanged changed)

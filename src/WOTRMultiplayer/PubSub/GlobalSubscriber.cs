@@ -30,8 +30,14 @@ namespace WOTRMultiplayer.PubSub
             {
                 return;
             }
+            var areaExitId = areaTransition.View?.UniqueId;
+            if (string.IsNullOrEmpty(areaExitId))
+            {
+                _logger.LogError("Missing area transition unique id");
+                return;
+            }
 
-            _multiplayerHost.LeaveArea();
+            _multiplayerHost.LeaveArea(areaExitId);
         }
 
         public void HandleWarning(WarningNotificationType warningType, bool addToLog = true)

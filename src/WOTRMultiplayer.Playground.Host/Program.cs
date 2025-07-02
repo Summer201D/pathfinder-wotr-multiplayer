@@ -59,7 +59,7 @@ namespace WOTRMultiplayer.Playground.Host
             loaded - make host loaded
             pause - pause game
             unpause - unpause game
-            leave-area - send leavearea notification
+            leave-area - send leavearea notification 1b018b52-c1be-40bf-8937-1f2a77b96049
             {Environment.NewLine}");
             while ((input = Console.ReadLine()) != "exit")
             {
@@ -91,7 +91,7 @@ namespace WOTRMultiplayer.Playground.Host
                         host.Unpause();
                         break;
                     case "leave-area":
-                        host.LeaveArea();
+                        host.LeaveArea("1b018b52-c1be-40bf-8937-1f2a77b96049");
                         break;
                     default:
                         break;
@@ -103,7 +103,7 @@ namespace WOTRMultiplayer.Playground.Host
         {
             public bool IsPaused { get; set; }
 
-            public void LeaveArea()
+            public void LeaveArea(string areaExitId)
             {
             }
 
