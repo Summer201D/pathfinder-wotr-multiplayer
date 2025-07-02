@@ -4,6 +4,7 @@ using Kingmaker.Controllers.Clicks.Handlers;
 using Kingmaker.EntitySystem.Entities;
 using Kingmaker.GameModes;
 using Kingmaker.PubSubSystem;
+using Kingmaker.View.MapObjects;
 using Microsoft.Extensions.Logging;
 
 namespace WOTRMultiplayer.HarmonyPatches.PubSub
@@ -105,6 +106,19 @@ namespace WOTRMultiplayer.HarmonyPatches.PubSub
 
             var allowedToRun = Main.Multiplayer.StopGameMode(type);
             return allowedToRun;
+        }
+
+        [HarmonyPatch(typeof(AreaTransitionPart), nameof(AreaTransitionPart.CheckRestrictions))]
+        [HarmonyPostfix]
+        public static void AreaTransitionPart_CheckRestrictions_Postfix(AreaTransitionPart __instance, UnitEntityData user, ref bool __result)
+        {
+            if (!Main.Multiplayer.IsActive || !__result)
+            {
+                return;
+            }
+
+            Game.Instance.UI.Bark(user, "Host only action", 15f);
+            __result = false;
         }
     }
 }
