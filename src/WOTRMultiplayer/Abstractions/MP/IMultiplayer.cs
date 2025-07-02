@@ -21,6 +21,7 @@ namespace WOTRMultiplayer.Abstractions.MP
         bool CanControlCharacter(string characterName);
         bool StartGameMode(GameModeType type);
         bool StopGameMode(GameModeType type);
+        bool CanLeaveArea();
 
         bool IsActive { get; }
     }

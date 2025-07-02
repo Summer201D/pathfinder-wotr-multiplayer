@@ -1,12 +1,14 @@
-﻿using Kingmaker.PubSubSystem;
+﻿using Kingmaker.Blueprints.Area;
+using Kingmaker.PubSubSystem;
 using Kingmaker.UI;
+using Kingmaker.View.MapObjects;
 using Microsoft.Extensions.Logging;
 using WOTRMultiplayer.Abstractions.MP;
 using WOTRMultiplayer.Abstractions.PubSub;
 
 namespace WOTRMultiplayer.PubSub
 {
-    public class GlobalSubscriber : IGlobalMultiplayerSubscriber, ISubscriber, IGlobalSubscriber, IWarningNotificationUIHandler
+    public class GlobalSubscriber : IGlobalMultiplayerSubscriber, ISubscriber, IGlobalSubscriber, IWarningNotificationUIHandler, IPartyLeaveAreaHandler
     {
         private readonly ILogger<GlobalSubscriber> _logger;
         private readonly IMultiplayerHost _multiplayerHost;
@@ -20,6 +22,16 @@ namespace WOTRMultiplayer.PubSub
             _logger = logger;
             _multiplayerHost = multiplayerHost;
             _multiplayerClient = multiplayerClient;
+        }
+
+        public void HandlePartyLeaveArea(BlueprintArea currentArea, BlueprintAreaEnterPoint targetArea, AreaTransitionPart areaTransition)
+        {
+            if (!_multiplayerHost.IsActive)
+            {
+                return;
+            }
+
+            _multiplayerHost.LeaveArea();
         }
 
         public void HandleWarning(WarningNotificationType warningType, bool addToLog = true)

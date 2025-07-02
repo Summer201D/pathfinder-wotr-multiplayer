@@ -3,21 +3,53 @@ using System.Numerics;
 using Kingmaker;
 using Kingmaker.GameModes;
 using Kingmaker.UnitLogic.Commands;
+using Kingmaker.View.MapObjects;
 using Microsoft.Extensions.Logging;
 using WOTRMultiplayer.Abstractions.GameInteraction;
+using WOTRMultiplayer.Abstractions.Unity;
 
 namespace WOTRMultiplayer.GameInteraction
 {
     public class GameInteractionService : IGameInteractionService
     {
         private readonly ILogger<GameInteractionService> _logger;
+        private readonly IMainThreadAccessor _mainThreadAccessor;
 
-        public GameInteractionService(ILogger<GameInteractionService> logger)
+        public GameInteractionService(
+            ILogger<GameInteractionService> logger,
+            IMainThreadAccessor mainThreadAccessor)
         {
             _logger = logger;
+            _mainThreadAccessor = mainThreadAccessor;
         }
 
         public bool IsPaused => Game.Instance.IsPaused;
+
+        public void LeaveArea()
+        {
+            _logger.LogInformation("Leaving area via nearest area transition");
+            _mainThreadAccessor.Enqueue(() =>
+            {
+                var position = Game.Instance.Player.Position;
+                var allTransitions = Game.Instance.State.MapObjects.All.Select(o => o.View.GetComponent<AreaTransition>()).Where(t => t != null).ToList();
+                var nearestAreaTransition = allTransitions.Aggregate((e1, e2) =>
+                {
+                    if ((e1.transform.position - position).sqrMagnitude <= (e2.transform.position - position).sqrMagnitude)
+                    {
+                        return e2;
+                    }
+                    return e1;
+                });
+                var areaTransition = nearestAreaTransition?.gameObject.GetComponent<MapObjectView>()?.Data.Get<AreaTransitionPart>();
+                if (areaTransition == null)
+                {
+                    _logger.LogError("Unable to find nearest area transition. Position={position}", position);
+                }
+
+                Game.Instance.LoadArea(areaTransition.AreaEnterPoint, areaTransition.Settings.AutoSaveMode, null);
+            });
+
+        }
 
         public void MoveCharacter(string characterName, Vector3 destination, float delay, float orientation)
         {

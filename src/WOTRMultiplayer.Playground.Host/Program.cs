@@ -41,7 +41,7 @@ namespace WOTRMultiplayer.Playground.Host
                 new() { Name = "NenioFemaleKitsuneWizard_Portrait", Portrait = "NenioFemaleKitsuneWizard_Portrait"},
             };
             var saveGamePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
-                "AppData\\LocalLow\\Owlcat Games\\Pathfinder Wrath Of The Righteous\\Saved Games\\Quick_12.zks");
+                "AppData\\LocalLow\\Owlcat Games\\Pathfinder Wrath Of The Righteous\\Saved Games\\Manual_31_Area_Exit.zks");
             var save = new SaveInfo
             {
                 FolderName = saveGamePath,
@@ -59,6 +59,7 @@ namespace WOTRMultiplayer.Playground.Host
             loaded - make host loaded
             pause - pause game
             unpause - unpause game
+            leave-area - send leavearea notification
             {Environment.NewLine}");
             while ((input = Console.ReadLine()) != "exit")
             {
@@ -89,6 +90,9 @@ namespace WOTRMultiplayer.Playground.Host
                     case "unpause":
                         host.Unpause();
                         break;
+                    case "leave-area":
+                        host.LeaveArea();
+                        break;
                     default:
                         break;
                 }
@@ -98,6 +102,10 @@ namespace WOTRMultiplayer.Playground.Host
         private class DummyGameInteractionService : IGameInteractionService
         {
             public bool IsPaused { get; set; }
+
+            public void LeaveArea()
+            {
+            }
 
             public void MoveCharacter(string characterName, Vector3 destination, float delay, float orientation)
             {

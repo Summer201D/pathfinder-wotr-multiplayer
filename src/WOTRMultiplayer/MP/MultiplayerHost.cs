@@ -488,5 +488,12 @@ namespace WOTRMultiplayer.MP
             };
             return message;
         }
+
+        public void LeaveArea()
+        {
+            _logger.LogInformation("Sending NotifyPartyLeaveArea");
+            var message = new NotifyPartyLeaveArea();
+            _networkServer.SendAll(message);
+        }
     }
 }

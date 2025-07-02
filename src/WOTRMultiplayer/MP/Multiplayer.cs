@@ -148,5 +148,10 @@ namespace WOTRMultiplayer.MP
             _logger.LogInformation("OnLobbyCharacterOwnerChanged. CharacterIndex={charIndex}, PlayerIndex={playerIndex}", characterIndex, playerIndex);
             _multiplayerHost.ChangeCharacterOwner(characterIndex, playerIndex);
         }
+
+        public bool CanLeaveArea()
+        {
+            return !_multiplayerClient.IsActive;
+        }
     }
 }

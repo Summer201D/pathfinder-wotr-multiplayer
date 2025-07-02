@@ -60,5 +60,10 @@
             public const string PlayersSectionTitle = "Players";
             public const string CharactersSectionTitle = "Characters";
         }
+
+        public class GameNotifications
+        {
+            public const string TryLeaveAsAClient = "Can't leave area as a multiplayer client";
+        }
     }
 }

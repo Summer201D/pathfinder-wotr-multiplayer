@@ -186,10 +186,17 @@ namespace WOTRMultiplayer.MP
                 .Register<NotifyGameStarted>(OnNotifyGameStarted)
                 .Register<NotifyCharacterMove>(OnNotifyCharacterMove)
                 .Register<NotifyGamePauseChanged>(OnNotifyGamePauseChanged)
+                .Register<NotifyPartyLeaveArea>(OnNotifyPartyLeaveArea)
                 ;
 
             _networkServerClient.OnError = OnNetworkClientError;
             _networkServerClient.OnConnected = OnNetworkClientConnected;
+        }
+
+        private void OnNotifyPartyLeaveArea(NotifyPartyLeaveArea area)
+        {
+            _logger.LogInformation("OnNotifyPartyLeaveArea");
+            _gameInteractionService.LeaveArea();
         }
 
         private void OnNotifyGamePauseChanged(NotifyGamePauseChanged changed)

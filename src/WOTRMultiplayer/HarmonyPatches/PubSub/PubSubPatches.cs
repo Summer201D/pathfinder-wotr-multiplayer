@@ -6,6 +6,7 @@ using Kingmaker.GameModes;
 using Kingmaker.PubSubSystem;
 using Kingmaker.View.MapObjects;
 using Microsoft.Extensions.Logging;
+using WOTRMultiplayer.UI;
 
 namespace WOTRMultiplayer.HarmonyPatches.PubSub
 {
@@ -117,8 +118,11 @@ namespace WOTRMultiplayer.HarmonyPatches.PubSub
                 return;
             }
 
-            Game.Instance.UI.Bark(user, "Host only action", 15f);
-            __result = false;
+            if (!Main.Multiplayer.CanLeaveArea())
+            {
+                Game.Instance.UI.Bark(user, UIStringConsts.GameNotifications.TryLeaveAsAClient, 10f);
+                __result = false;
+            }
         }
     }
 }
