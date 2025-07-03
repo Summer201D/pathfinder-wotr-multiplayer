@@ -140,9 +140,9 @@ namespace WOTRMultiplayer.HarmonyPatches.PubSub
                 return;
             }
 
-            var dialogueId = __instance.Dialog.name;
-            var userId = user.UniqueId;
-            var targetId = target.UniqueId;
+            var dialogueId = __instance.Dialog?.name;
+            var userId = user?.UniqueId;
+            var targetId = target?.UniqueId;
 
             Main.GetLogger<PubSubPatches>().LogWarning("DialogOnClick. DialogueId={dialogueId}, UserId={userId}, TargetId={targetId}", dialogueId, userId, targetId);
         }
@@ -157,9 +157,9 @@ namespace WOTRMultiplayer.HarmonyPatches.PubSub
                 return;
             }
 
-            var dialogueId = __instance.Dialog.name;
-            var userId = user.UniqueId;
-            var targetId = target.UniqueId;
+            var dialogueId = __instance.Dialog?.name;
+            var userId = user?.UniqueId;
+            var targetId = target?.UniqueId;
 
             Main.GetLogger<PubSubPatches>().LogWarning("OverrideDialogInteraction. DialogueId={dialogueId}, UserId={userId}, TargetId={targetId}", dialogueId, userId, targetId);
         }
@@ -173,9 +173,9 @@ namespace WOTRMultiplayer.HarmonyPatches.PubSub
                 return;
             }
 
-            var dialogueId = __instance.Dialog.Guid.ToString();
-            var userId = user.UniqueId;
-            var targetId = target.UniqueId;
+            var dialogueId = __instance.Dialog?.Guid.ToString();
+            var userId = user?.UniqueId;
+            var targetId = target?.UniqueId;
 
             Main.GetLogger<PubSubPatches>().LogWarning("EtudeBracketOverrideDialog. DialogueId={dialogueId}, UserId={userId}, TargetId={targetId}", dialogueId, userId, targetId);
         }
@@ -189,9 +189,9 @@ namespace WOTRMultiplayer.HarmonyPatches.PubSub
                 return;
             }
 
-            var dialogueId = __instance.Dialog.name;
-            var userId = user.UniqueId;
-            var targetId = target.UniqueId;
+            var dialogueId = __instance.Dialog?.name;
+            var userId = user?.UniqueId;
+            var targetId = target?.UniqueId;
 
             Main.GetLogger<PubSubPatches>().LogWarning("SpawnerInteractionDialog. DialogueId={dialogueId}, UserId={userId}, TargetId={targetId}", dialogueId, userId, targetId);
         }
