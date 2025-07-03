@@ -232,6 +232,12 @@ namespace WOTRMultiplayer.UI
             var text = UIUtility.GetSaberBookFormat(UIStringConsts.MainMenu.MultiplayerMenu);
             var viewModel = new ContextMenuEntityVM(new ContextMenuCollectionEntity(UIUtility.GetSaberBookFormat(text), onShow));
             multiplayerMenuView.Bind(viewModel);
+
+            // extra menu item = shift up %
+            float shiftY = context.Parent.position.y * 1.5f;
+            var newPosition = new Vector3(context.Parent.position.x, shiftY, context.Parent.position.z);
+            context.Parent.SetPositionAndRotation(newPosition, context.Parent.rotation);
+
             return multiplayerWindow;
         }
 
