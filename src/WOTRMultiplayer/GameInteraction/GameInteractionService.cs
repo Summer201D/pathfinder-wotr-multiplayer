@@ -1,7 +1,9 @@
 ﻿using System.Linq;
 using System.Numerics;
 using Kingmaker;
+using Kingmaker.Blueprints.Root;
 using Kingmaker.GameModes;
+using Kingmaker.Globalmap.Blueprints;
 using Kingmaker.UnitLogic.Commands;
 using Kingmaker.View.MapObjects;
 using Microsoft.Extensions.Logging;
@@ -27,17 +29,26 @@ namespace WOTRMultiplayer.GameInteraction
 
         public void LeaveArea(string areaExitId)
         {
-            _logger.LogInformation("Leaving area via nearest area transition");
+            _logger.LogInformation("Leaving area. AreaExitId={areaExitId}", areaExitId);
             _mainThreadAccessor.Enqueue(() =>
             {
-                var position = Game.Instance.Player.Position;
                 var allTransitions = Game.Instance.State.MapObjects.All.Select(o => o.View.GetComponent<AreaTransition>()).Where(t => t != null).ToList();
-                var transition = allTransitions.FirstOrDefault(x => string.Equals(x.GetComponent<MapObjectView>().UniqueId, areaExitId));
-                var areaTransition = transition.GetComponent<MapObjectView>()?.Data.Get<AreaTransitionPart>();
+                var transition = allTransitions.FirstOrDefault(x => string.Equals(x.GetComponent<MapObjectView>().UniqueId, areaExitId, System.StringComparison.OrdinalIgnoreCase));
+                var areaTransition = transition?.GetComponent<MapObjectView>()?.Data.Get<AreaTransitionPart>();
                 if (areaTransition == null)
                 {
-                    _logger.LogError("Unable to find requested area transition. Position={position}", position);
+                    _logger.LogError("Unable to find requested area transition. TransitionsCount={transitionsCount}, AreaExitId={areaExitId}", allTransitions.Count, areaExitId);
                     return;
+                }
+
+                // AreaTransitionGroupCommand.ExecuteTransition
+                if (Game.Instance.State.LoadedAreaState.Encounter == null && areaTransition.AreaEnterPoint.Area.IsGlobalMap)
+                {
+                    BlueprintGlobalMap globalMap = BlueprintRoot.Instance.GlobalMap.GetGlobalMap(areaTransition.AreaEnterPoint);
+                    if (globalMap != null)
+                    {
+                        Game.Instance.Player.GetGlobalMap(globalMap).Player.AreaReturnPoint = areaTransition.GetEnterPointToReturnTo();
+                    }
                 }
 
                 Game.Instance.LoadArea(areaTransition.AreaEnterPoint, areaTransition.Settings.AutoSaveMode, null);
