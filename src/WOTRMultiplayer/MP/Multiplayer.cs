@@ -196,6 +196,11 @@ namespace WOTRMultiplayer.MP
             return true;
         }
 
+        public bool CanManuallyUseDialogContinueButton()
+        {
+            return _multiplayerHost.IsActive;
+        }
+
         private PartyStatCheckRoll CreatePartyStatCheckRoll(RuleRollDice ruleRollDice, RulePartyStatCheck rulePartySkillCheck)
         {
             var roll = new PartyStatCheckRoll

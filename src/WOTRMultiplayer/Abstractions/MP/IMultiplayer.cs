@@ -26,6 +26,8 @@ namespace WOTRMultiplayer.Abstractions.MP
         bool OnBeforeRuleRollDiceTrigger(RuleRollDice ruleRollDice);
         void OnAfterRuleRollDiceTrigger(RuleRollDice ruleRollDice);
 
+        bool CanManuallyUseDialogContinueButton();
+
         bool IsActive { get; }
     }
 }
