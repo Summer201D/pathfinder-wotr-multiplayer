@@ -6,7 +6,7 @@ namespace WOTRMultiplayer.MP.Entities.Rolls
     {
         public RollDice Roll { get; set; }
 
-        public ConcurrentDictionary<int, int> RetrieveHistory { get; set; } = new();
+        public ConcurrentDictionary<long, int> RetrieveHistory { get; set; } = new();
 
         public RollDiceEntry(RollDice rollDice)
         {

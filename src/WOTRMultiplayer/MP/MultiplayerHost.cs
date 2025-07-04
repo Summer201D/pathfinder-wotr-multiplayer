@@ -308,7 +308,22 @@ namespace WOTRMultiplayer.MP
                 .Register<CharacterMove>(OnCharacterMove)
                 .Register<GameLoaded>(OnGameLoaded)
                 .Register<GamePauseChanged>(OnGamePauseChanged)
+                .Register<RollRequest>(OnRollRequest)
                 ;
+        }
+
+        private void OnRollRequest(long playerId, RollRequest request)
+        {
+            _logger.LogInformation("Received RollRequest. PlayerId={playerId}, RollId={rollId}", playerId, request.RollId);
+            var roll = _rollStorage.Get(request.RollId, playerId);
+
+            var response = new RollResponse
+            {
+                Roll = roll == null ? null : new Networking.Messages.RollDice { Result = roll.Result, RollHistory = [.. roll.RollHistory] },
+            };
+
+            _logger.LogInformation("Sending RollResponse. RollResult={rollResult}", roll?.Result ?? 0);
+            _networkServer.Send(playerId, response);
         }
 
         private void OnGamePauseChanged(long playerId, GamePauseChanged pauseChanged)

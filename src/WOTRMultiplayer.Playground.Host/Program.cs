@@ -127,7 +127,7 @@ namespace WOTRMultiplayer.Playground.Host
             {
             }
 
-            public RollDice Get(int rollId, int playerId)
+            public RollDice Get(int rollId, long playerId)
             {
                 if (rollId == 1469590275)
                 {

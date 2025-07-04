@@ -176,8 +176,32 @@ namespace WOTRMultiplayer.MP
 
         public RollDice GetRoll(int rollId)
         {
-            _logger.LogError("Not implemented");
-            return null;
+            _logger.LogInformation("Retrieving roll from the host. RollId={rollId}, RollResult={rollResult}", rollId);
+
+            var request = new RollRequest { RollId = rollId };
+            // it's important to block current thread since we cannot proceed without response
+            // yeah most likely it will cause the game to freeze in case of bad network
+            var response = _networkServerClient.SendAndWaitForAsync<RollResponse>(request).Result;
+
+            if (response == null)
+            {
+                _logger.LogError("Unable to retrieve roll from host. RollId={rollId}", rollId);
+                return null;
+            }
+
+            if (response.Roll == null)
+            {
+                _logger.LogError("Host returned null roll. RollId={rollId}", rollId);
+                return null;
+            }
+
+            _logger.LogInformation("Roll has been retrieved from the host. RollId={rollId}, RollResult={rollResult}", rollId, response.Roll.Result);
+
+            return new RollDice
+            {
+                Result = response.Roll.Result,
+                RollHistory = [.. response.Roll.RollHistory]
+            };
         }
 
         private void RegisterHandlers()

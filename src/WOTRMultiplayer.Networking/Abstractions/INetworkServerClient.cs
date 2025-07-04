@@ -17,6 +17,9 @@ namespace WOTRMultiplayer.Networking.Abstractions
 
         Task SendAsync(object message);
 
+        Task<T> SendAndWaitForAsync<T>(object message)
+            where T : class;
+
         Action<Exception> OnError { get; set; }
         Action<EndPoint> OnConnected { get; set; }
     }

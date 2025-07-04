@@ -6,9 +6,10 @@ namespace WOTRMultiplayer.Abstractions.MP
     {
         void Add(RollDice rollDice);
 
-        RollDice Get(int rollId, int playerId);
+        RollDice Get(int rollId, long playerId);
 
         int GetUniqueId(RollDice roll);
+
         void Reset();
     }
 }

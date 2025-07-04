@@ -41,7 +41,7 @@ namespace WOTRMultiplayer.MP
             }
         }
 
-        public RollDice Get(int rollId, int playerId)
+        public RollDice Get(int rollId, long playerId)
         {
             try
             {

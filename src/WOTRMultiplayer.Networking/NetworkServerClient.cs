@@ -13,7 +13,9 @@ namespace WOTRMultiplayer.Networking
     {
         private AsyncTcpClient _client;
         private readonly ConcurrentDictionary<Type, Action<object>> _handlers = new();
+        private readonly ConcurrentDictionary<Type, TaskCompletionSource<object>> _awaiters = new();
         private readonly ILogger<NetworkServerClient> _logger;
+        private readonly TimeSpan _defaultAwaiterTimeout = TimeSpan.FromSeconds(3);
 
         public Action<Exception> OnError { get; set; }
         public Action<EndPoint> OnConnected { get; set; }
@@ -66,6 +68,27 @@ namespace WOTRMultiplayer.Networking
             return _client.Send(message);
         }
 
+        public async Task<T> SendAndWaitForAsync<T>(object message)
+            where T : class
+        {
+            var taskCompletion = new TaskCompletionSource<object>();
+            var timeoutTask = Task.Delay(_defaultAwaiterTimeout);
+
+            _awaiters.TryAdd(typeof(T), taskCompletion);
+            await _client.Send(message);
+
+            Task.WaitAny(timeoutTask, taskCompletion.Task);
+
+            if (!taskCompletion.Task.IsCompleted)
+            {
+                _awaiters.TryRemove(typeof(T), out _);
+                _logger.LogWarning("Awaiter has been failed due to timeout. Type={type}, Timeout={timeout}", typeof(T), _defaultAwaiterTimeout);
+                return null;
+            }
+
+            return taskCompletion.Task.Result as T;
+        }
+
         public void Dispose()
         {
             _logger.LogInformation("Disposing");
@@ -76,6 +99,13 @@ namespace WOTRMultiplayer.Networking
         private void OnPackedReceived(IClient client, object message)
         {
             var type = message.GetType();
+            if (_awaiters.TryRemove(type, out var taskCompletion))
+            {
+                _logger.LogInformation("Awaiter has been found, other handlers will be skipped. MessageType={type}", type);
+                taskCompletion.SetResult(message);
+                return;
+            }
+
             if (!_handlers.TryGetValue(type, out var handler))
             {
                 _logger.LogWarning("Handler is not configured. Type={type}", type);
