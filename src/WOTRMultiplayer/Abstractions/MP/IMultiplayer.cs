@@ -1,6 +1,7 @@
 ﻿using Kingmaker.Controllers.Clicks.Handlers;
 using Kingmaker.EntitySystem.Entities;
 using Kingmaker.GameModes;
+using Kingmaker.RuleSystem.Rules;
 using WOTRMultiplayer.Abstractions.UI;
 using WOTRMultiplayer.MP.Entities;
 
@@ -22,6 +23,8 @@ namespace WOTRMultiplayer.Abstractions.MP
         bool StartGameMode(GameModeType type);
         bool StopGameMode(GameModeType type);
         bool CanLeaveArea();
+        bool OnBeforeRuleRollDiceTrigger(RuleRollDice ruleRollDice);
+        void OnAfterRuleRollDiceTrigger(RuleRollDice ruleRollDice);
 
         bool IsActive { get; }
     }

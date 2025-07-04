@@ -14,9 +14,7 @@ using WOTRMultiplayer.DI;
 namespace WOTRMultiplayer
 {
     // SettingsRoot.Game.TurnBased.EnableTurnBasedMode
-    // AutoPauseController
-
-    // EventBus -> make sure INetworkEventSub
+    // party skills checks enabled
     public class Main
     {
         private static UnityModManagerSettings _settings;

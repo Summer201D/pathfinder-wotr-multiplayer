@@ -1,12 +1,17 @@
-﻿using System.Numerics;
+﻿using System;
+using System.Numerics;
+using System.Text;
+using System.Threading;
 using Kingmaker.Controllers.Clicks.Handlers;
 using Kingmaker.EntitySystem.Entities;
 using Kingmaker.GameModes;
+using Kingmaker.RuleSystem.Rules;
 using Microsoft.Extensions.Logging;
 using WOTRMultiplayer.Abstractions.MP;
 using WOTRMultiplayer.Abstractions.UI;
 using WOTRMultiplayer.Abstractions.UI.Controllers;
 using WOTRMultiplayer.Abstractions.UI.Windows;
+using WOTRMultiplayer.HarmonyPatches.PubSub;
 using WOTRMultiplayer.MP.Entities;
 using WOTRMultiplayer.UI.Lobby;
 
@@ -121,6 +126,82 @@ namespace WOTRMultiplayer.MP
             return true;
         }
 
+        public bool CanLeaveArea()
+        {
+            return !_multiplayerClient.IsActive;
+        }
+
+        /// <summary>
+        /// host - store roll
+        /// client - ignore
+        /// </summary>
+        /// <param name="ruleRollDice"></param>
+        public void OnAfterRuleRollDiceTrigger(RuleRollDice ruleRollDice)
+        {
+            if (!_multiplayerHost.IsActive)
+            {
+                return;
+            }
+
+            var initiator = ruleRollDice.Initiator?.UniqueId;
+            var dice = ruleRollDice.DiceFormula.Dice;
+            var resultOverride = ruleRollDice.ResultOverride;
+            var result = ruleRollDice.Result;
+            var ruleType = ruleRollDice.Reason.Rule.GetType().Name;
+            var ruleName = ruleRollDice.Reason.Name;
+
+            switch (ruleRollDice.Reason.Rule)
+            {
+                case RulePartyStatCheck rulePartyStatCheck:
+                    var rollUniqueId = Convert.ToBase64String(Encoding.UTF8.GetBytes(initiator + dice + ruleType + ruleName + rulePartyStatCheck.DifficultyClass + rulePartyStatCheck.StatType));
+                    Main.GetLogger<PubSubPatches>().LogWarning("RuleRollDice_OnTrigger_Postfix. Initiator={initiator}, Dice={dice}, ResultOverride={resultOverride}, Result={result}, RuleName={ruleName} RuleType={ruleType}, RuleUniqueId={rollUniqueId}", initiator, dice, resultOverride, result, ruleName, ruleType, rollUniqueId);
+                    break;
+                case RuleRollD20:
+                default:
+                    Main.GetLogger<PubSubPatches>().LogWarning("RuleRollDice_OnTrigger_Postfix - Skipping dice roll. Type={rollType}", ruleRollDice.Reason.Rule.GetType().Name);
+                    break;
+            }
+        }
+
+        /// <summary>
+        /// host - ignore
+        /// client - get roll from host
+        /// </summary>
+        /// <param name="ruleRollDice"></param>
+        /// <returns></returns>
+        public bool OnBeforeRuleRollDiceTrigger(RuleRollDice ruleRollDice)
+        {
+            if (!_multiplayerClient.IsActive)
+            {
+                return true;
+            }
+
+            var initiator = ruleRollDice.Initiator?.UniqueId;
+            var dice = ruleRollDice.DiceFormula.Dice;
+            var resultOverride = ruleRollDice.ResultOverride;
+            var ruleType = ruleRollDice.Reason.Rule.GetType().Name;
+            var ruleName = ruleRollDice.Reason.Name;
+
+            switch (ruleRollDice.Reason.Rule)
+            {
+                case RulePartyStatCheck rulePartyStatCheck:
+                    var rollUniqueId = Convert.ToBase64String(Encoding.UTF8.GetBytes(initiator + dice + ruleType + ruleName + rulePartyStatCheck.DifficultyClass + rulePartyStatCheck.StatType));
+                    if (rollUniqueId == "YTk1MGFkNzUtNjVjZC00ZGMxLTk2ZTktNDQ0ZTI5MWZlZDdlRDIwUnVsZVBhcnR5U3RhdENoZWNrMTJDaGVja0RpcGxvbWFjeQ==")
+                    {
+                        Thread.Sleep(200); // network latency
+                        Main.GetLogger<PubSubPatches>().LogWarning("RuleRollDice_OnTrigger_Prefix - Using pregenerated values for RulePartyStatCheck");
+                        ruleRollDice.m_Result = 36;
+                        return false;
+                    }
+                    break;
+                case RuleRollD20:
+                default:
+                    break;
+            }
+
+            return true;
+        }
+
         private IMultiplayerParticipant GetMultiplayerParticipant()
         {
             return _multiplayerHost.IsActive ? _multiplayerHost : _multiplayerClient;
@@ -147,11 +228,6 @@ namespace WOTRMultiplayer.MP
         {
             _logger.LogInformation("OnLobbyCharacterOwnerChanged. CharacterIndex={charIndex}, PlayerIndex={playerIndex}", characterIndex, playerIndex);
             _multiplayerHost.ChangeCharacterOwner(characterIndex, playerIndex);
-        }
-
-        public bool CanLeaveArea()
-        {
-            return !_multiplayerClient.IsActive;
         }
     }
 }

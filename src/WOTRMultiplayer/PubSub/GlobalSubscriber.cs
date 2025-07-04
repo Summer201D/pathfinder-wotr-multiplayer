@@ -30,6 +30,7 @@ namespace WOTRMultiplayer.PubSub
             {
                 return;
             }
+
             var areaExitId = areaTransition.View?.UniqueId;
             if (string.IsNullOrEmpty(areaExitId))
             {
@@ -42,14 +43,18 @@ namespace WOTRMultiplayer.PubSub
 
         public void HandleWarning(WarningNotificationType warningType, bool addToLog = true)
         {
+            var multiplayerParticipant = GetMultiplayerParticipant();
+            if (!multiplayerParticipant?.IsActive ?? false)
+            {
+                return;
+            }
+
             // looks dumb af, but seems like it's the only way to know game is loaded
             if (warningType != WarningNotificationType.GameLoaded)
             {
                 return;
             }
 
-            _logger.LogInformation("Game loaded");
-            var multiplayerParticipant = GetMultiplayerParticipant();
             multiplayerParticipant.GameLoaded();
         }
 
@@ -59,7 +64,10 @@ namespace WOTRMultiplayer.PubSub
 
         private IMultiplayerParticipant GetMultiplayerParticipant()
         {
-            return _multiplayerHost.IsActive ? _multiplayerHost : _multiplayerClient;
+            return _multiplayerHost.IsActive ?
+                _multiplayerHost
+                : _multiplayerClient.IsActive ?
+                    _multiplayerClient : null;
         }
     }
 }
