@@ -46,7 +46,12 @@ namespace WOTRMultiplayer.Playground.Client
             loaded - send gameloaded
             pause - pause game
             unpause - unpause game
-            witness-cue - witness Cue_0001 cue
+            dialog-witness-cue_0001 - witness 1 cue of MeetSeelahAnevia_Dialogue
+            dialog-witness-cue_0002 - witness 2 cue of MeetSeelahAnevia_Dialogue
+            dialog-witness-cue_0003 - witness 3 cue of MeetSeelahAnevia_Dialogue
+            dialog-suggest-cue_0004_2 - suggest option 2 on 4 cue
+            dialog-suggest-cue_0004_3 - suggest option 3 on 4 cue
+
             {Environment.NewLine}");
             const string DialogName = "MeetSeelahAnevia_Dialogue";
 
@@ -75,19 +80,19 @@ namespace WOTRMultiplayer.Playground.Client
                     case "dialog-witness-cue_0003":
                         client.OnAfterCueShow(DialogName, "Cue_0003", false);
                         break;
-                    case "dialog-suggest-cue_0004_3":
-                        client.CurrentGame.Dialog = new NetworkDialog(DialogName)
-                        {
-                            CurrentCueName = "Cue_0004"
-                        };
-                        client.OnBeforeSelectDialogAnswer(DialogName, "Cue_0004", "Answer_0042", false, null);
-                        break;
                     case "dialog-suggest-cue_0004_2":
                         client.CurrentGame.Dialog = new NetworkDialog(DialogName)
                         {
                             CurrentCueName = "Cue_0004"
                         };
                         client.OnBeforeSelectDialogAnswer(DialogName, "Cue_0004", "Answer_0007", false, null);
+                        break;
+                    case "dialog-suggest-cue_0004_3":
+                        client.CurrentGame.Dialog = new NetworkDialog(DialogName)
+                        {
+                            CurrentCueName = "Cue_0004"
+                        };
+                        client.OnBeforeSelectDialogAnswer(DialogName, "Cue_0004", "Answer_0042", false, null);
                         break;
                     default:
                         break;

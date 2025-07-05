@@ -94,12 +94,13 @@ namespace WOTRMultiplayer.GameInteraction
                             existingSuggestionObject.SetActive(true);
                         }
 
+                        var portraitName = suggestedAnswer.Players.Count == 1 ? "Wererat_Portrait" : "RatSwarm";
+                        var portrait = _portraitProvider.GetPortrait(portraitName);
                         var image = existingSuggestionObject.GetComponent<Image>();
-                        var portrait = _portraitProvider.GetPortrait("Mask_Portrait");
                         image.sprite = portrait;
                         PlaySound(UISoundType.GlobalMapRandomEncounter);
-                        _logger.LogInformation("Created answer suggestion icon. AnswerIndex={answerIndex}, AnswerName={answerName}", answerIndex, suggestedAnswer.AnswerName);
-                        return;
+                        _logger.LogInformation("Created answer suggestion icon. AnswerIndex={answerIndex}, AnswerName={answerName}, PlayersCount={playersCount}", answerIndex, suggestedAnswer.AnswerName, suggestedAnswer.Players.Count);
+                        continue;
                     }
 
                     if (existingSuggestionObject != null)
