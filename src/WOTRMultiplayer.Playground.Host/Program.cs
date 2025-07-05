@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Numerics;
 using Kingmaker.EntitySystem.Persistence;
+using Kingmaker.UI;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using WOTRMultiplayer.Abstractions.GameInteraction;
@@ -185,6 +186,10 @@ namespace WOTRMultiplayer.Playground.Host
             }
 
             public void Pause(bool isPaused)
+            {
+            }
+
+            public void PlaySound(UISoundType type)
             {
             }
 

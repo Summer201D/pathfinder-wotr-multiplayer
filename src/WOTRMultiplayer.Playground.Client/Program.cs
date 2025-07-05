@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Numerics;
 using Kingmaker.EntitySystem.Persistence;
+using Kingmaker.UI;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using WOTRMultiplayer.Abstractions.GameInteraction;
@@ -47,6 +48,8 @@ namespace WOTRMultiplayer.Playground.Client
             unpause - unpause game
             witness-cue - witness Cue_0001 cue
             {Environment.NewLine}");
+            const string DialogName = "MeetSeelahAnevia_Dialogue";
+
             while ((input = Console.ReadLine()) != "exit")
             {
                 switch (input)
@@ -63,8 +66,28 @@ namespace WOTRMultiplayer.Playground.Client
                     case "unpause":
                         client.Unpause();
                         break;
-                    case "witness-cue":
-                        client.OnAfterCueShow("MeetSeelahAnevia_Dialogue", "Cue_0001", false);
+                    case "dialog-witness-cue_0001":
+                        client.OnAfterCueShow(DialogName, "Cue_0001", false);
+                        break;
+                    case "dialog-witness-cue_0002":
+                        client.OnAfterCueShow(DialogName, "Cue_0002", false);
+                        break;
+                    case "dialog-witness-cue_0003":
+                        client.OnAfterCueShow(DialogName, "Cue_0003", false);
+                        break;
+                    case "dialog-suggest-cue_0004_3":
+                        client.CurrentGame.Dialog = new NetworkDialog(DialogName)
+                        {
+                            CurrentCueName = "Cue_0004"
+                        };
+                        client.OnBeforeSelectDialogAnswer(DialogName, "Cue_0004", "Answer_0042", false, null);
+                        break;
+                    case "dialog-suggest-cue_0004_2":
+                        client.CurrentGame.Dialog = new NetworkDialog(DialogName)
+                        {
+                            CurrentCueName = "Cue_0004"
+                        };
+                        client.OnBeforeSelectDialogAnswer(DialogName, "Cue_0004", "Answer_0007", false, null);
                         break;
                     default:
                         break;
@@ -104,6 +127,10 @@ namespace WOTRMultiplayer.Playground.Client
             }
 
             public void Pause(bool isPaused)
+            {
+            }
+
+            public void PlaySound(UISoundType type)
             {
             }
 

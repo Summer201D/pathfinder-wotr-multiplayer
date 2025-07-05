@@ -6,13 +6,17 @@ using Kingmaker;
 using Kingmaker.Blueprints.Root;
 using Kingmaker.GameModes;
 using Kingmaker.Globalmap.Blueprints;
+using Kingmaker.UI;
 using Kingmaker.UI.MVVM._PCView.Dialog.Dialog;
 using Kingmaker.UI.MVVM._PCView.InGame;
+using Kingmaker.UI.MVVM._VM.Dialog.Dialog;
 using Kingmaker.UnitLogic.Commands;
 using Kingmaker.View.MapObjects;
 using Microsoft.Extensions.Logging;
 using Owlcat.Runtime.UI.Controls.Button;
+using UnityEngine.UI;
 using WOTRMultiplayer.Abstractions.GameInteraction;
+using WOTRMultiplayer.Abstractions.UI;
 using WOTRMultiplayer.Abstractions.Unity;
 using WOTRMultiplayer.MP.Entities;
 
@@ -22,13 +26,16 @@ namespace WOTRMultiplayer.GameInteraction
     {
         private readonly ILogger<GameInteractionService> _logger;
         private readonly IMainThreadAccessor _mainThreadAccessor;
+        private readonly IPortraitProvider _portraitProvider;
 
         public GameInteractionService(
             ILogger<GameInteractionService> logger,
-            IMainThreadAccessor mainThreadAccessor)
+            IMainThreadAccessor mainThreadAccessor,
+            IPortraitProvider portraitProvider)
         {
             _logger = logger;
             _mainThreadAccessor = mainThreadAccessor;
+            _portraitProvider = portraitProvider;
         }
 
         public bool IsPaused => Game.Instance.IsPaused;
@@ -64,7 +71,43 @@ namespace WOTRMultiplayer.GameInteraction
 
         public void MarkSuggestedDialogAnswers(List<NetworkDialogAnswerSuggestion> suggestions)
         {
-            _logger.LogError("TODO MarkSuggestedDialogAnswers");
+            const string SuggestionIconName = "SuggestionIcon";
+            _mainThreadAccessor.Enqueue(() =>
+            {
+                var dialogView = (Game.Instance.RootUiContext.m_UIView as InGamePCView)?.m_StaticPartPCView?.m_DialogContextPCView?.m_DialogPCView;
+                var gameObject = dialogView.gameObject;
+                var answers = gameObject.transform.Find("Body/View/Scroll View/Viewport/Content/AnswersPanel");
+                for (int i = 0; i < answers.childCount; i++)
+                {
+                    var answer = answers.GetChild(i);
+                    var answerView = answer.GetComponent<DialogAnswerPCView>();
+                    var answerName = (answerView.GetViewModel() as AnswerVM).Answer.Value.name;
+                    var suggestedAnswer = suggestions.FirstOrDefault(s => string.Equals(s.AnswerName, answerName));
+                    var existingSuggestionObject = answer.Find(SuggestionIconName)?.gameObject;
+                    if (suggestedAnswer != null)
+                    {
+                        if (existingSuggestionObject == null)
+                        {
+                            var arrow = answer.Find("Arrow");
+                            existingSuggestionObject = UnityEngine.Object.Instantiate(arrow.gameObject, answer);
+                            existingSuggestionObject.name = SuggestionIconName;
+                            existingSuggestionObject.SetActive(true);
+                        }
+
+                        var image = existingSuggestionObject.GetComponent<Image>();
+                        var portrait = _portraitProvider.GetPortrait("Mask_Portrait");
+                        image.sprite = portrait;
+                        PlaySound(UISoundType.GlobalMapRandomEncounter);
+                    }
+                    else
+                    {
+                        if (existingSuggestionObject != null)
+                        {
+                            UnityEngine.Object.DestroyImmediate(existingSuggestionObject);
+                        }
+                    }
+                }
+            });
         }
 
         public void MoveCharacter(string characterName, Vector3 destination, float delay, float orientation)
@@ -153,6 +196,11 @@ namespace WOTRMultiplayer.GameInteraction
                     throw;
                 }
             });
+        }
+
+        public void PlaySound(UISoundType type)
+        {
+            UISoundController.Instance.Play(type);
         }
     }
 }
