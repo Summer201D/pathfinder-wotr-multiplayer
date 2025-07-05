@@ -2,7 +2,7 @@
 
 namespace WOTRMultiplayer.MP.Entities.Rolls
 {
-    public class PartyStatCheckRoll : RollDice
+    public class PartyStatCheckRoll : NetworkDiceRoll
     {
         public int DifficultyClass { get; set; }
 

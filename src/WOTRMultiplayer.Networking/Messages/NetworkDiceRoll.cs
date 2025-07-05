@@ -4,7 +4,7 @@ using ProtoBuf;
 namespace WOTRMultiplayer.Networking.Messages
 {
     [ProtoContract]
-    public class RollDice
+    public class NetworkDiceRoll
     {
         [ProtoMember(1)]
         public int Result { get; set; }

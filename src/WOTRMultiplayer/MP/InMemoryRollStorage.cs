@@ -8,7 +8,7 @@ namespace WOTRMultiplayer.MP
 {
     public class InMemoryRollStorage : IRollStorage
     {
-        private readonly ConcurrentDictionary<int, RollDiceEntry> _rolls = new();
+        private readonly ConcurrentDictionary<int, DiceRollEntry> _rolls = new();
         private readonly ILogger<InMemoryRollStorage> _logger;
         private readonly IHashService _hashService;
 
@@ -20,12 +20,12 @@ namespace WOTRMultiplayer.MP
             _hashService = hashService;
         }
 
-        public void Add(RollDice rollDice)
+        public void Add(NetworkDiceRoll rollDice)
         {
             try
             {
                 var rollId = GetUniqueId(rollDice);
-                var entry = new RollDiceEntry(rollDice);
+                var entry = new DiceRollEntry(rollDice);
                 if (!_rolls.TryAdd(rollId, entry))
                 {
                     _logger.LogError("Collision has been detected. RollId={rollId}", rollId);
@@ -41,7 +41,7 @@ namespace WOTRMultiplayer.MP
             }
         }
 
-        public RollDice Get(int rollId, long playerId)
+        public NetworkDiceRoll Get(int rollId, long playerId)
         {
             try
             {
@@ -67,7 +67,7 @@ namespace WOTRMultiplayer.MP
             }
         }
 
-        public int GetUniqueId(RollDice roll)
+        public int GetUniqueId(NetworkDiceRoll roll)
         {
             var rawRollId = roll.GetIdString();
             var rollId = _hashService.Murmur3(rawRollId);

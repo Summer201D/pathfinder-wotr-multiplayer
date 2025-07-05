@@ -174,7 +174,7 @@ namespace WOTRMultiplayer.MP
             _networkServerClient.SendAsync(message).Wait();
         }
 
-        public RollDice GetRoll(int rollId)
+        public NetworkDiceRoll GetRoll(int rollId)
         {
             _logger.LogInformation("Retrieving roll from the host. RollId={rollId}, RollResult={rollResult}", rollId);
 
@@ -197,7 +197,7 @@ namespace WOTRMultiplayer.MP
 
             _logger.LogInformation("Roll has been retrieved from the host. RollId={rollId}, RollResult={rollResult}", rollId, response.Roll.Result);
 
-            return new RollDice
+            return new NetworkDiceRoll
             {
                 Result = response.Roll.Result,
                 RollHistory = [.. response.Roll.RollHistory]

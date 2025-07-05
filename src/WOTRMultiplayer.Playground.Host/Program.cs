@@ -199,27 +199,27 @@ namespace WOTRMultiplayer.Playground.Host
 
         private class DummyRollStorage : IRollStorage
         {
-            public void Add(RollDice rollDice)
+            public void Add(NetworkDiceRoll rollDice)
             {
             }
 
-            public RollDice Get(int rollId, long playerId)
+            public NetworkDiceRoll Get(int rollId, long playerId)
             {
                 if (rollId == 1469590275)
                 {
-                    return new RollDice
+                    return new NetworkDiceRoll
                     {
                         Result = 66
                     };
                 }
 
-                return new RollDice
+                return new NetworkDiceRoll
                 {
                     Result = 99
                 };
             }
 
-            public int GetUniqueId(RollDice roll)
+            public int GetUniqueId(NetworkDiceRoll roll)
             {
                 return -1;
             }

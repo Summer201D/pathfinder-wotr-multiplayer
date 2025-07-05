@@ -2,13 +2,13 @@
 
 namespace WOTRMultiplayer.MP.Entities.Rolls
 {
-    public class RollDiceEntry
+    public class DiceRollEntry
     {
-        public RollDice Roll { get; set; }
+        public NetworkDiceRoll Roll { get; set; }
 
         public ConcurrentDictionary<long, int> RetrieveHistory { get; set; } = new();
 
-        public RollDiceEntry(RollDice rollDice)
+        public DiceRollEntry(NetworkDiceRoll rollDice)
         {
             Roll = rollDice;
         }

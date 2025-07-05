@@ -527,7 +527,7 @@ namespace WOTRMultiplayer.MP
 
             var response = new RollResponse
             {
-                Roll = roll == null ? null : new Networking.Messages.RollDice { Result = roll.Result, RollHistory = [.. roll.RollHistory] },
+                Roll = roll == null ? null : new Networking.Messages.NetworkDiceRoll { Result = roll.Result, RollHistory = [.. roll.RollHistory] },
             };
 
             _logger.LogInformation("Sending RollResponse. RollResult={rollResult}", roll?.Result ?? 0);

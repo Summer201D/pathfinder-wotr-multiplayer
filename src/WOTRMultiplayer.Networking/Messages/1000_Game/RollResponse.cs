@@ -7,6 +7,6 @@ namespace WOTRMultiplayer.Networking.Messages.Game
     public class RollResponse
     {
         [ProtoMember(1)]
-        public RollDice Roll { get; set; }
+        public NetworkDiceRoll Roll { get; set; }
     }
 }

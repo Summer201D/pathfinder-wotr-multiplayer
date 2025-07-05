@@ -4,11 +4,11 @@ namespace WOTRMultiplayer.Abstractions.MP
 {
     public interface IRollStorage
     {
-        void Add(RollDice rollDice);
+        void Add(NetworkDiceRoll rollDice);
 
-        RollDice Get(int rollId, long playerId);
+        NetworkDiceRoll Get(int rollId, long playerId);
 
-        int GetUniqueId(RollDice roll);
+        int GetUniqueId(NetworkDiceRoll roll);
 
         void Reset();
     }

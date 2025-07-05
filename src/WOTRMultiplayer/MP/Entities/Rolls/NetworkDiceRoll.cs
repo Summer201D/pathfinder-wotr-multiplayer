@@ -3,7 +3,7 @@ using Kingmaker.RuleSystem;
 
 namespace WOTRMultiplayer.MP.Entities.Rolls
 {
-    public class RollDice
+    public class NetworkDiceRoll
     {
         public int Result { get; set; }
 
