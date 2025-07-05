@@ -247,8 +247,6 @@ namespace WOTRMultiplayer.MP
 
             _game.Dialog ??= new NetworkDialog(dialogName);
             _game.Dialog.CurrentCueName = cueName;
-            _game.Dialog.AnswerSuggestions.Clear();
-
             AddCueWitness(cueName, LocalHostPlayerId);
 
             TryEnableDialogContinueButton();
@@ -278,6 +276,10 @@ namespace WOTRMultiplayer.MP
             {
                 SendSelectedAnswer();
             }
+
+            // resets all suggested cue answers
+            _gameInteractionService.MarkSuggestedDialogAnswers([]);
+            _game.Dialog.AnswerSuggestions.Clear();
 
             return true;
         }
