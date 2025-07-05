@@ -15,7 +15,6 @@ using Owlcat.Runtime.UI.Controls.Button;
 using WOTRMultiplayer.Abstractions.GameInteraction;
 using WOTRMultiplayer.Abstractions.Unity;
 using WOTRMultiplayer.MP.Entities;
-using static UnityEngine.UI.Button;
 
 namespace WOTRMultiplayer.GameInteraction
 {
@@ -132,7 +131,7 @@ namespace WOTRMultiplayer.GameInteraction
                     bool? hotkeysEnabled = null;
                     if (Game.Instance.Keyboard.m_BindingCallbacks.TryGetValue(NextOrEndBindingName, out var callbacks))
                     {
-                        static bool hasConfiguredCallback(Action x) => x.Target is DialogSystemAnswerPCView or ButtonClickedEvent;
+                        static bool hasConfiguredCallback(Action x) => x.Target is DialogSystemAnswerPCView or UnityEngine.UI.Button.ButtonClickedEvent;
 
                         if (isEnabled && !callbacks.Any(hasConfiguredCallback))
                         {
