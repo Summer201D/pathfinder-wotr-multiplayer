@@ -15,5 +15,7 @@ namespace WOTRMultiplayer.Abstractions.MP
         void ChangeCharacterOwner(int characterIndex, int playerIndex);
 
         void LeaveArea(string areaExitId);
+
+        void SendSelectedAnswer();
     }
 }

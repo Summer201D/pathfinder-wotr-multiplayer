@@ -253,28 +253,60 @@ namespace WOTRMultiplayer.MP
             TryEnableDialogContinueButton();
         }
 
-        public bool OnBeforeSelectDialogAnswer(string dialogName, string cueName, string answerName, string manualUnitSelectionId)
+        public bool OnBeforeSelectDialogAnswer(string dialogName, string cueName, string answerName, bool isExitAnswer, string manualUnitSelectionId)
         {
-            _logger.LogInformation("Select Dialog Answer. DialogName={dialogName}, Answer={answer}, ManualUnitSelectionId={unitId}", dialogName, answerName, manualUnitSelectionId);
+            _logger.LogInformation("Select Dialog Answer. DialogName={dialogName}, CueName={cueName} Answer={answer}, IsExitAnswer={isExitAnswer}, ManualUnitSelectionId={unitId}", dialogName, cueName, answerName, isExitAnswer, manualUnitSelectionId);
 
             var missingPlayers = GetPlayersWhoHaveNotSeenCueYet(cueName);
             if (missingPlayers.Count > 0)
             {
                 _logger.LogWarning("Some players haven't seen the dialog yet. Players={playerNames}", string.Join(";", missingPlayers.Select(p => p.Name)));
-                // TODO: ui notification?
                 return false;
             }
 
-            var message = new NotifyDialogCueAnswerSelected
+            _game.Dialog.Answer = new NetworkDialogAnswer
             {
-                DialogName = dialogName,
-                CueName = cueName,
                 AnswerName = answerName,
+                CueName = cueName,
                 ManualUnitSelectionId = manualUnitSelectionId
             };
-            _networkServer.SendAll(message);
+
+            /// game will do it's 'dialog stat check' rolls logic a bit later on
+            /// so answer couldn't be sent right away unless it's the last one
+            if (isExitAnswer)
+            {
+                SendSelectedAnswer();
+            }
 
             return true;
+        }
+
+        public void SendSelectedAnswer()
+        {
+            if (_game.Dialog == null)
+            {
+                _logger.LogError("Unable to send dialog answer because dialog is null");
+                return;
+            }
+
+            if (_game.Dialog.Answer == null)
+            {
+                _logger.LogWarning("Answer is not set, most likely it's a first dialog cue or cutscene intermission. DialogName={dialogName}", _game.Dialog.Name);
+                return;
+            }
+
+            _logger.LogInformation("Sending selected answer to clients. DialogName={dialogName}, CueName={cueName}, AnswerName={answerName}, ManualUnitSelectionId={unitId}", _game.Dialog.Name, _game.Dialog.Answer.CueName, _game.Dialog.Answer.AnswerName, _game.Dialog.Answer.ManualUnitSelectionId);
+
+            var message = new NotifyDialogCueAnswerSelected
+            {
+                DialogName = _game.Dialog.Name,
+                CueName = _game.Dialog.Answer.CueName,
+                AnswerName = _game.Dialog.Answer.AnswerName,
+                ManualUnitSelectionId = _game.Dialog.Answer.ManualUnitSelectionId
+            };
+
+            _networkServer.SendAll(message);
+            _game.Dialog.Answer = null;
         }
 
         private void AddCueWitness(string cueName, long playerId)

@@ -1,6 +1,7 @@
 ﻿using HarmonyLib;
 using Kingmaker;
 using Kingmaker.AreaLogic.Etudes;
+using Kingmaker.Blueprints.Root;
 using Kingmaker.Controllers.Dialog;
 using Kingmaker.DialogSystem.Blueprints;
 using Kingmaker.EntitySystem.Entities;
@@ -139,8 +140,20 @@ namespace WOTRMultiplayer.HarmonyPatches.Dialogs
                 return true;
             }
 
-            var canContinue = Main.Multiplayer.OnBeforeSelectDialogAnswer(__instance.Dialog?.name, __instance.CurrentCue?.name, answer?.name, manualUnitSelection?.UniqueId);
+            var canContinue = Main.Multiplayer.OnBeforeSelectDialogAnswer(__instance.Dialog.name, __instance.CurrentCue.name, answer.name, answer.IsExit(), manualUnitSelection?.UniqueId);
             return canContinue;
+        }
+
+        [HarmonyPatch(typeof(DialogController), nameof(DialogController.PlayCue))]
+        [HarmonyPostfix]
+        public static void DialogController_PlayCue_Postfix(DialogController __instance, BlueprintCueBase cue)
+        {
+            if (!Main.Multiplayer.IsActive)
+            {
+                return;
+            }
+
+            Main.Multiplayer.OnAfterPlayDialogCue();
         }
 
         [HarmonyPatch(typeof(DialogVM), nameof(DialogVM.HandleOnCueShow))]

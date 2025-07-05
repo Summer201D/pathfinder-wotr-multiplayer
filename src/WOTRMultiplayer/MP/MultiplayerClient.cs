@@ -220,15 +220,15 @@ namespace WOTRMultiplayer.MP
 
             _game.Dialog ??= new NetworkDialog(dialogName);
             _game.Dialog.CurrentCueName = cueName;
-            _game.Dialog.CurrentAnswer = null;
+            _game.Dialog.Answer = null;
 
             var message = new CueWitnessed { CueName = cueName, DialogName = dialogName };
             _networkServerClient.SendAsync(message).Wait();
         }
 
-        public bool OnBeforeSelectDialogAnswer(string dialogName, string cueName, string answerName, string manualUnitSelectionId)
+        public bool OnBeforeSelectDialogAnswer(string dialogName, string cueName, string answerName, bool isExitAnswer, string manualUnitSelectionId)
         {
-            _logger.LogInformation("Select Dialog Answer. DialogName={dialogName}, Answer={answer}, ManualUnitSelectionId={unitId}", dialogName, answerName, manualUnitSelectionId);
+            _logger.LogInformation("Select Dialog Answer. DialogName={dialogName}, CueName={cueName}, Answer={answer}, IsExitAnswer={isExitAnswer}, ManualUnitSelectionId={unitId}", dialogName, cueName, answerName, isExitAnswer, manualUnitSelectionId);
             if (_game.Dialog == null)
             {
                 _logger.LogError("Current dialog is null");
@@ -236,15 +236,15 @@ namespace WOTRMultiplayer.MP
             }
 
             if (!string.Equals(_game.Dialog.Name, dialogName, StringComparison.OrdinalIgnoreCase)
-                || !string.Equals(_game.Dialog.CurrentCueName, cueName, StringComparison.OrdinalIgnoreCase))
+                || !string.Equals(_game.Dialog.Answer.CueName, cueName, StringComparison.OrdinalIgnoreCase))
             {
-                _logger.LogError("Dialog answer mismatch. ExpectedDialogName={expectedDialogName}, ExpectedCueName={expectedCueName}, ActualDialogName={actualDialogName}, ActualCueName={actualCueName}", _game.Dialog.Name, _game.Dialog.CurrentCueName, dialogName, cueName);
+                _logger.LogError("Dialog answer mismatch. ExpectedDialogName={expectedDialogName}, ExpectedCueName={expectedCueName}, ActualDialogName={actualDialogName}, ActualCueName={actualCueName}", _game.Dialog.Name, _game.Dialog.Answer.CueName, dialogName, cueName);
                 return false;
             }
 
             // answer could be set from host notifications only
             // so it means we have a response from host and shouldn't skip default game logic
-            if (!string.IsNullOrEmpty(_game.Dialog.CurrentAnswer) && string.Equals(answerName, _game.Dialog.CurrentAnswer, StringComparison.OrdinalIgnoreCase))
+            if (_game.Dialog.Answer != null && string.Equals(answerName, _game.Dialog.Answer.AnswerName, StringComparison.OrdinalIgnoreCase))
             {
                 _logger.LogInformation("Proceeding with dialog answer without extra steps. DialogName={dialogName}, CueName={cueName}, AnswerName={answerName}", dialogName, cueName, answerName);
                 return true;
@@ -302,8 +302,14 @@ namespace WOTRMultiplayer.MP
                 return;
             }
 
-            _game.Dialog.CurrentAnswer = selected.AnswerName;
-            _gameInteractionService.SelectDialogAnswer(selected.DialogName, selected.CueName, selected.AnswerName);
+            _game.Dialog.Answer = new NetworkDialogAnswer
+            {
+                AnswerName = selected.AnswerName,
+                CueName = selected.CueName,
+                ManualUnitSelectionId = selected.ManualUnitSelectionId,
+            };
+
+            _gameInteractionService.SelectDialogAnswer(selected.DialogName, selected.CueName, selected.AnswerName, selected.ManualUnitSelectionId);
         }
 
         private void OnNotifyDialogCueAnswerSuggested(NotifyDialogCueAnswerSuggested suggested)

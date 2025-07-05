@@ -27,7 +27,8 @@ namespace WOTRMultiplayer.Abstractions.MP
         void OnAfterRuleRollDiceTrigger(RuleRollDice ruleRollDice);
 
         void OnAfterCueShow(string dialogName, string cueName, bool hasSystemAnswer);
-        bool OnBeforeSelectDialogAnswer(string dialogName, string cueName, string answerName, string manualUnitSelectionId);
+        bool OnBeforeSelectDialogAnswer(string dialogName, string cueName, string answerName, bool isExitAnswer, string manualUnitSelectionId);
+        void OnAfterPlayDialogCue();
 
         bool IsActive { get; }
     }

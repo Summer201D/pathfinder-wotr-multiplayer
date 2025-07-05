@@ -92,7 +92,7 @@ namespace WOTRMultiplayer.GameInteraction
             Game.Instance.StopMode(GameModeType.Pause);
         }
 
-        public void SelectDialogAnswer(string dialogName, string cueName, string answerName)
+        public void SelectDialogAnswer(string dialogName, string cueName, string answerName, string manualUnitSelectionId)
         {
             _logger.LogError("Answer selection has not been implemented yet");
         }

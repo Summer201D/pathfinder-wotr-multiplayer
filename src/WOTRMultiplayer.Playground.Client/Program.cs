@@ -101,7 +101,7 @@ namespace WOTRMultiplayer.Playground.Client
             {
             }
 
-            public void SelectDialogAnswer(string dialogName, string cueName, string answerName)
+            public void SelectDialogAnswer(string dialogName, string cueName, string answerName, string manualUnitSelectionId)
             {
             }
 

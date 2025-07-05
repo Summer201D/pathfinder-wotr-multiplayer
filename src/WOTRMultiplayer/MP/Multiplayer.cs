@@ -202,13 +202,23 @@ namespace WOTRMultiplayer.MP
             participant.OnAfterCueShow(dialogName, cueName, hasSystemAnswer);
         }
 
-        public bool OnBeforeSelectDialogAnswer(string dialogName, string cueName, string answerName, string manualUnitSelectionId)
+        public bool OnBeforeSelectDialogAnswer(string dialogName, string cueName, string answerName, bool isExitAnswer, string manualUnitSelectionId)
         {
-            // host - send notification to clients => select answer & continue execution
+            // host - check if everyone witnessed current cue
             // client - skip execution if triggered by user himself, send notification to host => mark answer on host side
             var participant = GetMultiplayerParticipant();
-            var shouldContinueExecution = participant.OnBeforeSelectDialogAnswer(dialogName, cueName, answerName, manualUnitSelectionId);
+            var shouldContinueExecution = participant.OnBeforeSelectDialogAnswer(dialogName, cueName, answerName, isExitAnswer, manualUnitSelectionId);
             return shouldContinueExecution;
+        }
+
+        public void OnAfterPlayDialogCue()
+        {
+            if (_multiplayerClient.IsActive)
+            {
+                return;
+            }
+
+            _multiplayerHost.SendSelectedAnswer();
         }
 
         private PartyStatCheckRoll CreatePartyStatCheckRoll(RuleRollDice ruleRollDice, RulePartyStatCheck rulePartySkillCheck)

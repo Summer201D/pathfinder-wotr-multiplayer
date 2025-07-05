@@ -120,7 +120,7 @@ namespace WOTRMultiplayer.Playground.Host
             {
             }
 
-            public void SelectDialogAnswer(string dialogName, string cueName, string answerName)
+            public void SelectDialogAnswer(string dialogName, string cueName, string answerName, string manualUnitSelectionId)
             {
             }
 

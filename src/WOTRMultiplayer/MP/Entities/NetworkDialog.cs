@@ -10,7 +10,7 @@ namespace WOTRMultiplayer.MP.Entities
 
         public string CurrentCueName { get; set; }
 
-        public string CurrentAnswer { get; set; }
+        public NetworkDialogAnswer Answer { get; set; }
 
         public ConcurrentDictionary<string, HashSet<long>> CueViews { get; set; } = new(StringComparer.OrdinalIgnoreCase);
 
