@@ -104,8 +104,8 @@ namespace WOTRMultiplayer.GameInteraction
 
                     if (existingSuggestionObject != null)
                     {
-                        _logger.LogInformation("Deleted answer suggestion icon. AnswerIndex={answerIndex}", answerIndex);
                         UnityEngine.Object.DestroyImmediate(existingSuggestionObject);
+                        _logger.LogInformation("Deleted answer suggestion icon. AnswerIndex={answerIndex}", answerIndex);
                     }
                 }
             });
