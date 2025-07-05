@@ -11,7 +11,7 @@ namespace WOTRMultiplayer.Abstractions.GameInteraction
         void MoveCharacter(string characterName, Vector3 destination, float delay, float orientation);
 
         void Pause(bool isPaused);
-
+        void SelectDialogAnswer(string dialogName, string cueName, string answerName);
         void SetDialogContinueButtonState(bool isEnabled);
     }
 }

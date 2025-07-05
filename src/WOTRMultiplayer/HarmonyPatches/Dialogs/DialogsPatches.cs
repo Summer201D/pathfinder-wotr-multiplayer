@@ -132,17 +132,15 @@ namespace WOTRMultiplayer.HarmonyPatches.Dialogs
 
         [HarmonyPatch(typeof(DialogController), nameof(DialogController.SelectAnswer))]
         [HarmonyPrefix]
-        public static void DialogController_SelectAnswer_Prefix(DialogController __instance, BlueprintAnswer answer, UnitEntityData manualUnitSelection)
+        public static bool DialogController_SelectAnswer_Prefix(DialogController __instance, BlueprintAnswer answer, UnitEntityData manualUnitSelection)
         {
             if (!Main.Multiplayer.IsActive)
             {
-                return;
+                return true;
             }
 
-            // host - send notification to clients => select answer & continue execution
-            // client - skip execution if triggered by user himself, send notification to host => mark answer on host side
-
-            Main.GetLogger<DialogsPatches>().LogWarning("DialogController_SelectAnswer_Prefix. Answer={answer}, ManualUnitSelectionId={manualUnitSelectionId}", answer.name, manualUnitSelection?.UniqueId);
+            var canContinue = Main.Multiplayer.OnBeforeSelectDialogAnswer(__instance.Dialog?.name, __instance.CurrentCue?.name, answer?.name, manualUnitSelection?.UniqueId);
+            return canContinue;
         }
 
         [HarmonyPatch(typeof(DialogVM), nameof(DialogVM.HandleOnCueShow))]
@@ -154,10 +152,8 @@ namespace WOTRMultiplayer.HarmonyPatches.Dialogs
                 return;
             }
 
-            var logger = Main.GetLogger<DialogsPatches>();
-            logger.LogInformation("DialogVM_HandleOnCueShow_Postfix - configuring system continue button");
             var dialogName = Game.Instance.DialogController.Dialog?.name;
-            Main.Multiplayer.OnAfterCueShow(dialogName, data.Cue.name, __instance.SystemAnswer.HasValue);
+            Main.Multiplayer.OnAfterCueShow(dialogName, data.Cue.name, __instance.SystemAnswer.Value != null);
         }
     }
 }

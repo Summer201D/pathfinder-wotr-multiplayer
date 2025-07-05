@@ -80,7 +80,7 @@ namespace WOTRMultiplayer.MP
 
         public void InitializeEscMenuLobbyWindow(InitializeEscMenuLobbyWindowContext context)
         {
-            _logger.LogInformation("Creating Esc menu lobby item");
+            _logger.LogInformation("Creating Esc menu multiplayer lobby window");
             _lobbyWindow = Factory.InitializeEscMenuLobbyWindow(context, _multiplayerHost.IsActive, ShowEscMenuMultiplayerLobby);
 
             _lobbyWindow.NetworkGame = GetNetworkGame;
@@ -200,6 +200,15 @@ namespace WOTRMultiplayer.MP
         {
             var participant = GetMultiplayerParticipant();
             participant.OnAfterCueShow(dialogName, cueName, hasSystemAnswer);
+        }
+
+        public bool OnBeforeSelectDialogAnswer(string dialogName, string cueName, string answerName, string manualUnitSelectionId)
+        {
+            // host - send notification to clients => select answer & continue execution
+            // client - skip execution if triggered by user himself, send notification to host => mark answer on host side
+            var participant = GetMultiplayerParticipant();
+            var shouldContinueExecution = participant.OnBeforeSelectDialogAnswer(dialogName, cueName, answerName, manualUnitSelectionId);
+            return shouldContinueExecution;
         }
 
         private PartyStatCheckRoll CreatePartyStatCheckRoll(RuleRollDice ruleRollDice, RulePartyStatCheck rulePartySkillCheck)

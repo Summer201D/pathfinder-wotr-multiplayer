@@ -14,6 +14,8 @@ namespace WOTRMultiplayer.MP.Entities
 
         public List<NetworkCharacter> Characters { get; set; } = [];
 
+        public NetworkDialog Dialog { get; set; }
+
         public SaveInfo Save { get; set; }
 
         public NetworkGame(SaveInfo save)
@@ -29,6 +31,7 @@ namespace WOTRMultiplayer.MP.Entities
             Save = null;
             Endpoint = null;
             Stage = NetworkGameStage.None;
+            Dialog = null;
         }
     }
 }

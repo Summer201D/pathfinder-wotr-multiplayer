@@ -13,6 +13,7 @@ using Microsoft.Extensions.Logging;
 using Owlcat.Runtime.UI.Controls.Button;
 using WOTRMultiplayer.Abstractions.GameInteraction;
 using WOTRMultiplayer.Abstractions.Unity;
+using static UnityEngine.UI.Button;
 
 namespace WOTRMultiplayer.GameInteraction
 {
@@ -91,44 +92,53 @@ namespace WOTRMultiplayer.GameInteraction
             Game.Instance.StopMode(GameModeType.Pause);
         }
 
+        public void SelectDialogAnswer(string dialogName, string cueName, string answerName)
+        {
+            _logger.LogError("Answer selection has not been implemented yet");
+        }
+
         public void SetDialogContinueButtonState(bool isEnabled)
         {
-            const string NextOrEndBindingName = "NextOrEnd";
-            try
+            _mainThreadAccessor.Enqueue(() =>
             {
-                var dialogView = (Game.Instance.RootUiContext.m_UIView as InGamePCView)?.m_StaticPartPCView?.m_DialogContextPCView;
-                var systemButtonGameObject = dialogView?.m_DialogPCView?.gameObject.transform.Find("Body/SystemButton");
-                var continueButton = systemButtonGameObject?.GetComponent<OwlcatButton>();
-                if (continueButton == null)
+                const string NextOrEndBindingName = "NextOrEnd";
+                try
                 {
-                    _logger.LogError("Continue button - unable to find");
-                    return;
+                    var dialogView = (Game.Instance.RootUiContext.m_UIView as InGamePCView)?.m_StaticPartPCView?.m_DialogContextPCView;
+                    var systemButtonGameObject = dialogView?.m_DialogPCView?.gameObject.transform.Find("Body/SystemButton");
+                    var continueButton = systemButtonGameObject?.GetComponent<OwlcatButton>();
+                    if (continueButton == null)
+                    {
+                        _logger.LogError("Unable to find system dialog continue button");
+                        return;
+                    }
+
+                    continueButton.Interactable = isEnabled;
+                    bool? hotkeysEnabled = null;
+                    if (Game.Instance.Keyboard.m_BindingCallbacks.TryGetValue(NextOrEndBindingName, out var callbacks))
+                    {
+                        static bool hasConfiguredCallback(Action x) => x.Target is DialogSystemAnswerPCView or ButtonClickedEvent;
+
+                        if (isEnabled && !callbacks.Any(hasConfiguredCallback))
+                        {
+                            Game.Instance.Keyboard.Bind(NextOrEndBindingName, continueButton.OnLeftClick.Invoke);
+                            hotkeysEnabled = true;
+                        }
+                        else if (!isEnabled)
+                        {
+                            callbacks.RemoveAll(hasConfiguredCallback);
+                            hotkeysEnabled = false;
+                        }
+                    }
+
+                    _logger.LogInformation("Continue button updated. IsInteractable={isInteractable}, HotkeysEnabled={hotkeysEnabled}", isEnabled, hotkeysEnabled);
                 }
-
-                continueButton.Interactable = isEnabled;
-                _logger.LogInformation("Continue button - state changed. State={state}", isEnabled);
-
-                if (Game.Instance.Keyboard.m_BindingCallbacks.TryGetValue(NextOrEndBindingName, out var callbacks))
+                catch (Exception ex)
                 {
-                    static bool hasConfiguredCallback(Action x) => x.Target is DialogSystemAnswerPCView or GameInteractionService;
-
-                    if (isEnabled && !callbacks.Any(hasConfiguredCallback))
-                    {
-                        Game.Instance.Keyboard.Bind(NextOrEndBindingName, continueButton.OnLeftClick.Invoke);
-                        _logger.LogInformation("Continue button - hotkeys have been enabled");
-                    }
-                    else if (!isEnabled)
-                    {
-                        callbacks.RemoveAll(hasConfiguredCallback);
-                        _logger.LogInformation("Continue button - hotkeys have been disabled");
-                    }
+                    _logger.LogError(ex, "Unable to change state of system dialog continue button due to error");
+                    throw;
                 }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Continue button - unable to change state due to error");
-                throw;
-            }
+            });
         }
     }
 }

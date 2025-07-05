@@ -20,7 +20,6 @@ namespace WOTRMultiplayer.HarmonyPatches
                 var mainMenu = __instance.transform.Find($"Window/ButtonBlock/{UIFactory.MultiplayerMenuObjectName}")?.gameObject;
                 if (mainMenu == null && Main.Multiplayer.IsActive)
                 {
-                    logger.LogInformation("MultiplayerMenu doesn't exist.");
                     Main.Multiplayer.InitializeEscMenuLobbyWindow(new MP.Entities.InitializeEscMenuLobbyWindowContext(__instance));
                 }
                 else if (mainMenu != null && !Main.Multiplayer.IsActive)

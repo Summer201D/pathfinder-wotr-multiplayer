@@ -207,7 +207,56 @@ namespace WOTRMultiplayer.MP
         public void OnAfterCueShow(string dialogName, string cueName, bool hasSystemAnswer)
         {
             _logger.LogInformation("Showing dialog Cue. DialogName={dialogName}, CueName={cueName}, HasSystemAnswer={hasSystemAnswer}", dialogName, cueName, hasSystemAnswer);
-            _gameInteractionService.SetDialogContinueButtonState(!hasSystemAnswer);
+            if (hasSystemAnswer)
+            {
+                _gameInteractionService.SetDialogContinueButtonState(false);
+            }
+
+            if (_game.Dialog != null && _game.Dialog.Name != dialogName)
+            {
+                _logger.LogWarning("Previous dialog has not been disposed correctly. PreviousDialogName={previousDialogName}, CurrentDialogName={currentDialogName}", _game.Dialog.Name, dialogName);
+                _game.Dialog = null;
+            }
+
+            _game.Dialog ??= new NetworkDialog(dialogName);
+            _game.Dialog.CurrentCueName = cueName;
+            _game.Dialog.CurrentAnswer = null;
+
+            var message = new CueWitnessed { CueName = cueName, DialogName = dialogName };
+            _networkServerClient.SendAsync(message).Wait();
+        }
+
+        public bool OnBeforeSelectDialogAnswer(string dialogName, string cueName, string answerName, string manualUnitSelectionId)
+        {
+            _logger.LogInformation("Select Dialog Answer. DialogName={dialogName}, Answer={answer}, ManualUnitSelectionId={unitId}", dialogName, answerName, manualUnitSelectionId);
+            if (_game.Dialog == null)
+            {
+                _logger.LogError("Current dialog is null");
+                return false;
+            }
+
+            if (!string.Equals(_game.Dialog.Name, dialogName, StringComparison.OrdinalIgnoreCase)
+                || !string.Equals(_game.Dialog.CurrentCueName, cueName, StringComparison.OrdinalIgnoreCase))
+            {
+                _logger.LogError("Dialog answer mismatch. ExpectedDialogName={expectedDialogName}, ExpectedCueName={expectedCueName}, ActualDialogName={actualDialogName}, ActualCueName={actualCueName}", _game.Dialog.Name, _game.Dialog.CurrentCueName, dialogName, cueName);
+                return false;
+            }
+
+            // answer could be set from host notifications only
+            // so it means we have a response from host and shouldn't skip default game logic
+            if (!string.IsNullOrEmpty(_game.Dialog.CurrentAnswer) && string.Equals(answerName, _game.Dialog.CurrentAnswer, StringComparison.OrdinalIgnoreCase))
+            {
+                _logger.LogInformation("Proceeding with dialog answer without extra steps. DialogName={dialogName}, CueName={cueName}, AnswerName={answerName}", dialogName, cueName, answerName);
+                return true;
+            }
+
+            // TODO: mark answer suggestion
+            _logger.LogError("TODO mark answer suggestion");
+
+            var message = new DialogCueAnswerSuggested { DialogName = dialogName, CueName = cueName, AnswerName = answerName };
+            _networkServerClient.SendAsync(message).Wait();
+
+            return false;
         }
 
         private void RegisterHandlers()
@@ -224,10 +273,63 @@ namespace WOTRMultiplayer.MP
                 .Register<NotifyCharacterMove>(OnNotifyCharacterMove)
                 .Register<NotifyGamePauseChanged>(OnNotifyGamePauseChanged)
                 .Register<NotifyPartyLeaveArea>(OnNotifyPartyLeaveArea)
+                .Register<NotifyDialogCueAnswerSuggested>(OnNotifyDialogCueAnswerSuggested)
+                .Register<NotifyDialogCueAnswerSelected>(OnNotifyDialogCueAnswerSelected)
                 ;
 
             _networkServerClient.OnError = OnNetworkClientError;
             _networkServerClient.OnConnected = OnNetworkClientConnected;
+        }
+
+        private void OnNotifyDialogCueAnswerSelected(NotifyDialogCueAnswerSelected selected)
+        {
+            _logger.LogInformation("Received NotifyDialogCueAnswerSelected. DialogName={dialogName}, CueName={cueName}, AnswerName={answerName}", selected.DialogName, selected.CueName, selected.AnswerName);
+            if (_game.Dialog == null)
+            {
+                _logger.LogError("Received dialog answer selection, but there is no active dialog right now. SuggestedDialogName={suggestedDialogName}, SuggestedCueName={suggestedCueName}, SuggestedAnswer={suggestedAnswerName}", selected.DialogName, selected.CueName, selected.AnswerName);
+                return;
+            }
+
+            if (!string.Equals(_game.Dialog.Name, selected.DialogName, StringComparison.OrdinalIgnoreCase))
+            {
+                _logger.LogError("Dialog answer selection has mismatched dialog name. SuggestedDialogName={suggestedDialogName}, CurrentDialogName={currentCueName}", selected.DialogName, _game.Dialog.Name);
+                return;
+            }
+
+            if (!string.Equals(_game.Dialog.CurrentCueName, selected.CueName, StringComparison.OrdinalIgnoreCase))
+            {
+                _logger.LogError("Dialog answer selection has mismatched dialog. SuggestedCueName={suggestedCueName}, CurrentCueName={currentCueName}", selected.CueName, _game.Dialog.CurrentCueName);
+                return;
+            }
+
+            _game.Dialog.CurrentAnswer = selected.AnswerName;
+            _gameInteractionService.SelectDialogAnswer(selected.DialogName, selected.CueName, selected.AnswerName);
+        }
+
+        private void OnNotifyDialogCueAnswerSuggested(NotifyDialogCueAnswerSuggested suggested)
+        {
+            _logger.LogInformation("Received NotifyDialogCueAnswerSuggested. PlayerId={playerId}, DialogName={dialogName}, CueName={cueName}, AnswerName={answerName}", suggested.PlayerId, suggested.DialogName, suggested.CueName, suggested.AnswerName);
+
+            if (_game.Dialog == null)
+            {
+                _logger.LogError("Received dialog answer suggestion, but there is no active dialog right now. SuggestedDialogName={suggestedDialogName}, SuggestedCueName={suggestedCueName}, SuggestedAnswer={suggestedAnswerName}", suggested.DialogName, suggested.CueName, suggested.AnswerName);
+                return;
+            }
+
+            if (!string.Equals(_game.Dialog.Name, suggested.DialogName, StringComparison.OrdinalIgnoreCase))
+            {
+                _logger.LogError("Dialog suggestion has mismatched dialog name. SuggestedDialogName={suggestedDialogName}, CurrentDialogName={currentCueName}", suggested.DialogName, _game.Dialog.Name);
+                return;
+            }
+
+            if (!string.Equals(_game.Dialog.CurrentCueName, suggested.CueName, StringComparison.OrdinalIgnoreCase))
+            {
+                _logger.LogError("Dialog suggestion has mismatched dialog. SuggestedCueName={suggestedCueName}, CurrentCueName={currentCueName}", suggested.CueName, _game.Dialog.CurrentCueName);
+                return;
+            }
+
+            // TODO: mark answer suggestion
+            _logger.LogError("TODO mark answer suggestion");
         }
 
         private void OnNotifyPartyLeaveArea(NotifyPartyLeaveArea area)

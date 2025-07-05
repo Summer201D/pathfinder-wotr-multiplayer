@@ -43,6 +43,7 @@ namespace WOTRMultiplayer.Playground.Client
             loaded - send gameloaded
             pause - pause game
             unpause - unpause game
+            witness-cue - witness Cue_0001 cue
             {Environment.NewLine}");
             while ((input = Console.ReadLine()) != "exit")
             {
@@ -59,6 +60,9 @@ namespace WOTRMultiplayer.Playground.Client
                         break;
                     case "unpause":
                         client.Unpause();
+                        break;
+                    case "witness-cue":
+                        client.OnAfterCueShow("MeetSeelahAnevia_Dialogue", "Cue_0001", false);
                         break;
                     default:
                         break;
@@ -94,6 +98,10 @@ namespace WOTRMultiplayer.Playground.Client
             }
 
             public void Pause(bool isPaused)
+            {
+            }
+
+            public void SelectDialogAnswer(string dialogName, string cueName, string answerName)
             {
             }
 
