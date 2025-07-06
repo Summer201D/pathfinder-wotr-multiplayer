@@ -44,10 +44,11 @@ namespace WOTRMultiplayer.Playground.Host
             //    new() { Name = "NenioFemaleKitsuneWizard_Portrait", Portrait = "NenioFemaleKitsuneWizard_Portrait"},
             //};
             var characters = new List<NetworkCharacter> {
-                new() { Name = "Taolynn", Portrait = "KitsuneFemaleRogue_Portrait"}
+                //new() { Name = "Taolynn", Portrait = "KitsuneFemaleRogue_Portrait"}
+                new() { Name = "xdd", Portrait = "KitsuneFemaleRogue_Portrait"}
             };
             var saveGamePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
-                "AppData\\LocalLow\\Owlcat Games\\Pathfinder Wrath Of The Righteous\\Saved Games\\Manual_33_DIALOGUE_SKILL_CHECK.zks");
+                "AppData\\LocalLow\\Owlcat Games\\Pathfinder Wrath Of The Righteous\\Saved Games\\Manual_32_DIALOGUE.zks");
             var save = new SaveInfo
             {
                 FolderName = saveGamePath,
@@ -66,7 +67,13 @@ namespace WOTRMultiplayer.Playground.Host
             pause - pause game
             unpause - unpause game
             leave-area - send leavearea notification 1b018b52-c1be-40bf-8937-1f2a77b96049
-            dialog-answer_continue[0001-0005] - walk through first part of first dialog (until after cutscene)
+            dialog-answer_continue0001 - walk through first part of first dialog (until after cutscene)
+            dialog-answer_continue0002 - walk through first part of first dialog (until after cutscene)
+            dialog-answer_continue0003 - walk through first part of first dialog (until after cutscene)
+            dialog-answer_continue0004 - walk through first part of first dialog (until after cutscene)
+            dialog-answer_continue0005 - walk through first part of first dialog (until after cutscene)
+            start-unit-dialog - Vendor_Quartermaster_Dialogue 2C1EE7 98fd05f4-4458-4d2d-97f6-752be49667c0
+
             {Environment.NewLine}");
 
             const string DialogName = "MeetSeelahAnevia_Dialogue";
@@ -163,6 +170,9 @@ namespace WOTRMultiplayer.Playground.Host
                         };
                         host.SendSelectedAnswer();
                         break;
+                    case "start-unit-dialog":
+                        host.StartDialogWithUnit("Vendor_Quartermaster_Dialogue", "2C1EE7", "98fd05f4-4458-4d2d-97f6-752be49667c0");
+                        break;
                     default:
                         break;
                 }
@@ -198,6 +208,10 @@ namespace WOTRMultiplayer.Playground.Host
             }
 
             public void SetDialogContinueButtonState(bool isEnabled)
+            {
+            }
+
+            public void StartDialogWithUnit(string dialogName, string targetUnitId, string initiatorUnitId)
             {
             }
         }

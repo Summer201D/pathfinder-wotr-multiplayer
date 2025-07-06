@@ -259,6 +259,20 @@ namespace WOTRMultiplayer.MP
             return false;
         }
 
+        public bool StartDialogWithUnit(string dialogName, string targetUnitId, string initiatorUnitId)
+        {
+            if (string.Equals(_game.Dialog?.Name, dialogName, StringComparison.OrdinalIgnoreCase))
+            {
+                _logger.LogInformation("Dialog has been initiated, proceeding with default game logic.  DialogName={dialogName}", dialogName);
+                return true;
+            }
+
+            _logger.LogInformation("Sending dialog request to host. DialogueName={dialogName},  TargetUnitId={targetId}, InitiatorUnitId={initiatorId}", dialogName, targetUnitId, initiatorUnitId);
+            var message = new DialogWithUnitRequested { DialogName = dialogName, TargetUnitId = targetUnitId, InitiatorUnitId = initiatorUnitId };
+            _networkServerClient.SendAsync(message).Wait();
+            return false;
+        }
+
         private void RegisterHandlers()
         {
             _networkServerClient
@@ -275,10 +289,24 @@ namespace WOTRMultiplayer.MP
                 .Register<NotifyPartyLeaveArea>(OnNotifyPartyLeaveArea)
                 .Register<NotifyDialogCueAnswerSuggested>(OnNotifyDialogCueAnswerSuggested)
                 .Register<NotifyDialogCueAnswerSelected>(OnNotifyDialogCueAnswerSelected)
+                .Register<NotifyDialogWithUnitStarted>(OnNotifyDialogWithUnitStarted)
                 ;
 
             _networkServerClient.OnError = OnNetworkClientError;
             _networkServerClient.OnConnected = OnNetworkClientConnected;
+        }
+
+        private void OnNotifyDialogWithUnitStarted(NotifyDialogWithUnitStarted started)
+        {
+            _logger.LogInformation("Received NotifyDialogWithUnitStarted.  DialogueName={dialogName},  TargetUnitId={targetId}, InitiatorUnitId={initiatorId}", started.DialogName, started.TargetUnitId, started.InitiatorUnitId);
+            if (_game.Dialog != null)
+            {
+                _logger.LogWarning("Previous dialog has not been disposed correctly. PreviousDialogName={previousDialogName}, CurrentDialogName={currentDialogName}", _game.Dialog.Name, started.DialogName);
+                _game.Dialog = null;
+            }
+
+            _game.Dialog ??= new NetworkDialog(started.DialogName);
+            _gameInteractionService.StartDialogWithUnit(started.DialogName, started.TargetUnitId, started.InitiatorUnitId);
         }
 
         private void OnNotifyDialogCueAnswerSelected(NotifyDialogCueAnswerSelected selected)

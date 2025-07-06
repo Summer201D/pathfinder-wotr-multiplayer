@@ -22,5 +22,7 @@ namespace WOTRMultiplayer.Abstractions.GameInteraction
         void SetDialogContinueButtonState(bool isEnabled);
 
         void PlaySound(UISoundType type);
+
+        void StartDialogWithUnit(string dialogName, string targetUnitId, string initiatorUnitId);
     }
 }

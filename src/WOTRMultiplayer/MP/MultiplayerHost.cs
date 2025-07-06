@@ -312,6 +312,14 @@ namespace WOTRMultiplayer.MP
             _game.Dialog.Answer = null;
         }
 
+        public bool StartDialogWithUnit(string dialogName, string targetUnitId, string initiatorUnitId)
+        {
+            _logger.LogInformation("Sending dialog with unit started to all clients. DialogName={dialogName}, TargetUnitId={targetUnitId}, InitiatorUnitId={initiatorUnitId}", dialogName, targetUnitId, initiatorUnitId);
+            var message = new NotifyDialogWithUnitStarted { DialogName = dialogName, InitiatorUnitId = initiatorUnitId, TargetUnitId = targetUnitId };
+            _networkServer.SendAll(message);
+            return true;
+        }
+
         private void AddCueWitness(string cueName, long playerId)
         {
             if (_game.Dialog == null)
@@ -461,7 +469,14 @@ namespace WOTRMultiplayer.MP
                 .Register<RollRequest>(OnRollRequest)
                 .Register<CueWitnessed>(OnCueWitnessed)
                 .Register<DialogCueAnswerSuggested>(OnDialogCueAnswerSuggested)
+                .Register<DialogWithUnitRequested>(OnDialogWithUnitRequested)
                 ;
+        }
+
+        private void OnDialogWithUnitRequested(long playerId, DialogWithUnitRequested requested)
+        {
+            _logger.LogInformation("Received DialogWithUnitRequested. PlayerId={playerId}, DialogName={dialogName}, TargetUnitId={targetUnitId}, InitiatorUnitId={initiatorUnitId}", playerId, requested.DialogName, requested.TargetUnitId, requested.InitiatorUnitId);
+            _gameInteractionService.StartDialogWithUnit(requested.DialogName, requested.TargetUnitId, requested.InitiatorUnitId);
         }
 
         private void OnDialogCueAnswerSuggested(long playerId, DialogCueAnswerSuggested suggested)

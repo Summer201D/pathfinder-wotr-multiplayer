@@ -221,6 +221,13 @@ namespace WOTRMultiplayer.MP
             _multiplayerHost.SendSelectedAnswer();
         }
 
+        public bool StartDialogWithUnit(string dialogName, string targetUnitId, string initiatorId)
+        {
+            _logger.LogInformation("Start dialog with unit. DialogueName={dialogName},  TargetId={targetId}, InitiatorId={initiatorId},", dialogName, targetUnitId, initiatorId);
+            var participant = GetMultiplayerParticipant();
+            return participant.StartDialogWithUnit(dialogName, targetUnitId, initiatorId);
+        }
+
         private PartyStatCheckRoll CreatePartyStatCheckRoll(RuleRollDice ruleRollDice, RulePartyStatCheck rulePartySkillCheck)
         {
             var roll = new PartyStatCheckRoll

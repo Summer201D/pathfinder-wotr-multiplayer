@@ -4,6 +4,9 @@ using System.Linq;
 using System.Numerics;
 using Kingmaker;
 using Kingmaker.Blueprints.Root;
+using Kingmaker.Cheats;
+using Kingmaker.DialogSystem.Blueprints;
+using Kingmaker.EntitySystem.Entities;
 using Kingmaker.GameModes;
 using Kingmaker.Globalmap.Blueprints;
 using Kingmaker.UI;
@@ -214,6 +217,41 @@ namespace WOTRMultiplayer.GameInteraction
         public void PlaySound(UISoundType type)
         {
             UISoundController.Instance.Play(type);
+        }
+
+        public void StartDialogWithUnit(string dialogName, string targetUnitId, string initiatorUnitId)
+        {
+            _logger.LogInformation("Start dialog with unit. DialogueName={dialogueName},  TargetId={targetId}, InitiatorId={initiatorId},", dialogName, targetUnitId, initiatorUnitId);
+            _mainThreadAccessor.Enqueue(() =>
+            {
+                var dialogBlueprint = Utilities.GetBlueprint<BlueprintDialog>(dialogName);
+                var target = GetUnitEntity(targetUnitId);
+                var initiator = GetUnitEntity(initiatorUnitId);
+                if (dialogBlueprint == null)
+                {
+                    _logger.LogError("Unable to find dialog. Name={dialogName}", dialogName);
+                    return;
+                }
+
+                if (target == null)
+                {
+                    _logger.LogError("Unable to find target. TargetUnitId={targetUnitId}", targetUnitId);
+                    return;
+                }
+
+                Game.Instance.DialogController.StartDialogWithUnit(dialogBlueprint, target, initiator);
+            });
+        }
+
+        private UnitEntityData GetUnitEntity(string uniqueId)
+        {
+            if (string.IsNullOrEmpty(uniqueId))
+            {
+                return null;
+            }
+
+            return (Game.Instance.LoadedAreaState.AllEntityData.FirstOrDefault(e => string.Equals(e.UniqueId, uniqueId, StringComparison.OrdinalIgnoreCase))
+                ?? Game.Instance.Player.PartyAndPets.FirstOrDefault(p => string.Equals(p.UniqueId, uniqueId, StringComparison.OrdinalIgnoreCase))) as UnitEntityData;
         }
     }
 }

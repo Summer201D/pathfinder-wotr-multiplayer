@@ -86,18 +86,15 @@ namespace WOTRMultiplayer.HarmonyPatches.Dialogs
 
         [HarmonyPatch(typeof(DialogController), nameof(DialogController.StartDialogWithUnit))]
         [HarmonyPrefix]
-        public static void DialogController_StartDialogWithUnit_Prefix(DialogController __instance, BlueprintDialog dialog, UnitEntityData unit, UnitEntityData initiator)
+        public static bool DialogController_StartDialogWithUnit_Prefix(DialogController __instance, BlueprintDialog dialog, UnitEntityData unit, UnitEntityData initiator)
         {
             if (!Main.Multiplayer.IsActive)
             {
-                return;
+                return true;
             }
 
-            var dialogueId = dialog?.name;
-            var initiatorId = initiator?.UniqueId;
-            var targetId = unit?.UniqueId;
-
-            Main.GetLogger<DialogsPatches>().LogWarning("DialogController_StartDialogWithUnit_Prefix. DialogueId={dialogueId}, Initiator={initiatorId}, TargetId={targetId}", dialogueId, initiatorId, targetId);
+            var canContinue = Main.Multiplayer.StartDialogWithUnit(dialog.name, unit.UniqueId, initiator?.UniqueId);
+            return canContinue;
         }
 
         [HarmonyPatch(typeof(DialogController), nameof(DialogController.StartDialogWithMapObject))]
@@ -140,7 +137,8 @@ namespace WOTRMultiplayer.HarmonyPatches.Dialogs
                 return true;
             }
 
-            var canContinue = Main.Multiplayer.OnBeforeSelectDialogAnswer(__instance.Dialog.name, __instance.CurrentCue.name, answer.name, answer.IsExit(), manualUnitSelection?.UniqueId);
+            var isLastAnswer = answer.IsExit() || answer.NextCue.Cues.Count == 0;
+            var canContinue = Main.Multiplayer.OnBeforeSelectDialogAnswer(__instance.Dialog.name, __instance.CurrentCue.name, answer.name, isLastAnswer, manualUnitSelection?.UniqueId);
             return canContinue;
         }
 

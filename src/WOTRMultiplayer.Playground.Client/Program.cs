@@ -51,6 +51,7 @@ namespace WOTRMultiplayer.Playground.Client
             dialog-witness-cue_0003 - witness 3 cue of MeetSeelahAnevia_Dialogue
             dialog-suggest-cue_0004_2 - suggest option 2 on 4 cue
             dialog-suggest-cue_0004_3 - suggest option 3 on 4 cue
+            start-unit-dialog - Vendor_Quartermaster_Dialogue 2C1EE7 98fd05f4-4458-4d2d-97f6-752be49667c0
 
             {Environment.NewLine}");
             const string DialogName = "MeetSeelahAnevia_Dialogue";
@@ -93,6 +94,9 @@ namespace WOTRMultiplayer.Playground.Client
                             CurrentCueName = "Cue_0004"
                         };
                         client.OnBeforeSelectDialogAnswer(DialogName, "Cue_0004", "Answer_0042", false, null);
+                        break;
+                    case "start-unit-dialog":
+                        client.StartDialogWithUnit("Vendor_Quartermaster_Dialogue", "2C1EE7", "98fd05f4-4458-4d2d-97f6-752be49667c0");
                         break;
                     default:
                         break;
@@ -144,6 +148,10 @@ namespace WOTRMultiplayer.Playground.Client
             }
 
             public void SetDialogContinueButtonState(bool isEnabled)
+            {
+            }
+
+            public void StartDialogWithUnit(string dialogName, string targetUnitId, string initiatorUnitId)
             {
             }
         }
