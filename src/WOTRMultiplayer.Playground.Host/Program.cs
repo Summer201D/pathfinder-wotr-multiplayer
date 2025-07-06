@@ -44,11 +44,13 @@ namespace WOTRMultiplayer.Playground.Host
             //    new() { Name = "NenioFemaleKitsuneWizard_Portrait", Portrait = "NenioFemaleKitsuneWizard_Portrait"},
             //};
             var characters = new List<NetworkCharacter> {
-                //new() { Name = "Taolynn", Portrait = "KitsuneFemaleRogue_Portrait"}
-                new() { Name = "xdd", Portrait = "KitsuneFemaleRogue_Portrait"}
+                new() { Name = "Taolynn", Portrait = "KitsuneFemaleRogue_Portrait"}
+                //new() { Name = "xdd", Portrait = "KitsuneFemaleRogue_Portrait"}
             };
+            // Manual_33_DIALOGUE_SKILL_CHECK  - first cave
+            // Manual_32_DIALOGUE - capital act3
             var saveGamePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
-                "AppData\\LocalLow\\Owlcat Games\\Pathfinder Wrath Of The Righteous\\Saved Games\\Manual_32_DIALOGUE.zks");
+                "AppData\\LocalLow\\Owlcat Games\\Pathfinder Wrath Of The Righteous\\Saved Games\\Manual_33_DIALOGUE_SKILL_CHECK.zks");
             var save = new SaveInfo
             {
                 FolderName = saveGamePath,
@@ -171,7 +173,10 @@ namespace WOTRMultiplayer.Playground.Host
                         host.SendSelectedAnswer();
                         break;
                     case "start-unit-dialog":
-                        host.StartDialogWithUnit("Vendor_Quartermaster_Dialogue", "2C1EE7", "98fd05f4-4458-4d2d-97f6-752be49667c0");
+                        host.StartDialog("Vendor_Quartermaster_Dialogue", "2C1EE7", "98fd05f4-4458-4d2d-97f6-752be49667c0", null, null);
+                        break;
+                    case "start-dialog":
+                        host.StartDialog("MeetSeelahAnevia_Dialogue", null, null, null, null);
                         break;
                     default:
                         break;
@@ -211,7 +216,7 @@ namespace WOTRMultiplayer.Playground.Host
             {
             }
 
-            public void StartDialogWithUnit(string dialogName, string targetUnitId, string initiatorUnitId)
+            public void StartDialog(string dialogName, string targetUnitId, string initiatorUnitId, string mapObjectId, string speakerKey)
             {
             }
         }

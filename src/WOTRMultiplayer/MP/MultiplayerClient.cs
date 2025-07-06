@@ -259,7 +259,7 @@ namespace WOTRMultiplayer.MP
             return false;
         }
 
-        public bool StartDialogWithUnit(string dialogName, string targetUnitId, string initiatorUnitId)
+        public bool StartDialog(string dialogName, string targetUnitId, string initiatorUnitId, string mapObjectId, string speakerKey)
         {
             if (string.Equals(_game.Dialog?.Name, dialogName, StringComparison.OrdinalIgnoreCase))
             {
@@ -267,8 +267,15 @@ namespace WOTRMultiplayer.MP
                 return true;
             }
 
-            _logger.LogInformation("Sending dialog request to host. DialogueName={dialogName},  TargetUnitId={targetId}, InitiatorUnitId={initiatorId}", dialogName, targetUnitId, initiatorUnitId);
-            var message = new DialogWithUnitRequested { DialogName = dialogName, TargetUnitId = targetUnitId, InitiatorUnitId = initiatorUnitId };
+            _logger.LogInformation("Sending dialog request to host. DialogueName={dialogName}", dialogName);
+            var message = new StartDialogRequested
+            {
+                DialogName = dialogName,
+                TargetUnitId = targetUnitId,
+                InitiatorUnitId = initiatorUnitId,
+                MapObjectId = mapObjectId,
+                SpeakerKey = speakerKey
+            };
             _networkServerClient.SendAsync(message).Wait();
             return false;
         }
@@ -289,16 +296,16 @@ namespace WOTRMultiplayer.MP
                 .Register<NotifyPartyLeaveArea>(OnNotifyPartyLeaveArea)
                 .Register<NotifyDialogCueAnswerSuggested>(OnNotifyDialogCueAnswerSuggested)
                 .Register<NotifyDialogCueAnswerSelected>(OnNotifyDialogCueAnswerSelected)
-                .Register<NotifyDialogWithUnitStarted>(OnNotifyDialogWithUnitStarted)
+                .Register<NotifyDialogStarted>(OnNotifyDialogStarted)
                 ;
 
             _networkServerClient.OnError = OnNetworkClientError;
             _networkServerClient.OnConnected = OnNetworkClientConnected;
         }
 
-        private void OnNotifyDialogWithUnitStarted(NotifyDialogWithUnitStarted started)
+        private void OnNotifyDialogStarted(NotifyDialogStarted started)
         {
-            _logger.LogInformation("Received NotifyDialogWithUnitStarted.  DialogueName={dialogName},  TargetUnitId={targetId}, InitiatorUnitId={initiatorId}", started.DialogName, started.TargetUnitId, started.InitiatorUnitId);
+            _logger.LogInformation("Received NotifyDialogStarted.  DialogueName={dialogName},  TargetUnitId={targetId}, InitiatorUnitId={initiatorId}", started.DialogName, started.TargetUnitId, started.InitiatorUnitId);
             if (_game.Dialog != null)
             {
                 _logger.LogWarning("Previous dialog has not been disposed correctly. PreviousDialogName={previousDialogName}, CurrentDialogName={currentDialogName}", _game.Dialog.Name, started.DialogName);
@@ -306,7 +313,7 @@ namespace WOTRMultiplayer.MP
             }
 
             _game.Dialog ??= new NetworkDialog(started.DialogName);
-            _gameInteractionService.StartDialogWithUnit(started.DialogName, started.TargetUnitId, started.InitiatorUnitId);
+            _gameInteractionService.StartDialog(started.DialogName, started.TargetUnitId, started.InitiatorUnitId, started.MapObjectId, started.SpeakerKey);
         }
 
         private void OnNotifyDialogCueAnswerSelected(NotifyDialogCueAnswerSelected selected)
@@ -326,7 +333,7 @@ namespace WOTRMultiplayer.MP
 
             if (!string.Equals(_game.Dialog.CurrentCueName, selected.CueName, StringComparison.OrdinalIgnoreCase))
             {
-                _logger.LogError("Dialog answer selection has mismatched dialog. SuggestedCueName={suggestedCueName}, CurrentCueName={currentCueName}", selected.CueName, _game.Dialog.CurrentCueName);
+                _logger.LogError("Dialog answer selection has mismatched cue. SuggestedCueName={suggestedCueName}, CurrentCueName={currentCueName}", selected.CueName, _game.Dialog.CurrentCueName);
                 return;
             }
 

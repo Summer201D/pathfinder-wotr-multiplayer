@@ -4,7 +4,7 @@ namespace WOTRMultiplayer.Networking.Messages.Game
 {
     [ProtoContract]
     [BeetleX.Packets.MessageType(1013)]
-    public class NotifyDialogWithUnitStarted
+    public class NotifyDialogStarted
     {
         [ProtoMember(1)]
         public string DialogName { get; set; }
@@ -14,5 +14,11 @@ namespace WOTRMultiplayer.Networking.Messages.Game
 
         [ProtoMember(3)]
         public string InitiatorUnitId { get; set; }
+
+        [ProtoMember(4)]
+        public string MapObjectId { get; set; }
+
+        [ProtoMember(5)]
+        public string SpeakerKey { get; set; }
     }
 }

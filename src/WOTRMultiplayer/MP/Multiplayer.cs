@@ -221,11 +221,15 @@ namespace WOTRMultiplayer.MP
             _multiplayerHost.SendSelectedAnswer();
         }
 
-        public bool StartDialogWithUnit(string dialogName, string targetUnitId, string initiatorId)
+        public bool StartDialog(string dialogName, string targetUnitId, string initiatorUnitId, string mapObjectId, string speakerKey)
         {
-            _logger.LogInformation("Start dialog with unit. DialogueName={dialogName},  TargetId={targetId}, InitiatorId={initiatorId},", dialogName, targetUnitId, initiatorId);
+            _logger.LogInformation("Start dialog. DialogueName={dialogName},  TargetUnitId={targetUnitId}, InitiatorUnitId={initiatorUnitId}, MapObjectId={mapObjectId}, SpeakerKey={speakerKey}",
+                dialogName, targetUnitId, initiatorUnitId, mapObjectId, speakerKey);
+
+            // host - start dialog & send notification to clients
+            // clients - request dialog from host
             var participant = GetMultiplayerParticipant();
-            return participant.StartDialogWithUnit(dialogName, targetUnitId, initiatorId);
+            return participant.StartDialog(dialogName, targetUnitId, initiatorUnitId, mapObjectId, speakerKey);
         }
 
         private PartyStatCheckRoll CreatePartyStatCheckRoll(RuleRollDice ruleRollDice, RulePartyStatCheck rulePartySkillCheck)

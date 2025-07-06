@@ -9,6 +9,7 @@ using Kingmaker.DialogSystem.Blueprints;
 using Kingmaker.EntitySystem.Entities;
 using Kingmaker.GameModes;
 using Kingmaker.Globalmap.Blueprints;
+using Kingmaker.Localization;
 using Kingmaker.UI;
 using Kingmaker.UI.MVVM._PCView.Dialog.Dialog;
 using Kingmaker.UI.MVVM._PCView.InGame;
@@ -219,28 +220,48 @@ namespace WOTRMultiplayer.GameInteraction
             UISoundController.Instance.Play(type);
         }
 
-        public void StartDialogWithUnit(string dialogName, string targetUnitId, string initiatorUnitId)
+        public void StartDialog(string dialogName, string targetUnitId, string initiatorUnitId, string mapObjectId, string speakerKey)
         {
-            _logger.LogInformation("Start dialog with unit. DialogueName={dialogueName},  TargetId={targetId}, InitiatorId={initiatorId},", dialogName, targetUnitId, initiatorUnitId);
+            _logger.LogInformation("Start dialog. DialogName={dialogName}, TargetUnitId={targetUnitId}, InitiatorUnitId={initiatorUnitId}, MapObjectId={mapObjectId}, SpeakerKey={speakerKey}",
+                dialogName, targetUnitId, initiatorUnitId, mapObjectId, speakerKey);
+
             _mainThreadAccessor.Enqueue(() =>
             {
                 var dialogBlueprint = Utilities.GetBlueprint<BlueprintDialog>(dialogName);
                 var target = GetUnitEntity(targetUnitId);
                 var initiator = GetUnitEntity(initiatorUnitId);
+                var mapObject = GetMapObjectView(mapObjectId);
+                var speaker = speakerKey == null ? null : new LocalizedString { Key = speakerKey };
                 if (dialogBlueprint == null)
                 {
                     _logger.LogError("Unable to find dialog. Name={dialogName}", dialogName);
                     return;
                 }
 
-                if (target == null)
-                {
-                    _logger.LogError("Unable to find target. TargetUnitId={targetUnitId}", targetUnitId);
-                    return;
-                }
-
-                Game.Instance.DialogController.StartDialogWithUnit(dialogBlueprint, target, initiator);
+                StartDialog(dialogBlueprint, initiator, target, mapObject, speaker);
             });
+        }
+
+        private MapObjectView GetMapObjectView(string mapObjectId)
+        {
+            if (string.IsNullOrEmpty(mapObjectId))
+            {
+                return null;
+            }
+
+            var mapObject = Game.Instance.State.MapObjects.FirstOrDefault(m => string.Equals(m.UniqueId, mapObjectId, StringComparison.OrdinalIgnoreCase));
+            return mapObject?.View;
+        }
+
+        private void StartDialog(BlueprintDialog dialog, UnitEntityData initiator, UnitEntityData target, MapObjectView mapObjectView, LocalizedString customSpeakerName)
+        {
+            if (string.Equals(Game.Instance.DialogController.Dialog?.name, dialog.name, StringComparison.OrdinalIgnoreCase))
+            {
+                _logger.LogInformation("Requested dialog already started (most likely due to scripted zone), nothing to do here. DialogName={dialogName}", dialog.name);
+                return;
+            }
+
+            Game.Instance.DialogController.StartDialog(dialog, initiator, target, mapObjectView, customSpeakerName);
         }
 
         private UnitEntityData GetUnitEntity(string uniqueId)

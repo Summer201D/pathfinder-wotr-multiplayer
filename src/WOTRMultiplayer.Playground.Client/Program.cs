@@ -96,7 +96,7 @@ namespace WOTRMultiplayer.Playground.Client
                         client.OnBeforeSelectDialogAnswer(DialogName, "Cue_0004", "Answer_0042", false, null);
                         break;
                     case "start-unit-dialog":
-                        client.StartDialogWithUnit("Vendor_Quartermaster_Dialogue", "2C1EE7", "98fd05f4-4458-4d2d-97f6-752be49667c0");
+                        client.StartDialog("Vendor_Quartermaster_Dialogue", "2C1EE7", "98fd05f4-4458-4d2d-97f6-752be49667c0", null, null);
                         break;
                     default:
                         break;
@@ -151,7 +151,7 @@ namespace WOTRMultiplayer.Playground.Client
             {
             }
 
-            public void StartDialogWithUnit(string dialogName, string targetUnitId, string initiatorUnitId)
+            public void StartDialog(string dialogName, string targetUnitId, string initiatorUnitId, string mapObjectId, string speakerKey)
             {
             }
         }

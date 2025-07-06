@@ -312,10 +312,18 @@ namespace WOTRMultiplayer.MP
             _game.Dialog.Answer = null;
         }
 
-        public bool StartDialogWithUnit(string dialogName, string targetUnitId, string initiatorUnitId)
+        public bool StartDialog(string dialogName, string targetUnitId, string initiatorUnitId, string mapObjectId, string speakerKey)
         {
             _logger.LogInformation("Sending dialog with unit started to all clients. DialogName={dialogName}, TargetUnitId={targetUnitId}, InitiatorUnitId={initiatorUnitId}", dialogName, targetUnitId, initiatorUnitId);
-            var message = new NotifyDialogWithUnitStarted { DialogName = dialogName, InitiatorUnitId = initiatorUnitId, TargetUnitId = targetUnitId };
+            var message = new NotifyDialogStarted
+            {
+                DialogName = dialogName,
+                InitiatorUnitId = initiatorUnitId,
+                TargetUnitId = targetUnitId,
+                MapObjectId = mapObjectId,
+                SpeakerKey = speakerKey
+            };
+
             _networkServer.SendAll(message);
             return true;
         }
@@ -469,14 +477,16 @@ namespace WOTRMultiplayer.MP
                 .Register<RollRequest>(OnRollRequest)
                 .Register<CueWitnessed>(OnCueWitnessed)
                 .Register<DialogCueAnswerSuggested>(OnDialogCueAnswerSuggested)
-                .Register<DialogWithUnitRequested>(OnDialogWithUnitRequested)
+                .Register<StartDialogRequested>(OnStartDialogRequested)
                 ;
         }
 
-        private void OnDialogWithUnitRequested(long playerId, DialogWithUnitRequested requested)
+        private void OnStartDialogRequested(long playerId, StartDialogRequested requested)
         {
-            _logger.LogInformation("Received DialogWithUnitRequested. PlayerId={playerId}, DialogName={dialogName}, TargetUnitId={targetUnitId}, InitiatorUnitId={initiatorUnitId}", playerId, requested.DialogName, requested.TargetUnitId, requested.InitiatorUnitId);
-            _gameInteractionService.StartDialogWithUnit(requested.DialogName, requested.TargetUnitId, requested.InitiatorUnitId);
+            _logger.LogInformation("Received StartDialogRequested. PlayerId={playerId}, DialogName={dialogName}, TargetUnitId={targetUnitId}, InitiatorUnitId={initiatorUnitId}, MapObjectId={mapObjectId}, SpeakerKey={speakerKey}",
+                playerId, requested.DialogName, requested.TargetUnitId, requested.InitiatorUnitId, requested.MapObjectId, requested.SpeakerKey);
+
+            _gameInteractionService.StartDialog(requested.DialogName, requested.TargetUnitId, requested.InitiatorUnitId, requested.MapObjectId, requested.SpeakerKey);
         }
 
         private void OnDialogCueAnswerSuggested(long playerId, DialogCueAnswerSuggested suggested)
