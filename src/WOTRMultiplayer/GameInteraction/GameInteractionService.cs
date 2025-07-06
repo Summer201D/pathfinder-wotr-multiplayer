@@ -18,6 +18,7 @@ using UnityEngine.UI;
 using WOTRMultiplayer.Abstractions.GameInteraction;
 using WOTRMultiplayer.Abstractions.UI;
 using WOTRMultiplayer.Abstractions.Unity;
+using WOTRMultiplayer.Extensions;
 using WOTRMultiplayer.MP.Entities;
 
 namespace WOTRMultiplayer.GameInteraction
@@ -26,16 +27,16 @@ namespace WOTRMultiplayer.GameInteraction
     {
         private readonly ILogger<GameInteractionService> _logger;
         private readonly IMainThreadAccessor _mainThreadAccessor;
-        private readonly IPortraitProvider _portraitProvider;
+        private readonly IResourceProvider _resourceProvider;
 
         public GameInteractionService(
             ILogger<GameInteractionService> logger,
             IMainThreadAccessor mainThreadAccessor,
-            IPortraitProvider portraitProvider)
+            IResourceProvider resourceProvider)
         {
             _logger = logger;
             _mainThreadAccessor = mainThreadAccessor;
-            _portraitProvider = portraitProvider;
+            _resourceProvider = resourceProvider;
         }
 
         public bool IsPaused => Game.Instance.IsPaused;
@@ -83,34 +84,36 @@ namespace WOTRMultiplayer.GameInteraction
                     var answerView = answer.GetComponent<DialogAnswerPCView>();
                     var answerName = (answerView.GetViewModel() as AnswerVM).Answer.Value.name;
                     var suggestedAnswer = suggestions.FirstOrDefault(s => string.Equals(s.AnswerName, answerName));
-                    var existingSuggestionObject = answer.Find(SuggestionIconName)?.gameObject;
+
+                    answer.gameObject.CleanupAllChildren(x => x.name.StartsWith(SuggestionIconName));
+
                     if (suggestedAnswer != null)
                     {
-                        if (existingSuggestionObject == null)
+                        var portrait = _resourceProvider.GetUISprite("UI_Inventory_IconHeart");
+
+                        var maxIcons = Math.Min(3, suggestedAnswer.Players.Count);
+                        for (int i = maxIcons; i > 0; i--)
                         {
                             var arrow = answer.Find("Arrow");
-                            existingSuggestionObject = UnityEngine.Object.Instantiate(arrow.gameObject, answer);
-                            existingSuggestionObject.name = SuggestionIconName;
-                            existingSuggestionObject.SetActive(true);
+                            var suggestionIconObject = UnityEngine.Object.Instantiate(arrow.gameObject, answer);
+                            suggestionIconObject.name = SuggestionIconName + i.ToString();
+                            suggestionIconObject.SetActive(true);
 
-                            var rect = existingSuggestionObject.GetComponent<UnityEngine.RectTransform>();
+                            var rect = suggestionIconObject.GetComponent<UnityEngine.RectTransform>();
                             var preferedSize = Math.Min(rect.sizeDelta.x, rect.sizeDelta.y);
                             rect.sizeDelta = new UnityEngine.Vector2(preferedSize, preferedSize);
+
+                            var newPosition = new UnityEngine.Vector3(suggestionIconObject.transform.position.x + 4 - (5 * i), suggestionIconObject.transform.position.y, suggestionIconObject.transform.position.z);
+                            suggestionIconObject.transform.SetPositionAndRotation(newPosition, suggestionIconObject.transform.rotation);
+
+                            var image = suggestionIconObject.GetComponent<Image>();
+                            image.color = UnityEngine.Color.white;
+                            image.sprite = portrait;
                         }
 
-                        var portraitName = suggestedAnswer.Players.Count == 1 ? "Wererat_Portrait" : "RatSwarm";
-                        var portrait = _portraitProvider.GetPortrait(portraitName);
-                        var image = existingSuggestionObject.GetComponent<Image>();
-                        image.sprite = portrait;
                         PlaySound(UISoundType.GlobalMapRandomEncounter);
                         _logger.LogInformation("Created answer suggestion icon. AnswerIndex={answerIndex}, AnswerName={answerName}, PlayersCount={playersCount}", answerIndex, suggestedAnswer.AnswerName, suggestedAnswer.Players.Count);
                         continue;
-                    }
-
-                    if (existingSuggestionObject != null)
-                    {
-                        UnityEngine.Object.DestroyImmediate(existingSuggestionObject);
-                        _logger.LogInformation("Deleted answer suggestion icon. AnswerIndex={answerIndex}", answerIndex);
                     }
                 }
             });

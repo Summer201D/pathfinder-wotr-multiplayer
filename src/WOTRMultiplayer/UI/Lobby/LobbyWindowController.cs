@@ -44,7 +44,7 @@ namespace WOTRMultiplayer.UI.Lobby
         private readonly ILogger<LobbyWindowController> _logger;
         private readonly IUIFactory _uIFactory;
         private readonly IMainThreadAccessor _mainThreadAccessor;
-        private readonly IPortraitProvider _portraitProvider;
+        private readonly IResourceProvider _resourceProvider;
         private readonly ConcurrentDictionary<LobbyWindowOwner, GameObject> _contents = new();
         private LobbyWindowOwner _activeOwner;
 
@@ -68,13 +68,13 @@ namespace WOTRMultiplayer.UI.Lobby
         public LobbyWindowController(
             ILogger<LobbyWindowController> logger,
             IMainThreadAccessor mainThreadAccessor,
-            IPortraitProvider portraitProvider,
+            IResourceProvider resourceProvider,
             IUIFactory uIFactory)
         {
             _logger = logger;
             _uIFactory = uIFactory;
             _mainThreadAccessor = mainThreadAccessor;
-            _portraitProvider = portraitProvider;
+            _resourceProvider = resourceProvider;
         }
 
         public void InitializeContent(LobbyWindowOwner owner, Transform parent, bool canUseCharacterDropdown)
@@ -296,7 +296,7 @@ namespace WOTRMultiplayer.UI.Lobby
 
         private Sprite GetPortraitSprite(string portraitName)
         {
-            var portrait = _portraitProvider.GetPortrait(portraitName);
+            var portrait = _resourceProvider.GetPortrait(portraitName);
             if (portrait == null)
             {
                 _logger.LogWarning("Unable to load character portrait. PortraitName={portraitName}", portraitName);

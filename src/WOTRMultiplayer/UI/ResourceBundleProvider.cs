@@ -5,15 +5,16 @@ using WOTRMultiplayer.Abstractions.UI;
 
 namespace WOTRMultiplayer.UI
 {
-    public class ResourceLibraryPortraitProvider : IPortraitProvider
+    public class ResourceBundleProvider : IResourceProvider
     {
         public const string PlaceholderPortrait = "Mask_Portrait";
         public const string PortraitsBundleName = "portraits";
+        public const string UIBundleName = "ui";
 
         private readonly ILogger _logger;
         private ConcurrentDictionary<string, ConcurrentDictionary<string, UnityEngine.Sprite>> _resources;
 
-        public ResourceLibraryPortraitProvider(ILogger<ResourceLibraryPortraitProvider> logger)
+        public ResourceBundleProvider(ILogger<ResourceBundleProvider> logger)
         {
             _logger = logger;
         }
@@ -30,12 +31,24 @@ namespace WOTRMultiplayer.UI
             return sprite;
         }
 
+        public UnityEngine.Sprite GetUISprite(string name)
+        {
+            _resources.TryGetValue(UIBundleName, out var uiSprites);
+            if (!uiSprites.TryGetValue(name, out var sprite))
+            {
+                _logger.LogWarning("Unable to find requested sprite. Name={spriteName}", name);
+            }
+
+            return sprite;
+        }
+
         public void Initialize()
         {
             if (_resources == null)
             {
                 _resources = new ConcurrentDictionary<string, ConcurrentDictionary<string, UnityEngine.Sprite>>();
                 _resources.TryAdd(PortraitsBundleName, LoadAssets(PortraitsBundleName));
+                _resources.TryAdd(UIBundleName, LoadAssets(UIBundleName));
             }
         }
 

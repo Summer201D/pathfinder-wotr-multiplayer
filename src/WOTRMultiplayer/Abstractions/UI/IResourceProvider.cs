@@ -2,9 +2,11 @@
 
 namespace WOTRMultiplayer.Abstractions.UI
 {
-    public interface IPortraitProvider
+    public interface IResourceProvider
     {
         Sprite GetPortrait(string name);
+
+        Sprite GetUISprite(string name);
 
         void Initialize();
     }

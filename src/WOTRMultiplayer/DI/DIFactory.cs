@@ -43,7 +43,7 @@ namespace WOTRMultiplayer.DI
             serviceCollection.AddSingleton<ISaveGameService, SaveGameService>();
 
             serviceCollection.AddSingleton<IFileSystemService, FileSystemService>();
-            serviceCollection.AddSingleton<IPortraitProvider, ResourceLibraryPortraitProvider>();
+            serviceCollection.AddSingleton<IResourceProvider, ResourceBundleProvider>();
             serviceCollection.AddSingleton<IUIFactory, UIFactory>();
             serviceCollection.AddSingleton<IHashService, HashService>();
             serviceCollection.AddSingleton<IRollStorage, InMemoryRollStorage>();

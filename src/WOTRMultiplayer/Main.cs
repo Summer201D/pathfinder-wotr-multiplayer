@@ -73,7 +73,7 @@ namespace WOTRMultiplayer
         public static void InitializePortraits()
         {
             _logger.LogInformation("Initializing portrait sprites");
-            _serviceProvider.GetService<IPortraitProvider>().Initialize();
+            _serviceProvider.GetService<IResourceProvider>().Initialize();
         }
 
         private static bool OnUnload(UnityModManager.ModEntry entry)
