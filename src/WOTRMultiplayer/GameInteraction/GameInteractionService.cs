@@ -92,6 +92,10 @@ namespace WOTRMultiplayer.GameInteraction
                             existingSuggestionObject = UnityEngine.Object.Instantiate(arrow.gameObject, answer);
                             existingSuggestionObject.name = SuggestionIconName;
                             existingSuggestionObject.SetActive(true);
+
+                            var rect = existingSuggestionObject.GetComponent<UnityEngine.RectTransform>();
+                            var preferedSize = Math.Min(rect.sizeDelta.x, rect.sizeDelta.y);
+                            rect.sizeDelta = new UnityEngine.Vector2(preferedSize, preferedSize);
                         }
 
                         var portraitName = suggestedAnswer.Players.Count == 1 ? "Wererat_Portrait" : "RatSwarm";
