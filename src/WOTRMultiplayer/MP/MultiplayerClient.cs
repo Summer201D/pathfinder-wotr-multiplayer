@@ -173,6 +173,11 @@ namespace WOTRMultiplayer.MP
 
             // could be synced from host, but state is the same anyway
             var partyCharacters = _gameInteractionService.GetPartyPlayers();
+            if (partyCharacters.Count == 0)
+            {
+                return;
+            }
+
             var oldCharacters = _game.Characters.ToList();
             _game.Characters = [.. partyCharacters];
             var defaultOwner = GetPlayer(LocalHostPlayerId);

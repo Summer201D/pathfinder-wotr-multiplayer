@@ -13,7 +13,8 @@ namespace WOTRMultiplayer.PubSub
         IWarningNotificationUIHandler,
         IPartyLeaveAreaHandler,
         IPartyChangedUIHandler,
-        IPartyHandler
+        IPartyHandler,
+        IAreaLoadingStagesHandler
     {
         private readonly ILogger<GlobalSubscriber> _logger;
         private readonly IMultiplayerHost _multiplayerHost;
@@ -125,6 +126,22 @@ namespace WOTRMultiplayer.PubSub
 
         public void HandleWarning(string text, bool addToLog = true)
         {
+        }
+
+        public void OnAreaLoadingComplete()
+        {
+        }
+
+        public void OnAreaScenesLoaded()
+        {
+            var multiplayerParticipant = GetMultiplayerParticipant();
+            if (!multiplayerParticipant?.IsActive ?? false)
+            {
+                return;
+            }
+
+            _logger.LogInformation("OnAreaScenesLoaded");
+            multiplayerParticipant.PartyChanged();
         }
 
         private IMultiplayerParticipant GetMultiplayerParticipant()
