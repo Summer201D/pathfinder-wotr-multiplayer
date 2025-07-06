@@ -338,7 +338,6 @@ namespace WOTRMultiplayer.MP
 
         public bool StartDialog(string dialogName, string targetUnitId, string initiatorUnitId, string mapObjectId, string speakerKey)
         {
-            _logger.LogInformation("Sending dialog with unit started to all clients. DialogName={dialogName}, TargetUnitId={targetUnitId}, InitiatorUnitId={initiatorUnitId}", dialogName, targetUnitId, initiatorUnitId);
             var message = new NotifyDialogStarted
             {
                 DialogName = dialogName,
@@ -347,6 +346,8 @@ namespace WOTRMultiplayer.MP
                 MapObjectId = mapObjectId,
                 SpeakerKey = speakerKey
             };
+            _logger.LogInformation("Sending NotifyDialogStarted to all clients. DialogName={dialogName}, TargetUnitId={targetUnitId}, InitiatorUnitId={initiatorUnitId}, MapObjectId={mapObjectId}, SpeakerKey={speakerKey}",
+                message.DialogName, message.TargetUnitId, message.InitiatorUnitId, message.MapObjectId, message.SpeakerKey);
 
             _networkServer.SendAll(message);
             return true;
@@ -512,12 +513,26 @@ namespace WOTRMultiplayer.MP
                 ;
         }
 
-        private void OnStartDialogRequested(long playerId, StartDialogRequested requested)
+        private async void OnStartDialogRequested(long playerId, StartDialogRequested requested)
         {
             _logger.LogInformation("Received StartDialogRequested. PlayerId={playerId}, DialogName={dialogName}, TargetUnitId={targetUnitId}, InitiatorUnitId={initiatorUnitId}, MapObjectId={mapObjectId}, SpeakerKey={speakerKey}",
                 playerId, requested.DialogName, requested.TargetUnitId, requested.InitiatorUnitId, requested.MapObjectId, requested.SpeakerKey);
 
-            _gameInteractionService.StartDialog(requested.DialogName, requested.TargetUnitId, requested.InitiatorUnitId, requested.MapObjectId, requested.SpeakerKey);
+            var hasStartedDialog = await _gameInteractionService.StartDialogAsync(requested.DialogName, requested.TargetUnitId, requested.InitiatorUnitId, requested.MapObjectId, requested.SpeakerKey);
+            if (!hasStartedDialog)
+            {
+                _logger.LogInformation("Host dialog is already in progress. Sending dialog confirmation");
+                var message = new NotifyDialogStarted
+                {
+                    DialogName = requested.DialogName,
+                    InitiatorUnitId = requested.InitiatorUnitId,
+                    TargetUnitId = requested.TargetUnitId,
+                    MapObjectId = requested.MapObjectId,
+                    SpeakerKey = requested.SpeakerKey
+                };
+
+                _networkServer.SendAll(message);
+            }
         }
 
         private void OnDialogCueAnswerSuggested(long playerId, DialogCueAnswerSuggested suggested)

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Numerics;
+using System.Threading.Tasks;
 using Kingmaker.EntitySystem.Persistence;
 using Kingmaker.UI;
 using Microsoft.Extensions.DependencyInjection;
@@ -221,8 +222,9 @@ namespace WOTRMultiplayer.Playground.Host
             {
             }
 
-            public void StartDialog(string dialogName, string targetUnitId, string initiatorUnitId, string mapObjectId, string speakerKey)
+            public Task<bool> StartDialogAsync(string dialogName, string targetUnitId, string initiatorUnitId, string mapObjectId, string speakerKey)
             {
+                return Task.FromResult(true);
             }
         }
 

@@ -332,7 +332,7 @@ namespace WOTRMultiplayer.MP
             _networkServerClient.OnConnected = OnNetworkClientConnected;
         }
 
-        private void OnNotifyDialogStarted(NotifyDialogStarted started)
+        private async void OnNotifyDialogStarted(NotifyDialogStarted started)
         {
             _logger.LogInformation("Received NotifyDialogStarted.  DialogueName={dialogName},  TargetUnitId={targetId}, InitiatorUnitId={initiatorId}", started.DialogName, started.TargetUnitId, started.InitiatorUnitId);
             if (_game.Dialog != null)
@@ -342,7 +342,11 @@ namespace WOTRMultiplayer.MP
             }
 
             _game.Dialog ??= new NetworkDialog(started.DialogName);
-            _gameInteractionService.StartDialog(started.DialogName, started.TargetUnitId, started.InitiatorUnitId, started.MapObjectId, started.SpeakerKey);
+            var hasStartedDialog = await _gameInteractionService.StartDialogAsync(started.DialogName, started.TargetUnitId, started.InitiatorUnitId, started.MapObjectId, started.SpeakerKey);
+            if (!hasStartedDialog)
+            {
+                _logger.LogWarning("Client dialog is already started. DialogName={dialogName}", started.DialogName);
+            }
         }
 
         private void OnNotifyDialogCueAnswerSelected(NotifyDialogCueAnswerSelected selected)

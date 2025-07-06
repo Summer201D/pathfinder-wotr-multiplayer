@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
+using System.Threading.Tasks;
 using Kingmaker;
 using Kingmaker.Blueprints.Root;
 using Kingmaker.Cheats;
@@ -220,11 +221,15 @@ namespace WOTRMultiplayer.GameInteraction
             UISoundController.Instance.Play(type);
         }
 
-        public void StartDialog(string dialogName, string targetUnitId, string initiatorUnitId, string mapObjectId, string speakerKey)
+        public Task<bool> StartDialogAsync(string dialogName, string targetUnitId, string initiatorUnitId, string mapObjectId, string speakerKey)
         {
             _logger.LogInformation("Start dialog. DialogName={dialogName}, TargetUnitId={targetUnitId}, InitiatorUnitId={initiatorUnitId}, MapObjectId={mapObjectId}, SpeakerKey={speakerKey}",
                 dialogName, targetUnitId, initiatorUnitId, mapObjectId, speakerKey);
-
+            // this is kinda sketchy, but we need to really know if dialog is already in progress
+            // starting dialog is really important as it's required to send `NotifyDialogStarted` to clients
+            // unfortunately blueprints can be loaded in mainthread only which means we can't get result right away
+            // so it's kinda a workaround so caller (MultiplayerHost) could wait to see if `NotifyDialogStarted` needs to be manually triggered
+            var hasStartedDialogTask = new TaskCompletionSource<bool>();
             _mainThreadAccessor.Enqueue(() =>
             {
                 var dialogBlueprint = Utilities.GetBlueprint<BlueprintDialog>(dialogName);
@@ -238,8 +243,10 @@ namespace WOTRMultiplayer.GameInteraction
                     return;
                 }
 
-                StartDialog(dialogBlueprint, initiator, target, mapObject, speaker);
+                StartDialog(hasStartedDialogTask, dialogBlueprint, initiator, target, mapObject, speaker);
             });
+
+            return hasStartedDialogTask.Task;
         }
 
         public List<NetworkCharacter> GetPartyPlayers()
@@ -262,15 +269,17 @@ namespace WOTRMultiplayer.GameInteraction
             return mapObject?.View;
         }
 
-        private void StartDialog(BlueprintDialog dialog, UnitEntityData initiator, UnitEntityData target, MapObjectView mapObjectView, LocalizedString customSpeakerName)
+        private void StartDialog(TaskCompletionSource<bool> hasStartedDialogTask, BlueprintDialog dialog, UnitEntityData initiator, UnitEntityData target, MapObjectView mapObjectView, LocalizedString customSpeakerName)
         {
             if (string.Equals(Game.Instance.DialogController.Dialog?.name, dialog.name, StringComparison.OrdinalIgnoreCase))
             {
                 _logger.LogInformation("Requested dialog already started (most likely due to scripted zone), nothing to do here. DialogName={dialogName}", dialog.name);
+                hasStartedDialogTask.SetResult(false);
                 return;
             }
 
             Game.Instance.DialogController.StartDialog(dialog, initiator, target, mapObjectView, customSpeakerName);
+            hasStartedDialogTask.SetResult(true);
         }
 
         private UnitEntityData GetUnitEntity(string uniqueId)

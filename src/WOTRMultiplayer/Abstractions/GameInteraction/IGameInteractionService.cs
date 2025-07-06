@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Numerics;
+using System.Threading.Tasks;
 using Kingmaker.UI;
 using WOTRMultiplayer.MP.Entities;
 
@@ -23,7 +24,7 @@ namespace WOTRMultiplayer.Abstractions.GameInteraction
 
         void PlaySound(UISoundType type);
 
-        void StartDialog(string dialogName, string targetUnitId, string initiatorUnitId, string mapObjectId, string speakerKey);
+        Task<bool> StartDialogAsync(string dialogName, string targetUnitId, string initiatorUnitId, string mapObjectId, string speakerKey);
 
         List<NetworkCharacter> GetPartyPlayers();
     }
