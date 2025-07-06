@@ -24,5 +24,7 @@ namespace WOTRMultiplayer.Abstractions.GameInteraction
         void PlaySound(UISoundType type);
 
         void StartDialog(string dialogName, string targetUnitId, string initiatorUnitId, string mapObjectId, string speakerKey);
+
+        List<NetworkCharacter> GetPartyPlayers();
     }
 }

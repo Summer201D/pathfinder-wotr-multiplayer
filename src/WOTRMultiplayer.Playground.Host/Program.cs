@@ -188,6 +188,11 @@ namespace WOTRMultiplayer.Playground.Host
         {
             public bool IsPaused { get; set; }
 
+            public List<NetworkCharacter> GetPartyPlayers()
+            {
+                return [];
+            }
+
             public void LeaveArea(string areaExitId)
             {
             }

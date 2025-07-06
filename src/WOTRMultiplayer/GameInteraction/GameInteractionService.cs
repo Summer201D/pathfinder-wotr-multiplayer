@@ -242,6 +242,15 @@ namespace WOTRMultiplayer.GameInteraction
             });
         }
 
+        public List<NetworkCharacter> GetPartyPlayers()
+        {
+            var partyCharacters = Game.Instance.Player.Party
+                .Select(x => new NetworkCharacter { Name = x.CharacterName, Portrait = x.Portrait.SmallPortrait.name })
+                .ToList();
+
+            return partyCharacters;
+        }
+
         private MapObjectView GetMapObjectView(string mapObjectId)
         {
             if (string.IsNullOrEmpty(mapObjectId))

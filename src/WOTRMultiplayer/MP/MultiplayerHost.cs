@@ -201,7 +201,31 @@ namespace WOTRMultiplayer.MP
 
         public void GameLoaded()
         {
-            _logger.LogInformation("Game loaded, pausing...");
+            _logger.LogInformation("Game loaded");
+
+            // assumption: should be done after each area load aswell
+            SoftReset();
+
+            // could be synced from host, but state is the same anyway
+            var partyCharacters = _gameInteractionService.GetPartyPlayers();
+            var oldCharacters = _game.Characters.ToList();
+            _game.Characters = [.. partyCharacters];
+            var defaultOwner = GetPlayer(LocalHostPlayerId);
+            foreach (var character in _game.Characters)
+            {
+                var existingOwnershipConfiguration = oldCharacters.FirstOrDefault(old =>
+                    old.Name == character.Name || old.Name.Contains(character.Name));
+                if (existingOwnershipConfiguration?.Owner != null)
+                {
+                    character.Owner = existingOwnershipConfiguration.Owner;
+                    _logger.LogInformation("Character ownership has been preserved. CharacterName={characterName}, Owner={ownerId}", character.Name, character.Owner.Id);
+                    continue;
+                }
+
+                character.Owner = defaultOwner;
+                _logger.LogInformation("Character ownership has been assigned to default player (host). CharacterName={characterName}, Owner={ownerId}", character.Name, character.Owner.Id);
+            }
+
             _gameInteractionService.Pause(true);
 
             var host = GetHost();
@@ -326,6 +350,13 @@ namespace WOTRMultiplayer.MP
 
             _networkServer.SendAll(message);
             return true;
+        }
+
+        private void SoftReset()
+        {
+            _game.Dialog = null;
+            _game.Save = null;
+            _rollStorage.Reset();
         }
 
         private void AddCueWitness(string cueName, long playerId)

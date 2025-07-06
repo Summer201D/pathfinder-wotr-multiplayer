@@ -67,8 +67,6 @@ namespace WOTRMultiplayer.UI.Menu.Windows
         public override void Dispose()
         {
             _logger.LogInformation("Dispose");
-
-            NetworkGame = null;
             base.Dispose();
         }
 

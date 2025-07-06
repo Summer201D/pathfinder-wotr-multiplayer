@@ -522,6 +522,8 @@ namespace WOTRMultiplayer.UI
                 return;
             }
 
+            lobbyWindow.NetworkGame = null;
+
             if (lobbyWindow.MenuItem == null)
             {
                 _logger.LogWarning("Lobby MenuItem is null");
