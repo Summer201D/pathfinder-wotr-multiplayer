@@ -184,17 +184,42 @@ namespace WOTRMultiplayer.MP
             switch (ruleRollDice.Reason.Rule)
             {
                 case RulePartyStatCheck rulePartyStatCheck:
-                    var roll = CreatePartyStatCheckRoll(ruleRollDice, rulePartyStatCheck);
-                    var uniqueId = _rollStorage.GetUniqueId(roll);
-                    var hostRoll = _multiplayerClient.GetRoll(uniqueId);
-                    if (hostRoll == null)
+                    var partyRoll = CreatePartyStatCheckRoll(ruleRollDice, rulePartyStatCheck);
+                    var partyRollId = _rollStorage.GetUniqueId(partyRoll);
+                    var hostPartyRoll = _multiplayerClient.GetHostRoll(partyRollId);
+                    if (hostPartyRoll == null)
                     {
-                        _logger.LogError("Roll is missing => it will be rolled by the game");
+                        _logger.LogCritical("RulePartyStatCheck is not available at host => it will be rolled by the game");
                         return true;
                     }
-                    ruleRollDice.m_Result = hostRoll.Result;
-                    ruleRollDice.RollHistory.AddRange(hostRoll.RollHistory);
-                    _logger.LogInformation("Roll results has been acquired from host. RollId={rollId}, Result={result}", uniqueId, ruleRollDice.Result);
+
+                    ruleRollDice.m_Result = hostPartyRoll.Result;
+                    if (ruleRollDice.RollHistory?.Count > 0)
+                    {
+                        _logger.LogWarning("RulePartyStatCheck history is not empty. RollId={rollId}", partyRollId);
+                    }
+
+                    ruleRollDice.RollHistory = [.. hostPartyRoll.RollHistory];
+                    _logger.LogInformation("RulePartyStatCheck results has been acquired from host. RollId={rollId}, Result={result}", partyRollId, ruleRollDice.Result);
+                    return false;
+                case RuleInitiativeRoll ruleInitiativeRoll:
+                    var initiativeRoll = CreateInitiativeRoll(ruleRollDice, ruleInitiativeRoll);
+                    var initiativeRollId = _rollStorage.GetUniqueId(initiativeRoll);
+                    var hostInitiativeRoll = _multiplayerClient.GetHostRoll(initiativeRollId);
+                    if (hostInitiativeRoll == null)
+                    {
+                        _logger.LogCritical("RuleInitiativeRoll is not available at host => it will be rolled by the game");
+                        return true;
+                    }
+
+                    ruleRollDice.m_Result = hostInitiativeRoll.Result;
+                    if (ruleRollDice.RollHistory?.Count > 0)
+                    {
+                        _logger.LogWarning("RuleInitiativeRoll history is not empty. RollId={rollId}", initiativeRollId);
+                    }
+
+                    ruleRollDice.RollHistory = [.. hostInitiativeRoll.RollHistory];
+                    _logger.LogInformation("RuleInitiativeRoll results has been acquired from host. RollId={rollId}, Result={result}, Modifier={totalBonus}", initiativeRollId, ruleRollDice.Result, ruleInitiativeRoll.Modifier);
                     return false;
                 case RuleRollD20:
                 default:

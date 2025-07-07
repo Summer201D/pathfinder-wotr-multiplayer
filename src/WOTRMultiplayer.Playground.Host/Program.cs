@@ -50,8 +50,9 @@ namespace WOTRMultiplayer.Playground.Host
             };
             // Manual_33_DIALOGUE_SKILL_CHECK  - first cave
             // Manual_32_DIALOGUE - capital act3
+            // Manual_34_FIRST_COMBAT - first combat in first cave
             var saveGamePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
-                "AppData\\LocalLow\\Owlcat Games\\Pathfinder Wrath Of The Righteous\\Saved Games\\Manual_33_DIALOGUE_SKILL_CHECK.zks");
+                "AppData\\LocalLow\\Owlcat Games\\Pathfinder Wrath Of The Righteous\\Saved Games\\Manual_34_FIRST_COMBAT.zks");
             var save = new SaveInfo
             {
                 FolderName = saveGamePath,
@@ -77,6 +78,7 @@ namespace WOTRMultiplayer.Playground.Host
             dialog-answer_continue0005 - walk through first part of first dialog (until after cutscene)
             start-unit-dialog - Vendor_Quartermaster_Dialogue 2C1EE7 98fd05f4-4458-4d2d-97f6-752be49667c0
             start-dialog - MeetSeelahAnevia_Dialogue
+            combat-started - send initialization message
             {Environment.NewLine}");
 
             const string DialogName = "MeetSeelahAnevia_Dialogue";
@@ -179,6 +181,11 @@ namespace WOTRMultiplayer.Playground.Host
                     case "start-dialog":
                         host.StartDialog("MeetSeelahAnevia_Dialogue", null, null, null, null);
                         break;
+                    case "combat-started":
+                        host.CombatStarted();
+                        host.CombatRoundStarted(1);
+                        host.CanContinueCombat();
+                        break;
                     default:
                         break;
                 }
@@ -270,6 +277,11 @@ namespace WOTRMultiplayer.Playground.Host
             }
 
             public void Reset()
+            {
+            }
+
+            public void Reset<T>()
+                where T : NetworkDiceRoll
             {
             }
         }

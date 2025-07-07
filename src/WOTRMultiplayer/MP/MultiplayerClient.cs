@@ -6,6 +6,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Numerics;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 using Kingmaker.EntitySystem.Persistence;
 using Microsoft.Extensions.Logging;
 using WOTRMultiplayer.Abstractions.GameInteraction;
@@ -211,7 +212,7 @@ namespace WOTRMultiplayer.MP
             //_networkServerClient.SendAsync(message).Wait();
         }
 
-        public NetworkDiceRoll GetRoll(int rollId)
+        public NetworkDiceRoll GetHostRoll(int rollId)
         {
             _logger.LogInformation("Retrieving roll from the host. RollId={rollId}, RollResult={rollResult}", rollId);
 
@@ -231,8 +232,6 @@ namespace WOTRMultiplayer.MP
                 _logger.LogError("Host returned null roll. RollId={rollId}", rollId);
                 return null;
             }
-
-            _logger.LogInformation("Roll has been retrieved from the host. RollId={rollId}, RollResult={rollResult}", rollId, response.Roll.Result);
 
             return new NetworkDiceRoll
             {
@@ -347,14 +346,16 @@ namespace WOTRMultiplayer.MP
 
         public bool CanContinueCombat()
         {
-            return true;
+            // confirmation from host is required
+            return _game.Combat.IsInitialized;
         }
 
         public bool OnBeforeStartTurn(string unitId)
         {
             var isPartyUnit = _gameInteractionService.GetIsUnitInParty(unitId);
             _logger.LogInformation("OnBeforeStartTurn. UnitId={unitId}, IsPartyUnit={isPartyUnit}", unitId, isPartyUnit);
-            return true;
+            // AI requires extra sync since it's movement is automated, but characters have strict control
+            return isPartyUnit;
         }
 
         public bool OnBeforeEndTurn(string unitId)
@@ -410,12 +411,23 @@ namespace WOTRMultiplayer.MP
             _networkServerClient.OnConnected = OnNetworkClientConnected;
         }
 
-        private void OnNotifyCombatStarted(NotifyCombatStarted started)
+        private async void OnNotifyCombatStarted(NotifyCombatStarted started)
         {
             _logger.LogInformation($"Received {nameof(NotifyCombatStarted)}.  Units={{unitsCount}}", started.Units.Count);
 
+            if (_game.Combat == null)
+            {
+                _logger.LogWarning("Combat has not been started on client yet. Waiting until start");
+                while (_game.Combat == null)
+                {
+                    await Task.Delay(TimeSpan.FromMilliseconds(100));
+                }
+            }
+
             // TODO: sync units
             _logger.LogError("Units are not synced");
+
+            _game.Combat.IsInitialized = true;
 
             _logger.LogInformation($"Sending {nameof(ClientCombatInitialized)}");
             var message = new ClientCombatInitialized();

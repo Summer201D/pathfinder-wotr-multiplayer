@@ -99,6 +99,9 @@ namespace WOTRMultiplayer.Playground.Client
                     case "start-unit-dialog":
                         client.StartDialog("Vendor_Quartermaster_Dialogue", "2C1EE7", "98fd05f4-4458-4d2d-97f6-752be49667c0", null, null);
                         break;
+                    case "combat-started":
+                        client.CombatStarted();
+                        break;
                     default:
                         break;
                 }

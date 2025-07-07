@@ -11,5 +11,8 @@ namespace WOTRMultiplayer.Abstractions.MP
         int GetUniqueId(NetworkDiceRoll roll);
 
         void Reset();
+
+        void Reset<T>()
+            where T : NetworkDiceRoll;
     }
 }

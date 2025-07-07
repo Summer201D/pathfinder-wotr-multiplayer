@@ -10,6 +10,7 @@ using WOTRMultiplayer.Abstractions.GameInteraction;
 using WOTRMultiplayer.Abstractions.IO;
 using WOTRMultiplayer.Abstractions.MP;
 using WOTRMultiplayer.MP.Entities;
+using WOTRMultiplayer.MP.Entities.Rolls;
 using WOTRMultiplayer.Networking.Abstractions;
 using WOTRMultiplayer.Networking.Messages.Game;
 using WOTRMultiplayer.Networking.Messages.Lobby;
@@ -382,6 +383,9 @@ namespace WOTRMultiplayer.MP
             }
 
             _game.Combat = new NetworkCombat();
+
+            // it's impossible to differentiate rolls between multiple combats
+            _rollStorage.Reset<InitiativeRoll>();
         }
 
         public void CombatEnded()

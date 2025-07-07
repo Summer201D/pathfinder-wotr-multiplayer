@@ -1,4 +1,6 @@
-﻿using System.Collections.Concurrent;
+﻿using System;
+using System.Collections.Concurrent;
+using System.Linq;
 using Microsoft.Extensions.Logging;
 using WOTRMultiplayer.Abstractions.Hashing;
 using WOTRMultiplayer.Abstractions.MP;
@@ -77,7 +79,19 @@ namespace WOTRMultiplayer.MP
         public void Reset()
         {
             _rolls.Clear();
-            _logger.LogInformation("Rolls have been cleared");
+            _logger.LogInformation("All rolls have been cleared");
+        }
+
+        public void Reset<T>()
+            where T : NetworkDiceRoll
+        {
+            var rollsToRemove = _rolls.Where(x => x.Value.Roll is T).ToList();
+            foreach (var roll in rollsToRemove)
+            {
+                _rolls.TryRemove(roll.Key, out _);
+            }
+
+            _logger.LogInformation("Typed rolls have been cleared. RollType={rollType}, RemovedCount={removedCount}", typeof(T), rollsToRemove.Count);
         }
     }
 }
