@@ -124,7 +124,17 @@ namespace WOTRMultiplayer.Playground.Client
         {
             public bool IsPaused { get; set; }
 
-            public List<NetworkCharacter> GetPartyPlayers()
+            public bool GetIsUnitInParty(string unitId)
+            {
+                return true;
+            }
+
+            public List<NetworkCharacterOwnership> GetPartyPlayers()
+            {
+                return [];
+            }
+
+            public List<NetworkUnit> GetUnitsInCombat()
             {
                 return [];
             }

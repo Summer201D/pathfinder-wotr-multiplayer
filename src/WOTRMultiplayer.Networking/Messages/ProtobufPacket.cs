@@ -34,7 +34,6 @@ namespace WOTRMultiplayer.Networking.Messages
 
     public class ProtobufClientPacket : BeetleX.Packets.FixeHeaderClientPacket
     {
-
         static ProtobufClientPacket()
         {
             TypeHeader.Register(typeof(ProtobufClientPacket).Assembly);

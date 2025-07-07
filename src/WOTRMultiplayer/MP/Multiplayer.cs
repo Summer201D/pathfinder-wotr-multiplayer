@@ -244,7 +244,13 @@ namespace WOTRMultiplayer.MP
         public bool CanTickUnitCombatPrepareController()
         {
             var participant = GetMultiplayerParticipant();
-            return participant.CanStartCombat();
+            return participant.CanInitializeCombat();
+        }
+
+        public bool CanTickCombatController()
+        {
+            var participant = GetMultiplayerParticipant();
+            return participant.CanContinueCombat();
         }
 
         public bool OnBeforeStartTurn(string unitId)

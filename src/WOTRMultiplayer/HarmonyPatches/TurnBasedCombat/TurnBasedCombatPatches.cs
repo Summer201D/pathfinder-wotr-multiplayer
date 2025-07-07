@@ -25,6 +25,21 @@ namespace WOTRMultiplayer.HarmonyPatches.TurnBasedCombat
             return canContinue;
         }
 
+        [HarmonyPatch(typeof(CombatController), nameof(CombatController.Tick))]
+        [HarmonyPrefix]
+        public static bool CombatController_Tick_Prefix(CombatController __instance)
+        {
+            if (!Main.Multiplayer.IsActive)
+            {
+                return true;
+            }
+
+            // host - confirm initialization with clients
+            // client - always true
+            var canContinue = Main.Multiplayer.CanTickCombatController();
+            return canContinue;
+        }
+
         [HarmonyPatch(typeof(TurnController), nameof(TurnController.Start))]
         [HarmonyPrefix]
         public static bool TurnController_Start_Prefix(TurnController __instance)
@@ -35,7 +50,6 @@ namespace WOTRMultiplayer.HarmonyPatches.TurnBasedCombat
             }
 
             Main.GetLogger<TurnBasedCombatPatches>().LogInformation("TurnController_Start_Prefix. CharacterName={characterName}, UnitId={unitId}", __instance.Rider.CharacterName, __instance.Rider.UniqueId);
-
             // block on host/client until everyone is not trying to start same turn
             var canContinue = Main.Multiplayer.OnBeforeStartTurn(__instance.Rider.UniqueId);
             return canContinue;

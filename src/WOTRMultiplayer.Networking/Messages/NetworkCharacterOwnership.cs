@@ -3,7 +3,7 @@
 namespace WOTRMultiplayer.Networking.Messages
 {
     [ProtoContract]
-    public class NetworkCharacter
+    public class NetworkCharacterOwnership
     {
         [ProtoMember(1)]
         public string Name { get; set; }

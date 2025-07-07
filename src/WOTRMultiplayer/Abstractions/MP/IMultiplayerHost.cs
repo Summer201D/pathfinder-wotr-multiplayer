@@ -6,9 +6,9 @@ namespace WOTRMultiplayer.Abstractions.MP
 {
     public interface IMultiplayerHost : IMultiplayerParticipant
     {
-        void Create(SaveInfo save, List<NetworkCharacter> characters);
+        void Create(SaveInfo save, List<NetworkCharacterOwnership> characters);
 
-        void UpdateSaveGame(SaveInfo save, List<NetworkCharacter> characters);
+        void UpdateSaveGame(SaveInfo save, List<NetworkCharacterOwnership> characters);
 
         void Start();
 

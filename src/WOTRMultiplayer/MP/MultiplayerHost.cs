@@ -25,10 +25,11 @@ namespace WOTRMultiplayer.MP
         private readonly IGameInteractionService _gameInteractionService;
         private readonly IDiceRollStorage _rollStorage;
 
+        public const int LocalHostPlayerId = -1;
+
         private NetworkGameStage Status => _game?.Stage ?? NetworkGameStage.None;
 
         private readonly object _actionlock = new();
-        public const int LocalHostPlayerId = -1;
         private NetworkGame _game;
 
         public Action<List<NetworkPlayer>> OnPlayersChanged { get; set; }
@@ -57,7 +58,7 @@ namespace WOTRMultiplayer.MP
             _rollStorage = rollStorage;
         }
 
-        public void Create(SaveInfo save, List<NetworkCharacter> characters)
+        public void Create(SaveInfo save, List<NetworkCharacterOwnership> characters)
         {
             if (_networkServer.IsActive)
             {
@@ -68,7 +69,11 @@ namespace WOTRMultiplayer.MP
 
             _game?.Reset();
 
-            _game = new NetworkGame(save);
+            _game = new NetworkGame(save)
+            {
+                LocalPlayerId = LocalHostPlayerId
+            };
+
             _game.Characters.AddRange(characters);
 
             _networkServer.Start(_multiplayerSettingsProvider.Settings.HostPortRangeStart, _multiplayerSettingsProvider.Settings.HostPortRangeEnd);
@@ -76,7 +81,7 @@ namespace WOTRMultiplayer.MP
             _logger.LogInformation("Host has been created. SavePath={savePath}, Portraits={portraits}", _game.Save.FolderName, string.Join(";", _game.Characters.Select(c => c.Portrait)));
         }
 
-        public void UpdateSaveGame(SaveInfo save, List<NetworkCharacter> characters)
+        public void UpdateSaveGame(SaveInfo save, List<NetworkCharacterOwnership> characters)
         {
             _game.Save = save;
             _game.Characters.Clear();
@@ -160,13 +165,13 @@ namespace WOTRMultiplayer.MP
                 return false;
             }
 
-            return character.Owner != null && character.Owner.Id == LocalHostPlayerId;
+            return character.Owner != null && character.Owner.Id == _game.LocalPlayerId;
         }
 
         public bool ReadyChanged()
         {
-            var player = _game.Players.First(p => p.Id == LocalHostPlayerId); // host should be always present
-            var readyChanged = new PlayerReadyStatusChanged { PlayerId = LocalHostPlayerId, IsReady = !player.IsReady };
+            var player = _game.Players.First(p => p.Id == _game.LocalPlayerId); // host should be always present
+            var readyChanged = new PlayerReadyStatusChanged { PlayerId = player.Id, IsReady = !player.IsReady };
             OnPlayerReadyStatusChanged(player.Id, readyChanged);
             return readyChanged.IsReady;
         }
@@ -232,7 +237,7 @@ namespace WOTRMultiplayer.MP
 
             var oldCharacters = _game.Characters.ToList();
             _game.Characters = [.. partyCharacters];
-            var defaultOwner = GetPlayer(LocalHostPlayerId);
+            var defaultOwner = GetPlayer(_game.LocalPlayerId);
             foreach (var character in _game.Characters)
             {
                 var existingOwnershipConfiguration = oldCharacters.FirstOrDefault(old =>
@@ -286,7 +291,7 @@ namespace WOTRMultiplayer.MP
 
             _game.Dialog ??= new NetworkDialog(dialogName);
             _game.Dialog.CurrentCueName = cueName;
-            AddCueWitness(cueName, LocalHostPlayerId);
+            AddCueWitness(cueName, _game.LocalPlayerId);
 
             TryEnableDialogContinueButton();
         }
@@ -390,15 +395,45 @@ namespace WOTRMultiplayer.MP
             _game.Combat = null;
         }
 
-        public bool CanStartCombat()
+        public bool CanInitializeCombat()
         {
             // host is never blocked as combat initialization (initiative rolls) are required for a clients to proceed
             return true;
         }
 
+        public bool CanContinueCombat()
+        {
+            if (_game.Combat == null)
+            {
+                return true;
+            }
+
+            if (_game.Combat.Round == 1 && !_game.Combat.IsInitialized)
+            {
+                var unitsInCombat = _gameInteractionService.GetUnitsInCombat();
+                var message = new NotifyCombatStarted
+                {
+                    Units = [.. unitsInCombat.Select(x => new Networking.Messages.NetworkUnit
+                    {
+                        Id = x.Id,
+                        PositionX = x.Position.X,
+                        PositionY = x.Position.Y,
+                        PositionZ = x.Position.Z
+                    })]
+                };
+                _networkServer.SendAll(message);
+                _game.Combat.IsInitialized = true;
+                _game.Combat.PlayersInitialization.TryAdd(_game.LocalPlayerId, true);
+                _logger.LogInformation("Sending NotifyCombatStarted. UnitsInCombat={unitsCount}", message.Units.Count);
+            }
+
+            return _game.Combat.PlayersInitialization.Count >= _game.Players.Count;
+        }
+
         public bool OnBeforeStartTurn(string unitId)
         {
-            _logger.LogInformation("OnBeforeStartTurn. UnitId={unitId}", unitId);
+            var isPartyUnit = _gameInteractionService.GetIsUnitInParty(unitId);
+            _logger.LogInformation("OnBeforeStartTurn. UnitId={unitId}, IsPartyUnit={isPartyUnit}", unitId, isPartyUnit);
             return true;
         }
 
@@ -505,6 +540,7 @@ namespace WOTRMultiplayer.MP
             if (canUnpause)
             {
                 _logger.LogInformation("All players have finished loading. Game will be unpaused");
+                _game.Stage = NetworkGameStage.Playing;
                 _gameInteractionService.Pause(false);
             }
         }
@@ -562,7 +598,7 @@ namespace WOTRMultiplayer.MP
 
         private NetworkPlayer GetHost()
         {
-            return _game.Players.First(f => f.Id == LocalHostPlayerId);
+            return _game.Players.First(f => f.Id == _game.LocalPlayerId);
         }
 
         private void RegisterHandlers()
@@ -582,7 +618,23 @@ namespace WOTRMultiplayer.MP
                 .Register<CueWitnessed>(OnCueWitnessed)
                 .Register<DialogCueAnswerSuggested>(OnDialogCueAnswerSuggested)
                 .Register<StartDialogRequested>(OnStartDialogRequested)
+                .Register<ClientCombatInitialized>(OnClientCombatInitialized)
                 ;
+        }
+
+        private void OnClientCombatInitialized(long playerId, ClientCombatInitialized initialized)
+        {
+            _logger.LogInformation("Received OnClientCombatInitialized. PlayerId={playerId}", playerId);
+            if (_game.Combat == null)
+            {
+                _logger.LogWarning("Received client initialization, but combat is null. PlayerId={playerId}", playerId);
+                return;
+            }
+
+            if (!_game.Combat.PlayersInitialization.TryAdd(playerId, true))
+            {
+                _logger.LogWarning("Received duplicate client initialization. PlayerId={playerId}", playerId);
+            }
         }
 
         private async void OnStartDialogRequested(long playerId, StartDialogRequested requested)
@@ -802,7 +854,7 @@ namespace WOTRMultiplayer.MP
                 var player = new NetworkPlayer(playerId);
                 _game.Players.Add(player);
                 _logger.LogInformation("Sending player name request. PlayerId={playerId}", playerId);
-                _networkServer.Send(playerId, new PlayerNameRequest { PlayerId = playerId });
+                _networkServer.Send(playerId, new PlayerNameRequest { ClientPlayerId = playerId });
             }
         }
 
@@ -823,7 +875,13 @@ namespace WOTRMultiplayer.MP
                     OnPlayersChanged?.Invoke(_game.Players);
                 }
 
-                // TBD send updates to other clients
+                // TODO: send updates to other clients
+                _logger.LogError("Player disconnection is not synced with other players");
+
+                if (_game.Stage == NetworkGameStage.Playing)
+                {
+                    _gameInteractionService.ShowModalMessage($"Player {existingPlayer.Name} has left the game");
+                }
             }
         }
 
@@ -855,7 +913,7 @@ namespace WOTRMultiplayer.MP
         {
             var message = new NotifyGameCharactersChanged
             {
-                Characters = [.. _game.Characters.Select(c => new Networking.Messages.NetworkCharacter { Name = c.Name, Portrait = c.Portrait })]
+                Characters = [.. _game.Characters.Select(c => new Networking.Messages.NetworkCharacterOwnership { Name = c.Name, Portrait = c.Portrait })]
             };
             return message;
         }

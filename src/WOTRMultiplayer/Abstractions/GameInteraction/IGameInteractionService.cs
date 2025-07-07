@@ -26,8 +26,12 @@ namespace WOTRMultiplayer.Abstractions.GameInteraction
 
         Task<bool> StartDialogAsync(string dialogName, string targetUnitId, string initiatorUnitId, string mapObjectId, string speakerKey);
 
-        List<NetworkCharacter> GetPartyPlayers();
+        List<NetworkCharacterOwnership> GetPartyPlayers();
 
         void ShowModalMessage(string error);
+
+        bool GetIsUnitInParty(string unitId);
+
+        List<NetworkUnit> GetUnitsInCombat();
     }
 }

@@ -263,7 +263,7 @@ namespace WOTRMultiplayer.UI.Menu.Items
             Lobby.UpdatePlayers(players);
         }
 
-        private void OnMultiplayerGameCharactersChanged(List<NetworkCharacter> characters)
+        private void OnMultiplayerGameCharactersChanged(List<NetworkCharacterOwnership> characters)
         {
             Lobby.UpdateCharacters(characters);
         }

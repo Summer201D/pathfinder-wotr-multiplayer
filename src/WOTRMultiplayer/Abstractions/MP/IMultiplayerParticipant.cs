@@ -38,10 +38,11 @@ namespace WOTRMultiplayer.Abstractions.MP
         void PartyChanged();
         void CombatStarted();
         void CombatEnded();
-        bool CanStartCombat();
+        bool CanInitializeCombat();
         bool OnBeforeStartTurn(string unitId);
         bool OnBeforeEndTurn(string unitId);
         void CombatRoundStarted(int round);
         int GetCombatRound();
+        bool CanContinueCombat();
     }
 }

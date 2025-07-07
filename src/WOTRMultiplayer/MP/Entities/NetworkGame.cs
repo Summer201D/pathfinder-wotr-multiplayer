@@ -6,13 +6,15 @@ namespace WOTRMultiplayer.MP.Entities
 {
     public class NetworkGame
     {
+        public long LocalPlayerId { get; set; }
+
         public EndPoint Endpoint { get; set; }
 
         public NetworkGameStage Stage { get; set; }
 
         public List<NetworkPlayer> Players { get; set; } = [];
 
-        public List<NetworkCharacter> Characters { get; set; } = [];
+        public List<NetworkCharacterOwnership> Characters { get; set; } = [];
 
         public NetworkCombat Combat { get; set; }
 
@@ -28,6 +30,7 @@ namespace WOTRMultiplayer.MP.Entities
 
         public void Reset()
         {
+            LocalPlayerId = 0; // -1 host << 0 default << 1+ clients
             Players.Clear();
             Characters.Clear();
             Save = null;

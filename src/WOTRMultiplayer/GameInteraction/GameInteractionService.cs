@@ -261,10 +261,10 @@ namespace WOTRMultiplayer.GameInteraction
             return hasStartedDialogTask.Task;
         }
 
-        public List<NetworkCharacter> GetPartyPlayers()
+        public List<NetworkCharacterOwnership> GetPartyPlayers()
         {
             var partyCharacters = Game.Instance.Player.Party
-                .Select(x => new NetworkCharacter { Name = x.CharacterName, Portrait = x.Portrait.SmallPortrait.name })
+                .Select(x => new NetworkCharacterOwnership { Name = x.CharacterName, Portrait = x.Portrait.SmallPortrait.name })
                 .ToList();
 
             return partyCharacters;
@@ -279,6 +279,12 @@ namespace WOTRMultiplayer.GameInteraction
                     window.HandleOpen(error, MessageModalBase.ModalType.Message, null);
                 });
             });
+        }
+
+        public bool GetIsUnitInParty(string unitId)
+        {
+            var unit = GetUnitEntityFromParty(unitId);
+            return unit != null;
         }
 
         private MapObjectView GetMapObjectView(string mapObjectId)
@@ -307,13 +313,38 @@ namespace WOTRMultiplayer.GameInteraction
 
         private UnitEntityData GetUnitEntity(string uniqueId)
         {
+            return GetUnitEntityFromLoadedArea(uniqueId) ?? GetUnitEntityFromParty(uniqueId);
+        }
+
+        private UnitEntityData GetUnitEntityFromParty(string uniqueId)
+        {
             if (string.IsNullOrEmpty(uniqueId))
             {
                 return null;
             }
 
-            return (Game.Instance.LoadedAreaState.AllEntityData.FirstOrDefault(e => string.Equals(e.UniqueId, uniqueId, StringComparison.OrdinalIgnoreCase))
-                ?? Game.Instance.Player.PartyAndPets.FirstOrDefault(p => string.Equals(p.UniqueId, uniqueId, StringComparison.OrdinalIgnoreCase))) as UnitEntityData;
+            return Game.Instance.Player.PartyAndPets.FirstOrDefault(p => string.Equals(p.UniqueId, uniqueId, StringComparison.OrdinalIgnoreCase));
+        }
+
+        private UnitEntityData GetUnitEntityFromLoadedArea(string uniqueId)
+        {
+            if (string.IsNullOrEmpty(uniqueId))
+            {
+                return null;
+            }
+
+            return Game.Instance.LoadedAreaState.AllEntityData.FirstOrDefault(e => string.Equals(e.UniqueId, uniqueId, StringComparison.OrdinalIgnoreCase)) as UnitEntityData;
+        }
+
+        public List<NetworkUnit> GetUnitsInCombat()
+        {
+            var inCombat = Game.Instance.State.Units.InCombat().ToList();
+
+            var units = inCombat
+                .Select(c => new NetworkUnit { Id = c.UniqueId, Position = new Vector3(c.Position.x, c.Position.y, c.Position.z) })
+                .ToList();
+
+            return units;
         }
     }
 }

@@ -7,6 +7,6 @@ namespace WOTRMultiplayer.Networking.Messages.Lobby
     public class PlayerNameRequest
     {
         [ProtoMember(1)]
-        public long PlayerId { get; set; }
+        public long ClientPlayerId { get; set; }
     }
 }

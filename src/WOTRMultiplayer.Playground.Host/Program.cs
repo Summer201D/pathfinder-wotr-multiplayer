@@ -44,7 +44,7 @@ namespace WOTRMultiplayer.Playground.Host
             //    new() { Name = "EmberFemaleElfWitch_Portrait", Portrait = "EmberFemaleElfWitch_Portrait"},
             //    new() { Name = "NenioFemaleKitsuneWizard_Portrait", Portrait = "NenioFemaleKitsuneWizard_Portrait"},
             //};
-            var characters = new List<NetworkCharacter> {
+            var characters = new List<NetworkCharacterOwnership> {
                 new() { Name = "Taolynn", Portrait = "KitsuneFemaleRogue_Portrait"}
                 //new() { Name = "xdd", Portrait = "KitsuneFemaleRogue_Portrait"}
             };
@@ -189,7 +189,17 @@ namespace WOTRMultiplayer.Playground.Host
         {
             public bool IsPaused { get; set; }
 
-            public List<NetworkCharacter> GetPartyPlayers()
+            public bool GetIsUnitInParty(string unitId)
+            {
+                return true;
+            }
+
+            public List<NetworkCharacterOwnership> GetPartyPlayers()
+            {
+                return [];
+            }
+
+            public List<NetworkUnit> GetUnitsInCombat()
             {
                 return [];
             }

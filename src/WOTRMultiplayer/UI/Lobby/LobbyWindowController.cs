@@ -191,7 +191,7 @@ namespace WOTRMultiplayer.UI.Lobby
             _contents.TryRemove(owner, out var _);
         }
 
-        public void UpdateCharacters(List<NetworkCharacter> characters)
+        public void UpdateCharacters(List<NetworkCharacterOwnership> characters)
         {
             if (GetContentOwnedObject() == null)
             {
