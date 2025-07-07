@@ -163,7 +163,7 @@ namespace WOTRMultiplayer.MP
                     break;
                 case RuleRollD20:
                 default:
-                    _logger.LogWarning("Roll saving has been skipped. Type={rollType}", ruleRollDice.Reason.Rule.GetType().Name);
+                    _logger.LogWarning("Roll saving has been skipped. Type={rollType}, InitiatorName={initiatorName}, InitiatorId={initiatorId}", ruleRollDice.Reason.Rule.GetType().Name, ruleRollDice.Initiator?.CharacterName, ruleRollDice.Initiator?.UniqueId);
                     break;
             }
         }
@@ -198,7 +198,7 @@ namespace WOTRMultiplayer.MP
                     return false;
                 case RuleRollD20:
                 default:
-                    _logger.LogWarning("Roll retrieving has been skipped. Type={rollType}", ruleRollDice.Reason.Rule.GetType().Name);
+                    _logger.LogWarning("Roll retrieving has been skipped. Type={rollType}, InitiatorName={initiatorName}, InitiatorId={initiatorId}", ruleRollDice.Reason.Rule.GetType().Name, ruleRollDice.Initiator?.CharacterName, ruleRollDice.Initiator?.UniqueId);
                     break;
             }
 
