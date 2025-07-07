@@ -232,7 +232,7 @@ namespace WOTRMultiplayer.Playground.Host
             }
         }
 
-        private class DummyRollStorage : IRollStorage
+        private class DummyRollStorage : IDiceRollStorage
         {
             public void Add(NetworkDiceRoll rollDice)
             {
@@ -240,7 +240,7 @@ namespace WOTRMultiplayer.Playground.Host
 
             public NetworkDiceRoll Get(int rollId, long playerId)
             {
-                if (rollId == 1469590275)
+                if (rollId == -1301660035)
                 {
                     return new NetworkDiceRoll
                     {

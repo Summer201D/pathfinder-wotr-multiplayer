@@ -14,6 +14,8 @@ namespace WOTRMultiplayer.MP.Entities
 
         public List<NetworkCharacter> Characters { get; set; } = [];
 
+        public NetworkCombat Combat { get; set; }
+
         public NetworkDialog Dialog { get; set; }
 
         public SaveInfo Save { get; set; }

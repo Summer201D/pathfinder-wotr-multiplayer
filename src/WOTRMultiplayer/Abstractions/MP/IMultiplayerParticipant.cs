@@ -36,5 +36,12 @@ namespace WOTRMultiplayer.Abstractions.MP
         bool OnBeforeSelectDialogAnswer(string dialogName, string cueName, string answerName, bool isExitAnswer, string manualUnitSelectionId);
         bool StartDialog(string dialogName, string targetUnitId, string initiatorUnitId, string mapObjectId, string speakerKey);
         void PartyChanged();
+        void CombatStarted();
+        void CombatEnded();
+        bool CanStartCombat();
+        bool OnBeforeStartTurn(string unitId);
+        bool OnBeforeEndTurn(string unitId);
+        void CombatRoundStarted(int round);
+        int GetCombatRound();
     }
 }

@@ -20,7 +20,7 @@ namespace WOTRMultiplayer.MP
         private ILobbyWindow _lobbyWindow;
 
         private readonly ILobbyWindowController _lobbyWindowController;
-        private readonly IRollStorage _rollStorage;
+        private readonly IDiceRollStorage _rollStorage;
         private readonly IMultiplayerClient _multiplayerClient;
         private readonly IMultiplayerHost _multiplayerHost;
         private readonly ILogger _logger;
@@ -35,7 +35,7 @@ namespace WOTRMultiplayer.MP
             ILobbyWindowController lobbyWindowController,
             IMultiplayerHost multiplayerHost,
             IMultiplayerClient multiplayerClient,
-            IRollStorage rollStorage)
+            IDiceRollStorage rollStorage)
         {
             _logger = logger;
             Factory = uiFactory;
@@ -149,8 +149,17 @@ namespace WOTRMultiplayer.MP
             switch (ruleRollDice.Reason.Rule)
             {
                 case RulePartyStatCheck rulePartyStatCheck:
-                    var roll = CreatePartyStatCheckRoll(ruleRollDice, rulePartyStatCheck);
-                    _rollStorage.Add(roll);
+                    var partyStatCheckRoll = CreatePartyStatCheckRoll(ruleRollDice, rulePartyStatCheck);
+                    _rollStorage.Add(partyStatCheckRoll);
+                    break;
+                case RuleInitiativeRoll ruleInitiativeRoll:
+                    var initiativeRoll = CreateInitiativeRoll(ruleRollDice, ruleInitiativeRoll);
+                    _rollStorage.Add(initiativeRoll);
+                    break;
+                case RuleAttackWithWeapon ruleAttackWithWeapon:
+                    var combatRound = _multiplayerHost.GetCombatRound();
+                    var attackWithWeaponRoll = CreateAttackWithWeaponRoll(ruleRollDice, ruleAttackWithWeapon, combatRound);
+                    _rollStorage.Add(attackWithWeaponRoll);
                     break;
                 case RuleRollD20:
                 default:
@@ -232,19 +241,73 @@ namespace WOTRMultiplayer.MP
             return participant.StartDialog(dialogName, targetUnitId, initiatorUnitId, mapObjectId, speakerKey);
         }
 
+        public bool CanTickUnitCombatPrepareController()
+        {
+            var participant = GetMultiplayerParticipant();
+            return participant.CanStartCombat();
+        }
+
+        public bool OnBeforeStartTurn(string unitId)
+        {
+            var participant = GetMultiplayerParticipant();
+            return participant.OnBeforeStartTurn(unitId);
+        }
+
+        public bool OnBeforeEndTurn(string unitId)
+        {
+            var participant = GetMultiplayerParticipant();
+            return participant.OnBeforeEndTurn(unitId);
+        }
+
         private PartyStatCheckRoll CreatePartyStatCheckRoll(RuleRollDice ruleRollDice, RulePartyStatCheck rulePartySkillCheck)
         {
             var roll = new PartyStatCheckRoll
             {
                 InitiatorId = ruleRollDice.Initiator?.UniqueId,
-                DifficultyClass = rulePartySkillCheck.DifficultyClass,
-                StatType = rulePartySkillCheck.StatType,
                 Result = ruleRollDice.Result,
                 ResultOverride = ruleRollDice.ResultOverride,
                 RollHistory = [.. ruleRollDice.RollHistory ?? []],
                 RuleRollName = ruleRollDice.Reason.Name,
                 RuleRollType = ruleRollDice.Reason.Rule.GetType().Name,
-                DiceType = ruleRollDice.DiceFormula.Dice
+                DiceType = ruleRollDice.DiceFormula.Dice,
+                DifficultyClass = rulePartySkillCheck.DifficultyClass,
+                StatType = rulePartySkillCheck.StatType
+            };
+
+            return roll;
+        }
+
+        private AttackWithWeaponRoll CreateAttackWithWeaponRoll(RuleRollDice ruleRollDice, RuleAttackWithWeapon ruleAttackWithWeapon, int combatRound)
+        {
+            var roll = new AttackWithWeaponRoll
+            {
+                InitiatorId = ruleRollDice.Initiator?.UniqueId,
+                Result = ruleRollDice.Result,
+                ResultOverride = ruleRollDice.ResultOverride,
+                RollHistory = [.. ruleRollDice.RollHistory ?? []],
+                RuleRollName = ruleRollDice.Reason.Name,
+                RuleRollType = ruleRollDice.Reason.Rule.GetType().Name,
+                DiceType = ruleRollDice.DiceFormula.Dice,
+                TotalModifiersBonus = ruleAttackWithWeapon.AttackRoll.AttackBonus,
+                AttackNumber = ruleAttackWithWeapon.AttackNumber,
+                CombatRound = combatRound
+            };
+
+            return roll;
+        }
+
+        private InitiativeRoll CreateInitiativeRoll(RuleRollDice ruleRollDice, RuleInitiativeRoll ruleInitiativeRoll)
+        {
+            var roll = new InitiativeRoll
+            {
+                InitiatorId = ruleRollDice.Initiator?.UniqueId,
+                Result = ruleRollDice.Result,
+                ResultOverride = ruleRollDice.ResultOverride,
+                RollHistory = [.. ruleRollDice.RollHistory ?? []],
+                RuleRollName = ruleRollDice.Reason.Name,
+                RuleRollType = ruleRollDice.Reason.Rule.GetType().Name,
+                DiceType = ruleRollDice.DiceFormula.Dice,
+                TotalModifiersBonus = ruleInitiativeRoll.Modifier
             };
 
             return roll;

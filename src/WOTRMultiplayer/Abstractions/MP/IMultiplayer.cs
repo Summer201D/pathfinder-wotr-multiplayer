@@ -31,6 +31,12 @@ namespace WOTRMultiplayer.Abstractions.MP
         void OnAfterPlayDialogCue();
         bool StartDialog(string dialogName, string targetUnitId, string initiatorUnitId, string mapObjectId, string speakerKey);
 
+        bool CanTickUnitCombatPrepareController();
+
+        bool OnBeforeStartTurn(string unitId);
+
+        bool OnBeforeEndTurn(string unitId);
+
         bool IsActive { get; }
     }
 }

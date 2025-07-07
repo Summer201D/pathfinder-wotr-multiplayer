@@ -1,6 +1,7 @@
 ﻿using Kingmaker.Blueprints.Area;
 using Kingmaker.EntitySystem.Entities;
 using Kingmaker.PubSubSystem;
+using Kingmaker.RuleSystem.Rules;
 using Kingmaker.UI;
 using Kingmaker.View.MapObjects;
 using Microsoft.Extensions.Logging;
@@ -14,7 +15,9 @@ namespace WOTRMultiplayer.PubSub
         IPartyLeaveAreaHandler,
         IPartyChangedUIHandler,
         IPartyHandler,
-        IAreaLoadingStagesHandler
+        IAreaLoadingStagesHandler,
+        IPartyCombatHandler,
+        ITurnBasedModeHandler
     {
         private readonly ILogger<GlobalSubscriber> _logger;
         private readonly IMultiplayerHost _multiplayerHost;
@@ -90,6 +93,24 @@ namespace WOTRMultiplayer.PubSub
             multiplayerParticipant.PartyChanged();
         }
 
+        public void HandlePartyCombatStateChanged(bool inCombat)
+        {
+            var multiplayerParticipant = GetMultiplayerParticipant();
+            if (!multiplayerParticipant?.IsActive ?? false)
+            {
+                return;
+            }
+
+            _logger.LogInformation("Combat state changed. InCombat={inCombat}", inCombat);
+            if (inCombat)
+            {
+                multiplayerParticipant.CombatStarted();
+                return;
+            }
+
+            multiplayerParticipant.CombatEnded();
+        }
+
         public void HandlePartyLeaveArea(BlueprintArea currentArea, BlueprintAreaEnterPoint targetArea, AreaTransitionPart areaTransition)
         {
             if (!_multiplayerHost.IsActive)
@@ -105,6 +126,33 @@ namespace WOTRMultiplayer.PubSub
             }
 
             _multiplayerHost.LeaveArea(areaExitId);
+        }
+
+        public void HandleRoundStarted(int round)
+        {
+            var multiplayerParticipant = GetMultiplayerParticipant();
+            if (!multiplayerParticipant?.IsActive ?? false)
+            {
+                return;
+            }
+
+            multiplayerParticipant.CombatRoundStarted(round);
+        }
+
+        public void HandleSurpriseRoundStarted()
+        {
+        }
+
+        public void HandleTurnStarted(UnitEntityData unit)
+        {
+        }
+
+        public void HandleUnitControlChanged(UnitEntityData unit)
+        {
+        }
+
+        public void HandleUnitNotSurprised(UnitEntityData unit, RuleSkillCheck perceptionCheck)
+        {
         }
 
         public void HandleWarning(WarningNotificationType warningType, bool addToLog = true)

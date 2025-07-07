@@ -23,7 +23,7 @@ namespace WOTRMultiplayer.MP
         private readonly IFileSystemService _fileSystemService;
         private readonly IMultiplayerSettingsProvider _multiplayerSettingsProvider;
         private readonly IGameInteractionService _gameInteractionService;
-        private readonly IRollStorage _rollStorage;
+        private readonly IDiceRollStorage _rollStorage;
 
         private NetworkGameStage Status => _game?.Stage ?? NetworkGameStage.None;
 
@@ -47,7 +47,7 @@ namespace WOTRMultiplayer.MP
             IMultiplayerSettingsProvider multiplayerSettingsProvider,
             IFileSystemService fileSystemService,
             INetworkServer networkServer,
-            IRollStorage rollStorage)
+            IDiceRollStorage rollStorage)
         {
             _logger = logger;
             _networkServer = networkServer;
@@ -366,6 +366,63 @@ namespace WOTRMultiplayer.MP
 
             _networkServer.SendAll(message);
             return true;
+        }
+
+        public void CombatStarted()
+        {
+            _logger.LogInformation("Combat started");
+            if (_game.Combat != null)
+            {
+                _logger.LogWarning("Previous combat has not been disposed correctly");
+            }
+
+            _game.Combat = new NetworkCombat();
+        }
+
+        public void CombatEnded()
+        {
+            _logger.LogInformation("Combat ended");
+            if (_game.Combat == null)
+            {
+                _logger.LogWarning("Combat has not been started correctly");
+            }
+
+            _game.Combat = null;
+        }
+
+        public bool CanStartCombat()
+        {
+            // host is never blocked as combat initialization (initiative rolls) are required for a clients to proceed
+            return true;
+        }
+
+        public bool OnBeforeStartTurn(string unitId)
+        {
+            _logger.LogInformation("OnBeforeStartTurn. UnitId={unitId}", unitId);
+            return true;
+        }
+
+        public bool OnBeforeEndTurn(string unitId)
+        {
+            _logger.LogInformation("OnBeforeEndTurn. UnitId={unitId}", unitId);
+            return true;
+        }
+
+        public void CombatRoundStarted(int round)
+        {
+            _logger.LogInformation("Combat round started. Round={round}", round);
+            if (_game.Combat == null)
+            {
+                _logger.LogWarning("Combat has not started yet");
+                return;
+            }
+
+            _game.Combat.Round = round;
+        }
+
+        public int GetCombatRound()
+        {
+            return _game.Combat?.Round ?? 0;
         }
 
         private void SoftReset()

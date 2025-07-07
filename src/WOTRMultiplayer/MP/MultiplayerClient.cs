@@ -318,6 +318,63 @@ namespace WOTRMultiplayer.MP
             return false;
         }
 
+        public void CombatStarted()
+        {
+            _logger.LogInformation("Combat started");
+            if (_game.Combat != null)
+            {
+                _logger.LogWarning("Previous combat has not been disposed correctly");
+            }
+
+            _game.Combat = new NetworkCombat();
+        }
+
+        public void CombatEnded()
+        {
+            _logger.LogInformation("Combat ended");
+            if (_game.Combat == null)
+            {
+                _logger.LogWarning("Combat has not been started correctly");
+            }
+
+            _game.Combat = null;
+        }
+
+        public bool CanStartCombat()
+        {
+            // confirmation from host is required
+            return _game.Combat.IsInitialized;
+        }
+
+        public bool OnBeforeStartTurn(string unitId)
+        {
+            _logger.LogInformation("OnBeforeStartTurn. UnitId={unitId}", unitId);
+            return true;
+        }
+
+        public bool OnBeforeEndTurn(string unitId)
+        {
+            _logger.LogInformation("OnBeforeEndTurn. UnitId={unitId}", unitId);
+            return true;
+        }
+
+        public void CombatRoundStarted(int round)
+        {
+            _logger.LogInformation("Combat round started. Round={round}", round);
+            if (_game.Combat == null)
+            {
+                _logger.LogWarning("Combat has not started yet");
+                return;
+            }
+
+            _game.Combat.Round = round;
+        }
+
+        public int GetCombatRound()
+        {
+            return _game.Combat?.Round ?? 0;
+        }
+
         private void SoftReset()
         {
             _game.Dialog = null;

@@ -21,7 +21,7 @@ namespace WOTRMultiplayer.UnitTests.MP
         private ILobbyWindowController _lobbyWindowController;
         private IMultiplayerHost _multiplayerHost;
         private IMultiplayerClient _multiplayerClient;
-        private IRollStorage _rollStorage;
+        private IDiceRollStorage _rollStorage;
 
         [SetUp]
         public void SetUp()
@@ -31,7 +31,7 @@ namespace WOTRMultiplayer.UnitTests.MP
             _lobbyWindowController = A.Fake<ILobbyWindowController>();
             _multiplayerHost = A.Fake<IMultiplayerHost>();
             _multiplayerClient = A.Fake<IMultiplayerClient>();
-            _rollStorage = A.Fake<IRollStorage>();
+            _rollStorage = A.Fake<IDiceRollStorage>();
 
             _multiplayer = new Multiplayer(
                 _logger,

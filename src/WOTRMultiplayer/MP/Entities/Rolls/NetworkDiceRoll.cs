@@ -19,9 +19,11 @@ namespace WOTRMultiplayer.MP.Entities.Rolls
 
         public string RuleRollName { get; set; }
 
+        public int TotalModifiersBonus { get; set; }
+
         public virtual string GetIdString()
         {
-            return InitiatorId + DiceType.ToString() + RuleRollType + RuleRollName;
+            return GetType().Name + InitiatorId + DiceType.ToString() + RuleRollType + RuleRollName + TotalModifiersBonus;
         }
     }
 }

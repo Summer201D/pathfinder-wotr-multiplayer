@@ -6,33 +6,33 @@ using WOTRMultiplayer.MP.Entities.Rolls;
 
 namespace WOTRMultiplayer.MP
 {
-    public class InMemoryRollStorage : IRollStorage
+    public class DiceRollStorage : IDiceRollStorage
     {
         private readonly ConcurrentDictionary<int, DiceRollEntry> _rolls = new();
-        private readonly ILogger<InMemoryRollStorage> _logger;
+        private readonly ILogger<DiceRollStorage> _logger;
         private readonly IHashService _hashService;
 
-        public InMemoryRollStorage(
-            ILogger<InMemoryRollStorage> logger,
+        public DiceRollStorage(
+            ILogger<DiceRollStorage> logger,
             IHashService hashService)
         {
             _logger = logger;
             _hashService = hashService;
         }
 
-        public void Add(NetworkDiceRoll rollDice)
+        public void Add(NetworkDiceRoll diceRoll)
         {
             try
             {
-                var rollId = GetUniqueId(rollDice);
-                var entry = new DiceRollEntry(rollDice);
+                var rollId = GetUniqueId(diceRoll);
+                var entry = new DiceRollEntry(diceRoll);
                 if (!_rolls.TryAdd(rollId, entry))
                 {
                     _logger.LogError("Collision has been detected. RollId={rollId}", rollId);
                     return;
                 }
 
-                _logger.LogInformation("Roll has been preserved. UniqueId={rollId}, Result={result}, HistoryCount={historyCount}", rollId, rollDice.Result, rollDice.RollHistory.Count);
+                _logger.LogInformation("Roll has been preserved. UniqueId={rollId}, Result={result}, TotalBonus={totalBonus}, Initiator={initiator}, HistoryCount={historyCount}", rollId, diceRoll.Result, diceRoll.TotalModifiersBonus, diceRoll.InitiatorId, diceRoll.RollHistory.Count);
             }
             catch (System.Exception ex)
             {
