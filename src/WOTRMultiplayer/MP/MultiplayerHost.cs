@@ -412,7 +412,7 @@ namespace WOTRMultiplayer.MP
                 return true;
             }
 
-            if (_game.Combat.Round == 1 && !_game.Combat.IsInitialized)
+            if (_game.Combat.Round <= 1 && !_game.Combat.IsInitialized)
             {
                 var unitsInCombat = _gameInteractionService.GetUnitsInCombat();
                 var message = new NotifyCombatStarted
