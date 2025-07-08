@@ -1,9 +1,5 @@
 ﻿using HarmonyLib;
-using Kingmaker;
 using Kingmaker.Controllers.Combat;
-using Kingmaker.UnitLogic.Commands;
-using Kingmaker.UnitLogic.Commands.Base;
-using Microsoft.Extensions.Logging;
 using TurnBased.Controllers;
 
 namespace WOTRMultiplayer.HarmonyPatches.TurnBasedCombat
@@ -64,43 +60,6 @@ namespace WOTRMultiplayer.HarmonyPatches.TurnBasedCombat
 
             var canContinue = Main.Multiplayer.OnBeforeEndTurn(__instance.Rider.UniqueId);
             return canContinue;
-        }
-
-        [HarmonyPatch(typeof(UnitCommand), nameof(UnitCommand.Interrupt))]
-        [HarmonyPostfix]
-        public static void UnitCommand_Interrupt_Prefix(UnitCommand __instance, bool raiseEvent)
-        {
-            if (!Main.Multiplayer.IsActive)
-            {
-                return;
-            }
-
-            // is not reliable
-
-            //if (Game.Instance.Player.IsInCombat
-            //    && (__instance is UnitMoveTo
-            //    || __instance is UnitMoveContiniously
-            //    || __instance is UnitMoveAlongPath))
-            //{
-            //    Main.GetLogger<TurnBasedCombatPatches>().LogInformation("Unit did move. UnitId={unitId}, CharacterName={characterName}", __instance.Executor?.UniqueId, __instance.Executor?.CharacterName);
-            //}
-        }
-
-        [HarmonyPatch(typeof(UnitCommand), nameof(UnitCommand.OnEnded))]
-        [HarmonyPostfix]
-        public static void UnitCommand_OnEnded_Prefix(UnitCommand __instance, bool raiseEvent)
-        {
-            if (!Main.Multiplayer.IsActive)
-            {
-                return;
-            }
-
-            // executed billion times for some reason
-
-            //if (Game.Instance.Player.IsInCombat && __instance is UnitMoveTo moveTo)
-            //{
-            //    Main.GetLogger<TurnBasedCombatPatches>().LogInformation("Unit move ended. UnitId={unitId}, CharacterName={characterName}", __instance.Executor?.UniqueId, __instance.Executor?.CharacterName);
-            //}
         }
     }
 }

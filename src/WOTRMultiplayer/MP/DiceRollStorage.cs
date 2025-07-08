@@ -21,7 +21,7 @@ namespace WOTRMultiplayer.MP
             _hashService = hashService;
         }
 
-        public void Add(NetworkDiceRoll diceRoll)
+        public bool Add(NetworkDiceRoll diceRoll)
         {
             try
             {
@@ -30,10 +30,11 @@ namespace WOTRMultiplayer.MP
                 if (!_rolls.TryAdd(rollId, entry))
                 {
                     _logger.LogError("Collision has been detected. Type={type}, RollId={rollId}", diceRoll.GetType().Name, rollId);
-                    return;
+                    return false;
                 }
 
                 _logger.LogInformation("Roll has been preserved. Type={type}, UniqueId={rollId}, Result={result}, TotalBonus={totalBonus}, Initiator={initiator}, HistoryCount={historyCount}", diceRoll.GetType().Name, rollId, diceRoll.Result, diceRoll.TotalModifiersBonus, diceRoll.InitiatorId, diceRoll.RollHistory.Count);
+                return true;
             }
             catch (System.Exception ex)
             {

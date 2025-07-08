@@ -1,10 +1,10 @@
-﻿using Kingmaker;
-using Kingmaker.PubSubSystem;
+﻿using Kingmaker.PubSubSystem;
 using Kingmaker.UnitLogic.Commands;
 using Kingmaker.UnitLogic.Commands.Base;
 using Microsoft.Extensions.Logging;
 using WOTRMultiplayer.Abstractions.MP;
 using WOTRMultiplayer.Abstractions.PubSub;
+using WOTRMultiplayer.MP.Entities;
 
 namespace WOTRMultiplayer.PubSub
 {
@@ -12,7 +12,8 @@ namespace WOTRMultiplayer.PubSub
         IGlobalMultiplayerUnitCommandSubscriber,
         IGlobalSubscriber,
         ISubscriber,
-        IUnitCommandActHandler
+        IUnitCommandActHandler,
+        IUnitCommandEndHandler
     {
         public GlobalMultiplayerUnitCommandSubscriber(
             ILogger<GlobalMultiplayerUnitCommandSubscriber> logger,
@@ -24,25 +25,64 @@ namespace WOTRMultiplayer.PubSub
 
         public void HandleUnitCommandDidAct(UnitCommand command)
         {
-            var multiplayerParticipant = GetMultiplayerParticipant();
-            if (multiplayerParticipant == null)
+            // this handler is not reliable for movement (UnitMoveTo), e.g. doesn't fire when you click to move far away or move(not attack) to enemy in combat
+            // I assume this kind of movement is being interrupted therefor it's not treated as 'acted'
+        }
+
+        public void HandleUnitCommandDidEnd(UnitCommand command)
+        {
+            if (!Host.IsActive)
             {
                 return;
             }
 
-            if (!Game.Instance.Player.IsInCombat)
+            var networkCommand = CreateCommand(command);
+            if (networkCommand == null)
             {
                 return;
             }
 
-            // this event is not reliable for movement, e.g. doesn't fire when you click to move far away or move(not attack) to enemy in combat
-            // so movement commands are handled by separate harmony patch
-            if (command is UnitMoveTo)
+            Host.UnitCommandDidEnd(networkCommand);
+        }
+
+        private NetworkUnitCommand CreateCommand(UnitCommand command)
+        {
+            var type = GetTypeFromCommand(command);
+            if (type == NetworkUnitCommandType.Ignored)
             {
-                return;
+                Logger.LogInformation("Command has been ignored. CommandType={commandType}", command.GetType().Name);
+                return null;
             }
 
-            Logger.LogInformation("Unit did act. CommandType={commandType}, UnitId={unitId}, CharacterName={characterName}", command.GetType().Name, command.Executor?.UniqueId, command.Executor?.CharacterName);
+            var networkUnitCommand = new NetworkUnitCommand
+            {
+                TargetId = command.Target?.Unit?.UniqueId,
+                CommandType = type,
+                UnitId = command.Executor?.UniqueId
+            };
+
+            if (command is UnitMoveTo moveTo)
+            {
+                networkUnitCommand.Destination = new System.Numerics.Vector3(moveTo.Target.x, moveTo.Target.y, moveTo.Target.z);
+                networkUnitCommand.Orientation = moveTo.Orientation;
+            }
+            else if (command is UnitAttack attack)
+            {
+            }
+
+            return networkUnitCommand;
+        }
+
+        private NetworkUnitCommandType GetTypeFromCommand(UnitCommand command)
+        {
+            return command switch
+            {
+                UnitMoveTo => NetworkUnitCommandType.Move,
+                UnitAttack => NetworkUnitCommandType.Attack,
+
+                UnitAttackOfOpportunity => NetworkUnitCommandType.Ignored,
+                _ => NetworkUnitCommandType.Unknown
+            };
         }
     }
 }

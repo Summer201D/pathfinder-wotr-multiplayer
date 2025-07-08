@@ -9,5 +9,7 @@ namespace WOTRMultiplayer.MP.Entities
         public int Round { get; set; }
 
         public ConcurrentDictionary<long, bool> PlayersInitialization { get; set; } = new();
+
+        public string TurnOwner { get; set; }
     }
 }

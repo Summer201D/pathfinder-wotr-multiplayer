@@ -446,6 +446,7 @@ namespace WOTRMultiplayer.MP
         public bool OnBeforeStartTurn(string unitId)
         {
             var isPartyUnit = _gameInteractionService.GetIsUnitInParty(unitId);
+            _game.Combat.TurnOwner = unitId;
             _logger.LogInformation("OnBeforeStartTurn. UnitId={unitId}, IsPartyUnit={isPartyUnit}", unitId, isPartyUnit);
             return true;
         }
@@ -453,6 +454,7 @@ namespace WOTRMultiplayer.MP
         public bool OnBeforeEndTurn(string unitId)
         {
             _logger.LogInformation("OnBeforeEndTurn. UnitId={unitId}", unitId);
+            _game.Combat.TurnOwner = null;
             return true;
         }
 
@@ -471,6 +473,22 @@ namespace WOTRMultiplayer.MP
         public int GetCombatRound()
         {
             return _game.Combat?.Round ?? 0;
+        }
+
+        public void UnitCommandDidEnd(NetworkUnitCommand networkCommand)
+        {
+            if (_game.Combat == null)
+            {
+                // don't care outside of combat
+                return;
+            }
+
+            if (networkCommand.UnitId != _game.Combat.TurnOwner)
+            {
+                return;
+            }
+
+            _logger.LogInformation("Send sync command. Type={type}, UnitId={unitId}", networkCommand.CommandType, networkCommand.UnitId);
         }
 
         private void SoftReset()

@@ -359,6 +359,7 @@ namespace WOTRMultiplayer.MP
         public bool OnBeforeStartTurn(string unitId)
         {
             var isPartyUnit = _gameInteractionService.GetIsUnitInParty(unitId);
+            _game.Combat.TurnOwner = unitId;
             _logger.LogInformation("OnBeforeStartTurn. UnitId={unitId}, IsPartyUnit={isPartyUnit}", unitId, isPartyUnit);
             // AI requires extra sync since it's movement is automated, but characters have strict control
             return isPartyUnit;
@@ -367,6 +368,7 @@ namespace WOTRMultiplayer.MP
         public bool OnBeforeEndTurn(string unitId)
         {
             _logger.LogInformation("OnBeforeEndTurn. UnitId={unitId}", unitId);
+            _game.Combat.TurnOwner = null;
             return true;
         }
 

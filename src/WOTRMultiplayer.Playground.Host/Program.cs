@@ -251,8 +251,9 @@ namespace WOTRMultiplayer.Playground.Host
 
         private class DummyRollStorage : IDiceRollStorage
         {
-            public void Add(NetworkDiceRoll rollDice)
+            public bool Add(NetworkDiceRoll rollDice)
             {
+                return true;
             }
 
             public NetworkDiceRoll Get(int rollId, long playerId)

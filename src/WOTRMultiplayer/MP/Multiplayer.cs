@@ -146,25 +146,24 @@ namespace WOTRMultiplayer.MP
                 return;
             }
 
-            switch (ruleRollDice.Reason.Rule)
+            var combatRound = _multiplayerHost.GetCombatRound();
+            NetworkDiceRoll roll = ruleRollDice.Reason.Rule switch
             {
-                case RulePartyStatCheck rulePartyStatCheck:
-                    var partyStatCheckRoll = CreatePartyStatCheckRoll(ruleRollDice, rulePartyStatCheck);
-                    _rollStorage.Add(partyStatCheckRoll);
-                    break;
-                case RuleInitiativeRoll ruleInitiativeRoll:
-                    var initiativeRoll = CreateInitiativeRoll(ruleRollDice, ruleInitiativeRoll);
-                    _rollStorage.Add(initiativeRoll);
-                    break;
-                case RuleAttackWithWeapon ruleAttackWithWeapon:
-                    var combatRound = _multiplayerHost.GetCombatRound();
-                    var attackWithWeaponRoll = CreateAttackWithWeaponRoll(ruleRollDice, ruleAttackWithWeapon, combatRound);
-                    _rollStorage.Add(attackWithWeaponRoll);
-                    break;
-                case RuleRollD20:
-                default:
-                    _logger.LogWarning("Roll saving has been skipped. Type={rollType}, InitiatorName={initiatorName}, InitiatorId={initiatorId}", ruleRollDice.Reason.Rule.GetType().Name, ruleRollDice.Initiator?.CharacterName, ruleRollDice.Initiator?.UniqueId);
-                    break;
+                RulePartyStatCheck rulePartyStatCheck => CreatePartyStatCheckRoll(ruleRollDice, rulePartyStatCheck),
+                RuleInitiativeRoll ruleInitiativeRoll => CreateInitiativeRoll(ruleRollDice, ruleInitiativeRoll),
+                RuleAttackWithWeapon ruleAttackWithWeapon => CreateAttackWithWeaponRoll(ruleRollDice, ruleAttackWithWeapon, combatRound),
+                _ => null
+            };
+
+            if (roll == null)
+            {
+                _logger.LogWarning("Roll saving has been skipped. Type={rollType}, InitiatorName={initiatorName}, InitiatorId={initiatorId}", ruleRollDice.Reason.Rule.GetType().Name, ruleRollDice.Initiator?.CharacterName, ruleRollDice.Initiator?.UniqueId);
+                return;
+            }
+
+            if (!_rollStorage.Add(roll))
+            {
+                _logger.LogCritical("Failing to save roll guarantees to cause desync in the game");
             }
         }
 
@@ -330,7 +329,8 @@ namespace WOTRMultiplayer.MP
                 TargetId = ruleAttackWithWeapon.Target.UniqueId,
                 ExtraAttack = ruleAttackWithWeapon.ExtraAttack,
                 IsFirstAttack = ruleAttackWithWeapon.IsFirstAttack,
-                AttacksCount = ruleAttackWithWeapon.AttacksCount
+                AttacksCount = ruleAttackWithWeapon.AttacksCount,
+                IsCriticalRoll = ruleAttackWithWeapon.AttackRoll.IsCriticalRoll
             };
 
             return roll;

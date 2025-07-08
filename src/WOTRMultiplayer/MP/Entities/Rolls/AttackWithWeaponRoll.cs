@@ -15,11 +15,12 @@
         public bool IsFirstAttack { get; set; }
 
         public int AttacksCount { get; set; }
+        public bool IsCriticalRoll { get; set; }
 
         public override string GetIdString()
         {
-            return base.GetIdString() + AttackNumber.ToString() + CombatRound.ToString()
-                + IsAttackOfOpportunity + TargetId + ExtraAttack + IsFirstAttack + AttacksCount;
+            return base.GetIdString() + AttackNumber.ToString() + CombatRound.ToString() + IsAttackOfOpportunity
+                + TargetId + ExtraAttack + IsFirstAttack + AttacksCount + IsCriticalRoll;
         }
     }
 }
