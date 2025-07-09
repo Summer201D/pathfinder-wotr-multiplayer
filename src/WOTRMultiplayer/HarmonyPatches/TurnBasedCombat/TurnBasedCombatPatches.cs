@@ -1,5 +1,7 @@
 ﻿using HarmonyLib;
 using Kingmaker.Controllers.Combat;
+using Kingmaker.Controllers.Units;
+using Kingmaker.UnitLogic.Commands.Base;
 using TurnBased.Controllers;
 
 namespace WOTRMultiplayer.HarmonyPatches.TurnBasedCombat
@@ -60,6 +62,28 @@ namespace WOTRMultiplayer.HarmonyPatches.TurnBasedCombat
 
             var canContinue = Main.Multiplayer.OnBeforeEndTurn(__instance.Rider.UniqueId);
             return canContinue;
+        }
+
+        [HarmonyPatch(typeof(UnitCommandController), nameof(UnitCommandController.TickCommand))]
+        [HarmonyPrefix]
+        public static bool UnitCommandController_TickCommand_Prefix(UnitCommandController __instance, UnitCommand command, bool canMoveUnit)
+        {
+            if (!Main.Multiplayer.IsActive)
+            {
+                return true;
+            }
+
+            // should be always true for a client + should be sent to host to make that action first
+
+            //if (!Game.Instance.Player.IsInCombat || !command.Executor.IsPlayerFaction)
+            //{
+            //    return true;
+            //}
+
+            //command.Interrupt(false);
+            //Main.GetLogger<TurnBasedCombatPatches>().LogInformation("Interrupted command. Type={type}, UnitId={unitId}", command.GetType().Name, command.Executor.UniqueId);
+            //return false;
+            return true;
         }
     }
 }
