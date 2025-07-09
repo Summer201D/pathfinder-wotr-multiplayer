@@ -2,8 +2,10 @@
 using Microsoft.Extensions.Logging;
 using Owlcat.Runtime.UI.Controls.Button;
 using UnityEngine;
+using WOTRMultiplayer.Abstractions.GameInteraction;
 using WOTRMultiplayer.Abstractions.UI.Controllers;
 using WOTRMultiplayer.Abstractions.UI.Controllers.Menu;
+using WOTRMultiplayer.Abstractions.Unity;
 using WOTRMultiplayer.UI.Lobby;
 
 namespace WOTRMultiplayer.UI.Menu.Items
@@ -18,6 +20,11 @@ namespace WOTRMultiplayer.UI.Menu.Items
         private GameObject _hoverImage;
 
         protected ILobbyWindowController Lobby { get; private set; }
+
+        protected IMainThreadAccessor MainThreadAccessor { get; private set; }
+
+        protected IGameInteractionService GameInteraction { get; private set; }
+
         protected bool SetupLayout { get; set; } = true;
         protected GameObject ActiveImage { get; private set; }
 
@@ -34,10 +41,14 @@ namespace WOTRMultiplayer.UI.Menu.Items
 
         protected MenuItemController(
             Microsoft.Extensions.Logging.ILogger logger,
-            ILobbyWindowController lobbyWindowController)
+            ILobbyWindowController lobbyWindowController,
+            IMainThreadAccessor mainThreadAccessor,
+            IGameInteractionService gameInteractionService)
         {
             _logger = logger;
             Lobby = lobbyWindowController;
+            MainThreadAccessor = mainThreadAccessor;
+            GameInteraction = gameInteractionService;
         }
 
         public void Dispose()

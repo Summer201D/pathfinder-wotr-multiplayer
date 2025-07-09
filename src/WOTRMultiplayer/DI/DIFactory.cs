@@ -7,7 +7,6 @@ using WOTRMultiplayer.Abstractions.Hashing;
 using WOTRMultiplayer.Abstractions.IO;
 using WOTRMultiplayer.Abstractions.MP;
 using WOTRMultiplayer.Abstractions.PubSub;
-using WOTRMultiplayer.Abstractions.Saves;
 using WOTRMultiplayer.Abstractions.UI;
 using WOTRMultiplayer.Abstractions.UI.Controllers;
 using WOTRMultiplayer.Abstractions.UI.Controllers.Menu;
@@ -18,7 +17,6 @@ using WOTRMultiplayer.IO;
 using WOTRMultiplayer.MP;
 using WOTRMultiplayer.Networking.Extensions;
 using WOTRMultiplayer.PubSub;
-using WOTRMultiplayer.Saves;
 using WOTRMultiplayer.UI;
 using WOTRMultiplayer.UI.Lobby;
 using WOTRMultiplayer.UI.Menu.Items;
@@ -40,7 +38,6 @@ namespace WOTRMultiplayer.DI
             });
 
             serviceCollection.AddSingleton<IMainThreadAccessor, MainThreadAccessor>();
-            serviceCollection.AddSingleton<ISaveGameService, SaveGameService>();
 
             serviceCollection.AddSingleton<IFileSystemService, FileSystemService>();
             serviceCollection.AddSingleton<IResourceProvider, ResourceBundleProvider>();

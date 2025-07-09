@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Net;
 using System.Numerics;
-using Kingmaker.EntitySystem.Persistence;
 using WOTRMultiplayer.MP.Entities;
 
 namespace WOTRMultiplayer.Abstractions.MP
@@ -19,7 +18,7 @@ namespace WOTRMultiplayer.Abstractions.MP
 
         void Dispose();
 
-        Action<SaveInfo> OnStartGame { get; set; }
+        Action<string> OnStartGame { get; set; }
 
         Action<EndPoint> OnConnected { get; set; }
 
@@ -44,5 +43,6 @@ namespace WOTRMultiplayer.Abstractions.MP
         void CombatRoundStarted(int round);
         int GetCombatRound();
         bool CanContinueCombat();
+        void ForceLoadGame(string savePath);
     }
 }

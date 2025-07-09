@@ -8,6 +8,7 @@ using Kingmaker.Blueprints.Root;
 using Kingmaker.Cheats;
 using Kingmaker.DialogSystem.Blueprints;
 using Kingmaker.EntitySystem.Entities;
+using Kingmaker.EntitySystem.Persistence;
 using Kingmaker.GameModes;
 using Kingmaker.Globalmap.Blueprints;
 using Kingmaker.Localization;
@@ -46,6 +47,18 @@ namespace WOTRMultiplayer.GameInteraction
         }
 
         public bool IsPaused => Game.Instance.IsPaused;
+
+        public string GetSaveGamePath()
+        {
+            var path = Game.Instance.SaveManager.SavePath;
+            return path;
+        }
+
+        public SaveInfo LoadSave(string path)
+        {
+            var save = Game.Instance.SaveManager.LoadZipSave(path);
+            return save;
+        }
 
         public void LeaveArea(string areaExitId)
         {
@@ -345,6 +358,24 @@ namespace WOTRMultiplayer.GameInteraction
                 .ToList();
 
             return units;
+        }
+
+        public void QuickLoadGame(string savePath)
+        {
+            var save = LoadSave(savePath);
+            _mainThreadAccessor.Enqueue(() =>
+            {
+                Game.Instance.LoadGame(save);
+            });
+        }
+
+        public void LoadGameFromMainMenu(string savePath)
+        {
+            var save = LoadSave(savePath);
+            _mainThreadAccessor.Enqueue(() =>
+            {
+                Game.Instance.RootUiContext.MainMenuVM.EnterLoadGame(save);
+            });
         }
     }
 }

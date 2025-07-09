@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using Kingmaker;
-using Kingmaker.EntitySystem.Persistence;
 using Kingmaker.UI.Common;
 using Kingmaker.UI.MVVM;
 using Kingmaker.UI.MVVM._PCView.SaveLoad;
@@ -16,6 +15,7 @@ using TMPro;
 using UniRx;
 using UnityEngine;
 using UnityEngine.Events;
+using WOTRMultiplayer.Abstractions.GameInteraction;
 using WOTRMultiplayer.Abstractions.MP;
 using WOTRMultiplayer.Abstractions.UI.Controllers;
 using WOTRMultiplayer.Abstractions.UI.Controllers.Menu;
@@ -42,7 +42,6 @@ namespace WOTRMultiplayer.UI.Menu.Items
 
         private readonly ILogger<HostMenuItemController> _logger;
         private readonly IMultiplayerHost _multiplayerHost;
-        private readonly IMainThreadAccessor _mainThreadAccessor;
 
         private GameObject _menuContent;
 
@@ -82,12 +81,12 @@ namespace WOTRMultiplayer.UI.Menu.Items
             ILogger<HostMenuItemController> logger,
             IMultiplayerHost multiplayerHost,
             IMainThreadAccessor mainThreadAccessor,
-            ILobbyWindowController lobbyWindowController)
-            : base(logger, lobbyWindowController)
+            ILobbyWindowController lobbyWindowController,
+            IGameInteractionService gameInteractionService)
+            : base(logger, lobbyWindowController, mainThreadAccessor, gameInteractionService)
         {
             _logger = logger;
             _multiplayerHost = multiplayerHost;
-            _mainThreadAccessor = mainThreadAccessor;
         }
 
         public override void Activate()
@@ -185,13 +184,10 @@ namespace WOTRMultiplayer.UI.Menu.Items
             Lobby.OnCharacterOwnerChanged = enable ? OnLobbyCharacterOwnerChanged : null;
         }
 
-        private void OnMultiplayerStartGame(SaveInfo info)
+        private void OnMultiplayerStartGame(string saveFilePath)
         {
             _logger.LogInformation("Starting multiplayer game as a host");
-            _mainThreadAccessor.Enqueue(() =>
-            {
-                Game.Instance.RootUiContext.MainMenuVM.EnterLoadGame(info);
-            });
+            GameInteraction.LoadGameFromMainMenu(saveFilePath);
         }
 
         protected override void DisposeInternal()
@@ -237,12 +233,12 @@ namespace WOTRMultiplayer.UI.Menu.Items
                 StartButtonObject.SetActive(true);
                 ReadyButtonObject.SetActive(true);
                 ReadyButton.Interactable = true;
-                _multiplayerHost.Create(selectedSave.Reference, characters);
+                _multiplayerHost.Create(savePath, characters);
                 SetButtonLabel(HostButtonObject, UIStringConsts.MultiplayerWindow.HostMenu.HostButtonActiveLabel);
                 return;
             }
 
-            _multiplayerHost.UpdateSaveGame(selectedSave.Reference, characters);
+            _multiplayerHost.UpdateSaveGame(savePath, characters);
         }
 
         private void OnReadyButtonClicked()
@@ -315,7 +311,7 @@ namespace WOTRMultiplayer.UI.Menu.Items
         {
             Lobby.UpdatePlayers(players);
             var canStart = players.All(p => p.IsReady);
-            _mainThreadAccessor.Enqueue(() =>
+            MainThreadAccessor.Enqueue(() =>
             {
                 StartButton.Interactable = canStart;
             });

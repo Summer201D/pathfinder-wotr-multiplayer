@@ -8,6 +8,7 @@ namespace WOTRMultiplayer.Abstractions.MP
     public interface IMultiplayerClient : IMultiplayerParticipant
     {
         ConnectLobbyResult Connect(string address);
+
         NetworkDiceRoll GetHostRoll(int rollId);
 
         bool IsConnecting { get; }

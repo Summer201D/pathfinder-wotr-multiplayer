@@ -10,7 +10,6 @@ using Microsoft.Extensions.Logging;
 using WOTRMultiplayer.Abstractions.GameInteraction;
 using WOTRMultiplayer.Abstractions.IO;
 using WOTRMultiplayer.Abstractions.MP;
-using WOTRMultiplayer.Abstractions.Saves;
 using WOTRMultiplayer.MP;
 using WOTRMultiplayer.MP.Entities;
 using WOTRMultiplayer.Networking.Abstractions;
@@ -25,17 +24,15 @@ namespace WOTRMultiplayer.Playground.Client
         {
             Console.WriteLine("Hello World!");
             var serviceProvider = DI.DIFactory.Create(new Config.UnityMod.UnityModManagerSettings { UseDebugConsole = false });
-            var unityPathService = new DummySaveGameService();
-            Console.WriteLine("Default save game dir=" + unityPathService.GetSaveGamePath());
+            var gameInteractionService = new DummyGameInteractionService();
+            Console.WriteLine("Default save game dir=" + gameInteractionService.GetSaveGamePath());
             Console.WriteLine("Press enter to join");
             Console.ReadLine();
-            var gameInteractionService = new DummyGameInteractionService();
             var client = new MultiplayerClient(
                 serviceProvider.GetService<ILogger<MultiplayerClient>>(),
                 gameInteractionService,
                 serviceProvider.GetService<IIPEndPointParser>(),
                 serviceProvider.GetService<IMultiplayerSettingsProvider>(),
-                unityPathService,
                 serviceProvider.GetService<IFileSystemService>(),
                 serviceProvider.GetService<INetworkServerClient>());
             client.Connect("127.0.0.1:1024");
@@ -108,8 +105,10 @@ namespace WOTRMultiplayer.Playground.Client
             }
         }
 
-        private class DummySaveGameService : ISaveGameService
+        private class DummyGameInteractionService : IGameInteractionService
         {
+            public bool IsPaused { get; set; }
+
             public string GetSaveGamePath()
             {
                 var appData = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
@@ -121,11 +120,6 @@ namespace WOTRMultiplayer.Playground.Client
             {
                 return null;
             }
-        }
-
-        private class DummyGameInteractionService : IGameInteractionService
-        {
-            public bool IsPaused { get; set; }
 
             public bool GetIsUnitInParty(string unitId)
             {
@@ -177,6 +171,14 @@ namespace WOTRMultiplayer.Playground.Client
             public Task<bool> StartDialogAsync(string dialogName, string targetUnitId, string initiatorUnitId, string mapObjectId, string speakerKey)
             {
                 return Task.FromResult(true);
+            }
+
+            public void QuickLoadGame(string savePath)
+            {
+            }
+
+            public void LoadGameFromMainMenu(string savePath)
+            {
             }
         }
     }

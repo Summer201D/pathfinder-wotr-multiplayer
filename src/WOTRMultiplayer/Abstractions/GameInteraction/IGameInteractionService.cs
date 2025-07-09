@@ -33,5 +33,11 @@ namespace WOTRMultiplayer.Abstractions.GameInteraction
         bool GetIsUnitInParty(string unitId);
 
         List<NetworkUnit> GetUnitsInCombat();
+
+        void QuickLoadGame(string savePath);
+
+        void LoadGameFromMainMenu(string savePath);
+
+        string GetSaveGamePath();
     }
 }

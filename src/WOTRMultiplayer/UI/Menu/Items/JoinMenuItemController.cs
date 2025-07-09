@@ -1,7 +1,5 @@
 ﻿using System.Collections.Generic;
 using System.Net;
-using Kingmaker;
-using Kingmaker.EntitySystem.Persistence;
 using Kingmaker.PubSubSystem;
 using Kingmaker.UI;
 using Microsoft.Extensions.Logging;
@@ -9,6 +7,7 @@ using Owlcat.Runtime.UI.Controls.Button;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using WOTRMultiplayer.Abstractions.GameInteraction;
 using WOTRMultiplayer.Abstractions.MP;
 using WOTRMultiplayer.Abstractions.UI;
 using WOTRMultiplayer.Abstractions.UI.Controllers;
@@ -35,7 +34,6 @@ namespace WOTRMultiplayer.UI.Menu.Items
         public const string LobbyWindowObjectName = "LobbyWindow";
 
         private readonly ILogger<JoinMenuItemController> _logger;
-        private readonly IMainThreadAccessor _mainThreadAccessor;
         private readonly IUIFactory _uIFactory;
         private readonly IMultiplayerClient _multiplayerClient;
         private GameObject _menuContent;
@@ -79,11 +77,11 @@ namespace WOTRMultiplayer.UI.Menu.Items
             IMainThreadAccessor mainThreadAccessor,
             ILobbyWindowController lobbyWindowController,
             IMultiplayerClient multiplayerClient,
-            IUIFactory uIFactory)
-            : base(logger, lobbyWindowController)
+            IUIFactory uIFactory,
+            IGameInteractionService gameInteractionService)
+            : base(logger, lobbyWindowController, mainThreadAccessor, gameInteractionService)
         {
             _logger = logger;
-            _mainThreadAccessor = mainThreadAccessor;
             _uIFactory = uIFactory;
             _multiplayerClient = multiplayerClient;
         }
@@ -242,13 +240,10 @@ namespace WOTRMultiplayer.UI.Menu.Items
             base.DisposeInternal();
         }
 
-        private void OnMultiplayerStartGame(SaveInfo info)
+        private void OnMultiplayerStartGame(string saveFilePath)
         {
             _logger.LogInformation("Starting multiplayer game as a client");
-            _mainThreadAccessor.Enqueue(() =>
-            {
-                Game.Instance.RootUiContext.MainMenuVM.EnterLoadGame(info);
-            });
+            GameInteraction.LoadGameFromMainMenu(saveFilePath);
         }
 
         private void OnMultiplayerConnected(EndPoint endpoint)
@@ -291,7 +286,7 @@ namespace WOTRMultiplayer.UI.Menu.Items
 
         private void ActivateLobbyControls()
         {
-            _mainThreadAccessor.Enqueue(() =>
+            MainThreadAccessor.Enqueue(() =>
             {
                 ReadyButtonObject.GetComponentInChildren<TextMeshProUGUI>().SetText(UIStringConsts.MultiplayerWindow.HostMenu.ReadyNotReadyButtonLabel);
 
@@ -303,7 +298,7 @@ namespace WOTRMultiplayer.UI.Menu.Items
 
         private void ActivateJoinLobbyControls()
         {
-            _mainThreadAccessor.Enqueue(() =>
+            MainThreadAccessor.Enqueue(() =>
             {
                 Lobby.ResetData();
                 SetButtonActive(JoinButtonObject, true);
@@ -334,7 +329,7 @@ namespace WOTRMultiplayer.UI.Menu.Items
 
         private void SetButtonActive(GameObject button, bool isActive)
         {
-            _mainThreadAccessor.Enqueue(() =>
+            MainThreadAccessor.Enqueue(() =>
             {
                 button.GetComponent<OwlcatButton>().Interactable = isActive;
             });

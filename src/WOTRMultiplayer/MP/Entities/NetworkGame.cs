@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using System.Net;
-using Kingmaker.EntitySystem.Persistence;
 
 namespace WOTRMultiplayer.MP.Entities
 {
@@ -20,11 +19,11 @@ namespace WOTRMultiplayer.MP.Entities
 
         public NetworkDialog Dialog { get; set; }
 
-        public SaveInfo Save { get; set; }
+        public string SaveFilePath { get; set; }
 
-        public NetworkGame(SaveInfo save)
+        public NetworkGame(string saveFilePath)
         {
-            Save = save;
+            SaveFilePath = saveFilePath;
             Stage = NetworkGameStage.Lobby;
         }
 
@@ -33,7 +32,7 @@ namespace WOTRMultiplayer.MP.Entities
             LocalPlayerId = 0; // -1 host << 0 default << 1+ clients
             Players.Clear();
             Characters.Clear();
-            Save = null;
+            SaveFilePath = null;
             Endpoint = null;
             Stage = NetworkGameStage.None;
             Dialog = null;

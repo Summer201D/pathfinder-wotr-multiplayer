@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Numerics;
-using Kingmaker.EntitySystem.Persistence;
 using Kingmaker.Utility;
 using Microsoft.Extensions.Logging;
 using WOTRMultiplayer.Abstractions.GameInteraction;
@@ -35,7 +34,7 @@ namespace WOTRMultiplayer.MP
 
         public Action<List<NetworkPlayer>> OnPlayersChanged { get; set; }
         public Action<EndPoint> OnConnected { get; set; }
-        public Action<SaveInfo> OnStartGame { get; set; }
+        public Action<string> OnStartGame { get; set; }
 
         public bool IsActive => _networkServer.IsActive;
 
@@ -59,7 +58,7 @@ namespace WOTRMultiplayer.MP
             _rollStorage = rollStorage;
         }
 
-        public void Create(SaveInfo save, List<NetworkCharacterOwnership> characters)
+        public void Create(string saveFilePath, List<NetworkCharacterOwnership> characters)
         {
             if (_networkServer.IsActive)
             {
@@ -70,7 +69,7 @@ namespace WOTRMultiplayer.MP
 
             _game?.Reset();
 
-            _game = new NetworkGame(save)
+            _game = new NetworkGame(saveFilePath)
             {
                 LocalPlayerId = LocalHostPlayerId
             };
@@ -79,12 +78,12 @@ namespace WOTRMultiplayer.MP
 
             _networkServer.Start(_multiplayerSettingsProvider.Settings.HostPortRangeStart, _multiplayerSettingsProvider.Settings.HostPortRangeEnd);
 
-            _logger.LogInformation("Host has been created. SavePath={savePath}, Portraits={portraits}", _game.Save.FolderName, string.Join(";", _game.Characters.Select(c => c.Portrait)));
+            _logger.LogInformation("Host has been created. SavePath={savePath}, Portraits={portraits}", saveFilePath, string.Join(";", _game.Characters.Select(c => c.Portrait)));
         }
 
-        public void UpdateSaveGame(SaveInfo save, List<NetworkCharacterOwnership> characters)
+        public void UpdateSaveGame(string saveFilePath, List<NetworkCharacterOwnership> characters)
         {
-            _game.Save = save;
+            _game.SaveFilePath = saveFilePath;
             _game.Characters.Clear();
             _game.Characters.AddRange(characters);
             var host = GetHost();
@@ -187,10 +186,10 @@ namespace WOTRMultiplayer.MP
         {
             _logger.LogInformation("Starting game...");
             // it should be fine to block current thread
-            var content = _fileSystemService.GetFile(_game.Save.FolderName);
+            var content = _fileSystemService.GetFile(_game.SaveFilePath);
             if (content == null)
             {
-                _logger.LogError("Unable to start a game due to missing save file. Path={savePath}", _game.Save.FolderName);
+                _logger.LogError("Unable to start a game due to missing save file. Path={savePath}", _game.SaveFilePath);
                 return;
             }
 
@@ -200,7 +199,7 @@ namespace WOTRMultiplayer.MP
 
             lock (_actionlock)
             {
-                var saveGameMessageAssigned = new NotifySaveGameAssigned { Content = content };
+                var saveGameMessageAssigned = new NotifySaveGameAssigned { Content = content, IsForceLoad = false };
                 _logger.LogInformation($"Sending save game file content to all players. Size={saveGameMessageAssigned.Content.Length}");
                 _networkServer.SendAll(saveGameMessageAssigned);
                 _game.Stage = NetworkGameStage.WaitingForPlayersInitialization;
@@ -491,11 +490,29 @@ namespace WOTRMultiplayer.MP
             _logger.LogInformation("Send sync command. Type={type}, UnitId={unitId}", networkCommand.CommandType, networkCommand.UnitId);
         }
 
+        public void ForceLoadGame(string savePath)
+        {
+            _logger.LogInformation("Notifying clients to force load save game. Path={savePath}", savePath);
+
+            var message = new NotifySaveGameAssigned
+            {
+                Content = _fileSystemService.GetFile(savePath),
+                IsForceLoad = true
+            };
+
+            foreach (var player in _game.Players)
+            {
+                player.IsLoading = true;
+            }
+
+            _networkServer.SendAll(message);
+        }
+
         private void SoftReset()
         {
             _logger.LogInformation("Doing soft reset");
             _game.Dialog = null;
-            _game.Save = null;
+            _game.SaveFilePath = null;
             _game.Combat = null;
             _rollStorage.Reset();
         }
@@ -614,7 +631,7 @@ namespace WOTRMultiplayer.MP
                 }
 
                 _networkServer.SendAll(new NotifyGameStarted());
-                OnStartGame?.Invoke(_game.Save);
+                OnStartGame?.Invoke(_game.SaveFilePath);
             }
         }
 
@@ -641,6 +658,10 @@ namespace WOTRMultiplayer.MP
             _networkServer.OnServerStarted = OnServerStarted;
 
             _networkServer
+                // this is special case when client sends notify as usually all notifies are sent by host only
+                // we need to load game ASAP on both host/clients
+                .Register<NotifySaveGameAssigned>(OnNotifySaveGameAssigned)
+
                 .Register<PlayerReadyStatusChanged>(OnPlayerReadyStatusChanged)
                 .Register<PlayerNameResponse>(OnPlayerNameResponse)
                 .Register<PlayerSaveGameSyncChanged>(OnPlayerSaveGameSyncChanged)
@@ -653,6 +674,13 @@ namespace WOTRMultiplayer.MP
                 .Register<StartDialogRequested>(OnStartDialogRequested)
                 .Register<ClientCombatInitialized>(OnClientCombatInitialized)
                 ;
+        }
+
+        private void OnNotifySaveGameAssigned(long playerId, NotifySaveGameAssigned assigned)
+        {
+            _logger.LogInformation($"Received {nameof(NotifySaveGameAssigned)}. PlayerId={{playerId}}, IsForceLoad={{isForceLoad}}, SaveGameSize={{saveGameSize}}", playerId, assigned.IsForceLoad, assigned.Content.Length);
+
+            _networkServer.SendAllExcept(playerId, assigned);
         }
 
         private void OnClientCombatInitialized(long playerId, ClientCombatInitialized initialized)

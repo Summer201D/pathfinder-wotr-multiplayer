@@ -66,7 +66,7 @@ namespace WOTRMultiplayer.PubSub
                 networkUnitCommand.Destination = new System.Numerics.Vector3(moveTo.Target.x, moveTo.Target.y, moveTo.Target.z);
                 networkUnitCommand.Orientation = moveTo.Orientation;
             }
-            else if (command is UnitAttack attack)
+            else if (command is UnitAttack)
             {
             }
 

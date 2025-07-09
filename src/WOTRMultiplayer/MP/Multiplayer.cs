@@ -1,6 +1,7 @@
 ﻿using System.Numerics;
 using Kingmaker.Controllers.Clicks.Handlers;
 using Kingmaker.EntitySystem.Entities;
+using Kingmaker.EntitySystem.Persistence;
 using Kingmaker.GameModes;
 using Kingmaker.RuleSystem.Rules;
 using Microsoft.Extensions.Logging;
@@ -291,6 +292,15 @@ namespace WOTRMultiplayer.MP
         {
             var participant = GetMultiplayerParticipant();
             return participant.OnBeforeEndTurn(unitId);
+        }
+
+        public void ForceLoadGame(SaveInfo saveInfo)
+        {
+            // extra validation is not required since everything is already validated by the game
+            var savePath = saveInfo.FolderName;
+            _logger.LogInformation("Force load game. Save={saveLocation}", savePath);
+            var participant = GetMultiplayerParticipant();
+            participant.ForceLoadGame(savePath);
         }
 
         private PartyStatCheckRoll CreatePartyStatCheckRoll(RuleRollDice ruleRollDice, RulePartyStatCheck rulePartySkillCheck)

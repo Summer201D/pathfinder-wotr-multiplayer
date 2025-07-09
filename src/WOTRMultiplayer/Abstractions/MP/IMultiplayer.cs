@@ -1,5 +1,6 @@
 ﻿using Kingmaker.Controllers.Clicks.Handlers;
 using Kingmaker.EntitySystem.Entities;
+using Kingmaker.EntitySystem.Persistence;
 using Kingmaker.GameModes;
 using Kingmaker.RuleSystem.Rules;
 using WOTRMultiplayer.Abstractions.UI;
@@ -37,6 +38,7 @@ namespace WOTRMultiplayer.Abstractions.MP
         bool OnBeforeStartTurn(string unitId);
 
         bool OnBeforeEndTurn(string unitId);
+        void ForceLoadGame(SaveInfo saveInfo);
 
         bool IsActive { get; }
     }

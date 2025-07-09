@@ -7,12 +7,10 @@ using System.Net.Sockets;
 using System.Numerics;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using Kingmaker.EntitySystem.Persistence;
 using Microsoft.Extensions.Logging;
 using WOTRMultiplayer.Abstractions.GameInteraction;
 using WOTRMultiplayer.Abstractions.IO;
 using WOTRMultiplayer.Abstractions.MP;
-using WOTRMultiplayer.Abstractions.Saves;
 using WOTRMultiplayer.MP.Entities;
 using WOTRMultiplayer.MP.Entities.Rolls;
 using WOTRMultiplayer.Networking.Abstractions;
@@ -27,7 +25,6 @@ namespace WOTRMultiplayer.MP
         private readonly ILogger<MultiplayerClient> _logger;
         private readonly IIPEndPointParser _ipEndPointParser;
         private readonly IFileSystemService _fileSystemService;
-        private readonly ISaveGameService _saveGameService;
         private readonly INetworkServerClient _networkServerClient;
         private readonly IMultiplayerSettingsProvider _multiplayerSettingsProvider;
         private readonly IGameInteractionService _gameInteractionService;
@@ -43,7 +40,7 @@ namespace WOTRMultiplayer.MP
         public Action<List<NetworkPlayer>> OnPlayersChanged { get; set; }
         public Action<List<NetworkCharacterOwnership>> OnGameCharactersChanged { get; set; }
         public Action<int, int> OnCharacterOwnerChanged { get; set; }
-        public Action<SaveInfo> OnStartGame { get; set; }
+        public Action<string> OnStartGame { get; set; }
 
         public Action OnDisconnected { get; set; }
 
@@ -62,14 +59,12 @@ namespace WOTRMultiplayer.MP
             IGameInteractionService gameInteractionService,
             IIPEndPointParser ipEndPointParser,
             IMultiplayerSettingsProvider multiplayerSettingsProvider,
-            ISaveGameService saveGameService,
             IFileSystemService fileSystemService,
             INetworkServerClient networkServerClient)
         {
             _logger = logger;
             _ipEndPointParser = ipEndPointParser;
             _fileSystemService = fileSystemService;
-            _saveGameService = saveGameService;
             _networkServerClient = networkServerClient;
             _multiplayerSettingsProvider = multiplayerSettingsProvider;
             _gameInteractionService = gameInteractionService;
@@ -389,10 +384,21 @@ namespace WOTRMultiplayer.MP
             return _game.Combat?.Round ?? 0;
         }
 
+        public void ForceLoadGame(string savePath)
+        {
+            _logger.LogInformation("Sending to host force load. SavePath={savePath}", savePath);
+            var message = new NotifySaveGameAssigned
+            {
+                Content = _fileSystemService.GetFile(savePath),
+                IsForceLoad = true
+            };
+            _networkServerClient.SendAsync(message).Wait();
+        }
+
         private void SoftReset()
         {
             _game.Dialog = null;
-            _game.Save = null;
+            _game.SaveFilePath = null;
             _game.Combat = null;
         }
 
@@ -539,7 +545,13 @@ namespace WOTRMultiplayer.MP
         private void OnNotifyGameStarted(NotifyGameStarted started)
         {
             _logger.LogInformation($"Received {nameof(NotifyGameStarted)}");
-            OnStartGame?.Invoke(_game.Save);
+            if (string.IsNullOrEmpty(_game.SaveFilePath))
+            {
+                _logger.LogCritical("Trying to start a game with missing save file path");
+                return;
+            }
+
+            OnStartGame?.Invoke(_game.SaveFilePath);
         }
 
         private void OnNotifyCharactersOwnerChanged(NotifyCharactersOwnerChanged changed)
@@ -576,9 +588,9 @@ namespace WOTRMultiplayer.MP
 
         private void OnNotifySaveGameAssigned(NotifySaveGameAssigned assigned)
         {
-            _logger.LogInformation($"Received {nameof(NotifySaveGameAssigned)}. GameStatus={{status}} Size={{contentSize}}", _game.Stage, assigned.Content.Length);
+            _logger.LogInformation($"Received {nameof(NotifySaveGameAssigned)}. GameStatus={{status}}, Size={{contentSize}}, IsForceLoad={{isForceLoad}}", _game.Stage, assigned.Content.Length, assigned.IsForceLoad);
 
-            var baseUnityPath = _saveGameService.GetSaveGamePath();
+            var baseUnityPath = _gameInteractionService.GetSaveGamePath();
             var multiplayerPath = Regex.Replace(baseUnityPath, "(((\\\\|\\/)+)(Saved Games)((\\\\|\\/)+))$", "/Saved Multiplayer Games/");
             var savePath = Path.Combine(multiplayerPath, "latest save.zks");
             _logger.LogInformation("Save game path changed. Path={path}", savePath);
@@ -589,9 +601,16 @@ namespace WOTRMultiplayer.MP
                 return;
             }
 
-            _game.Save = _saveGameService.LoadSave(savePath);
-            _logger.LogInformation("Game is ready to be started. SaveName={saveName}, Area={saveArea}", _game.Save?.Name, _game.Save?.Area.AreaDisplayName);
+            _game.SaveFilePath = savePath;
+
+            _logger.LogInformation("Game is ready to be started. SavePath={savePath}", savePath);
             _networkServerClient.SendAsync(new PlayerSaveGameSyncChanged { IsSynced = true }).Wait();
+
+            if (assigned.IsForceLoad)
+            {
+                _logger.LogInformation("Force loading save game. SavePath={savePath}", savePath);
+                _gameInteractionService.QuickLoadGame(savePath);
+            }
         }
 
         private void OnPlayerReadyStatusChanged(PlayerReadyStatusChanged readyStatusChanged)
