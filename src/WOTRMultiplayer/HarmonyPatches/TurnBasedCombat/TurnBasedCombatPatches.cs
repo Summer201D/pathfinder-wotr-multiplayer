@@ -73,7 +73,7 @@ namespace WOTRMultiplayer.HarmonyPatches.TurnBasedCombat
                 return true;
             }
 
-            // should be always true for a client + should be sent to host to make that action first
+            // should be always false for a client + should be sent to host to make that action first
 
             //if (!Game.Instance.Player.IsInCombat || !command.Executor.IsPlayerFaction)
             //{
