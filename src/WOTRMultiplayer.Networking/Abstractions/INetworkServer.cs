@@ -15,6 +15,9 @@ namespace WOTRMultiplayer.Networking.Abstractions
 
         void Send(long playerId, object message);
 
+        T SendAndWaitFor<T>(long clientId, object message)
+            where T : class;
+
         void SendAll(object message);
 
         void SendAllExcept(long clientId, object message);

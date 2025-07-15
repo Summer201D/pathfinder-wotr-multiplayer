@@ -166,7 +166,7 @@ namespace WOTRMultiplayer.MP
 
             var realCharacterId = _gameInteractionService.GetPetOwnerId(unitId) ?? unitId;
 
-            var character = _game.Characters.FirstOrDefault(c => string.Equals(c.UnitId, realCharacterId, StringComparison.OrdinalIgnoreCase));
+            var character = GetCharacterOwnership(realCharacterId);
             if (character == null)
             {
                 _logger.LogWarning("Unable to find character in the list. UnitId={unitId}", realCharacterId);
@@ -525,10 +525,39 @@ namespace WOTRMultiplayer.MP
         {
             _logger.LogInformation("Retrieving roll from other player. RollId={rollId}, UnitId={unitId}", networkDiceRollId, unitId);
 
-            // TODO
-            _logger.LogError("Not implemented");
+            var realCharacterId = _gameInteractionService.GetPetOwnerId(unitId) ?? unitId;
+            var character = GetCharacterOwnership(realCharacterId);
+            if (character == null)
+            {
+                _logger.LogError("Unable to find character. UnitId={unitId}", realCharacterId);
+                return null;
+            }
 
-            return null;
+            var message = new RollRequest { RollId = networkDiceRollId };
+            var playerId = character.Owner.Id;
+            var response = _networkServer.SendAndWaitFor<RollResponse>(playerId, message);
+            if (response == null)
+            {
+                _logger.LogError("Unable to retrieve roll from player. PlayerId={playerId}, RollId={rollId}", playerId, networkDiceRollId);
+                return null;
+            }
+
+            if (response.Roll == null)
+            {
+                _logger.LogError("Player returned null roll. PlayerId={playerId}, RollId={rollId}", playerId, networkDiceRollId);
+                return null;
+            }
+
+            return new NetworkDiceRoll
+            {
+                Result = response.Roll.Result,
+                RollHistory = [.. response.Roll.RollHistory]
+            };
+        }
+
+        private NetworkCharacterOwnership GetCharacterOwnership(string unitId)
+        {
+            return _game.Characters.FirstOrDefault(c => string.Equals(c.UnitId, unitId, StringComparison.OrdinalIgnoreCase));
         }
 
         private void SoftReset()
