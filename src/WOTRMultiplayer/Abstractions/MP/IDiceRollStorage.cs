@@ -4,7 +4,7 @@ namespace WOTRMultiplayer.Abstractions.MP
 {
     public interface IDiceRollStorage
     {
-        bool Add(NetworkDiceRoll rollDice);
+        bool Save(NetworkDiceRoll rollDice);
 
         NetworkDiceRoll Get(int rollId, long playerId);
 

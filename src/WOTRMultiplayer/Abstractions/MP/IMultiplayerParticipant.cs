@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Net;
 using System.Numerics;
 using WOTRMultiplayer.MP.Entities;
+using WOTRMultiplayer.MP.Entities.Rolls;
 
 namespace WOTRMultiplayer.Abstractions.MP
 {
@@ -26,7 +27,7 @@ namespace WOTRMultiplayer.Abstractions.MP
 
         Action<List<NetworkPlayer>> OnPlayersChanged { get; set; }
 
-        bool CanControlCharacter(string characterName);
+        bool CanControlCharacter(string unitId);
 
         void GameLoaded();
         void Pause();
@@ -44,5 +45,7 @@ namespace WOTRMultiplayer.Abstractions.MP
         int GetCombatRound();
         bool CanContinueCombat();
         void ForceLoadGame(string savePath);
+        bool ShouldStoreRoll();
+        NetworkDiceRoll RetrieveRoll(int networkDiceRollId, string initiatorId);
     }
 }

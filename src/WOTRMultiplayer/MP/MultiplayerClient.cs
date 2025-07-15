@@ -113,17 +113,19 @@ namespace WOTRMultiplayer.MP
             _networkServerClient?.Dispose();
         }
 
-        public bool CanControlCharacter(string characterName)
+        public bool CanControlCharacter(string unitId)
         {
             if (_game == null)
             {
                 return false;
             }
 
-            var character = _game.Characters.FirstOrDefault(c => c.Name.Contains(characterName)); // should be a strict match later on
+            var realCharacterId = _gameInteractionService.GetPetOwnerId(unitId) ?? unitId;
+
+            var character = _game.Characters.FirstOrDefault(c => string.Equals(c.UnitId, realCharacterId, StringComparison.OrdinalIgnoreCase));
             if (character == null)
             {
-                _logger.LogWarning("Unable to find character in the list. CharacterName={characterName}", characterName);
+                _logger.LogWarning("Unable to find character in the list. UnitId={unitId}", realCharacterId);
                 return false;
             }
 
@@ -189,12 +191,12 @@ namespace WOTRMultiplayer.MP
                 if (existingOwnershipConfiguration?.Owner != null)
                 {
                     character.Owner = existingOwnershipConfiguration.Owner;
-                    _logger.LogInformation("Character ownership has been preserved. CharacterName={characterName}, Owner={ownerId}", character.Name, character.Owner.Id);
+                    _logger.LogInformation("Character ownership has been preserved. UnitId={unitId}, CharacterName={characterName}, Owner={ownerId}", character.UnitId, character.Name, character.Owner.Id);
                     continue;
                 }
 
                 character.Owner = defaultOwner;
-                _logger.LogInformation("Character ownership has been assigned to default player (host). CharacterName={characterName}, Owner={ownerId}", character.Name, character.Owner.Id);
+                _logger.LogInformation("Character ownership has been assigned to default player (host). UnitId={unitId}, CharacterName={characterName}, Owner={ownerId}", character.UnitId, character.Name, character.Owner.Id);
             }
         }
 
@@ -213,24 +215,30 @@ namespace WOTRMultiplayer.MP
             //_networkServerClient.SendAsync(message).Wait();
         }
 
-        public NetworkDiceRoll GetHostRoll(int rollId)
+        /// <summary>
+        ///
+        /// </summary>
+        /// <param name="networkDiceRollId"></param>
+        /// <param name="unitId">client doesn't really care about unitId since it has connection to host only</param>
+        /// <returns></returns>
+        public NetworkDiceRoll RetrieveRoll(int networkDiceRollId, string unitId)
         {
-            _logger.LogInformation("Retrieving roll from the host. RollId={rollId}, RollResult={rollResult}", rollId);
+            _logger.LogInformation("Retrieving roll from the host. RollId={rollId}, UnitId={unitId}", networkDiceRollId, unitId);
 
-            var request = new RollRequest { RollId = rollId };
+            var request = new RollRequest { RollId = networkDiceRollId };
             // it's important to block current thread since we cannot proceed without response
             // yeah most likely it will cause the game to freeze in case of bad network
             var response = _networkServerClient.SendAndWaitForAsync<RollResponse>(request).Result;
 
             if (response == null)
             {
-                _logger.LogError("Unable to retrieve roll from host. RollId={rollId}", rollId);
+                _logger.LogError("Unable to retrieve roll from host. RollId={rollId}", networkDiceRollId);
                 return null;
             }
 
             if (response.Roll == null)
             {
-                _logger.LogError("Host returned null roll. RollId={rollId}", rollId);
+                _logger.LogError("Host returned null roll. RollId={rollId}", networkDiceRollId);
                 return null;
             }
 
@@ -353,17 +361,20 @@ namespace WOTRMultiplayer.MP
 
         public bool OnBeforeStartTurn(string unitId)
         {
-            var isPartyUnit = _gameInteractionService.GetIsUnitInParty(unitId);
             _game.Combat.TurnOwner = unitId;
-            _logger.LogInformation("OnBeforeStartTurn. UnitId={unitId}, IsPartyUnit={isPartyUnit}", unitId, isPartyUnit);
-            // AI requires extra sync since it's movement is automated, but characters have strict control
-            return isPartyUnit;
+            _game.Combat.IsMyTurn = CanControlCharacter(unitId);
+            _game.Combat.IsAITurn = _gameInteractionService.IsUnitAI(unitId);
+            _logger.LogInformation("OnBeforeStartTurn. UnitId={unitId}, IsMyTurn={isMyTurn}, IsAITurn={isAITurn}", unitId, _game.Combat.IsMyTurn, _game.Combat.IsAITurn);
+
+            return true;
         }
 
         public bool OnBeforeEndTurn(string unitId)
         {
-            _logger.LogInformation("OnBeforeEndTurn. UnitId={unitId}", unitId);
+            _logger.LogInformation("OnBeforeEndTurn. UnitId={unitId}, IsMyTurn={isMyTurn}, IsAITurn={isAITurn}", unitId, _game.Combat.IsMyTurn, _game.Combat.IsAITurn);
             _game.Combat.TurnOwner = null;
+            _game.Combat.IsMyTurn = false;
+            _game.Combat.IsAITurn = false;
             return true;
         }
 
@@ -393,6 +404,15 @@ namespace WOTRMultiplayer.MP
                 IsForceLoad = true
             };
             _networkServerClient.SendAsync(message).Wait();
+        }
+
+        public bool ShouldStoreRoll()
+        {
+            // client should store roll only in combat + on its turn
+            return _game.Combat != null
+                && _game.Combat.IsInitialized
+                && !_game.Combat.IsAITurn
+                && _game.Combat.IsMyTurn;
         }
 
         private void SoftReset()

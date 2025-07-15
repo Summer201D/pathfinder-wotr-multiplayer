@@ -5,7 +5,6 @@ using Kingmaker.EntitySystem.Entities;
 using Kingmaker.GameModes;
 using Kingmaker.PubSubSystem;
 using Kingmaker.View.MapObjects;
-using Microsoft.Extensions.Logging;
 using WOTRMultiplayer.UI;
 
 namespace WOTRMultiplayer.HarmonyPatches.PubSub
@@ -62,25 +61,6 @@ namespace WOTRMultiplayer.HarmonyPatches.PubSub
             }
 
             Main.Multiplayer.MoveCharacter(unit, settings);
-        }
-
-        [HarmonyPatch(typeof(UnitEntityData), nameof(UnitEntityData.IsDirectlyControllable), MethodType.Getter)]
-        [HarmonyPostfix]
-        public static void UnitEntityData_IsDirectlyControllable_Postfix(UnitEntityData __instance, ref bool __result)
-        {
-            if (!__result || !Main.Multiplayer.IsActive)
-            {
-                return;
-            }
-
-            if (__instance.IsPet && __instance.Master == null)
-            {
-                Main.GetLogger<PubSubPatches>().LogError("Pet has no master, but still controllable");
-                return;
-            }
-
-            var characterName = __instance.IsPet ? __instance.Master.CharacterName : __instance.CharacterName;
-            __result = Main.Multiplayer.CanControlCharacter(characterName);
         }
 
         [HarmonyPatch(typeof(Game), nameof(Game.StartMode))]

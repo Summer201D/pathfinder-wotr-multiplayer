@@ -121,7 +121,7 @@ namespace WOTRMultiplayer.Playground.Client
                 return null;
             }
 
-            public bool GetIsUnitInParty(string unitId)
+            public bool IsUnitAI(string unitId)
             {
                 return true;
             }
@@ -179,6 +179,11 @@ namespace WOTRMultiplayer.Playground.Client
 
             public void LoadGameFromMainMenu(string savePath)
             {
+            }
+
+            public string GetPetOwnerId(string unitId)
+            {
+                return null;
             }
         }
     }

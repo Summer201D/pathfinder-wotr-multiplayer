@@ -5,6 +5,7 @@ using Kingmaker.EntitySystem.Persistence;
 using Kingmaker.GameModes;
 using Kingmaker.RuleSystem.Rules;
 using Microsoft.Extensions.Logging;
+using WOTRMultiplayer.Abstractions.GameInteraction;
 using WOTRMultiplayer.Abstractions.MP;
 using WOTRMultiplayer.Abstractions.UI;
 using WOTRMultiplayer.Abstractions.UI.Controllers;
@@ -22,6 +23,7 @@ namespace WOTRMultiplayer.MP
 
         private readonly ILobbyWindowController _lobbyWindowController;
         private readonly IDiceRollStorage _rollStorage;
+        private readonly IGameInteractionService _gameInteractionService;
         private readonly IMultiplayerClient _multiplayerClient;
         private readonly IMultiplayerHost _multiplayerHost;
         private readonly ILogger _logger;
@@ -36,7 +38,8 @@ namespace WOTRMultiplayer.MP
             ILobbyWindowController lobbyWindowController,
             IMultiplayerHost multiplayerHost,
             IMultiplayerClient multiplayerClient,
-            IDiceRollStorage rollStorage)
+            IDiceRollStorage rollStorage,
+            IGameInteractionService gameInteractionService)
         {
             _logger = logger;
             Factory = uiFactory;
@@ -44,6 +47,7 @@ namespace WOTRMultiplayer.MP
             _multiplayerClient = multiplayerClient;
             _lobbyWindowController = lobbyWindowController;
             _rollStorage = rollStorage;
+            _gameInteractionService = gameInteractionService;
         }
 
         public bool InitializeMultiplayer(InitializeMultiplayerContext context)
@@ -97,10 +101,23 @@ namespace WOTRMultiplayer.MP
             multiplayerParticipant.MoveCharacter(unit.CharacterName, destination, settings.Delay, settings.Orientation);
         }
 
-        public bool CanControlCharacter(string characterName)
+        public bool CanControlCharacter(bool original, string unitId)
         {
+            // no need to possibly override value if this character is not controllable at all
+            if (!original)
+            {
+                {
+                    return original;
+                }
+            }
+
             var multiplayerParticipant = GetMultiplayerParticipant();
-            return multiplayerParticipant.CanControlCharacter(characterName);
+            if (multiplayerParticipant == null)
+            {
+                return false;
+            }
+
+            return multiplayerParticipant.CanControlCharacter(unitId);
         }
 
         public bool StartGameMode(GameModeType type)
@@ -136,25 +153,20 @@ namespace WOTRMultiplayer.MP
         }
 
         /// <summary>
-        /// host - store roll
-        /// client - ignore
+        /// Combat: host+client - store roll if you are in control of character
+        /// Non-Combat: host - store all rolls, client - ignore
         /// </summary>
         /// <param name="ruleRollDice"></param>
         public void OnAfterRuleRollDiceTrigger(RuleRollDice ruleRollDice)
         {
-            if (!_multiplayerHost.IsActive)
+            var multiplayerParticipant = GetMultiplayerParticipant();
+            if (multiplayerParticipant == null || !multiplayerParticipant.ShouldStoreRoll())
             {
                 return;
             }
 
-            var combatRound = _multiplayerHost.GetCombatRound();
-            NetworkDiceRoll roll = ruleRollDice.Reason.Rule switch
-            {
-                RulePartyStatCheck rulePartyStatCheck => CreatePartyStatCheckRoll(ruleRollDice, rulePartyStatCheck),
-                RuleInitiativeRoll ruleInitiativeRoll => CreateInitiativeRoll(ruleRollDice, ruleInitiativeRoll),
-                RuleAttackWithWeapon ruleAttackWithWeapon => CreateAttackWithWeaponRoll(ruleRollDice, ruleAttackWithWeapon, combatRound),
-                _ => null
-            };
+            var combatRound = multiplayerParticipant.GetCombatRound();
+            NetworkDiceRoll roll = CreateNetworkDiceRoll(ruleRollDice, combatRound);
 
             if (roll == null)
             {
@@ -162,72 +174,57 @@ namespace WOTRMultiplayer.MP
                 return;
             }
 
-            if (!_rollStorage.Add(roll))
+            if (!_rollStorage.Save(roll))
             {
-                _logger.LogCritical("Failing to save roll guarantees to cause desync in the game");
+                var message = "Roll has not been saved which guarantees to cause desync in the game";
+                _logger.LogCritical(message);
+                _gameInteractionService.ShowModalMessage(message);
             }
         }
 
         /// <summary>
-        /// host - ignore
-        /// client - get roll from host
+        ///
         /// </summary>
         /// <param name="ruleRollDice"></param>
-        /// <returns></returns>
+        /// <returns>true-roll should be performed by game</returns>
         public bool OnBeforeRuleRollDiceTrigger(RuleRollDice ruleRollDice)
         {
-            if (!_multiplayerClient.IsActive)
+            var multiplayerParticipant = GetMultiplayerParticipant();
+            if (multiplayerParticipant == null || multiplayerParticipant.ShouldStoreRoll())
             {
                 return true;
             }
 
-            switch (ruleRollDice.Reason.Rule)
+            var initiatorId = ruleRollDice.Initiator.UniqueId;
+            var combatRound = multiplayerParticipant.GetCombatRound();
+            var rollType = ruleRollDice.Reason.Rule.GetType().Name;
+
+            var networkDiceRoll = CreateNetworkDiceRoll(ruleRollDice, combatRound);
+            if (networkDiceRoll == null)
             {
-                case RulePartyStatCheck rulePartyStatCheck:
-                    var partyRoll = CreatePartyStatCheckRoll(ruleRollDice, rulePartyStatCheck);
-                    var partyRollId = _rollStorage.GetUniqueId(partyRoll);
-                    var hostPartyRoll = _multiplayerClient.GetHostRoll(partyRollId);
-                    if (hostPartyRoll == null)
-                    {
-                        _logger.LogCritical("RulePartyStatCheck is not available at host => it will be rolled by the game");
-                        return true;
-                    }
-
-                    ruleRollDice.m_Result = hostPartyRoll.Result;
-                    if (ruleRollDice.RollHistory?.Count > 0)
-                    {
-                        _logger.LogWarning("RulePartyStatCheck history is not empty. RollId={rollId}", partyRollId);
-                    }
-
-                    ruleRollDice.RollHistory = [.. hostPartyRoll.RollHistory];
-                    _logger.LogInformation("RulePartyStatCheck results has been acquired from host. RollId={rollId}, Result={result}", partyRollId, ruleRollDice.Result);
-                    return false;
-                case RuleInitiativeRoll ruleInitiativeRoll:
-                    var initiativeRoll = CreateInitiativeRoll(ruleRollDice, ruleInitiativeRoll);
-                    var initiativeRollId = _rollStorage.GetUniqueId(initiativeRoll);
-                    var hostInitiativeRoll = _multiplayerClient.GetHostRoll(initiativeRollId);
-                    if (hostInitiativeRoll == null)
-                    {
-                        _logger.LogCritical("RuleInitiativeRoll is not available at host => it will be rolled by the game");
-                        return true;
-                    }
-
-                    ruleRollDice.m_Result = hostInitiativeRoll.Result;
-                    if (ruleRollDice.RollHistory?.Count > 0)
-                    {
-                        _logger.LogWarning("RuleInitiativeRoll history is not empty. RollId={rollId}", initiativeRollId);
-                    }
-
-                    ruleRollDice.RollHistory = [.. hostInitiativeRoll.RollHistory];
-                    _logger.LogInformation("RuleInitiativeRoll results has been acquired from host. RollId={rollId}, Result={result}, Modifier={totalBonus}", initiativeRollId, ruleRollDice.Result, ruleInitiativeRoll.Modifier);
-                    return false;
-                case RuleRollD20:
-                default:
-                    _logger.LogWarning("Roll retrieving has been skipped. Type={rollType}, InitiatorName={initiatorName}, InitiatorId={initiatorId}", ruleRollDice.Reason.Rule.GetType().Name, ruleRollDice.Initiator?.CharacterName, ruleRollDice.Initiator?.UniqueId);
-                    break;
+                _logger.LogWarning("Roll retrieving has been skipped. Type={rollType}, InitiatorName={initiatorName}, InitiatorId={initiatorId}", rollType, ruleRollDice.Initiator?.CharacterName, ruleRollDice.Initiator?.UniqueId);
+                return true;
             }
 
-            return true;
+            var networkDiceRollId = _rollStorage.GetUniqueId(networkDiceRoll);
+
+            var roll = multiplayerParticipant.RetrieveRoll(networkDiceRollId, initiatorId);
+            if (roll == null)
+            {
+                _logger.LogCritical("Failed to acquire roll from remote player which guarantees desync in the game. RollType={rollType}", rollType);
+                _gameInteractionService.ShowModalMessage($"Failed to acquire roll from remote player which guarantees desync in the game. RollType={rollType}");
+                return true;
+            }
+
+            ruleRollDice.m_Result = roll.Result;
+            if (ruleRollDice.RollHistory?.Count > 0)
+            {
+                _logger.LogWarning("Roll history is not empty. RollId={rollId}, RollType={rollType}", networkDiceRollId, rollType);
+            }
+
+            ruleRollDice.RollHistory = [.. roll.RollHistory];
+            _logger.LogInformation("Roll result has been acquired from another player. RollId={rollId}, Result={result}, RollType={rollType}", networkDiceRollId, ruleRollDice.Result, rollType);
+            return false;
         }
 
         public void OnAfterCueShow(string dialogName, string cueName, bool hasSystemAnswer)
@@ -301,6 +298,19 @@ namespace WOTRMultiplayer.MP
             _logger.LogInformation("Force load game. Save={saveLocation}", savePath);
             var participant = GetMultiplayerParticipant();
             participant.ForceLoadGame(savePath);
+        }
+
+        private NetworkDiceRoll CreateNetworkDiceRoll(RuleRollDice ruleRollDice, int combatRound)
+        {
+            NetworkDiceRoll roll = ruleRollDice.Reason.Rule switch
+            {
+                RulePartyStatCheck rulePartyStatCheck => CreatePartyStatCheckRoll(ruleRollDice, rulePartyStatCheck),
+                RuleInitiativeRoll ruleInitiativeRoll => CreateInitiativeRoll(ruleRollDice, ruleInitiativeRoll),
+                RuleAttackWithWeapon ruleAttackWithWeapon => CreateAttackWithWeaponRoll(ruleRollDice, ruleAttackWithWeapon, combatRound),
+                _ => null
+            };
+
+            return roll;
         }
 
         private PartyStatCheckRoll CreatePartyStatCheckRoll(RuleRollDice ruleRollDice, RulePartyStatCheck rulePartySkillCheck)

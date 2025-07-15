@@ -277,7 +277,12 @@ namespace WOTRMultiplayer.GameInteraction
         public List<NetworkCharacterOwnership> GetPartyPlayers()
         {
             var partyCharacters = Game.Instance.Player.Party
-                .Select(x => new NetworkCharacterOwnership { Name = x.CharacterName, Portrait = x.Portrait.SmallPortrait.name })
+                .Select(x => new NetworkCharacterOwnership
+                {
+                    Name = x.CharacterName,
+                    Portrait = x.Portrait.SmallPortrait.name,
+                    UnitId = x.UniqueId
+                })
                 .ToList();
 
             return partyCharacters;
@@ -294,10 +299,10 @@ namespace WOTRMultiplayer.GameInteraction
             });
         }
 
-        public bool GetIsUnitInParty(string unitId)
+        public bool IsUnitAI(string unitId)
         {
             var unit = GetUnitEntityFromParty(unitId);
-            return unit != null;
+            return unit == null;
         }
 
         private MapObjectView GetMapObjectView(string mapObjectId)
@@ -376,6 +381,24 @@ namespace WOTRMultiplayer.GameInteraction
             {
                 Game.Instance.RootUiContext.MainMenuVM.EnterLoadGame(save);
             });
+        }
+
+        public string GetPetOwnerId(string unitId)
+        {
+            var unit = Game.Instance.State.Units.FirstOrDefault(u => string.Equals(u.UniqueId, unitId));
+
+            if (unit == null)
+            {
+                return null;
+            }
+
+            if (unit.IsPet && unit.Master == null)
+            {
+                _logger.LogError("Pet has no master. UnitId={unitId}", unitId);
+                return null;
+            }
+
+            return unit.IsPet ? unit.Master.UniqueId : null;
         }
     }
 }

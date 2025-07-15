@@ -20,7 +20,7 @@ namespace WOTRMultiplayer.Abstractions.MP
 
         void MoveCharacter(UnitEntityData unit, ClickGroundHandler.CommandSettings settings);
 
-        bool CanControlCharacter(string characterName);
+        bool CanControlCharacter(bool original, string unitId);
         bool StartGameMode(GameModeType type);
         bool StopGameMode(GameModeType type);
         bool CanLeaveArea();

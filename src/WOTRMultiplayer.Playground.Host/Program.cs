@@ -192,7 +192,7 @@ namespace WOTRMultiplayer.Playground.Host
         {
             public bool IsPaused { get; set; }
 
-            public bool GetIsUnitInParty(string unitId)
+            public bool IsUnitAI(string unitId)
             {
                 return true;
             }
@@ -263,11 +263,16 @@ namespace WOTRMultiplayer.Playground.Host
             public void LoadGameFromMainMenu(string savePath)
             {
             }
+
+            public string GetPetOwnerId(string unitId)
+            {
+                return null;
+            }
         }
 
         private class DummyRollStorage : IDiceRollStorage
         {
-            public bool Add(NetworkDiceRoll rollDice)
+            public bool Save(NetworkDiceRoll rollDice)
             {
                 return true;
             }

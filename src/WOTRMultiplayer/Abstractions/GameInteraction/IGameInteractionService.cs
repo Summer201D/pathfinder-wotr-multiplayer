@@ -30,7 +30,7 @@ namespace WOTRMultiplayer.Abstractions.GameInteraction
 
         void ShowModalMessage(string error);
 
-        bool GetIsUnitInParty(string unitId);
+        bool IsUnitAI(string unitId);
 
         List<NetworkUnit> GetUnitsInCombat();
 
@@ -39,5 +39,6 @@ namespace WOTRMultiplayer.Abstractions.GameInteraction
         void LoadGameFromMainMenu(string savePath);
 
         string GetSaveGamePath();
+        string GetPetOwnerId(string unitId);
     }
 }

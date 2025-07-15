@@ -21,7 +21,7 @@ namespace WOTRMultiplayer.MP
             _hashService = hashService;
         }
 
-        public bool Add(NetworkDiceRoll diceRoll)
+        public bool Save(NetworkDiceRoll diceRoll)
         {
             try
             {

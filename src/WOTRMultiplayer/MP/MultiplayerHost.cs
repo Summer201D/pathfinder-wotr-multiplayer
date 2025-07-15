@@ -157,17 +157,19 @@ namespace WOTRMultiplayer.MP
             _networkServer.Dispose();
         }
 
-        public bool CanControlCharacter(string characterName)
+        public bool CanControlCharacter(string unitId)
         {
             if (_game == null)
             {
                 return false;
             }
 
-            var character = _game.Characters.FirstOrDefault(c => c.Name.Contains(characterName)); // should be a strict match later on
+            var realCharacterId = _gameInteractionService.GetPetOwnerId(unitId) ?? unitId;
+
+            var character = _game.Characters.FirstOrDefault(c => string.Equals(c.UnitId, realCharacterId, StringComparison.OrdinalIgnoreCase));
             if (character == null)
             {
-                _logger.LogWarning("Unable to find character in the list. CharacterName={characterName}", characterName);
+                _logger.LogWarning("Unable to find character in the list. UnitId={unitId}", realCharacterId);
                 return false;
             }
 
@@ -444,16 +446,19 @@ namespace WOTRMultiplayer.MP
 
         public bool OnBeforeStartTurn(string unitId)
         {
-            var isPartyUnit = _gameInteractionService.GetIsUnitInParty(unitId);
             _game.Combat.TurnOwner = unitId;
-            _logger.LogInformation("OnBeforeStartTurn. UnitId={unitId}, IsPartyUnit={isPartyUnit}", unitId, isPartyUnit);
+            _game.Combat.IsMyTurn = CanControlCharacter(unitId);
+            _game.Combat.IsAITurn = _gameInteractionService.IsUnitAI(unitId);
+            _logger.LogInformation("OnBeforeStartTurn. UnitId={unitId}, IsMyTurn={isMyTurn}, IsAITurn={isAITurn}", unitId, _game.Combat.IsMyTurn, _game.Combat.IsAITurn);
             return true;
         }
 
         public bool OnBeforeEndTurn(string unitId)
         {
-            _logger.LogInformation("OnBeforeEndTurn. UnitId={unitId}", unitId);
+            _logger.LogInformation("OnBeforeEndTurn. UnitId={unitId}, IsMyTurn={isMyTurn}, IsAITurn={isAITurn}", unitId, _game.Combat.IsMyTurn, _game.Combat.IsAITurn);
             _game.Combat.TurnOwner = null;
+            _game.Combat.IsMyTurn = false;
+            _game.Combat.IsAITurn = false;
             return true;
         }
 
@@ -506,6 +511,24 @@ namespace WOTRMultiplayer.MP
             }
 
             _networkServer.SendAll(message);
+        }
+
+        public bool ShouldStoreRoll()
+        {
+            return _game.Combat == null // everything happens on host outside of combat
+                || !_game.Combat.IsInitialized // combat initialization phase (initiative rolls)
+                || _game.Combat.IsAITurn // AI turn happens on host side first, so clients are getting their AI rolls from host
+                || _game.Combat.IsMyTurn; // other MP players are getting rolls from turn owner
+        }
+
+        public NetworkDiceRoll RetrieveRoll(int networkDiceRollId, string unitId)
+        {
+            _logger.LogInformation("Retrieving roll from other player. RollId={rollId}, UnitId={unitId}", networkDiceRollId, unitId);
+
+            // TODO
+            _logger.LogError("Not implemented");
+
+            return null;
         }
 
         private void SoftReset()
