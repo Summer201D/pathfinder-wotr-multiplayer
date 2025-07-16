@@ -759,9 +759,9 @@ namespace WOTRMultiplayer.MP
             }
         }
 
-        private void OnGameLoaded(long playerId, GameLoaded loaded)
+        private void OnClientGameLoaded(long playerId, ClientGameLoaded loaded)
         {
-            _logger.LogInformation("OnGameLoaded. PlayerId={playerId}", playerId);
+            _logger.LogInformation($"Received {nameof(ClientGameLoaded)}. PlayerId={{playerId}}", playerId);
             lock (_actionlock)
             {
                 var player = GetPlayer(playerId);
@@ -823,14 +823,14 @@ namespace WOTRMultiplayer.MP
 
             _networkServer
                 // this is special case when client sends notify as usually all notifies are sent by host only
-                // we need to load game ASAP on both host/clients
+                // we need to load game ASAP on both host/remaining clients
                 .Register<NotifySaveGameAssigned>(OnNotifySaveGameAssigned)
 
                 .Register<PlayerReadyStatusChanged>(OnPlayerReadyStatusChanged)
                 .Register<PlayerNameResponse>(OnPlayerNameResponse)
                 .Register<PlayerSaveGameSyncChanged>(OnPlayerSaveGameSyncChanged)
                 .Register<CharacterMove>(OnCharacterMove)
-                .Register<GameLoaded>(OnGameLoaded)
+                .Register<ClientGameLoaded>(OnClientGameLoaded)
                 .Register<GamePauseChanged>(OnGamePauseChanged)
                 .Register<RollRequest>(OnRollRequest)
                 .Register<CueWitnessed>(OnCueWitnessed)

@@ -164,7 +164,7 @@ namespace WOTRMultiplayer.MP
 
             _gameInteractionService.Pause(true);
 
-            _networkServerClient.SendAsync(new GameLoaded()).Wait();
+            _networkServerClient.SendAsync(new ClientGameLoaded()).Wait();
         }
 
         /// <summary>
@@ -521,7 +521,7 @@ namespace WOTRMultiplayer.MP
 
         private async void OnNotifyCombatStarted(NotifyCombatStarted started)
         {
-            _logger.LogInformation($"Received {nameof(NotifyCombatStarted)}.  Units={{unitsCount}}", started.Units.Count);
+            _logger.LogInformation($"Received {nameof(NotifyCombatStarted)}. Units={{unitsCount}}", started.Units.Count);
 
             if (_game.Combat == null)
             {
