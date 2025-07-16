@@ -369,7 +369,7 @@ namespace WOTRMultiplayer.MP
                 MapObjectId = mapObjectId,
                 SpeakerKey = speakerKey
             };
-            _logger.LogInformation("Sending NotifyDialogStarted to all clients. DialogName={dialogName}, TargetUnitId={targetUnitId}, InitiatorUnitId={initiatorUnitId}, MapObjectId={mapObjectId}, SpeakerKey={speakerKey}",
+            _logger.LogInformation("Sending dialog started to all clients. DialogName={dialogName}, TargetUnitId={targetUnitId}, InitiatorUnitId={initiatorUnitId}, MapObjectId={mapObjectId}, SpeakerKey={speakerKey}",
                 message.DialogName, message.TargetUnitId, message.InitiatorUnitId, message.MapObjectId, message.SpeakerKey);
 
             _networkServer.SendAll(message);
@@ -865,7 +865,7 @@ namespace WOTRMultiplayer.MP
 
         private void OnClientCombatInitialized(long playerId, ClientCombatInitialized initialized)
         {
-            _logger.LogInformation("Received OnClientCombatInitialized. PlayerId={playerId}", playerId);
+            _logger.LogInformation($"Received {nameof(ClientCombatInitialized)}. PlayerId={{playerId}}", playerId);
             if (_game.Combat == null)
             {
                 _logger.LogWarning("Received client initialization, but combat is null. PlayerId={playerId}", playerId);
@@ -880,7 +880,7 @@ namespace WOTRMultiplayer.MP
 
         private async void OnStartDialogRequested(long playerId, StartDialogRequested requested)
         {
-            _logger.LogInformation("Received StartDialogRequested. PlayerId={playerId}, DialogName={dialogName}, TargetUnitId={targetUnitId}, InitiatorUnitId={initiatorUnitId}, MapObjectId={mapObjectId}, SpeakerKey={speakerKey}",
+            _logger.LogInformation($"Received {nameof(StartDialogRequested)}. PlayerId={{playerId}}, DialogName={{dialogName}}, TargetUnitId={{targetUnitId}}, InitiatorUnitId={{initiatorUnitId}}, MapObjectId={{mapObjectId}}, SpeakerKey={{speakerKey}}",
                 playerId, requested.DialogName, requested.TargetUnitId, requested.InitiatorUnitId, requested.MapObjectId, requested.SpeakerKey);
 
             var hasStartedDialog = await _gameInteractionService.StartDialogAsync(requested.DialogName, requested.TargetUnitId, requested.InitiatorUnitId, requested.MapObjectId, requested.SpeakerKey);
@@ -902,7 +902,7 @@ namespace WOTRMultiplayer.MP
 
         private void OnDialogCueAnswerSuggested(long playerId, DialogCueAnswerSuggested suggested)
         {
-            _logger.LogInformation("Received DialogCueAnswerSuggested. PlayerId={playerId}, DialogName={dialogName}, CueName={cueName}, AnswerName={answerName}", playerId, suggested.DialogName, suggested.CueName, suggested.AnswerName);
+            _logger.LogInformation($"Received {nameof(DialogCueAnswerSuggested)}. PlayerId={{playerId}}, DialogName={{dialogName}}, CueName={{cueName}}, AnswerName={{answerName}}", playerId, suggested.DialogName, suggested.CueName, suggested.AnswerName);
 
             if (_game.Dialog == null)
             {
@@ -941,7 +941,7 @@ namespace WOTRMultiplayer.MP
 
         private void OnCueWitnessed(long playerId, CueWitnessed witnessed)
         {
-            _logger.LogInformation("Received CueWitnessed. PlayerId={playerId}, DialogName={dialogName}, CueName={cueName}", playerId, witnessed.DialogName, witnessed.CueName);
+            _logger.LogInformation($"Received {nameof(CueWitnessed)}. PlayerId={{playerId}}, DialogName={{dialogName}}, CueName={{cueName}}", playerId, witnessed.DialogName, witnessed.CueName);
             if (_game.Dialog == null)
             {
                 _logger.LogError("Received cue witness, but there is no active dialog right now. WitnessedDialogName={witnessedDialogName}, WitnessedCueName={witnessedCueName}", witnessed.DialogName, witnessed.CueName);
@@ -960,7 +960,7 @@ namespace WOTRMultiplayer.MP
 
         private void OnRollRequest(long playerId, RollRequest request)
         {
-            _logger.LogInformation("Received RollRequest. PlayerId={playerId}, RollId={rollId}", playerId, request.RollId);
+            _logger.LogInformation($"Received {nameof(RollRequest)}. PlayerId={{playerId}}, RollId={{rollId}}", playerId, request.RollId);
             var roll = _rollStorage.Get(request.RollId, playerId);
 
             var response = new RollResponse
@@ -968,13 +968,13 @@ namespace WOTRMultiplayer.MP
                 Roll = roll == null ? null : new Networking.Messages.NetworkDiceRoll { Result = roll.Result, RollHistory = [.. roll.RollHistory] },
             };
 
-            _logger.LogInformation("Sending RollResponse. RollResult={rollResult}", roll?.Result ?? 0);
+            _logger.LogInformation("Sending roll response. RollResult={rollResult}", roll?.Result ?? 0);
             _networkServer.Send(playerId, response);
         }
 
         private void OnGamePauseChanged(long playerId, GamePauseChanged pauseChanged)
         {
-            _logger.LogInformation("Received GamePauseChanged. PlayerId={playerId}, IsPaused={isPaused}", playerId, pauseChanged.IsPaused);
+            _logger.LogInformation($"Received {nameof(GamePauseChanged)}. PlayerId={{playerId}}, IsPaused={{isPaused}}", playerId, pauseChanged.IsPaused);
             var message = new NotifyGamePauseChanged { IsPaused = pauseChanged.IsPaused };
             _networkServer.SendAllExcept(playerId, message);
             _gameInteractionService.Pause(pauseChanged.IsPaused);
@@ -982,7 +982,7 @@ namespace WOTRMultiplayer.MP
 
         private void OnCharacterMove(long playerId, CharacterMove move)
         {
-            _logger.LogInformation("Received CharacterMove. PlayerId={playerId}, CharacterName={characterName}, DestinationX={x}, DestinationY={y}, DestinationZ={z}", playerId, move.CharacterName, move.DestinationX, move.DestinationY, move.DestinationZ);
+            _logger.LogInformation($"Received {nameof(CharacterMove)}. PlayerId={{playerId}}, CharacterName={{characterName}}, DestinationX={{x}}, DestinationY={{y}}, DestinationZ={{z}}", playerId, move.CharacterName, move.DestinationX, move.DestinationY, move.DestinationZ);
 
             var destination = new Vector3(move.DestinationX, move.DestinationY, move.DestinationZ);
             _gameInteractionService.MoveCharacter(move.CharacterName, destination, move.Delay, move.Orientation);
@@ -1001,7 +1001,7 @@ namespace WOTRMultiplayer.MP
 
         private void OnPlayerSaveGameSyncChanged(long playerId, PlayerSaveGameSyncChanged changed)
         {
-            _logger.LogInformation("Received PlayerSaveGameSyncChanged. PlayerId={playerId}, SyncStatus={syncStatus}", playerId, changed.IsSynced);
+            _logger.LogInformation($"Received {nameof(PlayerSaveGameSyncChanged)}. PlayerId={{playerId}}, SyncStatus={{syncStatus}}", playerId, changed.IsSynced);
             lock (_actionlock)
             {
                 var player = GetPlayer(playerId);
@@ -1040,7 +1040,7 @@ namespace WOTRMultiplayer.MP
         {
             try
             {
-                _logger.LogInformation("Player name received. PlayerId={playerId}, Name={name}", playerId, response?.Name);
+                _logger.LogInformation($"Received {nameof(PlayerNameResponse)}. PlayerId={{playerId}}, Name={{name}}", playerId, response?.Name);
                 lock (_actionlock)
                 {
                     var existingPlayer = GetPlayer(playerId);
