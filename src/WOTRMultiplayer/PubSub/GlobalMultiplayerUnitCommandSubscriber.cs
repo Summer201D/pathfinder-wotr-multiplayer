@@ -31,18 +31,18 @@ namespace WOTRMultiplayer.PubSub
 
         public void HandleUnitCommandDidEnd(UnitCommand command)
         {
-            if (!Host.IsActive)
-            {
-                return;
-            }
+            //if (!Host.IsActive)
+            //{
+            //    return;
+            //}
 
-            var networkCommand = CreateCommand(command);
-            if (networkCommand == null)
-            {
-                return;
-            }
+            //var networkCommand = CreateCommand(command);
+            //if (networkCommand == null)
+            //{
+            //    return;
+            //}
 
-            Host.UnitCommandDidEnd(networkCommand);
+            //Host.UnitCommandDidEnd(networkCommand);
         }
 
         private NetworkUnitCommand CreateCommand(UnitCommand command)

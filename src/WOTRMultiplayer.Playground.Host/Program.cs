@@ -268,6 +268,18 @@ namespace WOTRMultiplayer.Playground.Host
             {
                 return null;
             }
+
+            public void StartTurnBasedCombatTurn(bool isActingInSurpriseRound)
+            {
+            }
+
+            public void EndTurnBasedCombatTurn()
+            {
+            }
+
+            public void UpdateUnitsPosition(List<NetworkUnit> networkUnits)
+            {
+            }
         }
 
         private class DummyRollStorage : IDiceRollStorage

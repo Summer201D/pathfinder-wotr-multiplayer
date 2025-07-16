@@ -39,6 +39,13 @@ namespace WOTRMultiplayer.Abstractions.GameInteraction
         void LoadGameFromMainMenu(string savePath);
 
         string GetSaveGamePath();
+
         string GetPetOwnerId(string unitId);
+
+        void StartTurnBasedCombatTurn(bool isActingInSurpriseRound);
+
+        void EndTurnBasedCombatTurn();
+
+        void UpdateUnitsPosition(List<NetworkUnit> networkUnits);
     }
 }

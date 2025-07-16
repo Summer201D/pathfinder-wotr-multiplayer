@@ -1,4 +1,5 @@
 ﻿using System.Collections.Concurrent;
+using System.Collections.Generic;
 
 namespace WOTRMultiplayer.MP.Entities
 {
@@ -8,16 +9,18 @@ namespace WOTRMultiplayer.MP.Entities
 
         public int Round { get; set; }
 
+        public NetworkCombatTurn Turn { get; set; }
+
         public ConcurrentDictionary<long, bool> PlayersCombatInitialization { get; set; } = new();
 
-        public string TurnOwner { get; set; }
+        /// <summary>
+        /// key: round+unitid
+        /// </summary>
+        public ConcurrentDictionary<string, HashSet<long>> PlayersTurnStartInitialization { get; set; } = new();
 
-        public bool IsAITurn { get; set; }
-
-        public bool IsMyTurn { get; set; }
-
-        public bool IsActingInSurpriseRound { get; set; }
-
-        public bool IsTurnStarted { get; set; }
+        /// <summary>
+        /// key: round+unitid
+        /// </summary>
+        public ConcurrentDictionary<string, HashSet<long>> PlayersTurnEndInitialization { get; set; } = new();
     }
 }

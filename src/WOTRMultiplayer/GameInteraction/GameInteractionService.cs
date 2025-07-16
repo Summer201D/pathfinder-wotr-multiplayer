@@ -365,6 +365,36 @@ namespace WOTRMultiplayer.GameInteraction
             return units;
         }
 
+        public void UpdateUnitsPosition(List<NetworkUnit> networkUnits)
+        {
+            foreach (var networkUnit in networkUnits)
+            {
+                var unit = Game.Instance.State.Units.FirstOrDefault(u => string.Equals(u.UniqueId, networkUnit.Id, StringComparison.OrdinalIgnoreCase));
+                if (unit == null)
+                {
+                    _logger.LogError("Unable to find specified unit. UnitId={unitId}", networkUnit.Id);
+                    continue;
+                }
+
+                if (!unit.IsInCombat)
+                {
+                    _logger.LogError("Updating position for unit outside of the combat. UnitId={unitId}", networkUnit.Id);
+                }
+
+                if (unit.Position.x == networkUnit.Position.X
+                    && unit.Position.y == networkUnit.Position.Y
+                    && unit.Position.z == networkUnit.Position.Z)
+                {
+                    _logger.LogInformation("Unit position has no need to be updated. UnitId={unitId}");
+                    continue;
+                }
+
+                var oldPosition = unit.Position;
+                unit.Position = new UnityEngine.Vector3(networkUnit.Position.X, networkUnit.Position.Y, networkUnit.Position.Z);
+                _logger.LogInformation("Unit position has been updated. UnitId={unitId}, OldPosition={oldPosition}, NewPosition={newPosition}", unit.UniqueId, oldPosition, unit.Position);
+            }
+        }
+
         public void QuickLoadGame(string savePath)
         {
             var save = LoadSave(savePath);
@@ -399,6 +429,18 @@ namespace WOTRMultiplayer.GameInteraction
             }
 
             return unit.IsPet ? unit.Master.UniqueId : null;
+        }
+
+        public void StartTurnBasedCombatTurn(bool isActingInSurpriseRound)
+        {
+            _logger.LogInformation("Starting turn. IsActingInSurpriseRound={isActingInSurpriseRound}", isActingInSurpriseRound);
+            Game.Instance.TurnBasedCombatController.CurrentTurn.Start(isActingInSurpriseRound);
+        }
+
+        public void EndTurnBasedCombatTurn()
+        {
+            _logger.LogInformation("Ending turn.");
+            Game.Instance.TurnBasedCombatController.CurrentTurn.End();
         }
     }
 }

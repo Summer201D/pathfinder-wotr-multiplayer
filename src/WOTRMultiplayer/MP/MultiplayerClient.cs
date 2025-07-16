@@ -361,21 +361,21 @@ namespace WOTRMultiplayer.MP
 
         public bool OnBeforeStartTurn(string unitId, bool actingInSurpriseRound)
         {
-            _game.Combat.TurnOwner = unitId;
-            _game.Combat.IsMyTurn = CanControlCharacter(unitId);
-            _game.Combat.IsAITurn = _gameInteractionService.IsUnitAI(unitId);
-            _game.Combat.IsActingInSurpriseRound = actingInSurpriseRound;
-            _logger.LogInformation("OnBeforeStartTurn. UnitId={unitId}, IsMyTurn={isMyTurn}, IsAITurn={isAITurn}, IsActingInSurpriseRound={isActingInSurpriseRound}", unitId, _game.Combat.IsMyTurn, _game.Combat.IsAITurn, _game.Combat.IsActingInSurpriseRound);
+            //_game.Combat.TurnOwner = unitId;
+            //_game.Combat.IsMyTurn = CanControlCharacter(unitId);
+            //_game.Combat.IsAITurn = _gameInteractionService.IsUnitAI(unitId);
+            //_game.Combat.IsActingInSurpriseRound = actingInSurpriseRound;
+            _logger.LogInformation("OnBeforeStartTurn. UnitId={unitId}, IsActingInSurpriseRound={isActingInSurpriseRound}", unitId, actingInSurpriseRound);
 
             return true;
         }
 
         public bool OnBeforeEndTurn(string unitId)
         {
-            _logger.LogInformation("OnBeforeEndTurn. UnitId={unitId}, IsMyTurn={isMyTurn}, IsAITurn={isAITurn}", unitId, _game.Combat.IsMyTurn, _game.Combat.IsAITurn);
-            _game.Combat.TurnOwner = null;
-            _game.Combat.IsMyTurn = false;
-            _game.Combat.IsAITurn = false;
+            _logger.LogInformation("OnBeforeEndTurn. UnitId={unitId}", unitId);
+            //_game.Combat.TurnOwner = null;
+            //_game.Combat.IsMyTurn = false;
+            //_game.Combat.IsAITurn = false;
             return true;
         }
 
@@ -412,8 +412,8 @@ namespace WOTRMultiplayer.MP
             // client should store roll only in combat + on its turn
             return _game.Combat != null
                 && _game.Combat.IsInitialized
-                && !_game.Combat.IsAITurn
-                && _game.Combat.IsMyTurn;
+                && !(_game.Combat.Turn?.IsAI ?? false)
+                && (_game.Combat.Turn?.IsLocalPlayer ?? false);
         }
 
         private void SoftReset()
@@ -460,8 +460,11 @@ namespace WOTRMultiplayer.MP
                 }
             }
 
-            // TODO: sync units
-            _logger.LogError("Units are not synced");
+            var units = started.Units
+                .Select(u => new NetworkUnit { Id = u.Id, Position = new Vector3(u.PositionX, u.PositionY, u.PositionZ) })
+                .ToList();
+
+            _gameInteractionService.UpdateUnitsPosition(units);
 
             _game.Combat.IsInitialized = true;
 

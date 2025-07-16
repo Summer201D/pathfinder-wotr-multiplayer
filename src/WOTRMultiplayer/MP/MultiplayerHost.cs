@@ -167,13 +167,8 @@ namespace WOTRMultiplayer.MP
             var realCharacterId = _gameInteractionService.GetPetOwnerId(unitId) ?? unitId;
 
             var character = GetCharacterOwnership(realCharacterId);
-            if (character == null)
-            {
-                _logger.LogWarning("Unable to find character in the list. UnitId={unitId}", realCharacterId);
-                return false;
-            }
 
-            return character.Owner != null && character.Owner.Id == _game.LocalPlayerId;
+            return character == null || character.Owner != null && character.Owner.Id == _game.LocalPlayerId;
         }
 
         public bool ReadyChanged()
@@ -202,7 +197,7 @@ namespace WOTRMultiplayer.MP
             lock (_actionlock)
             {
                 var saveGameMessageAssigned = new NotifySaveGameAssigned { Content = content, IsForceLoad = false };
-                _logger.LogInformation($"Sending save game file content to all players. Size={saveGameMessageAssigned.Content.Length}");
+                _logger.LogInformation("Sending save game file content to all players. Size={saveFileSize}", saveGameMessageAssigned.Content.Length);
                 _networkServer.SendAll(saveGameMessageAssigned);
                 _game.Stage = NetworkGameStage.WaitingForPlayersInitialization;
                 _logger.LogInformation("Waiting for players to confirm delivery. GameStatus={gameStatus}", _game.Stage);
@@ -253,12 +248,12 @@ namespace WOTRMultiplayer.MP
                 if (existingOwnershipConfiguration?.Owner != null)
                 {
                     character.Owner = existingOwnershipConfiguration.Owner;
-                    _logger.LogInformation("Character ownership has been preserved. CharacterName={characterName}, Owner={ownerId}", character.Name, character.Owner.Id);
+                    _logger.LogInformation("Character ownership has been preserved. CharacterId={characterId}, CharacterName={characterName}, Owner={ownerId}", character.UnitId, character.Name, character.Owner.Id);
                     continue;
                 }
 
                 character.Owner = defaultOwner;
-                _logger.LogInformation("Character ownership has been assigned to default player (host). CharacterName={characterName}, Owner={ownerId}", character.Name, character.Owner.Id);
+                _logger.LogInformation("Character ownership has been assigned to default player (host). CharacterId={characterId}, CharacterName={characterName}, Owner={ownerId}", character.UnitId, character.Name, character.Owner.Id);
             }
         }
 
@@ -446,21 +441,47 @@ namespace WOTRMultiplayer.MP
 
         public bool OnBeforeStartTurn(string unitId, bool actingInSurpriseRound)
         {
-            _game.Combat.TurnOwner = unitId;
-            _game.Combat.IsMyTurn = CanControlCharacter(unitId);
-            _game.Combat.IsAITurn = _gameInteractionService.IsUnitAI(unitId);
-            _game.Combat.IsActingInSurpriseRound = actingInSurpriseRound;
-            _logger.LogInformation("OnBeforeStartTurn. UnitId={unitId}, IsMyTurn={isMyTurn}, IsAITurn={isAITurn}, IsActingInSurpriseRound={isActingInSurpriseRound}", unitId, _game.Combat.IsMyTurn, _game.Combat.IsAITurn, _game.Combat.IsActingInSurpriseRound);
-            return true;
+            _logger.LogInformation("OnBeforeStartTurn. UnitId={unitId}, ActingInSurpriseRound={actingInSurpriseRound}", unitId, actingInSurpriseRound);
+
+            if (_game.Combat.Turn != null && _game.Combat.Turn.IsInProgress)
+            {
+                _logger.LogInformation("Turn start is allowed.");
+                return true;
+            }
+
+            _game.Combat.Turn = new NetworkCombatTurn
+            {
+                UnitId = unitId,
+                IsInProgress = false,
+                IsActingInSurpriseRound = actingInSurpriseRound,
+                IsLocalPlayer = CanControlCharacter(unitId),
+                IsAI = _gameInteractionService.IsUnitAI(unitId)
+            };
+
+            _logger.LogInformation("Turn start has been initialized. UnitId={unitId}, IsLocalPlayer={isLocalPlayer}, IsAI={isAI}, IsActingInSurpriseRound={isActingInSurpriseRound}",
+                unitId, _game.Combat.Turn.IsLocalPlayer, _game.Combat.Turn.IsAI, _game.Combat.Turn.IsActingInSurpriseRound);
+
+            AddTurnStartInitialization(_game.LocalPlayerId, _game.Combat.Round, unitId);
+
+            TryStartTurn();
+
+            return false;
         }
 
         public bool OnBeforeEndTurn(string unitId)
         {
-            _logger.LogInformation("OnBeforeEndTurn. UnitId={unitId}, IsMyTurn={isMyTurn}, IsAITurn={isAITurn}", unitId, _game.Combat.IsMyTurn, _game.Combat.IsAITurn);
-            _game.Combat.TurnOwner = null;
-            _game.Combat.IsMyTurn = false;
-            _game.Combat.IsAITurn = false;
-            return true;
+            _logger.LogInformation("OnBeforeEndTurn. UnitId={unitId}", unitId);
+
+            if (_game.Combat.Turn == null)
+            {
+                _logger.LogInformation("Turn end is allowed.");
+                return true;
+            }
+
+            AddTurnEndInitialization(_game.LocalPlayerId, _game.Combat.Round, unitId);
+            TryEndTurn();
+
+            return false;
         }
 
         public void CombatRoundStarted(int round)
@@ -478,22 +499,6 @@ namespace WOTRMultiplayer.MP
         public int GetCombatRound()
         {
             return _game.Combat?.Round ?? 0;
-        }
-
-        public void UnitCommandDidEnd(NetworkUnitCommand networkCommand)
-        {
-            if (_game.Combat == null)
-            {
-                // don't care outside of combat
-                return;
-            }
-
-            if (networkCommand.UnitId != _game.Combat.TurnOwner)
-            {
-                return;
-            }
-
-            _logger.LogInformation("Send sync command. Type={type}, UnitId={unitId}", networkCommand.CommandType, networkCommand.UnitId);
         }
 
         public void ForceLoadGame(string savePath)
@@ -518,8 +523,9 @@ namespace WOTRMultiplayer.MP
         {
             return _game.Combat == null // everything happens on host outside of combat
                 || !_game.Combat.IsInitialized // combat initialization phase (initiative rolls)
-                || _game.Combat.IsAITurn // AI turn happens on host side first, so clients are getting their AI rolls from host
-                || _game.Combat.IsMyTurn; // other MP players are getting rolls from turn owner
+                || _game.Combat.Turn == null // could happen when some new NPC joins midfight in midturns, e.g. Anevia in prologue
+                || _game.Combat.Turn.IsAI // AI turn happens on host side first, so clients are getting their AI rolls from host
+                || _game.Combat.Turn.IsLocalPlayer; // other MP players are getting rolls from turn owner
         }
 
         public NetworkDiceRoll RetrieveRoll(int networkDiceRollId, string unitId)
@@ -554,6 +560,91 @@ namespace WOTRMultiplayer.MP
                 Result = response.Roll.Result,
                 RollHistory = [.. response.Roll.RollHistory]
             };
+        }
+
+        private void TryStartTurn()
+        {
+            if (_game.Combat.Turn == null)
+            {
+                // could only happen when client starts turn before the host
+                _logger.LogWarning("Trying to start turn, but it has not been initialized yet. Round={round}", _game.Combat.Round);
+                return;
+            }
+
+            if (_game.Combat.Turn.IsInProgress)
+            {
+                _logger.LogWarning("Turn is already in progress. Round={round}, UnitId={unitId}", _game.Combat.Round, _game.Combat.Turn.UnitId);
+                return;
+            }
+
+            var canStart = false;
+
+            lock (_actionlock)
+            {
+                var key = GetTurnInitializationKey(_game.Combat.Round, _game.Combat.Turn.UnitId);
+                canStart = _game.Combat.PlayersTurnStartInitialization.TryGetValue(key, out var players) && players.Count >= _game.Players.Count;
+            }
+
+            if (canStart)
+            {
+                // TODO: send notification to clients
+                _game.Combat.Turn.IsInProgress = true;
+                _gameInteractionService.StartTurnBasedCombatTurn(_game.Combat.Turn.IsActingInSurpriseRound);
+            }
+        }
+
+        private void AddTurnStartInitialization(long playerId, int round, string unitId)
+        {
+            var key = GetTurnInitializationKey(round, unitId);
+            _game.Combat.PlayersTurnStartInitialization.AddOrUpdate(key,
+                key => new HashSet<long>([playerId]),
+                (key, existing) =>
+                {
+                    existing.Add(playerId);
+                    return existing;
+                });
+        }
+
+        private void AddTurnEndInitialization(long playerId, int round, string unitId)
+        {
+            var key = GetTurnInitializationKey(round, unitId);
+            _game.Combat.PlayersTurnEndInitialization.AddOrUpdate(key,
+                key => new HashSet<long>([playerId]),
+                (key, existing) =>
+                {
+                    existing.Add(playerId);
+                    return existing;
+                });
+        }
+
+        private string GetTurnInitializationKey(int round, string unitId)
+        {
+            return $"{round}|{unitId}";
+        }
+
+        private void TryEndTurn()
+        {
+            if (_game.Combat.Turn == null)
+            {
+                // could only happen when client starts turn before the host
+                _logger.LogWarning("Trying to end already ended turn. Round={round}", _game.Combat.Round);
+                return;
+            }
+
+            var canEnd = false;
+
+            lock (_actionlock)
+            {
+                var key = GetTurnInitializationKey(_game.Combat.Round, _game.Combat.Turn.UnitId);
+                canEnd = _game.Combat.PlayersTurnEndInitialization.TryGetValue(key, out var players) && players.Count >= _game.Players.Count;
+            }
+
+            if (canEnd)
+            {
+                // TODO: send notification to clients
+                _game.Combat.Turn = null;
+                _gameInteractionService.EndTurnBasedCombatTurn();
+            }
         }
 
         private NetworkCharacterOwnership GetCharacterOwnership(string unitId)

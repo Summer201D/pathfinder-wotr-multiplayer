@@ -16,7 +16,5 @@ namespace WOTRMultiplayer.Abstractions.MP
         void LeaveArea(string areaExitId);
 
         void SendSelectedAnswer();
-
-        void UnitCommandDidEnd(NetworkUnitCommand networkCommand);
     }
 }
