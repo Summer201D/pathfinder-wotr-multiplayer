@@ -309,7 +309,7 @@ namespace WOTRMultiplayer.MP
         public bool CanBeControlledByAI(string unitId)
         {
             var participant = GetMultiplayerParticipant();
-            if (participant == null)
+            if (participant == null || participant.CurrentGame?.Combat == null)
             {
                 return true;
             }
