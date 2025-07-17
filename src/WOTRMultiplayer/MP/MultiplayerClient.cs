@@ -388,16 +388,22 @@ namespace WOTRMultiplayer.MP
 
         public bool OnBeforeEndTurn(string unitId)
         {
-            _logger.LogInformation("OnBeforeEndTurn. UnitId={unitId}", unitId);
-
             if (_game.Combat.Turn == null)
             {
                 _logger.LogInformation("Turn end is allowed.");
                 return true;
             }
 
+            if (_game.Combat.Turn != null && !_game.Combat.Turn.IsInProgress)
+            {
+                return false;
+            }
+
+            _logger.LogInformation("OnBeforeEndTurn. UnitId={unitId}", unitId);
+
             var message = new ClientCombatTurnEnded { Round = _game.Combat.Round, UnitId = _game.Combat.Turn.UnitId };
             _networkServerClient.SendAsync(message).Wait();
+            _game.Combat.Turn.IsInProgress = false;
 
             return false;
         }
@@ -771,6 +777,7 @@ namespace WOTRMultiplayer.MP
                         _logger.LogWarning("Skipping notification. SocketCode={socketCode}", socketException.SocketErrorCode);
                         break;
                     case SocketError.ConnectionReset:
+                    case SocketError.Success:
                         error = "You have been disconnected.";
                         break;
                     default:
@@ -789,6 +796,11 @@ namespace WOTRMultiplayer.MP
 
         private void InvokeOnNetworkError(string error)
         {
+            if (string.IsNullOrEmpty(error))
+            {
+                return;
+            }
+
             OnNetworkError?.Invoke(error);
             _gameInteractionService.ShowModalMessage(error);
         }

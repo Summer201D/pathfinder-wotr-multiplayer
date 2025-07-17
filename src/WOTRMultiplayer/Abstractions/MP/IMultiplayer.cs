@@ -39,6 +39,7 @@ namespace WOTRMultiplayer.Abstractions.MP
 
         bool OnBeforeEndTurn(string unitId);
         void ForceLoadGame(SaveInfo saveInfo);
+        bool CanBeControlledByAI(string unitId);
 
         bool IsActive { get; }
     }

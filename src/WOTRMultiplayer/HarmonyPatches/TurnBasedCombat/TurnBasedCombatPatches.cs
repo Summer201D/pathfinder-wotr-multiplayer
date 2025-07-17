@@ -1,6 +1,8 @@
 ﻿using HarmonyLib;
+using Kingmaker.AI;
 using Kingmaker.Controllers.Combat;
 using Kingmaker.Controllers.Units;
+using Kingmaker.EntitySystem.Entities;
 using Kingmaker.UnitLogic.Commands.Base;
 using TurnBased.Controllers;
 
@@ -84,6 +86,19 @@ namespace WOTRMultiplayer.HarmonyPatches.TurnBasedCombat
             //Main.GetLogger<TurnBasedCombatPatches>().LogInformation("Interrupted command. Type={type}, UnitId={unitId}", command.GetType().Name, command.Executor.UniqueId);
             //return false;
             return true;
+        }
+
+        [HarmonyPatch(typeof(AiBrainController), nameof(AiBrainController.TickBrain))]
+        [HarmonyPrefix]
+        public static bool AiBrainController_TickBrain_Prefix(AiBrainController __instance, UnitEntityData unit)
+        {
+            if (!Main.Multiplayer.IsActive)
+            {
+                return true;
+            }
+
+            var canContinue = Main.Multiplayer.CanBeControlledByAI(unit.UniqueId);
+            return canContinue;
         }
     }
 }

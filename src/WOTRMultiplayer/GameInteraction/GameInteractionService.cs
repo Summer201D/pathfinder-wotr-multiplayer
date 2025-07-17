@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
+using System.Threading;
 using System.Threading.Tasks;
 using Kingmaker;
 using Kingmaker.Blueprints.Root;
@@ -392,8 +393,16 @@ namespace WOTRMultiplayer.GameInteraction
 
         public void EndTurnBasedCombatTurn()
         {
+            while ((Game.Instance.TurnBasedCombatController?.CurrentTurn?.Rider?.Commands?.Queue?.Count ?? 0) > 0)
+            {
+                Thread.Sleep(100);
+            }
+
             _logger.LogInformation("Ending turn.");
-            _mainThreadAccessor.Enqueue(Game.Instance.TurnBasedCombatController.CurrentTurn.End);
+            _mainThreadAccessor.Enqueue(() =>
+            {
+                Game.Instance.TurnBasedCombatController.CurrentTurn.End();
+            });
         }
         private MapObjectView GetMapObjectView(string mapObjectId)
         {

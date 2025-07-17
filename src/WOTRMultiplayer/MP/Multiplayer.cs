@@ -1,4 +1,5 @@
-﻿using System.Numerics;
+﻿using System.Linq;
+using System.Numerics;
 using Kingmaker.Controllers.Clicks.Handlers;
 using Kingmaker.EntitySystem.Entities;
 using Kingmaker.EntitySystem.Persistence;
@@ -303,6 +304,19 @@ namespace WOTRMultiplayer.MP
             _logger.LogInformation("Force load game. Save={saveLocation}", savePath);
             var participant = GetMultiplayerParticipant();
             participant.ForceLoadGame(savePath);
+        }
+
+        public bool CanBeControlledByAI(string unitId)
+        {
+            var participant = GetMultiplayerParticipant();
+            if (participant == null)
+            {
+                return true;
+            }
+
+            var realUnitId = _gameInteractionService.GetPetOwnerId(unitId) ?? unitId;
+            var partyMember = participant.CurrentGame.Characters.FirstOrDefault(c => string.Equals(c.UnitId, realUnitId, System.StringComparison.OrdinalIgnoreCase));
+            return partyMember == null;
         }
 
         private NetworkDiceRoll CreateNetworkDiceRoll(RuleRollDice ruleRollDice, int combatRound)

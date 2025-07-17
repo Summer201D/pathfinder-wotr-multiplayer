@@ -484,6 +484,7 @@ namespace WOTRMultiplayer.MP
             }
 
             _logger.LogInformation("OnBeforeEndTurn. UnitId={unitId}", unitId);
+            _game.Combat.Turn.IsInProgress = false;
 
             AddCombatTurnEndInitialization(_game.LocalPlayerId, _game.Combat.Round, unitId);
             TryEndCombatTurn();
@@ -659,12 +660,12 @@ namespace WOTRMultiplayer.MP
                 var message = new NotifyCombatTurnEnded { Round = _game.Combat.Round, UnitId = _game.Combat.Turn.UnitId };
                 _networkServer.SendAll(message);
 
-                _game.Combat.Turn = null;
-                _gameInteractionService.EndTurnBasedCombatTurn();
-                return;
+                if (_game.Combat.Turn != null)
+                {
+                    _game.Combat.Turn = null;
+                    _gameInteractionService.EndTurnBasedCombatTurn();
+                }
             }
-
-            _game.Combat.Turn.IsInProgress = false;
         }
 
         private NetworkCharacterOwnership GetCharacterOwnership(string unitId)
