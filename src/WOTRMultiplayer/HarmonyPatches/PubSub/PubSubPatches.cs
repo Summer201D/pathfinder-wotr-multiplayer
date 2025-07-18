@@ -51,18 +51,6 @@ namespace WOTRMultiplayer.HarmonyPatches.PubSub
             //}
         }
 
-        [HarmonyPatch(typeof(ClickGroundHandler), nameof(ClickGroundHandler.RunCommand))]
-        [HarmonyPrefix]
-        public static void ClickGroundHandler_RunCommand_Prefix(UnitEntityData unit, ClickGroundHandler.CommandSettings settings)
-        {
-            if (!Main.Multiplayer.IsActive)
-            {
-                return;
-            }
-
-            Main.Multiplayer.MoveCharacter(unit, settings);
-        }
-
         [HarmonyPatch(typeof(Game), nameof(Game.StartMode))]
         [HarmonyPrefix]
         public static bool Game_StartMode_Prefix(Game __instance, GameModeType type)

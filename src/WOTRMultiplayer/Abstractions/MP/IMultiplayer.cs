@@ -21,25 +21,37 @@ namespace WOTRMultiplayer.Abstractions.MP
         void MoveCharacter(UnitEntityData unit, ClickGroundHandler.CommandSettings settings);
 
         bool CanControlCharacter(bool original, string unitId);
+
         bool StartGameMode(GameModeType type);
+
         bool StopGameMode(GameModeType type);
+
         bool CanLeaveArea();
+
         bool OnBeforeRuleRollDiceTrigger(RuleRollDice ruleRollDice);
+
         void OnAfterRuleRollDiceTrigger(RuleRollDice ruleRollDice);
 
         void OnAfterCueShow(string dialogName, string cueName, bool hasSystemAnswer);
+
         bool OnBeforeSelectDialogAnswer(string dialogName, string cueName, string answerName, bool isExitAnswer, string manualUnitSelectionId);
+
         void OnAfterPlayDialogCue();
+
         bool StartDialog(string dialogName, string targetUnitId, string initiatorUnitId, string mapObjectId, string speakerKey);
 
         bool CanTickUnitCombatPrepareController();
+
         bool CanTickCombatController();
 
         bool OnBeforeStartTurn(string unitId, bool actingInSurpriseRound);
 
         bool OnBeforeEndTurn(string unitId);
+
         void ForceLoadGame(SaveInfo saveInfo);
+
         bool CanBeControlledByAI(string unitId);
+
         void OnUnitCommandDidStart(NetworkUnitCommand command);
 
         bool IsActive { get; }

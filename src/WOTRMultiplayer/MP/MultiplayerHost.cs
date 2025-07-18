@@ -573,8 +573,7 @@ namespace WOTRMultiplayer.MP
 
         public void OnUnitCommandDidStart(NetworkUnitCommand networkCommand)
         {
-            if (!networkCommand.CreatedByPlayer
-                || !(_game.Combat?.Turn?.IsLocalPlayer ?? false))
+            if (!(_game.Combat?.Turn?.IsLocalPlayer ?? false))
             {
                 return;
             }

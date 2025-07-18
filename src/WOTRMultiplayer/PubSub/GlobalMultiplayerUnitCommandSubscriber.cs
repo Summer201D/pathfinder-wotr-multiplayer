@@ -13,7 +13,8 @@ namespace WOTRMultiplayer.PubSub
         IGlobalSubscriber,
         ISubscriber,
         IUnitCommandActHandler,
-        IUnitCommandEndHandler
+        IUnitCommandEndHandler,
+        IUnitRunCommandHandler
     {
         public GlobalMultiplayerUnitCommandSubscriber(
             ILogger<GlobalMultiplayerUnitCommandSubscriber> logger,
@@ -43,6 +44,10 @@ namespace WOTRMultiplayer.PubSub
             //}
 
             //Host.UnitCommandDidEnd(networkCommand);
+        }
+
+        public void HandleUnitRunCommand(UnitCommand cmd)
+        {
         }
 
         private NetworkUnitCommand CreateCommand(UnitCommand command)

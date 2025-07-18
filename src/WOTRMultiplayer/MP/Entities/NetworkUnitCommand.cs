@@ -15,6 +15,8 @@ namespace WOTRMultiplayer.MP.Entities
         public float? Orientation { get; set; }
 
         public bool CreatedByPlayer { get; set; }
+
+        public string AbilityId { get; set; }
     }
 
 
@@ -24,6 +26,7 @@ namespace WOTRMultiplayer.MP.Entities
 
         Unknown, // should be reviewed & implemented
         Move,
-        Attack
+        Attack,
+        UseAbility
     }
 }
