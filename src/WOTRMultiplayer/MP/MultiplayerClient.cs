@@ -28,6 +28,7 @@ namespace WOTRMultiplayer.MP
         private readonly INetworkServerClient _networkServerClient;
         private readonly IMultiplayerSettingsProvider _multiplayerSettingsProvider;
         private readonly IGameInteractionService _gameInteractionService;
+        private readonly IDiceRollStorage _diceRollStorage;
         public const int LocalHostPlayerId = -1;
 
         private NetworkGame _game;
@@ -60,7 +61,8 @@ namespace WOTRMultiplayer.MP
             IIPEndPointParser ipEndPointParser,
             IMultiplayerSettingsProvider multiplayerSettingsProvider,
             IFileSystemService fileSystemService,
-            INetworkServerClient networkServerClient)
+            INetworkServerClient networkServerClient,
+            IDiceRollStorage diceRollStorage)
         {
             _logger = logger;
             _ipEndPointParser = ipEndPointParser;
@@ -68,6 +70,7 @@ namespace WOTRMultiplayer.MP
             _networkServerClient = networkServerClient;
             _multiplayerSettingsProvider = multiplayerSettingsProvider;
             _gameInteractionService = gameInteractionService;
+            _diceRollStorage = diceRollStorage;
         }
 
         public ConnectLobbyResult Connect(string address)
@@ -225,7 +228,8 @@ namespace WOTRMultiplayer.MP
         {
             _logger.LogInformation("Retrieving roll from the host. RollId={rollId}, UnitId={unitId}", networkDiceRollId, unitId);
 
-            var request = new RollRequest { RollId = networkDiceRollId };
+            var waitForRollTimeout = TimeSpan.FromSeconds(10);
+            var request = new RollRequest { RollId = networkDiceRollId, Timeout = waitForRollTimeout };
             // it's important to block current thread since we cannot proceed without response
             // yeah most likely it will cause the game to freeze in case of bad network
             var response = _networkServerClient.SendAndWaitForAsync<RollResponse>(request).Result;
@@ -456,6 +460,9 @@ namespace WOTRMultiplayer.MP
         private void RegisterHandlers()
         {
             _networkServerClient
+                // this is kinda special as well as the host is blocking the game loop thread until `RollResponse` is received
+                .Register<RollRequest>(OnRollRequest)
+
                 .Register<PlayerNameRequest>(OnPlayerNameRequest)
                 .Register<PlayerReadyStatusChanged>(OnPlayerReadyStatusChanged)
                 .Register<NotifyPlayersChanged>(OnNotifyPlayersChanged)
@@ -477,6 +484,23 @@ namespace WOTRMultiplayer.MP
 
             _networkServerClient.OnError = OnNetworkClientError;
             _networkServerClient.OnConnected = OnNetworkClientConnected;
+        }
+
+        private async void OnRollRequest(RollRequest request)
+        {
+            // only host could ask for a roll since there are no other network connections
+            var playerId = LocalHostPlayerId;
+
+            _logger.LogInformation($"Received {nameof(RollRequest)}. PlayerId={{playerId}}, RollId={{rollId}}", playerId, request.RollId);
+            var roll = await _diceRollStorage.GetAsync(request.RollId, playerId, request.Timeout);
+
+            var response = new RollResponse
+            {
+                Roll = roll == null ? null : new Networking.Messages.NetworkDiceRoll { Result = roll.Result, RollHistory = [.. roll.RollHistory] },
+            };
+
+            _logger.LogInformation("Sending roll response. RollResult={rollResult}", roll?.Result ?? 0);
+            _networkServerClient.SendAsync(response).Wait();
         }
 
         private void OnNotifyCombatTurnEnded(NotifyCombatTurnEnded ended)

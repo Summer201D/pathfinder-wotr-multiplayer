@@ -1,4 +1,5 @@
-﻿using ProtoBuf;
+﻿using System;
+using ProtoBuf;
 
 namespace WOTRMultiplayer.Networking.Messages.Game
 {
@@ -8,5 +9,8 @@ namespace WOTRMultiplayer.Networking.Messages.Game
     {
         [ProtoMember(1)]
         public int RollId { get; set; }
+
+        [ProtoMember(2)]
+        public TimeSpan Timeout { get; set; }
     }
 }

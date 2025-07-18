@@ -5,7 +5,6 @@ using System.Numerics;
 using System.Threading.Tasks;
 using Kingmaker.EntitySystem.Persistence;
 using Kingmaker.UI;
-using Kingmaker.UI.MVVM._VM.Tooltip.Templates;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using WOTRMultiplayer.Abstractions.GameInteraction;
@@ -13,6 +12,7 @@ using WOTRMultiplayer.Abstractions.IO;
 using WOTRMultiplayer.Abstractions.MP;
 using WOTRMultiplayer.MP;
 using WOTRMultiplayer.MP.Entities;
+using WOTRMultiplayer.MP.Entities.Rolls;
 using WOTRMultiplayer.Networking.Abstractions;
 
 namespace WOTRMultiplayer.Playground.Client
@@ -35,7 +35,8 @@ namespace WOTRMultiplayer.Playground.Client
                 serviceProvider.GetService<IIPEndPointParser>(),
                 serviceProvider.GetService<IMultiplayerSettingsProvider>(),
                 serviceProvider.GetService<IFileSystemService>(),
-                serviceProvider.GetService<INetworkServerClient>());
+                serviceProvider.GetService<INetworkServerClient>(),
+                new DummyDiceRollStorage());
             client.Connect("127.0.0.1:1024");
             var input = string.Empty;
 
@@ -242,6 +243,41 @@ namespace WOTRMultiplayer.Playground.Client
 
             public void UpdateUnitsPosition(List<NetworkUnit> networkUnits)
             {
+            }
+        }
+
+        private class DummyDiceRollStorage : IDiceRollStorage
+        {
+            public bool Save(NetworkDiceRoll rollDice)
+            {
+                return true;
+            }
+
+            public NetworkDiceRoll Get(int rollId, long playerId)
+            {
+                return new NetworkDiceRoll
+                {
+                    Result = 55
+                };
+            }
+
+            public int GetUniqueId(NetworkDiceRoll roll)
+            {
+                return -1;
+            }
+
+            public void Reset()
+            {
+            }
+
+            public void Reset<T>()
+                where T : NetworkDiceRoll
+            {
+            }
+
+            public Task<NetworkDiceRoll> GetAsync(int rollId, long playerId, TimeSpan? timeout)
+            {
+                return Task.FromResult(Get(rollId, playerId));
             }
         }
     }

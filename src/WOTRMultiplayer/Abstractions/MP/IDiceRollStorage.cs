@@ -1,4 +1,6 @@
-﻿using WOTRMultiplayer.MP.Entities.Rolls;
+﻿using System;
+using System.Threading.Tasks;
+using WOTRMultiplayer.MP.Entities.Rolls;
 
 namespace WOTRMultiplayer.Abstractions.MP
 {
@@ -14,5 +16,7 @@ namespace WOTRMultiplayer.Abstractions.MP
 
         void Reset<T>()
             where T : NetworkDiceRoll;
+
+        Task<NetworkDiceRoll> GetAsync(int rollId, long playerId, TimeSpan? waitForRollTimeout);
     }
 }

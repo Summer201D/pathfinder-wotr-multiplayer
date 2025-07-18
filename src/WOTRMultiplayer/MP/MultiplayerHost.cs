@@ -23,7 +23,7 @@ namespace WOTRMultiplayer.MP
         private readonly IFileSystemService _fileSystemService;
         private readonly IMultiplayerSettingsProvider _multiplayerSettingsProvider;
         private readonly IGameInteractionService _gameInteractionService;
-        private readonly IDiceRollStorage _rollStorage;
+        private readonly IDiceRollStorage _diceRollStorage;
 
         public const int LocalHostPlayerId = -1;
 
@@ -48,14 +48,14 @@ namespace WOTRMultiplayer.MP
             IMultiplayerSettingsProvider multiplayerSettingsProvider,
             IFileSystemService fileSystemService,
             INetworkServer networkServer,
-            IDiceRollStorage rollStorage)
+            IDiceRollStorage diceRollStorage)
         {
             _logger = logger;
             _networkServer = networkServer;
             _fileSystemService = fileSystemService;
             _multiplayerSettingsProvider = multiplayerSettingsProvider;
             _gameInteractionService = gameInteractionService;
-            _rollStorage = rollStorage;
+            _diceRollStorage = diceRollStorage;
         }
 
         public void Create(string saveFilePath, List<NetworkCharacterOwnership> characters)
@@ -387,8 +387,8 @@ namespace WOTRMultiplayer.MP
             _game.Combat = new NetworkCombat();
 
             // it's impossible to differentiate rolls between multiple combats
-            _rollStorage.Reset<InitiativeRoll>();
-            _rollStorage.Reset<AttackWithWeaponRoll>();
+            _diceRollStorage.Reset<InitiativeRoll>();
+            _diceRollStorage.Reset<AttackWithWeaponRoll>();
         }
 
         public void CombatEnded()
@@ -548,7 +548,8 @@ namespace WOTRMultiplayer.MP
                 return null;
             }
 
-            var message = new RollRequest { RollId = networkDiceRollId };
+            var waitForRollTimeout = TimeSpan.FromSeconds(10);
+            var message = new RollRequest { RollId = networkDiceRollId, Timeout = waitForRollTimeout };
             var playerId = character.Owner.Id;
             var response = _networkServer.SendAndWaitFor<RollResponse>(playerId, message);
             if (response == null)
@@ -679,7 +680,7 @@ namespace WOTRMultiplayer.MP
             _game.Dialog = null;
             _game.SaveFilePath = null;
             _game.Combat = null;
-            _rollStorage.Reset();
+            _diceRollStorage.Reset();
         }
 
         private void AddCueWitness(string cueName, long playerId)
@@ -827,13 +828,15 @@ namespace WOTRMultiplayer.MP
                 // we need to load game ASAP on both host/remaining clients
                 .Register<NotifySaveGameAssigned>(OnNotifySaveGameAssigned)
 
+                // this is kinda special as well as the client is blocking the game loop thread until `RollResponse` is received
+                .Register<RollRequest>(OnRollRequest)
+
                 .Register<PlayerReadyStatusChanged>(OnPlayerReadyStatusChanged)
                 .Register<PlayerNameResponse>(OnPlayerNameResponse)
                 .Register<PlayerSaveGameSyncChanged>(OnPlayerSaveGameSyncChanged)
                 .Register<CharacterMove>(OnCharacterMove)
                 .Register<ClientGameLoaded>(OnClientGameLoaded)
                 .Register<GamePauseChanged>(OnGamePauseChanged)
-                .Register<RollRequest>(OnRollRequest)
                 .Register<CueWitnessed>(OnCueWitnessed)
                 .Register<DialogCueAnswerSuggested>(OnDialogCueAnswerSuggested)
                 .Register<StartDialogRequested>(OnStartDialogRequested)
@@ -959,10 +962,11 @@ namespace WOTRMultiplayer.MP
             TryEnableDialogContinueButton();
         }
 
-        private void OnRollRequest(long playerId, RollRequest request)
+        private async void OnRollRequest(long playerId, RollRequest request)
         {
             _logger.LogInformation($"Received {nameof(RollRequest)}. PlayerId={{playerId}}, RollId={{rollId}}", playerId, request.RollId);
-            var roll = _rollStorage.Get(request.RollId, playerId);
+            // some events would occur at around the same time on client/host, but client MUST receive this dice roll from the host
+            var roll = await _diceRollStorage.GetAsync(request.RollId, playerId, request.Timeout);
 
             var response = new RollResponse
             {

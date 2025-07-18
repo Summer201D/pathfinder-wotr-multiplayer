@@ -1,5 +1,7 @@
-﻿using System.Collections.Concurrent;
+﻿using System;
+using System.Collections.Concurrent;
 using System.Linq;
+using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using WOTRMultiplayer.Abstractions.Hashing;
 using WOTRMultiplayer.Abstractions.MP;
@@ -12,6 +14,7 @@ namespace WOTRMultiplayer.MP
         private readonly ConcurrentDictionary<int, DiceRollEntry> _rolls = new();
         private readonly ILogger<DiceRollStorage> _logger;
         private readonly IHashService _hashService;
+        private readonly TimeSpan _defaultRetrieveDelay = TimeSpan.FromMilliseconds(50);
 
         public DiceRollStorage(
             ILogger<DiceRollStorage> logger,
@@ -49,7 +52,6 @@ namespace WOTRMultiplayer.MP
             {
                 if (!_rolls.TryGetValue(rollId, out var entry))
                 {
-                    _logger.LogWarning("Requested roll is missing. Id={id}", rollId);
                     return null;
                 }
 
@@ -92,6 +94,23 @@ namespace WOTRMultiplayer.MP
             }
 
             _logger.LogInformation("Typed rolls have been cleared. RollType={rollType}, RemovedCount={removedCount}", typeof(T), rollsToRemove.Count);
+        }
+
+        public async Task<NetworkDiceRoll> GetAsync(int rollId, long playerId, TimeSpan? waitForRollTimeout)
+        {
+            var timeoutTask = waitForRollTimeout == null ? Task.CompletedTask : Task.Delay(waitForRollTimeout.Value);
+            NetworkDiceRoll result;
+            do
+            {
+                result = Get(rollId, playerId);
+                if (result == null)
+                {
+                    await Task.Delay(_defaultRetrieveDelay);
+                }
+            }
+            while (result == null && !timeoutTask.IsCompleted);
+
+            return result;
         }
     }
 }

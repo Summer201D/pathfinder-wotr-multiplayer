@@ -35,7 +35,7 @@ namespace WOTRMultiplayer.Playground.Host
                 serviceProvider.GetService<IMultiplayerSettingsProvider>(),
                 serviceProvider.GetService<IFileSystemService>(),
                 serviceProvider.GetService<INetworkServer>(),
-                new DummyRollStorage());
+                new DummyDiceRollStorage());
             //var characters = new List<NetworkCharacter> {
             //    new() { Name = "xdd", Portrait = "KitsuneFemaleRogue_Portrait"},
             //    new() { Name = "SeelahFemalePaladin_Portrait", Portrait = "SeelahFemalePaladin_Portrait"},
@@ -282,7 +282,7 @@ namespace WOTRMultiplayer.Playground.Host
             }
         }
 
-        private class DummyRollStorage : IDiceRollStorage
+        private class DummyDiceRollStorage : IDiceRollStorage
         {
             public bool Save(NetworkDiceRoll rollDice)
             {
@@ -317,6 +317,11 @@ namespace WOTRMultiplayer.Playground.Host
             public void Reset<T>()
                 where T : NetworkDiceRoll
             {
+            }
+
+            public Task<NetworkDiceRoll> GetAsync(int rollId, long playerId, TimeSpan? timeout)
+            {
+                return Task.FromResult(Get(rollId, playerId));
             }
         }
     }

@@ -23,7 +23,7 @@ namespace WOTRMultiplayer.MP
         private ILobbyWindow _lobbyWindow;
 
         private readonly ILobbyWindowController _lobbyWindowController;
-        private readonly IDiceRollStorage _rollStorage;
+        private readonly IDiceRollStorage _diceRollStorage;
         private readonly IGameInteractionService _gameInteractionService;
         private readonly IMultiplayerClient _multiplayerClient;
         private readonly IMultiplayerHost _multiplayerHost;
@@ -39,7 +39,7 @@ namespace WOTRMultiplayer.MP
             ILobbyWindowController lobbyWindowController,
             IMultiplayerHost multiplayerHost,
             IMultiplayerClient multiplayerClient,
-            IDiceRollStorage rollStorage,
+            IDiceRollStorage diceRollStorage,
             IGameInteractionService gameInteractionService)
         {
             _logger = logger;
@@ -47,7 +47,7 @@ namespace WOTRMultiplayer.MP
             _multiplayerHost = multiplayerHost;
             _multiplayerClient = multiplayerClient;
             _lobbyWindowController = lobbyWindowController;
-            _rollStorage = rollStorage;
+            _diceRollStorage = diceRollStorage;
             _gameInteractionService = gameInteractionService;
         }
 
@@ -80,7 +80,7 @@ namespace WOTRMultiplayer.MP
             _logger.LogInformation("Disposing Esc menu window game objects");
             Factory.DestroyLobbyWindow(_lobbyWindow);
             _logger.LogInformation("Disposing stored rolls");
-            _rollStorage.Reset();
+            _diceRollStorage.Reset();
 
         }
 
@@ -176,7 +176,7 @@ namespace WOTRMultiplayer.MP
                 return;
             }
 
-            if (!_rollStorage.Save(roll))
+            if (!_diceRollStorage.Save(roll))
             {
                 var message = $"Roll has not been saved which guarantees to cause desync in the game. RollType={rollType}";
                 _logger.LogCritical(message);
@@ -208,7 +208,7 @@ namespace WOTRMultiplayer.MP
                 return true;
             }
 
-            var networkDiceRollId = _rollStorage.GetUniqueId(networkDiceRoll);
+            var networkDiceRollId = _diceRollStorage.GetUniqueId(networkDiceRoll);
 
             var roll = multiplayerParticipant.RetrieveRoll(networkDiceRollId, initiatorId);
             if (roll == null)
