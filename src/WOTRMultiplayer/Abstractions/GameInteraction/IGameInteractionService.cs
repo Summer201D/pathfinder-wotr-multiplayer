@@ -47,5 +47,7 @@ namespace WOTRMultiplayer.Abstractions.GameInteraction
         void EndTurnBasedCombatTurn();
 
         void UpdateUnitsPosition(List<NetworkUnit> networkUnits);
+
+        void ClickUnitInCombat(NetworkClick click);
     }
 }

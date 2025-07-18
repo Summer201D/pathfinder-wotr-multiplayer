@@ -11,5 +11,7 @@ namespace WOTRMultiplayer.MP.Entities
         public int Button { get; set; }
 
         public bool MuteEvents { get; set; }
+
+        public string SelectedUnitId { get; set; }
     }
 }

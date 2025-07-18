@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Kingmaker;
 using Kingmaker.Blueprints.Root;
 using Kingmaker.Cheats;
+using Kingmaker.Controllers.Clicks.Handlers;
 using Kingmaker.DialogSystem.Blueprints;
 using Kingmaker.EntitySystem.Entities;
 using Kingmaker.EntitySystem.Persistence;
@@ -318,32 +319,43 @@ namespace WOTRMultiplayer.GameInteraction
 
         public void UpdateUnitsPosition(List<NetworkUnit> networkUnits)
         {
-            foreach (var networkUnit in networkUnits)
+            _mainThreadAccessor.Enqueue(() =>
             {
-                var unit = Game.Instance.State.Units.FirstOrDefault(u => string.Equals(u.UniqueId, networkUnit.Id, StringComparison.OrdinalIgnoreCase));
-                if (unit == null)
+                foreach (var networkUnit in networkUnits)
                 {
-                    _logger.LogError("Unable to find specified unit. UnitId={unitId}", networkUnit.Id);
-                    continue;
-                }
+                    try
+                    {
+                        var unit = Game.Instance.State.Units.FirstOrDefault(u => string.Equals(u.UniqueId, networkUnit.Id, StringComparison.OrdinalIgnoreCase));
+                        if (unit == null)
+                        {
+                            _logger.LogError("Unable to find specified unit. UnitId={unitId}", networkUnit.Id);
+                            continue;
+                        }
 
-                if (!unit.IsInCombat)
-                {
-                    _logger.LogError("Updating position for unit outside of the combat. UnitId={unitId}", networkUnit.Id);
-                }
+                        if (!unit.IsInCombat)
+                        {
+                            _logger.LogError("Updating position for unit outside of the combat. UnitId={unitId}", networkUnit.Id);
+                        }
 
-                if (unit.Position.x == networkUnit.Position.X
-                    && unit.Position.y == networkUnit.Position.Y
-                    && unit.Position.z == networkUnit.Position.Z)
-                {
-                    _logger.LogInformation("Unit position has no need to be updated. UnitId={unitId}");
-                    continue;
-                }
+                        if (unit.Position.x == networkUnit.Position.X
+                            && unit.Position.y == networkUnit.Position.Y
+                            && unit.Position.z == networkUnit.Position.Z)
+                        {
+                            _logger.LogInformation("Unit position has no need to be updated. UnitId={unitId}");
+                            continue;
+                        }
 
-                var oldPosition = unit.Position;
-                unit.Position = new UnityEngine.Vector3(networkUnit.Position.X, networkUnit.Position.Y, networkUnit.Position.Z);
-                _logger.LogInformation("Unit position has been updated. UnitId={unitId}, OldPosition={oldPosition}, NewPosition={newPosition}", unit.UniqueId, oldPosition, unit.Position);
-            }
+                        var oldPosition = unit.Position;
+                        unit.Position = new UnityEngine.Vector3(networkUnit.Position.X, networkUnit.Position.Y, networkUnit.Position.Z);
+                        _logger.LogInformation("Unit position has been updated. UnitId={unitId}, OldPosition={oldPosition}, NewPosition={newPosition}", unit.UniqueId, oldPosition, unit.Position);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "Unable to update unit position. UnitId={unitId}", networkUnit.Id);
+                        continue;
+                    }
+                }
+            });
         }
 
         public void QuickLoadGame(string savePath)
@@ -401,9 +413,31 @@ namespace WOTRMultiplayer.GameInteraction
             _logger.LogInformation("Ending turn.");
             _mainThreadAccessor.Enqueue(() =>
             {
-                Game.Instance.TurnBasedCombatController.CurrentTurn.End();
+                Game.Instance.TurnBasedCombatController.CurrentTurn?.End();
             });
         }
+
+        public void ClickUnitInCombat(NetworkClick click)
+        {
+            var clickUnitHandler = Game.Instance.DefaultPointerController.m_ClickHandlers.FirstOrDefault(c => c is ClickUnitHandler);
+            var targetUnit = GetUnitEntity(click.TargetUnitId);
+            var selectedUnit = GetUnitEntity(click.SelectedUnitId);
+            var worldPosition = new UnityEngine.Vector3(click.WorldPosition.X, click.WorldPosition.Y, click.WorldPosition.Z);
+            _mainThreadAccessor.Enqueue(() =>
+            {
+                _logger.LogInformation("Clicking unit. TargetUnitId={targetUnitId}, SelectedUnit={selectedUnitId}", targetUnit.UniqueId, selectedUnit.UniqueId);
+
+                Game.Instance.SelectionCharacter.SelectedUnit.Value = selectedUnit;
+                Game.Instance.SelectionCharacter.SelectedUnits.Clear();
+                Game.Instance.SelectionCharacter.SelectedUnits.Add(selectedUnit);
+                //PathVisualizer.Instance.ClearPath();
+                //PathVisualizer.Instance.CalculatePathForCommand(selectedUnit, Game.Instance.TurnBasedCombatController.CurrentTurn.GetActionsStates(selectedUnit), true, true);
+                //AstarPath.BlockUntilCalculated(PathVisualizer.Instance.CurrentPathForUnit(selectedUnit.View));
+                var clickResult = clickUnitHandler.OnClick(targetUnit.View.gameObject, worldPosition, click.Button, simulate: false, click.MuteEvents, IsTMBClick: false);
+                _logger.LogInformation("Clicking unit result. Result={result}", clickResult);
+            });
+        }
+
         private MapObjectView GetMapObjectView(string mapObjectId)
         {
             if (string.IsNullOrEmpty(mapObjectId))

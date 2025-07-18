@@ -354,13 +354,13 @@ namespace WOTRMultiplayer.MP
         public bool CanInitializeCombat()
         {
             // confirmation from host is required
-            return _game.Combat.IsInitialized;
+            return _game.Combat?.IsInitialized ?? false;
         }
 
         public bool CanContinueCombat()
         {
             // confirmation from host is required
-            return _game.Combat.IsInitialized;
+            return _game.Combat?.IsInitialized ?? false;
         }
 
         public bool OnBeforeStartTurn(string unitId, bool actingInSurpriseRound)
@@ -452,6 +452,28 @@ namespace WOTRMultiplayer.MP
 
         public void OnClickUnit(NetworkClick click)
         {
+            if (!(_game.Combat?.Turn?.IsLocalPlayer ?? false))
+            {
+                return;
+            }
+
+            _logger.LogInformation("Sending unit click. TargetUnitId={targetUnitId}", click.TargetUnitId);
+
+            var message = new NotifyUnitClicked
+            {
+                Click = new Networking.Messages.NetworkClick
+                {
+                    Button = click.Button,
+                    MuteEvents = click.MuteEvents,
+                    SelectedUnitId = click.SelectedUnitId,
+                    TargetUnitId = click.TargetUnitId,
+                    WorldPositionX = click.WorldPosition.X,
+                    WorldPositionY = click.WorldPosition.Y,
+                    WorldPositionZ = click.WorldPosition.Z
+                }
+            };
+
+            _networkServerClient.SendAsync(message).Wait();
         }
 
         private void SoftReset()
@@ -484,10 +506,29 @@ namespace WOTRMultiplayer.MP
                 .Register<NotifyCombatStarted>(OnNotifyCombatStarted)
                 .Register<NotifyCombatTurnStarted>(OnNotifyCombatTurnStarted)
                 .Register<NotifyCombatTurnEnded>(OnNotifyCombatTurnEnded)
+                .Register<NotifyUnitClicked>(OnNotifyUnitClicked)
                 ;
 
             _networkServerClient.OnError = OnNetworkClientError;
             _networkServerClient.OnConnected = OnNetworkClientConnected;
+        }
+
+        private void OnNotifyUnitClicked(NotifyUnitClicked clicked)
+        {
+            _logger.LogInformation($"Received {nameof(NotifyUnitClicked)}. SelectedUnitId={{selectedUnitId}}, TargetUnitId={{targetUnitId}}", clicked.Click.SelectedUnitId, clicked.Click.TargetUnitId);
+            var click = new NetworkClick
+            {
+                Button = clicked.Click.Button,
+                MuteEvents = clicked.Click.MuteEvents,
+                SelectedUnitId = clicked.Click.SelectedUnitId,
+                TargetUnitId = clicked.Click.TargetUnitId,
+                WorldPosition = new Vector3(clicked.Click.WorldPositionX, clicked.Click.WorldPositionY, clicked.Click.WorldPositionZ)
+            };
+
+            if (_game.Combat != null)
+            {
+                _gameInteractionService.ClickUnitInCombat(click);
+            }
         }
 
         private async void OnRollRequest(RollRequest request)

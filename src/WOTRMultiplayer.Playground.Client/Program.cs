@@ -244,6 +244,10 @@ namespace WOTRMultiplayer.Playground.Client
             public void UpdateUnitsPosition(List<NetworkUnit> networkUnits)
             {
             }
+
+            public void ClickUnitInCombat(NetworkClick click)
+            {
+            }
         }
 
         private class DummyDiceRollStorage : IDiceRollStorage

@@ -1,9 +1,8 @@
 ﻿using HarmonyLib;
+using Kingmaker;
 using Kingmaker.AI;
 using Kingmaker.Controllers.Combat;
-using Kingmaker.Controllers.Units;
 using Kingmaker.EntitySystem.Entities;
-using Kingmaker.UnitLogic.Commands.Base;
 using TurnBased.Controllers;
 
 namespace WOTRMultiplayer.HarmonyPatches.TurnBasedCombat
@@ -66,28 +65,6 @@ namespace WOTRMultiplayer.HarmonyPatches.TurnBasedCombat
             return canContinue;
         }
 
-        [HarmonyPatch(typeof(UnitCommandController), nameof(UnitCommandController.TickCommand))]
-        [HarmonyPrefix]
-        public static bool UnitCommandController_TickCommand_Prefix(UnitCommandController __instance, UnitCommand command, bool canMoveUnit)
-        {
-            if (!Main.Multiplayer.IsActive)
-            {
-                return true;
-            }
-
-            // should be always false for a client + should be sent to host to make that action first
-
-            //if (!Game.Instance.Player.IsInCombat || !command.Executor.IsPlayerFaction)
-            //{
-            //    return true;
-            //}
-
-            //command.Interrupt(false);
-            //Main.GetLogger<TurnBasedCombatPatches>().LogInformation("Interrupted command. Type={type}, UnitId={unitId}", command.GetType().Name, command.Executor.UniqueId);
-            //return false;
-            return true;
-        }
-
         [HarmonyPatch(typeof(AiBrainController), nameof(AiBrainController.TickBrain))]
         [HarmonyPrefix]
         public static bool AiBrainController_TickBrain_Prefix(AiBrainController __instance, UnitEntityData unit)
@@ -98,6 +75,15 @@ namespace WOTRMultiplayer.HarmonyPatches.TurnBasedCombat
             }
 
             var canContinue = Main.Multiplayer.CanBeControlledByAI(unit.UniqueId);
+            if (!canContinue && Game.Instance.TurnBasedCombatController.CurrentTurn != null)
+            {
+                Game.Instance.TurnBasedCombatController.CurrentTurn.AIForcedTickCount = 0;
+                //Game.Instance.TurnBasedCombatController.CurrentTurn.FramesWaitedForStuckAI = 0;
+
+                // autoending turn
+                //Game.Instance.TurnBasedCombatController.CurrentTurn.TimeWaitedForIdleAI = 0;
+            }
+
             return canContinue;
         }
     }

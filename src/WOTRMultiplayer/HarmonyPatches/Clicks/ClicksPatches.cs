@@ -1,4 +1,6 @@
-﻿using HarmonyLib;
+﻿using System.Linq;
+using HarmonyLib;
+using Kingmaker;
 using Kingmaker.Controllers.Clicks.Handlers;
 using Kingmaker.EntitySystem.Entities;
 using Kingmaker.View;
@@ -36,9 +38,11 @@ namespace WOTRMultiplayer.HarmonyPatches.Clicks
                 return;
             }
 
+            var selectedUnit = Game.Instance.SelectionCharacter.SelectedUnits?.FirstOrDefault();
             var targetUnitId = gameObject.GetComponent<UnitEntityView>()?.UniqueId;
             var click = new NetworkClick
             {
+                SelectedUnitId = selectedUnit?.UniqueId,
                 TargetUnitId = targetUnitId,
                 Button = button,
                 WorldPosition = new System.Numerics.Vector3(worldPosition.x, worldPosition.y, worldPosition.z),

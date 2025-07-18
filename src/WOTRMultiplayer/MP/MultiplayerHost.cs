@@ -578,8 +578,23 @@ namespace WOTRMultiplayer.MP
                 return;
             }
 
-            // TODO:
-            _logger.LogError("Sync unit click. TargetUnitId={targetUnitId}", click.TargetUnitId);
+            _logger.LogInformation("Sending unit click. TargetUnitId={targetUnitId}", click.TargetUnitId);
+
+            var message = new NotifyUnitClicked
+            {
+                Click = new Networking.Messages.NetworkClick
+                {
+                    Button = click.Button,
+                    MuteEvents = click.MuteEvents,
+                    SelectedUnitId = click.SelectedUnitId,
+                    TargetUnitId = click.TargetUnitId,
+                    WorldPositionX = click.WorldPosition.X,
+                    WorldPositionY = click.WorldPosition.Y,
+                    WorldPositionZ = click.WorldPosition.Z
+                }
+            };
+
+            _networkServer.SendAll(message);
         }
 
         private void TryStartCombatTurn()
@@ -838,6 +853,7 @@ namespace WOTRMultiplayer.MP
                 // this is special case when client sends notify as usually all notifies are sent by host only
                 // we need to load game ASAP on both host/remaining clients
                 .Register<NotifySaveGameAssigned>(OnNotifySaveGameAssigned)
+                .Register<NotifyUnitClicked>(OnNotifyUnitClicked)
 
                 // this is kinda special as well as the client is blocking the game loop thread until `RollResponse` is received
                 .Register<RollRequest>(OnRollRequest)
@@ -855,6 +871,24 @@ namespace WOTRMultiplayer.MP
                 .Register<ClientCombatTurnStarted>(OnClientCombatTurnStarted)
                 .Register<ClientCombatTurnEnded>(OnClientCombatTurnEnded)
                 ;
+        }
+
+        private void OnNotifyUnitClicked(long playerId, NotifyUnitClicked clicked)
+        {
+            _logger.LogInformation($"Received {nameof(NotifyUnitClicked)}. PlayerId={{playerId}}, SelectedUnitId={{selectedUnitId}}, TargetUnitId={{targetUnitId}}", playerId, clicked.Click.SelectedUnitId, clicked.Click.TargetUnitId);
+            var click = new NetworkClick
+            {
+                Button = clicked.Click.Button,
+                MuteEvents = clicked.Click.MuteEvents,
+                SelectedUnitId = clicked.Click.SelectedUnitId,
+                TargetUnitId = clicked.Click.TargetUnitId,
+                WorldPosition = new Vector3(clicked.Click.WorldPositionX, clicked.Click.WorldPositionY, clicked.Click.WorldPositionZ)
+            };
+
+            if (_game.Combat != null)
+            {
+                _gameInteractionService.ClickUnitInCombat(click);
+            }
         }
 
         private void OnClientCombatTurnEnded(long playerId, ClientCombatTurnEnded ended)
