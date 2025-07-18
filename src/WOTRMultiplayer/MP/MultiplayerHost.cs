@@ -571,6 +571,18 @@ namespace WOTRMultiplayer.MP
             };
         }
 
+        public void OnUnitCommandDidStart(NetworkUnitCommand networkCommand)
+        {
+            if (!networkCommand.CreatedByPlayer
+                || !(_game.Combat?.Turn?.IsLocalPlayer ?? false))
+            {
+                return;
+            }
+
+            // TODO:
+            _logger.LogError("Sync unit command started. CommandType={commandType}", networkCommand.CommandType);
+        }
+
         private void TryStartCombatTurn()
         {
             if (_game.Combat.Turn == null)

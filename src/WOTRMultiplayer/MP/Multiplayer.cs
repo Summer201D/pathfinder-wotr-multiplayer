@@ -320,6 +320,17 @@ namespace WOTRMultiplayer.MP
             return partyMember == null;
         }
 
+        public void OnUnitCommandDidStart(NetworkUnitCommand networkCommand)
+        {
+            var multiplayerParticipant = GetMultiplayerParticipant();
+            if (multiplayerParticipant == null)
+            {
+                return;
+            }
+
+            multiplayerParticipant.OnUnitCommandDidStart(networkCommand);
+        }
+
         private NetworkDiceRoll CreateNetworkDiceRoll(RuleRollDice ruleRollDice, int combatRound)
         {
             NetworkDiceRoll roll = ruleRollDice.Reason.Rule switch

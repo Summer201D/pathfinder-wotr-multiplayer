@@ -13,6 +13,8 @@ namespace WOTRMultiplayer.MP.Entities
         public Vector3 Destination { get; set; }
 
         public float? Orientation { get; set; }
+
+        public bool CreatedByPlayer { get; set; }
     }
 
 
