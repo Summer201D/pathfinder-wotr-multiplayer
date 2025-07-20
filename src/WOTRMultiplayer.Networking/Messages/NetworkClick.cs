@@ -1,4 +1,5 @@
-﻿using ProtoBuf;
+﻿using System.Collections.Generic;
+using ProtoBuf;
 
 namespace WOTRMultiplayer.Networking.Messages
 {
@@ -15,15 +16,12 @@ namespace WOTRMultiplayer.Networking.Messages
         public bool MuteEvents { get; set; }
 
         [ProtoMember(4)]
-        public string SelectedUnitId { get; set; }
+        public List<string> SelectedUnits { get; set; } = [];
 
         [ProtoMember(5)]
-        public float WorldPositionX { get; set; }
+        public NetworkVector3 WorldPosition { get; set; }
 
         [ProtoMember(6)]
-        public float WorldPositionY { get; set; }
-
-        [ProtoMember(7)]
-        public float WorldPositionZ { get; set; }
+        public List<NetworkVector3> VectorPath { get; set; } = [];
     }
 }

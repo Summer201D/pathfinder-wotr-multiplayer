@@ -50,7 +50,7 @@ namespace WOTRMultiplayer.Abstractions.MP
 
         void ForceLoadGame(SaveInfo saveInfo);
 
-        bool CanBeControlledByAI(string unitId);
+        bool IsControlledByPlayers(string unitId);
 
         void OnClickUnit(NetworkClick click);
 

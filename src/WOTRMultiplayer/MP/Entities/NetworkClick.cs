@@ -1,10 +1,10 @@
-﻿using System.Numerics;
+﻿using System.Collections.Generic;
 
 namespace WOTRMultiplayer.MP.Entities
 {
     public class NetworkClick
     {
-        public Vector3 WorldPosition { get; set; }
+        public NetworkVector3 WorldPosition { get; set; }
 
         public string TargetUnitId { get; set; }
 
@@ -12,6 +12,8 @@ namespace WOTRMultiplayer.MP.Entities
 
         public bool MuteEvents { get; set; }
 
-        public string SelectedUnitId { get; set; }
+        public List<string> SelectedUnits { get; set; } = [];
+
+        public List<NetworkVector3> VectorPath { get; set; } = [];
     }
 }

@@ -354,13 +354,13 @@ namespace WOTRMultiplayer.MP
         public bool CanInitializeCombat()
         {
             // confirmation from host is required
-            return _game.Combat?.IsInitialized ?? false;
+            return _game.Combat?.IsInitialized ?? true;
         }
 
         public bool CanContinueCombat()
         {
             // confirmation from host is required
-            return _game.Combat?.IsInitialized ?? false;
+            return _game.Combat?.IsInitialized ?? true;
         }
 
         public bool OnBeforeStartTurn(string unitId, bool actingInSurpriseRound)
@@ -457,7 +457,7 @@ namespace WOTRMultiplayer.MP
                 return;
             }
 
-            _logger.LogInformation("Sending unit click. TargetUnitId={targetUnitId}", click.TargetUnitId);
+            _logger.LogInformation("Sending unit click. TargetUnitId={targetUnitId}, VectorPathCount={pathCount}", click.TargetUnitId, click.VectorPath.Count);
 
             var message = new NotifyUnitClicked
             {
@@ -465,11 +465,10 @@ namespace WOTRMultiplayer.MP
                 {
                     Button = click.Button,
                     MuteEvents = click.MuteEvents,
-                    SelectedUnitId = click.SelectedUnitId,
+                    SelectedUnits = click.SelectedUnits,
                     TargetUnitId = click.TargetUnitId,
-                    WorldPositionX = click.WorldPosition.X,
-                    WorldPositionY = click.WorldPosition.Y,
-                    WorldPositionZ = click.WorldPosition.Z
+                    WorldPosition = new Networking.Messages.NetworkVector3(click.WorldPosition.X, click.WorldPosition.Y, click.WorldPosition.Z),
+                    VectorPath = [.. click.VectorPath.Select(x => new Networking.Messages.NetworkVector3(x.X, x.Y, x.Z))]
                 }
             };
 
@@ -481,6 +480,7 @@ namespace WOTRMultiplayer.MP
             _game.Dialog = null;
             _game.SaveFilePath = null;
             _game.Combat = null;
+            _diceRollStorage.Reset();
         }
 
         private void RegisterHandlers()
@@ -515,14 +515,15 @@ namespace WOTRMultiplayer.MP
 
         private void OnNotifyUnitClicked(NotifyUnitClicked clicked)
         {
-            _logger.LogInformation($"Received {nameof(NotifyUnitClicked)}. SelectedUnitId={{selectedUnitId}}, TargetUnitId={{targetUnitId}}", clicked.Click.SelectedUnitId, clicked.Click.TargetUnitId);
+            _logger.LogInformation($"Received {nameof(NotifyUnitClicked)}. SelectedUnits={{selectedUnits}}, TargetUnitId={{targetUnitId}}", clicked.Click.SelectedUnits.Count, clicked.Click.TargetUnitId);
             var click = new NetworkClick
             {
                 Button = clicked.Click.Button,
                 MuteEvents = clicked.Click.MuteEvents,
-                SelectedUnitId = clicked.Click.SelectedUnitId,
+                SelectedUnits = clicked.Click.SelectedUnits,
                 TargetUnitId = clicked.Click.TargetUnitId,
-                WorldPosition = new Vector3(clicked.Click.WorldPositionX, clicked.Click.WorldPositionY, clicked.Click.WorldPositionZ)
+                WorldPosition = new NetworkVector3(clicked.Click.WorldPosition.X, clicked.Click.WorldPosition.Y, clicked.Click.WorldPosition.Z),
+                VectorPath = [..clicked.Click.VectorPath.Select(v => new NetworkVector3(v.X, v.Y, v.Z))]
             };
 
             if (_game.Combat != null)

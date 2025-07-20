@@ -15,6 +15,7 @@ using Kingmaker.GameModes;
 using Kingmaker.Globalmap.Blueprints;
 using Kingmaker.Localization;
 using Kingmaker.PubSubSystem;
+using Kingmaker.TurnBasedMode;
 using Kingmaker.UI;
 using Kingmaker.UI.MVVM._PCView.Dialog.Dialog;
 using Kingmaker.UI.MVVM._PCView.InGame;
@@ -23,6 +24,7 @@ using Kingmaker.UnitLogic.Commands;
 using Kingmaker.View.MapObjects;
 using Microsoft.Extensions.Logging;
 using Owlcat.Runtime.UI.Controls.Button;
+using Pathfinding;
 using UnityEngine.UI;
 using WOTRMultiplayer.Abstractions.GameInteraction;
 using WOTRMultiplayer.Abstractions.UI;
@@ -421,18 +423,29 @@ namespace WOTRMultiplayer.GameInteraction
         {
             var clickUnitHandler = Game.Instance.DefaultPointerController.m_ClickHandlers.FirstOrDefault(c => c is ClickUnitHandler);
             var targetUnit = GetUnitEntity(click.TargetUnitId);
-            var selectedUnit = GetUnitEntity(click.SelectedUnitId);
+            var selectedUnits = click.SelectedUnits.Select(GetUnitEntity)?.ToList();
+            var selectedUnit = selectedUnits.FirstOrDefault();
             var worldPosition = new UnityEngine.Vector3(click.WorldPosition.X, click.WorldPosition.Y, click.WorldPosition.Z);
             _mainThreadAccessor.Enqueue(() =>
             {
-                _logger.LogInformation("Clicking unit. TargetUnitId={targetUnitId}, SelectedUnit={selectedUnitId}", targetUnit.UniqueId, selectedUnit.UniqueId);
+                _logger.LogInformation("Clicking unit. TargetUnitId={targetUnitId}, SelectedUnit={selectedUnitId}, VectorPathCount={pathCount}", targetUnit.UniqueId, selectedUnit?.UniqueId, click.VectorPath.Count);
 
                 Game.Instance.SelectionCharacter.SelectedUnit.Value = selectedUnit;
                 Game.Instance.SelectionCharacter.SelectedUnits.Clear();
-                Game.Instance.SelectionCharacter.SelectedUnits.Add(selectedUnit);
-                //PathVisualizer.Instance.ClearPath();
-                //PathVisualizer.Instance.CalculatePathForCommand(selectedUnit, Game.Instance.TurnBasedCombatController.CurrentTurn.GetActionsStates(selectedUnit), true, true);
-                //AstarPath.BlockUntilCalculated(PathVisualizer.Instance.CurrentPathForUnit(selectedUnit.View));
+                Game.Instance.SelectionCharacter.SelectedUnits.AddRange(selectedUnits);
+
+                var isnull = Game.Instance.TurnBasedCombatController.CurrentTurn.SelectedUnit == null;
+                var actionStates = Game.Instance.TurnBasedCombatController.CurrentTurn.GetActionsStates(selectedUnit);
+
+                //Game.Instance.TurnBasedCombatController.CurrentTurn.UpdateActionPredictions
+                //PathVisualizer.Instance.CalculatePathForCommand(selectedUnit, actionStates, true, false);
+                if (click.VectorPath.Count > 0)
+                {
+                    var unityVectorPath = click.VectorPath.Select(v => new UnityEngine.Vector3(v.X, v.Y, v.Z)).ToList();
+                    PathVisualizer.Instance.m_CurrentPath = ABPath.FakePath(unityVectorPath);
+                    var path = PathVisualizer.Instance.CurrentPathForUnit(selectedUnit.View);
+                }
+
                 var clickResult = clickUnitHandler.OnClick(targetUnit.View.gameObject, worldPosition, click.Button, simulate: false, click.MuteEvents, IsTMBClick: false);
                 _logger.LogInformation("Clicking unit result. Result={result}", clickResult);
             });

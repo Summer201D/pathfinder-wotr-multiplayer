@@ -307,7 +307,7 @@ namespace WOTRMultiplayer.MP
             participant.ForceLoadGame(savePath);
         }
 
-        public bool CanBeControlledByAI(string unitId)
+        public bool IsControlledByPlayers(string unitId)
         {
             var participant = GetMultiplayerParticipant();
             if (participant == null || participant.CurrentGame?.Combat == null)
@@ -317,7 +317,7 @@ namespace WOTRMultiplayer.MP
 
             var realUnitId = _gameInteractionService.GetPetOwnerId(unitId) ?? unitId;
             var partyMember = participant.CurrentGame.Characters.FirstOrDefault(c => string.Equals(c.UnitId, realUnitId, System.StringComparison.OrdinalIgnoreCase));
-            return partyMember == null;
+            return partyMember != null;
         }
 
         public void OnClickUnit(NetworkClick click)

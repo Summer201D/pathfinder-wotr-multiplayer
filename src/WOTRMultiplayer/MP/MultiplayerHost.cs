@@ -578,7 +578,7 @@ namespace WOTRMultiplayer.MP
                 return;
             }
 
-            _logger.LogInformation("Sending unit click. TargetUnitId={targetUnitId}", click.TargetUnitId);
+            _logger.LogInformation("Sending unit click. TargetUnitId={targetUnitId}, VectorPathCount={pathCount}", click.TargetUnitId, click.VectorPath.Count);
 
             var message = new NotifyUnitClicked
             {
@@ -586,11 +586,10 @@ namespace WOTRMultiplayer.MP
                 {
                     Button = click.Button,
                     MuteEvents = click.MuteEvents,
-                    SelectedUnitId = click.SelectedUnitId,
+                    SelectedUnits = click.SelectedUnits,
                     TargetUnitId = click.TargetUnitId,
-                    WorldPositionX = click.WorldPosition.X,
-                    WorldPositionY = click.WorldPosition.Y,
-                    WorldPositionZ = click.WorldPosition.Z
+                    WorldPosition = new Networking.Messages.NetworkVector3(click.WorldPosition.X, click.WorldPosition.Y, click.WorldPosition.Z),
+                    VectorPath = [.. click.VectorPath.Select(x => new Networking.Messages.NetworkVector3(x.X, x.Y, x.Z))]
                 }
             };
 
@@ -875,14 +874,15 @@ namespace WOTRMultiplayer.MP
 
         private void OnNotifyUnitClicked(long playerId, NotifyUnitClicked clicked)
         {
-            _logger.LogInformation($"Received {nameof(NotifyUnitClicked)}. PlayerId={{playerId}}, SelectedUnitId={{selectedUnitId}}, TargetUnitId={{targetUnitId}}", playerId, clicked.Click.SelectedUnitId, clicked.Click.TargetUnitId);
+            _logger.LogInformation($"Received {nameof(NotifyUnitClicked)}. PlayerId={{playerId}}, SelectedUnitId={{selectedUnits}}, TargetUnitId={{targetUnitId}}", playerId, clicked.Click.SelectedUnits.Count, clicked.Click.TargetUnitId);
             var click = new NetworkClick
             {
                 Button = clicked.Click.Button,
                 MuteEvents = clicked.Click.MuteEvents,
-                SelectedUnitId = clicked.Click.SelectedUnitId,
+                SelectedUnits = clicked.Click.SelectedUnits,
                 TargetUnitId = clicked.Click.TargetUnitId,
-                WorldPosition = new Vector3(clicked.Click.WorldPositionX, clicked.Click.WorldPositionY, clicked.Click.WorldPositionZ)
+                WorldPosition = new NetworkVector3(clicked.Click.WorldPosition.X, clicked.Click.WorldPosition.Y, clicked.Click.WorldPosition.Z),
+                VectorPath = [.. clicked.Click.VectorPath.Select(v => new NetworkVector3(v.X, v.Y, v.Z))]
             };
 
             if (_game.Combat != null)
