@@ -57,8 +57,25 @@ namespace WOTRMultiplayer.HarmonyPatches.Clicks
         }
 
         [HarmonyPatch(typeof(ClickWithSelectedAbilityHandler), nameof(ClickWithSelectedAbilityHandler.OnClick))]
+        [HarmonyPrefix]
+        public static void ClickWithSelectedAbilityHandler_OnClick_Prefix(ClickWithSelectedAbilityHandler __instance, bool simulate, out ClickWithSelectedAbilityHandlerOnClickState __state)
+        {
+            if (!Main.Multiplayer.IsActive || simulate)
+            {
+                __state = null;
+                return;
+            }
+
+            // already set to null in postfix, but is required for network communication
+            __state = new ClickWithSelectedAbilityHandlerOnClickState
+            {
+                AbilityId = __instance.SelectedAbility?.UniqueId
+            };
+        }
+
+        [HarmonyPatch(typeof(ClickWithSelectedAbilityHandler), nameof(ClickWithSelectedAbilityHandler.OnClick))]
         [HarmonyPostfix]
-        public static void ClickWithSelectedAbilityHandler_OnClick_Postfix(ClickWithSelectedAbilityHandler __instance, bool __result, GameObject gameObject, Vector3 worldPosition, int button, bool simulate, bool muteEvents, bool IsTMBClick)
+        public static void ClickWithSelectedAbilityHandler_OnClick_Postfix(ClickWithSelectedAbilityHandler __instance, bool __result, ClickWithSelectedAbilityHandlerOnClickState __state, GameObject gameObject, Vector3 worldPosition, int button, bool simulate, bool muteEvents, bool IsTMBClick)
         {
             if (!Main.Multiplayer.IsActive || simulate || !__result)
             {
@@ -76,7 +93,7 @@ namespace WOTRMultiplayer.HarmonyPatches.Clicks
                 WorldPosition = new NetworkVector3(worldPosition.x, worldPosition.y, worldPosition.z),
                 MuteEvents = muteEvents,
                 VectorPath = [.. path?.vectorPath?.Select(v => new NetworkVector3 { X = v.x, Y = v.y, Z = v.z }) ?? []],
-                AbilityId = __instance.SelectedAbility.UniqueId,
+                AbilityId = __state.AbilityId
             };
 
             Main.Multiplayer.OnClickWithSelectedAbility(click);
@@ -105,6 +122,11 @@ namespace WOTRMultiplayer.HarmonyPatches.Clicks
             };
 
             Main.Multiplayer.OnClickUnit(click);
+        }
+
+        public class ClickWithSelectedAbilityHandlerOnClickState
+        {
+            public string AbilityId { get; set; }
         }
     }
 }

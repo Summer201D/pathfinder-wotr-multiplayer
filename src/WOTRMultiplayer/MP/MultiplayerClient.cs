@@ -161,8 +161,6 @@ namespace WOTRMultiplayer.MP
             // assumption: should be done after each area load aswell
             SoftReset();
 
-            PartyChanged();
-
             _gameInteractionService.Pause(true);
 
             _networkServerClient.SendAsync(new ClientGameLoaded()).Wait();

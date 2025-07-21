@@ -20,7 +20,8 @@ namespace WOTRMultiplayer.PubSub
         IPartyHandler,
         IAreaLoadingStagesHandler,
         IPartyCombatHandler,
-        ITurnBasedModeHandler
+        ITurnBasedModeHandler,
+        IUnitCombatHandler
     {
         public GlobalMultiplayerSubscriber(
             ILogger<GlobalMultiplayerSubscriber> logger,
@@ -128,7 +129,7 @@ namespace WOTRMultiplayer.PubSub
         public void HandleRoundStarted(int round)
         {
             var multiplayerParticipant = GetMultiplayerParticipant();
-            if (!multiplayerParticipant?.IsActive ?? false)
+            if (multiplayerParticipant == null)
             {
                 return;
             }
@@ -148,6 +149,22 @@ namespace WOTRMultiplayer.PubSub
         {
         }
 
+        public void HandleUnitJoinCombat(UnitEntityData unit)
+        {
+            var multiplayerParticipant = GetMultiplayerParticipant();
+            if (multiplayerParticipant?.CurrentGame?.Combat == null)
+            {
+                return;
+            }
+
+            // TODO
+            Logger.LogError("NOT SYNCED: Unit joined mid combat. UnitId={unitId}, UnitName={unitName}", unit.UniqueId, unit.CharacterName);
+        }
+
+        public void HandleUnitLeaveCombat(UnitEntityData unit)
+        {
+        }
+
         public void HandleUnitNotSurprised(UnitEntityData unit, RuleSkillCheck perceptionCheck)
         {
         }
@@ -155,7 +172,7 @@ namespace WOTRMultiplayer.PubSub
         public void HandleWarning(WarningNotificationType warningType, bool addToLog = true)
         {
             var multiplayerParticipant = GetMultiplayerParticipant();
-            if (!multiplayerParticipant?.IsActive ?? false)
+            if (multiplayerParticipant == null)
             {
                 return;
             }
