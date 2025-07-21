@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Kingmaker;
 using Kingmaker.Blueprints.Root;
 using Kingmaker.Cheats;
+using Kingmaker.Controllers.Clicks;
 using Kingmaker.Controllers.Clicks.Handlers;
 using Kingmaker.DialogSystem.Blueprints;
 using Kingmaker.EntitySystem.Entities;
@@ -146,12 +147,12 @@ namespace WOTRMultiplayer.GameInteraction
             });
         }
 
-        public void MoveCharacter(string characterName, Vector3 destination, float delay, float orientation)
+        public void MoveNonCombatCharacter(string unitId, NetworkVector3 destination, float delay, float orientation)
         {
-            var character = Game.Instance.Player.PartyAndPets.FirstOrDefault(f => string.Equals(f.CharacterName, characterName));
+            var character = Game.Instance.Player.PartyAndPets.FirstOrDefault(f => string.Equals(f.UniqueId, unitId, StringComparison.OrdinalIgnoreCase));
             if (character == null)
             {
-                _logger.LogError("Can't find character. Name={characterName}", characterName);
+                _logger.LogError("Can't move missing character. UnitId={unitId}", unitId);
                 return;
             }
 
@@ -427,13 +428,25 @@ namespace WOTRMultiplayer.GameInteraction
         public void ClickUnitInCombat(NetworkClick click)
         {
             var clickUnitHandler = Game.Instance.DefaultPointerController.m_ClickHandlers.FirstOrDefault(c => c is ClickUnitHandler);
+            ExecuteClickHandler(clickUnitHandler, click);
+        }
+
+        public void ClickGroundInCombat(NetworkClick click)
+        {
+            var clickUnitHandler = Game.Instance.DefaultPointerController.m_ClickHandlers.FirstOrDefault(c => c is ClickGroundHandler);
+            ExecuteClickHandler(clickUnitHandler, click);
+        }
+
+        private void ExecuteClickHandler(IClickEventHandler clickEventHandler, NetworkClick click)
+        {
             var targetUnit = GetUnitEntity(click.TargetUnitId);
             var selectedUnits = click.SelectedUnits.Select(GetUnitEntity)?.ToList();
             var selectedUnit = selectedUnits.FirstOrDefault();
             var worldPosition = new UnityEngine.Vector3(click.WorldPosition.X, click.WorldPosition.Y, click.WorldPosition.Z);
             _mainThreadAccessor.Enqueue(() =>
             {
-                _logger.LogInformation("Clicking unit. TargetUnitId={targetUnitId}, SelectedUnit={selectedUnitId}, VectorPathCount={pathCount}", targetUnit.UniqueId, selectedUnit?.UniqueId, click.VectorPath.Count);
+                _logger.LogInformation("Executing click handler. Type={handlerType}, WorldPosition={worldPosition}, TargetUnitId={targetUnitId}, SelectedUnit={selectedUnitId}, VectorPathCount={pathCount}",
+                    clickEventHandler.GetType().Name, click.WorldPosition, targetUnit?.UniqueId, selectedUnit?.UniqueId, click.VectorPath.Count);
 
                 Game.Instance.SelectionCharacter.SelectedUnit.Value = selectedUnit;
                 Game.Instance.SelectionCharacter.SelectedUnits.Clear();
@@ -449,7 +462,7 @@ namespace WOTRMultiplayer.GameInteraction
                     PathVisualizer.Instance.m_CurrentPath.Claim(this);
                 }
 
-                clickUnitHandler.OnClick(targetUnit.View.gameObject, worldPosition, click.Button, simulate: false, click.MuteEvents, IsTMBClick: false);
+                clickEventHandler.OnClick(targetUnit?.View?.gameObject, worldPosition, click.Button, simulate: false, click.MuteEvents, IsTMBClick: false);
             });
         }
 
@@ -479,6 +492,11 @@ namespace WOTRMultiplayer.GameInteraction
 
         private UnitEntityData GetUnitEntity(string uniqueId)
         {
+            if (string.IsNullOrEmpty(uniqueId))
+            {
+                return null;
+            }
+
             return GetUnitEntityFromLoadedArea(uniqueId) ?? GetUnitEntityFromParty(uniqueId);
         }
 

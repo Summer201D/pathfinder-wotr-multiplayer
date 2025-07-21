@@ -191,7 +191,7 @@ namespace WOTRMultiplayer.Playground.Client
             {
             }
 
-            public void MoveCharacter(string characterName, Vector3 destination, float delay, float orientation)
+            public void MoveNonCombatCharacter(string unitId, NetworkVector3 destination, float delay, float orientation)
             {
             }
 
@@ -247,6 +247,10 @@ namespace WOTRMultiplayer.Playground.Client
             }
 
             public void ClickUnitInCombat(NetworkClick click)
+            {
+            }
+
+            public void ClickGroundInCombat(NetworkClick click)
             {
             }
         }

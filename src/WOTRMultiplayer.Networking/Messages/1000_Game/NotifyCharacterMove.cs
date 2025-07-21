@@ -7,21 +7,15 @@ namespace WOTRMultiplayer.Networking.Messages.Game
     public class NotifyCharacterMove
     {
         [ProtoMember(1)]
-        public string CharacterName { get; set; }
+        public string UnitId { get; set; }
 
         [ProtoMember(2)]
-        public float DestinationX { get; set; }
+        public NetworkVector3 Destination { get; set; }
 
         [ProtoMember(3)]
-        public float DestinationY { get; set; }
-
-        [ProtoMember(4)]
-        public float DestinationZ { get; set; }
-
-        [ProtoMember(5)]
         public float Delay { get; set; }
 
-        [ProtoMember(6)]
+        [ProtoMember(4)]
         public float Orientation { get; set; }
     }
 }

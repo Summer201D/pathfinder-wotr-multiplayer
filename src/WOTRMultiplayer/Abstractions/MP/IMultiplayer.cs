@@ -1,6 +1,4 @@
-﻿using Kingmaker.Controllers.Clicks.Handlers;
-using Kingmaker.EntitySystem.Entities;
-using Kingmaker.EntitySystem.Persistence;
+﻿using Kingmaker.EntitySystem.Persistence;
 using Kingmaker.GameModes;
 using Kingmaker.RuleSystem.Rules;
 using WOTRMultiplayer.Abstractions.UI;
@@ -18,7 +16,7 @@ namespace WOTRMultiplayer.Abstractions.MP
 
         void InitializeEscMenuLobbyWindow(InitializeEscMenuLobbyWindowContext context);
 
-        void MoveCharacter(UnitEntityData unit, ClickGroundHandler.CommandSettings settings);
+        void MoveNonCombatCharacter(string unitId, NetworkVector3 destination, float delay, float orientation);
 
         bool CanControlCharacter(bool original, string unitId);
 

@@ -135,7 +135,7 @@ namespace WOTRMultiplayer.MP
             return character.Owner != null && character.Owner.Id == _game.LocalPlayerId;
         }
 
-        public void MoveCharacter(string characterName, Vector3 destination, float delay, float orientation)
+        public void MoveNonCombatCharacter(string unitId, NetworkVector3 destination, float delay, float orientation)
         {
             // TODO: current trigger couldn't be used in combat
             if (_game.Combat != null)
@@ -143,13 +143,11 @@ namespace WOTRMultiplayer.MP
                 return;
             }
 
-            _logger.LogInformation("Sending CharacterMove. Name={characterName}, Destination={destination}", characterName, destination);
+            _logger.LogInformation("Sending CharacterMove. UnitId={unitId}, Destination={destination}, Delay={delay}, Orientation={orientation}", unitId, destination, delay, orientation);
             var message = new CharacterMove
             {
-                CharacterName = characterName,
-                DestinationX = destination.X,
-                DestinationY = destination.Y,
-                DestinationZ = destination.Z,
+                UnitId = unitId,
+                Destination = new Networking.Messages.NetworkVector3(destination.X, destination.Y, destination.Z),
                 Delay = delay,
                 Orientation = orientation
             };
@@ -482,10 +480,22 @@ namespace WOTRMultiplayer.MP
                 return;
             }
 
-            // TODO:
-            _logger.LogError("TODO: Sending ground click. WorldPosition=<{x},{y},{z}>, VectorPathCount={pathCount}", click.WorldPosition.X, click.WorldPosition.Y, click.WorldPosition.Z, click.VectorPath.Count);
-        }
+            _logger.LogInformation("Sending ground click. WorldPosition={worldPosition}, VectorPathCount={pathCount}", click.WorldPosition, click.VectorPath.Count);
+            var message = new NotifyGroundClicked
+            {
+                Click = new Networking.Messages.NetworkClick
+                {
+                    Button = click.Button,
+                    MuteEvents = click.MuteEvents,
+                    SelectedUnits = click.SelectedUnits,
+                    TargetUnitId = click.TargetUnitId,
+                    WorldPosition = new Networking.Messages.NetworkVector3(click.WorldPosition.X, click.WorldPosition.Y, click.WorldPosition.Z),
+                    VectorPath = [.. click.VectorPath.Select(x => new Networking.Messages.NetworkVector3(x.X, x.Y, x.Z))]
+                }
+            };
 
+            _networkServerClient.SendAsync(message).Wait();
+        }
 
         public void OnClickWithSelectedAbility(NetworkClick click)
         {
@@ -530,15 +540,43 @@ namespace WOTRMultiplayer.MP
                 .Register<NotifyCombatTurnStarted>(OnNotifyCombatTurnStarted)
                 .Register<NotifyCombatTurnEnded>(OnNotifyCombatTurnEnded)
                 .Register<NotifyUnitClicked>(OnNotifyUnitClicked)
+                .Register<NotifyGroundClicked>(OnNotifyGroundClicked)
                 ;
 
             _networkServerClient.OnError = OnNetworkClientError;
             _networkServerClient.OnConnected = OnNetworkClientConnected;
         }
 
+        private void OnNotifyGroundClicked(NotifyGroundClicked clicked)
+        {
+            _logger.LogInformation($"Received {nameof(NotifyGroundClicked)}. SelectedUnitId={{selectedUnits}}, WorldPosition={{worldPosition}}", clicked.Click.SelectedUnits.Count, clicked.Click.WorldPosition);
+            if (_game.Combat == null)
+            {
+                _logger.LogWarning($"{nameof(NotifyGroundClicked)} is ignored out of combat");
+                return;
+            }
+
+            var click = new NetworkClick
+            {
+                Button = clicked.Click.Button,
+                MuteEvents = clicked.Click.MuteEvents,
+                SelectedUnits = clicked.Click.SelectedUnits,
+                WorldPosition = new NetworkVector3(clicked.Click.WorldPosition.X, clicked.Click.WorldPosition.Y, clicked.Click.WorldPosition.Z),
+                VectorPath = [.. clicked.Click.VectorPath.Select(v => new NetworkVector3(v.X, v.Y, v.Z))]
+            };
+
+            _gameInteractionService.ClickGroundInCombat(click);
+        }
+
         private void OnNotifyUnitClicked(NotifyUnitClicked clicked)
         {
             _logger.LogInformation($"Received {nameof(NotifyUnitClicked)}. SelectedUnits={{selectedUnits}}, TargetUnitId={{targetUnitId}}", clicked.Click.SelectedUnits.Count, clicked.Click.TargetUnitId);
+            if (_game.Combat == null)
+            {
+                _logger.LogInformation($"{nameof(NotifyUnitClicked)} is ignored out of combat");
+                return;
+            }
+
             var click = new NetworkClick
             {
                 Button = clicked.Click.Button,
@@ -549,10 +587,7 @@ namespace WOTRMultiplayer.MP
                 VectorPath = [.. clicked.Click.VectorPath.Select(v => new NetworkVector3(v.X, v.Y, v.Z))]
             };
 
-            if (_game.Combat != null)
-            {
-                _gameInteractionService.ClickUnitInCombat(click);
-            }
+            _gameInteractionService.ClickUnitInCombat(click);
         }
 
         private async void OnRollRequest(RollRequest request)
@@ -731,10 +766,10 @@ namespace WOTRMultiplayer.MP
 
         private void OnNotifyCharacterMove(NotifyCharacterMove move)
         {
-            _logger.LogInformation($"Received {nameof(NotifyCharacterMove)}. CharacterName={{characterName}}, DestinationX={{x}}, DestinationY={{y}}, DestinationZ={{z}}", move.CharacterName, move.DestinationX, move.DestinationY, move.DestinationZ);
+            _logger.LogInformation($"Received {nameof(NotifyCharacterMove)}. UnitId={{UnitId}}, Destination={{destination}}", move.UnitId, move.Destination);
 
-            var destination = new Vector3(move.DestinationX, move.DestinationY, move.DestinationZ);
-            _gameInteractionService.MoveCharacter(move.CharacterName, destination, move.Delay, move.Orientation);
+            var destination = new NetworkVector3(move.Destination.X, move.Destination.Y, move.Destination.Z);
+            _gameInteractionService.MoveNonCombatCharacter(move.UnitId, destination, move.Delay, move.Orientation);
         }
 
         private void OnNotifyGameStarted(NotifyGameStarted started)

@@ -1,7 +1,4 @@
 ﻿using System.Linq;
-using System.Numerics;
-using Kingmaker.Controllers.Clicks.Handlers;
-using Kingmaker.EntitySystem.Entities;
 using Kingmaker.EntitySystem.Persistence;
 using Kingmaker.GameModes;
 using Kingmaker.RuleSystem.Rules;
@@ -95,11 +92,15 @@ namespace WOTRMultiplayer.MP
             _lobbyWindowController.OnCharacterOwnerChanged = OnLobbyCharacterOwnerChanged;
         }
 
-        public void MoveCharacter(UnitEntityData unit, ClickGroundHandler.CommandSettings settings)
+        public void MoveNonCombatCharacter(string unitId, NetworkVector3 destination, float delay, float orientation)
         {
-            var destination = new Vector3(settings.Destination.x, settings.Destination.y, settings.Destination.z);
             var multiplayerParticipant = GetMultiplayerParticipant();
-            multiplayerParticipant.MoveCharacter(unit.CharacterName, destination, settings.Delay, settings.Orientation);
+            if (multiplayerParticipant == null)
+            {
+                return;
+            }
+
+            multiplayerParticipant.MoveNonCombatCharacter(unitId, destination, delay, orientation);
         }
 
         public bool CanControlCharacter(bool original, string unitId)

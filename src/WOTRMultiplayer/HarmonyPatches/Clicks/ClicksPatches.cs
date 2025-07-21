@@ -13,6 +13,10 @@ namespace WOTRMultiplayer.HarmonyPatches.Clicks
     [HarmonyPatch]
     public class ClicksPatches
     {
+        /// <summary>
+        /// handles movement outside of combat since it runs after formation calculations
+        /// could be merged with ClickGroundHandler_OnClick_Postfix, but it requires repeating formation calculations
+        /// </summary>
         [HarmonyPatch(typeof(ClickGroundHandler), nameof(ClickGroundHandler.RunCommand))]
         [HarmonyPrefix]
         public static void ClickGroundHandler_RunCommand_Prefix(UnitEntityData unit, ClickGroundHandler.CommandSettings settings)
@@ -22,9 +26,13 @@ namespace WOTRMultiplayer.HarmonyPatches.Clicks
                 return;
             }
 
-            Main.Multiplayer.MoveCharacter(unit, settings);
+            var destination = new NetworkVector3(settings.Destination.x, settings.Destination.y, settings.Destination.z);
+            Main.Multiplayer.MoveNonCombatCharacter(unit.UniqueId, destination, settings.Delay, settings.Orientation);
         }
 
+        /// <summary>
+        /// handles movement in combat
+        /// </summary>
         [HarmonyPatch(typeof(ClickGroundHandler), nameof(ClickGroundHandler.OnClick), [typeof(GameObject), typeof(Vector3), typeof(int), typeof(bool), typeof(bool), typeof(bool)])]
         [HarmonyPostfix]
         public static void ClickGroundHandler_OnClick_Postfix(ClickUnitHandler __instance, bool __result, GameObject gameObject, Vector3 worldPosition, int button, bool simulate, bool muteEvents, bool IsTMBClick)

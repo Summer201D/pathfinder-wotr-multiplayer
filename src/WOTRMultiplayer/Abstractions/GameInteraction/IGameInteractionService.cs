@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Numerics;
 using System.Threading.Tasks;
 using Kingmaker.UI;
 using WOTRMultiplayer.MP.Entities;
@@ -14,7 +13,7 @@ namespace WOTRMultiplayer.Abstractions.GameInteraction
 
         void MarkSuggestedDialogAnswers(List<NetworkDialogAnswerSuggestion> suggestions);
 
-        void MoveCharacter(string characterName, Vector3 destination, float delay, float orientation);
+        void MoveNonCombatCharacter(string unitId, NetworkVector3 destination, float delay, float orientation);
 
         void Pause(bool isPaused);
 
@@ -49,5 +48,7 @@ namespace WOTRMultiplayer.Abstractions.GameInteraction
         Task UpdateUnitsPositionAsync(List<NetworkUnit> networkUnits);
 
         void ClickUnitInCombat(NetworkClick click);
+
+        void ClickGroundInCombat(NetworkClick click);
     }
 }

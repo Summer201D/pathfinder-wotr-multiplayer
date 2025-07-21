@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Net;
-using System.Numerics;
 using WOTRMultiplayer.MP.Entities;
 using WOTRMultiplayer.MP.Entities.Rolls;
 
@@ -11,7 +10,7 @@ namespace WOTRMultiplayer.Abstractions.MP
     {
         bool ReadyChanged();
 
-        void MoveCharacter(string characterName, Vector3 destination, float delay, float orientation);
+        void MoveNonCombatCharacter(string unitId, NetworkVector3 destination, float delay, float orientation);
 
         bool IsActive { get; }
 

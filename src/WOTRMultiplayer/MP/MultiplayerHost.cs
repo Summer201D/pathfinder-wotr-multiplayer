@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
-using System.Numerics;
 using Kingmaker.Utility;
 using Microsoft.Extensions.Logging;
 using WOTRMultiplayer.Abstractions.GameInteraction;
@@ -124,7 +123,7 @@ namespace WOTRMultiplayer.MP
             }
         }
 
-        public void MoveCharacter(string characterName, Vector3 destination, float delay, float orientation)
+        public void MoveNonCombatCharacter(string unitId, NetworkVector3 destination, float delay, float orientation)
         {
             // TODO: current trigger couldn't be used in combat
             if (_game.Combat != null)
@@ -132,13 +131,11 @@ namespace WOTRMultiplayer.MP
                 return;
             }
 
-            _logger.LogInformation("Moving character. Name={characterName}, Destination={destination}", characterName, destination);
+            _logger.LogInformation("Sending NotifyCharacterMove. UnitId={unitId}, Destination={destination}, Delay={delay}, Orientation={orientation}", unitId, destination, delay, orientation);
             var message = new NotifyCharacterMove
             {
-                CharacterName = characterName,
-                DestinationX = destination.X,
-                DestinationY = destination.Y,
-                DestinationZ = destination.Z,
+                UnitId = unitId,
+                Destination = new Networking.Messages.NetworkVector3(destination.X, destination.Y, destination.Z),
                 Delay = delay,
                 Orientation = orientation
             };
@@ -875,6 +872,7 @@ namespace WOTRMultiplayer.MP
                 // we need to load game ASAP on both host/remaining clients
                 .Register<NotifySaveGameAssigned>(OnNotifySaveGameAssigned)
                 .Register<NotifyUnitClicked>(OnNotifyUnitClicked)
+                .Register<NotifyGroundClicked>(OnNotifyGroundClicked)
 
                 // this is kinda special as well as the client is blocking the game loop thread until `RollResponse` is received
                 .Register<RollRequest>(OnRollRequest)
@@ -894,9 +892,39 @@ namespace WOTRMultiplayer.MP
                 ;
         }
 
+        private void OnNotifyGroundClicked(long playerId, NotifyGroundClicked clicked)
+        {
+            _logger.LogInformation($"Received {nameof(NotifyGroundClicked)}. PlayerId={{playerId}}, SelectedUnitId={{selectedUnits}}, WorldPosition={{worldPosition}}", playerId, clicked.Click.SelectedUnits.Count, clicked.Click.WorldPosition);
+            if (_game.Combat == null)
+            {
+                _logger.LogWarning($"{nameof(NotifyGroundClicked)} is ignored out of combat");
+                return;
+            }
+
+            var click = new NetworkClick
+            {
+                Button = clicked.Click.Button,
+                MuteEvents = clicked.Click.MuteEvents,
+                SelectedUnits = clicked.Click.SelectedUnits,
+                WorldPosition = new NetworkVector3(clicked.Click.WorldPosition.X, clicked.Click.WorldPosition.Y, clicked.Click.WorldPosition.Z),
+                VectorPath = [.. clicked.Click.VectorPath.Select(v => new NetworkVector3(v.X, v.Y, v.Z))]
+            };
+
+            _gameInteractionService.ClickGroundInCombat(click);
+
+            _logger.LogInformation($"Resending {nameof(NotifyGroundClicked)} to other players");
+            _networkServer.SendAllExcept(playerId, click);
+        }
+
         private void OnNotifyUnitClicked(long playerId, NotifyUnitClicked clicked)
         {
             _logger.LogInformation($"Received {nameof(NotifyUnitClicked)}. PlayerId={{playerId}}, SelectedUnitId={{selectedUnits}}, TargetUnitId={{targetUnitId}}", playerId, clicked.Click.SelectedUnits.Count, clicked.Click.TargetUnitId);
+            if (_game.Combat == null)
+            {
+                _logger.LogWarning($"{nameof(NotifyUnitClicked)} is ignored out of combat");
+                return;
+            }
+
             var click = new NetworkClick
             {
                 Button = clicked.Click.Button,
@@ -907,10 +935,10 @@ namespace WOTRMultiplayer.MP
                 VectorPath = [.. clicked.Click.VectorPath.Select(v => new NetworkVector3(v.X, v.Y, v.Z))]
             };
 
-            if (_game.Combat != null)
-            {
-                _gameInteractionService.ClickUnitInCombat(click);
-            }
+            _gameInteractionService.ClickUnitInCombat(click);
+
+            _logger.LogInformation($"Resending {nameof(NotifyUnitClicked)} to other players");
+            _networkServer.SendAllExcept(playerId, click);
         }
 
         private void OnClientCombatTurnEnded(long playerId, ClientCombatTurnEnded ended)
@@ -1054,17 +1082,15 @@ namespace WOTRMultiplayer.MP
 
         private void OnCharacterMove(long playerId, CharacterMove move)
         {
-            _logger.LogInformation($"Received {nameof(CharacterMove)}. PlayerId={{playerId}}, CharacterName={{characterName}}, DestinationX={{x}}, DestinationY={{y}}, DestinationZ={{z}}", playerId, move.CharacterName, move.DestinationX, move.DestinationY, move.DestinationZ);
+            _logger.LogInformation($"Received {nameof(CharacterMove)}. PlayerId={{playerId}}, UnitId={{unitId}}, Destination={{destination}}", playerId, move.UnitId, move.Destination);
 
-            var destination = new Vector3(move.DestinationX, move.DestinationY, move.DestinationZ);
-            _gameInteractionService.MoveCharacter(move.CharacterName, destination, move.Delay, move.Orientation);
+            var destination = new NetworkVector3(move.Destination.X, move.Destination.Y, move.Destination.Z);
+            _gameInteractionService.MoveNonCombatCharacter(move.UnitId, destination, move.Delay, move.Orientation);
 
             var notifyMove = new NotifyCharacterMove
             {
-                CharacterName = move.CharacterName,
-                DestinationX = move.DestinationX,
-                DestinationY = move.DestinationY,
-                DestinationZ = move.DestinationZ,
+                UnitId = move.UnitId,
+                Destination = move.Destination,
                 Delay = move.Delay,
                 Orientation = move.Orientation
             };
