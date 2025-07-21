@@ -504,8 +504,24 @@ namespace WOTRMultiplayer.MP
                 return;
             }
 
-            // TODO:
-            _logger.LogError("TODO: Sending Ability click. TargetUnitId={targetUnitId}, AbilityId={abilityId}, WorldPosition=<{x},{y},{z}>, VectorPathCount={pathCount}", click.TargetUnitId, click.AbilityId, click.WorldPosition.X, click.WorldPosition.Y, click.WorldPosition.Z, click.VectorPath.Count);
+            _logger.LogInformation("Sending ability click. TargetUnitId={targetUnitId}, AbilityId={abilityId}, WorldPosition={worldPosition}, VectorPathCount={pathCount}",
+                click.TargetUnitId, click.AbilityId, click.WorldPosition, click.VectorPath.Count);
+
+            var message = new NotifyAbilityClicked
+            {
+                Click = new Networking.Messages.NetworkClick
+                {
+                    Button = click.Button,
+                    MuteEvents = click.MuteEvents,
+                    SelectedUnits = click.SelectedUnits,
+                    TargetUnitId = click.TargetUnitId,
+                    AbilityId = click.AbilityId,
+                    WorldPosition = new Networking.Messages.NetworkVector3(click.WorldPosition.X, click.WorldPosition.Y, click.WorldPosition.Z),
+                    VectorPath = [.. click.VectorPath.Select(x => new Networking.Messages.NetworkVector3(x.X, x.Y, x.Z))]
+                }
+            };
+
+            _networkServerClient.SendAsync(message).Wait();
         }
 
         private void SoftReset()
@@ -541,10 +557,34 @@ namespace WOTRMultiplayer.MP
                 .Register<NotifyCombatTurnEnded>(OnNotifyCombatTurnEnded)
                 .Register<NotifyUnitClicked>(OnNotifyUnitClicked)
                 .Register<NotifyGroundClicked>(OnNotifyGroundClicked)
+                .Register<NotifyAbilityClicked>(OnNotifyAbilityClicked)
                 ;
 
             _networkServerClient.OnError = OnNetworkClientError;
             _networkServerClient.OnConnected = OnNetworkClientConnected;
+        }
+
+        private void OnNotifyAbilityClicked(NotifyAbilityClicked clicked)
+        {
+            _logger.LogInformation($"Received {nameof(NotifyAbilityClicked)}. AbilityId={{abilityId}}, TargetUnitId={{targetUnitId}}, SelectedUnitId={{selectedUnits}}, WorldPosition={{worldPosition}}", clicked.Click.AbilityId, clicked.Click.TargetUnitId, clicked.Click.SelectedUnits.Count, clicked.Click.WorldPosition);
+            if (_game.Combat == null)
+            {
+                _logger.LogWarning($"{nameof(NotifyAbilityClicked)} is ignored out of combat");
+                return;
+            }
+
+            var click = new NetworkClick
+            {
+                Button = clicked.Click.Button,
+                MuteEvents = clicked.Click.MuteEvents,
+                SelectedUnits = clicked.Click.SelectedUnits,
+                AbilityId = clicked.Click.AbilityId,
+                TargetUnitId = clicked.Click.TargetUnitId,
+                WorldPosition = new NetworkVector3(clicked.Click.WorldPosition.X, clicked.Click.WorldPosition.Y, clicked.Click.WorldPosition.Z),
+                VectorPath = [.. clicked.Click.VectorPath.Select(v => new NetworkVector3(v.X, v.Y, v.Z))]
+            };
+
+            _gameInteractionService.ClickAbilityInCombat(click);
         }
 
         private void OnNotifyGroundClicked(NotifyGroundClicked clicked)
@@ -570,7 +610,8 @@ namespace WOTRMultiplayer.MP
 
         private void OnNotifyUnitClicked(NotifyUnitClicked clicked)
         {
-            _logger.LogInformation($"Received {nameof(NotifyUnitClicked)}. SelectedUnits={{selectedUnits}}, TargetUnitId={{targetUnitId}}", clicked.Click.SelectedUnits.Count, clicked.Click.TargetUnitId);
+            _logger.LogInformation($"Received {nameof(NotifyUnitClicked)}. TargetUnitId={{targetUnitId}}, SelectedUnits={{selectedUnits}}", clicked.Click.TargetUnitId, clicked.Click.SelectedUnits.Count);
+
             if (_game.Combat == null)
             {
                 _logger.LogInformation($"{nameof(NotifyUnitClicked)} is ignored out of combat");

@@ -413,6 +413,7 @@ namespace WOTRMultiplayer.GameInteraction
 
         public void EndTurnBasedCombatTurn()
         {
+            // TODO: proper command queue
             while ((Game.Instance.TurnBasedCombatController?.CurrentTurn?.Rider?.Commands?.Queue?.Count ?? 0) > 0)
             {
                 Thread.Sleep(100);
@@ -427,14 +428,51 @@ namespace WOTRMultiplayer.GameInteraction
 
         public void ClickUnitInCombat(NetworkClick click)
         {
-            var clickUnitHandler = Game.Instance.DefaultPointerController.m_ClickHandlers.FirstOrDefault(c => c is ClickUnitHandler);
-            ExecuteClickHandler(clickUnitHandler, click);
+            try
+            {
+                var clickUnitHandler = Game.Instance.DefaultPointerController.m_ClickHandlers.FirstOrDefault(c => c is ClickUnitHandler);
+                ExecuteClickHandler(clickUnitHandler, click);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Unable to initiate click handler. HandlerTy={handlerType}", typeof(ClickUnitHandler));
+                throw;
+            }
         }
 
         public void ClickGroundInCombat(NetworkClick click)
         {
-            var clickUnitHandler = Game.Instance.DefaultPointerController.m_ClickHandlers.FirstOrDefault(c => c is ClickGroundHandler);
-            ExecuteClickHandler(clickUnitHandler, click);
+            try
+            {
+                var clickUnitHandler = Game.Instance.DefaultPointerController.m_ClickHandlers.FirstOrDefault(c => c is ClickGroundHandler);
+                ExecuteClickHandler(clickUnitHandler, click);
+            }
+            catch (Exception ex)
+            {
+
+                _logger.LogError(ex, "Unable to initiate click handler. HandlerTy={handlerType}", typeof(ClickGroundHandler));
+                throw;
+            }
+        }
+
+        public void ClickAbilityInCombat(NetworkClick click)
+        {
+            try
+            {
+                var clickUnitHandler = Game.Instance.DefaultPointerController.m_ClickHandlers.FirstOrDefault(c => c is ClickWithSelectedAbilityHandler);
+
+                var caster = GetUnitEntity(click.SelectedUnits.FirstOrDefault());
+                var ability = caster?.Abilities.Enumerable.FirstOrDefault(a => string.Equals(a.UniqueId, click.AbilityId, StringComparison.OrdinalIgnoreCase));
+                ((ClickWithSelectedAbilityHandler)clickUnitHandler).SelectedAbility = ability.Data;
+
+                ExecuteClickHandler(clickUnitHandler, click);
+            }
+            catch (Exception ex)
+            {
+
+                _logger.LogError(ex, "Unable to initiate click handler. HandlerTy={handlerType}", typeof(ClickWithSelectedAbilityHandler));
+                throw;
+            }
         }
 
         private void ExecuteClickHandler(IClickEventHandler clickEventHandler, NetworkClick click)
@@ -445,24 +483,32 @@ namespace WOTRMultiplayer.GameInteraction
             var worldPosition = new UnityEngine.Vector3(click.WorldPosition.X, click.WorldPosition.Y, click.WorldPosition.Z);
             _mainThreadAccessor.Enqueue(() =>
             {
-                _logger.LogInformation("Executing click handler. Type={handlerType}, WorldPosition={worldPosition}, TargetUnitId={targetUnitId}, SelectedUnit={selectedUnitId}, VectorPathCount={pathCount}",
-                    clickEventHandler.GetType().Name, click.WorldPosition, targetUnit?.UniqueId, selectedUnit?.UniqueId, click.VectorPath.Count);
-
-                Game.Instance.SelectionCharacter.SelectedUnit.Value = selectedUnit;
-                Game.Instance.SelectionCharacter.SelectedUnits.Clear();
-                Game.Instance.SelectionCharacter.SelectedUnits.AddRange(selectedUnits);
-
-                if (click.VectorPath.Count > 0)
+                try
                 {
-                    var movementPath = click.VectorPath.Select(v => new UnityEngine.Vector3(v.X, v.Y, v.Z)).ToList();
-                    // Commands are using m_CurrentPath in case of extra movement is needed, e.g. UnitAttack command with far away target
-                    PathVisualizer.Instance.m_CurrentPath = ABPath.FakePath(movementPath);
-                    // I have no idea what are consequences of 'fake' claiming the path (sorry not reading docs), but atleast it suppresses exceptions in dev mode
-                    // let's hope it's not going to cause a lot of problems since this path is fake anyway (transfered from another player)
-                    PathVisualizer.Instance.m_CurrentPath.Claim(this);
-                }
+                    _logger.LogInformation("Executing click handler. Type={handlerType}, WorldPosition={worldPosition}, TargetUnitId={targetUnitId}, SelectedUnit={selectedUnitId}, VectorPathCount={pathCount}",
+                               clickEventHandler.GetType().Name, click.WorldPosition, targetUnit?.UniqueId, selectedUnit?.UniqueId, click.VectorPath.Count);
 
-                clickEventHandler.OnClick(targetUnit?.View?.gameObject, worldPosition, click.Button, simulate: false, click.MuteEvents, IsTMBClick: false);
+                    Game.Instance.SelectionCharacter.SelectedUnit.Value = selectedUnit;
+                    Game.Instance.SelectionCharacter.SelectedUnits.Clear();
+                    Game.Instance.SelectionCharacter.SelectedUnits.AddRange(selectedUnits);
+
+                    if (click.VectorPath.Count > 0)
+                    {
+                        var movementPath = click.VectorPath.Select(v => new UnityEngine.Vector3(v.X, v.Y, v.Z)).ToList();
+                        // Commands are using m_CurrentPath in case of extra movement is needed, e.g. UnitAttack command with far away target
+                        PathVisualizer.Instance.m_CurrentPath = ABPath.FakePath(movementPath);
+                        // I have no idea what are consequences of 'fake' claiming the path (sorry not reading docs), but atleast it suppresses exceptions in dev mode
+                        // let's hope it's not going to cause a lot of problems since this path is fake anyway (transfered from another player)
+                        PathVisualizer.Instance.m_CurrentPath.Claim(this);
+                    }
+
+                    clickEventHandler.OnClick(targetUnit?.View?.gameObject, worldPosition, click.Button, simulate: false, click.MuteEvents, IsTMBClick: false);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Unable to execute click handler. HandlerType={handlerType}", clickEventHandler?.GetType().Name);
+                    throw;
+                }
             });
         }
 

@@ -50,5 +50,7 @@ namespace WOTRMultiplayer.Abstractions.GameInteraction
         void ClickUnitInCombat(NetworkClick click);
 
         void ClickGroundInCombat(NetworkClick click);
+
+        void ClickAbilityInCombat(NetworkClick click);
     }
 }

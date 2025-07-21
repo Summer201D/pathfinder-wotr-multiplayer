@@ -600,8 +600,21 @@ namespace WOTRMultiplayer.MP
                 return;
             }
 
-            // TODO:
-            _logger.LogError("TODO: Sending ground click. WorldPosition=<{x},{y},{z}>, VectorPathCount={pathCount}", click.WorldPosition.X, click.WorldPosition.Y, click.WorldPosition.Z, click.VectorPath.Count);
+            _logger.LogInformation("Sending ground click. WorldPosition={worldPosition}, VectorPathCount={pathCount}", click.WorldPosition, click.VectorPath.Count);
+            var message = new NotifyGroundClicked
+            {
+                Click = new Networking.Messages.NetworkClick
+                {
+                    Button = click.Button,
+                    MuteEvents = click.MuteEvents,
+                    SelectedUnits = click.SelectedUnits,
+                    TargetUnitId = click.TargetUnitId,
+                    WorldPosition = new Networking.Messages.NetworkVector3(click.WorldPosition.X, click.WorldPosition.Y, click.WorldPosition.Z),
+                    VectorPath = [.. click.VectorPath.Select(x => new Networking.Messages.NetworkVector3(x.X, x.Y, x.Z))]
+                }
+            };
+
+            _networkServer.SendAll(message);
         }
 
         public void OnClickWithSelectedAbility(NetworkClick click)
@@ -611,8 +624,24 @@ namespace WOTRMultiplayer.MP
                 return;
             }
 
-            // TODO:
-            _logger.LogError("TODO: Sending Ability click. TargetUnitId={targetUnitId}, AbilityId={abilityId}, WorldPosition=<{x},{y},{z}>, VectorPathCount={pathCount}", click.TargetUnitId, click.AbilityId, click.WorldPosition.X, click.WorldPosition.Y, click.WorldPosition.Z, click.VectorPath.Count);
+            _logger.LogInformation("Sending ability click. TargetUnitId={targetUnitId}, AbilityId={abilityId}, WorldPosition={worldPosition}, VectorPathCount={pathCount}",
+                click.TargetUnitId, click.AbilityId, click.WorldPosition, click.VectorPath.Count);
+
+            var message = new NotifyAbilityClicked
+            {
+                Click = new Networking.Messages.NetworkClick
+                {
+                    Button = click.Button,
+                    MuteEvents = click.MuteEvents,
+                    SelectedUnits = click.SelectedUnits,
+                    TargetUnitId = click.TargetUnitId,
+                    AbilityId = click.AbilityId,
+                    WorldPosition = new Networking.Messages.NetworkVector3(click.WorldPosition.X, click.WorldPosition.Y, click.WorldPosition.Z),
+                    VectorPath = [.. click.VectorPath.Select(x => new Networking.Messages.NetworkVector3(x.X, x.Y, x.Z))]
+                }
+            };
+
+            _networkServer.SendAll(message);
         }
 
         private void TryStartCombatTurn()
@@ -873,6 +902,7 @@ namespace WOTRMultiplayer.MP
                 .Register<NotifySaveGameAssigned>(OnNotifySaveGameAssigned)
                 .Register<NotifyUnitClicked>(OnNotifyUnitClicked)
                 .Register<NotifyGroundClicked>(OnNotifyGroundClicked)
+                .Register<NotifyAbilityClicked>(OnNotifyAbilityClicked)
 
                 // this is kinda special as well as the client is blocking the game loop thread until `RollResponse` is received
                 .Register<RollRequest>(OnRollRequest)
@@ -890,6 +920,32 @@ namespace WOTRMultiplayer.MP
                 .Register<ClientCombatTurnStarted>(OnClientCombatTurnStarted)
                 .Register<ClientCombatTurnEnded>(OnClientCombatTurnEnded)
                 ;
+        }
+
+        private void OnNotifyAbilityClicked(long playerId, NotifyAbilityClicked clicked)
+        {
+            _logger.LogInformation($"Received {nameof(NotifyAbilityClicked)}. AbilityId={{abilityId}}, TargetUnitId={{targetUnitId}}, SelectedUnitId={{selectedUnits}}, WorldPosition={{worldPosition}}", clicked.Click.AbilityId, clicked.Click.TargetUnitId, clicked.Click.SelectedUnits.Count, clicked.Click.WorldPosition);
+            if (_game.Combat == null)
+            {
+                _logger.LogWarning($"{nameof(NotifyAbilityClicked)} is ignored out of combat");
+                return;
+            }
+
+            var click = new NetworkClick
+            {
+                Button = clicked.Click.Button,
+                MuteEvents = clicked.Click.MuteEvents,
+                SelectedUnits = clicked.Click.SelectedUnits,
+                AbilityId = clicked.Click.AbilityId,
+                TargetUnitId = clicked.Click.TargetUnitId,
+                WorldPosition = new NetworkVector3(clicked.Click.WorldPosition.X, clicked.Click.WorldPosition.Y, clicked.Click.WorldPosition.Z),
+                VectorPath = [.. clicked.Click.VectorPath.Select(v => new NetworkVector3(v.X, v.Y, v.Z))]
+            };
+
+            _gameInteractionService.ClickAbilityInCombat(click);
+
+            _logger.LogInformation($"Resending {nameof(NotifyAbilityClicked)} to other players");
+            _networkServer.SendAllExcept(playerId, clicked);
         }
 
         private void OnNotifyGroundClicked(long playerId, NotifyGroundClicked clicked)
@@ -918,7 +974,7 @@ namespace WOTRMultiplayer.MP
 
         private void OnNotifyUnitClicked(long playerId, NotifyUnitClicked clicked)
         {
-            _logger.LogInformation($"Received {nameof(NotifyUnitClicked)}. PlayerId={{playerId}}, SelectedUnitId={{selectedUnits}}, TargetUnitId={{targetUnitId}}", playerId, clicked.Click.SelectedUnits.Count, clicked.Click.TargetUnitId);
+            _logger.LogInformation($"Received {nameof(NotifyUnitClicked)}. PlayerId={{playerId}}, TargetUnitId={{targetUnitId}}, SelectedUnits={{selectedUnits}}", playerId, clicked.Click.TargetUnitId, clicked.Click.SelectedUnits.Count);
             if (_game.Combat == null)
             {
                 _logger.LogWarning($"{nameof(NotifyUnitClicked)} is ignored out of combat");

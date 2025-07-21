@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Numerics;
 using System.Threading.Tasks;
 using Kingmaker.EntitySystem.Persistence;
 using Kingmaker.UI;
@@ -287,6 +286,10 @@ namespace WOTRMultiplayer.Playground.Host
             }
 
             public void ClickGroundInCombat(NetworkClick click)
+            {
+            }
+
+            public void ClickAbilityInCombat(NetworkClick click)
             {
             }
         }

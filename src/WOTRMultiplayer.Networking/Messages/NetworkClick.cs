@@ -23,5 +23,8 @@ namespace WOTRMultiplayer.Networking.Messages
 
         [ProtoMember(6)]
         public List<NetworkVector3> VectorPath { get; set; } = [];
+
+        [ProtoMember(7)]
+        public string AbilityId { get; set; }
     }
 }

@@ -253,6 +253,10 @@ namespace WOTRMultiplayer.Playground.Client
             public void ClickGroundInCombat(NetworkClick click)
             {
             }
+
+            public void ClickAbilityInCombat(NetworkClick click)
+            {
+            }
         }
 
         private class DummyDiceRollStorage : IDiceRollStorage
