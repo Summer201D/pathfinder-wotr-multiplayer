@@ -3,7 +3,6 @@ using HarmonyLib;
 using Kingmaker;
 using Kingmaker.Controllers.Clicks.Handlers;
 using Kingmaker.EntitySystem.Entities;
-using Kingmaker.EntitySystem.Persistence.JsonUtility;
 using Kingmaker.TurnBasedMode;
 using Kingmaker.TurnBasedMode.Controllers;
 using Kingmaker.View;

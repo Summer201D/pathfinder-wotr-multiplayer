@@ -109,6 +109,43 @@ namespace WOTRMultiplayer.HarmonyPatches.TurnBasedCombat
         }
 
         /// <summary>
+        /// The game relies on a random number to determine turn order in cases where Initiative/Stats are the same. Unfortunately, this leads to a possible (50%) desync between MP clients
+        /// This transpiler modifies the comparer to stop relying on CombatState.InitiativeRandom and instead compare UnitEntityData.UniqueId which produces same results on different PCs
+        /// </summary>
+        /// <param name="instructions"></param>
+        /// <returns></returns>
+        [HarmonyPatch(typeof(CombatController.UnitsOrderComaprer), nameof(CombatController.UnitsOrderComaprer.Compare))]
+        [HarmonyTranspiler]
+        public static IEnumerable<CodeInstruction> UnitsOrderComaprer_Compare_Transpiler(IEnumerable<CodeInstruction> instructions)
+        {
+            var attr = MethodBase.GetCurrentMethod().GetCustomAttribute<HarmonyPatch>();
+            var target = $"{attr.info.declaringType.Name}.{attr.info.methodName}";
+            var matcher = new CodeMatcher(instructions);
+            var lookFor = AccessTools.PropertyGetter(typeof(UnitCombatState), nameof(UnitCombatState.InitiativeRandom));
+            var match = matcher.SearchForward(x => x.Calls(lookFor));
+            if (match != null)
+            {
+                match.RemoveInstructions(matcher.Length - match.Pos - 1); // keep last `ret`
+                var newInstructions = new List<CodeInstruction>()
+                {
+                    // OpCodes.Ldloc_0 is already loaded
+                    new(OpCodes.Ldloc_1),
+                    new(OpCodes.Call, AccessTools.Method(typeof(TurnBasedCombatPatches), nameof(TurnBasedCombatPatches.CompareUnitsByUniqueId)))
+                };
+
+                match.Insert(newInstructions);
+                Main.GetLogger<HarmonyTranspiler>().LogInformation("Transpiler has been applied. Target={target}", target);
+            }
+
+            return matcher.Instructions();
+        }
+
+        public static int CompareUnitsByUniqueId(UnitEntityData xi, UnitEntityData yi)
+        {
+            return xi.UniqueId.CompareTo(yi.UniqueId);
+        }
+
+        /// <summary>
         /// skips predictions if !IsDirectlyControllable
         /// </summary>
         /// <param name="instructions"></param>
