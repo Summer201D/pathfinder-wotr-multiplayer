@@ -619,7 +619,7 @@ namespace WOTRMultiplayer.MP
         {
             var unitsToSync = Mapper.Map<List<NetworkUnit>>(units);
 
-            await GameInteraction.UpdateUnitsPositionAsync(unitsToSync);
+            await GameInteraction.UpdateUnitsAsync(unitsToSync);
         }
 
         private async void OnNotifyDialogStarted(NotifyDialogStarted started)

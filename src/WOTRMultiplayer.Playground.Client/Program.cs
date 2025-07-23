@@ -242,7 +242,7 @@ namespace WOTRMultiplayer.Playground.Client
             {
             }
 
-            public Task UpdateUnitsPositionAsync(List<NetworkUnit> networkUnits)
+            public Task UpdateUnitsAsync(List<NetworkUnit> networkUnits)
             {
                 return Task.CompletedTask;
             }

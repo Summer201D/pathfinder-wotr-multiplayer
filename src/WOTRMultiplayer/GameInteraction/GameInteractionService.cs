@@ -333,7 +333,7 @@ namespace WOTRMultiplayer.GameInteraction
             return units;
         }
 
-        public Task UpdateUnitsPositionAsync(List<NetworkUnit> networkUnits)
+        public Task UpdateUnitsAsync(List<NetworkUnit> networkUnits)
         {
             var taskCompletion = new TaskCompletionSource<bool>();
             _mainThreadAccessor.Enqueue(() =>
