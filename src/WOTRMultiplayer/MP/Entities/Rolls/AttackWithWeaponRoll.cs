@@ -28,12 +28,7 @@
 
         public override bool IsCompleted()
         {
-            if (!IsHit)
-            {
-                return true;
-            }
-
-            return DamageValues.Count > 0;
+            return !IsHit || DamageValues.Count > 0;
         }
     }
 }
