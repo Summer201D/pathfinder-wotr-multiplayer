@@ -12,8 +12,6 @@ namespace WOTRMultiplayer.MP.Entities.Rolls
 
         public string InitiatorId { get; set; }
 
-        public int? ResultOverride { get; set; }
-
         public string RuleRollType { get; set; }
 
         public string RuleRollName { get; set; }

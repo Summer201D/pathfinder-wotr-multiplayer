@@ -274,7 +274,7 @@ namespace WOTRMultiplayer.MP
                 }
 
                 var combatRound = multiplayerParticipant.GetCombatRound();
-                var roll = CreateNetworkDiceRoll(ruleRollDice.Reason?.Rule, ruleRollDice.RollHistory, ruleRollDice.Result, ruleRollDice.ResultOverride, combatRound);
+                var roll = CreateNetworkDiceRoll(ruleRollDice.Reason?.Rule, ruleRollDice.RollHistory, ruleRollDice.Result, combatRound);
 
                 var rollType = ruleRollDice.Reason?.Rule?.GetType().Name;
                 if (roll == null)
@@ -311,7 +311,7 @@ namespace WOTRMultiplayer.MP
                 var combatRound = multiplayerParticipant.GetCombatRound();
                 var rollType = ruleRollDice.Reason?.Rule?.GetType().Name;
 
-                var networkDiceRoll = CreateNetworkDiceRoll(ruleRollDice.Reason?.Rule, ruleRollDice.RollHistory, ruleRollDice.Result, ruleRollDice.ResultOverride, combatRound);
+                var networkDiceRoll = CreateNetworkDiceRoll(ruleRollDice.Reason?.Rule, ruleRollDice.RollHistory, ruleRollDice.Result, combatRound);
                 if (networkDiceRoll == null)
                 {
                     _logger.LogWarning("Roll retrieving has been skipped. Type={rollType}, InitiatorName={initiatorName}, InitiatorId={initiatorId}", rollType, ruleRollDice.Initiator?.CharacterName, ruleRollDice.Initiator?.UniqueId);
@@ -472,16 +472,16 @@ namespace WOTRMultiplayer.MP
 
         private NetworkDiceRoll CreateNetworkDiceRoll(RulebookEvent rulebookEvent, int combatRound)
         {
-            return CreateNetworkDiceRoll(rulebookEvent, [], 0, null, combatRound);
+            return CreateNetworkDiceRoll(rulebookEvent, [], 0, combatRound);
         }
 
-        private NetworkDiceRoll CreateNetworkDiceRoll(RulebookEvent rulebookEvent, List<int> rollHistory, int result, int? resultOverride, int combatRound)
+        private NetworkDiceRoll CreateNetworkDiceRoll(RulebookEvent rulebookEvent, List<int> rollHistory, int result, int combatRound)
         {
             NetworkDiceRoll roll = rulebookEvent switch
             {
-                RulePartyStatCheck rulePartyStatCheck => CreatePartyStatCheckRoll(rollHistory, result, resultOverride, rulePartyStatCheck),
-                RuleInitiativeRoll ruleInitiativeRoll => CreateInitiativeRoll(rollHistory, result, resultOverride, ruleInitiativeRoll),
-                RuleAttackWithWeapon ruleAttackWithWeapon => CreateAttackWithWeaponRoll(rollHistory, result, resultOverride, ruleAttackWithWeapon, combatRound),
+                RulePartyStatCheck rulePartyStatCheck => CreatePartyStatCheckRoll(rollHistory, result, rulePartyStatCheck),
+                RuleInitiativeRoll ruleInitiativeRoll => CreateInitiativeRoll(rollHistory, result, ruleInitiativeRoll),
+                RuleAttackWithWeapon ruleAttackWithWeapon => CreateAttackWithWeaponRoll(rollHistory, result, ruleAttackWithWeapon, combatRound),
                 _ => null
             };
 
@@ -493,13 +493,12 @@ namespace WOTRMultiplayer.MP
             return roll;
         }
 
-        private PartyStatCheckRoll CreatePartyStatCheckRoll(List<int> rollHistory, int result, int? resultOverride, RulePartyStatCheck rulePartySkillCheck)
+        private PartyStatCheckRoll CreatePartyStatCheckRoll(List<int> rollHistory, int result, RulePartyStatCheck rulePartySkillCheck)
         {
             var roll = new PartyStatCheckRoll
             {
                 InitiatorId = rulePartySkillCheck.Initiator.UniqueId,
                 Result = result,
-                ResultOverride = resultOverride,
                 RollHistory = [.. rollHistory ?? []],
                 RuleRollName = rulePartySkillCheck.Reason.Name,
                 RuleRollType = rulePartySkillCheck.GetType().Name,
@@ -510,7 +509,7 @@ namespace WOTRMultiplayer.MP
             return roll;
         }
 
-        private AttackWithWeaponRoll CreateAttackWithWeaponRoll(List<int> rollHistory, int result, int? resultOverride, RuleAttackWithWeapon ruleAttackWithWeapon, int combatRound)
+        private AttackWithWeaponRoll CreateAttackWithWeaponRoll(List<int> rollHistory, int result, RuleAttackWithWeapon ruleAttackWithWeapon, int combatRound)
         {
             var roll = new AttackWithWeaponRoll
             {
@@ -520,7 +519,6 @@ namespace WOTRMultiplayer.MP
                 TotalModifiersBonus = ruleAttackWithWeapon.AttackRoll.AttackBonus,
 
                 Result = result,
-                ResultOverride = resultOverride,
                 RollHistory = [.. rollHistory ?? []],
                 CombatRound = combatRound,
                 AttackNumber = ruleAttackWithWeapon.AttackNumber,
@@ -535,13 +533,12 @@ namespace WOTRMultiplayer.MP
             return roll;
         }
 
-        private InitiativeRoll CreateInitiativeRoll(List<int> rollHistory, int result, int? resultOverride, RuleInitiativeRoll ruleInitiativeRoll)
+        private InitiativeRoll CreateInitiativeRoll(List<int> rollHistory, int result, RuleInitiativeRoll ruleInitiativeRoll)
         {
             var roll = new InitiativeRoll
             {
                 InitiatorId = ruleInitiativeRoll.Initiator.UniqueId,
                 Result = result,
-                ResultOverride = resultOverride,
                 RollHistory = [.. rollHistory ?? []],
                 RuleRollName = ruleInitiativeRoll.Reason.Name,
                 RuleRollType = ruleInitiativeRoll.GetType().Name,
