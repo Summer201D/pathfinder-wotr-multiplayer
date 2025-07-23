@@ -11,5 +11,8 @@ namespace WOTRMultiplayer.Networking.Messages
 
         [ProtoMember(2)]
         public List<int> RollHistory { get; set; } = [];
+
+        [ProtoMember(3)]
+        public List<NetworkDamageValueRoll> DamageValues { get; set; } = [];
     }
 }

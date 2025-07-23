@@ -12,10 +12,10 @@ using Kingmaker.Controllers.Clicks.Handlers;
 using Kingmaker.DialogSystem.Blueprints;
 using Kingmaker.EntitySystem.Entities;
 using Kingmaker.EntitySystem.Persistence;
-using Kingmaker.EntitySystem.Persistence.JsonUtility;
 using Kingmaker.GameModes;
 using Kingmaker.Globalmap.Blueprints;
 using Kingmaker.Localization;
+using Kingmaker.Pathfinding;
 using Kingmaker.PubSubSystem;
 using Kingmaker.TurnBasedMode;
 using Kingmaker.TurnBasedMode.Controllers;
@@ -29,7 +29,6 @@ using Kingmaker.Utility;
 using Kingmaker.View.MapObjects;
 using Microsoft.Extensions.Logging;
 using Owlcat.Runtime.UI.Controls.Button;
-using Pathfinding;
 using UnityEngine.UI;
 using WOTRMultiplayer.Abstractions.GameInteraction;
 using WOTRMultiplayer.Abstractions.UI;
@@ -552,23 +551,22 @@ namespace WOTRMultiplayer.GameInteraction
                     Game.Instance.SelectionCharacter.SelectedUnits.Clear();
                     Game.Instance.SelectionCharacter.SelectedUnits.AddRange(selectedUnits);
 
+                    var actionStates = Game.Instance.TurnBasedCombatController.CurrentTurn.GetActionsStates(Game.Instance.TurnBasedCombatController.CurrentTurn.SelectedUnit);
+                    UpdateActionsState(click.ActionsState);
+
                     if (click.VectorPath.Count > 0)
                     {
                         var movementPath = click.VectorPath.Select(v => new UnityEngine.Vector3(v.X, v.Y, v.Z)).ToList();
                         // Commands are using m_CurrentPath in case of extra movement is needed, e.g. UnitAttack command with far away target
-                        PathVisualizer.Instance.m_CurrentPath = ABPath.FakePath(movementPath);
+                        PathVisualizer.Instance.m_CurrentPath = new ForcedPath(movementPath);
+                        PathVisualizer.Instance.m_CurrentPathTargetPoint = new UnityEngine.Vector3(click.ActionsState.ApproachPoint.X, click.ActionsState.ApproachPoint.Y, click.ActionsState.ApproachPoint.Z);
+
                         PathVisualizer.Instance.m_CurrentPath.Claim(this);
                         PathVisualizer.Instance.m_CurrentPath.Claim(PathVisualizer.Instance);
+
                         _logger.LogInformation("Configured unit path. Vectors={vectorsCount}", PathVisualizer.Instance.CurrentPathForUnit(Game.Instance.TurnBasedCombatController.CurrentTurn.SelectedUnit.View)?.vectorPath.Count);
                     }
 
-                    var actionStates = Game.Instance.TurnBasedCombatController.CurrentTurn.GetActionsStates(Game.Instance.TurnBasedCombatController.CurrentTurn.SelectedUnit);
-
-                    UpdateActionsState(click.ActionsState);
-
-                    // TODO: remove json dump
-                    //var json = OwlcatJsonConvert.SerializeObject(actionStates);
-                    //_logger.LogInformation("Unit action states. UnitId={unitID}, ApproachPoint={approachPoint}, ApproachRadius={approachRadius}, Data={data}", Game.Instance.TurnBasedCombatController.CurrentTurn?.SelectedUnit?.UniqueId, actionStates?.ApproachPoint, actionStates?.ApproachRadius, json);
 
                     clickEventHandler.OnClick(targetUnit?.View?.gameObject, worldPosition, click.Button, simulate: false, click.MuteEvents, IsTMBClick: false);
                 }

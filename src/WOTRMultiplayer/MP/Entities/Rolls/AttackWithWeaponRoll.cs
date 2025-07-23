@@ -15,12 +15,25 @@
         public bool IsFirstAttack { get; set; }
 
         public int AttacksCount { get; set; }
+
         public bool IsCriticalRoll { get; set; }
+
+        public bool IsHit { get; set; }
 
         public override string GetIdString()
         {
             return string.Join(IdSeparator, base.GetIdString(), AttackNumber.ToString(), CombatRound.ToString(), IsAttackOfOpportunity
                 , TargetId, ExtraAttack, IsFirstAttack, AttacksCount, IsCriticalRoll);
+        }
+
+        public override bool IsCompleted()
+        {
+            if (!IsHit)
+            {
+                return true;
+            }
+
+            return DamageValues.Count > 0;
         }
     }
 }

@@ -93,21 +93,6 @@ namespace WOTRMultiplayer.HarmonyPatches.TurnBasedCombat
             return canContinue;
         }
 
-        [HarmonyPatch(typeof(TurnController), nameof(TurnController.UpdateActionPredictions))]
-        [HarmonyPrefix]
-        public static void TurnController_UpdateActionPredictions_HarmonyPrefix(TurnController __instance)
-        {
-            if (!Main.Multiplayer.IsActive)
-            {
-                return;
-            }
-
-            if (__instance.SelectedUnit == null)
-            {
-                Main.GetLogger<TurnBasedCombatPatches>().LogError("Null selected unit");
-            }
-        }
-
         /// <summary>
         /// The game relies on a random number to determine turn order in cases where Initiative/Stats are the same. Unfortunately, this leads to a possible (50%) desync between MP clients
         /// This transpiler modifies the comparer to stop relying on CombatState.InitiativeRandom and instead compare UnitEntityData.UniqueId which produces same results on different PCs

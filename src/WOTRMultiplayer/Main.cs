@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Reflection;
+using System.Threading.Tasks;
 using HarmonyLib;
 using Kingmaker.PubSubSystem;
 using Microsoft.Extensions.DependencyInjection;
@@ -59,6 +60,9 @@ namespace WOTRMultiplayer
                 _logger.LogInformation("harmony patching");
                 var harmony = new Harmony(entry.Info.Id);
                 harmony.PatchAll(Assembly.GetExecutingAssembly());
+
+                AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
+                TaskScheduler.UnobservedTaskException += TaskScheduler_UnobservedTaskException;
             }
             catch (Exception ex)
             {
@@ -67,6 +71,16 @@ namespace WOTRMultiplayer
             }
 
             return true;
+        }
+
+        private static void TaskScheduler_UnobservedTaskException(object sender, UnobservedTaskExceptionEventArgs e)
+        {
+            _logger.LogError(e.Exception, "Unhandled task exception");
+        }
+
+        private static void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
+        {
+            _logger.LogError(e.ExceptionObject as Exception, "Unhandled exception");
         }
 
         public static void InitializePortraits()

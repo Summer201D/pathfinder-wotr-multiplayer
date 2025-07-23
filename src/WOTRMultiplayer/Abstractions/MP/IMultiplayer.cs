@@ -1,6 +1,7 @@
 ﻿using Kingmaker.EntitySystem.Persistence;
 using Kingmaker.GameModes;
 using Kingmaker.RuleSystem.Rules;
+using Kingmaker.RuleSystem.Rules.Damage;
 using WOTRMultiplayer.Abstractions.UI;
 using WOTRMultiplayer.MP.Entities;
 
@@ -29,6 +30,10 @@ namespace WOTRMultiplayer.Abstractions.MP
         bool OnBeforeRuleRollDiceTrigger(RuleRollDice ruleRollDice);
 
         void OnAfterRuleRollDiceTrigger(RuleRollDice ruleRollDice);
+
+        bool OnBeforeRuleCalculateDamageTrigger(RuleCalculateDamage ruleCalculateDamage);
+
+        void OnAfterRuleCalculateDamageTrigger(RuleCalculateDamage ruleCalculateDamage);
 
         void OnAfterCueShow(string dialogName, string cueName, bool hasSystemAnswer);
 

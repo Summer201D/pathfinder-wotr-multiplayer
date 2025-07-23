@@ -50,7 +50,7 @@ namespace WOTRMultiplayer.MP
         {
             try
             {
-                if (!_rolls.TryGetValue(rollId, out var entry))
+                if (!_rolls.TryGetValue(rollId, out var entry) || !entry.Roll.IsCompleted())
                 {
                     return null;
                 }

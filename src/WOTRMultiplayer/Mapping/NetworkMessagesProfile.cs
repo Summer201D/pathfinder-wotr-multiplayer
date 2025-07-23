@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using WOTRMultiplayer.MP.Entities;
+using WOTRMultiplayer.MP.Entities.Rolls;
 
 namespace WOTRMultiplayer.Mapping
 {
@@ -20,6 +21,12 @@ namespace WOTRMultiplayer.Mapping
                 .ReverseMap();
 
             CreateMap<NetworkCombatAction, Networking.Messages.NetworkCombatAction>()
+                .ReverseMap();
+
+            CreateMap<NetworkDiceRoll, Networking.Messages.NetworkDiceRoll>()
+               .ReverseMap();
+
+            CreateMap<NetworkDamageValueRoll, Networking.Messages.NetworkDamageValueRoll>()
                 .ReverseMap();
         }
     }

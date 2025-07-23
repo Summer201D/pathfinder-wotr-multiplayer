@@ -128,10 +128,8 @@ namespace WOTRMultiplayer.HarmonyPatches.Clicks
         {
             var selectedUnits = Game.Instance.SelectionCharacter.SelectedUnits.Select(x => x.UniqueId)?.ToList();
             var targetUnitId = gameObject?.GetComponent<UnitEntityView>()?.UniqueId;
-            var path = PathVisualizer.Instance.CurrentPathForUnit(Game.Instance.SelectionCharacter?.FirstSelectedUnit?.View);
-            //var actionStates = Game.Instance.TurnBasedCombatController.CurrentTurn?.GetActionsStates(Game.Instance.TurnBasedCombatController.CurrentTurn?.SelectedUnit);
-            //var json = OwlcatJsonConvert.SerializeObject(actionStates);
-            //Main.GetLogger<ClicksPatches>().LogInformation("Unit action states. UnitId={unitID}, ApproachPoint={approachPoint}, ApproachRadius={approachRadius}, Data={data}", Game.Instance.TurnBasedCombatController.CurrentTurn?.SelectedUnit?.UniqueId, actionStates?.ApproachPoint, actionStates?.ApproachRadius, json);
+            var selectedUnit = Game.Instance.SelectionCharacter?.FirstSelectedUnit?.View;
+            var path = selectedUnit == null ? null : PathVisualizer.Instance.CurrentPathForUnit(selectedUnit);
 
             return new NetworkClick
             {

@@ -60,7 +60,7 @@ namespace WOTRMultiplayer.Abstractions.MP
 
         void ForceLoadGame(string savePath);
 
-        bool ShouldStoreRoll();
+        bool ShouldStoreRoll(bool silent);
 
         NetworkDiceRoll RetrieveRoll(int networkDiceRollId, string initiatorId);
 
