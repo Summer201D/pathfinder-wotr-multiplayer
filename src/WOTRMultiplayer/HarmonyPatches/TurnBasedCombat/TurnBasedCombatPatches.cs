@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Reflection;
 using System.Reflection.Emit;
 using HarmonyLib;
@@ -151,6 +150,11 @@ namespace WOTRMultiplayer.HarmonyPatches.TurnBasedCombat
             return matcher.Instructions();
         }
 
+        /// <summary>
+        /// Resets path each frame if !IsDirectlyControllable which breaks Multi Command sticky touch abilities, e.g. Cure Wounds
+        /// </summary>
+        /// <param name="instructions"></param>
+        /// <returns></returns>
         [HarmonyPatch(typeof(PathVisualizer), nameof(PathVisualizer.Update))]
         [HarmonyTranspiler]
         public static IEnumerable<CodeInstruction> PathVisualizer_Update_Transpiler(IEnumerable<CodeInstruction> instructions)
@@ -161,7 +165,6 @@ namespace WOTRMultiplayer.HarmonyPatches.TurnBasedCombat
 
             ReplaceIsDirectlyControllable(matcher, target);
 
-            Main.GetLogger<HarmonyTranspiler>().LogWarning(string.Join(Environment.NewLine, matcher.Instructions()));
             return matcher.Instructions();
         }
 
