@@ -86,7 +86,7 @@ namespace WOTRMultiplayer.MP
 
         public bool ReadyChanged()
         {
-            Logger.LogInformation("Ready changed");
+            Logger.LogInformation("Toggling ready status changed");
             var player = Game.Players.First(p => p.Id == Game.LocalPlayerId);
             player.IsReady = !player.IsReady;
             var readyChanged = new PlayerReadyStatusChanged { PlayerId = player.Id, IsReady = player.IsReady };

@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Net;
 using Kingmaker.PubSubSystem;
 using Kingmaker.UI;
 using Microsoft.Extensions.Logging;
@@ -246,9 +245,9 @@ namespace WOTRMultiplayer.UI.Menu.Items
             GameInteraction.LoadGameFromMainMenu(saveFilePath);
         }
 
-        private void OnMultiplayerConnected(EndPoint endpoint)
+        private void OnMultiplayerConnected(NetworkGameConnectivity connectivity)
         {
-            Lobby.UpdateServerInfo(endpoint.ToString());
+            Lobby.UpdateServerInfo(connectivity);
             SetButtonActive(JoinButtonObject, true);
             ActivateLobbyControls();
         }

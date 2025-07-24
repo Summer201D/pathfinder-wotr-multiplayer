@@ -1058,7 +1058,7 @@ namespace WOTRMultiplayer.MP
 
                 OnPlayersChanged?.Invoke(Game.Players);
                 Logger.LogInformation("Sending ready status changed. PlayerId={playerId}, IsReady={isReady}", playerId, existingPlayer.IsReady);
-                _networkServer.SendAll(readyStatusChanged);
+                _networkServer.SendAllExcept(playerId, readyStatusChanged);
             }
         }
 

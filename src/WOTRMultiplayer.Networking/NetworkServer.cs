@@ -35,7 +35,7 @@ namespace WOTRMultiplayer.Networking
         public INetworkServer Register<TMessage>(Action<long, TMessage> messageHandler)
             where TMessage : class
         {
-            _logger.LogInformation("Register message handler. Type={type}", typeof(TMessage).Name);
+            _logger.LogDebug("Register message handler. Type={type}", typeof(TMessage).Name);
             Server.OnMessageReceive<TMessage>(args => OnHandleMessage(args, messageHandler));
             return this;
         }

@@ -57,7 +57,7 @@ namespace WOTRMultiplayer.Networking
         public INetworkServerClient Register<TMessage>(Action<TMessage> handler)
             where TMessage : class
         {
-            _logger.LogInformation("Registering handler. Type={type}", typeof(TMessage));
+            _logger.LogDebug("Registering handler. Type={type}", typeof(TMessage));
             _handlers.TryAdd(typeof(TMessage), message => handler((TMessage)message));
 
             return this;

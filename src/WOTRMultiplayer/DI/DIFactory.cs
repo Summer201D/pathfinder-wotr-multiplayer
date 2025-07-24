@@ -2,6 +2,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Serilog;
+using Serilog.Events;
 using WOTRMultiplayer.Abstractions.GameInteraction;
 using WOTRMultiplayer.Abstractions.Hashing;
 using WOTRMultiplayer.Abstractions.IO;
@@ -30,7 +31,12 @@ namespace WOTRMultiplayer.DI
         public static IServiceProvider Create(Config.UnityMod.UnityModManagerSettings settings)
         {
             var serviceCollection = new ServiceCollection();
-            Log.Logger = Logging.LoggerFactory.Create(settings.UseDebugConsole);
+            if (!Enum.TryParse<LogEventLevel>(settings.MinimumLogLevel, true, out var logLevel))
+            {
+                logLevel = LogEventLevel.Information;
+            }
+
+            Log.Logger = Logging.LoggerFactory.Create(settings.UseDebugConsole, logLevel);
 
             serviceCollection.AddLogging(x =>
             {

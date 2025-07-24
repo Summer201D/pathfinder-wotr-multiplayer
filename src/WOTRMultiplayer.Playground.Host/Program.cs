@@ -1,13 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Threading.Tasks;
 using AutoMapper;
-using Kingmaker.EntitySystem.Persistence;
-using Kingmaker.UI;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using WOTRMultiplayer.Abstractions.GameInteraction;
+using WOTR.Multiplayer.Playground.Core.Dummies;
 using WOTRMultiplayer.Abstractions.IO;
 using WOTRMultiplayer.Abstractions.MP;
 using WOTRMultiplayer.MP;
@@ -35,7 +32,7 @@ namespace WOTRMultiplayer.Playground.Host
                 serviceProvider.GetService<IMultiplayerSettingsProvider>(),
                 serviceProvider.GetService<IFileSystemService>(),
                 serviceProvider.GetService<INetworkServer>(),
-                new DummyDiceRollStorage(),
+                new DummyDiceRollStorage([new NetworkDiceRoll { Result = 85 }]),
                 serviceProvider.GetService<IMapper>());
             //var characters = new List<NetworkCharacter> {
             //    new() { Name = "xdd", Portrait = "KitsuneFemaleRogue_Portrait"},
@@ -186,161 +183,6 @@ namespace WOTRMultiplayer.Playground.Host
                     default:
                         break;
                 }
-            }
-        }
-
-        private class DummyGameInteractionService : IGameInteractionService
-        {
-            public bool IsPaused { get; set; }
-
-            public bool IsUnitAI(string unitId)
-            {
-                return true;
-            }
-
-            public List<NetworkCharacterOwnership> GetPartyPlayers()
-            {
-                return [];
-            }
-
-            public List<NetworkUnit> GetUnitsInCombat()
-            {
-                return [];
-            }
-
-            public void LeaveArea(string areaExitId)
-            {
-            }
-
-            public void MarkSuggestedDialogAnswers(List<NetworkDialogAnswerSuggestion> suggestions)
-            {
-            }
-
-            public void MoveNonCombatCharacter(string unitId, NetworkVector3 destination, float delay, float orientation)
-            {
-            }
-
-            public void Pause(bool isPaused)
-            {
-            }
-
-            public void PlaySound(UISoundType type)
-            {
-            }
-
-            public void SelectDialogAnswer(string dialogName, string cueName, string answerName, string manualUnitSelectionId)
-            {
-            }
-
-            public void SetDialogContinueButtonState(bool isEnabled)
-            {
-            }
-
-            public void ShowModalMessage(string error)
-            {
-            }
-
-            public Task<bool> StartDialogAsync(string dialogName, string targetUnitId, string initiatorUnitId, string mapObjectId, string speakerKey)
-            {
-                return Task.FromResult(true);
-            }
-
-            public string GetSaveGamePath()
-            {
-                var appData = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
-                var fullPath = Path.Combine(appData, "AppData\\LocalLow\\Owlcat Games\\Pathfinder Wrath Of The Righteous\\Saved Games\\");
-                return fullPath;
-            }
-
-            public SaveInfo LoadSave(string path)
-            {
-                return null;
-            }
-
-            public void QuickLoadGame(string savePath)
-            {
-            }
-
-            public void LoadGameFromMainMenu(string savePath)
-            {
-            }
-
-            public string GetPetOwnerId(string unitId)
-            {
-                return null;
-            }
-
-            public void StartTurnBasedCombatTurn(bool isActingInSurpriseRound)
-            {
-            }
-
-            public void EndTurnBasedCombatTurn()
-            {
-            }
-
-            public Task UpdateUnitsAsync(List<NetworkUnit> networkUnits)
-            {
-                return Task.CompletedTask;
-            }
-
-            public void ClickUnitInCombat(NetworkClick click)
-            {
-            }
-
-            public void ClickGroundInCombat(NetworkClick click)
-            {
-            }
-
-            public void ClickAbilityInCombat(NetworkClick click)
-            {
-            }
-
-            public bool CombatTurnHasBeenFinished()
-            {
-                return true;
-            }
-        }
-
-        private class DummyDiceRollStorage : IDiceRollStorage
-        {
-            public bool Save(NetworkDiceRoll rollDice)
-            {
-                return true;
-            }
-
-            public NetworkDiceRoll Get(int rollId, long playerId, bool ensureCompleted = true)
-            {
-                if (rollId == -1301660035)
-                {
-                    return new NetworkDiceRoll
-                    {
-                        Result = 66
-                    };
-                }
-
-                return new NetworkDiceRoll
-                {
-                    Result = 99
-                };
-            }
-
-            public int GetUniqueId(NetworkDiceRoll roll)
-            {
-                return -1;
-            }
-
-            public void Reset()
-            {
-            }
-
-            public void Reset<T>()
-                where T : NetworkDiceRoll
-            {
-            }
-
-            public Task<NetworkDiceRoll> GetAsync(int rollId, long playerId, TimeSpan? timeout)
-            {
-                return Task.FromResult(Get(rollId, playerId));
             }
         }
     }
