@@ -75,19 +75,34 @@ namespace WOTRMultiplayer.MP
             return [.. Game?.Characters ?? []];
         }
 
-        public bool CanControlCharacter(string unitId)
+        public bool IsControlledByLocalPlayer(string unitId)
         {
-            if (Game == null)
+            try
             {
-                Logger.LogWarning("Game has not been initialized yet, but trying to get character control info");
-                return false;
+                var character = GetCharacterOwnership(unitId);
+
+                return character?.Owner != null && character.Owner.Id == Game.LocalPlayerId;
             }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, "Unable to determine if character is controlled by local player");
+                throw;
+            }
+        }
 
-            var realCharacterId = GameInteraction.GetPetOwnerId(unitId) ?? unitId;
+        public bool IsControlledByPlayers(string unitId)
+        {
+            try
+            {
+                var character = GetCharacterOwnership(unitId);
 
-            var character = GetCharacterOwnership(realCharacterId);
-
-            return character != null && character.Owner != null && character.Owner.Id == Game.LocalPlayerId;
+                return character?.Owner != null;
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, "Unable to determine if character is controlled by players");
+                throw;
+            }
         }
 
         public void CombatRoundStarted(int round)
@@ -173,7 +188,7 @@ namespace WOTRMultiplayer.MP
                 UnitId = unitId,
                 IsInProgress = false,
                 IsActingInSurpriseRound = isActingInSurpriseRound,
-                IsLocalPlayer = CanControlCharacter(unitId),
+                IsLocalPlayer = IsControlledByLocalPlayer(unitId),
                 IsAI = GameInteraction.IsUnitAI(unitId)
             };
 
@@ -205,7 +220,9 @@ namespace WOTRMultiplayer.MP
 
         protected NetworkCharacterOwnership GetCharacterOwnership(string unitId)
         {
-            return Game.Characters.FirstOrDefault(c => string.Equals(c.UnitId, unitId, StringComparison.OrdinalIgnoreCase));
+            var realCharacterId = GameInteraction.GetPetOwnerId(unitId) ?? unitId;
+
+            return Game.Characters.FirstOrDefault(c => string.Equals(c.UnitId, realCharacterId, StringComparison.OrdinalIgnoreCase));
         }
 
         protected string GetTurnReadinessKey(int round, string unitId)

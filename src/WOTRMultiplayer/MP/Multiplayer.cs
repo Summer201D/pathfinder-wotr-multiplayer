@@ -115,33 +115,30 @@ namespace WOTRMultiplayer.MP
             multiplayerActor.MoveNonCombatCharacter(unitId, destination, delay, orientation);
         }
 
-        public bool CanControlCharacter(bool original, string unitId)
+        public bool IsControlledByLocalPlayer(string unitId)
         {
-            // no need to possibly override value if this character is not controllable at all
-            if (!original)
-            {
-                {
-                    return original;
-                }
-            }
-
             var multiplayerActor = GetMultiplayerActor();
             if (multiplayerActor == null)
             {
                 return false;
             }
 
-            return multiplayerActor.CanControlCharacter(unitId);
+            return multiplayerActor.IsControlledByLocalPlayer(unitId);
         }
 
         public bool StartGameMode(GameModeType type)
         {
+            var multiplayerActor = GetMultiplayerActor();
+            if (multiplayerActor == null)
+            {
+                return true;
+            }
+
             var allowedToRun = type != GameModeType.EscMode && type != GameModeType.FullScreenUi;
             _logger.LogInformation("Trying to start GameModeType. Mode={mode}, AllowedToRun={allowedToRun}", type.Name, allowedToRun);
 
             if (type == GameModeType.Pause)
             {
-                var multiplayerActor = GetMultiplayerActor();
                 multiplayerActor.Pause();
             }
 
@@ -150,11 +147,16 @@ namespace WOTRMultiplayer.MP
 
         public bool StopGameMode(GameModeType type)
         {
+            var multiplayerActor = GetMultiplayerActor();
+            if (multiplayerActor == null)
+            {
+                return true;
+            }
+
             _logger.LogInformation("Trying to stop GameModeType. Mode={mode}", type.Name);
 
             if (type == GameModeType.Pause)
             {
-                var multiplayerActor = GetMultiplayerActor();
                 multiplayerActor.Unpause();
             }
 
@@ -467,7 +469,8 @@ namespace WOTRMultiplayer.MP
                 return true;
             }
 
-            return multiplayerActor.CanControlCharacter(unitId);
+            var result = multiplayerActor.IsControlledByPlayers(unitId);
+            return result;
         }
 
         public void OnClickUnit(NetworkClick click)

@@ -159,14 +159,17 @@ namespace WOTRMultiplayer.GameInteraction
                 return;
             }
 
-            var unityDestination = new UnityEngine.Vector3(destination.X, destination.Y, destination.Z);
-            var command = new UnitMoveTo(unityDestination, 0.3f)
+            _mainThreadAccessor.Enqueue(() =>
             {
-                MovementDelay = delay,
-                Orientation = orientation,
-                CreatedByPlayer = true
-            };
-            character.Commands.Run(command);
+                var unityDestination = new UnityEngine.Vector3(destination.X, destination.Y, destination.Z);
+                var command = new UnitMoveTo(unityDestination, 0.3f)
+                {
+                    MovementDelay = delay,
+                    Orientation = orientation,
+                    CreatedByPlayer = true
+                };
+                character.Commands.Run(command);
+            });
         }
 
         public void Pause(bool isPaused)

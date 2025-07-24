@@ -33,7 +33,9 @@ namespace WOTRMultiplayer.Abstractions.MP
 
         Action<List<NetworkPlayer>> OnPlayersChanged { get; set; }
 
-        bool CanControlCharacter(string unitId);
+        bool IsControlledByLocalPlayer(string unitId);
+
+        bool IsControlledByPlayers(string unitId);
 
         void GameLoaded();
 

@@ -460,11 +460,10 @@ namespace WOTRMultiplayer.MP
         {
             Logger.LogInformation("Retrieving roll from other player. RollId={rollId}, UnitId={unitId}", networkDiceRollId, unitId);
 
-            var realCharacterId = GameInteraction.GetPetOwnerId(unitId) ?? unitId;
-            var character = GetCharacterOwnership(realCharacterId);
+            var character = GetCharacterOwnership(unitId);
             if (character == null)
             {
-                Logger.LogError("Unable to find character. UnitId={unitId}", realCharacterId);
+                Logger.LogError("Unable to find character. UnitId={unitId}", unitId);
                 return null;
             }
 
@@ -529,7 +528,7 @@ namespace WOTRMultiplayer.MP
             }
 
             Logger.LogInformation("Sending ability click. TargetUnitId={targetUnitId}, AbilityId={abilityId}, WorldPosition={worldPosition}, VectorPathCount={pathCount}",
-                click.TargetUnitId, click.Ability.Id, click.WorldPosition, click.VectorPath.Count);
+               click.TargetUnitId, click.Ability.Id, click.WorldPosition, click.VectorPath.Count);
 
             var message = new NotifyAbilityClicked
             {

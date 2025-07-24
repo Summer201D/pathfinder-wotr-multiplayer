@@ -19,8 +19,6 @@ namespace WOTRMultiplayer.Abstractions.MP
 
         void MoveNonCombatCharacter(string unitId, NetworkVector3 destination, float delay, float orientation);
 
-        bool CanControlCharacter(bool original, string unitId);
-
         bool StartGameMode(GameModeType type);
 
         bool StopGameMode(GameModeType type);
@@ -54,6 +52,8 @@ namespace WOTRMultiplayer.Abstractions.MP
         void ForceLoadGame(SaveInfo saveInfo);
 
         bool IsControlledByPlayers(string unitId);
+
+        bool IsControlledByLocalPlayer(string unitId);
 
         void OnClickUnit(NetworkClick click);
 
