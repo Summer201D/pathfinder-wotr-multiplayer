@@ -18,7 +18,7 @@ namespace WOTRMultiplayer.MP.Entities.Rolls
 
         public int TotalModifiersBonus { get; set; }
 
-        public List<NetworkDamageValueRoll> DamageValues { get; set; } = [];
+        public List<NetworkDamageValueRoll> DamageValues { get; private set; } = [];
 
         public virtual string GetIdString()
         {
@@ -28,6 +28,11 @@ namespace WOTRMultiplayer.MP.Entities.Rolls
         public virtual bool IsCompleted()
         {
             return true;
+        }
+
+        public virtual void AddDamageValues(IEnumerable<NetworkDamageValueRoll> values)
+        {
+            DamageValues.AddRange(values);
         }
     }
 }

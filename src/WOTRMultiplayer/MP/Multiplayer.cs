@@ -260,7 +260,7 @@ namespace WOTRMultiplayer.MP
                     return;
                 }
 
-                storedDiceRoll.DamageValues.AddRange(ruleCalculateDamage.CalculatedDamage.Select(x => new NetworkDamageValueRoll
+                storedDiceRoll.AddDamageValues(ruleCalculateDamage.CalculatedDamage.Select(x => new NetworkDamageValueRoll
                 {
                     MaximumDamage = x.Source.MaximumValue,
                     RollAndBonusValue = x.RollAndBonusValue,

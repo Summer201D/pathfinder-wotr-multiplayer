@@ -1,7 +1,11 @@
-﻿namespace WOTRMultiplayer.MP.Entities.Rolls
+﻿using System.Collections.Generic;
+
+namespace WOTRMultiplayer.MP.Entities.Rolls
 {
     public class AttackWithWeaponRoll : NetworkDiceRoll
     {
+        private readonly object _checkLock = new();
+
         public int AttackNumber { get; set; }
 
         public int CombatRound { get; set; }
@@ -28,13 +32,24 @@
 
         public override bool IsCompleted()
         {
-            if (!IsHit)
+            lock (_checkLock)
             {
-                return true;
-            }
+                if (!IsHit)
+                {
+                    return true;
+                }
 
-            // Hit requires damage calculation which happens few fractions later
-            return DamageValues.Count > 0;
+                // Hit requires damage calculation which happens few fractions later
+                return DamageValues.Count > 0;
+            }
+        }
+
+        public override void AddDamageValues(IEnumerable<NetworkDamageValueRoll> value)
+        {
+            lock (_checkLock)
+            {
+                base.AddDamageValues(value);
+            }
         }
     }
 }
