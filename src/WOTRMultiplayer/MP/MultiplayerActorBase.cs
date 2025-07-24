@@ -8,6 +8,7 @@ using WOTRMultiplayer.Abstractions.GameInteraction;
 using WOTRMultiplayer.Abstractions.IO;
 using WOTRMultiplayer.Abstractions.MP;
 using WOTRMultiplayer.MP.Entities;
+using WOTRMultiplayer.Networking.Messages.Game;
 
 namespace WOTRMultiplayer.MP
 {
@@ -121,6 +122,26 @@ namespace WOTRMultiplayer.MP
         {
             return Game.Combat?.Round ?? 0;
         }
+
+        public void OnAbilityUse(NetworkAbilityUse abilityUse)
+        {
+            if (!(Game.Combat?.Turn?.IsLocalPlayer ?? false) || GameInteraction.CombatTurnHasBeenFinished())
+            {
+                return;
+            }
+
+            Logger.LogInformation("Sending ability use. CasterId={unitId}, TargetId={targetId}, TargetPoint={targetPoint}, AbilityId={abilityId}, SpellbookId={spellbookId}, VectorPathCount={vectorPathCount}",
+                abilityUse.CasterId, abilityUse.TargetId, abilityUse.TargetPoint, abilityUse.Id, abilityUse.SpellbookId, abilityUse.VectorPath?.Count);
+
+            var message = new NotifyAbilityUse
+            {
+                Ability = Mapper.Map<Networking.Messages.NetworkAbilityUse>(abilityUse)
+            };
+
+            Send(message);
+        }
+
+        protected abstract void Send(object message);
 
         protected bool IsRolledByHost(bool silent)
         {

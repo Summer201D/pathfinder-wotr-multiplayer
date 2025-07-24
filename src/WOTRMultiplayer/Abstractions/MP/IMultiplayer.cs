@@ -59,8 +59,10 @@ namespace WOTRMultiplayer.Abstractions.MP
 
         void OnClickGround(NetworkClick click);
 
-        void OnClickWithSelectedAbility(NetworkClick click);
+        void OnAbilityUse(NetworkAbilityUse abilityUse);
 
         bool IsActive { get; }
+
+        NetworkActionsState GetActionsState();
     }
 }

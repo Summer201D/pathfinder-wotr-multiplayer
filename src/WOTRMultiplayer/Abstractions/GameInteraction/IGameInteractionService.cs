@@ -2,6 +2,7 @@
 using System.Threading.Tasks;
 using Kingmaker.UI;
 using WOTRMultiplayer.MP.Entities;
+using WOTRMultiplayer.Networking.Messages.Game;
 
 namespace WOTRMultiplayer.Abstractions.GameInteraction
 {
@@ -51,8 +52,10 @@ namespace WOTRMultiplayer.Abstractions.GameInteraction
 
         void ClickGroundInCombat(NetworkClick click);
 
-        void ClickAbilityInCombat(NetworkClick click);
-
         bool CombatTurnHasBeenFinished();
+
+        NetworkActionsState GetActionsState();
+
+        void UseAbility(NetworkAbilityUse use);
     }
 }

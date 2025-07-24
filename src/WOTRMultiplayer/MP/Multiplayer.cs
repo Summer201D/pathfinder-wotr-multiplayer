@@ -237,8 +237,8 @@ namespace WOTRMultiplayer.MP
                 }
 
                 var combatRound = multiplayerActor.GetCombatRound();
-                var roll = CreateNetworkDiceRoll(ruleCalculateDamage.Reason.Rule, combatRound);
                 var rollType = ruleCalculateDamage.Reason?.Rule?.GetType().Name;
+                var roll = CreateNetworkDiceRoll(ruleCalculateDamage.Reason.Rule, combatRound);
                 if (roll == null)
                 {
                     _logger.LogWarning("Damage Roll saving has been skipped. Type={rollType}, InitiatorName={initiatorName}, InitiatorId={initiatorId}", rollType, ruleCalculateDamage.Initiator?.CharacterName, ruleCalculateDamage.Initiator?.UniqueId);
@@ -282,7 +282,7 @@ namespace WOTRMultiplayer.MP
             try
             {
                 var multiplayerActor = GetMultiplayerActor();
-                if (multiplayerActor == null || !multiplayerActor.ShouldStoreRoll(true))
+                if (multiplayerActor == null || ruleRollDice.Reason?.Rule == null || !multiplayerActor.ShouldStoreRoll(true))
                 {
                     return;
                 }
@@ -318,7 +318,7 @@ namespace WOTRMultiplayer.MP
             try
             {
                 var multiplayerActor = GetMultiplayerActor();
-                if (multiplayerActor == null || multiplayerActor.ShouldStoreRoll(false))
+                if (multiplayerActor == null || ruleRollDice.Reason?.Rule == null || multiplayerActor.ShouldStoreRoll(false))
                 {
                     return true;
                 }
@@ -495,7 +495,7 @@ namespace WOTRMultiplayer.MP
             multiplayerActor.OnClickGround(click);
         }
 
-        public void OnClickWithSelectedAbility(NetworkClick click)
+        public void OnAbilityUse(NetworkAbilityUse abilityUse)
         {
             var multiplayerActor = GetMultiplayerActor();
             if (multiplayerActor == null)
@@ -503,7 +503,17 @@ namespace WOTRMultiplayer.MP
                 return;
             }
 
-            multiplayerActor.OnClickWithSelectedAbility(click);
+            multiplayerActor.OnAbilityUse(abilityUse);
+        }
+
+        public NetworkActionsState GetActionsState()
+        {
+            if (GetMultiplayerActor() == null)
+            {
+                return null;
+            }
+
+            return _gameInteractionService.GetActionsState();
         }
 
         private NetworkDiceRoll CreateNetworkDiceRoll(RulebookEvent rulebookEvent, int combatRound)

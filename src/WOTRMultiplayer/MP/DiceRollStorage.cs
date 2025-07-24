@@ -50,25 +50,47 @@ namespace WOTRMultiplayer.MP
         {
             try
             {
-                if (!_rolls.TryGetValue(rollId, out var entry) || ensureCompleted && !entry.Roll.IsCompleted())
+                if (!_rolls.TryGetValue(rollId, out var entry))
                 {
                     return null;
                 }
 
-                entry.RetrieveHistory.AddOrUpdate(playerId, 1, (key, value) =>
+                if (ensureCompleted && !entry.Roll.IsCompleted())
                 {
-                    var accessCount = value++;
+                    return null;
+                }
+
+                entry.RetrieveHistory.AddOrUpdate(playerId, k => 1, (key, existing) =>
+                {
+                    var accessCount = existing + 1;
                     _logger.LogWarning("Same roll has been retrieved more than once by the same player. PlayerId={playerId}, RollId={rollId}, AccessCount={accessCount}", playerId, rollId, accessCount);
                     return accessCount;
                 });
 
                 return entry.Roll;
             }
-            catch (System.Exception ex)
+            catch (Exception ex)
             {
                 _logger.LogError(ex, "Unable retrieve roll. RollId={rollId}, PlayerId={playerId}", rollId, playerId);
                 throw;
             }
+        }
+
+        public async Task<NetworkDiceRoll> GetAsync(int rollId, long playerId, TimeSpan? waitForRollTimeout)
+        {
+            var timeoutTask = waitForRollTimeout == null ? Task.CompletedTask : Task.Delay(waitForRollTimeout.Value);
+            NetworkDiceRoll result;
+            do
+            {
+                result = Get(rollId, playerId, ensureCompleted: true);
+                if (result == null)
+                {
+                    await Task.Delay(_defaultRetrieveDelay);
+                }
+            }
+            while (result == null && !timeoutTask.IsCompleted);
+
+            return result;
         }
 
         public int GetUniqueId(NetworkDiceRoll roll)
@@ -94,23 +116,6 @@ namespace WOTRMultiplayer.MP
             }
 
             _logger.LogInformation("Typed rolls have been cleared. RollType={rollType}, RemovedCount={removedCount}", typeof(T), rollsToRemove.Count);
-        }
-
-        public async Task<NetworkDiceRoll> GetAsync(int rollId, long playerId, TimeSpan? waitForRollTimeout)
-        {
-            var timeoutTask = waitForRollTimeout == null ? Task.CompletedTask : Task.Delay(waitForRollTimeout.Value);
-            NetworkDiceRoll result;
-            do
-            {
-                result = Get(rollId, playerId);
-                if (result == null)
-                {
-                    await Task.Delay(_defaultRetrieveDelay);
-                }
-            }
-            while (result == null && !timeoutTask.IsCompleted);
-
-            return result;
         }
     }
 }

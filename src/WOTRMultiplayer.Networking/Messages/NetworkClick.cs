@@ -25,9 +25,6 @@ namespace WOTRMultiplayer.Networking.Messages
         public List<NetworkVector3> VectorPath { get; set; } = [];
 
         [ProtoMember(7)]
-        public NetworkAbility Ability { get; set; }
-
-        [ProtoMember(8)]
         public NetworkActionsState ActionsState { get; set; }
     }
 }

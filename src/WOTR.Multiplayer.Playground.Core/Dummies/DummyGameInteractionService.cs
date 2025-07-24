@@ -119,6 +119,14 @@ namespace WOTR.Multiplayer.Playground.Core.Dummies
         {
             return true;
         }
-    }
 
+        public NetworkActionsState GetActionsState()
+        {
+            return null;
+        }
+
+        public void UseAbility(NetworkAbilityUse use)
+        {
+        }
+    }
 }

@@ -14,7 +14,7 @@ namespace WOTRMultiplayer.Config.Mapping
             CreateMap<NetworkClick, Networking.Messages.NetworkClick>()
                 .ReverseMap();
 
-            CreateMap<NetworkAbility, Networking.Messages.NetworkAbility>()
+            CreateMap<NetworkAbilityUse, Networking.Messages.NetworkAbilityUse>()
                 .ReverseMap();
 
             CreateMap<NetworkActionsState, Networking.Messages.NetworkActionsState>()

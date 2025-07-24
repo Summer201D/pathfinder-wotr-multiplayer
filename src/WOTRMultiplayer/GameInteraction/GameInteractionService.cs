@@ -463,8 +463,8 @@ namespace WOTRMultiplayer.GameInteraction
         {
             try
             {
-                var clickUnitHandler = Game.Instance.DefaultPointerController.m_ClickHandlers.FirstOrDefault(c => c is ClickGroundHandler);
-                ExecuteClickHandler(clickUnitHandler, click);
+                var clickGroundHandler = Game.Instance.DefaultPointerController.m_ClickHandlers.FirstOrDefault(c => c is ClickGroundHandler);
+                ExecuteClickHandler(clickGroundHandler, click);
             }
             catch (Exception ex)
             {
@@ -474,28 +474,33 @@ namespace WOTRMultiplayer.GameInteraction
             }
         }
 
-        public void ClickAbilityInCombat(NetworkClick click)
+        public void UseAbility(NetworkAbilityUse use)
         {
             try
             {
-                var clickUnitHandler = Game.Instance.DefaultPointerController.m_ClickHandlers.FirstOrDefault(c => c is ClickWithSelectedAbilityHandler);
-                var clickUnitId = click.SelectedUnits.FirstOrDefault();
-                var caster = GetUnitEntity(clickUnitId);
-                if (caster == null)
-                {
-                    _logger.LogError("Can't click ability on missing unit. UnitId={unitID}", clickUnitId);
-                    return;
-                }
-
-                var abilityData = FindAbility(caster, click.Ability);
+                var caster = GetUnitEntity(use.CasterId);
+                var abilityData = FindAbility(caster, use);
                 if (abilityData == null)
                 {
                     return;
                 }
 
-                ((ClickWithSelectedAbilityHandler)clickUnitHandler).SelectedAbility = abilityData;
+                var target = GetUnitEntity(use.TargetId);
+                var point = new UnityEngine.Vector3(use.TargetPoint.X, use.TargetPoint.Y, use.TargetPoint.Z);
+                var targetWrapper = new TargetWrapper(point, null, target);
 
-                ExecuteClickHandler(clickUnitHandler, click);
+                UpdateActionsState(use.ActionsState);
+
+                Enum.TryParse<Kingmaker.UnitLogic.Commands.Base.UnitCommand.CommandType>(use.CommandType, true, out var commandType);
+                var command = UnitUseAbility.CreateCastCommand(abilityData, targetWrapper, commandType);
+                command.CreatedByPlayer = true;
+                if (use.VectorPath != null)
+                {
+                    var movementPath = use.VectorPath.Select(v => new UnityEngine.Vector3(v.X, v.Y, v.Z)).ToList();
+                    command.ForcedPath = new ForcedPath(movementPath);
+                }
+
+                caster.Commands.Run(command);
             }
             catch (Exception ex)
             {
@@ -505,37 +510,113 @@ namespace WOTRMultiplayer.GameInteraction
             }
         }
 
-        private AbilityData FindAbility(UnitEntityData unit, NetworkAbility ability)
+        public bool CombatTurnHasBeenFinished()
         {
-            if (!string.IsNullOrEmpty(ability.SpellbookId))
+            var turnStatus = Game.Instance.TurnBasedCombatController.CurrentTurn?.Status ?? TurnBased.Controllers.TurnController.TurnStatus.None;
+            return turnStatus == TurnBased.Controllers.TurnController.TurnStatus.None
+                || turnStatus == TurnBased.Controllers.TurnController.TurnStatus.Ended
+                || turnStatus == TurnBased.Controllers.TurnController.TurnStatus.Ending;
+        }
+
+        public NetworkActionsState GetActionsState()
+        {
+            var actionStates = Game.Instance.TurnBasedCombatController.CurrentTurn?.GetActionsStates(Game.Instance.TurnBasedCombatController.CurrentTurn?.SelectedUnit);
+            if (actionStates == null)
             {
-                var spellbook = unit.Spellbooks.FirstOrDefault(s => string.Equals(s.Blueprint.Name.Key, ability.SpellbookId));
+                return null;
+            }
+
+            return new NetworkActionsState
+            {
+                ApproachPoint = new NetworkVector3(actionStates.ApproachPoint.x, actionStates.ApproachPoint.y, actionStates.ApproachPoint.z),
+                ApproachRadius = actionStates.ApproachRadius,
+                FiveFootStep = CreateNetworkCombatAction(actionStates.FiveFootStep),
+                Free = CreateNetworkCombatAction(actionStates.Free),
+                Standard = CreateNetworkCombatAction(actionStates.Standard),
+                Swift = CreateNetworkCombatAction(actionStates.Swift),
+                Move = CreateNetworkCombatAction(actionStates.Move),
+            };
+        }
+
+        private NetworkCombatAction CreateNetworkCombatAction(CombatAction action)
+        {
+            if (action == null)
+            {
+                return null;
+            }
+
+            return new NetworkCombatAction
+            {
+                MovementActivityStatePredicted = action.m_MovementActivityStatePredicted?.ToString(),
+                MovementActivityStateCurrent = action.m_MovementActivityStateCurrent?.ToString(),
+                AttackActivityStatePredicted = action.m_AttackActivityStatePredicted?.ToString(),
+                AttackActivityStateCurrent = action.m_AttackActivityStateCurrent?.ToString(),
+                AbilityActivityStatePredicted = action.m_AbilityActivityStatePredicted?.ToString(),
+                AbilityActivityStateCurrent = action.m_AbilityActivityStateCurrent?.ToString(),
+                LockType = action.LockType,
+                HasMovePossibility = action.HasMovePossibility,
+                MaxMoveDistance = action.MaxMoveDistance,
+                RemainingMoveDistance = action.RemainingMoveDistance,
+                PredictedMoveDistance = action.PredictedMoveDistance,
+                Type = action.Type.ToString(),
+            };
+        }
+
+        private AbilityData FindAbility(UnitEntityData unit, NetworkAbilityUse abilityUse)
+        {
+            if (!string.IsNullOrEmpty(abilityUse.SpellbookId))
+            {
+                var spellbook = unit.Spellbooks.FirstOrDefault(s => string.Equals(s.Blueprint.Name.Key, abilityUse.SpellbookId));
                 if (spellbook == null)
                 {
-                    _logger.LogError("Unable to find ability due to missing spellbook. UnitId={unitId}, AbilityId={abilityId}, SpellbookId={spellbookId}", unit.UniqueId, ability.Id, ability.SpellbookId);
+                    _logger.LogError("Unable to find ability due to missing spellbook. UnitId={unitId}, AbilityId={abilityId}, SpellbookId={spellbookId}", unit.UniqueId, abilityUse.Id, abilityUse.SpellbookId);
                     return null;
                 }
 
                 foreach (var spellSlot in spellbook.m_MemorizedSpells)
                 {
-                    var spell = spellSlot.FirstOrDefault(s => string.Equals(s.Spell.UniqueId, ability.Id, StringComparison.OrdinalIgnoreCase));
+                    var spell = spellSlot.FirstOrDefault(s => string.Equals(s.Spell.UniqueId, abilityUse.Id, StringComparison.OrdinalIgnoreCase));
                     if (spell != null)
                     {
-                        _logger.LogInformation("Spell has been found. UnitId={unitId}, AbilityId={abilityId}, SpellbookName={spellbookName}", unit.UniqueId, ability.Id, spellbook.Blueprint.Name);
+                        _logger.LogInformation("Spell has been found. UnitId={unitId}, AbilityId={abilityId}, SpellbookName={spellbookName}", unit.UniqueId, abilityUse.Id, spellbook.Blueprint.Name);
                         return spell.Spell;
                     }
                 }
             }
 
-            var byAbilityId = unit.Abilities.Enumerable.FirstOrDefault(a => !string.IsNullOrEmpty(ability.Id) && string.Equals(a.Data.UniqueId, ability.Id, StringComparison.OrdinalIgnoreCase));
+            if (!string.IsNullOrEmpty(abilityUse.ConvertedFromId))
+            {
+                var conversionAbility = unit.Abilities.Enumerable.FirstOrDefault(a => string.Equals(a.Data.UniqueId, abilityUse.ConvertedFromId, StringComparison.OrdinalIgnoreCase));
+                if (conversionAbility == null)
+                {
+                    _logger.LogInformation("Unable to find ability for conversion. UnitId={unitId}, AbilityId={abilityId}", unit.UniqueId, abilityUse.ConvertedFromId);
+                    return null;
+                }
+                var convertedAbility = conversionAbility.Data.GetConversions()?.FirstOrDefault(c => string.Equals(c.NameForAcronym, abilityUse.Name, StringComparison.OrdinalIgnoreCase));
+                if (convertedAbility == null)
+                {
+                    _logger.LogInformation("Unable to find ability in conversion list. UnitId={unitId}, AbilityId={abilityId}", unit.UniqueId, abilityUse.ConvertedFromId);
+                }
+
+                return convertedAbility;
+            }
+
+            var byAbilityId = unit.Abilities.Enumerable.FirstOrDefault(a => !string.IsNullOrEmpty(abilityUse.Id) && string.Equals(a.Data.UniqueId, abilityUse.Id, StringComparison.OrdinalIgnoreCase));
             if (byAbilityId != null)
             {
-                _logger.LogInformation("Ability has been found by abilityId. UnitId={unitId}, AbilityId={abilityId}", unit.UniqueId, ability.Id);
+                _logger.LogInformation("Ability has been found by abilityId. UnitId={unitId}, AbilityId={abilityId}", unit.UniqueId, abilityUse.Id);
                 return byAbilityId.Data;
             }
 
-            _logger.LogError("Unable to find ability. UnitId={unitId}, AbilityId={abilityId}, SpellbookBlueprintId={spellbookBlueprintId}", unit.UniqueId, ability.Id, ability.SpellbookId);
+            //var activatable = unit.ActivatableAbilities.Enumerable.FirstOrDefault(a => a.UniqueId == abilityId);
+
+            _logger.LogError("Unable to find ability. UnitId={unitId}, AbilityId={abilityId}, SpellbookBlueprintId={spellbookBlueprintId}", unit.UniqueId, abilityUse.Id, abilityUse.Id);
             return null;
+        }
+
+        private static ActionsState GetGameActionsState()
+        {
+            return Game.Instance.TurnBasedCombatController.CurrentTurn.GetActionsStates(Game.Instance.TurnBasedCombatController.CurrentTurn.SelectedUnit);
         }
 
         private void ExecuteClickHandler(IClickEventHandler clickEventHandler, NetworkClick click)
@@ -556,7 +637,6 @@ namespace WOTRMultiplayer.GameInteraction
                     Game.Instance.SelectionCharacter.SelectedUnits.Clear();
                     Game.Instance.SelectionCharacter.SelectedUnits.AddRange(selectedUnits);
 
-                    var actionStates = Game.Instance.TurnBasedCombatController.CurrentTurn.GetActionsStates(Game.Instance.TurnBasedCombatController.CurrentTurn.SelectedUnit);
                     UpdateActionsState(click.ActionsState);
 
                     if (click.VectorPath.Count > 0)
@@ -586,8 +666,7 @@ namespace WOTRMultiplayer.GameInteraction
         private void UpdateActionsState(NetworkActionsState networkActionsState)
         {
             // could use OwlcatJsonConvert.DeserializeObject instead, but transfering/blidnly using big black box is kinda bad due to zero understanding of whats happening inside and what could cause errors in future
-
-            var actionStates = Game.Instance.TurnBasedCombatController.CurrentTurn.GetActionsStates(Game.Instance.TurnBasedCombatController.CurrentTurn.SelectedUnit);
+            var actionStates = GetGameActionsState();
             if (actionStates == null)
             {
                 _logger.LogError("Unable to update missing actions state");
@@ -662,14 +741,6 @@ namespace WOTRMultiplayer.GameInteraction
             }
 
             return Game.Instance.State.Units.FirstOrDefault(u => string.Equals(u.UniqueId, uniqueId, StringComparison.OrdinalIgnoreCase));
-        }
-
-        public bool CombatTurnHasBeenFinished()
-        {
-            var turnStatus = Game.Instance.TurnBasedCombatController.CurrentTurn?.Status ?? TurnBased.Controllers.TurnController.TurnStatus.None;
-            return turnStatus == TurnBased.Controllers.TurnController.TurnStatus.None
-                || turnStatus == TurnBased.Controllers.TurnController.TurnStatus.Ended
-                || turnStatus == TurnBased.Controllers.TurnController.TurnStatus.Ending;
         }
     }
 }

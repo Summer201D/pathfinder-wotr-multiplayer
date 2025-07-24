@@ -520,21 +520,8 @@ namespace WOTRMultiplayer.MP
             _networkServer.SendAll(message);
         }
 
-        public void OnClickWithSelectedAbility(NetworkClick click)
+        protected override void Send(object message)
         {
-            if (!(Game.Combat?.Turn?.IsLocalPlayer ?? false) || GameInteraction.CombatTurnHasBeenFinished())
-            {
-                return;
-            }
-
-            Logger.LogInformation("Sending ability click. TargetUnitId={targetUnitId}, AbilityId={abilityId}, WorldPosition={worldPosition}, VectorPathCount={pathCount}",
-               click.TargetUnitId, click.Ability.Id, click.WorldPosition, click.VectorPath.Count);
-
-            var message = new NotifyAbilityClicked
-            {
-                Click = Mapper.Map<Networking.Messages.NetworkClick>(click)
-            };
-
             _networkServer.SendAll(message);
         }
 
@@ -758,7 +745,6 @@ namespace WOTRMultiplayer.MP
                 .Register<NotifySaveGameAssigned>(OnNotifySaveGameAssigned)
                 .Register<NotifyUnitClicked>(OnNotifyUnitClicked)
                 .Register<NotifyGroundClicked>(OnNotifyGroundClicked)
-                .Register<NotifyAbilityClicked>(OnNotifyAbilityClicked)
 
                 // this is kinda special as well as the client is blocking the game loop thread until `RollResponse` is received
                 .Register<RollRequest>(OnRollRequest)
@@ -809,22 +795,6 @@ namespace WOTRMultiplayer.MP
             {
                 TryStartTurn();
             }
-        }
-
-        private void OnNotifyAbilityClicked(long playerId, NotifyAbilityClicked clicked)
-        {
-            Logger.LogInformation($"Received {nameof(NotifyAbilityClicked)}. PlayerId={{playerId}} AbilityId={{abilityId}}, TargetUnitId={{targetUnitId}}, SelectedUnitId={{selectedUnits}}, WorldPosition={{worldPosition}}", playerId, clicked.Click.Ability.Id, clicked.Click.TargetUnitId, clicked.Click.SelectedUnits.Count, clicked.Click.WorldPosition);
-            if (Game.Combat == null)
-            {
-                Logger.LogWarning($"{nameof(NotifyAbilityClicked)} is ignored out of combat");
-                return;
-            }
-
-            var click = Mapper.Map<NetworkClick>(clicked.Click);
-            GameInteraction.ClickAbilityInCombat(click);
-
-            Logger.LogInformation($"Resending {nameof(NotifyAbilityClicked)} to other players");
-            _networkServer.SendAllExcept(playerId, clicked);
         }
 
         private void OnNotifyGroundClicked(long playerId, NotifyGroundClicked clicked)
@@ -996,7 +966,11 @@ namespace WOTRMultiplayer.MP
                 Roll = Mapper.Map<Networking.Messages.NetworkDiceRoll>(roll)
             };
 
-            Logger.LogInformation("Sending roll response. RollResult={rollResult}", roll?.Result ?? 0);
+            if (roll != null)
+            {
+                Logger.LogInformation("Sending roll response. RollId={rollId}, RollType={rollType}, IsComplete={isComplete}, DamageValuesCount={damageValuesCount} RollResult={rollResult}", request.RollId, roll.GetType().Name, roll.IsCompleted(), roll.DamageValues.Count, roll.Result);
+            }
+
             _networkServer.Send(playerId, response);
         }
 

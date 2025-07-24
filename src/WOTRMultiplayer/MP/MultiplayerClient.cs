@@ -405,21 +405,8 @@ namespace WOTRMultiplayer.MP
             _networkServerClient.SendAsync(message).Wait();
         }
 
-        public void OnClickWithSelectedAbility(NetworkClick click)
+        protected override void Send(object message)
         {
-            if (!(Game.Combat?.Turn?.IsLocalPlayer ?? false) || GameInteraction.CombatTurnHasBeenFinished())
-            {
-                return;
-            }
-
-            Logger.LogInformation("Sending ability click. TargetUnitId={targetUnitId}, AbilityId={abilityId}, WorldPosition={worldPosition}, VectorPathCount={pathCount}",
-                click.TargetUnitId, click.Ability.Id, click.WorldPosition, click.VectorPath.Count);
-
-            var message = new NotifyAbilityClicked
-            {
-                Click = Mapper.Map<Networking.Messages.NetworkClick>(click)
-            };
-
             _networkServerClient.SendAsync(message).Wait();
         }
 
@@ -470,8 +457,7 @@ namespace WOTRMultiplayer.MP
                 .Register<NotifyDialogStarted>(OnNotifyDialogStarted)
                 .Register<NotifyUnitClicked>(OnNotifyUnitClicked)
                 .Register<NotifyGroundClicked>(OnNotifyGroundClicked)
-                .Register<NotifyAbilityClicked>(OnNotifyAbilityClicked)
-
+                .Register<NotifyAbilityUse>(OnNotifyAbilityUse)
                 // combat
                 .Register<PlayerCombatTurnEnded>(OnPlayerCombatTurnEnded)
                 .Register<NotifyCombatStarted>(OnNotifyCombatStarted)
@@ -481,6 +467,13 @@ namespace WOTRMultiplayer.MP
 
             _networkServerClient.OnError = OnNetworkClientError;
             _networkServerClient.OnConnected = OnNetworkClientConnected;
+        }
+
+        private void OnNotifyAbilityUse(NotifyAbilityUse use)
+        {
+            Logger.LogInformation($"Received {nameof(NotifyAbilityUse)}. AbilityId={{abilityId}}", use.Ability.Id);
+            var ability = Mapper.Map<NetworkAbilityUse>(use.Ability);
+            GameInteraction.UseAbility(ability);
         }
 
         private async void OnNotifyCombatTurnSynchronizationRequired(NotifyCombatTurnSynchronizationRequired required)
@@ -509,19 +502,6 @@ namespace WOTRMultiplayer.MP
             {
                 EndLocalTurn();
             }
-        }
-
-        private void OnNotifyAbilityClicked(NotifyAbilityClicked clicked)
-        {
-            Logger.LogInformation($"Received {nameof(NotifyAbilityClicked)}. AbilityId={{abilityId}}, TargetUnitId={{targetUnitId}}, SelectedUnitId={{selectedUnits}}, WorldPosition={{worldPosition}}", clicked.Click.Ability.Id, clicked.Click.TargetUnitId, clicked.Click.SelectedUnits.Count, clicked.Click.WorldPosition);
-            if (Game.Combat == null)
-            {
-                Logger.LogWarning($"{nameof(NotifyAbilityClicked)} is ignored out of combat");
-                return;
-            }
-
-            var click = Mapper.Map<NetworkClick>(clicked.Click);
-            GameInteraction.ClickAbilityInCombat(click);
         }
 
         private void OnNotifyGroundClicked(NotifyGroundClicked clicked)
