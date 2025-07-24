@@ -1,4 +1,5 @@
-﻿using HarmonyLib;
+﻿using System.Reflection;
+using HarmonyLib;
 using Kingmaker.Blueprints.JsonSystem;
 using Microsoft.Extensions.Logging;
 
@@ -11,8 +12,8 @@ namespace WOTRMultiplayer.HarmonyPatches
         [HarmonyPostfix]
         public static void BlueprintesCachePatches_Init_Postfix()
         {
-            var logger = Main.GetLogger<BlueprintesCachePatches>();
-            logger.LogInformation("Applying patch [{patchName}]", nameof(BlueprintesCachePatches_Init_Postfix));
+            Main.GetLogger<BlueprintesCachePatches>().LogInformation("Applying patch [{patchName}]", MethodBase.GetCurrentMethod().Name);
+
             Main.InitializePortraits();
         }
     }

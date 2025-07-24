@@ -498,6 +498,8 @@ namespace WOTRMultiplayer.GameInteraction
                 {
                     var movementPath = use.VectorPath.Select(v => new UnityEngine.Vector3(v.X, v.Y, v.Z)).ToList();
                     command.ForcedPath = new ForcedPath(movementPath);
+                    PathVisualizer.Instance.m_CurrentPath = command.ForcedPath;
+                    PathVisualizer.Instance.m_CurrentPath.Claim(PathVisualizer.Instance);
                 }
 
                 caster.Commands.Run(command);

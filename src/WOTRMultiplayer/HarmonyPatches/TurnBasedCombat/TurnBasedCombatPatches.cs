@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Reflection;
 using System.Reflection.Emit;
 using HarmonyLib;
@@ -6,6 +7,7 @@ using Kingmaker;
 using Kingmaker.AI;
 using Kingmaker.Controllers.Combat;
 using Kingmaker.EntitySystem.Entities;
+using Kingmaker.TurnBasedMode;
 using Microsoft.Extensions.Logging;
 using TurnBased.Controllers;
 
@@ -149,6 +151,20 @@ namespace WOTRMultiplayer.HarmonyPatches.TurnBasedCombat
             return matcher.Instructions();
         }
 
+        [HarmonyPatch(typeof(PathVisualizer), nameof(PathVisualizer.Update))]
+        [HarmonyTranspiler]
+        public static IEnumerable<CodeInstruction> PathVisualizer_Update_Transpiler(IEnumerable<CodeInstruction> instructions)
+        {
+            var attr = MethodBase.GetCurrentMethod().GetCustomAttribute<HarmonyPatch>();
+            var target = $"{attr.info.declaringType.Name}.{attr.info.methodName}";
+            var matcher = new CodeMatcher(instructions);
+
+            ReplaceIsDirectlyControllable(matcher, target);
+
+            Main.GetLogger<HarmonyTranspiler>().LogWarning(string.Join(Environment.NewLine, matcher.Instructions()));
+            return matcher.Instructions();
+        }
+
         /// <summary>
         /// IsDirectlyControllable must be true to set UnitCanGetUpOnCommand
         /// </summary>
@@ -178,6 +194,7 @@ namespace WOTRMultiplayer.HarmonyPatches.TurnBasedCombat
                 match.RemoveInstruction();
                 match.Insert(call);
                 Main.GetLogger<HarmonyTranspiler>().LogInformation("Transpiler has been applied. Target={target}", target);
+
                 return;
             }
 

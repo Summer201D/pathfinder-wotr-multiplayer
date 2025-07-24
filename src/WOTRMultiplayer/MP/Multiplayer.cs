@@ -256,17 +256,18 @@ namespace WOTRMultiplayer.MP
 
                 if (storedDiceRoll.DamageValues.Count > 0)
                 {
-                    _logger.LogWarning("Damage values already exist. RuleType={ruleType}, RollUniqueId={rollUniqueId}", rollType, rollUniqueId);
+                    _logger.LogError("Damage values already exist. RuleType={ruleType}, RollUniqueId={rollUniqueId}", rollType, rollUniqueId);
+                    return;
                 }
 
-                storedDiceRoll.DamageValues = [.. ruleCalculateDamage.CalculatedDamage.Select(x => new NetworkDamageValueRoll
+                storedDiceRoll.DamageValues.AddRange(ruleCalculateDamage.CalculatedDamage.Select(x => new NetworkDamageValueRoll
                 {
                     MaximumDamage = x.Source.MaximumValue,
                     RollAndBonusValue = x.RollAndBonusValue,
                     RollResult = x.RollResult,
                     TacticalCombatDRModifier = x.TacticalCombatDRModifier,
                     ValueWithoutReduction = x.ValueWithoutReduction
-                })];
+                }));
 
                 _logger.LogInformation("Damage values have been attached. RollId={rollId}, RollType={rollType}, DamageValuesCount={damageValuesCount}", rollUniqueId, rollType, storedDiceRoll.DamageValues.Count);
             }
