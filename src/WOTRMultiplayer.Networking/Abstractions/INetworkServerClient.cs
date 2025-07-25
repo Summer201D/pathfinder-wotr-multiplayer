@@ -15,6 +15,8 @@ namespace WOTRMultiplayer.Networking.Abstractions
         INetworkServerClient Register<T>(Action<T> handler)
             where T : class;
 
+        void Send(object message);
+
         Task SendAsync(object message);
 
         Task<T> SendAndWaitForAsync<T>(object message)

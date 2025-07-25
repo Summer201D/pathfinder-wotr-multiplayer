@@ -37,116 +37,13 @@ namespace WOTRMultiplayer.Playground.Client
             var verbs = CommandLineHelper.LoadVerbs();
             Parser.Default.ParseArguments(["--help"], verbs).WithParsed(Console.WriteLine);
 
-            var input = string.Empty;
-
-            Console.Write(@$"
-            exit - exit the program
-            ready - toggle client ready status
-            loaded - send gameloaded
-            pause - pause game
-            unpause - unpause game
-            dialog-witness-cue_0001 - witness 1 cue of MeetSeelahAnevia_Dialogue
-            dialog-witness-cue_0002 - witness 2 cue of MeetSeelahAnevia_Dialogue
-            dialog-witness-cue_0003 - witness 3 cue of MeetSeelahAnevia_Dialogue
-            dialog-suggest-cue_0004_2 - suggest option 2 on 4 cue
-            dialog-suggest-cue_0004_3 - suggest option 3 on 4 cue
-            start-unit-dialog - Vendor_Quartermaster_Dialogue 2C1EE7 98fd05f4-4458-4d2d-97f6-752be49667c0
-
-            {Environment.NewLine}");
-            const string DialogName = "MeetSeelahAnevia_Dialogue";
-
-            while ((input = Console.ReadLine()) != "exit")
+            while (true)
             {
+                var input = Console.ReadLine();
                 var inputArgs = input.Split(' ').Select(x => x.Trim(' ')).ToList();
                 Parser.Default
                     .ParseArguments(inputArgs, verbs)
                     .WithParsed(command => RunCommand(client, command));
-
-                switch (input)
-                {
-                    case "pause":
-                        client.Pause();
-                        break;
-                    case "unpause":
-                        client.Unpause();
-                        break;
-                    case "dialog-witness-cue_0001":
-                        client.OnAfterCueShow(DialogName, "Cue_0001", false);
-                        break;
-                    case "dialog-witness-cue_0002":
-                        client.OnAfterCueShow(DialogName, "Cue_0002", false);
-                        break;
-                    case "dialog-witness-cue_0003":
-                        client.OnAfterCueShow(DialogName, "Cue_0003", false);
-                        break;
-                    case "dialog-suggest-cue_0004_2":
-                        client.Game.Dialog = new NetworkDialog(DialogName)
-                        {
-                            CurrentCueName = "Cue_0004"
-                        };
-                        client.OnBeforeSelectDialogAnswer(DialogName, "Cue_0004", "Answer_0007", false, null);
-                        break;
-                    case "dialog-suggest-cue_0004_3":
-                        client.Game.Dialog = new NetworkDialog(DialogName)
-                        {
-                            CurrentCueName = "Cue_0004"
-                        };
-                        client.OnBeforeSelectDialogAnswer(DialogName, "Cue_0004", "Answer_0042", false, null);
-                        break;
-                    case "start-unit-dialog":
-                        client.StartDialog("Vendor_Quartermaster_Dialogue", "2C1EE7", "98fd05f4-4458-4d2d-97f6-752be49667c0", null, null);
-                        break;
-                    case "combat-started":
-                        client.CombatStarted();
-                        break;
-                    case "combat-round-1":
-                        client.CombatRoundStarted(1);
-                        break;
-                    case "combat-round-2":
-                        client.CombatRoundStarted(2);
-                        break;
-                    case "combat-round-3":
-                        client.CombatRoundStarted(3);
-                        break;
-                    case "combat-turn-started-camellia":
-                        client.OnBeforeStartTurn("3996", false);
-                        break;
-                    case "combat-turn-ended-camellia":
-                        client.OnBeforeEndTurn("3996");
-                        break;
-                    case "combat-turn-started-main":
-                        client.OnBeforeStartTurn("a950ad75-65cd-4dc1-96e9-444e291fed7e", false);
-                        break;
-                    case "combat-turn-ended-main":
-                        client.OnBeforeEndTurn("a950ad75-65cd-4dc1-96e9-444e291fed7e");
-                        break;
-                    case "combat-turn-started-seelah":
-                        client.OnBeforeStartTurn("38AF", false);
-                        break;
-                    case "combat-turn-ended-seelah":
-                        client.OnBeforeEndTurn("38AF");
-                        break;
-                    case "combat-turn-started-3502":
-                        client.OnBeforeStartTurn("3502", false);
-                        break;
-                    case "combat-turn-ended-3502":
-                        client.OnBeforeEndTurn("3502");
-                        break;
-                    case "combat-turn-started-3521":
-                        client.OnBeforeStartTurn("3521", false);
-                        break;
-                    case "combat-turn-ended-3521":
-                        client.OnBeforeEndTurn("3521");
-                        break;
-                    case "combat-turn-started-3560":
-                        client.OnBeforeStartTurn("3560", false);
-                        break;
-                    case "combat-turn-ended-3560":
-                        client.OnBeforeEndTurn("3560");
-                        break;
-                    default:
-                        break;
-                }
             }
         }
 
@@ -160,9 +57,43 @@ namespace WOTRMultiplayer.Playground.Client
                 case CommandVerbs.ClientLoadedCommandVerb:
                     client.GameLoaded();
                     break;
+                case CommandVerbs.ClientPausedCommandVerb:
+                    client.Pause();
+                    break;
+                case CommandVerbs.ClientUnpausedCommandVerb:
+                    client.Unpause();
+                    break;
                 case CommandVerbs.ConnectCommandVerb connect:
                     var result = client.Connect(connect.ServerAddress);
                     Console.WriteLine(result.Message);
+                    break;
+                case CommandVerbs.ExitCommandVerb:
+                    Environment.Exit(0);
+                    break;
+                case CommandVerbs.DialogWitnessCueCommandVerb dialog:
+                    client.OnAfterCueShow(dialog.DialogName, dialog.Cue, dialog.HasSystemAnswer);
+                    break;
+                case CommandVerbs.DialogSuggestCueCommandVerb dialog:
+                    client.Game.Dialog = new NetworkDialog(dialog.DialogName)
+                    {
+                        CurrentCueName = dialog.Cue
+                    };
+                    client.OnBeforeSelectDialogAnswer(dialog.DialogName, dialog.Cue, dialog.Answer, dialog.IsExitAnswer, dialog.ManualUnitSelectionId);
+                    break;
+                case CommandVerbs.DialogStartCommandVerb dialog:
+                    client.StartDialog(dialog.DialogName, dialog.TargetUnitId, dialog.InitiatorUnitId, dialog.MapObjectId, dialog.SpeakerKey);
+                    break;
+                case CommandVerbs.CombatStartedCommandVerb started:
+                    client.CombatStarted();
+                    break;
+                case CommandVerbs.CombatRoundCommandVerb round:
+                    client.CombatRoundStarted(round.Round);
+                    break;
+                case CommandVerbs.CombatTurnStartedCommandVerb turn:
+                    client.OnBeforeStartTurn(turn.UnitId, turn.IsSurpriseRound);
+                    break;
+                case CommandVerbs.CombatTurnEndedCommandVerb turn:
+                    client.OnBeforeEndTurn(turn.UnitId);
                     break;
                 default:
                     break;

@@ -63,6 +63,11 @@ namespace WOTRMultiplayer.Networking
             return this;
         }
 
+        public void Send(object message)
+        {
+            _client.Send(message).Wait();
+        }
+
         public Task SendAsync(object message)
         {
             return _client.Send(message);
