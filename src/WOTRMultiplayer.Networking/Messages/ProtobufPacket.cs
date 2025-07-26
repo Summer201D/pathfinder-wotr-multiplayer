@@ -21,7 +21,7 @@ namespace WOTRMultiplayer.Networking.Messages
         protected override object OnRead(ISession session, PipeStream stream)
         {
             Type type = TypeHeader.ReadType(stream);
-            var size = CurrentSize - 4;
+            var size = CurrentSize - sizeof(int);
             return ProtoBuf.Meta.RuntimeTypeModel.Default.Deserialize(stream, null, type, size);
         }
 
@@ -49,7 +49,7 @@ namespace WOTRMultiplayer.Networking.Messages
         protected override object OnRead(IClient client, PipeStream stream)
         {
             Type type = TypeHeader.ReadType(stream);
-            var size = CurrentSize - 4;
+            var size = CurrentSize - sizeof(int);
             return ProtoBuf.Meta.RuntimeTypeModel.Default.Deserialize(stream, null, type, size);
         }
 
