@@ -20,23 +20,16 @@ namespace WOTRMultiplayer.HarmonyPatches.Commands
             {
                 return;
             }
-            Main.GetLogger<UnitCommandPatches>().LogWarning("");
+
             if (__instance.Ability.StickyTouch != null)
             {
                 Main.GetLogger<UnitCommandPatches>().LogWarning("Skipping ability use as it's a part of another usage. UnitId={unitId}, AbilityName={abilityName}, AbilityId={abilityId}", __instance.Executor.UniqueId, __instance.Ability.Name, __instance.Ability.UniqueId);
                 return;
             }
 
-
-            if (__instance.CreatedByPlayer)
-            {
-                Main.GetLogger<UnitCommandPatches>().LogWarning("Skipping ability use as it has been manually created. UnitId={unitId}, AbilityName={abilityName}, AbilityId={abilityId}", __instance.Executor.UniqueId, __instance.Ability.Name, __instance.Ability.UniqueId);
-                return;
-            }
-
             var path = PathVisualizer.Instance.CurrentPathForUnit(__instance.Executor.View);
             var networkPath = path?.vectorPath.Select(v => new NetworkVector3(v.x, v.y, v.z)).ToList();
-            var networkAbility = new NetworkAbilityUse
+            var networkAbility = new NetworkAbility
             {
                 Id = __instance.Ability.UniqueId,
                 Name = __instance.Ability.NameForAcronym,

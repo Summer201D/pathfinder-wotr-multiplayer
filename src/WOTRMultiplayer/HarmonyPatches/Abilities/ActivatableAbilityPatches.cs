@@ -1,8 +1,10 @@
-﻿using HarmonyLib;
-using JetBrains.Annotations;
+﻿using System.Linq;
+using HarmonyLib;
 using Kingmaker.EntitySystem.Entities;
+using Kingmaker.UnitLogic.Abilities.Components.TargetCheckers;
 using Kingmaker.UnitLogic.ActivatableAbilities;
 using Microsoft.Extensions.Logging;
+using WOTRMultiplayer.MP.Entities;
 
 namespace WOTRMultiplayer.HarmonyPatches.Abilities
 {
@@ -11,21 +13,34 @@ namespace WOTRMultiplayer.HarmonyPatches.Abilities
     {
         [HarmonyPatch(typeof(ActivatableAbility), nameof(ActivatableAbility.SetIsOn))]
         [HarmonyPostfix]
-        public static void ActivatableAbility_SetIsOn_Postfix(ActivatableAbility __instance, bool value, [CanBeNull] UnitEntityData target)
+        public static void ActivatableAbility_SetIsOn_Postfix(ActivatableAbility __instance, bool value, UnitEntityData target)
         {
             if (!Main.Multiplayer.IsActive)
             {
                 return;
             }
 
-            if (__instance.m_IsOn)
+            if (__instance.Blueprint.SelectTargetAbility != null &&
+                __instance.Blueprint.SelectTargetAbility.TargetRestrictions.Any(r => r is AbilityTargetIsSuitableMount))
             {
-                Main.GetLogger<ActivatableAbilityPatches>().LogInformation("Started activatable ability. Name={name}, Id={abilityId}, UnitId={unitId}, UnitName={unitName}", __instance.NameForAcronym, __instance.UniqueId, __instance.Owner.Unit.UniqueId, __instance.Owner.Unit.CharacterName);
+                // mount toggle is messing up with AbilityUse, so we need to handle Dismount only as everything else is handled by AbilityUse
+                if (__instance.m_IsOn
+                    || !__instance.Owner.Unit.Buffs.Enumerable.Any(a => string.Equals(a.Blueprint.NameForAcronym, "MountedBuff", System.StringComparison.OrdinalIgnoreCase)))
+                {
+                    Main.GetLogger<ActivatableAbilityPatches>().LogInformation("Mount toggle is ignored. IsActive={value}", __instance.m_IsOn);
+                    return;
+                }
             }
-            else
+
+            var ability = new NetworkActivatableAbility
             {
-                Main.GetLogger<ActivatableAbilityPatches>().LogInformation("Stopped activatable ability. Name={name}, Id={abilityId}, UnitId={unitId}, UnitName={unitName}", __instance.NameForAcronym, __instance.UniqueId, __instance.Owner.Unit.UniqueId, __instance.Owner.Unit.CharacterName);
-            }
+                Id = __instance.UniqueId,
+                CasterId = __instance.Owner.Unit.UniqueId,
+                TargetId = target?.UniqueId,
+                IsActive = __instance.m_IsOn
+            };
+
+            Main.Multiplayer.OnToggleActivatableAbility(ability);
         }
     }
 }

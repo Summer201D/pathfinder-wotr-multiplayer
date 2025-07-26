@@ -758,12 +758,31 @@ namespace WOTRMultiplayer.MP
                 .Register<CueWitnessed>(OnCueWitnessed)
                 .Register<DialogCueAnswerSuggested>(OnDialogCueAnswerSuggested)
                 .Register<StartDialogRequested>(OnStartDialogRequested)
-
+                .Register<NotifyAbilityUse>(OnNotifyAbilityUsed)
+                .Register<NotifyToggleActivatableAbility>(OnNotifyToggleActivatableAbility)
                 .Register<PlayerCombatTurnEnded>(OnPlayerCombatTurnEnded)
                 .Register<ClientCombatInitialized>(OnClientCombatInitialized)
                 .Register<ClientCombatTurnStarted>(OnClientCombatTurnStarted)
                 .Register<ClientCombatTurnSynchronized>(OnClientCombatTurnSynchronized)
                 ;
+        }
+
+        private void OnNotifyToggleActivatableAbility(long playerId, NotifyToggleActivatableAbility toggle)
+        {
+            Logger.LogInformation($"Received {nameof(NotifyToggleActivatableAbility)}. PlayerId={{playerId}}, AbilityId={{abilityId}}, IsActive={{isActive}}", playerId, toggle.Ability.Id, toggle.Ability.IsActive);
+            _networkServer.SendAllExcept(playerId, toggle);
+
+            var ability = Mapper.Map<NetworkActivatableAbility>(toggle.Ability);
+            GameInteraction.ToggleActivatableAbility(ability);
+        }
+
+        private void OnNotifyAbilityUsed(long playerId, NotifyAbilityUse used)
+        {
+            Logger.LogInformation($"Received {nameof(NotifyAbilityUse)}. PlayerId={{playerId}}, AbilityId={{abilityId}}", playerId, used.Ability.Id);
+            _networkServer.SendAllExcept(playerId, used);
+
+            var ability = Mapper.Map<NetworkAbility>(used.Ability);
+            GameInteraction.UseAbility(ability);
         }
 
         private void OnClientCombatTurnSynchronized(long playerId, ClientCombatTurnSynchronized synchronized)

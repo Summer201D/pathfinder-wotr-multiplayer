@@ -496,7 +496,7 @@ namespace WOTRMultiplayer.MP
             multiplayerActor.OnClickGround(click);
         }
 
-        public void OnAbilityUse(NetworkAbilityUse abilityUse)
+        public void OnAbilityUse(NetworkAbility ability)
         {
             var multiplayerActor = GetMultiplayerActor();
             if (multiplayerActor == null)
@@ -504,7 +504,18 @@ namespace WOTRMultiplayer.MP
                 return;
             }
 
-            multiplayerActor.OnAbilityUse(abilityUse);
+            multiplayerActor.OnAbilityUse(ability);
+        }
+
+        public void OnToggleActivatableAbility(NetworkActivatableAbility activatableAbilityUse)
+        {
+            var multiplayerActor = GetMultiplayerActor();
+            if (multiplayerActor == null)
+            {
+                return;
+            }
+
+            multiplayerActor.OnToggleActivatableAbility(activatableAbilityUse);
         }
 
         public NetworkActionsState GetActionsState()

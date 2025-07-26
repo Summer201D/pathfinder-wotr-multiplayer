@@ -23,6 +23,7 @@ using Kingmaker.UI.MVVM._PCView.Dialog.Dialog;
 using Kingmaker.UI.MVVM._PCView.InGame;
 using Kingmaker.UI.MVVM._VM.Dialog.Dialog;
 using Kingmaker.UnitLogic.Abilities;
+using Kingmaker.UnitLogic.ActivatableAbilities;
 using Kingmaker.UnitLogic.Commands;
 using Kingmaker.Utility;
 using Kingmaker.View.MapObjects;
@@ -34,7 +35,6 @@ using WOTRMultiplayer.Abstractions.UI;
 using WOTRMultiplayer.Abstractions.Unity;
 using WOTRMultiplayer.Extensions;
 using WOTRMultiplayer.MP.Entities;
-using static Kingmaker.TurnBasedMode.Controllers.CombatAction;
 
 namespace WOTRMultiplayer.GameInteraction
 {
@@ -474,40 +474,72 @@ namespace WOTRMultiplayer.GameInteraction
             }
         }
 
-        public void UseAbility(NetworkAbilityUse use)
+        public void ToggleActivatableAbility(NetworkActivatableAbility toggle)
         {
             try
             {
-                var caster = GetUnitEntity(use.CasterId);
-                var abilityData = FindAbility(caster, use);
-                if (abilityData == null)
+                var caster = GetUnitEntity(toggle.CasterId);
+                var ability = FindActivatableAbility(caster, toggle.Id);
+                if (ability == null)
                 {
+                    _logger.LogError("Unable to find activatable ability. UnitId={unitId}, AbilityId={abilityId}", caster.UniqueId, toggle.Id);
                     return;
                 }
 
-                var target = GetUnitEntity(use.TargetId);
-                var point = new UnityEngine.Vector3(use.TargetPoint.X, use.TargetPoint.Y, use.TargetPoint.Z);
+                var target = GetUnitEntity(toggle.TargetId);
+                _mainThreadAccessor.Enqueue(() =>
+                {
+                    ability.SetIsOn(toggle.IsActive, target);
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Unable to initiate ToggleActivatableAbility.  CasterId={casterId}, TargetId={targetId}, AbilityId={abilityId}", toggle.CasterId, toggle.TargetId, toggle.Id);
+                throw;
+            }
+        }
+
+        public void UseAbility(NetworkAbility abilityUse)
+        {
+            try
+            {
+                var caster = GetUnitEntity(abilityUse.CasterId);
+                var abilityData = FindAbility(caster, abilityUse);
+                if (abilityData == null)
+                {
+                    _logger.LogError("Unable to find ability. UnitId={unitId}, AbilityId={abilityId}, SpellbookBlueprintId={spellbookBlueprintId}", caster.UniqueId, abilityUse.Id, abilityUse.Id);
+                    return;
+                }
+
+                var target = GetUnitEntity(abilityUse.TargetId);
+                var point = new UnityEngine.Vector3(abilityUse.TargetPoint.X, abilityUse.TargetPoint.Y, abilityUse.TargetPoint.Z);
                 var targetWrapper = new TargetWrapper(point, null, target);
 
-                UpdateActionsState(use.ActionsState);
+                if (abilityUse.ActionsState != null)
+                {
+                    UpdateActionsState(abilityUse.ActionsState);
+                }
 
-                Enum.TryParse<Kingmaker.UnitLogic.Commands.Base.UnitCommand.CommandType>(use.CommandType, true, out var commandType);
+                Enum.TryParse<Kingmaker.UnitLogic.Commands.Base.UnitCommand.CommandType>(abilityUse.CommandType, true, out var commandType);
                 var command = UnitUseAbility.CreateCastCommand(abilityData, targetWrapper, commandType);
                 command.CreatedByPlayer = true;
-                if (use.VectorPath != null)
+                if (abilityUse.VectorPath != null)
                 {
-                    var movementPath = use.VectorPath.Select(v => new UnityEngine.Vector3(v.X, v.Y, v.Z)).ToList();
+                    var movementPath = abilityUse.VectorPath.Select(v => new UnityEngine.Vector3(v.X, v.Y, v.Z)).ToList();
                     command.ForcedPath = new ForcedPath(movementPath);
                     PathVisualizer.Instance.m_CurrentPath = command.ForcedPath;
                     PathVisualizer.Instance.m_CurrentPath.Claim(PathVisualizer.Instance);
                 }
 
-                caster.Commands.Run(command);
+                _mainThreadAccessor.Enqueue(() =>
+                {
+                    caster.Commands.Run(command);
+                });
             }
             catch (Exception ex)
             {
 
-                _logger.LogError(ex, "Unable to initiate click handler. HandlerTy={handlerType}", typeof(ClickWithSelectedAbilityHandler));
+                _logger.LogError(ex, "Unable to initiate UseAbility.  CasterId={casterId}, TargetId={targetId}, AbilityId={abilityId}", abilityUse.CasterId, abilityUse.TargetId, abilityUse.Id);
                 throw;
             }
         }
@@ -564,7 +596,13 @@ namespace WOTRMultiplayer.GameInteraction
             };
         }
 
-        private AbilityData FindAbility(UnitEntityData unit, NetworkAbilityUse abilityUse)
+        private ActivatableAbility FindActivatableAbility(UnitEntityData caster, string id)
+        {
+            var ability = caster.ActivatableAbilities.Enumerable.FirstOrDefault(a => string.Equals(a.UniqueId, id, StringComparison.OrdinalIgnoreCase));
+            return ability;
+        }
+
+        private AbilityData FindAbility(UnitEntityData unit, NetworkAbility abilityUse)
         {
             if (!string.IsNullOrEmpty(abilityUse.SpellbookId))
             {
@@ -610,9 +648,6 @@ namespace WOTRMultiplayer.GameInteraction
                 return byAbilityId.Data;
             }
 
-            //var activatable = unit.ActivatableAbilities.Enumerable.FirstOrDefault(a => a.UniqueId == abilityId);
-
-            _logger.LogError("Unable to find ability. UnitId={unitId}, AbilityId={abilityId}, SpellbookBlueprintId={spellbookBlueprintId}", unit.UniqueId, abilityUse.Id, abilityUse.Id);
             return null;
         }
 
@@ -686,18 +721,18 @@ namespace WOTRMultiplayer.GameInteraction
 
         private void UpdateCombatAction(CombatAction action, NetworkCombatAction networkCombatAction)
         {
-            action.m_MovementActivityStatePredicted = ParseEnum<ActivityState>(networkCombatAction.MovementActivityStatePredicted);
-            action.m_MovementActivityStateCurrent = ParseEnum<ActivityState>(networkCombatAction.MovementActivityStateCurrent);
-            action.m_AttackActivityStatePredicted = ParseEnum<ActivityState>(networkCombatAction.AttackActivityStatePredicted);
-            action.m_AttackActivityStateCurrent = ParseEnum<ActivityState>(networkCombatAction.AttackActivityStateCurrent);
-            action.m_AbilityActivityStatePredicted = ParseEnum<ActivityState>(networkCombatAction.AbilityActivityStatePredicted);
-            action.m_AbilityActivityStateCurrent = ParseEnum<ActivityState>(networkCombatAction.AbilityActivityStateCurrent);
+            action.m_MovementActivityStatePredicted = ParseEnum<CombatAction.ActivityState>(networkCombatAction.MovementActivityStatePredicted);
+            action.m_MovementActivityStateCurrent = ParseEnum<CombatAction.ActivityState>(networkCombatAction.MovementActivityStateCurrent);
+            action.m_AttackActivityStatePredicted = ParseEnum<CombatAction.ActivityState>(networkCombatAction.AttackActivityStatePredicted);
+            action.m_AttackActivityStateCurrent = ParseEnum<CombatAction.ActivityState>(networkCombatAction.AttackActivityStateCurrent);
+            action.m_AbilityActivityStatePredicted = ParseEnum<CombatAction.ActivityState>(networkCombatAction.AbilityActivityStatePredicted);
+            action.m_AbilityActivityStateCurrent = ParseEnum<CombatAction.ActivityState>(networkCombatAction.AbilityActivityStateCurrent);
             action.LockType = networkCombatAction.LockType;
             action.HasMovePossibility = networkCombatAction.HasMovePossibility;
             action.MaxMoveDistance = networkCombatAction.MaxMoveDistance;
             action.RemainingMoveDistance = networkCombatAction.RemainingMoveDistance;
             action.PredictedMoveDistance = networkCombatAction.PredictedMoveDistance;
-            action.Type = ParseEnum<UsageType>(networkCombatAction.Type) ?? default;
+            action.Type = ParseEnum<CombatAction.UsageType>(networkCombatAction.Type) ?? default;
         }
 
         private T? ParseEnum<T>(string value)

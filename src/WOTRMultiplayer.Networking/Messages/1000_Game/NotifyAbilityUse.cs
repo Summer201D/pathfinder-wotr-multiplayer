@@ -7,6 +7,6 @@ namespace WOTRMultiplayer.Networking.Messages.Game
     public class NotifyAbilityUse
     {
         [ProtoMember(1)]
-        public NetworkAbilityUse Ability { get; set; }
+        public NetworkAbility Ability { get; set; }
     }
 }

@@ -2,7 +2,6 @@
 using System.Threading.Tasks;
 using Kingmaker.UI;
 using WOTRMultiplayer.MP.Entities;
-using WOTRMultiplayer.Networking.Messages.Game;
 
 namespace WOTRMultiplayer.Abstractions.GameInteraction
 {
@@ -56,6 +55,8 @@ namespace WOTRMultiplayer.Abstractions.GameInteraction
 
         NetworkActionsState GetActionsState();
 
-        void UseAbility(NetworkAbilityUse use);
+        void UseAbility(NetworkAbility use);
+
+        void ToggleActivatableAbility(NetworkActivatableAbility toggle);
     }
 }

@@ -4,7 +4,7 @@ using ProtoBuf;
 namespace WOTRMultiplayer.Networking.Messages
 {
     [ProtoContract]
-    public class NetworkAbilityUse
+    public class NetworkAbility
     {
         [ProtoMember(1)]
         public string Id { get; set; }

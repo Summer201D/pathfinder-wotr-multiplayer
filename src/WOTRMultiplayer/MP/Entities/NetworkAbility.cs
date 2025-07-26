@@ -2,7 +2,7 @@
 
 namespace WOTRMultiplayer.MP.Entities
 {
-    public class NetworkAbilityUse
+    public class NetworkAbility
     {
         public string Id { get; set; }
 

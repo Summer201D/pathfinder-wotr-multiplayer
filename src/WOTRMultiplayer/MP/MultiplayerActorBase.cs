@@ -123,22 +123,57 @@ namespace WOTRMultiplayer.MP
             return Game.Combat?.Round ?? 0;
         }
 
-        public void OnAbilityUse(NetworkAbilityUse abilityUse)
+        public void OnAbilityUse(NetworkAbility ability)
         {
-            if (!(Game.Combat?.Turn?.IsLocalPlayer ?? false) || GameInteraction.CombatTurnHasBeenFinished())
+            if (!ShouldNotifyAboutAbilityUse(ability.CasterId))
             {
                 return;
             }
 
             Logger.LogInformation("Sending ability use. CasterId={unitId}, TargetId={targetId}, TargetPoint={targetPoint}, AbilityId={abilityId}, SpellbookId={spellbookId}, VectorPathCount={vectorPathCount}",
-                abilityUse.CasterId, abilityUse.TargetId, abilityUse.TargetPoint, abilityUse.Id, abilityUse.SpellbookId, abilityUse.VectorPath?.Count);
+              ability.CasterId, ability.TargetId, ability.TargetPoint, ability.Id, ability.SpellbookId, ability.VectorPath?.Count);
 
             var message = new NotifyAbilityUse
             {
-                Ability = Mapper.Map<Networking.Messages.NetworkAbilityUse>(abilityUse)
+                Ability = Mapper.Map<Networking.Messages.NetworkAbility>(ability)
             };
 
             Send(message);
+        }
+
+        public void OnToggleActivatableAbility(NetworkActivatableAbility activatableAbilityUse)
+        {
+            if (!ShouldNotifyAboutAbilityUse(activatableAbilityUse.CasterId))
+            {
+                return;
+            }
+
+            Logger.LogInformation("Toggle activatable ability. CasterId={unitId}, TargetId={targetId}, AbilityId={abilityId}, IsActive={isActive}", activatableAbilityUse.CasterId, activatableAbilityUse.TargetId, activatableAbilityUse.Id, activatableAbilityUse.IsActive);
+
+            var message = new NotifyToggleActivatableAbility
+            {
+                Ability = Mapper.Map<Networking.Messages.NetworkActivatableAbility>(activatableAbilityUse)
+            };
+
+            Send(message);
+        }
+
+        protected bool ShouldNotifyAboutAbilityUse(string sourceUnitId)
+        {
+            if (Game.Combat == null)
+            {
+                return IsControlledByLocalPlayer(sourceUnitId);
+            }
+
+            // not sure what falls under this category
+            // midfight joins shouldn't have any actions?
+            if (Game.Combat.Turn == null)
+            {
+                Logger.LogWarning("Midfight action. UnitId={unitID}", sourceUnitId);
+                return IsHost;
+            }
+
+            return Game.Combat.Turn.IsLocalPlayer && !GameInteraction.CombatTurnHasBeenFinished();
         }
 
         protected abstract void Send(object message);

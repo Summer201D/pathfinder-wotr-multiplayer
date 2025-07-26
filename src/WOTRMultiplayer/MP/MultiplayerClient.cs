@@ -457,7 +457,8 @@ namespace WOTRMultiplayer.MP
                 .Register<NotifyDialogStarted>(OnNotifyDialogStarted)
                 .Register<NotifyUnitClicked>(OnNotifyUnitClicked)
                 .Register<NotifyGroundClicked>(OnNotifyGroundClicked)
-                .Register<NotifyAbilityUse>(OnNotifyAbilityUse)
+                .Register<NotifyAbilityUse>(OnNotifyAbilityUsed)
+                .Register<NotifyToggleActivatableAbility>(OnNotifyToggleActivatableAbility)
                 // combat
                 .Register<PlayerCombatTurnEnded>(OnPlayerCombatTurnEnded)
                 .Register<NotifyCombatStarted>(OnNotifyCombatStarted)
@@ -469,10 +470,17 @@ namespace WOTRMultiplayer.MP
             _networkServerClient.OnConnected = OnNetworkClientConnected;
         }
 
-        private void OnNotifyAbilityUse(NotifyAbilityUse use)
+        private void OnNotifyToggleActivatableAbility(NotifyToggleActivatableAbility toggle)
         {
-            Logger.LogInformation($"Received {nameof(NotifyAbilityUse)}. AbilityId={{abilityId}}", use.Ability.Id);
-            var ability = Mapper.Map<NetworkAbilityUse>(use.Ability);
+            Logger.LogInformation($"Received {nameof(NotifyToggleActivatableAbility)}. AbilityId={{abilityId}}, IsActive={{isActive}}", toggle.Ability.Id, toggle.Ability.IsActive);
+            var ability = Mapper.Map<NetworkActivatableAbility>(toggle.Ability);
+            GameInteraction.ToggleActivatableAbility(ability);
+        }
+
+        private void OnNotifyAbilityUsed(NotifyAbilityUse used)
+        {
+            Logger.LogInformation($"Received {nameof(NotifyAbilityUse)}. AbilityId={{abilityId}}", used.Ability.Id);
+            var ability = Mapper.Map<NetworkAbility>(used.Ability);
             GameInteraction.UseAbility(ability);
         }
 
