@@ -1,7 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using WOTRMultiplayer.MP.Entities;
-using WOTRMultiplayer.MP.Entities.Rolls;
+using WOTRMultiplayer.MP.Entities.Abilities;
+using WOTRMultiplayer.MP.Entities.Rolls.Claiming.Values;
 
 namespace WOTRMultiplayer.Abstractions.MP
 {
@@ -12,6 +13,8 @@ namespace WOTRMultiplayer.Abstractions.MP
         NetworkGameConnectivity GetGameConnectivity();
 
         List<NetworkPlayer> GetPlayers();
+
+        List<NetworkPlayer> GetOtherPlayers();
 
         List<NetworkCharacterOwnership> GetCharacters();
 
@@ -71,7 +74,8 @@ namespace WOTRMultiplayer.Abstractions.MP
 
         bool ShouldStoreRoll(bool silent);
 
-        NetworkDiceRoll RetrieveRoll(int networkDiceRollId, string initiatorId);
+        TRollValue RetrieveRoll<TRollValue>(int networkDiceRollId, string unitId)
+            where TRollValue : RollValueBase;
 
         void OnClickUnit(NetworkClick click);
 

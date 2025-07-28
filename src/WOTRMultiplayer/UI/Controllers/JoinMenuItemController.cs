@@ -313,7 +313,7 @@ namespace WOTRMultiplayer.UI.Controllers
             var rawAddress = ServerAddressObject.transform.Find(UIFactory.InputLabelObjectName).GetComponent<TextMeshProUGUI>().text;
             // thank you for zero-width space
             var address = rawAddress.Trim('\u200B').Trim();
-            address = "192.168.50.188:1024";
+            //address = "192.168.50.188:1024";
             var result = _multiplayerClient.Connect(address);
             if (!result.IsOk)
             {

@@ -63,7 +63,7 @@ namespace WOTRMultiplayer.Networking
             Server.AppServer.Send(message, session);
         }
 
-        public T SendAndWaitFor<T>(long clientId, object message)
+        public async Task<T> SendAndWaitForAsync<T>(long clientId, object message)
             where T : class
         {
             var taskCompletion = new TaskCompletionSource<object>();
@@ -72,7 +72,7 @@ namespace WOTRMultiplayer.Networking
             AddAwaiter<T>(clientId, taskCompletion);
             Send(clientId, message);
 
-            Task.WaitAny(timeoutTask, taskCompletion.Task);
+            await Task.WhenAny(timeoutTask, taskCompletion.Task);
 
             if (!taskCompletion.Task.IsCompleted)
             {

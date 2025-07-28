@@ -1,4 +1,4 @@
-﻿namespace WOTRMultiplayer.MP.Entities
+﻿namespace WOTRMultiplayer.MP.Entities.Dialogs
 {
     public class NetworkDialogAnswer
     {

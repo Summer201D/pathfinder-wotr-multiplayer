@@ -4,5 +4,9 @@
 // a specific target and scoped to a namespace, type, member, etc.
 
 using System.Diagnostics.CodeAnalysis;
+using System.Runtime.CompilerServices;
 
 [assembly: SuppressMessage("Style", "IDE0290:Use primary constructor", Justification = "I DON'T CARE")]
+
+[assembly: InternalsVisibleTo("WOTRMultiplayer.Playground.Client")]
+[assembly: InternalsVisibleTo("WOTRMultiplayer.Playground.Host")]

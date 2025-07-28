@@ -1,4 +1,6 @@
-﻿namespace WOTRMultiplayer.MP.Entities
+﻿using WOTRMultiplayer.MP.Entities.Combat;
+
+namespace WOTRMultiplayer.MP.Entities
 {
     public class NetworkActionsState
     {

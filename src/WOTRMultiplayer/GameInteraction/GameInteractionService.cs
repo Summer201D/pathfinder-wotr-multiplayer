@@ -35,6 +35,9 @@ using WOTRMultiplayer.Abstractions.UI;
 using WOTRMultiplayer.Abstractions.Unity;
 using WOTRMultiplayer.Extensions;
 using WOTRMultiplayer.MP.Entities;
+using WOTRMultiplayer.MP.Entities.Abilities;
+using WOTRMultiplayer.MP.Entities.Combat;
+using WOTRMultiplayer.MP.Entities.Dialogs;
 
 namespace WOTRMultiplayer.GameInteraction
 {
@@ -330,7 +333,12 @@ namespace WOTRMultiplayer.GameInteraction
             }
 
             var units = unitsToSync
-                .Select(c => new NetworkUnit { Id = c.UniqueId, Position = new NetworkVector3(c.Position.x, c.Position.y, c.Position.z) })
+                .Select(c => new NetworkUnit
+                {
+                    Id = c.UniqueId,
+                    Position = new NetworkVector3(c.Position.x, c.Position.y, c.Position.z),
+                    Orientation = c.Orientation
+                })
                 .ToList();
 
             return units;
@@ -352,21 +360,27 @@ namespace WOTRMultiplayer.GameInteraction
                             continue;
                         }
 
-                        if (unit.Position.x == networkUnit.Position.X
-                            && unit.Position.y == networkUnit.Position.Y
-                            && unit.Position.z == networkUnit.Position.Z)
-                        {
-                            continue;
-                        }
-
                         if (!unit.IsInCombat)
                         {
-                            _logger.LogWarning("Updating position for unit outside of the combat. UnitId={unitId}", networkUnit.Id);
+                            _logger.LogWarning("Updating unit outside of the combat. UnitId={unitId}", networkUnit.Id);
                         }
 
-                        var oldPosition = unit.Position;
-                        unit.Position = new UnityEngine.Vector3(networkUnit.Position.X, networkUnit.Position.Y, networkUnit.Position.Z);
-                        _logger.LogInformation("Unit position has been updated. UnitId={unitId}, OldPosition={oldPosition}, NewPosition={newPosition}", unit.UniqueId, oldPosition.ToString("F4"), unit.Position.ToString("F4"));
+                        if (unit.Orientation != networkUnit.Orientation)
+                        {
+                            var previousOrientation = unit.Orientation;
+                            _logger.LogInformation("Orientation has been updated. UnitId={unitId}, PreviousOrientation={previousOrientation}, NewOrientation={newOrientation}", unit.UniqueId, previousOrientation.ToString("F4"), unit.Orientation.ToString("F4"));
+                            unit.Orientation = networkUnit.Orientation;
+                        }
+
+                        if (unit.Position.x != networkUnit.Position.X
+                            && unit.Position.y != networkUnit.Position.Y
+                            && unit.Position.z != networkUnit.Position.Z)
+                        {
+                            var oldPosition = unit.Position;
+                            unit.Position = new UnityEngine.Vector3(networkUnit.Position.X, networkUnit.Position.Y, networkUnit.Position.Z);
+                            _logger.LogInformation("Unit position has been updated. UnitId={unitId}, PreviousPosition={oldPosition}, NewPosition={newPosition}", unit.UniqueId, oldPosition.ToString("F4"), unit.Position.ToString("F4"));
+                        }
+
                     }
                     catch (Exception ex)
                     {
@@ -531,6 +545,7 @@ namespace WOTRMultiplayer.GameInteraction
                     PathVisualizer.Instance.m_CurrentPath.Claim(PathVisualizer.Instance);
                 }
 
+                // TODO: look at AbilityExecutionController
                 _mainThreadAccessor.Enqueue(() =>
                 {
                     caster.Commands.Run(command);

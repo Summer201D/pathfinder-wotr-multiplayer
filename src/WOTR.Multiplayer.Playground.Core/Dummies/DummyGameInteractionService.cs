@@ -6,6 +6,8 @@ using Kingmaker.EntitySystem.Persistence;
 using Kingmaker.UI;
 using WOTRMultiplayer.Abstractions.GameInteraction;
 using WOTRMultiplayer.MP.Entities;
+using WOTRMultiplayer.MP.Entities.Abilities;
+using WOTRMultiplayer.MP.Entities.Dialogs;
 
 namespace WOTR.Multiplayer.Playground.Core.Dummies
 {

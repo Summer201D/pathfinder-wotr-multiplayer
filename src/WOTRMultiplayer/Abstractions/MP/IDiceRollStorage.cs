@@ -1,22 +1,18 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
-using WOTRMultiplayer.MP.Entities.Rolls;
+using WOTRMultiplayer.MP.Entities.Rolls.Claiming.Values;
 
 namespace WOTRMultiplayer.Abstractions.MP
 {
     public interface IDiceRollStorage
     {
-        bool Save(NetworkDiceRoll rollDice);
+        TValue Get<TValue>(int rollId, long playerId)
+            where TValue : RollValueBase;
 
-        NetworkDiceRoll Get(int rollId, long playerId, bool ensureCompleted = true);
+        Task<TValue> GetAsync<TValue>(int rollId, long playerId, TimeSpan? waitForRollTimeout)
+            where TValue : RollValueBase;
 
-        int GetUniqueId(NetworkDiceRoll roll);
-
-        void Reset();
-
-        void Reset<T>()
-            where T : NetworkDiceRoll;
-
-        Task<NetworkDiceRoll> GetAsync(int rollId, long playerId, TimeSpan? waitForRollTimeout);
+        void Add(int rollId, List<long> claimingList, RollValueBase roll);
     }
 }

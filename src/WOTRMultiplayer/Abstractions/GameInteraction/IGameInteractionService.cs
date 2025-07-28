@@ -2,6 +2,8 @@
 using System.Threading.Tasks;
 using Kingmaker.UI;
 using WOTRMultiplayer.MP.Entities;
+using WOTRMultiplayer.MP.Entities.Abilities;
+using WOTRMultiplayer.MP.Entities.Dialogs;
 
 namespace WOTRMultiplayer.Abstractions.GameInteraction
 {

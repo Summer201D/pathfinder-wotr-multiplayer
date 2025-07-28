@@ -9,7 +9,8 @@ using WOTRMultiplayer.Abstractions.IO;
 using WOTRMultiplayer.Abstractions.MP;
 using WOTRMultiplayer.MP;
 using WOTRMultiplayer.MP.Entities;
-using WOTRMultiplayer.MP.Entities.Rolls;
+using WOTRMultiplayer.MP.Entities.Dialogs;
+using WOTRMultiplayer.MP.Entities.Rolls.Claiming.Values;
 using WOTRMultiplayer.Networking.Abstractions;
 
 namespace WOTRMultiplayer.Playground.Host
@@ -32,7 +33,7 @@ namespace WOTRMultiplayer.Playground.Host
                 serviceProvider.GetService<IMultiplayerSettingsProvider>(),
                 serviceProvider.GetService<IFileSystemService>(),
                 serviceProvider.GetService<INetworkServer>(),
-                new DummyDiceRollStorage([new NetworkDiceRoll { Result = 85 }]),
+                new DummyDiceRollStorage([new NetworkRollIntValue { Value = 66 }]),
                 serviceProvider.GetService<IMapper>());
             //var characters = new List<NetworkCharacter> {
             //    new() { Name = "xdd", Portrait = "KitsuneFemaleRogue_Portrait"},

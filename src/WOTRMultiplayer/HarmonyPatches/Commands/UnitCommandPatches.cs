@@ -4,6 +4,7 @@ using Kingmaker.TurnBasedMode;
 using Kingmaker.UnitLogic.Commands;
 using Microsoft.Extensions.Logging;
 using WOTRMultiplayer.MP.Entities;
+using WOTRMultiplayer.MP.Entities.Abilities;
 
 namespace WOTRMultiplayer.HarmonyPatches.Commands
 {

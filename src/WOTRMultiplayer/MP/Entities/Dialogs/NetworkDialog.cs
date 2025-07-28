@@ -2,7 +2,7 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 
-namespace WOTRMultiplayer.MP.Entities
+namespace WOTRMultiplayer.MP.Entities.Dialogs
 {
     public class NetworkDialog
     {

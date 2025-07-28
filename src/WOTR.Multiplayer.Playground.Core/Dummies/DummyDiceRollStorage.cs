@@ -3,46 +3,32 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using WOTRMultiplayer.Abstractions.MP;
-using WOTRMultiplayer.MP.Entities.Rolls;
+using WOTRMultiplayer.MP.Entities.Rolls.Claiming.Values;
 
 namespace WOTR.Multiplayer.Playground.Core.Dummies
 {
     public class DummyDiceRollStorage : IDiceRollStorage
     {
-        private readonly List<NetworkDiceRoll> _rolls;
+        private readonly List<RollValueBase> _values;
 
-        public DummyDiceRollStorage(List<NetworkDiceRoll> rolls)
+        public DummyDiceRollStorage(List<RollValueBase> values)
         {
-            _rolls = rolls ?? [];
+            _values = values;
         }
 
-        public bool Save(NetworkDiceRoll rollDice)
-        {
-            return true;
-        }
-
-        public NetworkDiceRoll Get(int rollId, long playerId, bool ensureCompleted = true)
-        {
-            return _rolls.FirstOrDefault();
-        }
-
-        public int GetUniqueId(NetworkDiceRoll roll)
-        {
-            return -1;
-        }
-
-        public void Reset()
+        public void Add(int rollId, List<long> claimingList, RollValueBase roll)
         {
         }
 
-        public void Reset<T>()
-            where T : NetworkDiceRoll
+        public TValue Get<TValue>(int rollId, long playerId)
+            where TValue : RollValueBase
         {
+            return (TValue)_values.FirstOrDefault();
         }
 
-        public Task<NetworkDiceRoll> GetAsync(int rollId, long playerId, TimeSpan? timeout)
+        public Task<TValue> GetAsync<TValue>(int rollId, long playerId, TimeSpan? waitForRollTimeout) where TValue : RollValueBase
         {
-            return Task.FromResult(Get(rollId, playerId));
+            return Task.FromResult(Get<TValue>(rollId, playerId));
         }
     }
 }

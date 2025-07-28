@@ -2,12 +2,16 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using AutoMapper;
 using Microsoft.Extensions.Logging;
 using WOTRMultiplayer.Abstractions.GameInteraction;
 using WOTRMultiplayer.Abstractions.IO;
 using WOTRMultiplayer.Abstractions.MP;
 using WOTRMultiplayer.MP.Entities;
+using WOTRMultiplayer.MP.Entities.Abilities;
+using WOTRMultiplayer.MP.Entities.Combat;
+using WOTRMultiplayer.MP.Entities.Rolls.Claiming.Values;
 using WOTRMultiplayer.Networking.Messages.Game;
 
 namespace WOTRMultiplayer.MP
@@ -20,8 +24,7 @@ namespace WOTRMultiplayer.MP
 
         public bool IsInCombat => Game?.Combat != null;
 
-        // public just because of playground, but never exposed directly via interfaces
-        public NetworkGame Game { get; set; }
+        internal NetworkGame Game { get; set; }
 
         protected ILogger Logger { get; private set; }
 
@@ -69,6 +72,12 @@ namespace WOTRMultiplayer.MP
         {
 
             return [.. Game?.Players ?? []];
+        }
+
+        public List<NetworkPlayer> GetOtherPlayers()
+        {
+
+            return [.. Game?.Players.Where(p => p.Id != Game.LocalPlayerId) ?? []];
         }
 
         public List<NetworkCharacterOwnership> GetCharacters()
@@ -158,6 +167,22 @@ namespace WOTRMultiplayer.MP
             Send(message);
         }
 
+        public TRollValue RetrieveRoll<TRollValue>(int networkDiceRollId, string unitId)
+            where TRollValue : RollValueBase
+        {
+            Logger.LogInformation("Retrieving roll over network. RollId={rollId}, UnitId={unitId}", networkDiceRollId, unitId);
+
+            var waitForRollTimeout = TimeSpan.FromSeconds(10);
+            var request = new DiceRollValueRequest { RollId = networkDiceRollId, Timeout = waitForRollTimeout };
+            // it's important to block current thread since we cannot proceed without response
+            // yeah most likely it will cause the game to freeze in case of bad network
+            var response = RetrieveRoll(request, unitId).Result;
+
+            return ResponseToRollValue<TRollValue>(response);
+        }
+
+        protected abstract Task<DiceRollValueResponse> RetrieveRoll(DiceRollValueRequest rollRequest, string unitId);
+
         protected bool ShouldNotifyAboutAbilityUse(string sourceUnitId)
         {
             if (Game.Combat == null)
@@ -174,6 +199,49 @@ namespace WOTRMultiplayer.MP
             }
 
             return Game.Combat.Turn.IsLocalPlayer && !GameInteraction.CombatTurnHasBeenFinished();
+        }
+
+        protected TRollValue ResponseToRollValue<TRollValue>(Networking.Messages.Game.DiceRollValueResponse rollResponse)
+               where TRollValue : RollValueBase
+        {
+            if (rollResponse?.RollValue == null)
+            {
+                Logger.LogError("Retrieved roll is null. RollId={rollId}", rollResponse.RollId);
+                return null;
+            }
+
+            if (rollResponse.RollValue.Result > 0)
+            {
+                var intValue = Mapper.Map<NetworkRollIntValue>(rollResponse.RollValue);
+                return intValue as TRollValue;
+            }
+
+            if (rollResponse.RollValue.DamageValues.Count > 0)
+            {
+                var damageValues = Mapper.Map<NetworkRollDamageValues>(rollResponse.RollValue);
+                return damageValues as TRollValue;
+            }
+
+            Logger.LogError("Unknown roll type response. RollId={rollId}", rollResponse.RollId);
+            return null;
+        }
+
+        protected async Task<DiceRollValueResponse> GetLocalRollAsync(long playerId, DiceRollValueRequest request)
+        {
+            var roll = await DiceRollStorage.GetAsync<RollValueBase>(request.RollId, playerId, request.Timeout);
+            var response = new DiceRollValueResponse
+            {
+                RollId = request.RollId,
+                RollValue = Mapper.Map<Networking.Messages.NetworkRollValue>(roll)
+            };
+
+            if (response?.RollValue != null)
+            {
+                Logger.LogInformation("Sending roll value response. RollId={rollId}, RollType={rollType}, Result={result}, DamageValuesCount={damageValuesCount} RollHistoryCount={rollHistoryCount}",
+                    response.RollId, roll.GetType().Name, response.RollValue.Result, response.RollValue.DamageValues.Count, response.RollValue.RollHistory.Count);
+            }
+
+            return response;
         }
 
         protected abstract void Send(object message);

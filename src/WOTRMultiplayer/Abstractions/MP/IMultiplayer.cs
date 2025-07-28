@@ -4,6 +4,7 @@ using Kingmaker.RuleSystem.Rules;
 using Kingmaker.RuleSystem.Rules.Damage;
 using WOTRMultiplayer.Abstractions.UI;
 using WOTRMultiplayer.MP.Entities;
+using WOTRMultiplayer.MP.Entities.Abilities;
 
 namespace WOTRMultiplayer.Abstractions.MP
 {
@@ -24,14 +25,6 @@ namespace WOTRMultiplayer.Abstractions.MP
         bool StopGameMode(GameModeType type);
 
         bool CanLeaveArea();
-
-        bool OnBeforeRuleRollDiceTrigger(RuleRollDice ruleRollDice);
-
-        void OnAfterRuleRollDiceTrigger(RuleRollDice ruleRollDice);
-
-        bool OnBeforeRuleCalculateDamageTrigger(RuleCalculateDamage ruleCalculateDamage);
-
-        void OnAfterRuleCalculateDamageTrigger(RuleCalculateDamage ruleCalculateDamage);
 
         void OnAfterCueShow(string dialogName, string cueName, bool hasSystemAnswer);
 
@@ -66,5 +59,13 @@ namespace WOTRMultiplayer.Abstractions.MP
         bool IsActive { get; }
 
         NetworkActionsState GetActionsState();
+
+        bool OnBeforeRuleRollDiceTrigger(RuleRollDice ruleRollDice);
+        void OnAfterRuleRollDiceTrigger(RuleRollDice ruleRollDice);
+
+        bool OnBeforeRuleCalculateDamageTrigger(RuleCalculateDamage ruleCalculateDamage);
+        void OnAfterRuleCalculateDamageTrigger(RuleCalculateDamage ruleCalculateDamage);
+
+        int OnAfterRollRuleHealDamage(RuleHealDamage instance, int result);
     }
 }

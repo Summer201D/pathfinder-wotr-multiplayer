@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 using AutoMapper;
 using Kingmaker.Utility;
 using Microsoft.Extensions.Logging;
@@ -12,7 +13,9 @@ using WOTRMultiplayer.Abstractions.GameInteraction;
 using WOTRMultiplayer.Abstractions.IO;
 using WOTRMultiplayer.Abstractions.MP;
 using WOTRMultiplayer.MP.Entities;
-using WOTRMultiplayer.MP.Entities.Rolls;
+using WOTRMultiplayer.MP.Entities.Abilities;
+using WOTRMultiplayer.MP.Entities.Combat;
+using WOTRMultiplayer.MP.Entities.Dialogs;
 using WOTRMultiplayer.Networking.Abstractions;
 using WOTRMultiplayer.Networking.Messages.Game;
 using WOTRMultiplayer.Networking.Messages.Lobby;
@@ -356,10 +359,6 @@ namespace WOTRMultiplayer.MP
             }
 
             Game.Combat = new NetworkCombat();
-
-            // it's impossible to differentiate rolls between multiple combats
-            DiceRollStorage.Reset<InitiativeRoll>();
-            DiceRollStorage.Reset<AttackWithWeaponRoll>();
         }
 
         public void CombatEnded()
@@ -456,37 +455,6 @@ namespace WOTRMultiplayer.MP
             return IsRolledByHost(isBeforeRolling) || IsRolledByLocalPlayer(isBeforeRolling);
         }
 
-        public NetworkDiceRoll RetrieveRoll(int networkDiceRollId, string unitId)
-        {
-            Logger.LogInformation("Retrieving roll from other player. RollId={rollId}, UnitId={unitId}", networkDiceRollId, unitId);
-
-            var character = GetCharacterOwnership(unitId);
-            if (character == null)
-            {
-                Logger.LogError("Unable to find character. UnitId={unitId}", unitId);
-                return null;
-            }
-
-            var waitForRollTimeout = TimeSpan.FromSeconds(10);
-            var message = new RollRequest { RollId = networkDiceRollId, Timeout = waitForRollTimeout };
-            var playerId = character.Owner.Id;
-            var response = _networkServer.SendAndWaitFor<RollResponse>(playerId, message);
-            if (response == null)
-            {
-                Logger.LogError("Unable to retrieve roll from player. PlayerId={playerId}, RollId={rollId}", playerId, networkDiceRollId);
-                return null;
-            }
-
-            if (response.Roll == null)
-            {
-                Logger.LogError("Player returned null roll. PlayerId={playerId}, RollId={rollId}", playerId, networkDiceRollId);
-                return null;
-            }
-
-            var diceRoll = Mapper.Map<NetworkDiceRoll>(response.Roll);
-            return diceRoll;
-        }
-
         public void OnClickUnit(NetworkClick click)
         {
             if (!(Game.Combat?.Turn?.IsLocalPlayer ?? false) || GameInteraction.CombatTurnHasBeenFinished())
@@ -518,6 +486,18 @@ namespace WOTRMultiplayer.MP
             };
 
             _networkServer.SendAll(message);
+        }
+
+        protected override Task<DiceRollValueResponse> RetrieveRoll(DiceRollValueRequest request, string unitId)
+        {
+            var character = GetCharacterOwnership(unitId);
+            if (character == null)
+            {
+                Logger.LogError("Unable to retrieve roll due to missing character ownership. UnitId={unitId}", unitId);
+                return Task.FromResult<DiceRollValueResponse>(null);
+            }
+
+            return _networkServer.SendAndWaitForAsync<DiceRollValueResponse>(character.Owner.Id, request);
         }
 
         protected override void Send(object message)
@@ -596,7 +576,6 @@ namespace WOTRMultiplayer.MP
             Game.Dialog = null;
             Game.SaveFilePath = null;
             Game.Combat = null;
-            DiceRollStorage.Reset();
         }
 
         private void AddCueWitness(string cueName, long playerId)
@@ -747,7 +726,7 @@ namespace WOTRMultiplayer.MP
                 .Register<NotifyGroundClicked>(OnNotifyGroundClicked)
 
                 // this is kinda special as well as the client is blocking the game loop thread until `RollResponse` is received
-                .Register<RollRequest>(OnRollRequest)
+                .Register<DiceRollValueRequest>(OnRollRequest)
 
                 .Register<PlayerReadyStatusChanged>(OnPlayerReadyStatusChanged)
                 .Register<PlayerNameResponse>(OnPlayerNameResponse)
@@ -974,22 +953,10 @@ namespace WOTRMultiplayer.MP
             TryEnableDialogContinueButton();
         }
 
-        private async void OnRollRequest(long playerId, RollRequest request)
+        private async void OnRollRequest(long playerId, DiceRollValueRequest request)
         {
-            Logger.LogInformation($"Received {nameof(RollRequest)}. PlayerId={{playerId}}, RollId={{rollId}}", playerId, request.RollId);
-            // some events would occur at around the same time on client/host, but client MUST receive this dice roll from the host
-            var roll = await DiceRollStorage.GetAsync(request.RollId, playerId, request.Timeout);
-
-            var response = new RollResponse
-            {
-                Roll = Mapper.Map<Networking.Messages.NetworkDiceRoll>(roll)
-            };
-
-            if (roll != null)
-            {
-                Logger.LogInformation("Sending roll response. RollId={rollId}, RollType={rollType}, IsComplete={isComplete}, DamageValuesCount={damageValuesCount} RollResult={rollResult}", request.RollId, roll.GetType().Name, roll.IsCompleted(), roll.DamageValues.Count, roll.Result);
-            }
-
+            Logger.LogInformation($"Received {nameof(DiceRollValueRequest)}. PlayerId={{playerId}}, RollId={{rollId}}", playerId, request.RollId);
+            var response = await GetLocalRollAsync(playerId, request);
             _networkServer.Send(playerId, response);
         }
 

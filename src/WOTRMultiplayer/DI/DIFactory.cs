@@ -54,7 +54,7 @@ namespace WOTRMultiplayer.DI
             serviceCollection.AddSingleton<IResourceProvider, ResourceBundleProvider>();
             serviceCollection.AddSingleton<IUIFactory, UIFactory>();
             serviceCollection.AddSingleton<IHashService, HashService>();
-            serviceCollection.AddSingleton<IDiceRollStorage, DiceRollStorage>();
+            serviceCollection.AddSingleton<IDiceRollStorage, ClaimableDiceRollStorage>();
 
             serviceCollection.AddSingleton<ILobbyWindowController, LobbyWindowController>();
             serviceCollection.AddSingleton<IHostMenuItemController, HostMenuItemController>();

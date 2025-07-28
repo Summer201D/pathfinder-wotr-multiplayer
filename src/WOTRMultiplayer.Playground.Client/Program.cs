@@ -9,8 +9,8 @@ using WOTR.Multiplayer.Playground.Core.Dummies;
 using WOTRMultiplayer.Abstractions.IO;
 using WOTRMultiplayer.Abstractions.MP;
 using WOTRMultiplayer.MP;
-using WOTRMultiplayer.MP.Entities;
-using WOTRMultiplayer.MP.Entities.Rolls;
+using WOTRMultiplayer.MP.Entities.Dialogs;
+using WOTRMultiplayer.MP.Entities.Rolls.Claiming.Values;
 using WOTRMultiplayer.Networking.Abstractions;
 
 namespace WOTRMultiplayer.Playground.Client
@@ -31,7 +31,7 @@ namespace WOTRMultiplayer.Playground.Client
                 serviceProvider.GetService<IMultiplayerSettingsProvider>(),
                 serviceProvider.GetService<IFileSystemService>(),
                 serviceProvider.GetService<INetworkServerClient>(),
-                new DummyDiceRollStorage([new NetworkDiceRoll { Result = 55 }]),
+                new DummyDiceRollStorage([new NetworkRollIntValue { Value = 59 }]),
                 serviceProvider.GetService<IMapper>());
 
             var verbs = CommandLineHelper.LoadVerbs();

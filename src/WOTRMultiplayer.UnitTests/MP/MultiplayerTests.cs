@@ -4,6 +4,7 @@ using FakeItEasy;
 using Microsoft.Extensions.Logging;
 using NUnit.Framework;
 using WOTRMultiplayer.Abstractions.GameInteraction;
+using WOTRMultiplayer.Abstractions.Hashing;
 using WOTRMultiplayer.Abstractions.MP;
 using WOTRMultiplayer.Abstractions.UI;
 using WOTRMultiplayer.Abstractions.UI.Controllers;
@@ -25,6 +26,7 @@ namespace WOTRMultiplayer.UnitTests.MP
         private IMultiplayerClient _multiplayerClient;
         private IDiceRollStorage _rollStorage;
         private IGameInteractionService _gameInteractionService;
+        private IHashService _hashService;
 
         [SetUp]
         public void SetUp()
@@ -36,6 +38,7 @@ namespace WOTRMultiplayer.UnitTests.MP
             _multiplayerClient = A.Fake<IMultiplayerClient>();
             _rollStorage = A.Fake<IDiceRollStorage>();
             _gameInteractionService = A.Fake<IGameInteractionService>();
+            _hashService = A.Fake<IHashService>();
 
             _multiplayer = new Multiplayer(
                 _logger,
@@ -43,6 +46,7 @@ namespace WOTRMultiplayer.UnitTests.MP
                 _lobbyWindowController,
                 _multiplayerHost,
                 _multiplayerClient,
+                _hashService,
                 _rollStorage,
                 _gameInteractionService);
         }

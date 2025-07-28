@@ -2,13 +2,9 @@
 
 namespace WOTRMultiplayer.MP.Entities.Rolls
 {
-    public class AttackWithWeaponRoll : NetworkDiceRoll
+    public class AttackWithWeaponRoll : NetworkDiceRollBase
     {
-        private readonly object _checkLock = new();
-
         public int AttackNumber { get; set; }
-
-        public int CombatRound { get; set; }
 
         public bool IsAttackOfOpportunity { get; set; }
 
@@ -18,38 +14,16 @@ namespace WOTRMultiplayer.MP.Entities.Rolls
 
         public bool IsFirstAttack { get; set; }
 
-        public int AttacksCount { get; set; }
-
         public bool IsCriticalRoll { get; set; }
 
-        public bool IsHit { get; set; }
-
-        public override string GetIdString()
+        public AttackWithWeaponRoll(string initiatorId, string ruleName, NetworkDiceRollType networkDiceRollType, int totalModifierBonus)
+            : base(initiatorId, ruleName, networkDiceRollType, totalModifierBonus)
         {
-            return string.Join(IdSeparator, base.GetIdString(), AttackNumber.ToString(), CombatRound.ToString(), IsAttackOfOpportunity
-                , TargetId, ExtraAttack, IsFirstAttack, AttacksCount, IsCriticalRoll);
         }
 
-        public override bool IsCompleted()
+        protected override IEnumerable<string> GetUniquinessIdentifiers()
         {
-            lock (_checkLock)
-            {
-                if (!IsHit)
-                {
-                    return true;
-                }
-
-                // Hit requires damage calculation which happens few fractions later
-                return DamageValues.Count > 0;
-            }
-        }
-
-        public override void AddDamageValues(IEnumerable<NetworkDamageValueRoll> value)
-        {
-            lock (_checkLock)
-            {
-                base.AddDamageValues(value);
-            }
+            return [AttackNumber.ToString(), IsAttackOfOpportunity.ToString(), TargetId, ExtraAttack.ToString(), IsFirstAttack.ToString(), IsCriticalRoll.ToString()];
         }
     }
 }

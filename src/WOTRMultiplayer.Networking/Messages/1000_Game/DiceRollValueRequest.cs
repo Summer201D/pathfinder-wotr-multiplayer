@@ -5,7 +5,7 @@ namespace WOTRMultiplayer.Networking.Messages.Game
 {
     [ProtoContract]
     [BeetleX.Packets.MessageType(1006)]
-    public class RollRequest
+    public class DiceRollValueRequest
     {
         [ProtoMember(1)]
         public int RollId { get; set; }

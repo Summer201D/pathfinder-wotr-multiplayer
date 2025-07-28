@@ -4,9 +4,12 @@ namespace WOTRMultiplayer.Networking.Messages.Game
 {
     [ProtoContract]
     [BeetleX.Packets.MessageType(1007)]
-    public class RollResponse
+    public class DiceRollValueResponse
     {
         [ProtoMember(1)]
-        public NetworkDiceRoll Roll { get; set; }
+        public int RollId { get; set; }
+
+        [ProtoMember(2)]
+        public NetworkRollValue RollValue { get; set; }
     }
 }

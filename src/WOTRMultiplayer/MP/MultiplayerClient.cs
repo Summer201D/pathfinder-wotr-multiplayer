@@ -12,7 +12,9 @@ using WOTRMultiplayer.Abstractions.GameInteraction;
 using WOTRMultiplayer.Abstractions.IO;
 using WOTRMultiplayer.Abstractions.MP;
 using WOTRMultiplayer.MP.Entities;
-using WOTRMultiplayer.MP.Entities.Rolls;
+using WOTRMultiplayer.MP.Entities.Abilities;
+using WOTRMultiplayer.MP.Entities.Combat;
+using WOTRMultiplayer.MP.Entities.Dialogs;
 using WOTRMultiplayer.Networking.Abstractions;
 using WOTRMultiplayer.Networking.Messages.Game;
 using WOTRMultiplayer.Networking.Messages.Lobby;
@@ -179,38 +181,6 @@ namespace WOTRMultiplayer.MP
             //Logger.LogInformation("Sending unpausing notification");
             //var message = new GamePauseChanged { IsPaused = false };
             //_networkServerClient.SendAsync(message).Wait();
-        }
-
-        /// <summary>
-        ///
-        /// </summary>
-        /// <param name="networkDiceRollId"></param>
-        /// <param name="unitId">client doesn't really care about unitId since it has connection to host only</param>
-        /// <returns></returns>
-        public NetworkDiceRoll RetrieveRoll(int networkDiceRollId, string unitId)
-        {
-            Logger.LogInformation("Retrieving roll from the host. RollId={rollId}, UnitId={unitId}", networkDiceRollId, unitId);
-
-            var waitForRollTimeout = TimeSpan.FromSeconds(10);
-            var request = new RollRequest { RollId = networkDiceRollId, Timeout = waitForRollTimeout };
-            // it's important to block current thread since we cannot proceed without response
-            // yeah most likely it will cause the game to freeze in case of bad network
-            var response = _networkServerClient.SendAndWaitForAsync<RollResponse>(request).Result;
-
-            if (response == null)
-            {
-                Logger.LogError("Unable to retrieve roll from host. RollId={rollId}", networkDiceRollId);
-                return null;
-            }
-
-            if (response.Roll == null)
-            {
-                Logger.LogError("Host returned null roll. RollId={rollId}", networkDiceRollId);
-                return null;
-            }
-
-            var diceRoll = Mapper.Map<NetworkDiceRoll>(response.Roll);
-            return diceRoll;
         }
 
         public void OnAfterCueShow(string dialogName, string cueName, bool hasSystemAnswer)
@@ -405,6 +375,11 @@ namespace WOTRMultiplayer.MP
             _networkServerClient.Send(message);
         }
 
+        protected override Task<DiceRollValueResponse> RetrieveRoll(DiceRollValueRequest request, string unitId)
+        {
+            return _networkServerClient.SendAndWaitForAsync<DiceRollValueResponse>(request);
+        }
+
         protected override void Send(object message)
         {
             _networkServerClient.Send(message);
@@ -432,14 +407,13 @@ namespace WOTRMultiplayer.MP
             Game.Dialog = null;
             Game.SaveFilePath = null;
             Game.Combat = null;
-            DiceRollStorage.Reset();
         }
 
         private void RegisterHandlers()
         {
             _networkServerClient
                 // this is kinda special as well as the host is blocking the game loop thread until `RollResponse` is received
-                .Register<RollRequest>(OnRollRequest)
+                .Register<DiceRollValueRequest>(OnRollRequest)
 
                 .Register<PlayerNameRequest>(OnPlayerNameRequest)
                 .Register<PlayerReadyStatusChanged>(OnPlayerReadyStatusChanged)
@@ -539,20 +513,11 @@ namespace WOTRMultiplayer.MP
             GameInteraction.ClickUnitInCombat(click);
         }
 
-        private async void OnRollRequest(RollRequest request)
+        private async void OnRollRequest(DiceRollValueRequest request)
         {
-            // only host could ask for a roll since there are no other network connections
-            var playerId = LocalHostPlayerId;
-
-            Logger.LogInformation($"Received {nameof(RollRequest)}. PlayerId={{playerId}}, RollId={{rollId}}", playerId, request.RollId);
-            var roll = await DiceRollStorage.GetAsync(request.RollId, playerId, request.Timeout);
-
-            var response = new RollResponse
-            {
-                Roll = Mapper.Map<Networking.Messages.NetworkDiceRoll>(roll)
-            };
-
-            Logger.LogInformation("Sending roll response. RollResult={rollResult}", roll?.Result ?? 0);
+            Logger.LogInformation($"Received {nameof(DiceRollValueRequest)}. RollId={{rollId}}", request.RollId);
+            // only host could ask for a roll since there is no direct connection between clients
+            var response = await GetLocalRollAsync(LocalHostPlayerId, request);
             _networkServerClient.Send(response);
         }
 

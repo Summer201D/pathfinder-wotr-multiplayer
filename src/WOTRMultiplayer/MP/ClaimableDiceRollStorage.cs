@@ -1,0 +1,112 @@
+﻿using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
+using WOTRMultiplayer.Abstractions.MP;
+using WOTRMultiplayer.MP.Entities.Rolls.Claiming;
+using WOTRMultiplayer.MP.Entities.Rolls.Claiming.Values;
+
+namespace WOTRMultiplayer.MP
+{
+    public class ClaimableDiceRollStorage : IDiceRollStorage
+    {
+        private readonly TimeSpan _defaultRetrieveDelay = TimeSpan.FromMilliseconds(50);
+        private readonly object _actionLock = new object();
+        private readonly ConcurrentDictionary<int, ClaimableDiceRollEntry> _rolls = new();
+
+        private readonly ILogger<ClaimableDiceRollStorage> _logger;
+
+        public ClaimableDiceRollStorage(ILogger<ClaimableDiceRollStorage> logger)
+        {
+            _logger = logger;
+        }
+
+        public TValue Get<TValue>(int rollId, long playerId)
+            where TValue : RollValueBase
+        {
+            if (!_rolls.TryGetValue(rollId, out var entry))
+            {
+                return null;
+            }
+
+            lock (_actionLock)
+            {
+                foreach (var claimableValue in entry.Rolls)
+                {
+                    if (claimableValue.ClaimingList.TryRemove(playerId, out _))
+                    {
+                        _logger.LogInformation("Claimed roll value. RollId={rollId}, PlayerId={playerId}, OrderId={orderId}, RollType={rollType}", rollId, playerId, claimableValue.OrderId, claimableValue.Roll.GetType().Name);
+                        return (TValue)claimableValue.Roll;
+                    }
+                }
+            }
+
+            return null;
+        }
+
+        public async Task<TValue> GetAsync<TValue>(int rollId, long playerId, TimeSpan? waitForRollTimeout)
+            where TValue : RollValueBase
+        {
+            var timeoutTask = waitForRollTimeout == null ? Task.CompletedTask : Task.Delay(waitForRollTimeout.Value);
+            TValue result;
+            do
+            {
+                result = Get<TValue>(rollId, playerId);
+                if (result == null)
+                {
+                    await Task.Delay(_defaultRetrieveDelay);
+                }
+            }
+            while (result == null && !timeoutTask.IsCompleted);
+
+            return result;
+        }
+
+        public void Add(int rollId, List<long> claimingList, RollValueBase roll)
+        {
+            lock (_actionLock)
+            {
+                if (!_rolls.TryGetValue(rollId, out var entry))
+                {
+                    AddRollEntry(rollId, claimingList, roll);
+                    return;
+                }
+
+                if (entry.IsClaimed)
+                {
+                    _logger.LogWarning("Duplicate entry id, but all previous values have been claimed. RollId={rollId}, RollType={rollType}", rollId, roll.GetType().Name);
+                    _rolls.TryRemove(rollId, out _);
+                    AddRollEntry(rollId, claimingList, roll);
+                    return;
+                }
+
+                var extraClaimableRoll = CreateClaimableRoll(claimingList, roll);
+                extraClaimableRoll.OrderId = entry.Rolls.Count;
+                entry.Rolls.Enqueue(extraClaimableRoll);
+                _logger.LogWarning("Appended claimable roll value to existing entry. RollId={rollId}, RollType={rollType}, OrderId={orderId}, ClaimingListCount={playerId}", rollId, roll.GetType().Name, extraClaimableRoll.OrderId, claimingList.Count);
+            }
+        }
+
+        private void AddRollEntry(int rollId, List<long> claimingList, RollValueBase roll)
+        {
+            var entry = new ClaimableDiceRollEntry();
+            var rollValue = CreateClaimableRoll(claimingList, roll);
+            entry.Rolls.Enqueue(rollValue);
+            _rolls.TryAdd(rollId, entry);
+            _logger.LogInformation("Created claimable roll value. RollId={rollId}, RollType={rollType}, OrderId={orderId}, ClaimingListCount={playerId}", rollId, roll.GetType().Name, rollValue.OrderId, claimingList.Count);
+        }
+
+        private ClaimableDiceRollValue<RollValueBase> CreateClaimableRoll(List<long> claimingList, RollValueBase roll)
+        {
+            var rollValue = new ClaimableDiceRollValue<RollValueBase>
+            {
+                Roll = roll,
+                ClaimingList = new ConcurrentDictionary<long, bool>(claimingList.Select(x => new KeyValuePair<long, bool>(x, true))),
+                OrderId = 0
+            };
+            return rollValue;
+        }
+    }
+}

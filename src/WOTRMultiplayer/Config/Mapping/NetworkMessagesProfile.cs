@@ -1,6 +1,9 @@
 ﻿using AutoMapper;
+using WOTRMultiplayer.MP;
 using WOTRMultiplayer.MP.Entities;
-using WOTRMultiplayer.MP.Entities.Rolls;
+using WOTRMultiplayer.MP.Entities.Abilities;
+using WOTRMultiplayer.MP.Entities.Combat;
+using WOTRMultiplayer.MP.Entities.Rolls.Claiming.Values;
 
 namespace WOTRMultiplayer.Config.Mapping
 {
@@ -23,10 +26,7 @@ namespace WOTRMultiplayer.Config.Mapping
             CreateMap<NetworkCombatAction, Networking.Messages.NetworkCombatAction>()
                 .ReverseMap();
 
-            CreateMap<NetworkDiceRoll, Networking.Messages.NetworkDiceRoll>()
-               .ReverseMap();
-
-            CreateMap<NetworkDamageValueRoll, Networking.Messages.NetworkDamageValueRoll>()
+            CreateMap<NetworkRollDamageRoll, Networking.Messages.NetworkDamageValueRoll>()
                 .ReverseMap();
 
             CreateMap<NetworkUnit, Networking.Messages.NetworkUnit>()
@@ -34,6 +34,16 @@ namespace WOTRMultiplayer.Config.Mapping
 
             CreateMap<NetworkActivatableAbility, Networking.Messages.NetworkActivatableAbility>()
                 .ReverseMap();
+
+            CreateMap<NetworkRollDamageValues, Networking.Messages.NetworkRollValue>()
+                .ForMember(m => m.DamageValues, o => o.MapFrom(v => v.Value))
+                .ReverseMap()
+                .ForMember(m => m.Value, o => o.MapFrom(v => v.DamageValues));
+
+            CreateMap<NetworkRollIntValue, Networking.Messages.NetworkRollValue>()
+                .ForMember(m => m.Result, o => o.MapFrom(v => v.Value))
+                .ReverseMap()
+                .ForMember(m => m.Value, o => o.MapFrom(v => v.Result));
         }
     }
 }

@@ -4,7 +4,7 @@ using Kingmaker.EntitySystem.Entities;
 using Kingmaker.UnitLogic.Abilities.Components.TargetCheckers;
 using Kingmaker.UnitLogic.ActivatableAbilities;
 using Microsoft.Extensions.Logging;
-using WOTRMultiplayer.MP.Entities;
+using WOTRMultiplayer.MP.Entities.Abilities;
 
 namespace WOTRMultiplayer.HarmonyPatches.Abilities
 {
@@ -30,6 +30,13 @@ namespace WOTRMultiplayer.HarmonyPatches.Abilities
                     Main.GetLogger<ActivatableAbilityPatches>().LogInformation("Mount toggle is ignored. IsActive={value}", __instance.m_IsOn);
                     return;
                 }
+            }
+
+            if (__instance.Owner.Unit.UniqueId.StartsWith("description-helper-unit"))
+            {
+                // happens when you hover over enemy creature in top list (Turn based combat)
+                Main.GetLogger<ActivatableAbilityPatches>().LogWarning("Skipping description activation");
+                return;
             }
 
             var ability = new NetworkActivatableAbility

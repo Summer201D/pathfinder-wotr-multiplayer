@@ -10,5 +10,8 @@ namespace WOTRMultiplayer.Networking.Messages
 
         [ProtoMember(2)]
         public NetworkVector3 Position { get; set; }
+
+        [ProtoMember(3)]
+        public float Orientation { get; set; }
     }
 }

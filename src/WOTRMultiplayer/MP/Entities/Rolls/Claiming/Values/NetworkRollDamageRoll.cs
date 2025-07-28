@@ -1,6 +1,6 @@
-﻿namespace WOTRMultiplayer.MP.Entities.Rolls
+﻿namespace WOTRMultiplayer.MP.Entities.Rolls.Claiming.Values
 {
-    public class NetworkDamageValueRoll
+    public class NetworkRollDamageRoll
     {
         public float TacticalCombatDRModifier { get; set; }
 
