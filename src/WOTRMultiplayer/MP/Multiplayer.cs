@@ -273,6 +273,12 @@ namespace WOTRMultiplayer.MP
                     return;
                 }
 
+                // TODO: this is generic handler, but attacks are handled in a different way. Consider replacing generic with specific handlers (RulePartyStatCheck, RuleInitiativeRoll)
+                if (ruleRollDice.Reason.Rule is RuleAttackWithWeapon)
+                {
+                    return;
+                }
+
                 var rollId = GetDiceRollId(ruleRollDice.Reason, NetworkDiceRollType.Hit);
                 if (rollId == null)
                 {
@@ -301,6 +307,12 @@ namespace WOTRMultiplayer.MP
             {
                 var multiplayerActor = GetMultiplayerActor();
                 if (multiplayerActor == null || multiplayerActor.ShouldStoreRoll(false))
+                {
+                    return true;
+                }
+
+                // TODO: this is generic handler, but attacks are handled in a different way. Consider replacing generic with specific handlers (RulePartyStatCheck, RuleInitiativeRoll)
+                if (ruleRollDice.Reason.Rule is RuleAttackWithWeapon)
                 {
                     return true;
                 }
@@ -341,6 +353,79 @@ namespace WOTRMultiplayer.MP
             return result;
         }
 
+        public bool OnBeforeRuleAttackRoleTrigger(RuleAttackRoll ruleAttackRoll)
+        {
+            try
+            {
+                var multiplayerActor = GetMultiplayerActor();
+                if (multiplayerActor == null || multiplayerActor.ShouldStoreRoll(false))
+                {
+                    return true;
+                }
+
+                var weaponAttack = CreateAttackWithWeaponRoll(NetworkDiceRollType.Hit, ruleAttackRoll.RuleAttackWithWeapon);
+                var rollId = GetDiceRollId(weaponAttack);
+                if (rollId == null)
+                {
+                    _logger.LogWarning("Roll retrieving has been skipped due to unability to generate rollId. ReasonRuleType={reasonRuleType} InitiatorName={initiatorName}, InitiatorId={initiatorId}", ruleAttackRoll.GetType().Name, ruleAttackRoll.Initiator.CharacterName, ruleAttackRoll.Initiator.UniqueId);
+                    return true;
+                }
+
+                var roll = multiplayerActor.RetrieveRoll<NetworkRollIntValue>(rollId.Value, weaponAttack.InitiatorId);
+                if (roll == null)
+                {
+                    _logger.LogCritical("Failed to acquire Attack roll from remote player which guarantees desync in the game. RollType={rollType}", ruleAttackRoll.GetType().Name);
+                    _gameInteractionService.ShowModalMessage($"Failed to acquire roll from remote player which guarantees desync in the game.");
+                    return true;
+                }
+
+                var d20 = RuleRollD20.FromInt(ruleAttackRoll.Initiator, roll.Value);
+                d20.RollHistory = [.. roll.RollHistory];
+                ruleAttackRoll.D20 = d20;
+
+                _logger.LogInformation("Roll result has been acquired from another player. RollId={rollId}, Result={result}, RollType={rollType}", rollId.Value, d20.Result, ruleAttackRoll.GetType().Name);
+                return false;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Unable to handle {MethodBase.GetCurrentMethod().Name}");
+                throw;
+            }
+        }
+
+        public void OnAfterRuleAttackRoleTrigger(RuleAttackRoll ruleAttackRoll, RuleRollD20 roll)
+        {
+            try
+            {
+                var multiplayerActor = GetMultiplayerActor();
+                if (multiplayerActor == null || !multiplayerActor.ShouldStoreRoll(false))
+                {
+                    return;
+                }
+
+                var weaponAttack = CreateAttackWithWeaponRoll(NetworkDiceRollType.Hit, ruleAttackRoll.RuleAttackWithWeapon);
+                var rollId = GetDiceRollId(weaponAttack);
+                if (rollId == null)
+                {
+                    _logger.LogWarning("[Attack Roll] saving has been skipped due to unability to generate rollId. ReasonRuleType={reasonRuleType} InitiatorName={initiatorName}, InitiatorId={initiatorId}", ruleAttackRoll.GetType().Name, ruleAttackRoll.Initiator.CharacterName, ruleAttackRoll.Initiator.UniqueId);
+                    return;
+                }
+
+                var rollValue = new NetworkRollIntValue
+                {
+                    RollHistory = [.. roll.RollHistory ?? []],
+                    Value = roll.m_Result
+                };
+
+                SaveRollValue(multiplayerActor, rollId.Value, rollValue);
+
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Unable to handle {MethodBase.GetCurrentMethod().Name}");
+                throw;
+            }
+        }
 
         public void OnAfterCueShow(string dialogName, string cueName, bool hasSystemAnswer)
         {
@@ -559,6 +644,7 @@ namespace WOTRMultiplayer.MP
                 ExtraAttack = attackWithWeapon.ExtraAttack,
                 IsFirstAttack = attackWithWeapon.IsFirstAttack,
                 IsCriticalRoll = attackWithWeapon.AttackRoll.IsCriticalRoll,
+                AttacksCount = attackWithWeapon.AttacksCount,
             };
 
             return roll;

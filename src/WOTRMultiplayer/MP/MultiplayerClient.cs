@@ -284,13 +284,23 @@ namespace WOTRMultiplayer.MP
         public bool CanInitializeCombat()
         {
             // confirmation from host is required
-            return Game.Combat?.IsInitialized ?? true;
+            if (Game.Combat == null)
+            {
+                return true;
+            }
+
+            if (Game.Combat.IsInitialized)
+            {
+                Game.Combat.IsCombatPrepared = true;
+            }
+
+            return Game.Combat.IsInitialized;
         }
 
         public bool CanContinueCombat()
         {
-            // confirmation from host is required
-            return Game.Combat?.IsInitialized ?? true;
+            // must be run after Preparation phase
+            return Game.Combat != null && Game.Combat.IsCombatPrepared;
         }
 
         public bool OnBeforeStartTurn(string unitId, bool actingInSurpriseRound)

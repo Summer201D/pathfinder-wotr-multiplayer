@@ -9,6 +9,8 @@ namespace WOTRMultiplayer.MP.Entities.Combat
 
         public bool IsInitialized { get; set; }
 
+        public bool IsCombatPrepared { get; set; }
+
         public int Round
         {
             // sometimes combat is being paused (on client) before round started event, but still we need to initialize everything as first round aka 1

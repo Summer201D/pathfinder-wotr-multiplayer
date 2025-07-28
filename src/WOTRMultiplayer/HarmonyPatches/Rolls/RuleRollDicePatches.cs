@@ -1,7 +1,12 @@
-﻿using HarmonyLib;
+﻿using System.Collections.Generic;
+using System.Reflection;
+using System.Reflection.Emit;
+using HarmonyLib;
 using Kingmaker.RuleSystem;
 using Kingmaker.RuleSystem.Rules;
 using Kingmaker.RuleSystem.Rules.Damage;
+using Microsoft.Extensions.Logging;
+using static Kingmaker.RuleSystem.RulebookEvent;
 
 namespace WOTRMultiplayer.HarmonyPatches.Rolls
 {
@@ -94,6 +99,59 @@ namespace WOTRMultiplayer.HarmonyPatches.Rolls
             }
 
             __result = Main.Multiplayer.OnAfterRollRuleHealDamage(__instance, __result);
+        }
+
+        [HarmonyPatch(typeof(RuleAttackRoll), nameof(RuleAttackRoll.OnTrigger))]
+        [HarmonyTranspiler]
+        public static IEnumerable<CodeInstruction> RuleAttackRoll_OnTrigger_Transpiler(IEnumerable<CodeInstruction> instructions)
+        {
+            var attr = MethodBase.GetCurrentMethod().GetCustomAttribute<HarmonyPatch>();
+            var target = $"{attr.info.declaringType.Name}.{attr.info.methodName}";
+            var matcher = new CodeMatcher(instructions);
+
+            ReplaceD20Generator(matcher, target);
+
+            return matcher.Instructions();
+        }
+
+        private static void ReplaceD20Generator(CodeMatcher matcher, string target)
+        {
+            var replaceWith = AccessTools.Method(typeof(RuleRollDicePatches), nameof(RuleRollDicePatches.GenerateReplaceableG20));
+            var lookFor = AccessTools.Method(typeof(Dice), nameof(Dice.GenerateD20));
+            var match = matcher.SearchForward(x => x.Calls(lookFor));
+            if (match == null)
+            {
+                Main.GetLogger<HarmonyTranspiler>().LogError("Transpiler has not been applied. Target={target}", target);
+                return;
+            }
+
+            match.RemoveInstruction();
+            var newInstructions = new List<CodeInstruction>()
+                {
+                    new(OpCodes.Ldarg_0),
+                    new(OpCodes.Call, replaceWith)
+                };
+
+            match.Insert(newInstructions);
+            Main.GetLogger<HarmonyTranspiler>().LogInformation("Transpiler has been applied. Target={target}", target);
+        }
+
+        public static RuleRollD20 GenerateReplaceableG20(bool isFake, RuleAttackRoll ruleAttackRoll)
+        {
+            if (!Main.Multiplayer.IsActive)
+            {
+                return Dice.GenerateD20(isFake);
+            }
+
+            var shouldRunOriginalLogic = Main.Multiplayer.OnBeforeRuleAttackRoleTrigger(ruleAttackRoll);
+            if (shouldRunOriginalLogic)
+            {
+                var roll = Dice.GenerateD20(isFake);
+                Main.Multiplayer.OnAfterRuleAttackRoleTrigger(ruleAttackRoll, roll);
+                return roll;
+            }
+
+            return ruleAttackRoll.D20;
         }
     }
 
