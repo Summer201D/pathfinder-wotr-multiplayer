@@ -191,7 +191,7 @@ namespace WOTRMultiplayer.MP
                     return true;
                 }
 
-                var networkRoll = multiplayerActor.RetrieveRoll<NetworkRollDamageValues>(rollId.Value, ruleCalculateDamage.Initiator.UniqueId);
+                var networkRoll = multiplayerActor.RetrieveRoll<NetworkDamageListRollValue>(rollId.Value, ruleCalculateDamage.Initiator.UniqueId);
 
                 if (networkRoll == null)
                 {
@@ -243,9 +243,9 @@ namespace WOTRMultiplayer.MP
                     return;
                 }
 
-                var rollValue = new NetworkRollDamageValues
+                var rollValue = new NetworkDamageListRollValue
                 {
-                    Value = [..ruleCalculateDamage.CalculatedDamage.Select(x => new NetworkRollDamageRoll
+                    Value = [..ruleCalculateDamage.CalculatedDamage.Select(x => new NetworkDamageRollValue
                     {
                         MaximumDamage = x.Source.MaximumValue,
                         RollAndBonusValue = x.RollAndBonusValue,
@@ -287,7 +287,7 @@ namespace WOTRMultiplayer.MP
                     return;
                 }
 
-                var rollValue = new NetworkRollIntValue
+                var rollValue = new NetworkIntRollValue
                 {
                     RollHistory = [.. ruleRollDice.RollHistory ?? []],
                     Value = ruleRollDice.m_Result
@@ -325,7 +325,7 @@ namespace WOTRMultiplayer.MP
                     return true;
                 }
 
-                var roll = multiplayerActor.RetrieveRoll<NetworkRollIntValue>(rollId.Value, ruleRollDice.Initiator.UniqueId);
+                var roll = multiplayerActor.RetrieveRoll<NetworkIntRollValue>(rollId.Value, ruleRollDice.Initiator.UniqueId);
                 if (roll == null)
                 {
                     _logger.LogCritical("Failed to acquire roll from remote player which guarantees desync in the game. RollType={rollType}", ruleRollDice.Reason.Rule?.GetType().Name);
@@ -367,7 +367,7 @@ namespace WOTRMultiplayer.MP
 
                 if (multiplayerActor.ShouldStoreRoll(false))
                 {
-                    var value = new NetworkRollIntValue { Value = result };
+                    var value = new NetworkIntRollValue { Value = result };
                     SaveRollValue(multiplayerActor, rollId.Value, value);
                     return result;
                 }
@@ -713,7 +713,7 @@ namespace WOTRMultiplayer.MP
                 return;
             }
 
-            var rollValue = new NetworkRollIntValue
+            var rollValue = new NetworkIntRollValue
             {
                 RollHistory = [.. ruleRollD20.RollHistory ?? []],
                 Value = ruleRollD20.m_Result
@@ -767,7 +767,7 @@ namespace WOTRMultiplayer.MP
                     return null;
                 }
 
-                var roll = multiplayerActor.RetrieveRoll<NetworkRollIntValue>(rollId.Value, networkDiceRoll.InitiatorId);
+                var roll = multiplayerActor.RetrieveRoll<NetworkIntRollValue>(rollId.Value, networkDiceRoll.InitiatorId);
                 if (roll == null)
                 {
                     _logger.LogCritical("Failed to acquire roll from remote player which guarantees desync in the game. RollId={rollId}, RollType={rollType}, InitiatorId={initiatorId}", rollId.Value, rollType, initiator.UniqueId);

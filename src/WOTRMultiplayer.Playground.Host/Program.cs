@@ -33,7 +33,7 @@ namespace WOTRMultiplayer.Playground.Host
                 serviceProvider.GetService<IMultiplayerSettingsProvider>(),
                 serviceProvider.GetService<IFileSystemService>(),
                 serviceProvider.GetService<INetworkServer>(),
-                new DummyDiceRollStorage([new NetworkRollIntValue { Value = 66 }]),
+                new DummyDiceRollStorage([new NetworkIntRollValue { Value = 66 }]),
                 serviceProvider.GetService<IMapper>());
             //var characters = new List<NetworkCharacter> {
             //    new() { Name = "xdd", Portrait = "KitsuneFemaleRogue_Portrait"},

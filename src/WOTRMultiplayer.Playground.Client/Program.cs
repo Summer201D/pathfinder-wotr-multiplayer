@@ -31,7 +31,7 @@ namespace WOTRMultiplayer.Playground.Client
                 serviceProvider.GetService<IMultiplayerSettingsProvider>(),
                 serviceProvider.GetService<IFileSystemService>(),
                 serviceProvider.GetService<INetworkServerClient>(),
-                new DummyDiceRollStorage([new NetworkRollIntValue { Value = 59 }]),
+                new DummyDiceRollStorage([new NetworkIntRollValue { Value = 59 }]),
                 serviceProvider.GetService<IMapper>());
 
             var verbs = CommandLineHelper.LoadVerbs();

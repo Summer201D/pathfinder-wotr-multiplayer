@@ -26,7 +26,7 @@ namespace WOTRMultiplayer.Config.Mapping
             CreateMap<NetworkCombatAction, Networking.Messages.NetworkCombatAction>()
                 .ReverseMap();
 
-            CreateMap<NetworkRollDamageRoll, Networking.Messages.NetworkDamageValueRoll>()
+            CreateMap<NetworkDamageRollValue, Networking.Messages.NetworkDamageRollValue>()
                 .ReverseMap();
 
             CreateMap<NetworkUnit, Networking.Messages.NetworkUnit>()
@@ -35,12 +35,12 @@ namespace WOTRMultiplayer.Config.Mapping
             CreateMap<NetworkActivatableAbility, Networking.Messages.NetworkActivatableAbility>()
                 .ReverseMap();
 
-            CreateMap<NetworkRollDamageValues, Networking.Messages.NetworkRollValue>()
+            CreateMap<NetworkDamageListRollValue, Networking.Messages.NetworkRollValue>()
                 .ForMember(m => m.DamageValues, o => o.MapFrom(v => v.Value))
                 .ReverseMap()
                 .ForMember(m => m.Value, o => o.MapFrom(v => v.DamageValues));
 
-            CreateMap<NetworkRollIntValue, Networking.Messages.NetworkRollValue>()
+            CreateMap<NetworkIntRollValue, Networking.Messages.NetworkRollValue>()
                 .ForMember(m => m.Result, o => o.MapFrom(v => v.Value))
                 .ReverseMap()
                 .ForMember(m => m.Value, o => o.MapFrom(v => v.Result));

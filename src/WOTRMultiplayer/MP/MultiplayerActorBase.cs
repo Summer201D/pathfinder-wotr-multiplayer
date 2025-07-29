@@ -212,13 +212,13 @@ namespace WOTRMultiplayer.MP
 
             if (rollResponse.RollValue.Result > 0)
             {
-                var intValue = Mapper.Map<NetworkRollIntValue>(rollResponse.RollValue);
+                var intValue = Mapper.Map<NetworkIntRollValue>(rollResponse.RollValue);
                 return intValue as TRollValue;
             }
 
             if (rollResponse.RollValue.DamageValues.Count > 0)
             {
-                var damageValues = Mapper.Map<NetworkRollDamageValues>(rollResponse.RollValue);
+                var damageValues = Mapper.Map<NetworkDamageListRollValue>(rollResponse.RollValue);
                 return damageValues as TRollValue;
             }
 

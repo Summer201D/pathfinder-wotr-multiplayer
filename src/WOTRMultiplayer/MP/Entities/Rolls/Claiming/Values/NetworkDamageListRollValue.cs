@@ -3,7 +3,7 @@ using System.Linq;
 
 namespace WOTRMultiplayer.MP.Entities.Rolls.Claiming.Values
 {
-    public class NetworkRollDamageValues : TypedRollValueBase<List<NetworkRollDamageRoll>>
+    public class NetworkDamageListRollValue : TypedRollValueBase<List<NetworkDamageRollValue>>
     {
         public override string ToString()
         {
