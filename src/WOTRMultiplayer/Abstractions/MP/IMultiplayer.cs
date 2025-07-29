@@ -66,9 +66,12 @@ namespace WOTRMultiplayer.Abstractions.MP
         bool OnBeforeRuleCalculateDamageTrigger(RuleCalculateDamage ruleCalculateDamage);
         void OnAfterRuleCalculateDamageTrigger(RuleCalculateDamage ruleCalculateDamage);
 
-        int OnAfterRollRuleHealDamage(RuleHealDamage instance, int result);
+        int OnAfterRollRuleHealDamage(RuleHealDamage instance, int unitsCount, int result);
 
-        bool OnBeforeRuleAttackRoleTrigger(RuleAttackRoll ruleAttackRoll);
-        void OnAfterRuleAttackRoleTrigger(RuleAttackRoll ruleAttackRoll, RuleRollD20 roll);
+        bool OnBeforeRuleAttackRoll(RuleAttackRoll ruleAttackRoll);
+        void OnAfterRuleAttackRollTrigger(RuleAttackRoll ruleAttackRoll);
+
+        void OnAfterRuleSavingThrowTrigger(RuleSavingThrow ruleSavingThrow);
+        void OnBeforeRuleSavingThrowRoll(RuleSavingThrow ruleSavingThrow);
     }
 }

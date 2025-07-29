@@ -1,0 +1,27 @@
+﻿using System.Collections.Generic;
+
+namespace WOTRMultiplayer.MP.Entities.Rolls
+{
+    public class HealDamageRoll : NetworkDiceRollBase
+    {
+        public string TargetId { get; set; }
+
+        public string AbilityId { get; set; }
+
+        public string AbilitySchoolId { get; set; }
+
+        public int UnitsCount { get; set; }
+
+        public float EmpowerModifier { get; set; }
+
+        public HealDamageRoll(string initiatorId, string ruleName, NetworkDiceRollType networkDiceRollType, int totalModifierBonus)
+            : base(initiatorId, ruleName, networkDiceRollType, totalModifierBonus)
+        {
+        }
+
+        protected override IEnumerable<string> GetUniquinessIdentifiers()
+        {
+            return [TargetId, AbilityId, AbilitySchoolId, UnitsCount.ToString(), EmpowerModifier];
+        }
+    }
+}

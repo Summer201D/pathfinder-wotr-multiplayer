@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using System.Reflection;
+using Kingmaker.EntitySystem.Entities;
 using Kingmaker.EntitySystem.Persistence;
 using Kingmaker.GameModes;
 using Kingmaker.RuleSystem;
@@ -183,7 +184,7 @@ namespace WOTRMultiplayer.MP
                     return true;
                 }
 
-                var rollId = GetDiceRollId(ruleCalculateDamage.Reason, NetworkDiceRollType.Damage);
+                var rollId = GetDamageRollId(ruleCalculateDamage);
                 if (rollId == null)
                 {
                     _logger.LogWarning("Damage Roll retrieving has been skipped due to unability to generate rollId. InitiatorName={initiatorName}, InitiatorId={initiatorId}", ruleCalculateDamage.Initiator?.CharacterName, ruleCalculateDamage.Initiator?.UniqueId);
@@ -235,7 +236,7 @@ namespace WOTRMultiplayer.MP
                     return;
                 }
 
-                var rollId = GetDiceRollId(ruleCalculateDamage.Reason, NetworkDiceRollType.Damage);
+                var rollId = GetDamageRollId(ruleCalculateDamage);
                 if (rollId == null)
                 {
                     _logger.LogWarning("Damage Roll saving has been skipped due to unability to generate rollId. InitiatorName={initiatorName}, InitiatorId={initiatorId}", ruleCalculateDamage.Initiator?.CharacterName, ruleCalculateDamage.Initiator?.UniqueId);
@@ -345,15 +346,43 @@ namespace WOTRMultiplayer.MP
             }
         }
 
-        public int OnAfterRollRuleHealDamage(RuleHealDamage ruleHealDamage, int result)
+        public int OnAfterRollRuleHealDamage(RuleHealDamage ruleHealDamage, int unitsCount, int result)
         {
-            _logger.LogInformation("Healing, SourceFactId={factId}, CasterId={casterId}, TargetId={targetId}, EmpowerBonus={emopower}, Result={result}",
-             ruleHealDamage.SourceFact?.UniqueId, ruleHealDamage.Initiator.UniqueId, ruleHealDamage.Target.UniqueId, ruleHealDamage.EmpowerModifier, result);
+            try
+            {
+                var multiplayerActor = GetMultiplayerActor();
+                if (multiplayerActor == null)
+                {
+                    return result;
+                }
 
-            return result;
+                var roll = CreateHealDamageRoll(NetworkDiceRollType.Heal, ruleHealDamage, unitsCount);
+                var rollId = GetDiceRollId(roll);
+                if (rollId == null)
+                {
+                    _logger.LogInformation("Unable to get rollId for healing, SourceFactId={factId}, CasterId={casterId}, TargetId={targetId}, EmpowerBonus={emopower}, Result={result}",
+                        ruleHealDamage.SourceFact?.UniqueId, ruleHealDamage.Initiator.UniqueId, ruleHealDamage.Target.UniqueId, ruleHealDamage.EmpowerModifier, result);
+                    return result;
+                }
+
+                if (multiplayerActor.ShouldStoreRoll(false))
+                {
+                    var value = new NetworkRollIntValue { Value = result };
+                    SaveRollValue(multiplayerActor, rollId.Value, value);
+                    return result;
+                }
+
+                var d20 = RetrieveD20Roll(multiplayerActor, roll, ruleHealDamage.Initiator);
+                return d20.Result;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Unable to handle {MethodBase.GetCurrentMethod().Name}");
+                throw;
+            }
         }
 
-        public bool OnBeforeRuleAttackRoleTrigger(RuleAttackRoll ruleAttackRoll)
+        public bool OnBeforeRuleAttackRoll(RuleAttackRoll ruleAttackRoll)
         {
             try
             {
@@ -364,26 +393,13 @@ namespace WOTRMultiplayer.MP
                 }
 
                 var weaponAttack = CreateAttackWithWeaponRoll(NetworkDiceRollType.Hit, ruleAttackRoll.RuleAttackWithWeapon);
-                var rollId = GetDiceRollId(weaponAttack);
-                if (rollId == null)
+                var d20 = RetrieveD20Roll(multiplayerActor, weaponAttack, ruleAttackRoll.Initiator);
+                if (d20 == null)
                 {
-                    _logger.LogWarning("Roll retrieving has been skipped due to unability to generate rollId. ReasonRuleType={reasonRuleType} InitiatorName={initiatorName}, InitiatorId={initiatorId}", ruleAttackRoll.GetType().Name, ruleAttackRoll.Initiator.CharacterName, ruleAttackRoll.Initiator.UniqueId);
                     return true;
                 }
 
-                var roll = multiplayerActor.RetrieveRoll<NetworkRollIntValue>(rollId.Value, weaponAttack.InitiatorId);
-                if (roll == null)
-                {
-                    _logger.LogCritical("Failed to acquire Attack roll from remote player which guarantees desync in the game. RollType={rollType}", ruleAttackRoll.GetType().Name);
-                    _gameInteractionService.ShowModalMessage($"Failed to acquire roll from remote player which guarantees desync in the game.");
-                    return true;
-                }
-
-                var d20 = RuleRollD20.FromInt(ruleAttackRoll.Initiator, roll.Value);
-                d20.RollHistory = [.. roll.RollHistory];
                 ruleAttackRoll.D20 = d20;
-
-                _logger.LogInformation("Roll result has been acquired from another player. RollId={rollId}, Result={result}, RollType={rollType}", rollId.Value, d20.Result, ruleAttackRoll.GetType().Name);
                 return false;
             }
             catch (Exception ex)
@@ -393,7 +409,7 @@ namespace WOTRMultiplayer.MP
             }
         }
 
-        public void OnAfterRuleAttackRoleTrigger(RuleAttackRoll ruleAttackRoll, RuleRollD20 roll)
+        public void OnAfterRuleAttackRollTrigger(RuleAttackRoll ruleAttackRoll)
         {
             try
             {
@@ -404,21 +420,47 @@ namespace WOTRMultiplayer.MP
                 }
 
                 var weaponAttack = CreateAttackWithWeaponRoll(NetworkDiceRollType.Hit, ruleAttackRoll.RuleAttackWithWeapon);
-                var rollId = GetDiceRollId(weaponAttack);
-                if (rollId == null)
+                SaveIntRollValue(multiplayerActor, weaponAttack, ruleAttackRoll.D20);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Unable to handle {MethodBase.GetCurrentMethod().Name}");
+                throw;
+            }
+        }
+
+        public void OnAfterRuleSavingThrowTrigger(RuleSavingThrow ruleSavingThrow)
+        {
+            try
+            {
+                var multiplayerActor = GetMultiplayerActor();
+                if (multiplayerActor == null || !multiplayerActor.ShouldStoreRoll(false))
                 {
-                    _logger.LogWarning("[Attack Roll] saving has been skipped due to unability to generate rollId. ReasonRuleType={reasonRuleType} InitiatorName={initiatorName}, InitiatorId={initiatorId}", ruleAttackRoll.GetType().Name, ruleAttackRoll.Initiator.CharacterName, ruleAttackRoll.Initiator.UniqueId);
                     return;
                 }
 
-                var rollValue = new NetworkRollIntValue
+                var savingThrow = CreateSavingThrowRoll(NetworkDiceRollType.Hit, ruleSavingThrow);
+                SaveIntRollValue(multiplayerActor, savingThrow, ruleSavingThrow.D20);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Unable to handle {MethodBase.GetCurrentMethod().Name}");
+                throw;
+            }
+        }
+
+        public void OnBeforeRuleSavingThrowRoll(RuleSavingThrow ruleSavingThrow)
+        {
+            try
+            {
+                var multiplayerActor = GetMultiplayerActor();
+                if (multiplayerActor == null || multiplayerActor.ShouldStoreRoll(false))
                 {
-                    RollHistory = [.. roll.RollHistory ?? []],
-                    Value = roll.m_Result
-                };
+                    return;
+                }
 
-                SaveRollValue(multiplayerActor, rollId.Value, rollValue);
-
+                var savingThrow = CreateSavingThrowRoll(NetworkDiceRollType.Hit, ruleSavingThrow);
+                ruleSavingThrow.D20 = RetrieveD20Roll(multiplayerActor, savingThrow, ruleSavingThrow.Initiator);
             }
             catch (Exception ex)
             {
@@ -594,7 +636,6 @@ namespace WOTRMultiplayer.MP
         {
             NetworkDiceRollBase roll = ruleReason.Rule switch
             {
-                RuleAttackWithWeapon ruleAttackWithWeapon => CreateAttackWithWeaponRoll(networkDiceRollType, ruleAttackWithWeapon),
                 RulePartyStatCheck rulePartyStatCheck => CreatePartyStatCheckRoll(networkDiceRollType, rulePartyStatCheck),
                 RuleInitiativeRoll ruleInitiativeRoll => CreateInitiativeRoll(networkDiceRollType, ruleInitiativeRoll),
                 _ => null,
@@ -615,12 +656,128 @@ namespace WOTRMultiplayer.MP
             return id;
         }
 
+        private void SaveIntRollValue(IMultiplayerActor multiplayerActor, NetworkDiceRollBase networkDiceRoll, RuleRollD20 ruleRollD20)
+        {
+            var rollType = networkDiceRoll.GetType().Name;
+            var rollId = GetDiceRollId(networkDiceRoll);
+            if (rollId == null)
+            {
+                _logger.LogWarning("Roll saving has been skipped due to unability to generate rollId. RollType={rollType}, InitiatorId={initiatorId}", rollType, networkDiceRoll.InitiatorId);
+                return;
+            }
+
+            var rollValue = new NetworkRollIntValue
+            {
+                RollHistory = [.. ruleRollD20.RollHistory ?? []],
+                Value = ruleRollD20.m_Result
+            };
+
+            SaveRollValue(multiplayerActor, rollId.Value, rollValue);
+        }
+
         private void SaveRollValue(IMultiplayerActor multiplayerActor, int rollId, RollValueBase rollValue)
         {
             var claimingList = multiplayerActor.GetOtherPlayers().Select(i => i.Id).ToList();
             var playerId = multiplayerActor.GetLocalPlayerId();
             _diceRollStorage.Add(rollId, claimingList, rollValue);
             _logger.LogInformation("Roll value has been stored. RollId={rollId}, RollValueType={rollValueType}, ClaimingListCount={claimingListCount}", rollId, rollValue.GetType().Name, claimingList.Count);
+        }
+
+        private int? GetDamageRollId(RuleCalculateDamage ruleCalculateDamage)
+        {
+            NetworkDiceRollBase roll = ruleCalculateDamage.Reason.Rule switch
+            {
+                RuleAttackWithWeapon ruleAttackWithWeapon => CreateAttackWithWeaponRoll(NetworkDiceRollType.Damage, ruleAttackWithWeapon),
+                null => CreateAbilityUse(NetworkDiceRollType.Damage, ruleCalculateDamage),
+                _ => null,
+            };
+
+            if (roll == null)
+            {
+                _logger.LogWarning("Unable to get damage roll id due to unhandled rule type. RuleType={ruleType} InitiatorId={initiatorId}", ruleCalculateDamage.Reason.Rule?.GetType().Name, ruleCalculateDamage.Initiator?.UniqueId);
+                return null;
+            }
+
+            var rollId = GetDiceRollId(roll);
+            if (rollId == null)
+            {
+                _logger.LogWarning("Unable to get damage roll id due to unability to generate rollId. InitiatorName={initiatorName}, InitiatorId={initiatorId}", ruleCalculateDamage.Initiator?.CharacterName, ruleCalculateDamage.Initiator?.UniqueId);
+                return null;
+            }
+
+            return rollId.Value;
+        }
+
+        private RuleRollD20 RetrieveD20Roll(IMultiplayerActor multiplayerActor, NetworkDiceRollBase networkDiceRoll, UnitEntityData initiator)
+        {
+            try
+            {
+                var rollType = networkDiceRoll.GetType().Name;
+                var rollId = GetDiceRollId(networkDiceRoll);
+                if (rollId == null)
+                {
+                    _logger.LogWarning("Unable to retrieve roll due to null rollId. RollType={rollType}, InitiatorId={initiatorId}", rollType, initiator.UniqueId);
+                    return null;
+                }
+
+                var roll = multiplayerActor.RetrieveRoll<NetworkRollIntValue>(rollId.Value, networkDiceRoll.InitiatorId);
+                if (roll == null)
+                {
+                    _logger.LogCritical("Failed to acquire roll from remote player which guarantees desync in the game. RollId={rollId}, RollType={rollType}, InitiatorId={initiatorId}", rollId.Value, rollType, initiator.UniqueId);
+                    _gameInteractionService.ShowModalMessage($"Failed to acquire {networkDiceRoll.RuleName} roll from remote player which guarantees desync in the game.");
+                    return null;
+                }
+
+                var d20 = RuleRollD20.FromInt(initiator, roll.Value);
+                d20.RollHistory = [.. roll.RollHistory];
+
+                _logger.LogInformation("D20 Roll has been acquired from another player. RollId={rollId}, Result={result}, RollType={rollType}, InitiatorId={initiatorId}", rollId.Value, d20.Result, rollType, initiator.UniqueId);
+                return d20;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Unable to handle {MethodBase.GetCurrentMethod().Name}");
+                throw;
+            }
+        }
+
+        private HealDamageRoll CreateHealDamageRoll(NetworkDiceRollType diceRollType, RuleHealDamage ruleHealDamage, int unitsCount)
+        {
+            var roll = new HealDamageRoll(ruleHealDamage.Initiator.UniqueId, ruleHealDamage.GetType().Name, diceRollType, ruleHealDamage.Bonus)
+            {
+                AbilityId = ruleHealDamage.Reason.Ability?.UniqueId,
+                AbilitySchoolId = ruleHealDamage.Reason.Ability?.Spellbook?.Blueprint.name,
+                TargetId = ruleHealDamage.Target?.UniqueId,
+                UnitsCount = unitsCount,
+                EmpowerModifier = ruleHealDamage.EmpowerModifier,
+            };
+
+            return roll;
+        }
+
+        private AbilityDamageRoll CreateAbilityUse(NetworkDiceRollType diceRollType, RuleCalculateDamage ruleCalculateDamage)
+        {
+            var roll = new AbilityDamageRoll(ruleCalculateDamage.Initiator.UniqueId, ruleCalculateDamage.ParentRule?.GetType().Name, diceRollType, ruleCalculateDamage.TotalBonusValue)
+            {
+                AbilityId = ruleCalculateDamage.Reason.Ability?.UniqueId,
+                AbilitySchoolId = ruleCalculateDamage.Reason.Ability?.Spellbook?.Blueprint.name,
+                TargetId = ruleCalculateDamage.Target?.UniqueId
+            };
+
+            return roll;
+        }
+
+        private SavingThrowRoll CreateSavingThrowRoll(NetworkDiceRollType diceRollType, RuleSavingThrow ruleSavingThrow)
+        {
+            var roll = new SavingThrowRoll(ruleSavingThrow.Initiator.UniqueId, ruleSavingThrow.GetType().Name, diceRollType, ruleSavingThrow.TotalBonusValue)
+            {
+                StatType = ruleSavingThrow.StatType,
+                ReasonAbilityName = ruleSavingThrow.Reason?.Ability?.NameForAcronym,
+                ReasonCasterId = ruleSavingThrow.Reason?.Caster?.UniqueId,
+                DifficultyClass = ruleSavingThrow.DifficultyClass,
+            };
+
+            return roll;
         }
 
         private PartyStatCheckRoll CreatePartyStatCheckRoll(NetworkDiceRollType diceRollType, RulePartyStatCheck partyStatCheck)

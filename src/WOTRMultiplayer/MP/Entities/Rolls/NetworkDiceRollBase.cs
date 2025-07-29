@@ -33,7 +33,7 @@ namespace WOTRMultiplayer.MP.Entities.Rolls
 
         private IEnumerable<string> GetBaseUniquinessIdentifiers()
         {
-            return [GetType().Name, InitiatorId, RuleName, TotalModifiersBonus.ToString()];
+            return [GetType().Name, RollType.ToString(), InitiatorId, RuleName, TotalModifiersBonus.ToString()];
         }
 
         protected abstract IEnumerable<string> GetUniquinessIdentifiers();
