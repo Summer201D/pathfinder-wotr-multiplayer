@@ -4,7 +4,6 @@ using System.Reflection;
 using Kingmaker.EntitySystem.Entities;
 using Kingmaker.EntitySystem.Persistence;
 using Kingmaker.GameModes;
-using Kingmaker.RuleSystem;
 using Kingmaker.RuleSystem.Rules;
 using Kingmaker.RuleSystem.Rules.Damage;
 using Microsoft.Extensions.Logging;
@@ -690,18 +689,6 @@ namespace WOTRMultiplayer.MP
             }
 
             return _gameInteractionService.GetActionsState();
-        }
-
-        private int? GetDiceRollId(RuleReason ruleReason, NetworkDiceRollType networkDiceRollType)
-        {
-            NetworkDiceRollBase roll = ruleReason.Rule switch
-            {
-                RulePartyStatCheck rulePartyStatCheck => CreatePartyStatCheckRoll(networkDiceRollType, rulePartyStatCheck),
-                RuleInitiativeRoll ruleInitiativeRoll => CreateInitiativeRoll(networkDiceRollType, ruleInitiativeRoll),
-                _ => null,
-            };
-
-            return GetDiceRollId(roll);
         }
 
         private int? GetDiceRollId(NetworkDiceRollBase roll)
