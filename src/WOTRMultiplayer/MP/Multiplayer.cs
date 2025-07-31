@@ -857,23 +857,6 @@ namespace WOTRMultiplayer.MP
             return roll;
         }
 
-        /// <summary>
-        /// TODO: delete since it's been handled in RuleSkillCheck handler
-        /// </summary>
-        /// <param name="diceRollType"></param>
-        /// <param name="partyStatCheck"></param>
-        /// <returns></returns>
-        private PartyStatCheckRoll CreatePartyStatCheckRoll(NetworkDiceRollType diceRollType, RulePartyStatCheck partyStatCheck)
-        {
-            var roll = new PartyStatCheckRoll(partyStatCheck.Initiator.UniqueId, partyStatCheck.GetType().Name, diceRollType, partyStatCheck.TotalBonusValue)
-            {
-                DifficultyClass = partyStatCheck.DifficultyClass,
-                StatType = partyStatCheck.StatType.ToString()
-            };
-
-            return roll;
-        }
-
         private AttackRoll CreateAttackRoll(NetworkDiceRollType diceRollType, RuleAttackRoll ruleAttackRoll)
         {
             var roll = new AttackRoll(ruleAttackRoll.Initiator.UniqueId, ruleAttackRoll.GetType().Name, diceRollType, ruleAttackRoll.AttackBonus)

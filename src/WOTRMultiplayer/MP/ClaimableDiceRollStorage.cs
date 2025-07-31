@@ -13,7 +13,7 @@ namespace WOTRMultiplayer.MP
     public class ClaimableDiceRollStorage : IDiceRollStorage
     {
         private readonly TimeSpan _defaultRetrieveDelay = TimeSpan.FromMilliseconds(50);
-        private readonly object _actionLock = new object();
+        private readonly object _actionLock = new();
         private readonly ConcurrentDictionary<int, ClaimableDiceRollEntry> _rolls = new();
 
         private readonly ILogger<ClaimableDiceRollStorage> _logger;

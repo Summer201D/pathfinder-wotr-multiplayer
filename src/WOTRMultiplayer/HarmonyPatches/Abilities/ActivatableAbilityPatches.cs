@@ -13,7 +13,7 @@ namespace WOTRMultiplayer.HarmonyPatches.Abilities
     {
         [HarmonyPatch(typeof(ActivatableAbility), nameof(ActivatableAbility.SetIsOn))]
         [HarmonyPostfix]
-        public static void ActivatableAbility_SetIsOn_Postfix(ActivatableAbility __instance, bool value, UnitEntityData target)
+        public static void ActivatableAbility_SetIsOn_Postfix(ActivatableAbility __instance, UnitEntityData target)
         {
             if (!Main.Multiplayer.IsActive)
             {
@@ -32,7 +32,7 @@ namespace WOTRMultiplayer.HarmonyPatches.Abilities
                 }
             }
 
-            if (__instance.Owner.Unit.UniqueId.StartsWith("description-helper-unit"))
+            if (__instance.Owner.Unit.UniqueId.StartsWith("description-helper-unit", System.StringComparison.OrdinalIgnoreCase))
             {
                 // happens when you hover over enemy creature in top list (Turn based combat)
                 Main.GetLogger<ActivatableAbilityPatches>().LogWarning("Skipping description activation");

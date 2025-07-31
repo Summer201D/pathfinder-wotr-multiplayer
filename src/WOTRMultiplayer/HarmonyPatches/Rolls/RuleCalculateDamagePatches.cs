@@ -9,7 +9,7 @@ namespace WOTRMultiplayer.HarmonyPatches.Rolls
     {
         [HarmonyPatch(typeof(RuleCalculateDamage), nameof(RuleCalculateDamage.OnTrigger))]
         [HarmonyPostfix]
-        public static void RuleCalculateDamage_OnTrigger_Postfix(RuleCalculateDamage __instance, RulebookEventContext context)
+        public static void RuleCalculateDamage_OnTrigger_Postfix(RuleCalculateDamage __instance)
         {
             if (!Main.Multiplayer.IsActive)
             {
@@ -21,7 +21,7 @@ namespace WOTRMultiplayer.HarmonyPatches.Rolls
 
         [HarmonyPatch(typeof(RuleCalculateDamage), nameof(RuleCalculateDamage.OnTrigger))]
         [HarmonyPrefix]
-        public static bool RuleCalculateDamage_OnTrigger_Prefix(RuleCalculateDamage __instance, RulebookEventContext context)
+        public static bool RuleCalculateDamage_OnTrigger_Prefix(RuleCalculateDamage __instance)
         {
             if (!Main.Multiplayer.IsActive)
             {

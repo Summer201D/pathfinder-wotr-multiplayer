@@ -698,7 +698,6 @@ namespace WOTRMultiplayer.MP
 
         private NotifyCharactersOwnerChanged CreateNotifyCharactersOwnerChanged()
         {
-            Game.Characters.Select((character, index) => new Networking.Messages.NetworkCharacterOwner { CharacterIndex = index, PlayerId = character.Owner.Id });
             var charactersOwnerChanged = new NotifyCharactersOwnerChanged
             {
                 Owners = [.. Game.Characters.Select((character, index) => new Networking.Messages.NetworkCharacterOwner { CharacterIndex = index, PlayerId = character.Owner.Id })]

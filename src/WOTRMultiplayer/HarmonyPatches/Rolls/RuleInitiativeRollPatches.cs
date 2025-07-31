@@ -14,7 +14,7 @@ namespace WOTRMultiplayer.HarmonyPatches.Rolls
     {
         [HarmonyPatch(typeof(RuleInitiativeRoll), nameof(RuleInitiativeRoll.OnTrigger))]
         [HarmonyPostfix]
-        public static void RuleInitiativeRoll_OnTrigger_Postfix(RuleInitiativeRoll __instance, RulebookEventContext context)
+        public static void RuleInitiativeRoll_OnTrigger_Postfix(RuleInitiativeRoll __instance)
         {
             if (!Main.Multiplayer.IsActive)
             {

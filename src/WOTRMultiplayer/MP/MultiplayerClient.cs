@@ -490,7 +490,7 @@ namespace WOTRMultiplayer.MP
         private void OnPlayerCombatTurnEnded(PlayerCombatTurnEnded ended)
         {
             Logger.LogInformation($"Received {nameof(PlayerCombatTurnEnded)}. Round={{round}}, UnitId={{unitId}}", ended.Round, ended.UnitId);
-            if (Game.Combat.Round == ended.Round && string.Equals(Game.Combat.Turn?.UnitId, ended.UnitId))
+            if (Game.Combat.Round == ended.Round && string.Equals(Game.Combat.Turn?.UnitId, ended.UnitId, StringComparison.OrdinalIgnoreCase))
             {
                 EndLocalTurn();
             }
