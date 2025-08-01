@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using AutoMapper;
 using Microsoft.Extensions.Logging;
@@ -233,6 +235,26 @@ namespace WOTRMultiplayer.MP
 
         protected abstract Task<DiceRollValueResponse> RetrieveRoll(DiceRollValueRequest rollRequest, string unitId);
 
+        protected abstract void OnLocalPlayerTurnStart();
+
+        protected abstract void OnLocalPlayerTurnEnded();
+
+        protected abstract void Send(object message);
+
+        protected string StoreSaveFile(byte[] content)
+        {
+            var baseUnityPath = GameInteraction.GetSaveGamePath();
+            var multiplayerPath = Regex.Replace(baseUnityPath, "(((\\\\|\\/)+)(Saved Games)((\\\\|\\/)+))$", "/Saved Multiplayer Games/");
+            var savePath = Path.Combine(multiplayerPath, "latest save.zks");
+            Logger.LogInformation("Save game path changed. Path={path}", savePath);
+            if (!FileSystem.WriteFile(savePath, content))
+            {
+                return null;
+            }
+
+            return savePath;
+        }
+
         protected bool ShouldNotifyAboutAbilityUse(string sourceUnitId)
         {
             if (Game.Combat == null)
@@ -293,8 +315,6 @@ namespace WOTRMultiplayer.MP
 
             return response;
         }
-
-        protected abstract void Send(object message);
 
         protected bool IsRolledByHost(bool silent)
         {
@@ -387,10 +407,6 @@ namespace WOTRMultiplayer.MP
         protected virtual void OnTurnStartConfirmed()
         {
         }
-
-        protected abstract void OnLocalPlayerTurnStart();
-
-        protected abstract void OnLocalPlayerTurnEnded();
 
         protected NetworkCharacterOwnership GetCharacterOwnership(string unitId)
         {
