@@ -22,7 +22,6 @@ using Kingmaker.UI;
 using Kingmaker.UI.MVVM._PCView.Dialog.Dialog;
 using Kingmaker.UI.MVVM._PCView.InGame;
 using Kingmaker.UI.MVVM._VM.Dialog.Dialog;
-using Kingmaker.UI.MVVM._VM.Lockpick;
 using Kingmaker.UnitLogic.Abilities;
 using Kingmaker.UnitLogic.ActivatableAbilities;
 using Kingmaker.UnitLogic.Commands;
@@ -499,18 +498,9 @@ namespace WOTRMultiplayer.GameInteraction
                     return;
                 }
 
+                var selectedUnits = click.SelectedUnits.Select(GetUnitEntity).ToList();
                 _mainThreadAccessor.Enqueue(() =>
                 {
-                    // TODO: check
-                    if (LockpickVM.NeedLockpick(mapObject.View))
-                    {
-                        EventBus.RaiseEvent(delegate (ILockpickUIHandler h)
-                        {
-                            h.HandleLockpickRequest(mapObject.View, click.IsTurnBasedModeClick);
-                        });
-                    }
-
-                    var selectedUnits = click.SelectedUnits.Select(GetUnitEntity).ToList();
                     ClickMapObjectHandler.Interact(mapObject.View.gameObject, selectedUnits, forceOvertipInteractions: false, click.MuteEvents);
                 });
             }
