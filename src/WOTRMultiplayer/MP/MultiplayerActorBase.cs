@@ -186,7 +186,8 @@ namespace WOTRMultiplayer.MP
 
         public void OnClickUnit(NetworkClick click)
         {
-            if (!(Game.Combat?.Turn?.IsLocalPlayer ?? false) || GameInteraction.CombatTurnHasBeenFinished())
+            if (Game.Combat == null && !IsControlledByLocalPlayer(click.SelectedUnits)
+                || Game.Combat != null && (!(Game.Combat.Turn?.IsLocalPlayer ?? false) || GameInteraction.CombatTurnHasBeenFinished()))
             {
                 return;
             }
