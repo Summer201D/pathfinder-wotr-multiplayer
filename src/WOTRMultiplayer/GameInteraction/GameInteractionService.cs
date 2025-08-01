@@ -481,7 +481,6 @@ namespace WOTRMultiplayer.GameInteraction
             }
             catch (Exception ex)
             {
-
                 _logger.LogError(ex, "Unable to initiate click handler. HandlerTy={handlerType}", typeof(ClickGroundHandler));
                 throw;
             }
@@ -506,7 +505,6 @@ namespace WOTRMultiplayer.GameInteraction
             }
             catch (Exception ex)
             {
-
                 _logger.LogError(ex, "Unable to initiate click handler. HandlerTy={handlerType}", typeof(ClickGroundHandler));
                 throw;
             }

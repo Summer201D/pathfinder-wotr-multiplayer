@@ -220,7 +220,7 @@ namespace WOTRMultiplayer.MP
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"Unable to handle {MethodBase.GetCurrentMethod().Name}");
+                _logger.LogError(ex, "Unable to handle {methodName}", MethodBase.GetCurrentMethod().Name);
                 throw;
             }
         }
@@ -258,7 +258,7 @@ namespace WOTRMultiplayer.MP
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"Unable to handle {MethodBase.GetCurrentMethod().Name}");
+                _logger.LogError(ex, "Unable to handle {methodName}", MethodBase.GetCurrentMethod().Name);
                 throw;
             }
         }
@@ -294,7 +294,7 @@ namespace WOTRMultiplayer.MP
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"Unable to handle {MethodBase.GetCurrentMethod().Name}");
+                _logger.LogError(ex, "Unable to handle {methodName}", MethodBase.GetCurrentMethod().Name);
                 throw;
             }
         }
@@ -321,7 +321,7 @@ namespace WOTRMultiplayer.MP
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"Unable to handle {MethodBase.GetCurrentMethod().Name}");
+                _logger.LogError(ex, "Unable to handle {methodName}", MethodBase.GetCurrentMethod().Name);
                 throw;
             }
         }
@@ -341,7 +341,7 @@ namespace WOTRMultiplayer.MP
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"Unable to handle {MethodBase.GetCurrentMethod().Name}");
+                _logger.LogError(ex, "Unable to handle {methodName}", MethodBase.GetCurrentMethod().Name);
                 throw;
             }
         }
@@ -361,7 +361,7 @@ namespace WOTRMultiplayer.MP
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"Unable to handle {MethodBase.GetCurrentMethod().Name}");
+                _logger.LogError(ex, "Unable to handle {methodName}", MethodBase.GetCurrentMethod().Name);
                 throw;
             }
         }
@@ -381,7 +381,7 @@ namespace WOTRMultiplayer.MP
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"Unable to handle {MethodBase.GetCurrentMethod().Name}");
+                _logger.LogError(ex, "Unable to handle {methodName}", MethodBase.GetCurrentMethod().Name);
                 throw;
             }
         }
@@ -408,7 +408,7 @@ namespace WOTRMultiplayer.MP
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"Unable to handle {MethodBase.GetCurrentMethod().Name}");
+                _logger.LogError(ex, "Unable to handle {methodName}", MethodBase.GetCurrentMethod().Name);
                 throw;
             }
         }
@@ -428,7 +428,7 @@ namespace WOTRMultiplayer.MP
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"Unable to handle {MethodBase.GetCurrentMethod().Name}");
+                _logger.LogError(ex, "Unable to handle {methodName}", MethodBase.GetCurrentMethod().Name);
                 throw;
             }
         }
@@ -455,7 +455,7 @@ namespace WOTRMultiplayer.MP
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"Unable to handle {MethodBase.GetCurrentMethod().Name}");
+                _logger.LogError(ex, "Unable to handle {methodName}", MethodBase.GetCurrentMethod().Name);
                 throw;
             }
         }
@@ -475,7 +475,7 @@ namespace WOTRMultiplayer.MP
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"Unable to handle {MethodBase.GetCurrentMethod().Name}");
+                _logger.LogError(ex, "Unable to handle {methodName}", MethodBase.GetCurrentMethod().Name);
                 throw;
             }
         }
@@ -503,7 +503,7 @@ namespace WOTRMultiplayer.MP
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"Unable to handle {MethodBase.GetCurrentMethod().Name}");
+                _logger.LogError(ex, "Unable to handle {methodName}", MethodBase.GetCurrentMethod().Name);
                 throw;
             }
         }
@@ -523,7 +523,7 @@ namespace WOTRMultiplayer.MP
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"Unable to handle {MethodBase.GetCurrentMethod().Name}");
+                _logger.LogError(ex, "Unable to handle {methodName}", MethodBase.GetCurrentMethod().Name);
                 throw;
             }
         }
