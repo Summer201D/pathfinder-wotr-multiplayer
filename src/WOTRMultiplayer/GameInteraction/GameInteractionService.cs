@@ -617,32 +617,26 @@ namespace WOTRMultiplayer.GameInteraction
             _mainThreadAccessor.Enqueue(() =>
             {
                 var mapObject = GetMapObject(networkLootContainer.Id);
-                List<ItemEntity> transferList = [];
-                if (mapObject == null)
-                {
-                    var neareastLootableContainers = GetNeareastLootableMapObjects(networkLootContainer.Position);
-                    foreach (var container in neareastLootableContainers)
-                    {
-                        var interaction = (InteractionLootPart)container.Interactions.FirstOrDefault(i => i is InteractionLootPart);
+                var lookupTargets = mapObject != null ? [mapObject]
+                    : GetNeareastLootableMapObjects(networkLootContainer.Position);
 
-                        transferList = [.. interaction.Loot.Items.Where(item => networkLootContainer.Items.Any(ni => IsSameItem(item, ni)))];
-                        if (transferList.Count == networkLootContainer.Items.Count)
-                        {
-                            mapObject = container;
-                            break;
-                        }
+                foreach (var container in lookupTargets)
+                {
+                    var interaction = (InteractionLootPart)container.Interactions.FirstOrDefault(i => i is InteractionLootPart);
+
+                    List<LootTransferPair> transferList = [.. interaction.Loot.Items
+                            .Select(item => new LootTransferPair { ItemEntity = item, NetworkItem = networkLootContainer.Items.FirstOrDefault(ni => IsSameItem(item, ni)) })
+                            .Where(x => x.NetworkItem != null)];
+
+                    if (transferList.Count == networkLootContainer.Items.Count)
+                    {
+                        TransferItems(interaction.Loot, Game.Instance.Player.Inventory, transferList);
+                        RefreshLootUI();
+                        return;
                     }
                 }
 
-                if (mapObject == null)
-                {
-                    _logger.LogCritical("Unable to find valid nearest lootable map object. Position={position}", networkLootContainer.Position);
-                    return;
-                }
-
-                var objectInteraction = (InteractionLootPart)mapObject.Interactions.FirstOrDefault(i => i is InteractionLootPart); ;
-                TransferItems(objectInteraction.Loot, Game.Instance.Player.Inventory, transferList);
-                RefreshLootUI();
+                _logger.LogCritical("Unable to find valid nearest lootable map object. ContainerId={containerId}, Position={position}", networkLootContainer.Id, networkLootContainer.Position);
             });
         }
 
@@ -670,11 +664,19 @@ namespace WOTRMultiplayer.GameInteraction
             }
         }
 
-        private void TransferItems(ItemsCollection source, ItemsCollection target, List<ItemEntity> transferList)
+        private void TransferItems(ItemsCollection source, ItemsCollection target, List<LootTransferPair> transferList)
         {
-            foreach (ItemEntity item in transferList)
+            foreach (var transfer in transferList)
             {
-                source.Transfer(item, item.Count, target);
+                if (!string.Equals(transfer.ItemEntity.UniqueId, transfer.NetworkItem.UniqueId, StringComparison.OrdinalIgnoreCase))
+                {
+                    _logger.LogWarning("Transfer item id is mismatched, updating... ItemId={itemId}, NetworkItemId, ItemName={itemName}, NetworkItemName={networkItemName}",
+                        transfer.ItemEntity.UniqueId, transfer.NetworkItem.UniqueId, transfer.ItemEntity.Name, transfer.NetworkItem.Name);
+
+                    transfer.ItemEntity.UniqueId = transfer.NetworkItem.UniqueId;
+                }
+
+                source.Transfer(transfer.ItemEntity, transfer.NetworkItem.Count, target);
             }
         }
 
@@ -889,6 +891,13 @@ namespace WOTRMultiplayer.GameInteraction
             }
 
             return Game.Instance.State.Units.FirstOrDefault(u => string.Equals(u.UniqueId, uniqueId, StringComparison.OrdinalIgnoreCase));
+        }
+
+        private class LootTransferPair
+        {
+            public ItemEntity ItemEntity { get; set; }
+
+            public NetworkLootItem NetworkItem { get; set; }
         }
     }
 }
