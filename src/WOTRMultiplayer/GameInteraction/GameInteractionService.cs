@@ -497,14 +497,8 @@ namespace WOTRMultiplayer.GameInteraction
             {
                 try
                 {
-                    var mapObject = GetMapObject(click.MapObjectId);
-                    if (mapObject == null && click.IsLootBagMapObject)
-                    {
-                        // each client generates a random map object ID, so the easiest way is to look for the nearest bag(assuming its location is relatively the same)
-                        mapObject = GetNeareastLootableMapObjects(click.WorldPosition).FirstOrDefault(o => o is DroppedLoot.EntityData);
-                        _logger.LogInformation("Using nearest lootbag as a map object. MapObjectId={mapObjectId}, Position={bagIndex}", mapObject?.UniqueId, mapObject?.Position);
-                    }
-
+                    // each client generates a random map object ID, so the easiest way is to look for the nearest bag(assuming its location is relatively the same)
+                    var mapObject = click.IsLootBagMapObject ? GetNeareastLootBagMapObject(click.WorldPosition) : GetMapObject(click.MapObjectId);
                     if (mapObject == null)
                     {
                         _logger.LogWarning("Unable to click missing map object. MapObjectId={uniqueId}", click.MapObjectId);
@@ -685,6 +679,14 @@ namespace WOTRMultiplayer.GameInteraction
                 entity.Inventory.DropItem(itemToDrop);
                 _logger.LogInformation("Item has been dropped. EntityId={entityId}, ItemId={itemId}", dropItem.OwnerEntityId, dropItem.Item.UniqueId);
             });
+        }
+
+        private MapObjectEntityData GetNeareastLootBagMapObject(NetworkVector3 position)
+        {
+            var allNearest = GetNeareastLootableMapObjects(position);
+            var lootbag = allNearest.FirstOrDefault(o => o is DroppedLoot.EntityData);
+            _logger.LogInformation("Using nearest lootbag as a map object. MapObjectId={mapObjectId}, Position={bagIndex}", lootbag?.UniqueId, lootbag?.Position);
+            return lootbag;
         }
 
         private bool IsSameItem(ItemEntity itemEntity, NetworkItem networkLootItem)
