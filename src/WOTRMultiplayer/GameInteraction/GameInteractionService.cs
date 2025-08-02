@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -49,6 +50,7 @@ namespace WOTRMultiplayer.GameInteraction
         private readonly ILogger<GameInteractionService> _logger;
         private readonly IMainThreadAccessor _mainThreadAccessor;
         private readonly IResourceProvider _resourceProvider;
+        private ConcurrentDictionary<string, bool> _droppedItemsByAnotherPlayer = new();
 
         public GameInteractionService(
             ILogger<GameInteractionService> logger,
@@ -494,9 +496,24 @@ namespace WOTRMultiplayer.GameInteraction
             try
             {
                 var mapObject = GetMapObject(click.MapObjectId);
+                if (mapObject == null && click.LootBagIndex != -1)
+                {
+                    var lootBags = Game.Instance.State.MapObjects.All
+                        .Where(x => x is DroppedLoot.EntityData)
+                        .Select(x => new { Item = x, Index = Game.Instance.State.MapObjects.IndexOf(x) })
+                        .OrderBy(x => x.Index)
+                        .ToList();
+
+                    if (lootBags.Count > click.LootBagIndex)
+                    {
+                        mapObject = lootBags[click.LootBagIndex].Item;
+                        _logger.LogInformation("Found loot bag by lootbag index. MapObjectId={mapObjectId}, LootBagIndex={bagIndex}", click.MapObjectId, click.LootBagIndex);
+                    }
+                }
+
                 if (mapObject == null)
                 {
-                    _logger.LogError("Unable to find map object. UniqueId={uniqueId}", click.MapObjectId);
+                    _logger.LogWarning("Unable to click missing map object. UniqueId={uniqueId}", click.MapObjectId);
                     return;
                 }
 
@@ -648,7 +665,36 @@ namespace WOTRMultiplayer.GameInteraction
             });
         }
 
-        private bool IsSameItem(ItemEntity itemEntity, NetworkLootItem networkLootItem)
+        public bool HasBeenDroppedByAnotherPlayer(NetworkDropItem dropItem)
+        {
+            return _droppedItemsByAnotherPlayer.TryRemove(dropItem.Item.UniqueId, out _);
+        }
+
+        public void DropItem(NetworkDropItem dropItem)
+        {
+            var entity = GetUnitEntity(dropItem.OwnerEntityId);
+            if (entity == null)
+            {
+                _logger.LogError("Unable to find entity to drop item. EntityId={entityId}", dropItem.OwnerEntityId);
+                return;
+            }
+
+            var itemToDrop = entity.Inventory.FirstOrDefault(e => IsSameItem(e, dropItem.Item));
+            if (itemToDrop == null)
+            {
+                _logger.LogWarning("Unable to find item to drop. EntityId={entityId}, ItemId={itemId}", dropItem.OwnerEntityId, dropItem.Item.UniqueId);
+                return;
+            }
+
+            _mainThreadAccessor.Enqueue(() =>
+            {
+                _droppedItemsByAnotherPlayer.TryAdd(dropItem.Item.UniqueId, true);
+                entity.Inventory.DropItem(itemToDrop);
+                _logger.LogInformation("Item has been dropped. EntityId={entityId}, ItemId={itemId}", dropItem.OwnerEntityId, dropItem.Item.UniqueId);
+            });
+        }
+
+        private bool IsSameItem(ItemEntity itemEntity, NetworkItem networkLootItem)
         {
             return string.Equals(itemEntity.NameForAcronym, networkLootItem.Name, StringComparison.OrdinalIgnoreCase)
                 && (string.Equals(itemEntity.UniqueId, networkLootItem.UniqueId, StringComparison.OrdinalIgnoreCase)
@@ -905,7 +951,7 @@ namespace WOTRMultiplayer.GameInteraction
         {
             public ItemEntity ItemEntity { get; set; }
 
-            public NetworkLootItem NetworkItem { get; set; }
+            public NetworkItem NetworkItem { get; set; }
         }
     }
 }

@@ -89,5 +89,7 @@ namespace WOTRMultiplayer.Abstractions.MP
         void OnToggleActivatableAbility(NetworkActivatableAbility activatableAbilityUse);
 
         void OnLootContainer(NetworkLootContainer container);
+
+        void OnDropItem(NetworkDropItem dropItem);
     }
 }

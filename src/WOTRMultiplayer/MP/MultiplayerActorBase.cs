@@ -246,6 +246,22 @@ namespace WOTRMultiplayer.MP
             Send(message);
         }
 
+        public void OnDropItem(NetworkDropItem dropItem)
+        {
+            if (GameInteraction.HasBeenDroppedByAnotherPlayer(dropItem))
+            {
+                return;
+            }
+
+            Logger.LogInformation("Sending drop item. OwnerId={ownerId}, ItemId={itemId}, ItemName={itemName}", dropItem.OwnerEntityId, dropItem.Item.UniqueId, dropItem.Item.Name);
+            var message = new NotifyDropItem
+            {
+                Drop = Mapper.Map<Networking.Messages.NetworkDropItem>(dropItem)
+            };
+
+            Send(message);
+        }
+
         protected abstract Task<DiceRollValueResponse> RetrieveRoll(DiceRollValueRequest rollRequest, string unitId);
 
         protected abstract void OnLocalPlayerTurnStart();

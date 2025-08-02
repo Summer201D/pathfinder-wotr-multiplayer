@@ -3,7 +3,7 @@
 namespace WOTRMultiplayer.Networking.Messages
 {
     [ProtoContract]
-    public class NetworkLootItem
+    public class NetworkItem
     {
         [ProtoMember(1)]
         public string UniqueId { get; set; }

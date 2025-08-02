@@ -63,27 +63,52 @@ namespace WOTRMultiplayer.HarmonyPatches.Loot
             Main.Multiplayer.OnLootContainer(container);
         }
 
+        [HarmonyPatch(typeof(ItemsCollection), nameof(ItemsCollection.DropItem))]
+        [HarmonyPrefix]
+        public static void ItemsCollection_DropItem_Prefix(ItemsCollection __instance, ItemEntity item)
+        {
+            if (!Main.Multiplayer.IsActive || __instance != item.Collection || __instance.OwnerRef.Entity is not Kingmaker.Player player)
+            {
+                return;
+            }
+
+            var dropItem = new NetworkDropItem
+            {
+                OwnerEntityId = player.MainCharacter.UniqueId,
+                Item = CreateNetworkItem(item)
+            };
+
+            Main.Multiplayer.OnDropItem(dropItem);
+        }
+
+
         private static NetworkLootContainer CreateLootContainer(EntityDataBase lootOwner, List<ItemEntity> itemEntities)
         {
             var container = new NetworkLootContainer
             {
                 Id = lootOwner.UniqueId,
                 Position = new NetworkVector3(lootOwner.Position.x, lootOwner.Position.y, lootOwner.Position.z),
-                IsMapObject = lootOwner is MapObjectEntityData,
-                Items = [.. itemEntities.Select(x => new NetworkLootItem
-                {
-                    UniqueId = x.UniqueId,
-                    BlueprintId = x.Blueprint.AssetGuid.ToString(),
-                    Name = x.NameForAcronym,
-                    Count = x.Count,
-                    Cost = x.Cost,
-                    EnchantmentValue = x.EnchantmentValue,
-                    EnchantmentsCount = x.Enchantments.Count,
-                    FirstEnchantmentName = x.Enchantments.FirstOrDefault()?.NameForAcronym
-                })]
+                Items = [.. itemEntities.Select(CreateNetworkItem)]
             };
 
             return container;
+        }
+
+        private static NetworkItem CreateNetworkItem(ItemEntity itemEntity)
+        {
+            var item = new NetworkItem
+            {
+                UniqueId = itemEntity.UniqueId,
+                BlueprintId = itemEntity.Blueprint.AssetGuid.ToString(),
+                Name = itemEntity.NameForAcronym,
+                Count = itemEntity.Count,
+                Cost = itemEntity.Cost,
+                EnchantmentValue = itemEntity.EnchantmentValue,
+                EnchantmentsCount = itemEntity.Enchantments.Count,
+                FirstEnchantmentName = itemEntity.Enchantments.FirstOrDefault()?.NameForAcronym
+            };
+
+            return item;
         }
     }
 }

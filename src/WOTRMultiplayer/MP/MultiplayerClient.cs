@@ -417,10 +417,19 @@ namespace WOTRMultiplayer.MP
                 .Register<NotifyCombatTurnSynchronizationRequired>(OnNotifyCombatTurnSynchronizationRequired)
 
                 .Register<NotifyContainerLooted>(OnNotifyContainerLooted)
+                .Register<NotifyDropItem>(OnNotifyDropItem)
                 ;
 
             _networkServerClient.OnError = OnNetworkClientError;
             _networkServerClient.OnConnected = OnNetworkClientConnected;
+        }
+
+        private void OnNotifyDropItem(NotifyDropItem item)
+        {
+            Logger.LogInformation("Received {messageType}. OwnerId={ownerId}, ItemId={itemId}, ItemName={itemName}", nameof(NotifyDropItem), item.Drop.OwnerEntityId, item.Drop.Item.UniqueId, item.Drop.Item.Name);
+
+            var dropItem = Mapper.Map<NetworkDropItem>(item.Drop);
+            GameInteraction.DropItem(dropItem);
         }
 
         private void OnNotifyContainerLooted(NotifyContainerLooted looted)

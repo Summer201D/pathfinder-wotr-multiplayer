@@ -86,5 +86,7 @@ namespace WOTRMultiplayer.Abstractions.MP
         void OnAfterRuleInitiativeRollTrigger(RuleInitiativeRoll ruleInitiativeRoll);
 
         void OnLootContainer(NetworkLootContainer container);
+
+        void OnDropItem(NetworkDropItem dropItem);
     }
 }

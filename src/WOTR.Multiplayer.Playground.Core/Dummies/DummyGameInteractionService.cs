@@ -143,5 +143,14 @@ namespace WOTR.Multiplayer.Playground.Core.Dummies
         public void CollectContainerLoot(NetworkLootContainer container)
         {
         }
+
+        public void DropItem(NetworkDropItem dropItem)
+        {
+        }
+
+        public bool HasBeenDroppedByAnotherPlayer(NetworkDropItem dropItem)
+        {
+            return false;
+        }
     }
 }

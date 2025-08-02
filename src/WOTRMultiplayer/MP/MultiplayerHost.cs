@@ -709,7 +709,19 @@ namespace WOTRMultiplayer.MP
                 .Register<ClientCombatTurnStarted>(OnClientCombatTurnStarted)
                 .Register<ClientCombatTurnSynchronized>(OnClientCombatTurnSynchronized)
                 .Register<NotifyContainerLooted>(OnNotifyContainerLooted)
+                .Register<NotifyDropItem>(OnNotifyDropItem)
                 ;
+        }
+
+        private void OnNotifyDropItem(long playerId, NotifyDropItem item)
+        {
+            Logger.LogInformation("Received {messageType}. PlayerId={playerId}, OwnerId={ownerId}, ItemId={itemId}, ItemName={itemName}", nameof(NotifyDropItem), playerId, item.Drop.OwnerEntityId, item.Drop.Item.UniqueId, item.Drop.Item.Name);
+
+            var dropItem = Mapper.Map<NetworkDropItem>(item.Drop);
+            GameInteraction.DropItem(dropItem);
+
+            Logger.LogInformation("Resending {messageType}", nameof(NotifyDropItem));
+            _networkServer.SendAllExcept(playerId, item);
         }
 
         private void OnNotifyContainerLooted(long playerId, NotifyContainerLooted looted)

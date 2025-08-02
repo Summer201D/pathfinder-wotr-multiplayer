@@ -48,7 +48,10 @@ namespace WOTRMultiplayer.Config.Mapping
             CreateMap<NetworkLootContainer, Networking.Messages.NetworkLootContainer>()
                 .ReverseMap();
 
-            CreateMap<NetworkLootItem, Networking.Messages.NetworkLootItem>()
+            CreateMap<NetworkItem, Networking.Messages.NetworkItem>()
+                .ReverseMap();
+
+            CreateMap<NetworkDropItem, Networking.Messages.NetworkDropItem>()
                 .ReverseMap();
         }
     }

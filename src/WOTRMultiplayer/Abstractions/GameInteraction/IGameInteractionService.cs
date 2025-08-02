@@ -63,6 +63,11 @@ namespace WOTRMultiplayer.Abstractions.GameInteraction
         void UseAbility(NetworkAbility use);
 
         void ToggleActivatableAbility(NetworkActivatableAbility toggle);
+
         void CollectContainerLoot(NetworkLootContainer container);
+
+        void DropItem(NetworkDropItem dropItem);
+
+        bool HasBeenDroppedByAnotherPlayer(NetworkDropItem dropItem);
     }
 }

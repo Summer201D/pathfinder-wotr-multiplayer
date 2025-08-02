@@ -16,7 +16,7 @@ namespace WOTRMultiplayer.Networking.Messages
         public bool IsMapObject { get; set; }
 
         [ProtoMember(4)]
-        public List<NetworkLootItem> Items { get; set; } = [];
+        public List<NetworkItem> Items { get; set; } = [];
 
     }
 }

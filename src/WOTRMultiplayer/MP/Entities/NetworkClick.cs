@@ -21,5 +21,7 @@ namespace WOTRMultiplayer.MP.Entities
         public NetworkActionsState ActionsState { get; set; }
 
         public bool IsTurnBasedModeClick { get; set; }
+
+        public int LootBagIndex { get; set; }
     }
 }

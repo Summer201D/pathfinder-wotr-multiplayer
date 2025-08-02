@@ -32,5 +32,8 @@ namespace WOTRMultiplayer.Networking.Messages
 
         [ProtoMember(9)]
         public bool IsTurnBasedModeClick { get; set; }
+
+        [ProtoMember(10)]
+        public int LootBagIndex { get; set; }
     }
 }

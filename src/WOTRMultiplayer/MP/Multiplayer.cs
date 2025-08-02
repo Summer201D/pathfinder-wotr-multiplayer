@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 using System.Linq;
 using System.Reflection;
 using Kingmaker.EntitySystem.Entities;
@@ -725,6 +726,17 @@ namespace WOTRMultiplayer.MP
             }
 
             multiplayerActor.OnLootContainer(container);
+        }
+
+        public void OnDropItem(NetworkDropItem dropItem)
+        {
+            var multiplayerActor = GetMultiplayerActor();
+            if (multiplayerActor == null)
+            {
+                return;
+            }
+
+            multiplayerActor.OnDropItem(dropItem);
         }
 
         private int? GetDiceRollId(NetworkDiceRollBase roll)

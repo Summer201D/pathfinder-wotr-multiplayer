@@ -1,6 +1,6 @@
 ﻿namespace WOTRMultiplayer.MP.Entities.Loot
 {
-    public class NetworkLootItem
+    public class NetworkItem
     {
         public string UniqueId { get; set; }
 

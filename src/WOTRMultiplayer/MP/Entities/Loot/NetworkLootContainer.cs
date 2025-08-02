@@ -8,9 +8,6 @@ namespace WOTRMultiplayer.MP.Entities.Loot
 
         public NetworkVector3 Position { get; set; }
 
-        public bool IsMapObject { get; set; }
-
-        public List<NetworkLootItem> Items { get; set; } = [];
-
+        public List<NetworkItem> Items { get; set; } = [];
     }
 }
