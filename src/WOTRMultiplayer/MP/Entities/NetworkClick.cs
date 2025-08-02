@@ -10,6 +10,8 @@ namespace WOTRMultiplayer.MP.Entities
 
         public string MapObjectId { get; set; }
 
+        public bool IsLootBagMapObject { get; set; }
+
         public int Button { get; set; }
 
         public bool MuteEvents { get; set; }
@@ -21,7 +23,5 @@ namespace WOTRMultiplayer.MP.Entities
         public NetworkActionsState ActionsState { get; set; }
 
         public bool IsTurnBasedModeClick { get; set; }
-
-        public int LootBagIndex { get; set; }
     }
 }

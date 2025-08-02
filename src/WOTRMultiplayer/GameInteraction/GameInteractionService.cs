@@ -493,41 +493,34 @@ namespace WOTRMultiplayer.GameInteraction
 
         public void ClickMapObject(NetworkClick click)
         {
-            try
+            _mainThreadAccessor.Enqueue(() =>
             {
-                var mapObject = GetMapObject(click.MapObjectId);
-                if (mapObject == null && click.LootBagIndex != -1)
+                try
                 {
-                    var lootBags = Game.Instance.State.MapObjects.All
-                        .Where(x => x is DroppedLoot.EntityData)
-                        .Select(x => new { Item = x, Index = Game.Instance.State.MapObjects.IndexOf(x) })
-                        .OrderBy(x => x.Index)
-                        .ToList();
-
-                    if (lootBags.Count > click.LootBagIndex)
+                    var mapObject = GetMapObject(click.MapObjectId);
+                    if (mapObject == null && click.IsLootBagMapObject)
                     {
-                        mapObject = lootBags[click.LootBagIndex].Item;
-                        _logger.LogInformation("Found loot bag by lootbag index. MapObjectId={mapObjectId}, LootBagIndex={bagIndex}", click.MapObjectId, click.LootBagIndex);
+                        // each client generates a random map object ID, so the easiest way is to look for the nearest bag(assuming its location is relatively the same)
+                        mapObject = GetNeareastLootableMapObjects(click.WorldPosition).FirstOrDefault(o => o is DroppedLoot.EntityData);
+                        _logger.LogInformation("Using nearest lootbag as a map object. MapObjectId={mapObjectId}, Position={bagIndex}", mapObject?.UniqueId, mapObject?.Position);
                     }
-                }
 
-                if (mapObject == null)
-                {
-                    _logger.LogWarning("Unable to click missing map object. UniqueId={uniqueId}", click.MapObjectId);
-                    return;
-                }
+                    if (mapObject == null)
+                    {
+                        _logger.LogWarning("Unable to click missing map object. MapObjectId={uniqueId}", click.MapObjectId);
+                        return;
+                    }
 
-                var selectedUnits = click.SelectedUnits.Select(GetUnitEntity).ToList();
-                _mainThreadAccessor.Enqueue(() =>
-                {
+                    var selectedUnits = click.SelectedUnits.Select(GetUnitEntity).ToList();
+
                     ClickMapObjectHandler.Interact(mapObject.View.gameObject, selectedUnits, forceOvertipInteractions: false, click.MuteEvents);
-                });
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Unable to initiate click handler. HandlerTy={handlerType}", typeof(ClickGroundHandler));
-                throw;
-            }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Unable to interact with map object. MapObjectId={uniqueId}", click.MapObjectId);
+                    throw;
+                }
+            });
         }
 
         public void ToggleActivatableAbility(NetworkActivatableAbility toggle)

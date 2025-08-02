@@ -4,7 +4,6 @@ using Kingmaker;
 using Kingmaker.Controllers.Clicks.Handlers;
 using Kingmaker.EntitySystem.Entities;
 using Kingmaker.TurnBasedMode;
-using Kingmaker.Utility;
 using Kingmaker.View;
 using Kingmaker.View.MapObjects;
 using Microsoft.Extensions.Logging;
@@ -108,24 +107,13 @@ namespace WOTRMultiplayer.HarmonyPatches.Clicks
             var selectedUnit = Game.Instance.SelectionCharacter?.FirstSelectedUnit?.View;
             var path = selectedUnit == null ? null : PathVisualizer.Instance.CurrentPathForUnit(selectedUnit);
             var actionState = Main.Multiplayer.GetActionsState();
-            var lootbagIndex = -1;
-            if (mapObject != null && mapObject.Data is DroppedLoot.EntityData)
-            {
-                var lootBags = Game.Instance.State.MapObjects.All
-                    .Where(x => x is DroppedLoot.EntityData)
-                    .Select(x => new { Item = x, Index = Game.Instance.State.MapObjects.IndexOf(mapObject.Data) })
-                    .OrderBy(x => x.Index)
-                    .ToList();
-
-                lootbagIndex = lootBags.FindIndex(x => x.Item == mapObject.Data);
-            }
 
             return new NetworkClick
             {
                 SelectedUnits = selectedUnits,
                 TargetUnitId = targetUnitId,
                 MapObjectId = mapObject?.UniqueId,
-                LootBagIndex = lootbagIndex,
+                IsLootBagMapObject = mapObject?.Data is DroppedLoot.EntityData,
                 IsTurnBasedModeClick = isTurnBasedModeClick,
                 Button = button,
                 WorldPosition = new NetworkVector3(worldPosition.x, worldPosition.y, worldPosition.z),
