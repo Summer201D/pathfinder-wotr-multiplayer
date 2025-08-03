@@ -265,7 +265,7 @@ namespace WOTRMultiplayer.MP
 
         public void OnEquipmentSlotChanged(NetworkEquipmentSlot equipmentSlot)
         {
-            if (GameInteraction.HasBeenChangedByAnotherPlayer(equipmentSlot))
+            if (!IsControlledByPlayers(equipmentSlot.OwnerId) || GameInteraction.HasBeenChangedByAnotherPlayer(equipmentSlot))
             {
                 return;
             }
