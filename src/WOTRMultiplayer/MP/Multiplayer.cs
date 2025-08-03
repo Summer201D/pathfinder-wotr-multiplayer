@@ -1,5 +1,4 @@
 ﻿using System;
-using System.ComponentModel;
 using System.Linq;
 using System.Reflection;
 using Kingmaker.EntitySystem.Entities;
@@ -16,6 +15,7 @@ using WOTRMultiplayer.Abstractions.UI.Controllers;
 using WOTRMultiplayer.Abstractions.UI.Windows;
 using WOTRMultiplayer.MP.Entities;
 using WOTRMultiplayer.MP.Entities.Abilities;
+using WOTRMultiplayer.MP.Entities.Equipment;
 using WOTRMultiplayer.MP.Entities.Loot;
 using WOTRMultiplayer.MP.Entities.Rolls;
 using WOTRMultiplayer.MP.Entities.Rolls.Claiming.Values;
@@ -737,6 +737,17 @@ namespace WOTRMultiplayer.MP
             }
 
             multiplayerActor.OnDropItem(dropItem);
+        }
+
+        public void OnChangeActiveHandEquipmentSet(NetworkActiveHandEquipmentSet set)
+        {
+            var multiplayerActor = GetMultiplayerActor();
+            if (multiplayerActor == null)
+            {
+                return;
+            }
+
+            multiplayerActor.OnChangeActiveHandEquipmentSet(set);
         }
 
         private int? GetDiceRollId(NetworkDiceRollBase roll)

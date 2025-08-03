@@ -111,6 +111,11 @@ namespace WOTRMultiplayer.Playground.Client
                     client.OnEquipmentSlotChanged(slot);
                     client.Game.Characters.Remove(character);
                     break;
+                case CommandVerbs.EquipmentActiveHandSlotUpdateCommandVerb handSlot:
+                    var set = new MP.Entities.Equipment.NetworkActiveHandEquipmentSet { Index = handSlot.SlotIndex, UnitId = handSlot.UnitId };
+                    client.Game.Characters.FirstOrDefault().UnitId = set.UnitId;
+                    client.OnChangeActiveHandEquipmentSet(set);
+                    break;
                 default:
                     break;
             }

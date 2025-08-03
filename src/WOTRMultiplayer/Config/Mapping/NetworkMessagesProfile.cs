@@ -1,5 +1,4 @@
-﻿using System;
-using AutoMapper;
+﻿using AutoMapper;
 using WOTRMultiplayer.MP.Entities;
 using WOTRMultiplayer.MP.Entities.Abilities;
 using WOTRMultiplayer.MP.Entities.Combat;
@@ -60,10 +59,10 @@ namespace WOTRMultiplayer.Config.Mapping
                 .ReverseMap();
 
             CreateMap<NetworkEquipmentSlotPosition, Networking.Messages.NetworkEquipmentSlotPosition>()
-                //.ForMember(m => m.Type, o => o.MapFrom(v => v.Type.ToString()))
                 .ReverseMap();
-                //.ForMember(m => m.Type, o => o.MapFrom(v => Enum.Parse(typeof(NetworkEquipmentSlotType), v.Type)));
 
+            CreateMap<NetworkActiveHandEquipmentSet, Networking.Messages.NetworkActiveHandEquipmentSet>()
+                .ReverseMap();
         }
     }
 }

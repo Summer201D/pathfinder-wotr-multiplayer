@@ -1,6 +1,7 @@
 ﻿using Kingmaker.Items;
 using Kingmaker.Items.Slots;
 using Kingmaker.PubSubSystem;
+using Kingmaker.UnitLogic;
 using Microsoft.Extensions.Logging;
 using WOTRMultiplayer.Abstractions.GameInteraction;
 using WOTRMultiplayer.Abstractions.MP;
@@ -13,7 +14,8 @@ namespace WOTRMultiplayer.PubSub
         IGlobalMultiplayerUnitCommandSubscriber,
         IGlobalSubscriber,
         ISubscriber,
-        IUnitEquipmentHandler
+        IUnitEquipmentHandler,
+        IUnitActiveEquipmentSetHandler
     {
         private readonly IGameInteractionService _gameInteractionService;
 
@@ -49,6 +51,23 @@ namespace WOTRMultiplayer.PubSub
             };
 
             multiplayerActor.OnEquipmentSlotChanged(networkSlot);
+        }
+
+        public void HandleUnitChangeActiveEquipmentSet(UnitDescriptor unit)
+        {
+            var multiplayerActor = GetMultiplayerActor();
+            if (multiplayerActor == null)
+            {
+                return;
+            }
+
+            var set = new NetworkActiveHandEquipmentSet
+            {
+                Index = unit.Body.CurrentHandEquipmentSetIndex,
+                UnitId = unit.Unit.UniqueId,
+            };
+
+            Main.Multiplayer.OnChangeActiveHandEquipmentSet(set);
         }
     }
 }

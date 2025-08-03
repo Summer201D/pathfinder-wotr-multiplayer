@@ -249,7 +249,7 @@ namespace WOTRMultiplayer.MP
 
         public void OnDropItem(NetworkDropItem dropItem)
         {
-            if (GameInteraction.HasBeenDroppedByAnotherPlayer(dropItem))
+            if (GameInteraction.HasBeenTriggeredByAnotherPlayer(dropItem))
             {
                 return;
             }
@@ -263,9 +263,26 @@ namespace WOTRMultiplayer.MP
             Send(message);
         }
 
+
+        public void OnChangeActiveHandEquipmentSet(NetworkActiveHandEquipmentSet set)
+        {
+            if (!IsControlledByPlayers(set.UnitId) || GameInteraction.HasBeenTriggeredByAnotherPlayer(set))
+            {
+                return;
+            }
+
+            Logger.LogInformation("Sending changed active hand equipment set. UnitId={unitId}, SetIndex={setIndex}", set.UnitId, set.Index);
+            var message = new NotifyActiveHandEquipmentSetChanged
+            {
+                Set = Mapper.Map<Networking.Messages.NetworkActiveHandEquipmentSet>(set)
+            };
+
+            Send(message);
+        }
+
         public void OnEquipmentSlotChanged(NetworkEquipmentSlot equipmentSlot)
         {
-            if (!IsControlledByPlayers(equipmentSlot.OwnerId) || GameInteraction.HasBeenChangedByAnotherPlayer(equipmentSlot))
+            if (!IsControlledByPlayers(equipmentSlot.OwnerId) || GameInteraction.HasBeenTriggeredByAnotherPlayer(equipmentSlot))
             {
                 return;
             }

@@ -5,6 +5,7 @@ using Kingmaker.RuleSystem.Rules.Damage;
 using WOTRMultiplayer.Abstractions.UI;
 using WOTRMultiplayer.MP.Entities;
 using WOTRMultiplayer.MP.Entities.Abilities;
+using WOTRMultiplayer.MP.Entities.Equipment;
 using WOTRMultiplayer.MP.Entities.Loot;
 
 namespace WOTRMultiplayer.Abstractions.MP
@@ -88,5 +89,7 @@ namespace WOTRMultiplayer.Abstractions.MP
         void OnLootContainer(NetworkLootContainer container);
 
         void OnDropItem(NetworkDropItem dropItem);
+
+        void OnChangeActiveHandEquipmentSet(NetworkActiveHandEquipmentSet set);
     }
 }

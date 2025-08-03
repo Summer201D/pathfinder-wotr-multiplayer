@@ -133,6 +133,16 @@ namespace WOTRMultiplayer.Playground.Client
             public string UnitId { get; set; }
         }
 
+        [Verb("equipment-hand", HelpText = "change active hand slot index")]
+        public class EquipmentActiveHandSlotUpdateCommandVerb
+        {
+            [Option('s', "slot-index", Required = false, Default = 0, HelpText = "Hand slot index (0-3)")]
+            public int SlotIndex { get; set; }
+
+            [Option('u', "unit", Required = false, Default = "a950ad75-65cd-4dc1-96e9-444e291fed7e", HelpText = "UnitId")]
+            public string UnitId { get; set; }
+        }
+
         [Verb("exit", HelpText = "cya next time")]
         public class ExitCommandVerb
         {

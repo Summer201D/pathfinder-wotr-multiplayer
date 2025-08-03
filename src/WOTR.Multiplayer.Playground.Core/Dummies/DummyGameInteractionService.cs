@@ -150,23 +150,32 @@ namespace WOTR.Multiplayer.Playground.Core.Dummies
         {
         }
 
-        public bool HasBeenDroppedByAnotherPlayer(NetworkDropItem dropItem)
-        {
-            return false;
-        }
-
         public NetworkEquipmentSlotPosition GetEquipmentSlotPosition(ItemSlot slot)
         {
             return null;
         }
 
-        public bool HasBeenChangedByAnotherPlayer(NetworkEquipmentSlot networkSlot)
+        public void UpdateEquipmentSlot(NetworkEquipmentSlot slot)
+        {
+        }
+
+        public void SetActiveHandEquipmentSet(NetworkActiveHandEquipmentSet set)
+        {
+        }
+
+        public bool HasBeenTriggeredByAnotherPlayer(NetworkDropItem dropItem)
         {
             return false;
         }
 
-        public void UpdateEquipmentSlot(NetworkEquipmentSlot slot)
+        public bool HasBeenTriggeredByAnotherPlayer(NetworkEquipmentSlot networkSlot)
         {
+            return false;
+        }
+
+        public bool HasBeenTriggeredByAnotherPlayer(NetworkActiveHandEquipmentSet set)
+        {
+            return false;
         }
     }
 }

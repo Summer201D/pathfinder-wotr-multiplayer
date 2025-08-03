@@ -84,16 +84,16 @@ namespace WOTRMultiplayer.MP
 
                 var extraClaimableRoll = CreateClaimableRoll(claimingList, roll);
                 extraClaimableRoll.OrderId = entry.Rolls.Count;
-                entry.Rolls.Enqueue(extraClaimableRoll);
+                entry.Rolls.Add(extraClaimableRoll);
                 _logger.LogWarning("Appended claimable roll value to existing entry. RollId={rollId}, RollType={rollType}, OrderId={orderId}, ClaimingListCount={playerId}", rollId, roll.GetType().Name, extraClaimableRoll.OrderId, claimingList.Count);
             }
         }
 
         private void AddRollEntry(int rollId, List<long> claimingList, RollValueBase roll)
         {
-            var entry = new ClaimableDiceRollEntry();
             var rollValue = CreateClaimableRoll(claimingList, roll);
-            entry.Rolls.Enqueue(rollValue);
+            var entry = new ClaimableDiceRollEntry();
+            entry.Rolls.Add(rollValue);
             _rolls.TryAdd(rollId, entry);
             _logger.LogInformation("Created claimable roll value. RollId={rollId}, RollType={rollType}, OrderId={orderId}, ClaimingListCount={playerId}", rollId, roll.GetType().Name, rollValue.OrderId, claimingList.Count);
         }

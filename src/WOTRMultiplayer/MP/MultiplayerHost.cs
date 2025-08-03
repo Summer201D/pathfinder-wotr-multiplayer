@@ -712,7 +712,18 @@ namespace WOTRMultiplayer.MP
                 .Register<NotifyContainerLooted>(OnNotifyContainerLooted)
                 .Register<NotifyDropItem>(OnNotifyDropItem)
                 .Register<NotifyEquipmentSlotChanged>(OnNotifyEquipmentSlotChanged)
+                .Register<NotifyActiveHandEquipmentSetChanged>(OnNotifyActiveHandEquipmentSetChanged)
                 ;
+        }
+
+        private void OnNotifyActiveHandEquipmentSetChanged(long playerId, NotifyActiveHandEquipmentSetChanged changed)
+        {
+            Logger.LogInformation("Received {messageType}. PlayerId={playerId}, UnitId={unitId}, SetIndex={setIndex}", nameof(NotifyEquipmentSlotChanged), playerId, changed.Set.UnitId, changed.Set.Index);
+            var set = Mapper.Map<NetworkActiveHandEquipmentSet>(changed.Set);
+            GameInteraction.SetActiveHandEquipmentSet(set);
+
+            Logger.LogInformation("Resending {messageType}", nameof(NotifyActiveHandEquipmentSetChanged));
+            _networkServer.SendAllExcept(playerId, changed);
         }
 
         private void OnNotifyEquipmentSlotChanged(long playerId, NotifyEquipmentSlotChanged slotChanged)

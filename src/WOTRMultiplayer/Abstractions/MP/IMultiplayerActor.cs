@@ -94,5 +94,7 @@ namespace WOTRMultiplayer.Abstractions.MP
         void OnDropItem(NetworkDropItem dropItem);
 
         void OnEquipmentSlotChanged(NetworkEquipmentSlot networkSlot);
+
+        void OnChangeActiveHandEquipmentSet(NetworkActiveHandEquipmentSet set);
     }
 }

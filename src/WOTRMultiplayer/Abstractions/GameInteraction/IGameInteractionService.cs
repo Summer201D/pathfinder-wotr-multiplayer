@@ -70,11 +70,16 @@ namespace WOTRMultiplayer.Abstractions.GameInteraction
 
         void DropItem(NetworkDropItem dropItem);
 
-        bool HasBeenDroppedByAnotherPlayer(NetworkDropItem dropItem);
+        bool HasBeenTriggeredByAnotherPlayer(NetworkDropItem dropItem);
 
-        bool HasBeenChangedByAnotherPlayer(NetworkEquipmentSlot networkSlot);
+        bool HasBeenTriggeredByAnotherPlayer(NetworkEquipmentSlot networkSlot);
+
+        bool HasBeenTriggeredByAnotherPlayer(NetworkActiveHandEquipmentSet set);
 
         NetworkEquipmentSlotPosition GetEquipmentSlotPosition(ItemSlot slot);
+
         void UpdateEquipmentSlot(NetworkEquipmentSlot slot);
+
+        void SetActiveHandEquipmentSet(NetworkActiveHandEquipmentSet set);
     }
 }
