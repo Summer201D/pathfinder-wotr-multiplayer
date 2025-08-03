@@ -13,7 +13,7 @@ namespace WOTRMultiplayer.HarmonyPatches.Units
     {
         [HarmonyPatch(typeof(UnitUseAbility), nameof(UnitUseAbility.OnAction))]
         [HarmonyPrefix]
-        public static void UnitUseAbility_OnAction_HarmonyPrefix(UnitUseAbility __instance)
+        public static void UnitUseAbility_OnAction_Prefix(UnitUseAbility __instance)
         {
             if (!Main.Multiplayer.IsActive)
             {

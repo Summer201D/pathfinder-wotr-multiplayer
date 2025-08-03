@@ -11,7 +11,7 @@ namespace WOTRMultiplayer.HarmonyPatches.Units
         [HarmonyPrefix]
         public static bool UnitLootUnit_OnAction_HarmonyPrefix(UnitLootUnit __instance)
         {
-            Main.GetLogger<UnitLootUnitPatches>().LogWarning("----------------LOOT COMMAND");
+            Main.GetLogger<UnitLootUnitPatches>().LogCritical("LOOT COMMAND AM I EVER USED?? UnitId={unitId}, TargetId={targetId}", __instance.Executor.UniqueId, __instance.Target?.UniqueId);
             return true;
         }
     }
