@@ -61,8 +61,9 @@ namespace WOTRMultiplayer.DI
             serviceCollection.AddSingleton<IJoinMenuItemController, JoinMenuItemController>();
 
             serviceCollection.AddSingleton<IGameInteractionService, GameInteractionService>();
+            serviceCollection.AddSingleton<IEquipmentDefinitions, EquipmentDefinitions>();
             serviceCollection.AddSingleton<IGlobalMultiplayerSubscriber, GlobalMultiplayerSubscriber>();
-            serviceCollection.AddSingleton<IGlobalMultiplayerUnitCommandSubscriber, GlobalMultiplayerUnitCommandSubscriber>();
+            serviceCollection.AddSingleton<IGlobalMultiplayerUnitCommandSubscriber, GlobalMultiplayerUnitSubscriber>();
 
             serviceCollection.AddSingleton<IMultiplayer, Multiplayer>();
             serviceCollection.AddSingleton<IMultiplayerHost, MultiplayerHost>();

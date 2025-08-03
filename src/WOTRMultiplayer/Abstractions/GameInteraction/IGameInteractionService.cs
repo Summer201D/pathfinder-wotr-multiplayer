@@ -1,9 +1,11 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
+using Kingmaker.Items.Slots;
 using Kingmaker.UI;
 using WOTRMultiplayer.MP.Entities;
 using WOTRMultiplayer.MP.Entities.Abilities;
 using WOTRMultiplayer.MP.Entities.Dialogs;
+using WOTRMultiplayer.MP.Entities.Equipment;
 using WOTRMultiplayer.MP.Entities.Loot;
 
 namespace WOTRMultiplayer.Abstractions.GameInteraction
@@ -69,5 +71,10 @@ namespace WOTRMultiplayer.Abstractions.GameInteraction
         void DropItem(NetworkDropItem dropItem);
 
         bool HasBeenDroppedByAnotherPlayer(NetworkDropItem dropItem);
+
+        bool HasBeenChangedByAnotherPlayer(NetworkEquipmentSlot networkSlot);
+
+        NetworkEquipmentSlotPosition GetEquipmentSlotPosition(ItemSlot slot);
+        void UpdateEquipmentSlot(NetworkEquipmentSlot slot);
     }
 }

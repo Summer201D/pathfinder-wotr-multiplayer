@@ -3,11 +3,13 @@ using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 using Kingmaker.EntitySystem.Persistence;
+using Kingmaker.Items.Slots;
 using Kingmaker.UI;
 using WOTRMultiplayer.Abstractions.GameInteraction;
 using WOTRMultiplayer.MP.Entities;
 using WOTRMultiplayer.MP.Entities.Abilities;
 using WOTRMultiplayer.MP.Entities.Dialogs;
+using WOTRMultiplayer.MP.Entities.Equipment;
 using WOTRMultiplayer.MP.Entities.Loot;
 
 namespace WOTR.Multiplayer.Playground.Core.Dummies
@@ -151,6 +153,20 @@ namespace WOTR.Multiplayer.Playground.Core.Dummies
         public bool HasBeenDroppedByAnotherPlayer(NetworkDropItem dropItem)
         {
             return false;
+        }
+
+        public NetworkEquipmentSlotPosition GetEquipmentSlotPosition(ItemSlot slot)
+        {
+            return null;
+        }
+
+        public bool HasBeenChangedByAnotherPlayer(NetworkEquipmentSlot networkSlot)
+        {
+            return false;
+        }
+
+        public void UpdateEquipmentSlot(NetworkEquipmentSlot slot)
+        {
         }
     }
 }

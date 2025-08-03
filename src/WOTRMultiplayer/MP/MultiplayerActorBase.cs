@@ -13,6 +13,7 @@ using WOTRMultiplayer.Abstractions.MP;
 using WOTRMultiplayer.MP.Entities;
 using WOTRMultiplayer.MP.Entities.Abilities;
 using WOTRMultiplayer.MP.Entities.Combat;
+using WOTRMultiplayer.MP.Entities.Equipment;
 using WOTRMultiplayer.MP.Entities.Loot;
 using WOTRMultiplayer.MP.Entities.Rolls.Claiming.Values;
 using WOTRMultiplayer.Networking.Messages.Game;
@@ -257,6 +258,22 @@ namespace WOTRMultiplayer.MP
             var message = new NotifyDropItem
             {
                 Drop = Mapper.Map<Networking.Messages.NetworkDropItem>(dropItem)
+            };
+
+            Send(message);
+        }
+
+        public void OnEquipmentSlotChanged(NetworkEquipmentSlot equipmentSlot)
+        {
+            if (GameInteraction.HasBeenChangedByAnotherPlayer(equipmentSlot))
+            {
+                return;
+            }
+
+            Logger.LogWarning("Sending changed equipment slot. SlotType={slotType}, SlotIndex={slotIndex}, ItemId={itemId}, OwnerId={ownerId}", equipmentSlot.Position.Type, equipmentSlot.Position.Index, equipmentSlot.ItemId, equipmentSlot.OwnerId);
+            var message = new NotifyEquipmentSlotChanged
+            {
+                Slot = Mapper.Map<Networking.Messages.NetworkEquipmentSlot>(equipmentSlot)
             };
 
             Send(message);

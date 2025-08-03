@@ -95,6 +95,19 @@ namespace WOTRMultiplayer.Playground.Client
                 case CommandVerbs.CombatTurnEndedCommandVerb turn:
                     client.OnBeforeEndTurn(turn.UnitId);
                     break;
+                case CommandVerbs.EquipmentSlotUpdateCommandVerb equipment:
+                    var slot = new MP.Entities.Equipment.NetworkEquipmentSlot
+                    {
+                        ItemId = equipment.ItemId,
+                        OwnerId = equipment.UnitId,
+                        Position = new MP.Entities.Equipment.NetworkEquipmentSlotPosition
+                        {
+                            Index = equipment.SlotIndex,
+                            Type = equipment.SlotType
+                        }
+                    };
+                    client.OnEquipmentSlotChanged(slot);
+                    break;
                 default:
                     break;
             }

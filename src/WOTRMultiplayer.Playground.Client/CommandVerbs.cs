@@ -1,4 +1,5 @@
 ﻿using CommandLine;
+using WOTRMultiplayer.MP.Entities.Equipment;
 
 namespace WOTRMultiplayer.Playground.Client
 {
@@ -115,6 +116,22 @@ namespace WOTRMultiplayer.Playground.Client
             public string UnitId { get; set; }
         }
 
+
+        [Verb("equipment", HelpText = "send equipment update")]
+        public class EquipmentSlotUpdateCommandVerb
+        {
+            [Option('t', "slot-type", Required = false, Default = NetworkEquipmentSlotType.EquipmentSlotWrist, HelpText = "Look at NetworkEquipmentSlotType enum")]
+            public NetworkEquipmentSlotType SlotType { get; set; }
+
+            [Option('s', "slot-index", Required = false, Default = 0, HelpText = "Slot index")]
+            public int SlotIndex { get; set; }
+
+            [Option('i', "item", Required = false, Default = null, HelpText = "ItemId, null = remove item, not null = equip item, e.g. fd68e547-2f65-43ba-be0d-2e14b505372a")]
+            public string ItemId { get; set; }
+
+            [Option('u', "unit", Required = false, Default = "a950ad75-65cd-4dc1-96e9-444e291fed7e", HelpText = "UnitId")]
+            public string UnitId { get; set; }
+        }
 
         [Verb("exit", HelpText = "cya next time")]
         public class ExitCommandVerb

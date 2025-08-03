@@ -15,6 +15,7 @@ using Kingmaker.EntitySystem.Persistence;
 using Kingmaker.GameModes;
 using Kingmaker.Globalmap.Blueprints;
 using Kingmaker.Items;
+using Kingmaker.Items.Slots;
 using Kingmaker.Localization;
 using Kingmaker.Pathfinding;
 using Kingmaker.PubSubSystem;
@@ -41,6 +42,7 @@ using WOTRMultiplayer.MP.Entities;
 using WOTRMultiplayer.MP.Entities.Abilities;
 using WOTRMultiplayer.MP.Entities.Combat;
 using WOTRMultiplayer.MP.Entities.Dialogs;
+using WOTRMultiplayer.MP.Entities.Equipment;
 using WOTRMultiplayer.MP.Entities.Loot;
 
 namespace WOTRMultiplayer.GameInteraction
@@ -50,16 +52,20 @@ namespace WOTRMultiplayer.GameInteraction
         private readonly ILogger<GameInteractionService> _logger;
         private readonly IMainThreadAccessor _mainThreadAccessor;
         private readonly IResourceProvider _resourceProvider;
-        private ConcurrentDictionary<string, bool> _droppedItemsByAnotherPlayer = new();
+        private readonly IEquipmentDefinitions _equipmentDefinitions;
+        private readonly ConcurrentDictionary<string, bool> _droppedItemsByAnotherPlayer = new();
+        private readonly ConcurrentDictionary<string, bool> _equipmentChangedByAnotherPlayer = new();
 
         public GameInteractionService(
             ILogger<GameInteractionService> logger,
             IMainThreadAccessor mainThreadAccessor,
+            IEquipmentDefinitions equipmentDefinitions,
             IResourceProvider resourceProvider)
         {
             _logger = logger;
             _mainThreadAccessor = mainThreadAccessor;
             _resourceProvider = resourceProvider;
+            _equipmentDefinitions = equipmentDefinitions;
         }
 
         public bool IsPaused => Game.Instance.IsPaused;
@@ -652,6 +658,12 @@ namespace WOTRMultiplayer.GameInteraction
             });
         }
 
+
+        public bool HasBeenChangedByAnotherPlayer(NetworkEquipmentSlot networkSlot)
+        {
+            return _equipmentChangedByAnotherPlayer.TryRemove(networkSlot.Position.Type.ToString() + networkSlot.Position.Index.ToString(), out _);
+        }
+
         public bool HasBeenDroppedByAnotherPlayer(NetworkDropItem dropItem)
         {
             return _droppedItemsByAnotherPlayer.TryRemove(dropItem.Item.UniqueId, out _);
@@ -679,6 +691,97 @@ namespace WOTRMultiplayer.GameInteraction
                 entity.Inventory.DropItem(itemToDrop);
                 _logger.LogInformation("Item has been dropped. EntityId={entityId}, ItemId={itemId}", dropItem.OwnerEntityId, dropItem.Item.UniqueId);
             });
+        }
+
+        public NetworkEquipmentSlotPosition GetEquipmentSlotPosition(ItemSlot slot)
+        {
+            var type = slot.GetType();
+            var slotType = _equipmentDefinitions.GetSlotType(type);
+            if (slotType == null)
+            {
+                _logger.LogWarning("Unable to get slot type. Type={slotType}, OwnerId={ownerId}", type, slot.Owner.Unit.UniqueId);
+                return null;
+            }
+
+            // let's just hope that order is the same everytime on everyclient
+            var sameTypeItems = slot.Owner.Unit.Body.EquipmentSlots
+                .Where(s => s.GetType() == slot.GetType())
+                .ToList();
+
+            var slotIndex = sameTypeItems.IndexOf(slot);
+
+            return new NetworkEquipmentSlotPosition
+            {
+                Index = slotIndex,
+                Type = slotType.Value,
+            };
+        }
+
+        public void UpdateEquipmentSlot(NetworkEquipmentSlot slot)
+        {
+            _mainThreadAccessor.Enqueue(() =>
+            {
+                var unit = GetUnitEntity(slot.OwnerId);
+                if (unit == null)
+                {
+                    _logger.LogError("Unable to update equipment slot for missing unit. UnitId={unitId}", slot.OwnerId);
+                    return;
+                }
+
+                var slotType = _equipmentDefinitions.GetSlotType(slot.Position.Type);
+                if (slotType == null)
+                {
+                    _logger.LogError("Unable to update equipment slot with invalid slot type. UnitId={unitId}, SlotType={slotType}", slot.OwnerId, slot.Position.Type);
+                    return;
+                }
+
+                var slotsOfSameType = unit.Body.EquipmentSlots
+                    .Where(s => s.GetType() == slotType)
+                    .ToList();
+
+                if (slotsOfSameType.Count < slot.Position.Index)
+                {
+                    _logger.LogError("Unable to update equipment slot with invalid slot index. UnitId={unitId}, SlotType={slotType}, SlotIndex={slotIndex}", slot.OwnerId, slot.Position.Type, slot.Position.Index);
+                    return;
+                }
+
+                var slotToUpdate = slotsOfSameType[slot.Position.Index];
+                if (string.IsNullOrEmpty(slot.ItemId))
+                {
+                    SuppressEquipmentUpdatedEvent(slot);
+                    slotToUpdate.RemoveItem();
+                    RefreshInventoryWindow();
+                    _logger.LogInformation("Item has been unequipped. UnitId={unitId}, SlotType={slotType}, SlotIndex={slotIndex}", slot.OwnerId, slot.Position.Type, slot.Position.Index);
+                    return;
+                }
+
+                var item = unit.Inventory.Items.FirstOrDefault(i => string.Equals(i.UniqueId, slot.ItemId, StringComparison.OrdinalIgnoreCase));
+                if (item == null)
+                {
+                    _logger.LogError("Unable to update equipment slot with missing item. UnitId={unitId}, SlotType={slotType}, SlotIndex={slotIndex}, ItemId={itemId}", slot.OwnerId, slot.Position.Type, slot.Position.Index, slot.ItemId);
+                    return;
+                }
+
+                SuppressEquipmentUpdatedEvent(slot);
+                slotToUpdate.InsertItem(item);
+                RefreshInventoryWindow();
+                _logger.LogInformation("Item has been equipped. UnitId={unitId}, SlotType={slotType}, SlotIndex={slotIndex}, ItemId={itemId}", slot.OwnerId, slot.Position.Type, slot.Position.Index, slot.ItemId);
+            });
+        }
+
+        private void SuppressEquipmentUpdatedEvent(NetworkEquipmentSlot slot)
+        {
+            _equipmentChangedByAnotherPlayer.TryAdd(slot.Position.Type.ToString() + slot.Position.Index.ToString(), true);
+        }
+
+        private void RefreshInventoryWindow()
+        {
+            var inventory = Game.Instance.RootUiContext?.InGameVM?.StaticPartVM?.ServiceWindowsVM?.InventoryVM?.Value;
+            if (inventory != null)
+            {
+                inventory.StashVM?.CollectionChanged();
+                inventory.DollVM?.RefreshData();
+            }
         }
 
         private MapObjectEntityData GetNeareastLootBagMapObject(NetworkVector3 position)
@@ -940,13 +1043,6 @@ namespace WOTRMultiplayer.GameInteraction
             }
 
             return Game.Instance.State.Units.FirstOrDefault(u => string.Equals(u.UniqueId, uniqueId, StringComparison.OrdinalIgnoreCase));
-        }
-
-        private class LootTransferPair
-        {
-            public ItemEntity ItemEntity { get; set; }
-
-            public NetworkItem NetworkItem { get; set; }
         }
     }
 }

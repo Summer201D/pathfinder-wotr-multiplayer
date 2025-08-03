@@ -13,6 +13,7 @@ using WOTRMultiplayer.MP.Entities;
 using WOTRMultiplayer.MP.Entities.Abilities;
 using WOTRMultiplayer.MP.Entities.Combat;
 using WOTRMultiplayer.MP.Entities.Dialogs;
+using WOTRMultiplayer.MP.Entities.Equipment;
 using WOTRMultiplayer.MP.Entities.Loot;
 using WOTRMultiplayer.Networking.Abstractions;
 using WOTRMultiplayer.Networking.Messages.Game;
@@ -418,10 +419,18 @@ namespace WOTRMultiplayer.MP
 
                 .Register<NotifyContainerLooted>(OnNotifyContainerLooted)
                 .Register<NotifyDropItem>(OnNotifyDropItem)
+                .Register<NotifyEquipmentSlotChanged>(OnNotifyEquipmentSlotChanged)
                 ;
 
             _networkServerClient.OnError = OnNetworkClientError;
             _networkServerClient.OnConnected = OnNetworkClientConnected;
+        }
+
+        private void OnNotifyEquipmentSlotChanged(NotifyEquipmentSlotChanged slotChanged)
+        {
+            Logger.LogInformation("Received {messageType}. SlotType={slotType}, SlotIndex={slotIndex}, ItemId={itemId}, OwnerId={ownerId}", nameof(NotifyEquipmentSlotChanged), slotChanged.Slot.Position.Type, slotChanged.Slot.Position.Index, slotChanged.Slot.ItemId, slotChanged.Slot.OwnerId);
+            var slot = Mapper.Map<NetworkEquipmentSlot>(slotChanged.Slot);
+            GameInteraction.UpdateEquipmentSlot(slot);
         }
 
         private void OnNotifyDropItem(NotifyDropItem item)
