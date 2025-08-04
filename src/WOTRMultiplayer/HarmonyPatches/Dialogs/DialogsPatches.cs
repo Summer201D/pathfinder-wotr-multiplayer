@@ -1,15 +1,12 @@
-﻿using System.Collections.Generic;
-using HarmonyLib;
+﻿using HarmonyLib;
 using Kingmaker;
 using Kingmaker.Blueprints.Root;
 using Kingmaker.Controllers.Dialog;
 using Kingmaker.DialogSystem.Blueprints;
 using Kingmaker.EntitySystem.Entities;
 using Kingmaker.Localization;
-using Kingmaker.UI.BookEvent;
 using Kingmaker.UI.MVVM._VM.Dialog.Dialog;
 using Kingmaker.View.MapObjects;
-using Microsoft.Extensions.Logging;
 
 namespace WOTRMultiplayer.HarmonyPatches.Dialogs
 {
@@ -78,18 +75,6 @@ namespace WOTRMultiplayer.HarmonyPatches.Dialogs
 
             var dialogName = Game.Instance.DialogController.Dialog?.name;
             Main.Multiplayer.OnAfterCueShow(dialogName, data.Cue.name, __instance.SystemAnswer.Value != null);
-        }
-
-        [HarmonyPatch(typeof(BookEventBaseController), nameof(BookEventBaseController.SetPage))]
-        [HarmonyPostfix]
-        public static void BookEventInterchapterController_SetPage_Postfix(BookEventBaseController __instance, BlueprintBookPage page, List<CueShowData> cues, List<BlueprintAnswer> answers)
-        {
-            if (!Main.Multiplayer.IsActive)
-            {
-                return;
-            }
-
-            Main.GetLogger<DialogController>().LogWarning("SET PAGE");
         }
     }
 }

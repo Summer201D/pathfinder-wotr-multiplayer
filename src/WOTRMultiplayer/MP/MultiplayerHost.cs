@@ -198,39 +198,6 @@ namespace WOTRMultiplayer.MP
             TryUnpauseGame();
         }
 
-        /// <summary>
-        /// Reloads current party characters and tries to merge ownership
-        /// </summary>
-        public void PartyChanged()
-        {
-            Logger.LogInformation("Updating current characters & merging ownership");
-
-            // could be synced from host, but state is the same anyway
-            var partyCharacters = GameInteraction.GetPartyPlayers();
-            if (partyCharacters.Count == 0)
-            {
-                return;
-            }
-
-            var oldCharacters = Game.Characters.ToList();
-            Game.Characters = [.. partyCharacters];
-            var defaultOwner = GetPlayer(Game.LocalPlayerId);
-            foreach (var character in Game.Characters)
-            {
-                var existingOwnershipConfiguration = oldCharacters.FirstOrDefault(old =>
-                    old.Name == character.Name || old.Name.Contains(character.Name));
-                if (existingOwnershipConfiguration?.Owner != null)
-                {
-                    character.Owner = existingOwnershipConfiguration.Owner;
-                    Logger.LogInformation("Character ownership has been preserved. CharacterId={characterId}, CharacterName={characterName}, Owner={ownerId}", character.UnitId, character.Name, character.Owner.Id);
-                    continue;
-                }
-
-                character.Owner = defaultOwner;
-                Logger.LogInformation("Character ownership has been assigned to default player (host). CharacterId={characterId}, CharacterName={characterName}, Owner={ownerId}", character.UnitId, character.Name, character.Owner.Id);
-            }
-        }
-
         public void Pause()
         {
             //Logger.LogInformation("Sending pausing notification");
@@ -719,7 +686,7 @@ namespace WOTRMultiplayer.MP
 
         private void OnNotifyOvertipInteracted(long playerId, NotifyOvertipInteracted interacted)
         {
-            Logger.LogInformation("Received {messageType}. PlayerId={playerId}, MapObjectId={mapObjectId}, UnitsCount={unitsCount}", nameof(NotifyOvertipInteracted), playerId, interacted.Overtip.MapObjectId, interacted.Overtip.Units);
+            Logger.LogInformation("Received {messageType}. PlayerId={playerId}, MapObjectId={mapObjectId}, UnitsCount={unitsCount}", nameof(NotifyOvertipInteracted), playerId, interacted.Overtip.MapObject.Id, interacted.Overtip.Units);
             var overtip = Mapper.Map<NetworkOvertip>(interacted.Overtip);
             GameInteraction.InteractWithOvertip(overtip);
 

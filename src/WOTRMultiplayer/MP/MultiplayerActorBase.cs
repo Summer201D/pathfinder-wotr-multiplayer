@@ -299,7 +299,7 @@ namespace WOTRMultiplayer.MP
 
         public void OnInteractWithMapObjectOvertip(NetworkOvertip networkOvertip)
         {
-            Logger.LogWarning("Sending overtip interaction. MapObjectId={mapObjectId}, Units={units}", networkOvertip.MapObjectId, networkOvertip.Units);
+            Logger.LogWarning("Sending overtip interaction. MapObjectId={mapObjectId}, Units={units}", networkOvertip.MapObject.Id, networkOvertip.Units);
             var message = new NotifyOvertipInteracted
             {
                 Overtip = Mapper.Map<Networking.Messages.NetworkOvertip>(networkOvertip)
@@ -308,6 +308,43 @@ namespace WOTRMultiplayer.MP
             Send(message);
         }
 
+        public void OnAreaScenesLoaded()
+        {
+            PartyChanged();
+        }
+
+        /// <summary>
+        /// Reloads current party characters and tries to merge ownership
+        /// </summary>
+        public void PartyChanged()
+        {
+            Logger.LogInformation("Updating current characters & merging ownership");
+
+            // could be synced from host, but state is the same anyway
+            var partyCharacters = GameInteraction.GetPartyPlayers();
+            if (partyCharacters.Count == 0)
+            {
+                return;
+            }
+
+            var oldCharacters = Game.Characters.ToList();
+            Game.Characters = [.. partyCharacters];
+            var defaultOwner = GetPlayer(LocalHostPlayerId);
+            foreach (var character in Game.Characters)
+            {
+                var existingOwnershipConfiguration = oldCharacters.FirstOrDefault(old =>
+                    old.Name == character.Name || old.Name.Contains(character.Name));
+                if (existingOwnershipConfiguration?.Owner != null)
+                {
+                    character.Owner = existingOwnershipConfiguration.Owner;
+                    Logger.LogInformation("Character ownership has been preserved. UnitId={unitId}, CharacterName={characterName}, Owner={ownerId}", character.UnitId, character.Name, character.Owner.Id);
+                    continue;
+                }
+
+                character.Owner = defaultOwner;
+                Logger.LogInformation("Character ownership has been assigned to default player (host). UnitId={unitId}, CharacterName={characterName}, Owner={ownerId}", character.UnitId, character.Name, character.Owner.Id);
+            }
+        }
 
         protected abstract Task<DiceRollValueResponse> RetrieveRoll(DiceRollValueRequest rollRequest, string unitId);
 

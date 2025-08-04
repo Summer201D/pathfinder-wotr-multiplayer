@@ -9,7 +9,6 @@ using Kingmaker.Blueprints.Root;
 using Kingmaker.Cheats;
 using Kingmaker.Controllers.Clicks;
 using Kingmaker.Controllers.Clicks.Handlers;
-using Kingmaker.Controllers.Dialog;
 using Kingmaker.DialogSystem.Blueprints;
 using Kingmaker.EntitySystem.Entities;
 using Kingmaker.EntitySystem.Persistence;
@@ -84,10 +83,10 @@ namespace WOTRMultiplayer.GameInteraction
             {
                 var units = networkOvertip.Units.Select(GetUnitEntity).ToList();
                 using var context = _networkExecutionContext.Value = new NetworkExecutionContext { SelectedUnits = units };
-                var mapObject = GetMapObject(networkOvertip.MapObjectId);
+                var mapObject = GetMapObject(networkOvertip.MapObject.Id);
                 if (mapObject == null)
                 {
-                    _logger.LogError("Unable to perform overtip interaction with missing map object. MapObjectId={mapObjectId}", networkOvertip.MapObjectId);
+                    _logger.LogError("Unable to perform overtip interaction with missing map object. MapObjectId={mapObjectId}", networkOvertip.MapObject.Id);
                     return;
                 }
 

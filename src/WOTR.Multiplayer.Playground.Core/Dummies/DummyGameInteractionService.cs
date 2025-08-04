@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
-using Kingmaker.EntitySystem.Persistence;
 using Kingmaker.GameModes;
 using Kingmaker.Items.Slots;
 using Kingmaker.UI;
@@ -30,11 +29,6 @@ namespace WOTR.Multiplayer.Playground.Core.Dummies
             var appData = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
             var fullPath = Path.Combine(appData, "AppData\\LocalLow\\Owlcat Games\\Pathfinder Wrath Of The Righteous\\Saved Games\\");
             return fullPath;
-        }
-
-        public SaveInfo LoadSave(string path)
-        {
-            return null;
         }
 
         public bool IsUnitAI(string unitId)
@@ -120,10 +114,6 @@ namespace WOTR.Multiplayer.Playground.Core.Dummies
         }
 
         public void ClickGroundInCombat(NetworkClick click)
-        {
-        }
-
-        public void ClickAbilityInCombat(NetworkClick click)
         {
         }
 

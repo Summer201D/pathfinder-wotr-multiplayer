@@ -7,7 +7,7 @@ namespace WOTRMultiplayer.Networking.Messages
     public class NetworkOvertip
     {
         [ProtoMember(1)]
-        public string MapObjectId { get; set; }
+        public NetworkMapObject MapObject { get; set; }
 
         [ProtoMember(2)]
         public List<string> Units { get; set; } = [];

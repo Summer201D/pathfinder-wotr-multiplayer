@@ -99,5 +99,7 @@ namespace WOTRMultiplayer.Abstractions.MP
         void OnChangeActiveHandEquipmentSet(NetworkActiveHandEquipmentSet set);
 
         void OnInteractWithMapObjectOvertip(NetworkOvertip networkOvertip);
+
+        void OnAreaScenesLoaded();
     }
 }

@@ -21,7 +21,11 @@ namespace WOTRMultiplayer.HarmonyPatches.MapObjects
             var selectedUnits = Game.Instance.SelectionCharacter.SelectedUnits.Select(x => x.UniqueId).ToList();
             var networkOvertip = new NetworkOvertip
             {
-                MapObjectId = __instance.MapObjectView.UniqueId,
+                MapObject = new NetworkMapObject
+                {
+                    Id = __instance.MapObjectView.UniqueId,
+                    Position = new MP.Entities.NetworkVector3(__instance.MapObjectView.Data.Position.x, __instance.MapObjectView.Data.Position.y, __instance.MapObjectView.Data.Position.z)
+                },
                 Units = [.. Game.Instance.SelectionCharacter.SelectedUnits.Select(x => x.UniqueId)]
             };
 

@@ -203,7 +203,7 @@ namespace WOTRMultiplayer.PubSub
             }
 
             Logger.LogInformation("OnAreaScenesLoaded");
-            multiplayerActor.PartyChanged();
+            multiplayerActor.OnAreaScenesLoaded();
         }
     }
 }
