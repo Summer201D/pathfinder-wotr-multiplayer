@@ -348,7 +348,7 @@ namespace WOTRMultiplayer.MP
             _networkServerClient.Send(message);
         }
 
-        public bool ShouldStoreRoll(bool silent)
+        public bool IsRollOwner(bool silent)
         {
             return !IsRolledByHost(silent) && IsRolledByLocalPlayer(silent);
         }

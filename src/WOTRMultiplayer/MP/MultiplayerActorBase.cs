@@ -424,6 +424,7 @@ namespace WOTRMultiplayer.MP
                 Logger.LogInformation("IsRolledByLocalPlayer calculation. Result={result}, IsNotAI={isNotAI}, IsLocalPlayer={isLocalPlayer}",
                 result, isNotAI, isLocalPlayer);
             }
+
             return result;
         }
 

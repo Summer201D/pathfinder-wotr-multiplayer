@@ -450,9 +450,9 @@ namespace WOTRMultiplayer.MP
             _networkServer.SendAll(message);
         }
 
-        public bool ShouldStoreRoll(bool isBeforeRolling)
+        public bool IsRollOwner(bool silent)
         {
-            return IsRolledByHost(isBeforeRolling) || IsRolledByLocalPlayer(isBeforeRolling);
+            return IsRolledByHost(silent) || IsRolledByLocalPlayer(silent);
         }
 
         protected override Task<DiceRollValueResponse> RetrieveRoll(DiceRollValueRequest request, string unitId)
