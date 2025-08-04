@@ -15,6 +15,7 @@ using WOTRMultiplayer.MP.Entities.Combat;
 using WOTRMultiplayer.MP.Entities.Dialogs;
 using WOTRMultiplayer.MP.Entities.Equipment;
 using WOTRMultiplayer.MP.Entities.Loot;
+using WOTRMultiplayer.MP.Entities.MapObjects;
 using WOTRMultiplayer.Networking.Abstractions;
 using WOTRMultiplayer.Networking.Messages.Game;
 using WOTRMultiplayer.Networking.Messages.Lobby;
@@ -421,10 +422,19 @@ namespace WOTRMultiplayer.MP
                 .Register<NotifyDropItem>(OnNotifyDropItem)
                 .Register<NotifyEquipmentSlotChanged>(OnNotifyEquipmentSlotChanged)
                 .Register<NotifyActiveHandEquipmentSetChanged>(OnNotifyActiveHandEquipmentSetChanged)
+
+                .Register<NotifyOvertipInteracted>(OnNotifyOvertipInteracted)
                 ;
 
             _networkServerClient.OnError = OnNetworkClientError;
             _networkServerClient.OnConnected = OnNetworkClientConnected;
+        }
+
+        private void OnNotifyOvertipInteracted(NotifyOvertipInteracted interacted)
+        {
+            Logger.LogInformation("Received {messageType}. MapObjectId={mapObjectId}, UnitsCount={unitsCount}", nameof(NotifyOvertipInteracted), interacted.Overtip.MapObjectId, interacted.Overtip.Units);
+            var overtip = Mapper.Map<NetworkOvertip>(interacted.Overtip);
+            GameInteraction.InteractWithOvertip(overtip);
         }
 
         private void OnNotifyActiveHandEquipmentSetChanged(NotifyActiveHandEquipmentSetChanged changed)

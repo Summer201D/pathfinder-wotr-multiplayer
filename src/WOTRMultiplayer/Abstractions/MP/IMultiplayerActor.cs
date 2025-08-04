@@ -4,6 +4,7 @@ using WOTRMultiplayer.MP.Entities;
 using WOTRMultiplayer.MP.Entities.Abilities;
 using WOTRMultiplayer.MP.Entities.Equipment;
 using WOTRMultiplayer.MP.Entities.Loot;
+using WOTRMultiplayer.MP.Entities.MapObjects;
 using WOTRMultiplayer.MP.Entities.Rolls.Claiming.Values;
 
 namespace WOTRMultiplayer.Abstractions.MP
@@ -96,5 +97,7 @@ namespace WOTRMultiplayer.Abstractions.MP
         void OnEquipmentSlotChanged(NetworkEquipmentSlot networkSlot);
 
         void OnChangeActiveHandEquipmentSet(NetworkActiveHandEquipmentSet set);
+
+        void OnInteractWithMapObjectOvertip(NetworkOvertip networkOvertip);
     }
 }

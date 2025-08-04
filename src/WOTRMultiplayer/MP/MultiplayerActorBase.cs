@@ -15,6 +15,7 @@ using WOTRMultiplayer.MP.Entities.Abilities;
 using WOTRMultiplayer.MP.Entities.Combat;
 using WOTRMultiplayer.MP.Entities.Equipment;
 using WOTRMultiplayer.MP.Entities.Loot;
+using WOTRMultiplayer.MP.Entities.MapObjects;
 using WOTRMultiplayer.MP.Entities.Rolls.Claiming.Values;
 using WOTRMultiplayer.Networking.Messages.Game;
 
@@ -295,6 +296,18 @@ namespace WOTRMultiplayer.MP
 
             Send(message);
         }
+
+        public void OnInteractWithMapObjectOvertip(NetworkOvertip networkOvertip)
+        {
+            Logger.LogWarning("Sending overtip interaction. MapObjectId={mapObjectId}, UnitsCount={unitsCount}", networkOvertip.MapObjectId, networkOvertip.Units);
+            var message = new NotifyOvertipInteracted
+            {
+                Overtip = Mapper.Map<Networking.Messages.NetworkOvertip>(networkOvertip)
+            };
+
+            Send(message);
+        }
+
 
         protected abstract Task<DiceRollValueResponse> RetrieveRoll(DiceRollValueRequest rollRequest, string unitId);
 

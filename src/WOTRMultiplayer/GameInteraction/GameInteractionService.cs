@@ -22,6 +22,7 @@ using Kingmaker.PubSubSystem;
 using Kingmaker.TurnBasedMode;
 using Kingmaker.TurnBasedMode.Controllers;
 using Kingmaker.UI;
+using Kingmaker.UI._ConsoleUI.Overtips;
 using Kingmaker.UI.MVVM._PCView.Dialog.Dialog;
 using Kingmaker.UI.MVVM._PCView.InGame;
 using Kingmaker.UI.MVVM._VM.Dialog.Dialog;
@@ -44,6 +45,7 @@ using WOTRMultiplayer.MP.Entities.Combat;
 using WOTRMultiplayer.MP.Entities.Dialogs;
 using WOTRMultiplayer.MP.Entities.Equipment;
 using WOTRMultiplayer.MP.Entities.Loot;
+using WOTRMultiplayer.MP.Entities.MapObjects;
 
 namespace WOTRMultiplayer.GameInteraction
 {
@@ -54,6 +56,9 @@ namespace WOTRMultiplayer.GameInteraction
         private readonly IResourceProvider _resourceProvider;
         private readonly IEquipmentDefinitions _equipmentDefinitions;
         private readonly ConcurrentDictionary<string, bool> _triggeredByAnotherPlayer = new();
+        private readonly AsyncLocal<NetworkExecutionContext> _networkExecutionContext = new();
+
+        public NetworkExecutionContext ExecutionContext => _networkExecutionContext?.Value;
 
         public GameInteractionService(
             ILogger<GameInteractionService> logger,
@@ -68,6 +73,29 @@ namespace WOTRMultiplayer.GameInteraction
         }
 
         public bool IsPaused => Game.Instance.IsPaused;
+
+        public bool IsMeaningfulRolls => Game.Instance.CurrentMode == GameModeType.Default;
+
+        public void InteractWithOvertip(NetworkOvertip networkOvertip)
+        {
+            _mainThreadAccessor.Enqueue(() =>
+            {
+                var units = networkOvertip.Units.Select(GetUnitEntity).ToList();
+                using var context = _networkExecutionContext.Value = new NetworkExecutionContext { SelectedUnits = units };
+                var mapObject = GetMapObject(networkOvertip.MapObjectId);
+                if (mapObject == null)
+                {
+                    _logger.LogError("Unable to perform overtip interaction with missing map object. MapObjectId={mapObjectId}", networkOvertip.MapObjectId);
+                    return;
+                }
+
+                // overtips are created by game on demand, but we need to make sure overtip exists
+                var overtipVM = new EntityOvertipVM(mapObject, OvertipsView.Instance.GetViewModel() as OvertipsVM);
+                // TODO: maybe get exact interactionpart
+                overtipVM.Interact(mapObject.Interactions.FirstOrDefault());
+                overtipVM.Dispose();
+            });
+        }
 
         public string GetSaveGamePath()
         {

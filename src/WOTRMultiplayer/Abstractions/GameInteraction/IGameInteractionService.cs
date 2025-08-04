@@ -2,17 +2,23 @@
 using System.Threading.Tasks;
 using Kingmaker.Items.Slots;
 using Kingmaker.UI;
+using WOTRMultiplayer.GameInteraction;
 using WOTRMultiplayer.MP.Entities;
 using WOTRMultiplayer.MP.Entities.Abilities;
 using WOTRMultiplayer.MP.Entities.Dialogs;
 using WOTRMultiplayer.MP.Entities.Equipment;
 using WOTRMultiplayer.MP.Entities.Loot;
+using WOTRMultiplayer.MP.Entities.MapObjects;
 
 namespace WOTRMultiplayer.Abstractions.GameInteraction
 {
     public interface IGameInteractionService
     {
+        NetworkExecutionContext ExecutionContext { get; }
+
         bool IsPaused { get; }
+
+        bool IsMeaningfulRolls { get; }
 
         void LeaveArea(string areaExitId);
 
@@ -81,5 +87,7 @@ namespace WOTRMultiplayer.Abstractions.GameInteraction
         void UpdateEquipmentSlot(NetworkEquipmentSlot slot);
 
         void SetActiveHandEquipmentSet(NetworkActiveHandEquipmentSet set);
+
+        void InteractWithOvertip(NetworkOvertip networkOvertip);
     }
 }

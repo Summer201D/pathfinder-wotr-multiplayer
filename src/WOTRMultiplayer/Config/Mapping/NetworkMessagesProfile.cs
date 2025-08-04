@@ -4,6 +4,7 @@ using WOTRMultiplayer.MP.Entities.Abilities;
 using WOTRMultiplayer.MP.Entities.Combat;
 using WOTRMultiplayer.MP.Entities.Equipment;
 using WOTRMultiplayer.MP.Entities.Loot;
+using WOTRMultiplayer.MP.Entities.MapObjects;
 using WOTRMultiplayer.MP.Entities.Rolls.Claiming.Values;
 
 namespace WOTRMultiplayer.Config.Mapping
@@ -62,6 +63,9 @@ namespace WOTRMultiplayer.Config.Mapping
                 .ReverseMap();
 
             CreateMap<NetworkActiveHandEquipmentSet, Networking.Messages.NetworkActiveHandEquipmentSet>()
+                .ReverseMap();
+
+            CreateMap<NetworkOvertip, Networking.Messages.NetworkOvertip>()
                 .ReverseMap();
         }
     }

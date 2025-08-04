@@ -6,17 +6,23 @@ using Kingmaker.EntitySystem.Persistence;
 using Kingmaker.Items.Slots;
 using Kingmaker.UI;
 using WOTRMultiplayer.Abstractions.GameInteraction;
+using WOTRMultiplayer.GameInteraction;
 using WOTRMultiplayer.MP.Entities;
 using WOTRMultiplayer.MP.Entities.Abilities;
 using WOTRMultiplayer.MP.Entities.Dialogs;
 using WOTRMultiplayer.MP.Entities.Equipment;
 using WOTRMultiplayer.MP.Entities.Loot;
+using WOTRMultiplayer.MP.Entities.MapObjects;
 
 namespace WOTR.Multiplayer.Playground.Core.Dummies
 {
     public class DummyGameInteractionService : IGameInteractionService
     {
         public bool IsPaused { get; set; }
+
+        public NetworkExecutionContext ExecutionContext { get; }
+
+        public bool IsMeaningfulRolls => true;
 
         public string GetSaveGamePath()
         {
@@ -176,6 +182,10 @@ namespace WOTR.Multiplayer.Playground.Core.Dummies
         public bool HasBeenTriggeredByAnotherPlayer(NetworkActiveHandEquipmentSet set)
         {
             return false;
+        }
+
+        public void InteractWithOvertip(NetworkOvertip networkOvertip)
+        {
         }
     }
 }

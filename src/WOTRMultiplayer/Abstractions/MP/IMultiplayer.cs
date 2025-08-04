@@ -3,15 +3,19 @@ using Kingmaker.GameModes;
 using Kingmaker.RuleSystem.Rules;
 using Kingmaker.RuleSystem.Rules.Damage;
 using WOTRMultiplayer.Abstractions.UI;
+using WOTRMultiplayer.GameInteraction;
 using WOTRMultiplayer.MP.Entities;
 using WOTRMultiplayer.MP.Entities.Abilities;
 using WOTRMultiplayer.MP.Entities.Equipment;
 using WOTRMultiplayer.MP.Entities.Loot;
+using WOTRMultiplayer.MP.Entities.MapObjects;
 
 namespace WOTRMultiplayer.Abstractions.MP
 {
     public interface IMultiplayer
     {
+        NetworkExecutionContext ExecutionContext { get; }
+
         IUIFactory Factory { get; }
 
         bool InitializeMultiplayer(InitializeMultiplayerContext context);
@@ -57,6 +61,8 @@ namespace WOTRMultiplayer.Abstractions.MP
         void OnClickGround(NetworkClick click);
 
         void OnClickMapObject(NetworkClick click);
+
+        void OnInteractWithMapObjectOvertip(NetworkOvertip networkOvertip);
 
         void OnAbilityUse(NetworkAbility ability);
 

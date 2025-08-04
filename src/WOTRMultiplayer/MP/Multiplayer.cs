@@ -13,10 +13,12 @@ using WOTRMultiplayer.Abstractions.MP;
 using WOTRMultiplayer.Abstractions.UI;
 using WOTRMultiplayer.Abstractions.UI.Controllers;
 using WOTRMultiplayer.Abstractions.UI.Windows;
+using WOTRMultiplayer.GameInteraction;
 using WOTRMultiplayer.MP.Entities;
 using WOTRMultiplayer.MP.Entities.Abilities;
 using WOTRMultiplayer.MP.Entities.Equipment;
 using WOTRMultiplayer.MP.Entities.Loot;
+using WOTRMultiplayer.MP.Entities.MapObjects;
 using WOTRMultiplayer.MP.Entities.Rolls;
 using WOTRMultiplayer.MP.Entities.Rolls.Claiming.Values;
 using WOTRMultiplayer.UI.Menu;
@@ -39,6 +41,8 @@ namespace WOTRMultiplayer.MP
         public IUIFactory Factory { get; private set; }
 
         public bool IsActive => _multiplayerClient.IsActive || _multiplayerHost.IsActive;
+
+        public NetworkExecutionContext ExecutionContext => _gameInteractionService.ExecutionContext;
 
         public Multiplayer(
             ILogger<Multiplayer> logger,
@@ -180,7 +184,7 @@ namespace WOTRMultiplayer.MP
             try
             {
                 var multiplayerActor = GetMultiplayerActor();
-                if (multiplayerActor == null || multiplayerActor.ShouldStoreRoll(false))
+                if (!_gameInteractionService.IsMeaningfulRolls || multiplayerActor == null || multiplayerActor.ShouldStoreRoll(false))
                 {
                     return true;
                 }
@@ -232,7 +236,7 @@ namespace WOTRMultiplayer.MP
             try
             {
                 var multiplayerActor = GetMultiplayerActor();
-                if (multiplayerActor == null || !multiplayerActor.ShouldStoreRoll(true))
+                if (!_gameInteractionService.IsMeaningfulRolls || multiplayerActor == null || !multiplayerActor.ShouldStoreRoll(true))
                 {
                     return;
                 }
@@ -306,7 +310,7 @@ namespace WOTRMultiplayer.MP
             try
             {
                 var multiplayerActor = GetMultiplayerActor();
-                if (multiplayerActor == null || multiplayerActor.ShouldStoreRoll(false))
+                if (!_gameInteractionService.IsMeaningfulRolls || multiplayerActor == null || multiplayerActor.ShouldStoreRoll(false))
                 {
                     return true;
                 }
@@ -333,7 +337,7 @@ namespace WOTRMultiplayer.MP
             try
             {
                 var multiplayerActor = GetMultiplayerActor();
-                if (multiplayerActor == null || !multiplayerActor.ShouldStoreRoll(false) || ruleAttackRoll.D20 == null)
+                if (!_gameInteractionService.IsMeaningfulRolls || multiplayerActor == null || !multiplayerActor.ShouldStoreRoll(false) || ruleAttackRoll.D20 == null)
                 {
                     return;
                 }
@@ -393,7 +397,7 @@ namespace WOTRMultiplayer.MP
             try
             {
                 var multiplayerActor = GetMultiplayerActor();
-                if (multiplayerActor == null || multiplayerActor.ShouldStoreRoll(false))
+                if (!_gameInteractionService.IsMeaningfulRolls || multiplayerActor == null || multiplayerActor.ShouldStoreRoll(false))
                 {
                     return true;
                 }
@@ -420,7 +424,7 @@ namespace WOTRMultiplayer.MP
             try
             {
                 var multiplayerActor = GetMultiplayerActor();
-                if (multiplayerActor == null || !multiplayerActor.ShouldStoreRoll(false))
+                if (!_gameInteractionService.IsMeaningfulRolls || multiplayerActor == null || !multiplayerActor.ShouldStoreRoll(false))
                 {
                     return;
                 }
@@ -440,6 +444,7 @@ namespace WOTRMultiplayer.MP
             try
             {
                 var multiplayerActor = GetMultiplayerActor();
+                // _gameInteractionService.IsMeaningfulRolls
                 if (multiplayerActor == null || multiplayerActor.ShouldStoreRoll(false))
                 {
                     return true;
@@ -488,7 +493,7 @@ namespace WOTRMultiplayer.MP
             try
             {
                 var multiplayerActor = GetMultiplayerActor();
-                if (multiplayerActor == null || multiplayerActor.ShouldStoreRoll(false))
+                if (!_gameInteractionService.IsMeaningfulRolls || multiplayerActor == null || multiplayerActor.ShouldStoreRoll(false))
                 {
                     return true;
                 }
@@ -515,7 +520,7 @@ namespace WOTRMultiplayer.MP
             try
             {
                 var multiplayerActor = GetMultiplayerActor();
-                if (multiplayerActor == null || !multiplayerActor.ShouldStoreRoll(false))
+                if (!_gameInteractionService.IsMeaningfulRolls || multiplayerActor == null || !multiplayerActor.ShouldStoreRoll(false))
                 {
                     return;
                 }
@@ -748,6 +753,17 @@ namespace WOTRMultiplayer.MP
             }
 
             multiplayerActor.OnChangeActiveHandEquipmentSet(set);
+        }
+
+        public void OnInteractWithMapObjectOvertip(NetworkOvertip networkOvertip)
+        {
+            var multiplayerActor = GetMultiplayerActor();
+            if (multiplayerActor == null)
+            {
+                return;
+            }
+
+            multiplayerActor.OnInteractWithMapObjectOvertip(networkOvertip);
         }
 
         private int? GetDiceRollId(NetworkDiceRollBase roll)
