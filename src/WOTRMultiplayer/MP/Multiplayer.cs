@@ -537,6 +537,11 @@ namespace WOTRMultiplayer.MP
         public void OnAfterCueShow(string dialogName, string cueName, bool hasSystemAnswer)
         {
             var multiplayerActor = GetMultiplayerActor();
+            if (multiplayerActor == null)
+            {
+                return;
+            }
+
             multiplayerActor.OnAfterCueShow(dialogName, cueName, hasSystemAnswer);
         }
 
@@ -545,6 +550,11 @@ namespace WOTRMultiplayer.MP
             // host - check if everyone witnessed current cue
             // client - skip execution if triggered by user himself, send notification to host => mark answer on host side
             var multiplayerActor = GetMultiplayerActor();
+            if (multiplayerActor == null)
+            {
+                return true;
+            }
+
             var shouldContinueExecution = multiplayerActor.OnBeforeSelectDialogAnswer(dialogName, cueName, answerName, isExitAnswer, manualUnitSelectionId);
             return shouldContinueExecution;
         }

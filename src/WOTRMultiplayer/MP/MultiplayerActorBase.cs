@@ -299,7 +299,7 @@ namespace WOTRMultiplayer.MP
 
         public void OnInteractWithMapObjectOvertip(NetworkOvertip networkOvertip)
         {
-            Logger.LogWarning("Sending overtip interaction. MapObjectId={mapObjectId}, UnitsCount={unitsCount}", networkOvertip.MapObjectId, networkOvertip.Units);
+            Logger.LogWarning("Sending overtip interaction. MapObjectId={mapObjectId}, Units={units}", networkOvertip.MapObjectId, networkOvertip.Units);
             var message = new NotifyOvertipInteracted
             {
                 Overtip = Mapper.Map<Networking.Messages.NetworkOvertip>(networkOvertip)

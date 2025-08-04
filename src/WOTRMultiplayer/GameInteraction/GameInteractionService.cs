@@ -9,6 +9,7 @@ using Kingmaker.Blueprints.Root;
 using Kingmaker.Cheats;
 using Kingmaker.Controllers.Clicks;
 using Kingmaker.Controllers.Clicks.Handlers;
+using Kingmaker.Controllers.Dialog;
 using Kingmaker.DialogSystem.Blueprints;
 using Kingmaker.EntitySystem.Entities;
 using Kingmaker.EntitySystem.Persistence;
@@ -24,6 +25,7 @@ using Kingmaker.TurnBasedMode.Controllers;
 using Kingmaker.UI;
 using Kingmaker.UI._ConsoleUI.Overtips;
 using Kingmaker.UI.MVVM._PCView.Dialog.Dialog;
+using Kingmaker.UI.MVVM._PCView.Dialog.Interchapter;
 using Kingmaker.UI.MVVM._PCView.InGame;
 using Kingmaker.UI.MVVM._VM.Dialog.Dialog;
 using Kingmaker.UnitLogic.Abilities;
@@ -140,55 +142,102 @@ namespace WOTRMultiplayer.GameInteraction
 
         public void MarkSuggestedDialogAnswers(List<NetworkDialogAnswerSuggestion> suggestions)
         {
-            const string SuggestionIconName = "SuggestionIcon";
             _mainThreadAccessor.Enqueue(() =>
             {
-                var dialogView = (Game.Instance.RootUiContext.m_UIView as InGamePCView)?.m_StaticPartPCView?.m_DialogContextPCView?.m_DialogPCView;
-                var gameObject = dialogView.gameObject;
-                var answers = gameObject.transform.Find("Body/View/Scroll View/Viewport/Content/AnswersPanel");
-                for (int answerIndex = 0; answerIndex < answers.childCount; answerIndex++)
+                if (Game.Instance.DialogController?.Dialog == null)
                 {
-                    var answer = answers.GetChild(answerIndex);
-                    var answerView = answer.GetComponent<DialogAnswerPCView>();
-                    var answerName = (answerView.GetViewModel() as AnswerVM).Answer.Value.name;
-                    var suggestedAnswer = suggestions.FirstOrDefault(s => string.Equals(s.AnswerName, answerName));
-
-                    answer.gameObject.CleanupAllChildren(x => x.name.StartsWith(SuggestionIconName));
-                    if (suggestedAnswer == null)
-                    {
-                        continue;
-                    }
-
-                    var portrait = _resourceProvider.GetUISprite("UI_Inventory_IconHeart");
-                    var maxIcons = Math.Min(3, suggestedAnswer.Players.Count);
-                    for (int i = maxIcons; i > 0; i--)
-                    {
-                        var arrow = answer.Find("Arrow");
-                        var suggestionIconObject = UnityEngine.Object.Instantiate(arrow.gameObject, answer);
-                        suggestionIconObject.name = SuggestionIconName + i.ToString();
-                        suggestionIconObject.SetActive(true);
-
-                        var rect = suggestionIconObject.GetComponent<UnityEngine.RectTransform>();
-                        var preferedSize = Math.Min(rect.sizeDelta.x, rect.sizeDelta.y);
-                        rect.sizeDelta = new UnityEngine.Vector2(preferedSize, preferedSize);
-
-                        var newPosition = new UnityEngine.Vector3(suggestionIconObject.transform.position.x + 4 - (5 * i), suggestionIconObject.transform.position.y, suggestionIconObject.transform.position.z);
-                        suggestionIconObject.transform.SetPositionAndRotation(newPosition, suggestionIconObject.transform.rotation);
-
-                        var image = suggestionIconObject.GetComponent<Image>();
-                        image.color = UnityEngine.Color.white;
-                        image.sprite = portrait;
-                    }
-
-                    _logger.LogInformation("Created answer suggestion icon. AnswerIndex={answerIndex}, AnswerName={answerName}, PlayersCount={playersCount}", answerIndex, suggestedAnswer.AnswerName, suggestedAnswer.Players.Count);
+                    _logger.LogWarning("DialogController.Dialog is null");
+                    return;
                 }
 
-                // single sound for all suggestions
+                var dialogContext = (Game.Instance.RootUiContext.m_UIView as InGamePCView)?.m_StaticPartPCView?.m_DialogContextPCView;
+                if (dialogContext == null)
+                {
+                    _logger.LogWarning("DialogContextView is null");
+                    return;
+                }
+
+                // (Game.Instance.RootUiContext.m_UIView as InGamePCView).m_StaticPartPCView.m_DialogContextPCView.m_BookEventPCView
+                switch (Game.Instance.DialogController.Dialog.Type)
+                {
+                    case DialogType.Interchapter:
+                        MarkInterchapterAnswer(dialogContext.m_InterchapterPCView, suggestions);
+                        break;
+                    case DialogType.Common:
+                        MarkDialogAnswer(dialogContext.m_DialogPCView, suggestions);
+                        break;
+                    default:
+                        _logger.LogWarning("Marking suggested answers has not been implemented for this dialog type. DialogType={dialogType}", Game.Instance.DialogController.Dialog.Type);
+                        break;
+                }
+
                 if (suggestions.Count > 0)
                 {
                     PlaySound(UISoundType.GlobalMapRandomEncounter);
                 }
             });
+        }
+
+        private void MarkInterchapterAnswer(InterchapterPCView interchapterView, List<NetworkDialogAnswerSuggestion> suggestions)
+        {
+            if (interchapterView == null)
+            {
+                return;
+            }
+
+            var answers = interchapterView.gameObject.transform.Find("ContentWrapper/Window/Content/Answers");
+            MarkAnswers(answers, suggestions);
+        }
+
+        private void MarkDialogAnswer(DialogPCView dialogView, List<NetworkDialogAnswerSuggestion> suggestions)
+        {
+            if (dialogView == null)
+            {
+                return;
+            }
+
+            var answers = dialogView.gameObject.transform.Find("Body/View/Scroll View/Viewport/Content/AnswersPanel");
+            MarkAnswers(answers, suggestions);
+        }
+
+        private void MarkAnswers(Transform answersContainer, List<NetworkDialogAnswerSuggestion> suggestions)
+        {
+            const string SuggestionIconName = "SuggestionIcon";
+
+            for (int answerIndex = 0; answerIndex < answersContainer.childCount; answerIndex++)
+            {
+                var answer = answersContainer.GetChild(answerIndex);
+                var answerView = answer.GetComponent<DialogAnswerPCView>();
+                var answerName = (answerView.GetViewModel() as AnswerVM).Answer.Value.name;
+                var suggestedAnswer = suggestions.FirstOrDefault(s => string.Equals(s.AnswerName, answerName));
+
+                answer.gameObject.CleanupAllChildren(x => x.name.StartsWith(SuggestionIconName));
+                if (suggestedAnswer == null)
+                {
+                    continue;
+                }
+
+                var portrait = _resourceProvider.GetUISprite("UI_Inventory_IconHeart");
+                var maxIcons = Math.Min(3, suggestedAnswer.Players.Count);
+                for (int i = maxIcons; i > 0; i--)
+                {
+                    var arrow = answer.Find("Arrow");
+                    var suggestionIconObject = UnityEngine.Object.Instantiate(arrow.gameObject, answer);
+                    suggestionIconObject.name = SuggestionIconName + i.ToString();
+                    suggestionIconObject.SetActive(true);
+
+                    var rect = suggestionIconObject.GetComponent<UnityEngine.RectTransform>();
+                    var preferedSize = Math.Min(rect.sizeDelta.x, rect.sizeDelta.y);
+                    rect.sizeDelta = new UnityEngine.Vector2(preferedSize, preferedSize);
+
+                    var newPosition = new UnityEngine.Vector3(suggestionIconObject.transform.position.x + 4 - (5 * i), suggestionIconObject.transform.position.y, suggestionIconObject.transform.position.z);
+                    suggestionIconObject.transform.SetPositionAndRotation(newPosition, suggestionIconObject.transform.rotation);
+
+                    var image = suggestionIconObject.GetComponent<Image>();
+                    image.color = UnityEngine.Color.white;
+                    image.sprite = portrait;
+                }
+            }
         }
 
         public void MoveNonCombatCharacter(string unitId, NetworkVector3 destination, float delay, float orientation)

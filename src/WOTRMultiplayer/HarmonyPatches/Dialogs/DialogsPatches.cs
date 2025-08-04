@@ -1,12 +1,15 @@
-﻿using HarmonyLib;
+﻿using System.Collections.Generic;
+using HarmonyLib;
 using Kingmaker;
 using Kingmaker.Blueprints.Root;
 using Kingmaker.Controllers.Dialog;
 using Kingmaker.DialogSystem.Blueprints;
 using Kingmaker.EntitySystem.Entities;
 using Kingmaker.Localization;
+using Kingmaker.UI.BookEvent;
 using Kingmaker.UI.MVVM._VM.Dialog.Dialog;
 using Kingmaker.View.MapObjects;
+using Microsoft.Extensions.Logging;
 
 namespace WOTRMultiplayer.HarmonyPatches.Dialogs
 {
@@ -54,11 +57,18 @@ namespace WOTRMultiplayer.HarmonyPatches.Dialogs
                 return;
             }
 
+            if (__instance.PlayingBookPage)
+            {
+                var dialogName = Game.Instance.DialogController.Dialog?.name;
+                Main.Multiplayer.OnAfterCueShow(dialogName, cue.name, false);
+                return;
+            }
+
             Main.Multiplayer.OnAfterPlayDialogCue();
         }
 
         [HarmonyPatch(typeof(DialogVM), nameof(DialogVM.HandleOnCueShow))]
-        [HarmonyPostfix] // must be postfix to be able to remove 'continue' hotkey coz it's not configured in prefix yet
+        [HarmonyPostfix]
         public static void DialogVM_HandleOnCueShow_Postfix(DialogVM __instance, CueShowData data)
         {
             if (!Main.Multiplayer.IsActive)
@@ -68,6 +78,18 @@ namespace WOTRMultiplayer.HarmonyPatches.Dialogs
 
             var dialogName = Game.Instance.DialogController.Dialog?.name;
             Main.Multiplayer.OnAfterCueShow(dialogName, data.Cue.name, __instance.SystemAnswer.Value != null);
+        }
+
+        [HarmonyPatch(typeof(BookEventBaseController), nameof(BookEventBaseController.SetPage))]
+        [HarmonyPostfix]
+        public static void BookEventInterchapterController_SetPage_Postfix(BookEventBaseController __instance, BlueprintBookPage page, List<CueShowData> cues, List<BlueprintAnswer> answers)
+        {
+            if (!Main.Multiplayer.IsActive)
+            {
+                return;
+            }
+
+            Main.GetLogger<DialogController>().LogWarning("SET PAGE");
         }
     }
 }

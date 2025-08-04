@@ -260,13 +260,6 @@ namespace WOTRMultiplayer.MP
                 GameInteraction.SetDialogContinueButtonState(false);
             }
 
-            if (Game.Dialog != null && Game.Dialog.Name != dialogName)
-            {
-                Logger.LogWarning("Previous dialog has not been disposed correctly. PreviousDialogName={previousDialogName}, CurrentDialogName={currentDialogName}", Game.Dialog.Name, dialogName);
-                Game.Dialog = null;
-            }
-
-            Game.Dialog ??= new NetworkDialog(dialogName);
             Game.Dialog.CurrentCueName = cueName;
             AddCueWitness(cueName, Game.LocalPlayerId);
 
@@ -347,6 +340,12 @@ namespace WOTRMultiplayer.MP
                 message.DialogName, message.TargetUnitId, message.InitiatorUnitId, message.MapObjectId, message.SpeakerKey);
 
             _networkServer.SendAll(message);
+
+            if (!string.Equals(Game.Dialog?.Name, dialogName, StringComparison.OrdinalIgnoreCase))
+            {
+                Game.Dialog = new NetworkDialog(dialogName);
+            }
+
             return true;
         }
 
@@ -591,7 +590,7 @@ namespace WOTRMultiplayer.MP
             var currentCue = Game.Dialog.CurrentCueName;
             if (string.IsNullOrEmpty(currentCue))
             {
-                Logger.LogError("Current CueName is not set for the dialog");
+                Logger.LogWarning("Current CueName is not set for the dialog");
                 return;
             }
 

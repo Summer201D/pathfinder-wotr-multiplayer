@@ -192,13 +192,6 @@ namespace WOTRMultiplayer.MP
                 GameInteraction.SetDialogContinueButtonState(false);
             }
 
-            if (Game.Dialog != null && Game.Dialog.Name != dialogName)
-            {
-                Logger.LogWarning("Previous dialog has not been disposed correctly. PreviousDialogName={previousDialogName}, CurrentDialogName={currentDialogName}", Game.Dialog.Name, dialogName);
-                Game.Dialog = null;
-            }
-
-            Game.Dialog ??= new NetworkDialog(dialogName);
             Game.Dialog.CurrentCueName = cueName;
             Game.Dialog.Answer = null;
 
@@ -257,6 +250,7 @@ namespace WOTRMultiplayer.MP
                 SpeakerKey = speakerKey
             };
             _networkServerClient.Send(message);
+
             return false;
         }
 
