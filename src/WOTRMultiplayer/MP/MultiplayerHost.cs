@@ -329,22 +329,14 @@ namespace WOTRMultiplayer.MP
                 return true;
             }
 
-            if (!Game.Combat.IsCombatPrepared)
-            {
-                Game.Combat.IsCombatPrepared = true;
-            }
+            PrepareCombat();
 
             return true;
         }
 
         public bool CanContinueCombat()
         {
-            if (Game.Combat == null)
-            {
-                return true;
-            }
-
-            if (!Game.Combat.IsCombatPrepared)
+            if (Game.Combat == null || !Game.Combat.IsCombatPrepared)
             {
                 return false;
             }

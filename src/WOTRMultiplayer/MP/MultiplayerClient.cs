@@ -228,17 +228,14 @@ namespace WOTRMultiplayer.MP
         public bool CanInitializeCombat()
         {
             // confirmation from host is required
-            if (Game.Combat == null)
+            if (Game.Combat == null || !Game.Combat.IsInitialized)
             {
-                return true;
+                return false;
             }
 
-            if (Game.Combat.IsInitialized)
-            {
-                Game.Combat.IsCombatPrepared = true;
-            }
+            PrepareCombat();
 
-            return Game.Combat.IsInitialized;
+            return true;
         }
 
         public bool CanContinueCombat()

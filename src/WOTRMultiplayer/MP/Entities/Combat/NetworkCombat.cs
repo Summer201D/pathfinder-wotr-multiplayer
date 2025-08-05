@@ -9,6 +9,8 @@ namespace WOTRMultiplayer.MP.Entities.Combat
 
         public bool IsInitialized { get; set; }
 
+        public int CombatPreparedFrames { get; set; }
+
         public bool IsCombatPrepared { get; set; }
 
         public int Round

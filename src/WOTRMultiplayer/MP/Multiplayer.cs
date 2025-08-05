@@ -510,7 +510,6 @@ namespace WOTRMultiplayer.MP
 
 
                 ruleInitiativeRoll.D20 = d20;
-                _logger.LogInformation("BEFORE Initiative roll. Result={result}, m_OverrideResult={override}", ruleInitiativeRoll.Result, ruleInitiativeRoll.m_OverrideResult);
                 return false;
             }
             catch (Exception ex)
@@ -532,7 +531,6 @@ namespace WOTRMultiplayer.MP
 
                 var roll = CreateInitiativeRoll(NetworkDiceRollType.Hit, ruleInitiativeRoll);
                 SaveIntRollValue(multiplayerActor, roll, ruleInitiativeRoll.D20);
-                _logger.LogInformation("AFTER Initiative roll. Result={result}, m_OverrideResult={override}", ruleInitiativeRoll.Result, ruleInitiativeRoll.m_OverrideResult);
             }
             catch (Exception ex)
             {

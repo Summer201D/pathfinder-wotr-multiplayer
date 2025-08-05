@@ -417,6 +417,22 @@ namespace WOTRMultiplayer.MP
 
         protected abstract void Send(object message);
 
+        protected void PrepareCombat()
+        {
+            // looks dumb af, but seems like combat could start before all initiatives are rolled
+            // so let's make sure combat is 100% prepared before allowing to proceed
+            const int combatPreparationFramesDelay = 10;
+            if (Game.Combat.CombatPreparedFrames < combatPreparationFramesDelay)
+            {
+                Game.Combat.CombatPreparedFrames++;
+            }
+
+            if (!Game.Combat.IsCombatPrepared && Game.Combat.CombatPreparedFrames == combatPreparationFramesDelay)
+            {
+                Game.Combat.IsCombatPrepared = true;
+            }
+        }
+
         protected void InvokeOnStartGame()
         {
             ResetGameIdGenerator();
