@@ -326,7 +326,15 @@ namespace WOTRMultiplayer.MP
                     return true;
                 }
 
-                ruleAttackRoll.D20 = d20;
+                if (isCriticalRoll)
+                {
+                    ruleAttackRoll.CriticalConfirmationD20 = d20;
+                }
+                else
+                {
+                    ruleAttackRoll.D20 = d20;
+                }
+
                 return false;
             }
             catch (Exception ex)
