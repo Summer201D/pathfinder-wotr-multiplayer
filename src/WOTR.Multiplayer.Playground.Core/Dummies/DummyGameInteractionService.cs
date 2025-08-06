@@ -185,5 +185,10 @@ namespace WOTR.Multiplayer.Playground.Core.Dummies
         {
             return null;
         }
+
+        public bool IsSummoned(string unitId)
+        {
+            return false;
+        }
     }
 }

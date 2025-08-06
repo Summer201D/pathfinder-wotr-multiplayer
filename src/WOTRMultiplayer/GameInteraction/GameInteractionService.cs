@@ -526,6 +526,14 @@ namespace WOTRMultiplayer.GameInteraction
             _logger.LogInformation("Starting turn. IsActingInSurpriseRound={isActingInSurpriseRound}", isActingInSurpriseRound);
             _mainThreadAccessor.Enqueue(() =>
             {
+                var currentUnit = Game.Instance.TurnBasedCombatController.CurrentTurn.Rider;
+
+                if (IsUnitAI(currentUnit.UniqueId))
+                {
+                    Game.Instance.TurnBasedCombatController.UpdateNavigationGrid();
+                    Kingmaker.AI.AiBrainController.TickBrain(currentUnit);
+                }
+
                 Game.Instance.TurnBasedCombatController.CurrentTurn.Start(isActingInSurpriseRound);
             });
         }
@@ -886,6 +894,12 @@ namespace WOTRMultiplayer.GameInteraction
         {
             var entity = EntityService.Instance.GetEntity(id);
             return entity;
+        }
+
+        public bool IsSummoned(string unitId)
+        {
+            var unit = GetUnitEntity(unitId);
+            return unit.IsSummoned();
         }
 
         private void SuppressEventsFor(NetworkEquipmentSlot slot)

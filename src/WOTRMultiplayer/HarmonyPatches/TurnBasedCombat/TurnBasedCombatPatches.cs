@@ -186,6 +186,84 @@ namespace WOTRMultiplayer.HarmonyPatches.TurnBasedCombat
         }
 
         /// <summary>
+        /// skips updating predictions if you have no controll over character
+        /// </summary>
+        /// <param name="instructions"></param>
+        /// <returns></returns>
+        [HarmonyPatch(typeof(TurnController), nameof(TurnController.HandlePortraitHover))]
+        [HarmonyTranspiler]
+        public static IEnumerable<CodeInstruction> TurnController_HandlePortraitHover_Transpiler(IEnumerable<CodeInstruction> instructions)
+        {
+            var attr = MethodBase.GetCurrentMethod().GetCustomAttribute<HarmonyPatch>();
+            var target = $"{attr.info.declaringType.Name}.{attr.info.methodName}";
+            var matcher = new CodeMatcher(instructions);
+            if (!SetCallUpdateActionPredictionsIfControlled(instructions, matcher))
+            {
+                Main.GetLogger<HarmonyTranspiler>().LogError("Transpiler has not been applied. Target={target}", target);
+                return instructions;
+            }
+
+            Main.GetLogger<HarmonyTranspiler>().LogInformation("Transpiler has been applied. Target={target}", target);
+            return matcher.Instructions();
+        }
+
+        // <summary>
+        /// skips updating predictions if you have no controll over character
+        /// </summary>
+        /// <param name="instructions"></param>
+        /// <returns></returns>
+        [HarmonyPatch(typeof(TurnController), nameof(TurnController.HandleOvertipHover))]
+        [HarmonyTranspiler]
+        public static IEnumerable<CodeInstruction> TurnController_HandleOvertipHover_Transpiler(IEnumerable<CodeInstruction> instructions)
+        {
+            var attr = MethodBase.GetCurrentMethod().GetCustomAttribute<HarmonyPatch>();
+            var target = $"{attr.info.declaringType.Name}.{attr.info.methodName}";
+            var matcher = new CodeMatcher(instructions);
+            if (!SetCallUpdateActionPredictionsIfControlled(instructions, matcher))
+            {
+                Main.GetLogger<HarmonyTranspiler>().LogError("Transpiler has not been applied. Target={target}", target);
+                return instructions;
+            }
+
+            Main.GetLogger<HarmonyTranspiler>().LogInformation("Transpiler has been applied. Target={target}", target);
+            return matcher.Instructions();
+        }
+
+        private static bool SetCallUpdateActionPredictionsIfControlled(IEnumerable<CodeInstruction> instructions, CodeMatcher matcher)
+        {
+            var replaceWith = AccessTools.Method(typeof(TurnBasedCombatPatches), nameof(TurnBasedCombatPatches.UpdateActionPredictionsIfControlled));
+            var lookFor = AccessTools.Method(typeof(TurnController), nameof(TurnController.UpdateActionPredictions));
+            var match = matcher.SearchForward(x => x.Calls(lookFor));
+
+            if (!match.IsValid)
+            {
+                return false;
+            }
+
+            match = match
+                .Advance(-1)
+                .RemoveInstructions(2);
+
+            var newInstructions = new List<CodeInstruction>
+            {
+                new(OpCodes.Call, replaceWith)
+            };
+            match.Insert(newInstructions);
+
+            return true;
+        }
+
+        public static void UpdateActionPredictionsIfControlled()
+        {
+            var currentUnit = Game.Instance.TurnBasedCombatController.CurrentTurn?.Rider;
+            if (currentUnit == null || Main.Multiplayer.IsControlledByLocalPlayer(currentUnit.UniqueId))
+            {
+                Game.Instance.TurnBasedCombatController.CurrentTurn.UpdateActionPredictions();
+            }
+        }
+
+
+        /// <summary>
         /// Resets path each frame if !IsDirectlyControllable which breaks Multi Command sticky touch abilities, e.g. Cure Wounds
         /// </summary>
         /// <param name="instructions"></param>

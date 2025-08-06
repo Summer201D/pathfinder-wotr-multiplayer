@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
@@ -641,7 +640,17 @@ namespace WOTRMultiplayer.MP
                 .Register<NotifyEquipmentSlotChanged>(OnNotifyEquipmentSlotChanged)
                 .Register<NotifyActiveHandEquipmentSetChanged>(OnNotifyActiveHandEquipmentSetChanged)
                 .Register<NotifyOvertipInteracted>(OnNotifyOvertipInteracted)
+                .Register<NotifyUnitJoinedMidCombat>(OnNotifyUnitJoinedMidCombat)
                 ;
+        }
+
+        private void OnNotifyUnitJoinedMidCombat(long playerId, NotifyUnitJoinedMidCombat combat)
+        {
+            Logger.LogInformation("Received {messageType}. PlayerId={playerId}, UnitId={unitId}", nameof(NotifyUnitJoinedMidCombat), playerId, combat.UnitId);
+            AddPlayerReadyStatus(PlayerTurnReadinessType.UnitJoinedMidCombat, combat.PlayerId, combat.UnitId);
+
+            Logger.LogInformation("Resending {messageType}", nameof(NotifyUnitJoinedMidCombat));
+            _networkServer.SendAllExcept(playerId, combat);
         }
 
         private void OnNotifyOvertipInteracted(long playerId, NotifyOvertipInteracted interacted)
@@ -740,10 +749,13 @@ namespace WOTRMultiplayer.MP
             AddPlayerReadyStatus(PlayerTurnReadinessType.Start, playerId, started.Round, started.UnitId);
 
             // player turn could be started earlier than host so recording readiness is enough
-            if (started.Round == Game.Combat.Round && string.Equals(started.UnitId, Game.Combat.Turn?.UnitId, StringComparison.OrdinalIgnoreCase))
+            if (started.Round != Game.Combat.Round || !string.Equals(started.UnitId, Game.Combat.Turn?.UnitId, StringComparison.OrdinalIgnoreCase))
             {
-                TryStartTurn();
+                Logger.LogWarning("Client has started different turn. Round={round}, UnitId={unitId}, ClientRound={clientRound}, ClientUnitId={clientUnitId}", Game.Combat.Round, Game.Combat.Turn?.UnitId, started.Round, started.UnitId);
+                return;
             }
+
+            TryStartTurn();
         }
 
         private void OnNotifyGroundClicked(long playerId, NotifyGroundClicked clicked)
@@ -1091,62 +1103,6 @@ namespace WOTRMultiplayer.MP
                 Characters = [.. Game.Characters.Select(c => new Networking.Messages.NetworkCharacterOwnership { Name = c.Name, Portrait = c.Portrait })]
             };
             return message;
-        }
-
-        private bool AddPlayerReadyStatus(PlayerTurnReadinessType playerReadinessType, long playerId, int round, string unitId)
-        {
-            try
-            {
-                lock (ActionLock)
-                {
-                    var tracker = GetPlayerTurnReadinessTracker(playerReadinessType);
-                    if (tracker == null)
-                    {
-                        Logger.LogError("Unable to find readiness tracker for provided type. Type={type}, PlayerId={playerId}, Round={round}, UnitId={unitId}", playerReadinessType, playerId, round, unitId);
-                        return false;
-                    }
-
-                    var key = GetTurnInitializationKey(round, unitId);
-                    tracker.AddOrUpdate(key,
-                        key => new HashSet<long>(collection: [playerId]),
-                        (key, existing) =>
-                        {
-                            existing.Add(playerId);
-                            return existing;
-                        });
-                    Logger.LogInformation("Player ready status has been confirmed. Type={readinessTypeName}, Key={key}, PlayersCount={playersCount}, KeysCount={keysCount}", playerReadinessType, key, tracker[key].Count, tracker.Keys.Count);
-
-                    return true;
-                }
-            }
-            catch (Exception ex)
-            {
-                Logger.LogError(ex, "Unable to confirm player readiness. PlayerId={playerId}, Round={round}, UnitId={unitId}", playerId, round, unitId);
-                throw;
-            }
-        }
-
-        private string GetTurnInitializationKey(int round, string unitId)
-        {
-            return $"{round}-{unitId}";
-        }
-
-        private ConcurrentDictionary<string, HashSet<long>> GetPlayerTurnReadinessTracker(PlayerTurnReadinessType type)
-        {
-            var tracker = type switch
-            {
-                PlayerTurnReadinessType.Start => Game.Combat.PlayersTurnStartInitialization,
-                PlayerTurnReadinessType.UnitSynchronization => Game.Combat.PlayersTurnSynchronization,
-                _ => null,
-            };
-
-            return tracker;
-        }
-
-        private enum PlayerTurnReadinessType
-        {
-            Start,
-            UnitSynchronization
         }
     }
 }

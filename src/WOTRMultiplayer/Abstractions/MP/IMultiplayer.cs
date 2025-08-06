@@ -73,6 +73,8 @@ namespace WOTRMultiplayer.Abstractions.MP
 
         bool IsActive { get; }
 
+        bool IsInCombat { get; }
+
         NetworkActionsState GetActionsState();
 
         bool OnBeforeRuleCalculateDamageTrigger(RuleCalculateDamage ruleCalculateDamage);
@@ -100,5 +102,7 @@ namespace WOTRMultiplayer.Abstractions.MP
         void OnDropItem(NetworkDropItem dropItem);
 
         void OnChangeActiveHandEquipmentSet(NetworkActiveHandEquipmentSet set);
+
+        bool CanUnitJoinCombat(string unitId);
     }
 }

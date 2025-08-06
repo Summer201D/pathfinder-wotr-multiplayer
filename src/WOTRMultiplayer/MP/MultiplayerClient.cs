@@ -338,10 +338,17 @@ namespace WOTRMultiplayer.MP
                 .Register<NotifyActiveHandEquipmentSetChanged>(OnNotifyActiveHandEquipmentSetChanged)
 
                 .Register<NotifyOvertipInteracted>(OnNotifyOvertipInteracted)
+                .Register<NotifyUnitJoinedMidCombat>(OnNotifyUnitJoinedMidCombat)
                 ;
 
             _networkServerClient.OnError = OnNetworkClientError;
             _networkServerClient.OnConnected = OnNetworkClientConnected;
+        }
+
+        private void OnNotifyUnitJoinedMidCombat(NotifyUnitJoinedMidCombat combat)
+        {
+            Logger.LogInformation("Received {messageType}. PlayerId={playerId}, UnitId={unitId}", nameof(NotifyUnitJoinedMidCombat), combat.UnitId);
+            AddPlayerReadyStatus(PlayerTurnReadinessType.UnitJoinedMidCombat, combat.PlayerId, combat.UnitId);
         }
 
         private void OnNotifyOvertipInteracted(NotifyOvertipInteracted interacted)

@@ -44,6 +44,8 @@ namespace WOTRMultiplayer.MP
 
         public bool IsActive => _multiplayerClient.IsActive || _multiplayerHost.IsActive;
 
+        public bool IsInCombat => IsActive && (_multiplayerClient.IsInCombat || _multiplayerHost.IsInCombat);
+
         public NetworkExecutionContext ExecutionContext => _gameInteractionService.ExecutionContext;
 
         public Multiplayer(
@@ -1043,6 +1045,17 @@ namespace WOTRMultiplayer.MP
         {
             _logger.LogInformation("OnLobbyCharacterOwnerChanged. CharacterIndex={charIndex}, PlayerIndex={playerIndex}", characterIndex, playerIndex);
             _multiplayerHost.ChangeCharacterOwner(characterIndex, playerIndex);
+        }
+
+        public bool CanUnitJoinCombat(string unitId)
+        {
+            var multiplayerActor = GetMultiplayerActor();
+            if (multiplayerActor == null)
+            {
+                return true;
+            }
+
+            return multiplayerActor.CanUnitJoinCombat(unitId);
         }
     }
 }

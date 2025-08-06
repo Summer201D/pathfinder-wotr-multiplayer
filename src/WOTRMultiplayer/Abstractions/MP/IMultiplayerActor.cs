@@ -101,5 +101,7 @@ namespace WOTRMultiplayer.Abstractions.MP
         void OnInteractWithMapObjectOvertip(NetworkOvertip networkOvertip);
 
         void OnAreaScenesLoaded();
+
+        bool CanUnitJoinCombat(string unitId);
     }
 }

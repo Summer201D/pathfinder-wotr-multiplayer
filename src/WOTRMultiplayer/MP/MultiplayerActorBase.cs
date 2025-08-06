@@ -409,6 +409,39 @@ namespace WOTRMultiplayer.MP
             Game.Combat = null;
         }
 
+        public bool CanUnitJoinCombat(string unitId)
+        {
+            if (Game.Combat == null)
+            {
+                return true;
+            }
+
+            var isSummoned = GameInteraction.IsSummoned(unitId);
+            if (isSummoned)
+            {
+                return true;
+            }
+
+            var localPlayerId = GetLocalPlayerId();
+            var isFirstJoinEvent = !Game.Combat.MidCombatUnitJoins.TryGetValue(unitId, out var players) || !players.Contains(localPlayerId);
+            if (isFirstJoinEvent)
+            {
+                Logger.LogInformation("Sending {messageType}. UnitId={unitId}", nameof(NotifyUnitJoinedMidCombat), unitId);
+                var message = new NotifyUnitJoinedMidCombat { UnitId = unitId, PlayerId = localPlayerId };
+                Send(message);
+            }
+
+            var playersSync = AddPlayerReadyStatus(PlayerTurnReadinessType.UnitJoinedMidCombat, localPlayerId, unitId);
+
+            var canJoin = playersSync.Count >= Game.Players.Count;
+            if (canJoin)
+            {
+                Logger.LogInformation("Unit has been allowed to join mid combat. UnitId={unitId}, PlayersSyncState={syncedPlayersCount}/{TotalPlayersCount}", unitId, playersSync.Count, Game.Players.Count);
+            }
+
+            return canJoin;
+        }
+
         protected abstract Task<DiceRollValueResponse> RetrieveRoll(DiceRollValueRequest rollRequest, string unitId);
 
         protected abstract void OnLocalPlayerTurnStart();
@@ -416,6 +449,58 @@ namespace WOTRMultiplayer.MP
         protected abstract void OnLocalPlayerTurnEnded();
 
         protected abstract void Send(object message);
+
+        protected HashSet<long> AddPlayerReadyStatus(PlayerTurnReadinessType playerReadinessType, long playerId, string unitId)
+        {
+            return AddPlayerReadyStatus(playerReadinessType, playerId, -1, unitId);
+        }
+
+        protected HashSet<long> AddPlayerReadyStatus(PlayerTurnReadinessType playerReadinessType, long playerId, int round, string unitId)
+        {
+            try
+            {
+                lock (ActionLock)
+                {
+                    var tracker = GetPlayerTurnReadinessTracker(playerReadinessType);
+                    if (tracker == null)
+                    {
+                        Logger.LogError("Unable to find readiness tracker for provided type. Type={type}, PlayerId={playerId}, Round={round}, UnitId={unitId}", playerReadinessType, playerId, round, unitId);
+                        return null;
+                    }
+
+                    var key = GetTurnInitializationKey(round, unitId);
+
+                    var isFirstAdd = !tracker.TryGetValue(key, out var readyPlayers) || !readyPlayers.Contains(playerId);
+
+                    var players = tracker.AddOrUpdate(key,
+                         key => new HashSet<long>(collection: [playerId]),
+                         (key, existing) =>
+                         {
+                             existing.Add(playerId);
+                             return existing;
+                         });
+
+                    if (isFirstAdd)
+                    {
+                        Logger.LogInformation("Player ready status has been confirmed. Type={readinessTypeName}, Key={key}, PlayersCount={playersCount}, KeysCount={keysCount}", playerReadinessType, key, tracker[key].Count, tracker.Keys.Count);
+                    }
+
+                    return players;
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, "Unable to confirm player readiness. PlayerId={playerId}, Round={round}, UnitId={unitId}", playerId, round, unitId);
+                throw;
+            }
+        }
+
+        protected enum PlayerTurnReadinessType
+        {
+            Start,
+            UnitSynchronization,
+            UnitJoinedMidCombat
+        }
 
         protected void PrepareCombat()
         {
@@ -655,6 +740,24 @@ namespace WOTRMultiplayer.MP
         private bool IsControlledByLocalPlayer(List<string> units)
         {
             return IsControlledByLocalPlayer(units?.FirstOrDefault());
+        }
+
+        private string GetTurnInitializationKey(int round, string unitId)
+        {
+            return $"{round}-{unitId}";
+        }
+
+        private ConcurrentDictionary<string, HashSet<long>> GetPlayerTurnReadinessTracker(PlayerTurnReadinessType type)
+        {
+            var tracker = type switch
+            {
+                PlayerTurnReadinessType.Start => Game.Combat.PlayersTurnStartInitialization,
+                PlayerTurnReadinessType.UnitSynchronization => Game.Combat.PlayersTurnSynchronization,
+                PlayerTurnReadinessType.UnitJoinedMidCombat => Game.Combat.MidCombatUnitJoins,
+                _ => null,
+            };
+
+            return tracker;
         }
     }
 }

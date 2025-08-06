@@ -11,6 +11,11 @@ namespace WOTRMultiplayer.HarmonyPatches.Rolls
     [HarmonyPatch]
     public class RuleAttackRollPatches
     {
+        /// <summary>
+        /// D20 + CriticalD20
+        /// </summary>
+        /// <param name="instructions"></param>
+        /// <returns></returns>
         [HarmonyPatch(typeof(RuleAttackRoll), nameof(RuleAttackRoll.OnTrigger))]
         [HarmonyTranspiler]
         public static IEnumerable<CodeInstruction> RuleAttackRoll_OnTrigger_Transpiler(IEnumerable<CodeInstruction> instructions)
@@ -28,7 +33,7 @@ namespace WOTRMultiplayer.HarmonyPatches.Rolls
                 var newInstructions = new List<CodeInstruction>()
                 {
                     new(OpCodes.Ldarg_0),
-                    new(OpCodes.Ldc_I4, replacementCounter),
+                    new(OpCodes.Ldc_I4, replacementCounter), // IsCriticall=true for critical roll replacement
                     new(OpCodes.Call, replaceWith)
                 };
                 match.Insert(newInstructions);

@@ -22,6 +22,9 @@ namespace WOTRMultiplayer.MP.Entities.Combat
 
         public NetworkCombatTurn Turn { get; set; }
 
+        /// <summary>
+        /// key: playerId
+        /// </summary>
         public ConcurrentDictionary<long, bool> PlayersCombatInitialization { get; set; } = new();
 
         /// <summary>
@@ -33,5 +36,10 @@ namespace WOTRMultiplayer.MP.Entities.Combat
         /// key: round+unitid
         /// </summary>
         public ConcurrentDictionary<string, HashSet<long>> PlayersTurnSynchronization { get; set; } = new();
+
+        /// <summary>
+        /// key: unitId
+        /// </summary>
+        public ConcurrentDictionary<string, HashSet<long>> MidCombatUnitJoins { get; set; } = new();
     }
 }

@@ -93,5 +93,7 @@ namespace WOTRMultiplayer.Abstractions.GameInteraction
         void InteractWithOvertip(NetworkOvertip networkOvertip);
 
         EntityDataBase GetEntity(string id);
+
+        bool IsSummoned(string unitId);
     }
 }
