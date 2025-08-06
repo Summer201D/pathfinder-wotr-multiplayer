@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using WOTRMultiplayer.MP.Entities;
+using WOTRMultiplayer.MP.Entities.MapObjects;
 
 namespace WOTRMultiplayer.Abstractions.MP
 {
@@ -16,5 +17,7 @@ namespace WOTRMultiplayer.Abstractions.MP
         void LeaveArea(string areaExitId);
 
         void SendSelectedAnswer();
+
+        void OnPerceptionRoll(NetworkPerceptionCheck check);
     }
 }

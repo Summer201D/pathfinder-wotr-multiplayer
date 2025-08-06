@@ -4,7 +4,7 @@ using Kingmaker.RuleSystem.Rules;
 using Kingmaker.RuleSystem.Rules.Damage;
 using WOTRMultiplayer.Abstractions.Random;
 using WOTRMultiplayer.Abstractions.UI;
-using WOTRMultiplayer.GameInteraction;
+using WOTRMultiplayer.GameInteraction.Contexts;
 using WOTRMultiplayer.MP.Entities;
 using WOTRMultiplayer.MP.Entities.Abilities;
 using WOTRMultiplayer.MP.Entities.Equipment;
@@ -106,5 +106,9 @@ namespace WOTRMultiplayer.Abstractions.MP
         void OnChangeActiveHandEquipmentSet(NetworkActiveHandEquipmentSet set);
 
         bool CanUnitJoinCombat(string unitId);
+
+        bool CanRollPerception(string unitId, string mapObjectId);
+
+        void OnPerceptionRoll(NetworkPerceptionCheck check);
     }
 }

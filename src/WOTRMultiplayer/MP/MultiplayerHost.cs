@@ -393,6 +393,17 @@ namespace WOTRMultiplayer.MP
             return IsRolledByHost(silent) || IsRolledByLocalPlayer(silent);
         }
 
+        public void OnPerceptionRoll(NetworkPerceptionCheck check)
+        {
+            Logger.LogInformation("Sending perception check to clients. UnitId={unitID}, MapObjectId={round}, Result={result}", check.UnitId, check.MapObject.Id);
+            var message = new NotifyPerceptionCheckRolled
+            {
+                Check = Mapper.Map<Networking.Messages.NetworkPerceptionCheck>(check)
+            };
+
+            _networkServer.SendAll(message);
+        }
+
         protected override Task<DiceRollValueResponse> RetrieveRollAsync(DiceRollValueRequest request, string unitId)
         {
             var character = GetCharacterOwnership(unitId);

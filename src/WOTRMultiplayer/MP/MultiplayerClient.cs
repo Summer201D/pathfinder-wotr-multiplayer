@@ -342,10 +342,19 @@ namespace WOTRMultiplayer.MP
 
                 .Register<NotifyOvertipInteracted>(OnNotifyOvertipInteracted)
                 .Register<NotifyUnitJoinedMidCombat>(OnNotifyUnitJoinedMidCombat)
+                .Register<NotifyPerceptionCheckRolled>(OnNotifyPerceptionCheckRolled)
                 ;
 
             _networkServerClient.OnError = OnNetworkClientError;
             _networkServerClient.OnConnected = OnNetworkClientConnected;
+        }
+
+        private void OnNotifyPerceptionCheckRolled(NotifyPerceptionCheckRolled rolled)
+        {
+            Logger.LogInformation("Received {messageType}. UnitId={unitID}, MapObjectId={round}", nameof(NotifyPerceptionCheckRolled), rolled.Check.UnitId, rolled.Check.MapObject.Id);
+
+            var check = Mapper.Map<NetworkPerceptionCheck>(rolled.Check);
+            GameInteraction.ApplyPerceptionCheck(check);
         }
 
         private void OnNotifyUnitJoinedMidCombat(NotifyUnitJoinedMidCombat combat)

@@ -14,6 +14,8 @@ namespace WOTRMultiplayer.MP.Entities.Rolls
 
         public string StatType { get; set; }
 
+        public string SourceEntityId { get; set; }
+
         public SkillCheckRoll(string initiatorId, string ruleName, NetworkDiceRollType networkDiceRollType, int totalModifierBonus)
             : base(initiatorId, ruleName, networkDiceRollType, totalModifierBonus)
         {
@@ -21,7 +23,7 @@ namespace WOTRMultiplayer.MP.Entities.Rolls
 
         public override IEnumerable<string> GetUniquinessIdentifiers()
         {
-            return [EnsureSuccess?.ToString(), DifficultyCheck.ToString(), RequireSuccessBonus.ToString(), Take10ForSuccess.ToString(), StatType];
+            return [EnsureSuccess?.ToString(), DifficultyCheck.ToString(), RequireSuccessBonus.ToString(), Take10ForSuccess.ToString(), StatType, SourceEntityId];
         }
     }
 }

@@ -7,7 +7,7 @@ using Kingmaker.GameModes;
 using Kingmaker.Items.Slots;
 using Kingmaker.UI;
 using WOTRMultiplayer.Abstractions.GameInteraction;
-using WOTRMultiplayer.GameInteraction;
+using WOTRMultiplayer.GameInteraction.Contexts;
 using WOTRMultiplayer.MP.Entities;
 using WOTRMultiplayer.MP.Entities.Abilities;
 using WOTRMultiplayer.MP.Entities.Dialogs;
@@ -192,6 +192,10 @@ namespace WOTR.Multiplayer.Playground.Core.Dummies
         }
 
         public void ResetSuggestedDialogAnswers()
+        {
+        }
+
+        public void ApplyPerceptionCheck(NetworkPerceptionCheck check)
         {
         }
     }

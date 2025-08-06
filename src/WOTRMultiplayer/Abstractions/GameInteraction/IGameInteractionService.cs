@@ -4,7 +4,7 @@ using Kingmaker.EntitySystem;
 using Kingmaker.GameModes;
 using Kingmaker.Items.Slots;
 using Kingmaker.UI;
-using WOTRMultiplayer.GameInteraction;
+using WOTRMultiplayer.GameInteraction.Contexts;
 using WOTRMultiplayer.MP.Entities;
 using WOTRMultiplayer.MP.Entities.Abilities;
 using WOTRMultiplayer.MP.Entities.Dialogs;
@@ -97,5 +97,7 @@ namespace WOTRMultiplayer.Abstractions.GameInteraction
         EntityDataBase GetEntity(string id);
 
         bool IsSummoned(string unitId);
+
+        void ApplyPerceptionCheck(NetworkPerceptionCheck check);
     }
 }

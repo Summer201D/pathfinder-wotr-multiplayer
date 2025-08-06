@@ -14,7 +14,7 @@ using WOTRMultiplayer.Abstractions.Random;
 using WOTRMultiplayer.Abstractions.UI;
 using WOTRMultiplayer.Abstractions.UI.Controllers;
 using WOTRMultiplayer.Abstractions.UI.Windows;
-using WOTRMultiplayer.GameInteraction;
+using WOTRMultiplayer.GameInteraction.Contexts;
 using WOTRMultiplayer.MP.Entities;
 using WOTRMultiplayer.MP.Entities.Abilities;
 using WOTRMultiplayer.MP.Entities.Equipment;
@@ -823,6 +823,44 @@ namespace WOTRMultiplayer.MP
             multiplayerActor.OnInteractWithMapObjectOvertip(networkOvertip);
         }
 
+        public bool CanUnitJoinCombat(string unitId)
+        {
+            var multiplayerActor = GetMultiplayerActor();
+            if (multiplayerActor == null)
+            {
+                return true;
+            }
+
+            return multiplayerActor.CanUnitJoinCombat(unitId);
+        }
+
+        public void OnPerceptionRoll(NetworkPerceptionCheck check)
+        {
+            if (!_multiplayerHost.IsActive)
+            {
+                return;
+            }
+
+            _multiplayerHost.OnPerceptionRoll(check);
+        }
+
+        public bool CanRollPerception(string unitId, string mapObjectId)
+        {
+            if (_multiplayerClient.IsActive)
+            {
+                var perceptionCheck = _gameInteractionService.ExecutionContext?.PerceptionCheck;
+                if (perceptionCheck == null)
+                {
+                    return false;
+                }
+
+                return string.Equals(unitId, perceptionCheck.UnitId, StringComparison.OrdinalIgnoreCase)
+                    && string.Equals(mapObjectId, perceptionCheck.MapObjectId, StringComparison.OrdinalIgnoreCase);
+            }
+
+            return true;
+        }
+
         private bool ShouldRetrieveRoll(IMultiplayerActor multiplayerActor, object rule)
         {
             var gameMode = _gameInteractionService.CurrentGameMode;
@@ -954,6 +992,7 @@ namespace WOTRMultiplayer.MP
                 RequireSuccessBonus = ruleSkillCheck.RequiresSuccessBonus,
                 Take10ForSuccess = ruleSkillCheck.Take10ForSuccess,
                 StatType = ruleSkillCheck.StatType.ToString(),
+                SourceEntityId = ruleSkillCheck.Reason?.SourceEntity?.UniqueId
             };
 
             return roll;
@@ -1072,17 +1111,6 @@ namespace WOTRMultiplayer.MP
         {
             _logger.LogInformation("OnLobbyCharacterOwnerChanged. CharacterIndex={charIndex}, PlayerIndex={playerIndex}", characterIndex, playerIndex);
             _multiplayerHost.ChangeCharacterOwner(characterIndex, playerIndex);
-        }
-
-        public bool CanUnitJoinCombat(string unitId)
-        {
-            var multiplayerActor = GetMultiplayerActor();
-            if (multiplayerActor == null)
-            {
-                return true;
-            }
-
-            return multiplayerActor.CanUnitJoinCombat(unitId);
         }
     }
 }

@@ -10,6 +10,7 @@ using Kingmaker.Blueprints.Root;
 using Kingmaker.Cheats;
 using Kingmaker.Controllers.Clicks;
 using Kingmaker.Controllers.Clicks.Handlers;
+using Kingmaker.Controllers.MapObjects;
 using Kingmaker.DialogSystem.Blueprints;
 using Kingmaker.EntitySystem;
 using Kingmaker.EntitySystem.Entities;
@@ -44,6 +45,7 @@ using WOTRMultiplayer.Abstractions.GameInteraction;
 using WOTRMultiplayer.Abstractions.UI;
 using WOTRMultiplayer.Abstractions.Unity;
 using WOTRMultiplayer.Extensions;
+using WOTRMultiplayer.GameInteraction.Contexts;
 using WOTRMultiplayer.MP.Entities;
 using WOTRMultiplayer.MP.Entities.Abilities;
 using WOTRMultiplayer.MP.Entities.Combat;
@@ -948,6 +950,34 @@ namespace WOTRMultiplayer.GameInteraction
             var unit = GetUnitEntity(unitId);
             return unit.IsSummoned();
         }
+
+        public void ApplyPerceptionCheck(NetworkPerceptionCheck check)
+        {
+            var mapObject = GetMapObject(check.MapObject.Id);
+            if (mapObject == null)
+            {
+                _logger.LogError("Unable to apply perception check due to missing map object. MapObjectId={mapObjectId}", check.MapObject.Id);
+                return;
+            }
+
+            var unit = GetUnitEntity(check.UnitId);
+            if (unit == null)
+            {
+                _logger.LogError("Unable to apply perception check due to missing unit. MapObjectId={mapObjectId}, UnitId={unitId}", check.MapObject.Id, check.UnitId);
+                return;
+            }
+
+            _mainThreadAccessor.Enqueue(() =>
+            {
+                _logger.LogInformation("Trigerring perception check. MapObjectId={mapObjectId}", check.MapObject.Id);
+                using var context = _networkExecutionContext.Value = new NetworkExecutionContext
+                {
+                    PerceptionCheck = new PerceptionCheckContext(unit.UniqueId, mapObject.UniqueId)
+                };
+                PartyPerceptionController.RollPerception(unit, mapObject);
+            });
+        }
+
 
         private void SuppressEventsFor(NetworkEquipmentSlot slot)
         {

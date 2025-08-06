@@ -70,6 +70,9 @@ namespace WOTRMultiplayer.Config.Mapping
 
             CreateMap<NetworkMapObject, Networking.Messages.NetworkMapObject>()
                 .ReverseMap();
+
+            CreateMap<NetworkPerceptionCheck, Networking.Messages.NetworkPerceptionCheck>()
+                .ReverseMap();
         }
     }
 }
