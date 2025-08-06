@@ -361,7 +361,7 @@ namespace WOTRMultiplayer.MP
                 if (ruleAttackRoll.IsCriticalRoll)
                 {
                     var criticalRoll = CreateAttackRoll(NetworkDiceRollType.Hit, ruleAttackRoll, true);
-                    SaveIntRollValue(multiplayerActor, roll, ruleAttackRoll.CriticalConfirmationD20);
+                    SaveIntRollValue(multiplayerActor, criticalRoll, ruleAttackRoll.CriticalConfirmationD20);
                 }
             }
             catch (Exception ex)
