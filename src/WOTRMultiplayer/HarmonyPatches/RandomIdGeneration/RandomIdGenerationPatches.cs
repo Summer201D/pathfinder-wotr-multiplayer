@@ -37,8 +37,7 @@ namespace WOTRMultiplayer.HarmonyPatches.RandomIdGeneration
         [HarmonyTranspiler]
         public static IEnumerable<CodeInstruction> EntityCreationController_SpawnEntity_Transpiler(IEnumerable<CodeInstruction> instructions)
         {
-            var attr = MethodBase.GetCurrentMethod().GetCustomAttribute<HarmonyPatch>();
-            var target = $"{attr.info.declaringType.Name}.{attr.info.methodName}";
+            var target = PatchesUtils.GetTranspilerTarget(MethodBase.GetCurrentMethod());
             var replaceWith = AccessTools.Method(typeof(RandomIdGenerationPatches), nameof(RandomIdGenerationPatches.GetNewEntityUniqueId));
             var newInstructions = new List<CodeInstruction>()
             {
@@ -52,8 +51,7 @@ namespace WOTRMultiplayer.HarmonyPatches.RandomIdGeneration
         [HarmonyTranspiler]
         public static IEnumerable<CodeInstruction> EntityCreationController_SpawnUnit_Transpiler(IEnumerable<CodeInstruction> instructions)
         {
-            var attr = MethodBase.GetCurrentMethod().GetCustomAttribute<HarmonyPatch>();
-            var target = $"{attr.info.declaringType.Name}.{attr.info.methodName}";
+            var target = PatchesUtils.GetTranspilerTarget(MethodBase.GetCurrentMethod());
             var replaceWith = AccessTools.Method(typeof(RandomIdGenerationPatches), nameof(RandomIdGenerationPatches.GetNewUnitUniqueId));
             var newInstructions = new List<CodeInstruction>()
             {
@@ -68,8 +66,7 @@ namespace WOTRMultiplayer.HarmonyPatches.RandomIdGeneration
         [HarmonyTranspiler]
         public static IEnumerable<CodeInstruction> EntityCreationController_ChangeUnitBlueprint_Transpiler(IEnumerable<CodeInstruction> instructions)
         {
-            var attr = MethodBase.GetCurrentMethod().GetCustomAttribute<HarmonyPatch>();
-            var target = $"{attr.info.declaringType.Name}.{attr.info.methodName}";
+            var target = PatchesUtils.GetTranspilerTarget(MethodBase.GetCurrentMethod());
             var replaceWith = AccessTools.Method(typeof(RandomIdGenerationPatches), nameof(RandomIdGenerationPatches.GetNewChangeBlueprintUniqueId));
             var newInstructions = new List<CodeInstruction>()
             {
@@ -85,8 +82,7 @@ namespace WOTRMultiplayer.HarmonyPatches.RandomIdGeneration
         [HarmonyTranspiler]
         public static IEnumerable<CodeInstruction> EntityFact_Attach_Transpiler(IEnumerable<CodeInstruction> instructions)
         {
-            var attr = MethodBase.GetCurrentMethod().GetCustomAttribute<HarmonyPatch>();
-            var target = $"{attr.info.declaringType.Name}.{attr.info.methodName}";
+            var target = PatchesUtils.GetTranspilerTarget(MethodBase.GetCurrentMethod());
             var replaceWith = AccessTools.Method(typeof(RandomIdGenerationPatches), nameof(RandomIdGenerationPatches.GetNewEntityFactUniqueId));
             var newInstructions = new List<CodeInstruction>()
             {
@@ -100,8 +96,7 @@ namespace WOTRMultiplayer.HarmonyPatches.RandomIdGeneration
         [HarmonyTranspiler]
         public static IEnumerable<CodeInstruction> ItemEntity_Constructor_Transpiler(IEnumerable<CodeInstruction> instructions)
         {
-            var attr = MethodBase.GetCurrentMethod().GetCustomAttribute<HarmonyPatch>();
-            var target = $"{attr.info.declaringType.Name}.{attr.info.methodName ?? attr.info.methodType?.ToString()}";
+            var target = PatchesUtils.GetTranspilerTarget(MethodBase.GetCurrentMethod());
             var lookFor = AccessTools.Method(typeof(Guid), nameof(Guid.NewGuid));
             var replaceWith = AccessTools.Method(typeof(RandomIdGenerationPatches), nameof(RandomIdGenerationPatches.GetNewItemEntityId));
             var matcher = new CodeMatcher(instructions);

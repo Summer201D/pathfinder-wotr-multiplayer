@@ -42,9 +42,7 @@ namespace WOTRMultiplayer.HarmonyPatches.Rolls
         [HarmonyTranspiler]
         public static IEnumerable<CodeInstruction> RuleSkillCheck_OnTrigger_Transpiler(IEnumerable<CodeInstruction> instructions)
         {
-            var currentMethod = MethodBase.GetCurrentMethod();
-            var attr = currentMethod.GetCustomAttribute<HarmonyPatch>();
-            var target = $"{attr.info.declaringType.Name}.{attr.info.methodName} ({currentMethod.Name})";
+            var target = PatchesUtils.GetTranspilerTarget(MethodBase.GetCurrentMethod());
             var matcher = new CodeMatcher(instructions);
             var replaceWith = AccessTools.Method(typeof(RuleSkillCheckPatches), nameof(RuleSkillCheckPatches.SkillCheckRollD20));
             if (!ReplaceRollD20(target, matcher, replaceWith) || !ReplaceFromIntUnityRange(target, matcher, replaceWith))
@@ -61,9 +59,7 @@ namespace WOTRMultiplayer.HarmonyPatches.Rolls
         [HarmonyTranspiler]
         public static IEnumerable<CodeInstruction> RuleSkillCheck_Calculate_Transpiler(IEnumerable<CodeInstruction> instructions)
         {
-            var currentMethod = MethodBase.GetCurrentMethod();
-            var attr = currentMethod.GetCustomAttribute<HarmonyPatch>();
-            var target = $"{attr.info.declaringType.Name}.{attr.info.methodName} ({currentMethod.Name})";
+            var target = PatchesUtils.GetTranspilerTarget(MethodBase.GetCurrentMethod());
             var matcher = new CodeMatcher(instructions);
             var replaceWith = AccessTools.Method(typeof(RuleSkillCheckPatches), nameof(RuleSkillCheckPatches.SkillCheckRollD20));
             if (!ReplaceRollD20(target, matcher, replaceWith))

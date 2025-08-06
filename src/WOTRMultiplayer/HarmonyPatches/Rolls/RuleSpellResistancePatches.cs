@@ -15,8 +15,7 @@ namespace WOTRMultiplayer.HarmonyPatches.Rolls
         [HarmonyTranspiler]
         public static IEnumerable<CodeInstruction> RuleSpellResistanceCheck_OnTrigger_Transpiler(IEnumerable<CodeInstruction> instructions)
         {
-            var attr = MethodBase.GetCurrentMethod().GetCustomAttribute<HarmonyPatch>();
-            var target = $"{attr.info.declaringType.Name}.{attr.info.methodName}";
+            var target = PatchesUtils.GetTranspilerTarget(MethodBase.GetCurrentMethod());
             var matcher = new CodeMatcher(instructions);
             var replaceWith = AccessTools.Method(typeof(RuleSpellResistancePatches), nameof(RuleSpellResistancePatches.SpellResistanceRollD20));
             var lookFor = AccessTools.PropertyGetter(typeof(Dice), nameof(Dice.D20));

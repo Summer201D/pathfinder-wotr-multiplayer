@@ -104,8 +104,7 @@ namespace WOTRMultiplayer.HarmonyPatches.TurnBasedCombat
         [HarmonyTranspiler]
         public static IEnumerable<CodeInstruction> UnitsOrderComaprer_Compare_Transpiler(IEnumerable<CodeInstruction> instructions)
         {
-            var attr = MethodBase.GetCurrentMethod().GetCustomAttribute<HarmonyPatch>();
-            var target = $"{attr.info.declaringType.Name}.{attr.info.methodName}";
+            var target = PatchesUtils.GetTranspilerTarget(MethodBase.GetCurrentMethod());
             var matcher = new CodeMatcher(instructions);
             var lookFor = AccessTools.PropertyGetter(typeof(UnitCombatState), nameof(UnitCombatState.InitiativeRandom));
             var match = matcher.SearchForward(x => x.Calls(lookFor));
@@ -121,7 +120,7 @@ namespace WOTRMultiplayer.HarmonyPatches.TurnBasedCombat
                 };
 
                 actualValidPosition.Insert(newInstructions);
-                Main.GetLogger<HarmonyTranspiler>().LogInformation("Transpiler has been applied. Target={target}", target);
+                Main.GetLogger<TurnBasedCombatPatches>().LogInformation("Transpiler has been applied. Target={target}", target);
             }
 
             return matcher.Instructions();
@@ -131,8 +130,7 @@ namespace WOTRMultiplayer.HarmonyPatches.TurnBasedCombat
         [HarmonyTranspiler]
         public static IEnumerable<CodeInstruction> UnitCombatPrepareController_Tick_Transpiler(IEnumerable<CodeInstruction> instructions)
         {
-            var attr = MethodBase.GetCurrentMethod().GetCustomAttribute<HarmonyPatch>();
-            var target = $"{attr.info.declaringType.Name}.{attr.info.methodName}";
+            var target = PatchesUtils.GetTranspilerTarget(MethodBase.GetCurrentMethod());
             var matcher = new CodeMatcher(instructions);
             var lookFor = AccessTools.PropertySetter(typeof(UnitCombatState), nameof(UnitCombatState.InitiativeRandom));
             CodeMatcher match;
@@ -152,11 +150,11 @@ namespace WOTRMultiplayer.HarmonyPatches.TurnBasedCombat
             const int ExpectedReplacementCounter = 2;
             if (replacementCounter != ExpectedReplacementCounter)
             {
-                Main.GetLogger<HarmonyTranspiler>().LogError("Instructions have not been replaced expected number of times. Target={target}, Expected={expected}, Current={current}", target, ExpectedReplacementCounter, replacementCounter);
+                Main.GetLogger<TurnBasedCombatPatches>().LogError("Instructions have not been replaced expected number of times. Target={target}, Expected={expected}, Current={current}", target, ExpectedReplacementCounter, replacementCounter);
                 return instructions;
             }
 
-            Main.GetLogger<HarmonyTranspiler>().LogInformation("Transpiler has been applied. Target={target}", target);
+            Main.GetLogger<TurnBasedCombatPatches>().LogInformation("Transpiler has been applied. Target={target}", target);
             return matcher.Instructions();
         }
 
@@ -176,8 +174,7 @@ namespace WOTRMultiplayer.HarmonyPatches.TurnBasedCombat
         [HarmonyTranspiler]
         public static IEnumerable<CodeInstruction> TurnController_UpdateActionPredictions_Transpiler(IEnumerable<CodeInstruction> instructions)
         {
-            var attr = MethodBase.GetCurrentMethod().GetCustomAttribute<HarmonyPatch>();
-            var target = $"{attr.info.declaringType.Name}.{attr.info.methodName}";
+            var target = PatchesUtils.GetTranspilerTarget(MethodBase.GetCurrentMethod());
             var matcher = new CodeMatcher(instructions);
 
             ReplaceIsDirectlyControllable(matcher, target);
@@ -194,16 +191,15 @@ namespace WOTRMultiplayer.HarmonyPatches.TurnBasedCombat
         [HarmonyTranspiler]
         public static IEnumerable<CodeInstruction> TurnController_HandlePortraitHover_Transpiler(IEnumerable<CodeInstruction> instructions)
         {
-            var attr = MethodBase.GetCurrentMethod().GetCustomAttribute<HarmonyPatch>();
-            var target = $"{attr.info.declaringType.Name}.{attr.info.methodName}";
+            var target = PatchesUtils.GetTranspilerTarget(MethodBase.GetCurrentMethod());
             var matcher = new CodeMatcher(instructions);
             if (!SetCallUpdateActionPredictionsIfControlled(instructions, matcher))
             {
-                Main.GetLogger<HarmonyTranspiler>().LogError("Transpiler has not been applied. Target={target}", target);
+                Main.GetLogger<TurnBasedCombatPatches>().LogError("Transpiler has not been applied. Target={target}", target);
                 return instructions;
             }
 
-            Main.GetLogger<HarmonyTranspiler>().LogInformation("Transpiler has been applied. Target={target}", target);
+            Main.GetLogger<TurnBasedCombatPatches>().LogInformation("Transpiler has been applied. Target={target}", target);
             return matcher.Instructions();
         }
 
@@ -216,8 +212,7 @@ namespace WOTRMultiplayer.HarmonyPatches.TurnBasedCombat
         [HarmonyTranspiler]
         public static IEnumerable<CodeInstruction> TurnController_HandleOvertipHover_Transpiler(IEnumerable<CodeInstruction> instructions)
         {
-            var attr = MethodBase.GetCurrentMethod().GetCustomAttribute<HarmonyPatch>();
-            var target = $"{attr.info.declaringType.Name}.{attr.info.methodName}";
+            var target = PatchesUtils.GetTranspilerTarget(MethodBase.GetCurrentMethod());
             var matcher = new CodeMatcher(instructions);
             if (!SetCallUpdateActionPredictionsIfControlled(instructions, matcher))
             {
@@ -225,7 +220,7 @@ namespace WOTRMultiplayer.HarmonyPatches.TurnBasedCombat
                 return instructions;
             }
 
-            Main.GetLogger<HarmonyTranspiler>().LogInformation("Transpiler has been applied. Target={target}", target);
+            Main.GetLogger<TurnBasedCombatPatches>().LogInformation("Transpiler has been applied. Target={target}", target);
             return matcher.Instructions();
         }
 
@@ -272,8 +267,7 @@ namespace WOTRMultiplayer.HarmonyPatches.TurnBasedCombat
         [HarmonyTranspiler]
         public static IEnumerable<CodeInstruction> PathVisualizer_Update_Transpiler(IEnumerable<CodeInstruction> instructions)
         {
-            var attr = MethodBase.GetCurrentMethod().GetCustomAttribute<HarmonyPatch>();
-            var target = $"{attr.info.declaringType.Name}.{attr.info.methodName}";
+            var target = PatchesUtils.GetTranspilerTarget(MethodBase.GetCurrentMethod());
             var matcher = new CodeMatcher(instructions);
 
             ReplaceIsDirectlyControllable(matcher, target);
@@ -290,8 +284,7 @@ namespace WOTRMultiplayer.HarmonyPatches.TurnBasedCombat
         [HarmonyTranspiler]
         public static IEnumerable<CodeInstruction> TurnController_Start_Transpiler(IEnumerable<CodeInstruction> instructions)
         {
-            var attr = MethodBase.GetCurrentMethod().GetCustomAttribute<HarmonyPatch>();
-            var target = $"{attr.info.declaringType.Name}.{attr.info.methodName}";
+            var target = PatchesUtils.GetTranspilerTarget(MethodBase.GetCurrentMethod());
             var matcher = new CodeMatcher(instructions);
 
             ReplaceIsDirectlyControllable(matcher, target);
@@ -309,12 +302,12 @@ namespace WOTRMultiplayer.HarmonyPatches.TurnBasedCombat
                 var call = new CodeInstruction(OpCodes.Call, replaceWith);
                 match.RemoveInstruction();
                 match.Insert(call);
-                Main.GetLogger<HarmonyTranspiler>().LogInformation("Transpiler has been applied. Target={target}", target);
+                Main.GetLogger<TurnBasedCombatPatches>().LogInformation("Transpiler has been applied. Target={target}", target);
 
                 return;
             }
 
-            Main.GetLogger<HarmonyTranspiler>().LogError("Transpiler has not been applied. Target={target}", target);
+            Main.GetLogger<TurnBasedCombatPatches>().LogError("Transpiler has not been applied. Target={target}", target);
         }
 
         public static bool IsControlledByPlayers(UnitEntityData unit)

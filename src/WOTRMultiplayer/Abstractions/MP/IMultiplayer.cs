@@ -1,6 +1,7 @@
 ﻿using Kingmaker.EntitySystem.Persistence;
 using Kingmaker.GameModes;
 using Kingmaker.RuleSystem.Rules;
+using Kingmaker.RuleSystem.Rules.Abilities;
 using Kingmaker.RuleSystem.Rules.Damage;
 using WOTRMultiplayer.Abstractions.Random;
 using WOTRMultiplayer.Abstractions.UI;
@@ -98,6 +99,9 @@ namespace WOTRMultiplayer.Abstractions.MP
 
         bool OnBeforeRuleInitiativeRoll(RuleInitiativeRoll ruleInitiativeRoll);
         void OnAfterRuleInitiativeRollTrigger(RuleInitiativeRoll ruleInitiativeRoll);
+
+        bool OnBeforeRuleCheckConcentrationRoll(RuleCheckConcentration ruleCheckConcentration);
+        void OnAfterRuleCheckConcentrationTrigger(RuleCheckConcentration ruleCheckConcentration);
 
         void OnLootContainer(NetworkLootContainer container);
 

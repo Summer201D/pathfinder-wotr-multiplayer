@@ -5,6 +5,7 @@ using Kingmaker.EntitySystem.Entities;
 using Kingmaker.EntitySystem.Persistence;
 using Kingmaker.GameModes;
 using Kingmaker.RuleSystem.Rules;
+using Kingmaker.RuleSystem.Rules.Abilities;
 using Kingmaker.RuleSystem.Rules.Damage;
 using Microsoft.Extensions.Logging;
 using WOTRMultiplayer.Abstractions.GameInteraction;
@@ -462,6 +463,53 @@ namespace WOTRMultiplayer.MP
 
                 var roll = CreateSpellResistanceCheckRoll(NetworkDiceRollType.Hit, ruleSpellResistanceCheck);
                 SaveIntRollValue(multiplayerActor, roll, ruleSpellResistanceCheck.Roll);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Unable to handle {methodName}", MethodBase.GetCurrentMethod().Name);
+                throw;
+            }
+        }
+
+        public bool OnBeforeRuleCheckConcentrationRoll(RuleCheckConcentration ruleCheckConcentration)
+        {
+            try
+            {
+                var multiplayerActor = GetMultiplayerActor();
+                if (!ShouldRetrieveRoll(multiplayerActor, ruleCheckConcentration))
+                {
+                    return true;
+                }
+
+                var roll = CreateConcentrationRoll(NetworkDiceRollType.Hit, ruleCheckConcentration);
+                var d20 = RetrieveD20Roll(multiplayerActor, roll, ruleCheckConcentration.Initiator);
+                if (d20 == null)
+                {
+                    return true;
+                }
+
+                ruleCheckConcentration.ResultRollRaw = d20;
+                return false;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Unable to handle {methodName}", MethodBase.GetCurrentMethod().Name);
+                throw;
+            }
+        }
+
+        public void OnAfterRuleCheckConcentrationTrigger(RuleCheckConcentration ruleCheckConcentration)
+        {
+            try
+            {
+                var multiplayerActor = GetMultiplayerActor();
+                if (!ShouldStoreRoll(multiplayerActor, ruleCheckConcentration))
+                {
+                    return;
+                }
+
+                var roll = CreateConcentrationRoll(NetworkDiceRollType.Hit, ruleCheckConcentration);
+                SaveIntRollValue(multiplayerActor, roll, ruleCheckConcentration.ResultRollRaw);
             }
             catch (Exception ex)
             {
@@ -981,6 +1029,20 @@ namespace WOTRMultiplayer.MP
                 _logger.LogError(ex, $"Unable to handle {MethodBase.GetCurrentMethod().Name}");
                 throw;
             }
+        }
+
+        private ConcentrationRoll CreateConcentrationRoll(NetworkDiceRollType diceRollType, RuleCheckConcentration ruleCheckConcentration)
+        {
+            var roll = new ConcentrationRoll(ruleCheckConcentration.Initiator.UniqueId, ruleCheckConcentration.GetType().Name, diceRollType, ruleCheckConcentration.TotalBonusValue)
+            {
+                DC = ruleCheckConcentration.DC,
+                Concentration = ruleCheckConcentration.Concentration,
+                Damage = ruleCheckConcentration.Damage?.Result ?? 0,
+                AbilityId = ruleCheckConcentration.Reason?.Ability?.UniqueId,
+                AddTwiceSpellLevel = ruleCheckConcentration.AddTwiceSpellLevel
+            };
+
+            return roll;
         }
 
         private SkillCheckRoll CreateSkillCheckRoll(NetworkDiceRollType diceRollType, RuleSkillCheck ruleSkillCheck)

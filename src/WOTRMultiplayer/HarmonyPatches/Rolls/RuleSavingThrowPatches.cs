@@ -38,8 +38,7 @@ namespace WOTRMultiplayer.HarmonyPatches.Rolls
         [HarmonyTranspiler]
         public static IEnumerable<CodeInstruction> RuleSavingThrow_RollD20_Transpiler(IEnumerable<CodeInstruction> instructions)
         {
-            var attr = MethodBase.GetCurrentMethod().GetCustomAttribute<HarmonyPatch>();
-            var target = $"{attr.info.declaringType.Name}.{attr.info.methodName}";
+            var target = PatchesUtils.GetTranspilerTarget(MethodBase.GetCurrentMethod());
             var matcher = new CodeMatcher(instructions);
             var match = matcher.Advance(1);
             if (match.Instruction.opcode != OpCodes.Ldarg_0)

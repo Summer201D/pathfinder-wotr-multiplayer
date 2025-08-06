@@ -20,8 +20,7 @@ namespace WOTRMultiplayer.HarmonyPatches.Rolls
         [HarmonyTranspiler]
         public static IEnumerable<CodeInstruction> RuleAttackRoll_OnTrigger_Transpiler(IEnumerable<CodeInstruction> instructions)
         {
-            var attr = MethodBase.GetCurrentMethod().GetCustomAttribute<HarmonyPatch>();
-            var target = $"{attr.info.declaringType.Name}.{attr.info.methodName}";
+            var target = PatchesUtils.GetTranspilerTarget(MethodBase.GetCurrentMethod());
             var matcher = new CodeMatcher(instructions);
             var replaceWith = AccessTools.Method(typeof(RuleAttackRollPatches), nameof(RuleAttackRollPatches.AttackRollD20));
             var lookFor = AccessTools.Method(typeof(Dice), nameof(Dice.GenerateD20));
@@ -43,11 +42,11 @@ namespace WOTRMultiplayer.HarmonyPatches.Rolls
             const int ExpectedReplacementCounter = 2;
             if (replacementCounter != ExpectedReplacementCounter)
             {
-                Main.GetLogger<HarmonyTranspiler>().LogError("Instructions have not been replaced expected number of times. Target={target}, Expected={expected}, Current={current}", target, ExpectedReplacementCounter, replacementCounter);
+                Main.GetLogger<RuleAttackRollPatches>().LogError("Instructions have not been replaced expected number of times. Target={target}, Expected={expected}, Current={current}", target, ExpectedReplacementCounter, replacementCounter);
                 return instructions;
             }
 
-            Main.GetLogger<HarmonyTranspiler>().LogInformation("Transpiler has been applied. Target={target}", target);
+            Main.GetLogger<RuleAttackRollPatches>().LogInformation("Transpiler has been applied. Target={target}", target);
             return matcher.Instructions();
         }
 
