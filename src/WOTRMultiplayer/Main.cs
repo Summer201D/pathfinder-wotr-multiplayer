@@ -14,10 +14,6 @@ using WOTRMultiplayer.DI;
 
 namespace WOTRMultiplayer
 {
-    // SettingsRoot.Game.TurnBased.EnableTurnBasedMode
-    // party skills checks enabled
-    // same speed in combat
-    // loot bodies in combat = false
     public class Main
     {
         private static UnityModManagerSettings _settings;

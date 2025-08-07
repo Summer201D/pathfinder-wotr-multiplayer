@@ -17,6 +17,7 @@ using WOTRMultiplayer.MP.Entities.Dialogs;
 using WOTRMultiplayer.MP.Entities.Equipment;
 using WOTRMultiplayer.MP.Entities.Loot;
 using WOTRMultiplayer.MP.Entities.MapObjects;
+using WOTRMultiplayer.MP.Entities.Settings;
 using WOTRMultiplayer.Networking.Abstractions;
 using WOTRMultiplayer.Networking.Messages.Game;
 using WOTRMultiplayer.Networking.Messages.Lobby;
@@ -322,7 +323,7 @@ namespace WOTRMultiplayer.MP.Actors
                 .Register<DiceRollValueRequest>(OnRollRequest)
 
                 .Register<NotifyPlayerDisconnected>(OnNotifyPlayerDisconnected)
-                .Register<PlayerNameRequest>(OnPlayerNameRequest)
+                .Register<GameServerConnectionSucceeded>(OnGameServerConnectionSucceeded)
                 .Register<PlayerReadyStatusChanged>(OnPlayerReadyStatusChanged)
                 .Register<NotifyPlayersChanged>(OnNotifyPlayersChanged)
                 .Register<NotifyGameCharactersChanged>(OnNotifyGameCharactersChanged)
@@ -800,20 +801,22 @@ namespace WOTRMultiplayer.MP.Actors
             GameInteraction.ShowModalMessage(error);
         }
 
-        private void OnPlayerNameRequest(PlayerNameRequest request)
+        private void OnGameServerConnectionSucceeded(GameServerConnectionSucceeded succeeded)
         {
-            Logger.LogInformation("Received {messageType}. ClientPlayerId={clientPlayerId}", nameof(PlayerNameRequest), request.ClientPlayerId);
+            Logger.LogInformation("Received {messageType}. ClientPlayerId={clientPlayerId}", nameof(GameServerConnectionSucceeded), succeeded.ClientPlayerId);
             if (Game == null)
             {
                 Logger.LogError("Game has not been initialized yet");
                 return;
             }
 
-            Game.LocalPlayerId = request.ClientPlayerId;
+            Game.LocalPlayerId = succeeded.ClientPlayerId;
+            var settings = Mapper.Map<NetworkGameSettings>(succeeded.GameSettings);
+            GameInteraction.ApplyGameSettings(settings);
 
-            var nameResponse = new PlayerNameResponse() { Name = SettingsProvider.Settings.PlayerName };
-            _networkServerClient.Send(nameResponse);
-            Logger.LogInformation("Player name has been sent. Name={name}", nameResponse.Name);
+            var message = new ClientGameServerConnectionConfirmed() { PlayerName = SettingsProvider.Settings.PlayerName };
+            Logger.LogInformation("Sending {messageType}. PlayerName={playerName}", nameof(ClientGameServerConnectionConfirmed), message.PlayerName);
+            _networkServerClient.Send(message);
         }
     }
 }

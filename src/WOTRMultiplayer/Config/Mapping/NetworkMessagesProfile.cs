@@ -6,6 +6,7 @@ using WOTRMultiplayer.MP.Entities.Equipment;
 using WOTRMultiplayer.MP.Entities.Loot;
 using WOTRMultiplayer.MP.Entities.MapObjects;
 using WOTRMultiplayer.MP.Entities.Rolls.Claiming.Values;
+using WOTRMultiplayer.MP.Entities.Settings;
 
 namespace WOTRMultiplayer.Config.Mapping
 {
@@ -72,6 +73,18 @@ namespace WOTRMultiplayer.Config.Mapping
                 .ReverseMap();
 
             CreateMap<NetworkPerceptionCheck, Networking.Messages.NetworkPerceptionCheck>()
+                .ReverseMap();
+
+            CreateMap<NetworkGameSettings, Networking.Messages.NetworkGameSettings>()
+                .ReverseMap();
+
+            CreateMap<NetworkTurnBasedSettngs, Networking.Messages.NetworkTurnBasedSettngs>()
+                .ReverseMap();
+
+            CreateMap<NetworkGameMainSettings, Networking.Messages.NetworkGameMainSettings>()
+                .ReverseMap();
+
+            CreateMap<NetworkAutopauseSettings, Networking.Messages.NetworkAutopauseSettings>()
                 .ReverseMap();
         }
     }

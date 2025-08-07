@@ -652,7 +652,7 @@ namespace WOTRMultiplayer.MP.Actors
                 .Register<DiceRollValueResponse>(null) // usable as awaiter only
 
                 .Register<PlayerReadyStatusChanged>(OnPlayerReadyStatusChanged)
-                .Register<PlayerNameResponse>(OnPlayerNameResponse)
+                .Register<ClientGameServerConnectionConfirmed>(OnPlayerNameResponse)
                 .Register<PlayerSaveGameSyncChanged>(OnPlayerSaveGameSyncChanged)
                 .Register<CharacterMove>(OnCharacterMove)
                 .Register<ClientGameLoaded>(OnClientGameLoaded)
@@ -1014,27 +1014,27 @@ namespace WOTRMultiplayer.MP.Actors
             }
         }
 
-        private void OnPlayerNameResponse(long playerId, PlayerNameResponse response)
+        private void OnPlayerNameResponse(long playerId, ClientGameServerConnectionConfirmed response)
         {
             try
             {
-                Logger.LogInformation("Received {messageType}. PlayerId={playerId}, Name={name}", nameof(PlayerNameResponse), playerId, response?.Name);
+                Logger.LogInformation("Received {messageType}. PlayerId={playerId}, Name={name}", nameof(ClientGameServerConnectionConfirmed), playerId, response?.PlayerName);
                 lock (ActionLock)
                 {
                     var existingPlayer = GetPlayer(playerId);
                     if (existingPlayer == null)
                     {
-                        Logger.LogWarning("Can't process player name update because player doesn't exist. PlayerId={playerId}, Name={name}", playerId, response?.Name);
+                        Logger.LogWarning("Can't process player name update because player doesn't exist. PlayerId={playerId}, Name={name}", playerId, response?.PlayerName);
                         return;
                     }
 
-                    if (string.IsNullOrEmpty(response.Name))
+                    if (string.IsNullOrEmpty(response.PlayerName))
                     {
-                        Logger.LogWarning("Can't process player name update because player name is missing. PlayerId={playerId}, Name={name}", playerId, response?.Name);
+                        Logger.LogWarning("Can't process player name update because player name is missing. PlayerId={playerId}, Name={name}", playerId, response?.PlayerName);
                         return;
                     }
 
-                    existingPlayer.Name = response.Name;
+                    existingPlayer.Name = response.PlayerName;
 
                     OnPlayersChanged?.Invoke(Game.Players);
 
@@ -1072,8 +1072,15 @@ namespace WOTRMultiplayer.MP.Actors
 
                 var player = new NetworkPlayer(playerId);
                 Game.Players.Add(player);
-                Logger.LogInformation("Sending player name request. PlayerId={playerId}", playerId);
-                _networkServer.Send(playerId, new PlayerNameRequest { ClientPlayerId = playerId });
+
+                var settings = GameInteraction.GetGameSettings();
+                Logger.LogInformation("Sending {messageType}. PlayerId={playerId}, Settings={gameSettings}", nameof(GameServerConnectionSucceeded), playerId, settings);
+                var message = new GameServerConnectionSucceeded
+                {
+                    ClientPlayerId = playerId,
+                    GameSettings = Mapper.Map<Networking.Messages.NetworkGameSettings>(settings)
+                };
+                _networkServer.Send(playerId, message);
             }
         }
 
@@ -1112,8 +1119,39 @@ namespace WOTRMultiplayer.MP.Actors
                 character.Owner = hostPlayer;
             }
 
+            var settings = GetMustHaveGameSettings();
+            GameInteraction.ApplyGameSettings(settings);
+
             OnConnected?.Invoke(Game.Connectivity);
             OnPlayersChanged?.Invoke(Game.Players);
+        }
+
+        private Entities.Settings.NetworkGameSettings GetMustHaveGameSettings()
+        {
+            var settings = new Entities.Settings.NetworkGameSettings
+            {
+                TurnBased = new Entities.Settings.NetworkTurnBasedSettngs
+                {
+                    IsTurnBasedModeEnabled = true,
+                    AutoStopAfterFirstMoveAction = false,
+                    AutoEndTurn = false,
+                },
+                Main = new Entities.Settings.NetworkGameMainSettings
+                {
+                    LootInCombat = false,
+                    QuickMovement = true
+                },
+                Autopause = new Entities.Settings.NetworkAutopauseSettings
+                {
+                    PauseOnTrapDetected = true,
+                    PauseOnSpellcastInterrupted = Kingmaker.Settings.EntitiesType.None,
+                    PauseOnSpellcastStarted = Kingmaker.Settings.EntitiesType.None,
+                    // everything else is false for autopause
+                },
+
+            };
+
+            return settings;
         }
 
         private NotifyGameCharactersChanged CreateNotifyGameCharactersChanged()

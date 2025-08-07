@@ -14,6 +14,7 @@ using WOTRMultiplayer.MP.Entities.Dialogs;
 using WOTRMultiplayer.MP.Entities.Equipment;
 using WOTRMultiplayer.MP.Entities.Loot;
 using WOTRMultiplayer.MP.Entities.MapObjects;
+using WOTRMultiplayer.MP.Entities.Settings;
 
 namespace WOTR.Multiplayer.Playground.Core.Dummies
 {
@@ -206,6 +207,15 @@ namespace WOTR.Multiplayer.Playground.Core.Dummies
         public List<string> GetUnitsCombatOrder()
         {
             return [];
+        }
+
+        public NetworkGameSettings GetGameSettings()
+        {
+            return null;
+        }
+
+        public void ApplyGameSettings(NetworkGameSettings gameSettings)
+        {
         }
     }
 }

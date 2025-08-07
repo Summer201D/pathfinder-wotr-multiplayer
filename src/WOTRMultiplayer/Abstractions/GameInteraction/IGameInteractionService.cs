@@ -11,6 +11,7 @@ using WOTRMultiplayer.MP.Entities.Dialogs;
 using WOTRMultiplayer.MP.Entities.Equipment;
 using WOTRMultiplayer.MP.Entities.Loot;
 using WOTRMultiplayer.MP.Entities.MapObjects;
+using WOTRMultiplayer.MP.Entities.Settings;
 
 namespace WOTRMultiplayer.Abstractions.GameInteraction
 {
@@ -103,5 +104,9 @@ namespace WOTRMultiplayer.Abstractions.GameInteraction
         void UpdateCombatOrder(List<string> combatOrderUnits);
 
         List<string> GetUnitsCombatOrder();
+
+        NetworkGameSettings GetGameSettings();
+
+        void ApplyGameSettings(NetworkGameSettings gameSettings);
     }
 }
