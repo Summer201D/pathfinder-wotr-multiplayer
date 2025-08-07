@@ -173,7 +173,6 @@ namespace WOTRMultiplayer.GameInteraction
                 return;
             }
 
-            // (Game.Instance.RootUiContext.m_UIView as InGamePCView).m_StaticPartPCView.m_DialogContextPCView.m_BookEventPCView
             switch (Game.Instance.DialogController.Dialog.Type)
             {
                 case DialogType.Interchapter:
@@ -780,6 +779,7 @@ namespace WOTRMultiplayer.GameInteraction
                         {
                             TransferItems(interaction.Loot, Game.Instance.Player.Inventory, transferList);
                             RefreshLootUI();
+                            RefreshInventoryWindow();
                             return;
                         }
                     }
@@ -803,19 +803,60 @@ namespace WOTRMultiplayer.GameInteraction
                 return;
             }
 
-            var itemToDrop = entity.Inventory.FirstOrDefault(e => IsSameItem(e, dropItem.Item));
-            if (itemToDrop == null)
+            var possibleItemsToDrop = entity.Inventory
+                .Where(i => i.HoldingSlot == null && IsSameItem(i, dropItem.Item))
+                .OrderBy(x => x.Count)
+                .ToList();
+
+            if (possibleItemsToDrop.Count == 0)
             {
                 _logger.LogWarning("Unable to find item to drop. EntityId={entityId}, ItemId={itemId}", dropItem.OwnerEntityId, dropItem.Item.UniqueId);
                 return;
             }
 
+            var totalCount = possibleItemsToDrop.Sum(x => x.Count);
+            if (totalCount < dropItem.Item.Count)
+            {
+                _logger.LogError("Not enough items to drop, possibly desynced somewhere else. EntityId={entityId}, ItemId={itemId}, TotalCount={totalCount} RequiredCount={requiredCount}", dropItem.OwnerEntityId, dropItem.Item.UniqueId, totalCount, dropItem.Item.Count);
+                return;
+            }
+
             _mainThreadAccessor.Enqueue(() =>
             {
-                using var context = _networkExecutionContext.Value = new NetworkExecutionContext { DropItem = new DropItemContext { ItemId = dropItem.Item.UniqueId, UnitId = dropItem.OwnerEntityId } };
-                entity.Inventory.DropItem(itemToDrop);
-                _logger.LogInformation("Item has been dropped. EntityId={entityId}, ItemId={itemId}", dropItem.OwnerEntityId, dropItem.Item.UniqueId);
+                var countToDrop = dropItem.Item.Count;
+                foreach (var item in possibleItemsToDrop)
+                {
+                    var difference = countToDrop - item.Count;
+                    if (difference == 0)
+                    {
+                        DropItem(entity.Inventory, item, dropItem.OwnerEntityId);
+                        break;
+                    }
+                    else if (difference < 0)
+                    {
+                        var itemsToDrop = item.Split(countToDrop);
+                        DropItem(entity.Inventory, itemsToDrop, dropItem.OwnerEntityId);
+                        break;
+                    }
+                    else
+                    {
+                        // less than needed
+                        countToDrop = difference;
+                        DropItem(entity.Inventory, item, dropItem.OwnerEntityId);
+                        continue;
+                    }
+                }
+
+                RefreshInventoryWindow();
             });
+        }
+
+        private void DropItem(ItemsCollection inventory, ItemEntity itemEntity, string ownerId)
+        {
+            var itemId = itemEntity.UniqueId;
+            using var context = _networkExecutionContext.Value = new NetworkExecutionContext { DropItem = new DropItemContext { ItemId = itemId, UnitId = ownerId } };
+            inventory.DropItem(itemEntity);
+            _logger.LogInformation("Item has been dropped. EntityId={entityId}, ItemId={itemId}, Count={count}", ownerId, itemId, itemEntity.Count);
         }
 
         public NetworkEquipmentSlotPosition GetEquipmentSlotPosition(ItemSlot slot)
@@ -1135,13 +1176,6 @@ namespace WOTRMultiplayer.GameInteraction
                 && itemEntity.Enchantments.Count == networkLootItem.EnchantmentsCount;
 
             return sameItemType;
-        }
-        private bool IsSameItemPosition(ItemSlot holdingSlot, NetworkEquipmentSlotPosition position)
-        {
-            var holdingSlotPosition = GetEquipmentSlotPosition(holdingSlot);
-
-            return holdingSlotPosition == null && position == null
-                || holdingSlotPosition != null && position != null && holdingSlotPosition.Index == position.Index && holdingSlotPosition.Type == position.Type;
         }
 
         private void RefreshLootUI()
