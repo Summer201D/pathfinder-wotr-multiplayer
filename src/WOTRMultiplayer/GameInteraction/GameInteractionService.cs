@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -64,7 +63,6 @@ namespace WOTRMultiplayer.GameInteraction
         private readonly IMainThreadAccessor _mainThreadAccessor;
         private readonly IResourceProvider _resourceProvider;
         private readonly IEquipmentDefinitions _equipmentDefinitions;
-        private readonly ConcurrentDictionary<string, bool> _triggeredByAnotherPlayer = new();
         private readonly AsyncLocal<NetworkExecutionContext> _networkExecutionContext = new();
 
         public NetworkExecutionContext ExecutionContext => _networkExecutionContext?.Value;
@@ -708,7 +706,7 @@ namespace WOTRMultiplayer.GameInteraction
                     UpdateActionsState(abilityUse.ActionsState);
                 }
 
-                Enum.TryParse<Kingmaker.UnitLogic.Commands.Base.UnitCommand.CommandType>(abilityUse.CommandType, true, out var commandType);
+                Enum.TryParse<UnitCommand.CommandType>(abilityUse.CommandType, true, out var commandType);
                 var command = UnitUseAbility.CreateCastCommand(abilityData, targetWrapper, commandType);
                 command.CreatedByPlayer = true;
                 if (abilityUse.VectorPath != null)
@@ -796,12 +794,6 @@ namespace WOTRMultiplayer.GameInteraction
             });
         }
 
-
-        public bool HasBeenChangedByAnotherPlayer(NetworkEquipmentSlot networkSlot)
-        {
-            return _triggeredByAnotherPlayer.TryRemove(networkSlot.Position.Type.ToString() + networkSlot.Position.Index.ToString(), out _);
-        }
-
         public void DropItem(NetworkDropItem dropItem)
         {
             var entity = GetUnitEntity(dropItem.OwnerEntityId);
@@ -820,7 +812,7 @@ namespace WOTRMultiplayer.GameInteraction
 
             _mainThreadAccessor.Enqueue(() =>
             {
-                SuppressEventsFor(dropItem);
+                using var context = _networkExecutionContext.Value = new NetworkExecutionContext { DropItem = new DropItemContext { ItemId = dropItem.Item.UniqueId, UnitId = dropItem.OwnerEntityId } };
                 entity.Inventory.DropItem(itemToDrop);
                 _logger.LogInformation("Item has been dropped. EntityId={entityId}, ItemId={itemId}", dropItem.OwnerEntityId, dropItem.Item.UniqueId);
             });
@@ -878,10 +870,11 @@ namespace WOTRMultiplayer.GameInteraction
                     return;
                 }
 
+                using var context = _networkExecutionContext.Value = new NetworkExecutionContext { Equipment = new EquipmentContext { Position = slot.Position } };
+
                 var slotToUpdate = slotsOfSameType[slot.Position.Index];
                 if (string.IsNullOrEmpty(slot.ItemId))
                 {
-                    SuppressEventsFor(slot);
                     slotToUpdate.RemoveItem();
                     RefreshInventoryWindow();
                     _logger.LogInformation("Item has been unequipped. UnitId={unitId}, SlotType={slotType}, SlotIndex={slotIndex}", slot.OwnerId, slot.Position.Type, slot.Position.Index);
@@ -895,7 +888,6 @@ namespace WOTRMultiplayer.GameInteraction
                     return;
                 }
 
-                SuppressEventsFor(slot);
                 slotToUpdate.InsertItem(item);
                 RefreshInventoryWindow();
                 _logger.LogInformation("Item has been equipped. UnitId={unitId}, SlotType={slotType}, SlotIndex={slotIndex}, ItemId={itemId}", slot.OwnerId, slot.Position.Type, slot.Position.Index, slot.ItemId);
@@ -914,30 +906,17 @@ namespace WOTRMultiplayer.GameInteraction
 
             _mainThreadAccessor.Enqueue(() =>
             {
-                if (unit.Body.CurrentHandEquipmentSetIndex != set.Index)
+                if (unit.Body.CurrentHandEquipmentSetIndex == set.Index)
                 {
-                    SuppressEventsFor(set);
-                    var previousIndex = unit.Body.CurrentHandEquipmentSetIndex;
-                    unit.Body.CurrentHandEquipmentSetIndex = set.Index;
-                    RefreshInventoryWindow();
-                    _logger.LogInformation("Changed active hand equipment slot. UnitId={unitID}, PreviousIndex={previousIndex}, CurrentIndex={currentIndex}", set.UnitId, previousIndex, unit.Body.CurrentHandEquipmentSetIndex);
+                    return;
                 }
+
+                using var context = _networkExecutionContext.Value = new NetworkExecutionContext { HandEquipment = new HandEquipmentContext { UnitId = set.UnitId, Index = set.Index } };
+                var previousIndex = unit.Body.CurrentHandEquipmentSetIndex;
+                unit.Body.CurrentHandEquipmentSetIndex = set.Index;
+                RefreshInventoryWindow();
+                _logger.LogInformation("Changed active hand equipment slot. UnitId={unitID}, PreviousIndex={previousIndex}, CurrentIndex={currentIndex}", set.UnitId, previousIndex, unit.Body.CurrentHandEquipmentSetIndex);
             });
-        }
-
-        public bool HasBeenTriggeredByAnotherPlayer(NetworkDropItem dropItem)
-        {
-            return _triggeredByAnotherPlayer.TryRemove(GetSuppressKey(dropItem), out _);
-        }
-
-        public bool HasBeenTriggeredByAnotherPlayer(NetworkEquipmentSlot networkSlot)
-        {
-            return _triggeredByAnotherPlayer.TryRemove(GetSuppressKey(networkSlot), out _);
-        }
-
-        public bool HasBeenTriggeredByAnotherPlayer(NetworkActiveHandEquipmentSet set)
-        {
-            return _triggeredByAnotherPlayer.TryRemove(GetSuppressKey(set), out _);
         }
 
         public EntityDataBase GetEntity(string id)
@@ -1108,47 +1087,6 @@ namespace WOTRMultiplayer.GameInteraction
             SettingsRoot.Game.Autopause.PauseWhenAllyUnconscious.SetValueAndConfirm(gameSettings.Autopause.PauseWhenAllyUnconscious);
             SettingsRoot.Game.Autopause.PauseWhenEnemyUnconscious.SetValueAndConfirm(gameSettings.Autopause.PauseWhenEnemyUnconscious);
             SettingsRoot.Game.Autopause.PauseWhenLastSleepingEnemyStays.SetValueAndConfirm(gameSettings.Autopause.PauseWhenLastSleepingEnemyStays);
-        }
-
-        private void SuppressEventsFor(NetworkEquipmentSlot slot)
-        {
-            _triggeredByAnotherPlayer.TryAdd(GetSuppressKey(slot), true);
-        }
-
-        private void SuppressEventsFor(NetworkDropItem dropItem)
-        {
-            _triggeredByAnotherPlayer.TryAdd(GetSuppressKey(dropItem), true);
-        }
-
-        private void SuppressEventsFor(NetworkActiveHandEquipmentSet handSlot)
-        {
-            _triggeredByAnotherPlayer.TryAdd(GetSuppressKey(handSlot), true);
-        }
-
-        private string GetSuppressKey(object targetEvent)
-        {
-            var key = targetEvent.GetType().Name;
-
-            switch (targetEvent)
-            {
-                case NetworkEquipmentSlot slot:
-                    key += slot.Position.Type.ToString();
-                    key += slot.Position.Index.ToString();
-                    break;
-                case NetworkDropItem dropItem:
-                    key += dropItem.OwnerEntityId;
-                    key += dropItem.Item.UniqueId;
-                    break;
-                case NetworkActiveHandEquipmentSet handSlot:
-                    key += handSlot.UnitId;
-                    key += handSlot.Index;
-                    break;
-                default:
-                    _logger.LogError("Suppress has not been configured for this type of object. Type={type}", targetEvent.GetType().Name);
-                    break;
-            }
-
-            return key;
         }
 
         private void RefreshInventoryWindow()

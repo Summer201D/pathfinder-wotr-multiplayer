@@ -10,10 +10,19 @@ namespace WOTRMultiplayer.GameInteraction.Contexts
 
         public PerceptionCheckContext PerceptionCheck { get; set; }
 
+        public DropItemContext DropItem { get; set; }
+
+        public EquipmentContext Equipment { get; set; }
+
+        public HandEquipmentContext HandEquipment { get; set; }
+
         public void Dispose()
         {
             SelectedUnits = null;
             PerceptionCheck = null;
+            DropItem = null;
+            Equipment = null;
+            HandEquipment = null;
         }
     }
 }

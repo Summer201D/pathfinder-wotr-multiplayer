@@ -5,7 +5,6 @@ using Kingmaker.UnitLogic;
 using Microsoft.Extensions.Logging;
 using WOTRMultiplayer.Abstractions.GameInteraction;
 using WOTRMultiplayer.Abstractions.MP;
-using WOTRMultiplayer.Abstractions.MP.Actors;
 using WOTRMultiplayer.Abstractions.PubSub;
 using WOTRMultiplayer.MP.Entities.Equipment;
 
@@ -48,6 +47,12 @@ namespace WOTRMultiplayer.PubSub
                 OwnerId = slot.Owner.Unit.UniqueId,
                 Position = position
             };
+
+            var equipmentContext = _gameInteractionService.ExecutionContext?.Equipment;
+            if (equipmentContext != null && equipmentContext.Position.Type == position.Type && equipmentContext.Position.Index == position.Index)
+            {
+                return;
+            }
 
             ActorAccessor.Current.OnEquipmentSlotChanged(networkSlot);
         }

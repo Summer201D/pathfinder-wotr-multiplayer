@@ -388,12 +388,27 @@ namespace WOTRMultiplayer.MP
                 return;
             }
 
+            var context = _gameInteractionService.ExecutionContext?.DropItem;
+            if (context != null && string.Equals(context.UnitId, dropItem.OwnerEntityId, StringComparison.OrdinalIgnoreCase)
+                && string.Equals(context.ItemId, dropItem.Item.UniqueId, StringComparison.OrdinalIgnoreCase))
+            {
+                return;
+            }
+
             _multiplayerActorAccessor.Current.OnDropItem(dropItem);
         }
 
         public void OnChangeActiveHandEquipmentSet(NetworkActiveHandEquipmentSet set)
         {
             if (_multiplayerActorAccessor.Current == null)
+            {
+                return;
+            }
+
+            var context = _gameInteractionService.ExecutionContext?.HandEquipment;
+            if (context != null
+                && context.Index == set.Index
+                && string.Equals(context.UnitId, set.UnitId, StringComparison.OrdinalIgnoreCase))
             {
                 return;
             }

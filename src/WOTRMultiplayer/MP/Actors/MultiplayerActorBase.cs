@@ -257,11 +257,6 @@ namespace WOTRMultiplayer.MP.Actors
 
         public void OnDropItem(NetworkDropItem dropItem)
         {
-            if (GameInteraction.HasBeenTriggeredByAnotherPlayer(dropItem))
-            {
-                return;
-            }
-
             Logger.LogInformation("Sending drop item. OwnerId={ownerId}, ItemId={itemId}, ItemName={itemName}", dropItem.OwnerEntityId, dropItem.Item.UniqueId, dropItem.Item.Name);
             var message = new NotifyDropItem
             {
@@ -274,7 +269,7 @@ namespace WOTRMultiplayer.MP.Actors
 
         public void OnChangeActiveHandEquipmentSet(NetworkActiveHandEquipmentSet set)
         {
-            if (!IsControlledByPlayers(set.UnitId) || GameInteraction.HasBeenTriggeredByAnotherPlayer(set))
+            if (!IsControlledByPlayers(set.UnitId))
             {
                 return;
             }
@@ -290,7 +285,7 @@ namespace WOTRMultiplayer.MP.Actors
 
         public void OnEquipmentSlotChanged(NetworkEquipmentSlot equipmentSlot)
         {
-            if (!IsControlledByPlayers(equipmentSlot.OwnerId) || GameInteraction.HasBeenTriggeredByAnotherPlayer(equipmentSlot))
+            if (!IsControlledByPlayers(equipmentSlot.OwnerId))
             {
                 return;
             }

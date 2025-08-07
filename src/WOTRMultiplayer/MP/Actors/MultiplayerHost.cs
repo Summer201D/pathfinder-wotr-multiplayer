@@ -30,6 +30,7 @@ namespace WOTRMultiplayer.MP.Actors
         private NetworkGameStage Status => Game?.Stage ?? NetworkGameStage.None;
 
         public Action<List<NetworkPlayer>> OnPlayersChanged { get; set; }
+
         public Action<NetworkGameConnectivity> OnConnected { get; set; }
 
         public bool IsActive => _networkServer.IsActive;
