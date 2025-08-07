@@ -820,6 +820,11 @@ namespace WOTRMultiplayer.GameInteraction
 
         public NetworkEquipmentSlotPosition GetEquipmentSlotPosition(ItemSlot slot)
         {
+            if (slot == null)
+            {
+                return null;
+            }
+
             var type = slot.GetType();
             var slotType = _equipmentDefinitions.GetSlotType(type);
             if (slotType == null)
@@ -884,8 +889,20 @@ namespace WOTRMultiplayer.GameInteraction
                 var item = unit.Inventory.Items.FirstOrDefault(i => string.Equals(i.UniqueId, slot.Item.UniqueId, StringComparison.OrdinalIgnoreCase));
                 if (item == null)
                 {
-                    _logger.LogError("Unable to update equipment slot with missing item. UnitId={unitId}, SlotType={slotType}, SlotIndex={slotIndex}, ItemId={itemId}", slot.OwnerId, slot.Position.Type, slot.Position.Index, slot.Item.UniqueId);
-                    return;
+                    // Stacking / splitting items generates a new item ID, which causes a mismatch on the clients,
+                    // so we can find the 'same' unequipped item and equip it
+                    var sameItem = unit.Inventory.Items.Where(i => i.HoldingSlot == null && IsSameItem(i, slot.Item))
+                        .OrderBy(x => x.Count)
+                        .FirstOrDefault();
+
+                    if (sameItem == null)
+                    {
+                        _logger.LogError("Unable to update equipment slot with missing item. UnitId={unitId}, SlotType={slotType}, SlotIndex={slotIndex}, ItemId={itemId}", slot.OwnerId, slot.Position.Type, slot.Position.Index, slot.Item.UniqueId);
+                        return;
+                    }
+
+                    // Split only works if count > 1, so it's safe to split everytime
+                    item = sameItem.Split(1);
                 }
 
                 slotToUpdate.InsertItem(item);
@@ -893,7 +910,6 @@ namespace WOTRMultiplayer.GameInteraction
                 _logger.LogInformation("Item has been equipped. UnitId={unitId}, SlotType={slotType}, SlotIndex={slotIndex}, ItemId={itemId}", slot.OwnerId, slot.Position.Type, slot.Position.Index, slot.Item.UniqueId);
             });
         }
-
 
         public void SetActiveHandEquipmentSet(NetworkActiveHandEquipmentSet set)
         {
@@ -1109,7 +1125,7 @@ namespace WOTRMultiplayer.GameInteraction
 
         private bool IsSameItem(ItemEntity itemEntity, NetworkItem networkLootItem)
         {
-            return string.Equals(itemEntity.NameForAcronym, networkLootItem.Name, StringComparison.OrdinalIgnoreCase)
+            var sameItemType = string.Equals(itemEntity.NameForAcronym, networkLootItem.Name, StringComparison.OrdinalIgnoreCase)
                 && (string.Equals(itemEntity.UniqueId, networkLootItem.UniqueId, StringComparison.OrdinalIgnoreCase)
                     || string.Equals(itemEntity.Blueprint.AssetGuid.ToString(), networkLootItem.BlueprintId, StringComparison.OrdinalIgnoreCase))
                 && itemEntity.Cost == networkLootItem.Cost
@@ -1117,6 +1133,15 @@ namespace WOTRMultiplayer.GameInteraction
                 && itemEntity.EnchantmentValue == networkLootItem.EnchantmentValue
                 && itemEntity.Enchantments.FirstOrDefault()?.NameForAcronym == networkLootItem.FirstEnchantmentName
                 && itemEntity.Enchantments.Count == networkLootItem.EnchantmentsCount;
+
+            return sameItemType;
+        }
+        private bool IsSameItemPosition(ItemSlot holdingSlot, NetworkEquipmentSlotPosition position)
+        {
+            var holdingSlotPosition = GetEquipmentSlotPosition(holdingSlot);
+
+            return holdingSlotPosition == null && position == null
+                || holdingSlotPosition != null && position != null && holdingSlotPosition.Index == position.Index && holdingSlotPosition.Type == position.Type;
         }
 
         private void RefreshLootUI()
