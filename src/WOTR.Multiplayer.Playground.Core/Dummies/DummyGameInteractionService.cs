@@ -14,6 +14,7 @@ using WOTRMultiplayer.MP.Entities.Dialogs;
 using WOTRMultiplayer.MP.Entities.Equipment;
 using WOTRMultiplayer.MP.Entities.Loot;
 using WOTRMultiplayer.MP.Entities.MapObjects;
+using WOTRMultiplayer.MP.Entities.Rest;
 using WOTRMultiplayer.MP.Entities.Settings;
 
 namespace WOTR.Multiplayer.Playground.Core.Dummies
@@ -25,6 +26,16 @@ namespace WOTR.Multiplayer.Playground.Core.Dummies
         public NetworkExecutionContext ExecutionContext { get; }
 
         public GameModeType CurrentGameMode => GameModeType.None;
+
+        public string CampingPotionBlueprintRecipeId => null;
+
+        public string CampingCookingBlueprintRecipeId => null;
+
+        public string CampingScrollBlueprintRecipeId => null;
+
+        public bool CampingAutotuneIterationsStatus => false;
+
+        public int CampingIterationsCount => 0;
 
         public string GetSaveGamePath()
         {
@@ -208,6 +219,18 @@ namespace WOTR.Multiplayer.Playground.Core.Dummies
         }
 
         public void SpawnCampPlace(NetworkVector3 position)
+        {
+        }
+
+        public void SetCampingUseHealingSpells(bool isOn)
+        {
+        }
+
+        public void SetCampingState(NetworkCampingState state)
+        {
+        }
+
+        public void SetCampingRoles(List<NetworkCampingRole> roles)
         {
         }
     }

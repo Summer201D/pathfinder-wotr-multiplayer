@@ -6,14 +6,12 @@ using Kingmaker.UI;
 using Kingmaker.View.MapObjects;
 using Microsoft.Extensions.Logging;
 using WOTRMultiplayer.Abstractions.MP;
-using WOTRMultiplayer.Abstractions.PubSub;
+using WOTRMultiplayer.Abstractions.Pubsub;
 
 namespace WOTRMultiplayer.PubSub
 {
-    public class GlobalMultiplayerSubscriber : GlobalMultiplayerSubscriberBase,
-        IGlobalMultiplayerSubscriber,
-        ISubscriber,
-        IGlobalSubscriber,
+    public class MultiplayerSubscriber : MultiplayerSubscriberBase,
+        IMultiplayerGlobalSubscriber,
         IWarningNotificationUIHandler,
         IPartyLeaveAreaHandler,
         IPartyChangedUIHandler,
@@ -22,8 +20,8 @@ namespace WOTRMultiplayer.PubSub
         IPartyCombatHandler,
         ITurnBasedModeHandler
     {
-        public GlobalMultiplayerSubscriber(
-            ILogger<GlobalMultiplayerSubscriber> logger,
+        public MultiplayerSubscriber(
+            ILogger<MultiplayerSubscriber> logger,
             IMultiplayerActorAccessor multiplayerActorAccessor)
             : base(logger, multiplayerActorAccessor)
         {
@@ -31,57 +29,32 @@ namespace WOTRMultiplayer.PubSub
 
         public void HandleAddCompanion(UnitEntityData unit)
         {
-            if (ActorAccessor.Current == null)
-            {
-                return;
-            }
-
             Logger.LogInformation("HandleAddCompanion");
-            ActorAccessor.Current.PartyChanged();
+            OnPartyChanged();
         }
 
         public void HandleCapitalModeChanged()
         {
-            if (ActorAccessor.Current == null)
-            {
-                return;
-            }
-
             Logger.LogInformation("HandleCapitalModeChanged");
-            ActorAccessor.Current.PartyChanged();
+            OnPartyChanged();
         }
 
         public void HandleCompanionActivated(UnitEntityData unit)
         {
-            if (ActorAccessor.Current == null)
-            {
-                return;
-            }
-
             Logger.LogInformation("HandleCompanionActivated");
-            ActorAccessor.Current.PartyChanged();
+            OnPartyChanged();
         }
 
         public void HandleCompanionRemoved(UnitEntityData unit, bool stayInGame)
         {
-            if (ActorAccessor.Current == null)
-            {
-                return;
-            }
-
             Logger.LogInformation("HandleCompanionRemoved");
-            ActorAccessor.Current.PartyChanged();
+            OnPartyChanged();
         }
 
         public void HandlePartyChanged()
         {
-            if (ActorAccessor.Current == null)
-            {
-                return;
-            }
-
             Logger.LogInformation("HandlePartyChanged");
-            ActorAccessor.Current.PartyChanged();
+            OnPartyChanged();
         }
 
         public void HandlePartyCombatStateChanged(bool inCombat)
@@ -177,6 +150,16 @@ namespace WOTRMultiplayer.PubSub
 
             Logger.LogInformation("OnAreaScenesLoaded");
             ActorAccessor.Current.OnAreaScenesLoaded();
+        }
+
+        private void OnPartyChanged()
+        {
+            if (ActorAccessor.Current == null)
+            {
+                return;
+            }
+
+            ActorAccessor.Current.PartyChanged();
         }
     }
 }

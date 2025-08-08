@@ -11,6 +11,7 @@ using WOTRMultiplayer.MP.Entities.Dialogs;
 using WOTRMultiplayer.MP.Entities.Equipment;
 using WOTRMultiplayer.MP.Entities.Loot;
 using WOTRMultiplayer.MP.Entities.MapObjects;
+using WOTRMultiplayer.MP.Entities.Rest;
 using WOTRMultiplayer.MP.Entities.Settings;
 
 namespace WOTRMultiplayer.Abstractions.GameInteraction
@@ -22,6 +23,12 @@ namespace WOTRMultiplayer.Abstractions.GameInteraction
         bool IsPaused { get; }
 
         GameModeType CurrentGameMode { get; }
+
+        string CampingPotionBlueprintRecipeId { get; }
+        string CampingCookingBlueprintRecipeId { get; }
+        string CampingScrollBlueprintRecipeId { get; }
+        bool CampingAutotuneIterationsStatus { get; }
+        int CampingIterationsCount { get; }
 
         void LeaveArea(string areaExitId);
 
@@ -106,5 +113,11 @@ namespace WOTRMultiplayer.Abstractions.GameInteraction
         void ShowWarningNotification(string text);
 
         void SpawnCampPlace(NetworkVector3 position);
+
+        void SetCampingUseHealingSpells(bool isOn);
+
+        void SetCampingState(NetworkCampingState state);
+
+        void SetCampingRoles(List<NetworkCampingRole> roles);
     }
 }

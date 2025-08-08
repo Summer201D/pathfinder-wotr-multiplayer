@@ -31,7 +31,9 @@ using Kingmaker.UI.MVVM._PCView.Dialog.BookEvent;
 using Kingmaker.UI.MVVM._PCView.Dialog.Dialog;
 using Kingmaker.UI.MVVM._PCView.Dialog.Interchapter;
 using Kingmaker.UI.MVVM._PCView.InGame;
+using Kingmaker.UI.MVVM._PCView.Rest;
 using Kingmaker.UI.MVVM._VM.Dialog.Dialog;
+using Kingmaker.UI.MVVM._VM.Rest;
 using Kingmaker.UnitLogic.Abilities;
 using Kingmaker.UnitLogic.ActivatableAbilities;
 using Kingmaker.UnitLogic.Commands;
@@ -53,6 +55,7 @@ using WOTRMultiplayer.MP.Entities.Dialogs;
 using WOTRMultiplayer.MP.Entities.Equipment;
 using WOTRMultiplayer.MP.Entities.Loot;
 using WOTRMultiplayer.MP.Entities.MapObjects;
+using WOTRMultiplayer.MP.Entities.Rest;
 using WOTRMultiplayer.MP.Entities.Settings;
 
 namespace WOTRMultiplayer.GameInteraction
@@ -67,6 +70,23 @@ namespace WOTRMultiplayer.GameInteraction
 
         public NetworkExecutionContext ExecutionContext => _networkExecutionContext?.Value;
 
+        public bool IsPaused => Game.Instance.IsPaused;
+
+        public GameModeType CurrentGameMode => Game.Instance.CurrentMode;
+
+        public string CampingPotionBlueprintRecipeId => Game.Instance.Player.Camping.SelectedPotion?.Item.AssetGuid.ToString();
+
+        public string CampingCookingBlueprintRecipeId => Game.Instance.Player.Camping.CookingRecipe?.AssetGuid.ToString();
+
+        public string CampingScrollBlueprintRecipeId => Game.Instance.Player.Camping.SelectedScroll?.Item.AssetGuid.ToString();
+
+        public bool CampingAutotuneIterationsStatus => Game.Instance.Player.Camping.AutotuneRestIterations;
+
+        public int CampingIterationsCount => Game.Instance.Player.Camping.RestIterationsCount;
+
+        private InGamePCView InGamePCView => (Game.Instance.RootUiContext.m_UIView as InGamePCView);
+        private RestPCView RestView => InGamePCView?.m_StaticPartPCView?.m_RestContextPCView?.m_RestPCView;
+
         public GameInteractionService(
             ILogger<GameInteractionService> logger,
             IMainThreadAccessor mainThreadAccessor,
@@ -79,9 +99,6 @@ namespace WOTRMultiplayer.GameInteraction
             _equipmentDefinitions = equipmentDefinitions;
         }
 
-        public bool IsPaused => Game.Instance.IsPaused;
-
-        public GameModeType CurrentGameMode => Game.Instance.CurrentMode;
 
         public void InteractWithOvertip(NetworkOvertip networkOvertip)
         {
@@ -1166,6 +1183,72 @@ namespace WOTRMultiplayer.GameInteraction
             {
                 var campPosition = new Vector3(position.X, position.Y, position.Z);
                 RestHelper.SpawnCampPlace(campPosition);
+            });
+        }
+
+        public void SetCampingUseHealingSpells(bool isOn)
+        {
+            _mainThreadAccessor.Enqueue(() =>
+            {
+                var restView = RestView;
+                if (restView == null)
+                {
+                    return;
+                }
+
+                restView.m_HealingToggle.isOn = isOn;
+
+                var campingState = Game.Instance.Player.Camping;
+                if (campingState == null)
+                {
+                    return;
+                }
+
+                campingState.UseSpells = isOn;
+            });
+        }
+
+        public void SetCampingState(NetworkCampingState state)
+        {
+            _mainThreadAccessor.Enqueue(() =>
+            {
+                var restView = RestView;
+                if (restView == null)
+                {
+                    return;
+                }
+
+                var campingState = Game.Instance.Player.Camping;
+                if (campingState == null)
+                {
+                    return;
+                }
+
+                var cookingRecipe = string.IsNullOrEmpty(state.CookingBlueprintRecipeId) ? null :
+                     campingState.KnownRecipes.FirstOrDefault(r => string.Equals(r.AssetGuid.ToString(), state.CookingBlueprintRecipeId, StringComparison.OrdinalIgnoreCase));
+                campingState.CookingRecipe = cookingRecipe;
+
+                restView.m_AutotuneToggle.isOn = state.AutotuneIterationsStatus;
+                campingState.RestIterationsCount = state.IterationsCount;
+                (restView.GetViewModel() as RestVM)?.HandleIterationsCountCalculated(state.IterationsCount);
+            });
+        }
+
+        public void SetCampingRoles(List<NetworkCampingRole> roles)
+        {
+            _mainThreadAccessor.Enqueue(() =>
+            {
+                var campingState = Game.Instance.Player.Camping;
+                if (campingState == null)
+                {
+                    return;
+                }
+
+                foreach (var role in roles)
+                {
+                    campingState.CurrentCampingRoles[role.RoleType].PrimaryUnit = GetUnitEntity(role.PrimaryUnitId);
+                    campingState.CurrentCampingRoles[role.RoleType].SecondaryUnit = GetUnitEntity(role.SecondaryUnitId);
+                }
             });
         }
 

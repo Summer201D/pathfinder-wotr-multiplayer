@@ -16,6 +16,7 @@ using WOTRMultiplayer.MP.Entities.Dialogs;
 using WOTRMultiplayer.MP.Entities.Equipment;
 using WOTRMultiplayer.MP.Entities.Loot;
 using WOTRMultiplayer.MP.Entities.MapObjects;
+using WOTRMultiplayer.MP.Entities.Rest;
 using WOTRMultiplayer.MP.Entities.Settings;
 using WOTRMultiplayer.Networking.Abstractions;
 using WOTRMultiplayer.Networking.Messages.Game;
@@ -419,6 +420,38 @@ namespace WOTRMultiplayer.MP.Actors
             Send(message);
 
             return true;
+        }
+
+        public void OnCampingUseHealingSpellsChanged(bool isOn)
+        {
+            var message = new NotifyCampingUseHealingSpellsChanged { IsOn = isOn };
+            Logger.LogInformation("Sending {messageType}. IsOn={isOn}", nameof(NotifyCampingUseHealingSpellsChanged), isOn);
+            Send(message);
+        }
+
+        public void OnCampingStateChanged(NetworkCampingState state)
+        {
+            var message = new NotifyCampingStateChanged
+            {
+                State = Mapper.Map<Networking.Messages.NetworkCampingState>(state)
+            };
+
+            Logger.LogInformation("Sending {messageType}.CookingBlueprintRecipeId={cookingId}, PotionBlueprintRecipeId={potionId}, ScrollBlueprintRecipeId={ScrollId}, IterationsCount={iterations}, AutotuneIterations={autotuneIterations}", nameof(NotifyCampingStateChanged),
+                message.State.CookingBlueprintRecipeId, message.State.PotionBlueprintRecipeId, message.State.ScrollBlueprintRecipeId, message.State.IterationsCount, message.State.AutotuneIterationsStatus);
+
+            Send(message);
+        }
+
+        public void OnCampingUnitsRoleChanged(List<NetworkCampingRole> roles)
+        {
+            var rolesData = string.Join(" ,", roles.Select(r => $"[RoleType={r.RoleType} PrimaryUnit={r.PrimaryUnitId} SecondaryUnit={r.SecondaryUnitId}]"));
+            Logger.LogInformation("Sending {messageType}. RolesCount={rolesCount}, RolesData={rolesData}", nameof(NotifyCampingStateChanged), roles.Count, rolesData);
+
+            var message = new NotifyCampingUnitsRoleChanged
+            {
+                Roles = Mapper.Map<List<Networking.Messages.NetworkCampingRole>>(roles),
+            };
+            Send(message);
         }
 
         protected override Task<DiceRollValueResponse> RetrieveRollAsync(DiceRollValueRequest request, string unitId)

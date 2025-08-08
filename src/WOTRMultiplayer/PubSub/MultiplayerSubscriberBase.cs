@@ -3,13 +3,13 @@ using WOTRMultiplayer.Abstractions.MP;
 
 namespace WOTRMultiplayer.PubSub
 {
-    public abstract class GlobalMultiplayerSubscriberBase
+    public abstract class MultiplayerSubscriberBase
     {
         protected ILogger Logger { get; private set; }
 
         protected IMultiplayerActorAccessor ActorAccessor { get; private set; }
 
-        public GlobalMultiplayerSubscriberBase(ILogger logger, IMultiplayerActorAccessor multiplayerActorAccessor)
+        public MultiplayerSubscriberBase(ILogger logger, IMultiplayerActorAccessor multiplayerActorAccessor)
         {
             Logger = logger;
             ActorAccessor = multiplayerActorAccessor;

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using Kingmaker.EntitySystem.Persistence;
 using Kingmaker.GameModes;
 using Microsoft.Extensions.Logging;
@@ -14,6 +15,7 @@ using WOTRMultiplayer.MP.Entities.Abilities;
 using WOTRMultiplayer.MP.Entities.Equipment;
 using WOTRMultiplayer.MP.Entities.Loot;
 using WOTRMultiplayer.MP.Entities.MapObjects;
+using WOTRMultiplayer.MP.Entities.Rest;
 using WOTRMultiplayer.UI.Menu;
 
 namespace WOTRMultiplayer.MP
@@ -478,6 +480,38 @@ namespace WOTRMultiplayer.MP
 
             var canContinue = _multiplayerActorAccessor.Host.OnSpawnCampPlace(position);
             return canContinue;
+        }
+
+
+        public bool OnCampingUseHealingSpellsChanged(bool isOn)
+        {
+            if (_multiplayerActorAccessor.Current == null)
+            {
+                return true;
+            }
+
+            if (_multiplayerActorAccessor.Client.IsActive)
+            {
+                return false;
+            }
+
+            _multiplayerActorAccessor.Host.OnCampingUseHealingSpellsChanged(isOn);
+            return true;
+        }
+
+        public void OnCampingUnitsRoleChanged(List<NetworkCampingRole> roles)
+        {
+            if (_multiplayerActorAccessor.Current == null)
+            {
+                return;
+            }
+
+            if (_multiplayerActorAccessor.Client.IsActive)
+            {
+                return;
+            }
+
+            _multiplayerActorAccessor.Host.OnCampingUnitsRoleChanged(roles);
         }
 
         private void ShowEscMenuMultiplayerLobby()

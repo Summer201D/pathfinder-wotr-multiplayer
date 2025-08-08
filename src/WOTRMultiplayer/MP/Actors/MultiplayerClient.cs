@@ -17,6 +17,7 @@ using WOTRMultiplayer.MP.Entities.Dialogs;
 using WOTRMultiplayer.MP.Entities.Equipment;
 using WOTRMultiplayer.MP.Entities.Loot;
 using WOTRMultiplayer.MP.Entities.MapObjects;
+using WOTRMultiplayer.MP.Entities.Rest;
 using WOTRMultiplayer.MP.Entities.Settings;
 using WOTRMultiplayer.Networking.Abstractions;
 using WOTRMultiplayer.Networking.Messages.Game;
@@ -357,10 +358,37 @@ namespace WOTRMultiplayer.MP.Actors
                 .Register<NotifyUnitJoinedMidCombat>(OnNotifyUnitJoinedMidCombat)
                 .Register<NotifyPerceptionCheckRolled>(OnNotifyPerceptionCheckRolled)
                 .Register<NotifySpawnCampPlace>(OnNotifySpawnCampPlace)
+                .Register<NotifyCampingUseHealingSpellsChanged>(OnNotifyCampingUseHealingSpellsChanged)
+                .Register<NotifyCampingStateChanged>(OnNotifyCampingStateChanged)
+                .Register<NotifyCampingUnitsRoleChanged>(OnNotifyCampingUnitsRoleChanged)
                 ;
 
             _networkServerClient.OnError = OnNetworkClientError;
             _networkServerClient.OnConnected = OnNetworkClientConnected;
+        }
+
+        private void OnNotifyCampingUnitsRoleChanged(NotifyCampingUnitsRoleChanged changed)
+        {
+            var rolesData = string.Join(" ,", changed.Roles.Select(r => $"[RoleType={r.RoleType} PrimaryUnit={r.PrimaryUnitId} SecondaryUnit={r.SecondaryUnitId}]"));
+            Logger.LogInformation("Received {messageType}. RolesCount={rolesCount}, RolesData={rolesData}", nameof(NotifyCampingUnitsRoleChanged), changed.Roles.Count, rolesData);
+
+            var roles = Mapper.Map<List<NetworkCampingRole>>(changed.Roles);
+            GameInteraction.SetCampingRoles(roles);
+        }
+
+        private void OnNotifyCampingStateChanged(NotifyCampingStateChanged changed)
+        {
+            Logger.LogInformation("Received {messageType}. CookingBlueprintRecipeId={cookingId}, PotionBlueprintRecipeId={potionId}, ScrollBlueprintRecipeId={ScrollId}, IterationsCount={iterations}, AutotuneIterations={autotuneIterations}", nameof(NotifyCampingStateChanged),
+                changed.State.CookingBlueprintRecipeId, changed.State.PotionBlueprintRecipeId, changed.State.ScrollBlueprintRecipeId, changed.State.IterationsCount, changed.State.AutotuneIterationsStatus);
+
+            var state = Mapper.Map<NetworkCampingState>(changed.State);
+            GameInteraction.SetCampingState(state);
+        }
+
+        private void OnNotifyCampingUseHealingSpellsChanged(NotifyCampingUseHealingSpellsChanged changed)
+        {
+            Logger.LogInformation("Received {messageType}. IsOn={isOn}", nameof(NotifyCampingUseHealingSpellsChanged), changed.IsOn);
+            GameInteraction.SetCampingUseHealingSpells(changed.IsOn);
         }
 
         private void OnNotifySpawnCampPlace(NotifySpawnCampPlace place)

@@ -8,7 +8,6 @@ using WOTRMultiplayer.Abstractions.Hashing;
 using WOTRMultiplayer.Abstractions.IO;
 using WOTRMultiplayer.Abstractions.MP;
 using WOTRMultiplayer.Abstractions.MP.Actors;
-using WOTRMultiplayer.Abstractions.PubSub;
 using WOTRMultiplayer.Abstractions.Random;
 using WOTRMultiplayer.Abstractions.UI;
 using WOTRMultiplayer.Abstractions.UI.Controllers;
@@ -67,8 +66,10 @@ namespace WOTRMultiplayer.DI
 
             serviceCollection.AddSingleton<IGameInteractionService, GameInteractionService>();
             serviceCollection.AddSingleton<IEquipmentDefinitions, EquipmentDefinitions>();
-            serviceCollection.AddSingleton<IGlobalMultiplayerSubscriber, GlobalMultiplayerSubscriber>();
-            serviceCollection.AddSingleton<IGlobalMultiplayerUnitCommandSubscriber, GlobalMultiplayerUnitSubscriber>();
+
+            serviceCollection.AddSingleton<MultiplayerSubscriber>();
+            serviceCollection.AddSingleton<MultiplayerUnitEquipmentSubscriber>();
+            serviceCollection.AddSingleton<MultiplayerCampingStateSubscriber>();
 
             serviceCollection.AddSingleton<IMultiplayerActorAccessor, MultiplayerActorAccessor>();
             serviceCollection.AddSingleton<IMultiplayerRollsProcessor, MultiplayerRollProcessor>();

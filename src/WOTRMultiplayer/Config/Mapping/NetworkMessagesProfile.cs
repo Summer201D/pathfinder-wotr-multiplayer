@@ -5,6 +5,7 @@ using WOTRMultiplayer.MP.Entities.Combat;
 using WOTRMultiplayer.MP.Entities.Equipment;
 using WOTRMultiplayer.MP.Entities.Loot;
 using WOTRMultiplayer.MP.Entities.MapObjects;
+using WOTRMultiplayer.MP.Entities.Rest;
 using WOTRMultiplayer.MP.Entities.Rolls.Claiming.Values;
 using WOTRMultiplayer.MP.Entities.Settings;
 
@@ -85,6 +86,12 @@ namespace WOTRMultiplayer.Config.Mapping
                 .ReverseMap();
 
             CreateMap<NetworkAutopauseSettings, Networking.Messages.NetworkAutopauseSettings>()
+                .ReverseMap();
+
+            CreateMap<NetworkCampingRole, Networking.Messages.NetworkCampingRole>()
+                .ReverseMap();
+
+            CreateMap<NetworkCampingState, Networking.Messages.NetworkCampingState>()
                 .ReverseMap();
         }
     }

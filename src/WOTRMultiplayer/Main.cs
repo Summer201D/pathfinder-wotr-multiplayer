@@ -7,10 +7,10 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using UnityModManagerNet;
 using WOTRMultiplayer.Abstractions.MP;
-using WOTRMultiplayer.Abstractions.PubSub;
 using WOTRMultiplayer.Abstractions.UI;
 using WOTRMultiplayer.Config.UnityMod;
 using WOTRMultiplayer.DI;
+using WOTRMultiplayer.PubSub;
 
 namespace WOTRMultiplayer
 {
@@ -94,11 +94,14 @@ namespace WOTRMultiplayer
 
         private static void Subscribe()
         {
-            var globalMultiplayerSubscriber = _serviceProvider.GetService<IGlobalMultiplayerSubscriber>();
-            EventBus.Subscribe(globalMultiplayerSubscriber);
+            var genericSubscriber = _serviceProvider.GetService<MultiplayerSubscriber>();
+            EventBus.Subscribe(genericSubscriber);
 
-            var globalMultiplayerUnitCommandSubscriber = _serviceProvider.GetService<IGlobalMultiplayerUnitCommandSubscriber>();
-            EventBus.Subscribe(globalMultiplayerUnitCommandSubscriber);
+            var unitEquipmentSubscriber = _serviceProvider.GetService<MultiplayerUnitEquipmentSubscriber>();
+            EventBus.Subscribe(unitEquipmentSubscriber);
+
+            var campingStateSubscriber = _serviceProvider.GetService<MultiplayerCampingStateSubscriber>();
+            EventBus.Subscribe(campingStateSubscriber);
         }
 
         private static bool OnUnload(UnityModManager.ModEntry entry)

@@ -1,4 +1,5 @@
-﻿using Kingmaker.EntitySystem.Persistence;
+﻿using System.Collections.Generic;
+using Kingmaker.EntitySystem.Persistence;
 using Kingmaker.GameModes;
 using WOTRMultiplayer.Abstractions.Random;
 using WOTRMultiplayer.Abstractions.UI;
@@ -8,6 +9,7 @@ using WOTRMultiplayer.MP.Entities.Abilities;
 using WOTRMultiplayer.MP.Entities.Equipment;
 using WOTRMultiplayer.MP.Entities.Loot;
 using WOTRMultiplayer.MP.Entities.MapObjects;
+using WOTRMultiplayer.MP.Entities.Rest;
 
 namespace WOTRMultiplayer.Abstractions.MP
 {
@@ -90,5 +92,9 @@ namespace WOTRMultiplayer.Abstractions.MP
         void OnPerceptionCheck(NetworkPerceptionCheck check);
 
         bool OnSpawnCampPlace(NetworkVector3 position);
+
+        bool OnCampingUseHealingSpellsChanged(bool isOn);
+
+        void OnCampingUnitsRoleChanged(List<NetworkCampingRole> roles);
     }
 }

@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using WOTRMultiplayer.MP.Entities;
 using WOTRMultiplayer.MP.Entities.MapObjects;
+using WOTRMultiplayer.MP.Entities.Rest;
 
 namespace WOTRMultiplayer.Abstractions.MP.Actors
 {
@@ -21,5 +22,11 @@ namespace WOTRMultiplayer.Abstractions.MP.Actors
         void OnPerceptionCheck(NetworkPerceptionCheck check);
 
         bool OnSpawnCampPlace(NetworkVector3 position);
+
+        void OnCampingUseHealingSpellsChanged(bool isOn);
+
+        void OnCampingStateChanged(NetworkCampingState state);
+
+        void OnCampingUnitsRoleChanged(List<NetworkCampingRole> roles);
     }
 }

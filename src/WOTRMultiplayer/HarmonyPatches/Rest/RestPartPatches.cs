@@ -17,11 +17,6 @@ namespace WOTRMultiplayer.HarmonyPatches.Rest
     [HarmonyPatch]
     public class RestPartPatches
     {
-        /// <summary>
-        /// Can't patch Player.GetPartyCharactersForGroupCommand directly since it's default behavior is fine for other cases
-        /// </summary>
-        /// <param name="instructions"></param>
-        /// <returns></returns>
         [HarmonyPatch(typeof(RestPart), nameof(RestPart.OnInteract))]
         [HarmonyTranspiler]
         public static IEnumerable<CodeInstruction> PlaceRestMarkerHandler_OnClick_Transpiler(IEnumerable<CodeInstruction> instructions)
@@ -48,6 +43,11 @@ namespace WOTRMultiplayer.HarmonyPatches.Rest
             return matcher.Instructions();
         }
 
+        /// <summary>
+        /// Can't patch Player.GetPartyCharactersForGroupCommand directly since its default behavior is fine for other cases
+        /// </summary>
+        /// <param name="instructions"></param>
+        /// <returns></returns>
         public static List<UnitEntityData> GetPartyCharactersForGroupCommand(Vector3 approachPoint, bool skipNoIsInGame)
         {
             if (!Main.Multiplayer.IsActive)

@@ -5,22 +5,20 @@ using Kingmaker.UnitLogic;
 using Microsoft.Extensions.Logging;
 using WOTRMultiplayer.Abstractions.GameInteraction;
 using WOTRMultiplayer.Abstractions.MP;
-using WOTRMultiplayer.Abstractions.PubSub;
+using WOTRMultiplayer.Abstractions.Pubsub;
 using WOTRMultiplayer.MP.Entities.Equipment;
 
 namespace WOTRMultiplayer.PubSub
 {
-    public class GlobalMultiplayerUnitSubscriber : GlobalMultiplayerSubscriberBase,
-        IGlobalMultiplayerUnitCommandSubscriber,
-        IGlobalSubscriber,
-        ISubscriber,
+    public class MultiplayerUnitEquipmentSubscriber : MultiplayerSubscriberBase,
+        IMultiplayerGlobalSubscriber,
         IUnitEquipmentHandler,
         IUnitActiveEquipmentSetHandler
     {
         private readonly IGameInteractionService _gameInteractionService;
 
-        public GlobalMultiplayerUnitSubscriber(
-            ILogger<GlobalMultiplayerUnitSubscriber> logger,
+        public MultiplayerUnitEquipmentSubscriber(
+            ILogger<MultiplayerUnitEquipmentSubscriber> logger,
             IGameInteractionService gameInteractionService,
             IMultiplayerActorAccessor multiplayerActorAccessor)
             : base(logger, multiplayerActorAccessor)
