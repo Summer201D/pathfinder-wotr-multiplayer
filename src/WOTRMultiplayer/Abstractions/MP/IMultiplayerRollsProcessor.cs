@@ -38,5 +38,8 @@ namespace WOTRMultiplayer.Abstractions.MP
 
         bool OnBeforeParryDataTrigger(RuleAttackRoll.ParryData parryData);
         void OnAfterParryDataTrigger(RuleAttackRoll.ParryData parryData);
+
+        bool OnBeforeRuleDispelMagicRoll(RuleDispelMagic ruleDispelMagic);
+        void OnAfterRuleDispelMagicTrigger(RuleDispelMagic ruleDispelMagic);
     }
 }

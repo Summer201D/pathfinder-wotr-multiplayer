@@ -610,6 +610,51 @@ namespace WOTRMultiplayer.MP
             }
         }
 
+        public bool OnBeforeRuleDispelMagicRoll(RuleDispelMagic ruleDispelMagic)
+        {
+            try
+            {
+                if (!ShouldRetrieveRoll(ruleDispelMagic))
+                {
+                    return true;
+                }
+
+                var roll = CreateDispelMagicRoll(NetworkDiceRollType.Hit, ruleDispelMagic);
+                var d20 = RetrieveRoll<RuleRollD20>(roll, ruleDispelMagic.Initiator);
+                if (d20 == null)
+                {
+                    return true;
+                }
+
+                ruleDispelMagic.CheckRoll = d20;
+                return false;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Unable to handle {methodName}", MethodBase.GetCurrentMethod().Name);
+                throw;
+            }
+        }
+
+        public void OnAfterRuleDispelMagicTrigger(RuleDispelMagic ruleDispelMagic)
+        {
+            try
+            {
+                if (!ShouldStoreRoll(ruleDispelMagic))
+                {
+                    return;
+                }
+
+                var roll = CreateDispelMagicRoll(NetworkDiceRollType.Hit, ruleDispelMagic);
+                SaveIntRollValue(roll, ruleDispelMagic.CheckRoll);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Unable to handle {methodName}", MethodBase.GetCurrentMethod().Name);
+                throw;
+            }
+        }
+
         private bool ShouldRetrieveRoll(object rule)
         {
             var gameMode = _gameInteractionService.CurrentGameMode;
@@ -745,6 +790,21 @@ namespace WOTRMultiplayer.MP
                 _logger.LogError(ex, $"Unable to handle {MethodBase.GetCurrentMethod().Name}");
                 throw;
             }
+        }
+
+        private DispelMagicRoll CreateDispelMagicRoll(NetworkDiceRollType diceRollType, RuleDispelMagic ruleDispelMagic)
+        {
+            var roll = new DispelMagicRoll(ruleDispelMagic.Initiator.UniqueId, ruleDispelMagic.GetType().Name, diceRollType, ruleDispelMagic.Bonus)
+            {
+                CasterLevel = ruleDispelMagic.CasterLevel,
+                CheckType = ruleDispelMagic.Check.ToString(),
+                DC = ruleDispelMagic.DC,
+                Skill = ruleDispelMagic.Skill.ToString(),
+                BuffName = ruleDispelMagic.Buff?.NameForAcronym,
+                AreaEffectName = ruleDispelMagic.AreaEffect?.View.name
+            };
+
+            return roll;
         }
 
         private ParryRoll CreateParryRoll(NetworkDiceRollType diceRollType, RuleAttackRoll.ParryData parryData)
