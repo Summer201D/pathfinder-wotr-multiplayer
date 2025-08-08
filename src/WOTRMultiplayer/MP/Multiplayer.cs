@@ -514,6 +514,12 @@ namespace WOTRMultiplayer.MP
             _multiplayerActorAccessor.Host.OnCampingUnitsRoleChanged(roles);
         }
 
+
+        public bool CanUseCampingUI()
+        {
+            return _multiplayerActorAccessor.Current != null && _multiplayerActorAccessor.Host.IsActive;
+        }
+
         private void ShowEscMenuMultiplayerLobby()
         {
             _logger.LogInformation("Show lobby window");

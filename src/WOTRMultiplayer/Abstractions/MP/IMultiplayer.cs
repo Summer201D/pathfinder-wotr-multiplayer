@@ -96,5 +96,7 @@ namespace WOTRMultiplayer.Abstractions.MP
         bool OnCampingUseHealingSpellsChanged(bool isOn);
 
         void OnCampingUnitsRoleChanged(List<NetworkCampingRole> roles);
+
+        bool CanUseCampingUI();
     }
 }
