@@ -29,6 +29,7 @@ namespace WOTRMultiplayer.Abstractions.GameInteraction
         string CampingScrollBlueprintRecipeId { get; }
         bool CampingAutotuneIterationsStatus { get; }
         int CampingIterationsCount { get; }
+        bool IsRandomEncounter { get; }
 
         void LeaveArea(string areaExitId);
 
@@ -123,5 +124,11 @@ namespace WOTRMultiplayer.Abstractions.GameInteraction
         void SetStartRestButtonState(bool isInteractable, int readyPlayersCount, int totalPlayersCount);
 
         void StartRest();
+
+        void SetRandomEncounterContext(NetworkRandomEncounterContext context);
+
+        string GetNextUnitTurn();
+
+        void SetNextUnitCombatTurn(string nextUnitTurn);
     }
 }

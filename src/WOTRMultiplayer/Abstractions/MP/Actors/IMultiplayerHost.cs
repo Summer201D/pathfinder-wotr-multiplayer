@@ -30,5 +30,7 @@ namespace WOTRMultiplayer.Abstractions.MP.Actors
         void OnCampingUnitsRoleChanged(List<NetworkCampingRole> roles);
 
         void OnStartRest();
+
+        void OnAfterTryRollRandomEncounter();
     }
 }

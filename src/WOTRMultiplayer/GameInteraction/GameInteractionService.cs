@@ -90,6 +90,8 @@ namespace WOTRMultiplayer.GameInteraction
         private InGamePCView InGamePCView => (Game.Instance.RootUiContext.m_UIView as InGamePCView);
         private RestPCView RestView => InGamePCView?.m_StaticPartPCView?.m_RestContextPCView?.m_RestPCView;
 
+        public bool IsRandomEncounter => Game.Instance.RestController.Status?.NightRandomEncounter ?? false;
+
         public GameInteractionService(
             ILogger<GameInteractionService> logger,
             IMainThreadAccessor mainThreadAccessor,
@@ -1039,6 +1041,18 @@ namespace WOTRMultiplayer.GameInteraction
             return units;
         }
 
+        public string GetNextUnitTurn()
+        {
+            var nextUnit = Game.Instance.TurnBasedCombatController.m_NextUnit?.UniqueId;
+            return nextUnit;
+        }
+
+        public void SetNextUnitCombatTurn(string nextUnitId)
+        {
+            var nextUnit = GetUnitEntity(nextUnitId);
+            Game.Instance.TurnBasedCombatController.m_NextUnit = nextUnit;
+        }
+
         public void UpdateCombatOrder(List<string> unitsCombatOrder)
         {
             _logger.LogInformation("Update units combat order. Order={order}", unitsCombatOrder);
@@ -1286,6 +1300,11 @@ namespace WOTRMultiplayer.GameInteraction
             {
                 RestView?.StartRest();
             });
+        }
+
+        public void SetRandomEncounterContext(NetworkRandomEncounterContext context)
+        {
+            _networkExecutionContext.Value = RemoteExecutionContext.Create(context);
         }
 
         private CraftItemInfo GetCampingCraftItemInfo(UnitEntityData crafter, UsableItemType itemType, string itemBlueprintId)

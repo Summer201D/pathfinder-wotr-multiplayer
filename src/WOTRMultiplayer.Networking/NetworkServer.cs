@@ -15,7 +15,7 @@ namespace WOTRMultiplayer.Networking
 {
     public class NetworkServer : INetworkServer
     {
-        private readonly TimeSpan _defaultAwaiterTimeout = TimeSpan.FromSeconds(30);
+        private readonly TimeSpan _defaultAwaiterTimeout = TimeSpan.FromSeconds(15);
 
         private ServerBuilder<NetworkServerApp, NetworkClientToken, ProtobufPacket> _server;
         private ServerBuilder<NetworkServerApp, NetworkClientToken, ProtobufPacket> Server => _server ??= new ServerBuilder<NetworkServerApp, NetworkClientToken, ProtobufPacket>();
@@ -64,7 +64,7 @@ namespace WOTRMultiplayer.Networking
             Server.AppServer.Send(message, session);
         }
 
-        public Task<T> SendAndWaitForAsync<T>(long clientId, object message)
+        public T SendAndWaitFor<T>(long clientId, object message)
             where T : class
         {
             if (message is not IAwaitableMessage awaitableMessage || !typeof(IAwaitableMessage).IsAssignableFrom(typeof(T)))
@@ -88,7 +88,7 @@ namespace WOTRMultiplayer.Networking
                 return null;
             }
 
-            return Task.FromResult((T)taskCompletion.Task.Result);
+            return (T)taskCompletion.Task.Result;
         }
 
         private void AddAwaiter(long clientId, string awaiterKey, TaskCompletionSource<object> task)

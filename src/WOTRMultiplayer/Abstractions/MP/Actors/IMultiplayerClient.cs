@@ -15,5 +15,7 @@ namespace WOTRMultiplayer.Abstractions.MP.Actors
         Action<List<NetworkCharacterOwnership>> OnGameCharactersChanged { get; set; }
 
         Action<int, int> OnCharacterOwnerChanged { get; set; }
+
+        void OnBeforeTryRollRandomEncounter();
     }
 }

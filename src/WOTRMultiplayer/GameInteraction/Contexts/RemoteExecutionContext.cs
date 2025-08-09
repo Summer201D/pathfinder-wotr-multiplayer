@@ -10,13 +10,15 @@ namespace WOTRMultiplayer.GameInteraction.Contexts
     {
         public List<UnitEntityData> SelectedUnits { get; set; }
 
-        public PerceptionCheckRemoteContext PerceptionCheck { get; set; }
+        public PerceptionCheckContext PerceptionCheck { get; set; }
 
-        public DropItemRemoteContext DropItem { get; set; }
+        public DropItemContext DropItem { get; set; }
 
-        public EquipmentRemoteContext Equipment { get; set; }
+        public EquipmentContext Equipment { get; set; }
 
-        public HandEquipmentRemoteContext HandEquipment { get; set; }
+        public HandEquipmentContext HandEquipment { get; set; }
+
+        public NetworkRandomEncounterContext RandomEncounter { get; set; }
 
         public void Dispose()
         {
@@ -31,7 +33,7 @@ namespace WOTRMultiplayer.GameInteraction.Contexts
         {
             return new RemoteExecutionContext
             {
-                DropItem = new DropItemRemoteContext
+                DropItem = new DropItemContext
                 {
                     ItemId = itemId,
                     UnitId = unitId
@@ -43,7 +45,7 @@ namespace WOTRMultiplayer.GameInteraction.Contexts
         {
             return new RemoteExecutionContext
             {
-                Equipment = new EquipmentRemoteContext
+                Equipment = new EquipmentContext
                 {
                     Position = position
                 }
@@ -54,7 +56,7 @@ namespace WOTRMultiplayer.GameInteraction.Contexts
         {
             return new RemoteExecutionContext
             {
-                HandEquipment = new HandEquipmentRemoteContext
+                HandEquipment = new HandEquipmentContext
                 {
                     UnitId = set.UnitId,
                     Index = set.Index
@@ -66,13 +68,18 @@ namespace WOTRMultiplayer.GameInteraction.Contexts
         {
             return new RemoteExecutionContext
             {
-                PerceptionCheck = new PerceptionCheckRemoteContext(check.UnitId, check.MapObject.Id)
+                PerceptionCheck = new PerceptionCheckContext(check.UnitId, check.MapObject.Id)
             };
         }
 
         public static RemoteExecutionContext Create(List<UnitEntityData> selectedUnits)
         {
             return new RemoteExecutionContext { SelectedUnits = selectedUnits };
+        }
+
+        public static RemoteExecutionContext Create(NetworkRandomEncounterContext encounterContext)
+        {
+            return new RemoteExecutionContext { RandomEncounter = encounterContext };
         }
     }
 }

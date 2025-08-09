@@ -32,6 +32,8 @@ namespace WOTRMultiplayer.MP.Entities
 
         public bool ForcedPause { get; set; }
 
+        public NetworkRandomEncounter RandomEncounter { get; set; }
+
         public NetworkGame(string saveFilePath)
         {
             SaveFilePath = saveFilePath;
@@ -51,6 +53,7 @@ namespace WOTRMultiplayer.MP.Entities
             Id = null;
             Combat = null;
             ForcedPause = false;
+            RandomEncounter = null;
         }
     }
 }

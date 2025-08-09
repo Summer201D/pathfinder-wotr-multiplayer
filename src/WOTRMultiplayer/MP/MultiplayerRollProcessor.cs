@@ -364,7 +364,7 @@ namespace WOTRMultiplayer.MP
         {
             try
             {
-                if (!ShouldStoreRoll(ruleSpellResistanceCheck))
+                if (!ShouldStoreRoll(ruleSpellResistanceCheck) || ruleSpellResistanceCheck.Roll == null)
                 {
                     return;
                 }

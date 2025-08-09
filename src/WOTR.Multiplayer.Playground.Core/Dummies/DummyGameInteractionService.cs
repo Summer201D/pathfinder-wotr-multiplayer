@@ -37,6 +37,8 @@ namespace WOTR.Multiplayer.Playground.Core.Dummies
 
         public int CampingIterationsCount => 0;
 
+        public bool IsRandomEncounter => false;
+
         public string GetSaveGamePath()
         {
             var appData = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
@@ -239,6 +241,19 @@ namespace WOTR.Multiplayer.Playground.Core.Dummies
         }
 
         public void StartRest()
+        {
+        }
+
+        public void SetRandomEncounterContext(NetworkRandomEncounterContext context)
+        {
+        }
+
+        public string GetNextUnitTurn()
+        {
+            return null;
+        }
+
+        public void SetNextUnitCombatTurn(string nextUnitTurn)
         {
         }
     }

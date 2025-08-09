@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using Kingmaker.Controllers.Rest;
 using Kingmaker.EntitySystem.Persistence;
 using Kingmaker.GameModes;
 using WOTRMultiplayer.Abstractions.Random;
@@ -16,7 +15,7 @@ namespace WOTRMultiplayer.Abstractions.MP
 {
     public interface IMultiplayer
     {
-        RemoteExecutionContext ExecutionContext { get; }
+        RemoteExecutionContext RemoteContext { get; }
 
         IUIFactory Factory { get; }
 
@@ -101,5 +100,9 @@ namespace WOTRMultiplayer.Abstractions.MP
         void OnStartRest();
 
         bool CanUseCampingUI();
+
+        void OnBeforeTryRollRandomEncounter();
+
+        void OnAfterTryRollRandomEncounter();
     }
 }

@@ -21,6 +21,7 @@ using WOTRMultiplayer.MP.Entities.MapObjects;
 using WOTRMultiplayer.MP.Entities.Rolls.Claiming.Values;
 using WOTRMultiplayer.Networking.Messages.Game;
 using WOTRMultiplayer.Networking.Messages.Lobby;
+using WOTRMultiplayer.Networking.Messages.Requests;
 using WOTRMultiplayer.UI;
 
 namespace WOTRMultiplayer.MP.Actors
@@ -158,7 +159,7 @@ namespace WOTRMultiplayer.MP.Actors
 
             var message = new NotifyAbilityUse
             {
-                Ability = Mapper.Map<Networking.Messages.NetworkAbility>(ability)
+                Ability = Mapper.Map<Networking.Messages.Contracts.NetworkAbility>(ability)
             };
 
             Send(message);
@@ -175,7 +176,7 @@ namespace WOTRMultiplayer.MP.Actors
 
             var message = new NotifyToggleActivatableAbility
             {
-                Ability = Mapper.Map<Networking.Messages.NetworkActivatableAbility>(activatableAbilityUse)
+                Ability = Mapper.Map<Networking.Messages.Contracts.NetworkActivatableAbility>(activatableAbilityUse)
             };
 
             Send(message);
@@ -190,7 +191,7 @@ namespace WOTRMultiplayer.MP.Actors
             var request = new DiceRollValueRequest { RollId = networkDiceRollId, Timeout = waitForRollTimeout, UnitId = unitId };
             // it's important to block current thread since we cannot proceed without response
             // yeah most likely it will cause the game to freeze in case of bad network
-            var response = RetrieveRollAsync(request, unitId).Result;
+            var response = RetrieveRoll(request, unitId);
 
             return ResponseToRollValue<TRollValue>(response);
         }
@@ -208,7 +209,7 @@ namespace WOTRMultiplayer.MP.Actors
 
             var message = new NotifyUnitClicked
             {
-                Click = Mapper.Map<Networking.Messages.NetworkClick>(click)
+                Click = Mapper.Map<Networking.Messages.Contracts.NetworkClick>(click)
             };
 
             Send(message);
@@ -224,7 +225,7 @@ namespace WOTRMultiplayer.MP.Actors
             Logger.LogInformation("Sending ground click. WorldPosition={worldPosition}, VectorPathCount={pathCount}, SelectedUnits={selectedUnits}", click.WorldPosition, click.VectorPath.Count, string.Join(";", click.SelectedUnits));
             var message = new NotifyGroundClicked
             {
-                Click = Mapper.Map<Networking.Messages.NetworkClick>(click)
+                Click = Mapper.Map<Networking.Messages.Contracts.NetworkClick>(click)
             };
 
             Send(message);
@@ -240,7 +241,7 @@ namespace WOTRMultiplayer.MP.Actors
             Logger.LogInformation("Sending map object click. WorldPosition={worldPosition}, VectorPathCount={pathCount}, SelectedUnits={selectedUnits}", click.WorldPosition, click.VectorPath.Count, string.Join(";", click.SelectedUnits));
             var message = new NotifyMapObjectClicked
             {
-                Click = Mapper.Map<Networking.Messages.NetworkClick>(click)
+                Click = Mapper.Map<Networking.Messages.Contracts.NetworkClick>(click)
             };
 
             Send(message);
@@ -251,7 +252,7 @@ namespace WOTRMultiplayer.MP.Actors
             Logger.LogInformation("Sending looted container info. ContainerId={containerId}, ContainerPosition={containerPosition}, ItemsCount={itemsCount}, Items={itemsIds}", container.Id, container.Position, container.Items.Count, container.Items.Select(i => i.UniqueId));
             var message = new NotifyContainerLooted
             {
-                Container = Mapper.Map<Networking.Messages.NetworkLootContainer>(container)
+                Container = Mapper.Map<Networking.Messages.Contracts.NetworkLootContainer>(container)
             };
 
             Send(message);
@@ -262,7 +263,7 @@ namespace WOTRMultiplayer.MP.Actors
             Logger.LogInformation("Sending drop item. OwnerId={ownerId}, ItemId={itemId}, ItemName={itemName}", dropItem.OwnerEntityId, dropItem.Item.UniqueId, dropItem.Item.Name);
             var message = new NotifyDropItem
             {
-                Drop = Mapper.Map<Networking.Messages.NetworkDropItem>(dropItem)
+                Drop = Mapper.Map<Networking.Messages.Contracts.NetworkDropItem>(dropItem)
             };
 
             Send(message);
@@ -279,7 +280,7 @@ namespace WOTRMultiplayer.MP.Actors
             Logger.LogInformation("Sending changed active hand equipment set. UnitId={unitId}, SetIndex={setIndex}", set.UnitId, set.Index);
             var message = new NotifyActiveHandEquipmentSetChanged
             {
-                Set = Mapper.Map<Networking.Messages.NetworkActiveHandEquipmentSet>(set)
+                Set = Mapper.Map<Networking.Messages.Contracts.NetworkActiveHandEquipmentSet>(set)
             };
 
             Send(message);
@@ -295,7 +296,7 @@ namespace WOTRMultiplayer.MP.Actors
             Logger.LogWarning("Sending changed equipment slot. SlotType={slotType}, SlotIndex={slotIndex}, ItemId={itemId}, OwnerId={ownerId}", equipmentSlot.Position.Type, equipmentSlot.Position.Index, equipmentSlot.Item?.UniqueId, equipmentSlot.OwnerId);
             var message = new NotifyEquipmentSlotChanged
             {
-                Slot = Mapper.Map<Networking.Messages.NetworkEquipmentSlot>(equipmentSlot)
+                Slot = Mapper.Map<Networking.Messages.Contracts.NetworkEquipmentSlot>(equipmentSlot)
             };
 
             Send(message);
@@ -306,7 +307,7 @@ namespace WOTRMultiplayer.MP.Actors
             Logger.LogWarning("Sending overtip interaction. MapObjectId={mapObjectId}, Units={units}", networkOvertip.MapObject.Id, networkOvertip.Units);
             var message = new NotifyOvertipInteracted
             {
-                Overtip = Mapper.Map<Networking.Messages.NetworkOvertip>(networkOvertip)
+                Overtip = Mapper.Map<Networking.Messages.Contracts.NetworkOvertip>(networkOvertip)
             };
 
             Send(message);
@@ -502,9 +503,15 @@ namespace WOTRMultiplayer.MP.Actors
             Logger.LogInformation("OnStopGameMode. Mode={mode}, PlayerId={playerId}", type.Name, playerId);
             lock (ActionLock)
             {
+                var isLocal = GetLocalPlayerId() == playerId;
+
+                if (isLocal && GameInteraction.IsRandomEncounter)
+                {
+                    GameInteraction.Pause(true);
+                }
+
                 if (UnregisterGameMode(type, playerId))
                 {
-                    var isLocal = GetLocalPlayerId() == playerId;
                     OnGameModeEnded(type, isLocal);
                 }
             }
@@ -539,7 +546,7 @@ namespace WOTRMultiplayer.MP.Actors
             return false;
         }
 
-        protected abstract Task<DiceRollValueResponse> RetrieveRollAsync(DiceRollValueRequest rollRequest, string unitId);
+        protected abstract DiceRollValueResponse RetrieveRoll(DiceRollValueRequest rollRequest, string unitId);
 
         protected abstract void OnLocalPlayerTurnStart();
 
@@ -713,7 +720,12 @@ namespace WOTRMultiplayer.MP.Actors
         protected TRollValue ResponseToRollValue<TRollValue>(DiceRollValueResponse rollResponse)
                where TRollValue : RollValueBase
         {
-            if (rollResponse?.RollValue == null)
+            if (rollResponse == null)
+            {
+                return null;
+            }
+
+            if (rollResponse.RollValue == null)
             {
                 Logger.LogError("Retrieved roll is null. RollId={rollId}", rollResponse?.RollId);
                 return null;
@@ -738,10 +750,10 @@ namespace WOTRMultiplayer.MP.Actors
                 {
                     RollId = request.RollId,
                     UnitId = request.UnitId,
-                    RollValue = Mapper.Map<Networking.Messages.NetworkRollValue>(roll)
+                    RollValue = Mapper.Map<Networking.Messages.Contracts.NetworkRollValue>(roll)
                 };
 
-                Logger.LogInformation("Sending roll value response. RollId={rollId}, RollType={rollType}, Result={result}, DamageValuesCount={damageValuesCount} RollHistoryCount={rollHistoryCount}",
+                Logger.LogInformation("Sending roll value response. RollId={rollId}, RollType={rollType}, Result={result}, DamageValuesCount={damageValuesCount}, RollHistoryCount={rollHistoryCount}",
                     response.RollId, roll?.GetType().Name, response.RollValue?.Result, response.RollValue?.DamageValues.Count, response.RollValue?.RollHistory.Count);
 
                 Send(playerId, response);

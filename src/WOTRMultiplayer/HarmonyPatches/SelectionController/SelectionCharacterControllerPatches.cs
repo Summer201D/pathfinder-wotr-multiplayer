@@ -12,12 +12,12 @@ namespace WOTRMultiplayer.HarmonyPatches.SelectionController
         [HarmonyPrefix]
         public static bool SelectionCharacterController_SelectedUnits_Prefix(SelectionCharacterController __instance, ref List<UnitEntityData> __result)
         {
-            if (!Main.Multiplayer.IsActive || Main.Multiplayer.ExecutionContext?.SelectedUnits == null)
+            if (!Main.Multiplayer.IsActive || Main.Multiplayer.RemoteContext?.SelectedUnits == null)
             {
                 return true;
             }
 
-            __result = Main.Multiplayer.ExecutionContext.SelectedUnits;
+            __result = Main.Multiplayer.RemoteContext.SelectedUnits;
             return false;
         }
     }

@@ -39,7 +39,7 @@ namespace WOTRMultiplayer.MP
 
         public bool IsInCombat => _multiplayerActorAccessor.Current != null && _multiplayerActorAccessor.Current.IsInCombat;
 
-        public RemoteExecutionContext ExecutionContext => _gameInteractionService.RemoteContext;
+        public RemoteExecutionContext RemoteContext => _gameInteractionService.RemoteContext;
 
         public Multiplayer(
             ILogger<Multiplayer> logger,
@@ -521,6 +521,37 @@ namespace WOTRMultiplayer.MP
         public bool CanUseCampingUI()
         {
             return _multiplayerActorAccessor.Current != null && _multiplayerActorAccessor.Host.IsActive;
+        }
+
+        public void OnBeforeTryRollRandomEncounter()
+        {
+            if (_multiplayerActorAccessor.Current == null)
+            {
+                return;
+            }
+
+            if (_multiplayerActorAccessor.Host.IsActive)
+            {
+                _gameInteractionService.SetRandomEncounterContext(new NetworkRandomEncounterContext() { IsRecording = true, Encounter = new NetworkRandomEncounter() });
+                return;
+            }
+
+            _multiplayerActorAccessor.Client.OnBeforeTryRollRandomEncounter();
+        }
+
+        public void OnAfterTryRollRandomEncounter()
+        {
+            if (_multiplayerActorAccessor.Current == null)
+            {
+                return;
+            }
+
+            if (!_multiplayerActorAccessor.Host.IsActive)
+            {
+                return;
+            }
+
+            _multiplayerActorAccessor.Host.OnAfterTryRollRandomEncounter();
         }
 
         private void ShowEscMenuMultiplayerLobby()

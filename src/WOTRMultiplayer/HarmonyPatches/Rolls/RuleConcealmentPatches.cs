@@ -15,7 +15,9 @@ namespace WOTRMultiplayer.HarmonyPatches.Rolls
         [HarmonyPostfix]
         public static void RuleCalculateDamage_OnTrigger_Postfix(RuleConcealmentCheck __instance)
         {
-            if (!Main.Multiplayer.IsActive)
+            if (!Main.Multiplayer.IsActive
+                || PatchesUtils.IsHelperUnit(__instance.Initiator.UniqueId)
+                || PatchesUtils.IsHelperUnit(__instance.Target?.UniqueId))
             {
                 return;
             }
@@ -29,7 +31,7 @@ namespace WOTRMultiplayer.HarmonyPatches.Rolls
         {
             var target = PatchesUtils.GetTranspilerTarget(MethodBase.GetCurrentMethod());
             var matcher = new CodeMatcher(instructions);
-            var replaceWith = AccessTools.Method(typeof(RuleConcealmentPatches), nameof(RuleConcealmentPatches.ConcentrationRollD100));
+            var replaceWith = AccessTools.Method(typeof(RuleConcealmentPatches), nameof(RuleConcealmentPatches.ConcealmentRollD100));
             var lookFor = AccessTools.PropertyGetter(typeof(RuleConcealmentCheck), nameof(RuleConcealmentCheck.Roll));
             var match = matcher.SearchForward(x => x.Calls(lookFor));
             if (match.IsInvalid)
@@ -51,9 +53,11 @@ namespace WOTRMultiplayer.HarmonyPatches.Rolls
             return matcher.Instructions();
         }
 
-        public static RuleRollD100 ConcentrationRollD100(RuleConcealmentCheck ruleConcealmentCheck)
+        public static RuleRollD100 ConcealmentRollD100(RuleConcealmentCheck ruleConcealmentCheck)
         {
-            if (!Main.Multiplayer.IsActive)
+            if (!Main.Multiplayer.IsActive
+                || PatchesUtils.IsHelperUnit(ruleConcealmentCheck.Initiator.UniqueId)
+                || PatchesUtils.IsHelperUnit(ruleConcealmentCheck.Target?.UniqueId))
             {
                 return Rulebook.Trigger<RuleRollD100>(ruleConcealmentCheck.Roll);
             }

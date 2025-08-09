@@ -3,7 +3,7 @@
 namespace WOTRMultiplayer.Networking.Messages.Game
 {
     [ProtoContract]
-    [BeetleX.Packets.MessageType(1039)]
+    [BeetleX.Packets.MessageType(1035)]
     public class NotifyRestStarted
     {
     }

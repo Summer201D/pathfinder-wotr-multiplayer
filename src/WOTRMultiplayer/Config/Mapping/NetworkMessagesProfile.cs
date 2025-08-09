@@ -2,6 +2,7 @@
 using WOTRMultiplayer.MP.Entities;
 using WOTRMultiplayer.MP.Entities.Abilities;
 using WOTRMultiplayer.MP.Entities.Combat;
+using WOTRMultiplayer.MP.Entities.Dialogs;
 using WOTRMultiplayer.MP.Entities.Equipment;
 using WOTRMultiplayer.MP.Entities.Loot;
 using WOTRMultiplayer.MP.Entities.MapObjects;
@@ -15,83 +16,92 @@ namespace WOTRMultiplayer.Config.Mapping
     {
         public NetworkMessagesProfile()
         {
-            CreateMap<NetworkVector3, Networking.Messages.NetworkVector3>()
+            CreateMap<NetworkVector3, Networking.Messages.Contracts.NetworkVector3>()
                 .ReverseMap();
 
-            CreateMap<NetworkClick, Networking.Messages.NetworkClick>()
+            CreateMap<NetworkDialogAnswerSuggestion, Networking.Messages.Contracts.NetworkDialogAnswerSuggestion>()
+               .ReverseMap();
+
+            CreateMap<NetworkCharacterOwnership, Networking.Messages.Contracts.NetworkCharacterOwnership>()
+               .ReverseMap();
+
+            CreateMap<NetworkClick, Networking.Messages.Contracts.NetworkClick>()
                 .ReverseMap();
 
-            CreateMap<NetworkAbility, Networking.Messages.NetworkAbility>()
+            CreateMap<NetworkAbility, Networking.Messages.Contracts.NetworkAbility>()
                 .ReverseMap();
 
-            CreateMap<NetworkActionsState, Networking.Messages.NetworkActionsState>()
+            CreateMap<NetworkActionsState, Networking.Messages.Contracts.NetworkActionsState>()
                 .ReverseMap();
 
-            CreateMap<NetworkCombatAction, Networking.Messages.NetworkCombatAction>()
+            CreateMap<NetworkCombatAction, Networking.Messages.Contracts.NetworkCombatAction>()
                 .ReverseMap();
 
-            CreateMap<NetworkDamageRollValue, Networking.Messages.NetworkDamageRollValue>()
+            CreateMap<NetworkDamageRollValue, Networking.Messages.Contracts.NetworkDamageRollValue>()
                 .ReverseMap();
 
-            CreateMap<NetworkUnit, Networking.Messages.NetworkUnit>()
+            CreateMap<NetworkUnit, Networking.Messages.Contracts.NetworkUnit>()
                 .ReverseMap();
 
-            CreateMap<NetworkActivatableAbility, Networking.Messages.NetworkActivatableAbility>()
+            CreateMap<NetworkActivatableAbility, Networking.Messages.Contracts.NetworkActivatableAbility>()
                 .ReverseMap();
 
-            CreateMap<NetworkDamageListRollValue, Networking.Messages.NetworkRollValue>()
+            CreateMap<NetworkDamageListRollValue, Networking.Messages.Contracts.NetworkRollValue>()
                 .ForMember(m => m.DamageValues, o => o.MapFrom(v => v.Value))
                 .ReverseMap()
                 .ForMember(m => m.Value, o => o.MapFrom(v => v.DamageValues));
 
-            CreateMap<NetworkIntRollValue, Networking.Messages.NetworkRollValue>()
+            CreateMap<NetworkIntRollValue, Networking.Messages.Contracts.NetworkRollValue>()
                 .ForMember(m => m.Result, o => o.MapFrom(v => v.Value))
                 .ReverseMap()
                 .ForMember(m => m.Value, o => o.MapFrom(v => v.Result));
 
-            CreateMap<NetworkLootContainer, Networking.Messages.NetworkLootContainer>()
+            CreateMap<NetworkLootContainer, Networking.Messages.Contracts.NetworkLootContainer>()
                 .ReverseMap();
 
-            CreateMap<NetworkItem, Networking.Messages.NetworkItem>()
+            CreateMap<NetworkItem, Networking.Messages.Contracts.NetworkItem>()
                 .ReverseMap();
 
-            CreateMap<NetworkDropItem, Networking.Messages.NetworkDropItem>()
+            CreateMap<NetworkDropItem, Networking.Messages.Contracts.NetworkDropItem>()
                 .ReverseMap();
 
-            CreateMap<NetworkEquipmentSlot, Networking.Messages.NetworkEquipmentSlot>()
+            CreateMap<NetworkEquipmentSlot, Networking.Messages.Contracts.NetworkEquipmentSlot>()
                 .ReverseMap();
 
-            CreateMap<NetworkEquipmentSlotPosition, Networking.Messages.NetworkEquipmentSlotPosition>()
+            CreateMap<NetworkEquipmentSlotPosition, Networking.Messages.Contracts.NetworkEquipmentSlotPosition>()
                 .ReverseMap();
 
-            CreateMap<NetworkActiveHandEquipmentSet, Networking.Messages.NetworkActiveHandEquipmentSet>()
+            CreateMap<NetworkActiveHandEquipmentSet, Networking.Messages.Contracts.NetworkActiveHandEquipmentSet>()
                 .ReverseMap();
 
-            CreateMap<NetworkOvertip, Networking.Messages.NetworkOvertip>()
+            CreateMap<NetworkOvertip, Networking.Messages.Contracts.NetworkOvertip>()
                 .ReverseMap();
 
-            CreateMap<NetworkMapObject, Networking.Messages.NetworkMapObject>()
+            CreateMap<NetworkMapObject, Networking.Messages.Contracts.NetworkMapObject>()
                 .ReverseMap();
 
-            CreateMap<NetworkPerceptionCheck, Networking.Messages.NetworkPerceptionCheck>()
+            CreateMap<NetworkPerceptionCheck, Networking.Messages.Contracts.NetworkPerceptionCheck>()
                 .ReverseMap();
 
-            CreateMap<NetworkGameSettings, Networking.Messages.NetworkGameSettings>()
+            CreateMap<NetworkGameSettings, Networking.Messages.Contracts.NetworkGameSettings>()
                 .ReverseMap();
 
-            CreateMap<NetworkTurnBasedSettngs, Networking.Messages.NetworkTurnBasedSettngs>()
+            CreateMap<NetworkTurnBasedSettngs, Networking.Messages.Contracts.NetworkTurnBasedSettngs>()
                 .ReverseMap();
 
-            CreateMap<NetworkGameMainSettings, Networking.Messages.NetworkGameMainSettings>()
+            CreateMap<NetworkGameMainSettings, Networking.Messages.Contracts.NetworkGameMainSettings>()
                 .ReverseMap();
 
-            CreateMap<NetworkAutopauseSettings, Networking.Messages.NetworkAutopauseSettings>()
+            CreateMap<NetworkAutopauseSettings, Networking.Messages.Contracts.NetworkAutopauseSettings>()
                 .ReverseMap();
 
-            CreateMap<NetworkCampingRole, Networking.Messages.NetworkCampingRole>()
+            CreateMap<NetworkCampingRole, Networking.Messages.Contracts.NetworkCampingRole>()
                 .ReverseMap();
 
-            CreateMap<NetworkCampingState, Networking.Messages.NetworkCampingState>()
+            CreateMap<NetworkCampingState, Networking.Messages.Contracts.NetworkCampingState>()
+                .ReverseMap();
+
+            CreateMap<NetworkRandomEncounter, Networking.Messages.Contracts.NetworkRandomEncounter>()
                 .ReverseMap();
         }
     }

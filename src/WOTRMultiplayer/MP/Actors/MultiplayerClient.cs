@@ -13,6 +13,7 @@ using WOTRMultiplayer.Abstractions.IO;
 using WOTRMultiplayer.Abstractions.MP;
 using WOTRMultiplayer.Abstractions.MP.Actors;
 using WOTRMultiplayer.Abstractions.Random;
+using WOTRMultiplayer.GameInteraction.Contexts;
 using WOTRMultiplayer.MP.Entities;
 using WOTRMultiplayer.MP.Entities.Abilities;
 using WOTRMultiplayer.MP.Entities.Dialogs;
@@ -24,6 +25,7 @@ using WOTRMultiplayer.MP.Entities.Settings;
 using WOTRMultiplayer.Networking.Abstractions;
 using WOTRMultiplayer.Networking.Messages.Game;
 using WOTRMultiplayer.Networking.Messages.Lobby;
+using WOTRMultiplayer.Networking.Messages.Requests;
 using WOTRMultiplayer.UI;
 
 namespace WOTRMultiplayer.MP.Actors
@@ -129,7 +131,7 @@ namespace WOTRMultiplayer.MP.Actors
             var message = new CharacterMove
             {
                 UnitId = unitId,
-                Destination = new Networking.Messages.NetworkVector3(destination.X, destination.Y, destination.Z),
+                Destination = Mapper.Map<Networking.Messages.Contracts.NetworkVector3>(destination),
                 Delay = delay,
                 Orientation = orientation
             };
@@ -286,6 +288,34 @@ namespace WOTRMultiplayer.MP.Actors
 
             return false;
         }
+        public void OnBeforeTryRollRandomEncounter()
+        {
+            try
+            {
+                Logger.LogInformation("Retrieving random encounter context");
+
+                var message = new RandomEncounterContextRequest { Timeout = TimeSpan.FromSeconds(10) };
+                var response = _networkServerClient.SendAndWaitFor<RandomEncounterContextResponse>(message);
+
+                if (response?.Context == null)
+                {
+                    Logger.LogError("Host return null encounter");
+                    return;
+                }
+
+                var context = new NetworkRandomEncounterContext
+                {
+                    Encounter = Mapper.Map<NetworkRandomEncounter>(response.Context)
+                };
+
+                GameInteraction.SetRandomEncounterContext(context);
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, "Unable to retreive random encounter context");
+                throw;
+            }
+        }
 
         protected override void OnGameModeStarted(GameModeType type)
         {
@@ -301,9 +331,9 @@ namespace WOTRMultiplayer.MP.Actors
             Send(message);
         }
 
-        protected override Task<DiceRollValueResponse> RetrieveRollAsync(DiceRollValueRequest request, string unitId)
+        protected override DiceRollValueResponse RetrieveRoll(DiceRollValueRequest request, string unitId)
         {
-            return _networkServerClient.SendAndWaitForAsync<DiceRollValueResponse>(request);
+            return _networkServerClient.SendAndWaitFor<DiceRollValueResponse>(request);
         }
 
         protected override void Send(object message)
@@ -589,22 +619,23 @@ namespace WOTRMultiplayer.MP.Actors
                 Logger.LogWarning("Combat has not been started on client yet. Waiting until start");
                 while (Game.Combat == null)
                 {
-                    await Task.Delay(TimeSpan.FromMilliseconds(100));
+                    await Task.Delay(TimeSpan.FromMilliseconds(10));
                 }
             }
 
-
             await SynchronizeUnitsAsync(combatInitialized.Units);
+            GameInteraction.SetNextUnitCombatTurn(combatInitialized.NextUnitTurn);
 
-            Game.Combat.IsInitialized = true;
             Game.Combat.InitialCombatOrder = [.. combatInitialized.UnitsCombatOrder];
 
             Logger.LogInformation("Sending {messageType}", nameof(ClientCombatInitialized));
             var message = new ClientCombatInitialized();
             _networkServerClient.Send(message);
+
+            Game.Combat.IsInitialized = true;
         }
 
-        private async Task SynchronizeUnitsAsync(List<Networking.Messages.NetworkUnit> units)
+        private async Task SynchronizeUnitsAsync(List<Networking.Messages.Contracts.NetworkUnit> units)
         {
             var unitsToSync = Mapper.Map<List<NetworkUnit>>(units);
 

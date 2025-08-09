@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using ProtoBuf;
+using WOTRMultiplayer.Networking.Messages.Contracts;
 
 namespace WOTRMultiplayer.Networking.Messages.Game
 {
@@ -12,5 +13,8 @@ namespace WOTRMultiplayer.Networking.Messages.Game
 
         [ProtoMember(2)]
         public List<string> UnitsCombatOrder { get; set; } = [];
+
+        [ProtoMember(3)]
+        public string NextUnitTurn { get; set; }
     }
 }

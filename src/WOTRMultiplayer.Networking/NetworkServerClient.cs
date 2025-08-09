@@ -16,7 +16,7 @@ namespace WOTRMultiplayer.Networking
         private readonly ConcurrentDictionary<Type, Action<object>> _handlers = new();
         private readonly ConcurrentDictionary<string, TaskCompletionSource<object>> _awaiters = new(StringComparer.OrdinalIgnoreCase);
         private readonly ILogger<NetworkServerClient> _logger;
-        private readonly TimeSpan _defaultAwaiterTimeout = TimeSpan.FromSeconds(30);
+        private readonly TimeSpan _defaultAwaiterTimeout = TimeSpan.FromSeconds(15);
 
         public Action<Exception> OnError { get; set; }
         public Action<EndPoint> OnConnected { get; set; }
@@ -74,7 +74,7 @@ namespace WOTRMultiplayer.Networking
             return _client.Send(message);
         }
 
-        public async Task<T> SendAndWaitForAsync<T>(object message)
+        public T SendAndWaitFor<T>(object message)
             where T : class
         {
             if (message is not IAwaitableMessage awaitableMessage || !typeof(IAwaitableMessage).IsAssignableFrom(typeof(T)))
@@ -87,7 +87,7 @@ namespace WOTRMultiplayer.Networking
 
             var awaiterKey = awaitableMessage.GetKey();
             _awaiters.TryAdd(awaiterKey, taskCompletion);
-            await _client.Send(message);
+            _client.Send(message).Wait();
 
             Task.WaitAny(timeoutTask, taskCompletion.Task);
 
@@ -126,12 +126,13 @@ namespace WOTRMultiplayer.Networking
 
             try
             {
+                _logger.LogWarning("Before message handler: {type}", message.GetType().Name);
                 handler(message);
+                _logger.LogWarning("After message handler: {type}", message.GetType().Name);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Unable to handle message. MessageType={messageType}", messageType.Name);
-                throw;
             }
         }
     }

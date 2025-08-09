@@ -23,6 +23,7 @@ using WOTRMultiplayer.MP.Entities.Settings;
 using WOTRMultiplayer.Networking.Abstractions;
 using WOTRMultiplayer.Networking.Messages.Game;
 using WOTRMultiplayer.Networking.Messages.Lobby;
+using WOTRMultiplayer.Networking.Messages.Requests;
 
 namespace WOTRMultiplayer.MP.Actors
 {
@@ -146,7 +147,7 @@ namespace WOTRMultiplayer.MP.Actors
             var message = new NotifyCharacterMove
             {
                 UnitId = unitId,
-                Destination = new Networking.Messages.NetworkVector3(destination.X, destination.Y, destination.Z),
+                Destination = new Networking.Messages.Contracts.NetworkVector3(destination.X, destination.Y, destination.Z),
                 Delay = delay,
                 Orientation = orientation
             };
@@ -342,10 +343,12 @@ namespace WOTRMultiplayer.MP.Actors
             {
                 var unitsInCombat = GameInteraction.GetUnitsInCombat();
                 var unitsCombatOrder = GameInteraction.GetUnitsCombatOrder();
+                var nextUnitTurn = GameInteraction.GetNextUnitTurn();
                 var message = new NotifyCombatInitialized
                 {
-                    Units = Mapper.Map<List<Networking.Messages.NetworkUnit>>(unitsInCombat),
-                    UnitsCombatOrder = unitsCombatOrder
+                    Units = Mapper.Map<List<Networking.Messages.Contracts.NetworkUnit>>(unitsInCombat),
+                    UnitsCombatOrder = unitsCombatOrder,
+                    NextUnitTurn = nextUnitTurn
                 };
                 _networkServer.SendAll(message);
                 Game.Combat.IsInitialized = true;
@@ -393,7 +396,7 @@ namespace WOTRMultiplayer.MP.Actors
             Logger.LogInformation("Sending perception check to clients. UnitId={unitID}, MapObjectId={round}, Result={result}", check.UnitId, check.MapObject.Id);
             var message = new NotifyPerceptionCheckRolled
             {
-                Check = Mapper.Map<Networking.Messages.NetworkPerceptionCheck>(check)
+                Check = Mapper.Map<Networking.Messages.Contracts.NetworkPerceptionCheck>(check)
             };
 
             Send(message);
@@ -404,7 +407,7 @@ namespace WOTRMultiplayer.MP.Actors
             Logger.LogInformation("Sending spawn camp event. Position={position}", position);
             var message = new NotifySpawnCampPlace
             {
-                Position = Mapper.Map<Networking.Messages.NetworkVector3>(position)
+                Position = Mapper.Map<Networking.Messages.Contracts.NetworkVector3>(position)
             };
             Send(message);
 
@@ -422,7 +425,7 @@ namespace WOTRMultiplayer.MP.Actors
         {
             var message = new NotifyCampingStateChanged
             {
-                State = Mapper.Map<Networking.Messages.NetworkCampingState>(state)
+                State = Mapper.Map<Networking.Messages.Contracts.NetworkCampingState>(state)
             };
 
             Logger.LogInformation("Sending {messageType}.CookingBlueprintRecipeId={cookingId}, PotionBlueprintRecipeId={potionId}, ScrollBlueprintRecipeId={ScrollId}, IterationsCount={iterations}, AutotuneIterations={autotuneIterations}", nameof(NotifyCampingStateChanged),
@@ -438,7 +441,7 @@ namespace WOTRMultiplayer.MP.Actors
 
             var message = new NotifyCampingUnitsRoleChanged
             {
-                Roles = Mapper.Map<List<Networking.Messages.NetworkCampingRole>>(roles),
+                Roles = Mapper.Map<List<Networking.Messages.Contracts.NetworkCampingRole>>(roles),
             };
             Send(message);
         }
@@ -448,6 +451,7 @@ namespace WOTRMultiplayer.MP.Actors
             Logger.LogInformation("Sending {messageType}", nameof(NotifyRestStarted));
             var message = new NotifyRestStarted();
             Send(message);
+            Game.RandomEncounter = null;
             Game.PlayersFinishedRest.Clear();
         }
 
@@ -461,6 +465,27 @@ namespace WOTRMultiplayer.MP.Actors
             }
 
             return true;
+        }
+
+        public void OnAfterTryRollRandomEncounter()
+        {
+            try
+            {
+                Logger.LogInformation("Storing random encounter context");
+                var encounterContext = GameInteraction.RemoteContext?.RandomEncounter;
+                if (encounterContext == null)
+                {
+                    Logger.LogError("Random encounter rolling is finished, but context has not been recorded");
+                    return;
+                }
+
+                Game.RandomEncounter = Mapper.Map<NetworkRandomEncounter>(encounterContext.Encounter);
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, "Unable to store random encounter context");
+                throw;
+            }
         }
 
         private void UpdateStartRestButtonAfterResults(long player)
@@ -506,22 +531,22 @@ namespace WOTRMultiplayer.MP.Actors
             }
         }
 
-        protected override Task<DiceRollValueResponse> RetrieveRollAsync(DiceRollValueRequest request, string unitId)
+        protected override DiceRollValueResponse RetrieveRoll(DiceRollValueRequest request, string unitId)
         {
             var character = GetCharacterOwnership(unitId);
             if (character?.Owner == null)
             {
                 Logger.LogError("Unable to retrieve roll due to missing character ownership. UnitId={unitId}", unitId);
-                return Task.FromResult<DiceRollValueResponse>(null);
+                return null;
             }
 
             if (character.Owner.Id == LocalHostPlayerId)
             {
                 Logger.LogError("Host is character owner, but tries to retrieve network roll. UnitId={unitId}", unitId);
-                return Task.FromResult<DiceRollValueResponse>(null);
+                return null;
             }
 
-            return _networkServer.SendAndWaitForAsync<DiceRollValueResponse>(character.Owner.Id, request);
+            return _networkServer.SendAndWaitFor<DiceRollValueResponse>(character.Owner.Id, request);
         }
 
         protected override void Send(object message)
@@ -574,7 +599,7 @@ namespace WOTRMultiplayer.MP.Actors
                     var unitsToSync = GameInteraction.GetUnitsInCombat();
                     var message = new NotifyCombatTurnSynchronizationRequired
                     {
-                        Units = Mapper.Map<List<Networking.Messages.NetworkUnit>>(unitsToSync)
+                        Units = Mapper.Map<List<Networking.Messages.Contracts.NetworkUnit>>(unitsToSync)
                     };
                     _networkServer.SendAll(message);
                 }
@@ -725,7 +750,7 @@ namespace WOTRMultiplayer.MP.Actors
         {
             var charactersOwnerChanged = new NotifyCharactersOwnerChanged
             {
-                Owners = [.. Game.Characters.Select((character, index) => new Networking.Messages.NetworkCharacterOwner { CharacterIndex = index, PlayerId = character.Owner.Id })]
+                Owners = [.. Game.Characters.Select((character, index) => new Networking.Messages.Contracts.NetworkCharacterOwner { CharacterIndex = index, PlayerId = character.Owner.Id })]
             };
 
             return charactersOwnerChanged;
@@ -753,6 +778,7 @@ namespace WOTRMultiplayer.MP.Actors
                 // this is kinda special because requester is blocking the game loop thread until <see cref="DiceRollValueResponse"/> is received
                 .Register<DiceRollValueRequest>(OnDiceRollValueRequest)
                 .Register<DiceRollValueResponse>(null) // usable as awaiter only
+                .Register<RandomEncounterContextRequest>(OnRandomEncounterContextRequest)
 
                 .Register<PlayerReadyStatusChanged>(OnPlayerReadyStatusChanged)
                 .Register<ClientGameServerConnectionConfirmed>(OnPlayerNameResponse)
@@ -778,6 +804,26 @@ namespace WOTRMultiplayer.MP.Actors
                 .Register<ClientGameModeTypeEnded>(OnClientGameModeTypeEnded)
                 .Register<ClientRestEnded>(OnClientRestEnded)
                 ;
+        }
+
+        private async void OnRandomEncounterContextRequest(long playerId, RandomEncounterContextRequest request)
+        {
+            Logger.LogInformation("Received {messageType}. PlayerId={playerId}", nameof(RandomEncounterContextRequest));
+
+            var timeout = Task.Delay(request.Timeout);
+            while (!timeout.IsCompleted && Game.RandomEncounter == null)
+            {
+                await Task.Delay(TimeSpan.FromMilliseconds(10));
+            }
+
+            var response = new RandomEncounterContextResponse
+            {
+                Context = Mapper.Map<Networking.Messages.Contracts.NetworkRandomEncounter>(Game.RandomEncounter)
+            };
+
+            Logger.LogInformation("Sending {messageType}. IsAvailable={isAvailable}", response.Context != null);
+
+            Send(playerId, response);
         }
 
         private void OnClientRestEnded(long playerId, ClientRestEnded ended)
@@ -1056,7 +1102,7 @@ namespace WOTRMultiplayer.MP.Actors
             {
                 DialogName = suggested.DialogName,
                 CueName = suggested.CueName,
-                Suggestions = [.. suggestions.Select(x => new Networking.Messages.NetworkDialogAnswerSuggestion { AnswerName = x.AnswerName, Players = [.. x.Players] })],
+                Suggestions = Mapper.Map<List<Networking.Messages.Contracts.NetworkDialogAnswerSuggestion>>(suggestions),
             };
             _networkServer.SendAll(notifyMessage);
         }
@@ -1094,7 +1140,7 @@ namespace WOTRMultiplayer.MP.Actors
                 && character.Owner.Id != playerId)
             {
                 Logger.LogInformation("Asking another client for a roll. PlayerId={playerId}, RollId={rollId}, UnitId={unitId}", character.Owner.Id, request.RollId, request.UnitId);
-                var rollFromAnotherClient = await RetrieveRollAsync(request, request.UnitId);
+                var rollFromAnotherClient = RetrieveRoll(request, request.UnitId);
                 Send(playerId, rollFromAnotherClient);
                 return;
             }
@@ -1180,7 +1226,7 @@ namespace WOTRMultiplayer.MP.Actors
 
                     OnPlayersChanged?.Invoke(Game.Players);
 
-                    var players = Game.Players.Select(x => new Networking.Messages.NetworkPlayer { Id = x.Id, Name = x.Name, IsReady = x.IsReady }).ToList();
+                    var players = Game.Players.Select(x => new Networking.Messages.Contracts.NetworkPlayer { Id = x.Id, Name = x.Name, IsReady = x.IsReady }).ToList();
                     var playersChanged = new NotifyPlayersChanged { Players = players };
                     Logger.LogInformation("Sending {messageType} to ALL players", nameof(NotifyPlayersChanged));
                     _networkServer.SendAll(playersChanged);
@@ -1220,7 +1266,7 @@ namespace WOTRMultiplayer.MP.Actors
                 var message = new GameServerConnectionSucceeded
                 {
                     ClientPlayerId = playerId,
-                    GameSettings = Mapper.Map<Networking.Messages.NetworkGameSettings>(settings)
+                    GameSettings = Mapper.Map<Networking.Messages.Contracts.NetworkGameSettings>(settings)
                 };
                 _networkServer.Send(playerId, message);
             }
@@ -1299,7 +1345,7 @@ namespace WOTRMultiplayer.MP.Actors
         {
             var message = new NotifyGameCharactersChanged
             {
-                Characters = [.. Game.Characters.Select(c => new Networking.Messages.NetworkCharacterOwnership { Name = c.Name, Portrait = c.Portrait })]
+                Characters = Mapper.Map<List<Networking.Messages.Contracts.NetworkCharacterOwnership>>(Game.Characters)
             };
             return message;
         }

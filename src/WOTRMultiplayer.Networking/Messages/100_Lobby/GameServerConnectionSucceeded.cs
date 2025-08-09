@@ -1,4 +1,5 @@
 ﻿using ProtoBuf;
+using WOTRMultiplayer.Networking.Messages.Contracts;
 
 namespace WOTRMultiplayer.Networking.Messages.Lobby
 {

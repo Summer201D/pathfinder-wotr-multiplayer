@@ -1,0 +1,17 @@
+﻿using ProtoBuf;
+
+namespace WOTRMultiplayer.Networking.Messages.Contracts
+{
+    [ProtoContract]
+    public class NetworkUnit
+    {
+        [ProtoMember(1)]
+        public string Id { get; set; }
+
+        [ProtoMember(2)]
+        public NetworkVector3 Position { get; set; }
+
+        [ProtoMember(3)]
+        public float Orientation { get; set; }
+    }
+}
