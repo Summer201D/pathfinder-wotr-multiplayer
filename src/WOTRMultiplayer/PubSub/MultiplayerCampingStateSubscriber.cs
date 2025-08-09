@@ -16,7 +16,8 @@ namespace WOTRMultiplayer.PubSub
         IRestCraftHandler,
         IRestIterationsHandler,
         IRestScrollScribingSkillHandler,
-        IRestRoleHandler
+        IRestRoleHandler,
+        IRestCampUIHandler
     {
         private readonly IGameInteractionService _gameInteractionService;
 
@@ -134,6 +135,32 @@ namespace WOTRMultiplayer.PubSub
             }).ToList();
 
             Main.Multiplayer.OnCampingUnitsRoleChanged(roles);
+        }
+
+        public void HandleSkipPhase()
+        {
+        }
+
+        public void HandleOpenRestCamp()
+        {
+        }
+
+        public void HandleVisualCampPhaseFinished()
+        {
+        }
+
+        public void HandleCloseRestCamp()
+        {
+        }
+
+        public void HandleShowResults()
+        {
+            if (ActorAccessor.Current == null)
+            {
+                return;
+            }
+
+            ActorAccessor.Current.OnShowRestView(Kingmaker.Controllers.Rest.RestPhase.ShowingResults);
         }
     }
 }

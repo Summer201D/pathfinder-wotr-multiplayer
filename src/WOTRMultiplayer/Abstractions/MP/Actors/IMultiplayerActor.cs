@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Kingmaker.Controllers.Rest;
 using Kingmaker.GameModes;
 using WOTRMultiplayer.MP.Entities;
 using WOTRMultiplayer.MP.Entities.Abilities;
@@ -106,5 +107,7 @@ namespace WOTRMultiplayer.Abstractions.MP.Actors
         bool OnStartGameMode(GameModeType type);
 
         bool OnStopGameMode(GameModeType type);
+
+        bool OnShowRestView(RestPhase phase);
     }
 }

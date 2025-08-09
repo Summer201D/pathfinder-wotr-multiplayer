@@ -1,4 +1,5 @@
 ﻿using HarmonyLib;
+using Kingmaker;
 using Kingmaker.UI.MVVM._PCView.Rest;
 
 namespace WOTRMultiplayer.HarmonyPatches.Rest
@@ -51,6 +52,18 @@ namespace WOTRMultiplayer.HarmonyPatches.Rest
             }
 
             DisableRestUI(__instance);
+        }
+
+        [HarmonyPatch(typeof(RestBaseView), nameof(RestBaseView.CloseRest))]
+        [HarmonyPrefix]
+        public static bool RestBaseView_CloseRest_Prefix(RestPCView __instance)
+        {
+            if (!Main.Multiplayer.IsActive)
+            {
+                return true;
+            }
+
+            return Game.Instance.RestController.CurrentPhase != Kingmaker.Controllers.Rest.RestPhase.ShowingResults;
         }
 
         private static void DisableRestUI(RestPCView view)

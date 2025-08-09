@@ -5,6 +5,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Threading.Tasks;
 using AutoMapper;
+using Kingmaker.Controllers.Rest;
 using Kingmaker.GameModes;
 using Microsoft.Extensions.Logging;
 using WOTRMultiplayer.Abstractions.GameInteraction;
@@ -274,6 +275,17 @@ namespace WOTRMultiplayer.MP.Actors
             return !IsRolledByHost(silent) && IsRolledByLocalPlayer(silent);
         }
 
+        public bool OnShowRestView(RestPhase phase)
+        {
+            Logger.LogInformation("Showing rest view. Phase={phase}", phase);
+            if (phase == RestPhase.ShowingResults)
+            {
+                var message = new ClientRestEnded();
+                Send(message);
+            }
+
+            return false;
+        }
 
         protected override void OnGameModeStarted(GameModeType type)
         {

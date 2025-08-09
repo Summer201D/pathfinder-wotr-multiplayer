@@ -22,6 +22,8 @@ namespace WOTRMultiplayer.MP.Entities
 
         public ConcurrentDictionary<GameModeType, HashSet<long>> PlayersInGameMode { get; set; } = [];
 
+        public HashSet<long> PlayersFinishedRest { get; set; } = [];
+
         public NetworkCombat Combat { get; set; }
 
         public NetworkDialog Dialog { get; set; }
@@ -41,11 +43,14 @@ namespace WOTRMultiplayer.MP.Entities
             LocalPlayerId = 0; // -1 host << 0 default << 1+ clients
             Players.Clear();
             Characters.Clear();
+            PlayersInGameMode.Clear();
             SaveFilePath = null;
             Connectivity = null;
             Stage = NetworkGameStage.None;
             Dialog = null;
             Id = null;
+            Combat = null;
+            ForcedPause = false;
         }
     }
 }

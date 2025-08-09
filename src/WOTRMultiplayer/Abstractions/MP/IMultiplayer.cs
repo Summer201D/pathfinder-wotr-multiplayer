@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using Kingmaker.Controllers.Rest;
 using Kingmaker.EntitySystem.Persistence;
 using Kingmaker.GameModes;
 using WOTRMultiplayer.Abstractions.Random;
@@ -97,8 +98,8 @@ namespace WOTRMultiplayer.Abstractions.MP
 
         void OnCampingUnitsRoleChanged(List<NetworkCampingRole> roles);
 
-        bool CanUseCampingUI();
-
         void OnStartRest();
+
+        bool CanUseCampingUI();
     }
 }

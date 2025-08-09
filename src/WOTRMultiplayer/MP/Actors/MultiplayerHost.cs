@@ -4,6 +4,7 @@ using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
 using AutoMapper;
+using Kingmaker.Controllers.Rest;
 using Kingmaker.GameModes;
 using Microsoft.Extensions.Logging;
 using WOTRMultiplayer.Abstractions.GameInteraction;
@@ -447,12 +448,40 @@ namespace WOTRMultiplayer.MP.Actors
             Logger.LogInformation("Sending {messageType}", nameof(NotifyRestStarted));
             var message = new NotifyRestStarted();
             Send(message);
+            Game.PlayersFinishedRest.Clear();
         }
 
-        private void UpdateBeginRestButton()
+        public bool OnShowRestView(RestPhase phase)
+        {
+            Logger.LogInformation("Showing rest view. Phase={phase}", phase);
+            if (phase == RestPhase.ShowingResults)
+            {
+                var localPlayer = GetLocalPlayerId();
+                UpdateStartRestButtonAfterResults(localPlayer);
+            }
+
+            return true;
+        }
+
+        private void UpdateStartRestButtonAfterResults(long player)
+        {
+            lock (ActionLock)
+            {
+                Game.PlayersFinishedRest.Add(player);
+                var readyPlayersCount = Game.PlayersFinishedRest.Count;
+                UpdateStartRestButton(readyPlayersCount);
+            }
+        }
+
+        private void UpdateStartRestButton()
+        {
+            var readyPlayersCount = Game.PlayersInGameMode[GameModeType.Rest].Count;
+            UpdateStartRestButton(readyPlayersCount);
+        }
+
+        private void UpdateStartRestButton(int readyPlayersCount)
         {
             var totalPlayersCount = Game.Players.Count;
-            var readyPlayersCount = Game.PlayersInGameMode[GameModeType.Rest].Count;
             var isInteractable = readyPlayersCount >= totalPlayersCount;
             GameInteraction.SetStartRestButtonState(isInteractable, readyPlayersCount, totalPlayersCount);
         }
@@ -461,7 +490,7 @@ namespace WOTRMultiplayer.MP.Actors
         {
             if (type == GameModeType.Rest)
             {
-                UpdateBeginRestButton();
+                UpdateStartRestButton();
             }
         }
 
@@ -473,7 +502,7 @@ namespace WOTRMultiplayer.MP.Actors
             }
             else if (type == GameModeType.Rest)
             {
-                UpdateBeginRestButton();
+                UpdateStartRestButton();
             }
         }
 
@@ -747,7 +776,15 @@ namespace WOTRMultiplayer.MP.Actors
                 .Register<NotifyUnitJoinedMidCombat>(OnNotifyUnitJoinedMidCombat)
                 .Register<ClientGameModeTypeStarted>(OnClientGameModeTypeStarted)
                 .Register<ClientGameModeTypeEnded>(OnClientGameModeTypeEnded)
+                .Register<ClientRestEnded>(OnClientRestEnded)
                 ;
+        }
+
+        private void OnClientRestEnded(long playerId, ClientRestEnded ended)
+        {
+            Logger.LogInformation("Received {messageType}. PlayerId={playerId}", nameof(ClientRestEnded));
+
+            UpdateStartRestButtonAfterResults(playerId);
         }
 
         private void OnClientGameModeTypeEnded(long playerId, ClientGameModeTypeEnded ended)

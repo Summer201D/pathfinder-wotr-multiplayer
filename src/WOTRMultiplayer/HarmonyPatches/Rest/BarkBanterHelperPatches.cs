@@ -43,7 +43,7 @@ namespace WOTRMultiplayer.HarmonyPatches.Rest
         public static BlueprintBarkBanter SelectBanter(TimeSpan campTime)
         {
             var units = CampingState.GetAllUnitsForRest(true, false);
-            var allBanters = BlueprintRoot.Instance.Camping.AllBanters.Where((BlueprintBarkBanter b) => b.CanBePlayed(campTime, units)).ToList();
+            var allBanters = BlueprintRoot.Instance.Camping.AllBanters.Where(b => b.CanBePlayed(campTime, units)).ToList();
             if (!Main.Multiplayer.IsActive)
             {
                 return allBanters.WeightedRandom<BlueprintBarkBanter>();
