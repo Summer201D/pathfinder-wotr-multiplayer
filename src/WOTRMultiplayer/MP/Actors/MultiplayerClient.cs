@@ -323,7 +323,7 @@ namespace WOTRMultiplayer.MP.Actors
         {
             _networkServerClient
                 // this is kinda special as well as the host is blocking the game loop thread until `RollResponse` is received
-                .Register<DiceRollValueRequest>(OnRollRequest)
+                .Register<DiceRollValueRequest>(OnDiceRollValueRequest)
 
                 .Register<NotifyPlayerDisconnected>(OnNotifyPlayerDisconnected)
                 .Register<GameServerConnectionSucceeded>(OnGameServerConnectionSucceeded)
@@ -537,7 +537,7 @@ namespace WOTRMultiplayer.MP.Actors
             GameInteraction.ClickMapObject(click);
         }
 
-        private async void OnRollRequest(DiceRollValueRequest request)
+        private async void OnDiceRollValueRequest(DiceRollValueRequest request)
         {
             Logger.LogInformation("Received {messageType}. RollId={rollId}", nameof(DiceRollValueRequest), request.RollId);
             // only host could ask for a roll since there is no direct connection between clients

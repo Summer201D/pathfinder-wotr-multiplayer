@@ -399,8 +399,6 @@ namespace WOTRMultiplayer.GameInteraction
 
         public Task<bool> StartDialogAsync(string dialogName, string targetUnitId, string initiatorUnitId, string mapObjectId, string speakerKey)
         {
-            _logger.LogInformation("Start dialog. DialogName={dialogName}, TargetUnitId={targetUnitId}, InitiatorUnitId={initiatorUnitId}, MapObjectId={mapObjectId}, SpeakerKey={speakerKey}",
-                dialogName, targetUnitId, initiatorUnitId, mapObjectId, speakerKey);
             // this is kinda sketchy, but we need to really know if dialog is already in progress
             // starting dialog is really important as it's required to send `NotifyDialogStarted` to clients
             // unfortunately blueprints can be loaded in mainthread only which means we can't get result right away
@@ -408,6 +406,8 @@ namespace WOTRMultiplayer.GameInteraction
             var hasStartedDialogTask = new TaskCompletionSource<bool>();
             _mainThreadAccessor.Enqueue(() =>
             {
+                _logger.LogInformation("Start dialog. DialogName={dialogName}, TargetUnitId={targetUnitId}, InitiatorUnitId={initiatorUnitId}, MapObjectId={mapObjectId}, SpeakerKey={speakerKey}",
+                    dialogName, targetUnitId, initiatorUnitId, mapObjectId, speakerKey);
                 var dialogBlueprint = Utilities.GetBlueprint<BlueprintDialog>(dialogName);
                 var target = GetUnitEntity(targetUnitId);
                 var initiator = GetUnitEntity(initiatorUnitId);

@@ -719,20 +719,14 @@ namespace WOTRMultiplayer.MP.Actors
                 return null;
             }
 
-            if (rollResponse.RollValue.Result > 0)
-            {
-                var intValue = Mapper.Map<NetworkIntRollValue>(rollResponse.RollValue);
-                return intValue as TRollValue;
-            }
-
             if (rollResponse.RollValue.DamageValues.Count > 0)
             {
                 var damageValues = Mapper.Map<NetworkDamageListRollValue>(rollResponse.RollValue);
                 return damageValues as TRollValue;
             }
 
-            Logger.LogError("Unknown roll type response. RollId={rollId}", rollResponse.RollId);
-            return null;
+            var intValue = Mapper.Map<NetworkIntRollValue>(rollResponse.RollValue);
+            return intValue as TRollValue;
         }
 
         protected async Task SendLocalRollAsync(long playerId, DiceRollValueRequest request)

@@ -722,7 +722,7 @@ namespace WOTRMultiplayer.MP.Actors
                 .Register<NotifyMapObjectClicked>(OnNotifyMapObjectClicked)
 
                 // this is kinda special because requester is blocking the game loop thread until <see cref="DiceRollValueResponse"/> is received
-                .Register<DiceRollValueRequest>(OnRollRequest)
+                .Register<DiceRollValueRequest>(OnDiceRollValueRequest)
                 .Register<DiceRollValueResponse>(null) // usable as awaiter only
 
                 .Register<PlayerReadyStatusChanged>(OnPlayerReadyStatusChanged)
@@ -1043,7 +1043,7 @@ namespace WOTRMultiplayer.MP.Actors
             TryEnableDialogContinueButton();
         }
 
-        private async void OnRollRequest(long playerId, DiceRollValueRequest request)
+        private async void OnDiceRollValueRequest(long playerId, DiceRollValueRequest request)
         {
             Logger.LogInformation("Received {messageType}. PlayerId={playerId}, RollId={rollId}, UnitId={unitId}", nameof(DiceRollValueRequest), playerId, request.RollId, request.UnitId);
 
