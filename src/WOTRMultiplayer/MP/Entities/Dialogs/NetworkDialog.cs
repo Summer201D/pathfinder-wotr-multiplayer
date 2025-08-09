@@ -16,6 +16,8 @@ namespace WOTRMultiplayer.MP.Entities.Dialogs
 
         public ConcurrentDictionary<long, string> AnswerSuggestions { get; set; } = new();
 
+        public bool IsSelectingAnswer { get; set; }
+
         public NetworkDialog(string name)
         {
             Name = name;

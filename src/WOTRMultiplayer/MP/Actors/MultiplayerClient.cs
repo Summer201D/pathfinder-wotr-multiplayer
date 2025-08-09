@@ -181,13 +181,14 @@ namespace WOTRMultiplayer.MP.Actors
             if (Game.Dialog.Answer != null && string.Equals(answerName, Game.Dialog.Answer.AnswerName, StringComparison.OrdinalIgnoreCase))
             {
                 Logger.LogInformation("Proceeding with dialog answer without extra steps. DialogName={dialogName}, CueName={cueName}, AnswerName={answerName}", dialogName, cueName, answerName);
+                Game.Dialog.IsSelectingAnswer = false;
                 return true;
             }
 
             var message = new DialogCueAnswerSuggested { DialogName = dialogName, CueName = cueName, AnswerName = answerName };
             Logger.LogInformation("Sending dialog answer suggestion. DialogName={dialogName}, CueName={cueName}, AnswerName={answerName}", message.DialogName, message.CueName, message.AnswerName);
             _networkServerClient.Send(message);
-
+            Game.Dialog.IsSelectingAnswer = true;
             return false;
         }
 
@@ -601,6 +602,16 @@ namespace WOTRMultiplayer.MP.Actors
         private async void OnNotifyDialogStarted(NotifyDialogStarted started)
         {
             Logger.LogInformation("Received {messageType}.  DialogueName={dialogName},  TargetUnitId={targetId}, InitiatorUnitId={initiatorId}", nameof(NotifyDialogStarted), started.DialogName, started.TargetUnitId, started.InitiatorUnitId);
+
+            if (Game.Dialog != null && Game.Dialog.IsSelectingAnswer)
+            {
+                Logger.LogWarning("Waiting until client finished processing previos answer");
+                while (Game.Dialog.IsSelectingAnswer)
+                {
+                    await Task.Delay(TimeSpan.FromMilliseconds(10));
+                }
+            }
+
             if (Game.Dialog == null || Game.Dialog.Name != started.DialogName)
             {
                 Logger.LogInformation("New dialog has been initiated. PreviousDialog={previousDialogName}, CurrentDialogName={dialogName}", Game.Dialog?.Name, started.DialogName);
