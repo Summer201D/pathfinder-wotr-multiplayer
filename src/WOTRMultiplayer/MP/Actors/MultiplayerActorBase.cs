@@ -21,6 +21,7 @@ using WOTRMultiplayer.MP.Entities.MapObjects;
 using WOTRMultiplayer.MP.Entities.Rolls.Claiming.Values;
 using WOTRMultiplayer.Networking.Messages.Game;
 using WOTRMultiplayer.Networking.Messages.Lobby;
+using WOTRMultiplayer.UI;
 
 namespace WOTRMultiplayer.MP.Actors
 {
@@ -461,6 +462,14 @@ namespace WOTRMultiplayer.MP.Actors
         public bool OnStopGameMode(GameModeType type)
         {
             Logger.LogInformation("Trying to stop GameModeType. Mode={mode}", type.Name);
+
+            if (type == GameModeType.Pause && Game.ForcedPause)
+            {
+                Logger.LogInformation("Pause can't be removed yet.");
+                GameInteraction.ShowWarningNotification(UIStringConsts.GameNotifications.TryingToUpauseWhileLoading);
+                return false;
+            }
+
             var localPlayer = GetLocalPlayerId();
             OnStopGameMode(type, localPlayer);
 

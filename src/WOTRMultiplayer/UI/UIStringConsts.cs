@@ -64,6 +64,8 @@
         public class GameNotifications
         {
             public const string TryingToLeaveAsAClient = "Can't leave area as a multiplayer client";
+            public const string TryingToUpauseWhileLoading = "Can't unpause while waiting for other players to finish loading the game";
+            public const string TryingToSetUpCampAsAClient = "Camp can be placed by the host only";
         }
     }
 }

@@ -16,6 +16,7 @@ using WOTRMultiplayer.MP.Entities.Equipment;
 using WOTRMultiplayer.MP.Entities.Loot;
 using WOTRMultiplayer.MP.Entities.MapObjects;
 using WOTRMultiplayer.MP.Entities.Rest;
+using WOTRMultiplayer.UI;
 using WOTRMultiplayer.UI.Menu;
 
 namespace WOTRMultiplayer.MP
@@ -457,7 +458,7 @@ namespace WOTRMultiplayer.MP
         {
             if (_multiplayerActorAccessor.Client.IsActive)
             {
-                _gameInteractionService.ShowWarningNotification("Camp can be placed by the host only");
+                _gameInteractionService.ShowWarningNotification(UIStringConsts.GameNotifications.TryingToSetUpCampAsAClient);
                 return false;
             }
 

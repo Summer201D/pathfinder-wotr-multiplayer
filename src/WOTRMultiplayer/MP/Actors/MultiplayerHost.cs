@@ -204,6 +204,7 @@ namespace WOTRMultiplayer.MP.Actors
         {
             Logger.LogInformation("Game loaded");
 
+            Game.ForcedPause = true;
             GameInteraction.Pause(true);
 
             var host = GetHost();
@@ -641,8 +642,9 @@ namespace WOTRMultiplayer.MP.Actors
             {
                 Logger.LogInformation("All players have finished loading. Game will be unpaused");
                 Game.Stage = NetworkGameStage.Playing;
+                Game.ForcedPause = false;
                 GameInteraction.Pause(false);
-                var message = new NotifyGamePauseChanged { IsPaused = false };
+                var message = new NotifyGameLoaded();
                 _networkServer.SendAll(message);
             }
         }
@@ -721,7 +723,6 @@ namespace WOTRMultiplayer.MP.Actors
                 .Register<PlayerSaveGameSyncChanged>(OnPlayerSaveGameSyncChanged)
                 .Register<CharacterMove>(OnCharacterMove)
                 .Register<ClientGameLoaded>(OnClientGameLoaded)
-                .Register<GamePauseChanged>(OnGamePauseChanged)
                 .Register<CueWitnessed>(OnCueWitnessed)
                 .Register<DialogCueAnswerSuggested>(OnDialogCueAnswerSuggested)
                 .Register<StartDialogRequested>(OnStartDialogRequested)
@@ -1028,14 +1029,6 @@ namespace WOTRMultiplayer.MP.Actors
         {
             Logger.LogInformation("Received {messageType}. PlayerId={playerId}, RollId={rollId}", nameof(DiceRollValueRequest), playerId, request.RollId);
             await SendLocalRollAsync(playerId, request);
-        }
-
-        private void OnGamePauseChanged(long playerId, GamePauseChanged pauseChanged)
-        {
-            Logger.LogInformation("Received {messageType}. PlayerId={playerId}, IsPaused={isPaused}", nameof(GamePauseChanged), playerId, pauseChanged.IsPaused);
-            var message = new NotifyGamePauseChanged { IsPaused = pauseChanged.IsPaused };
-            _networkServer.SendAllExcept(playerId, message);
-            GameInteraction.Pause(pauseChanged.IsPaused);
         }
 
         private void OnCharacterMove(long playerId, CharacterMove move)

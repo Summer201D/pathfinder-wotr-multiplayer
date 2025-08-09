@@ -139,6 +139,7 @@ namespace WOTRMultiplayer.MP.Actors
         {
             Logger.LogInformation("Game loaded");
 
+            Game.ForcedPause = true;
             GameInteraction.Pause(true);
 
             _networkServerClient.Send(new ClientGameLoaded());
@@ -334,7 +335,7 @@ namespace WOTRMultiplayer.MP.Actors
                 .Register<NotifyCharactersOwnerChanged>(OnNotifyCharactersOwnerChanged)
                 .Register<NotifyGameStarted>(OnNotifyGameStarted)
                 .Register<NotifyCharacterMove>(OnNotifyCharacterMove)
-                .Register<NotifyGamePauseChanged>(OnNotifyGamePauseChanged)
+                .Register<NotifyGameLoaded>(OnNotifyGameLoaded)
                 .Register<NotifyPartyLeaveArea>(OnNotifyPartyLeaveArea)
                 .Register<NotifyDialogCueAnswerSuggested>(OnNotifyDialogCueAnswerSuggested)
                 .Register<NotifyDialogCueAnswerSelected>(OnNotifyDialogCueAnswerSelected)
@@ -670,10 +671,11 @@ namespace WOTRMultiplayer.MP.Actors
             GameInteraction.LeaveArea(area.AreaExitId);
         }
 
-        private void OnNotifyGamePauseChanged(NotifyGamePauseChanged changed)
+        private void OnNotifyGameLoaded(NotifyGameLoaded changed)
         {
-            Logger.LogInformation("Received {messageType}. Value={value}", nameof(NotifyGamePauseChanged), changed.IsPaused);
-            GameInteraction.Pause(changed.IsPaused);
+            Logger.LogInformation("Received {messageType}. Value={value}", nameof(NotifyGameLoaded));
+            Game.ForcedPause = false;
+            GameInteraction.Pause(false);
         }
 
         private void OnNotifyCharacterMove(NotifyCharacterMove move)

@@ -66,7 +66,7 @@ namespace WOTRMultiplayer.MP
                 if (networkRoll.Value.Count != bundles.Count)
                 {
                     _logger.LogCritical("Network damage contains invalid number of damage values. RollId={rollId}, ExpectedCount={expectedCount}, ActualCount={actualCount}", rollId.Value, bundles.Count, networkRoll.Value.Count);
-                    _gameInteractionService.ShowModalMessage($"Network damage contains invalid number of damage values which guarantees desync in the game");
+                    _gameInteractionService.ShowModalMessage($"Network damage contains an invalid number of damage values which guarantees desync in the game");
                     return true;
                 }
 

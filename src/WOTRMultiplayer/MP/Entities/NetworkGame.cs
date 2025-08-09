@@ -28,6 +28,8 @@ namespace WOTRMultiplayer.MP.Entities
 
         public string SaveFilePath { get; set; }
 
+        public bool ForcedPause { get; set; }
+
         public NetworkGame(string saveFilePath)
         {
             SaveFilePath = saveFilePath;
