@@ -30,7 +30,7 @@ namespace WOTRMultiplayer.MP.Entities
 
         public string SaveFilePath { get; set; }
 
-        public bool ForcedPause { get; set; }
+        public NetworkForcedPause ForcedPause { get; set; }
 
         public NetworkRandomEncounter RandomEncounter { get; set; }
 
@@ -52,7 +52,7 @@ namespace WOTRMultiplayer.MP.Entities
             Dialog = null;
             Id = null;
             Combat = null;
-            ForcedPause = false;
+            ForcedPause = null;
             RandomEncounter = null;
         }
     }

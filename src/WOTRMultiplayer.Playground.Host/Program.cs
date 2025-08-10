@@ -100,7 +100,7 @@ namespace WOTRMultiplayer.Playground.Host
                         host.MoveNonCombatCharacter("xdd", new NetworkVector3(22.92498f, 42.053f, -9.376869f), 0, 138.3618f);
                         break;
                     case "loaded":
-                        host.GameLoaded();
+                        host.OnAreaScenesLoaded();
                         break;
                     case "leave-area":
                         host.LeaveArea("1b018b52-c1be-40bf-8937-1f2a77b96049");

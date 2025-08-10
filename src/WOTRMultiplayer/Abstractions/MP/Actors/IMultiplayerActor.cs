@@ -45,8 +45,6 @@ namespace WOTRMultiplayer.Abstractions.MP.Actors
 
         bool IsControlledByPlayers(string unitId);
 
-        void GameLoaded();
-
         void OnAfterCueShow(string dialogName, string cueName, bool hasSystemAnswer);
 
         bool OnBeforeSelectDialogAnswer(string dialogName, string cueName, string answerName, bool isExitAnswer, string manualUnitSelectionId);

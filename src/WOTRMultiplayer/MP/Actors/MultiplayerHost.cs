@@ -25,6 +25,7 @@ using WOTRMultiplayer.Networking.Abstractions;
 using WOTRMultiplayer.Networking.Messages.Game;
 using WOTRMultiplayer.Networking.Messages.Lobby;
 using WOTRMultiplayer.Networking.Messages.Requests;
+using WOTRMultiplayer.UI;
 
 namespace WOTRMultiplayer.MP.Actors
 {
@@ -203,17 +204,20 @@ namespace WOTRMultiplayer.MP.Actors
             TryStartGame();
         }
 
-        public void GameLoaded()
+        public override void OnAreaScenesLoaded()
         {
-            Logger.LogInformation("Game loaded");
+            base.OnAreaScenesLoaded();
 
-            Game.ForcedPause = true;
+            lock (ActionLock)
+            {
+                EnsureForcePaused(UIStringConsts.GameNotifications.ForcedPauseReasons.AreaLoading);
+                var localPlayerId = GetLocalPlayerId();
+                Game.ForcedPause.ReadyPlayers.Add(localPlayerId);
+            }
+
             GameInteraction.Pause(true);
 
-            var host = GetHost();
-            host.IsLoading = false;
-
-            TryUnpauseAfterLoadingGame();
+            TryEndForcedPause();
         }
 
         public void LeaveArea(string areaExitId)
@@ -483,7 +487,6 @@ namespace WOTRMultiplayer.MP.Actors
         {
             try
             {
-                Logger.LogInformation("Storing random encounter context");
                 var encounterContext = GameInteraction.RemoteContext?.RandomEncounter;
                 if (encounterContext == null)
                 {
@@ -491,7 +494,14 @@ namespace WOTRMultiplayer.MP.Actors
                     return;
                 }
 
-                Game.RandomEncounter = Mapper.Map<NetworkRandomEncounter>(encounterContext.Encounter);
+                if (Game.RandomEncounter != null)
+                {
+                    Logger.LogWarning("Previous random encounter context has not been disposed correctly");
+                }
+
+                Game.RandomEncounter = Mapper.Map<NetworkRandomEncounter>(encounterContext.Recording);
+
+                Logger.LogInformation("Random encounter context has been stored. Data={encounter}", Game.RandomEncounter);
             }
             catch (Exception ex)
             {
@@ -512,7 +522,8 @@ namespace WOTRMultiplayer.MP.Actors
 
         private void UpdateStartRestButton()
         {
-            var readyPlayersCount = Game.PlayersInGameMode[GameModeType.Rest].Count;
+            Game.PlayersInGameMode.TryGetValue(GameModeType.Rest, out var readyPlayers);
+            var readyPlayersCount = (readyPlayers ?? []).Count;
             UpdateStartRestButton(readyPlayersCount);
         }
 
@@ -523,24 +534,36 @@ namespace WOTRMultiplayer.MP.Actors
             GameInteraction.SetStartRestButtonState(isInteractable, readyPlayersCount, totalPlayersCount);
         }
 
-        protected override void OnGameModeStarted(GameModeType type)
+        protected override bool OnStartGameModeInternal(GameModeType type)
         {
+            var playerId = GetLocalPlayerId();
+            RegisterGameMode(type, playerId);
+
             if (type == GameModeType.Rest)
             {
                 UpdateStartRestButton();
             }
+
+            return true;
         }
 
-        protected override void OnGameModeEnded(GameModeType type, bool isLocalPlayer)
+        protected override bool OnStopGameModeInternal(GameModeType type)
         {
-            if (isLocalPlayer && type == GameModeType.Pause)
+            var playerId = GetLocalPlayerId();
+            UnregisterGameMode(type, playerId);
+
+            if (type == GameModeType.Rest && GameInteraction.IsRandomEncounter)
             {
-                TryUnpauseAfterLoadingGame();
+                lock (ActionLock)
+                {
+                    EnsureForcePaused(UIStringConsts.GameNotifications.ForcedPauseReasons.RandomEncounterLoading);
+                    Game.ForcedPause.ReadyPlayers.Add(playerId);
+                    GameInteraction.Pause(true);
+                    TryEndForcedPause();
+                }
             }
-            else if (type == GameModeType.Rest)
-            {
-                UpdateStartRestButton();
-            }
+
+            return true;
         }
 
         protected override DiceRollValueResponse RetrieveRoll(DiceRollValueRequest request, string unitId)
@@ -697,47 +720,47 @@ namespace WOTRMultiplayer.MP.Actors
             GameInteraction.SetDialogContinueButtonState(true);
         }
 
-        private void TryUnpauseAfterLoadingGame()
+        private void TryEndForcedPause()
         {
-            if (Game.Stage == NetworkGameStage.Playing)
+            try
             {
-                return;
-            }
+                Logger.LogInformation("Checking if forced pause could be removed. IsSet={isSet}", Game.ForcedPause != null);
 
-            var canUnpause = false;
-
-            lock (ActionLock)
-            {
-                canUnpause = Game.Players.All(p => !p.IsLoading);
-            }
-
-            if (canUnpause)
-            {
-                Logger.LogInformation("All players have finished loading. Game will be unpaused");
-                Game.Stage = NetworkGameStage.Playing;
-                Game.ForcedPause = false;
-                GameInteraction.Pause(false);
-                var message = new NotifyGameLoaded();
-                _networkServer.SendAll(message);
-            }
-        }
-
-        private void OnClientGameLoaded(long playerId, ClientGameLoaded loaded)
-        {
-            Logger.LogInformation("Received {messageType}. PlayerId={playerId}", nameof(ClientGameLoaded), playerId);
-            lock (ActionLock)
-            {
-                var player = GetPlayer(playerId);
-                if (player == null)
+                if (Game.ForcedPause == null)
                 {
-                    Logger.LogError("Can't set loading status for missing player. PlayerId={playerId}", playerId);
                     return;
                 }
 
-                player.IsLoading = false;
+                lock (ActionLock)
+                {
+                    if (Game.ForcedPause.ReadyPlayers.Count >= Game.Players.Count)
+                    {
+                        Logger.LogInformation("Forced pause is ready to be removed");
+                        Game.Stage = NetworkGameStage.Playing;
+                        Game.ForcedPause = null;
+                        GameInteraction.Pause(false);
+                        var message = new NotifyForcedPauseEnded();
+                        _networkServer.SendAll(message);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, "Unable to end forced pause");
+                throw;
+            }
+        }
+
+        private void OnClientAreaLoaded(long playerId, ClientAreaLoaded loaded)
+        {
+            Logger.LogInformation("Received {messageType}. PlayerId={playerId}", nameof(ClientAreaLoaded), playerId);
+            lock (ActionLock)
+            {
+                EnsureForcePaused(UIStringConsts.GameNotifications.ForcedPauseReasons.AreaLoading);
+                Game.ForcedPause.ReadyPlayers.Add(playerId);
             }
 
-            TryUnpauseAfterLoadingGame();
+            TryEndForcedPause();
         }
 
         private void TryStartGame()
@@ -752,7 +775,6 @@ namespace WOTRMultiplayer.MP.Actors
             if (canStart)
             {
                 Logger.LogInformation("Starting game");
-                SetLoadingGame();
                 _networkServer.SendAll(new NotifyGameStarted());
                 InvokeOnStartGame();
             }
@@ -796,7 +818,7 @@ namespace WOTRMultiplayer.MP.Actors
                 .Register<ClientGameServerConnectionConfirmed>(OnPlayerNameResponse)
                 .Register<PlayerSaveGameSyncChanged>(OnPlayerSaveGameSyncChanged)
                 .Register<CharacterMove>(OnCharacterMove)
-                .Register<ClientGameLoaded>(OnClientGameLoaded)
+                .Register<ClientAreaLoaded>(OnClientAreaLoaded)
                 .Register<CueWitnessed>(OnCueWitnessed)
                 .Register<DialogCueAnswerSuggested>(OnDialogCueAnswerSuggested)
                 .Register<ClientDialogStartRequested>(OnClientDialogStartRequested)
@@ -847,17 +869,30 @@ namespace WOTRMultiplayer.MP.Actors
 
         private void OnClientGameModeTypeEnded(long playerId, ClientGameModeTypeEnded ended)
         {
-            Logger.LogInformation("Received {messageType}. PlayerId={playerId}, TypeId={typeId}", nameof(ClientGameModeTypeEnded), playerId, ended.TypeId);
+            var isRandomEncounter = GameInteraction.IsRandomEncounter;
+            Logger.LogInformation("Received {messageType}. PlayerId={playerId}, TypeId={typeId}, IsRandomEncounter={isRandomEncounter}", nameof(ClientGameModeTypeEnded), playerId, ended.TypeId, isRandomEncounter);
             var gameMode = GameModeType.All.FirstOrDefault(g => g.Index == ended.TypeId);
-            OnStopGameMode(gameMode, playerId);
+            UnregisterGameMode(gameMode, playerId);
+            if (gameMode == GameModeType.Rest)
+            {
+                lock (ActionLock)
+                {
+                    EnsureForcePaused(UIStringConsts.GameNotifications.ForcedPauseReasons.RandomEncounterLoading);
+                    Game.ForcedPause.ReadyPlayers.Add(playerId);
+                    TryEndForcedPause();
+                }
+            }
         }
 
         private void OnClientGameModeTypeStarted(long playerId, ClientGameModeTypeStarted started)
         {
             Logger.LogInformation("Received {messageType}. PlayerId={playerId}, TypeId={typeId}", nameof(ClientGameModeTypeStarted), playerId, started.TypeId);
             var gameMode = GameModeType.All.FirstOrDefault(g => g.Index == started.TypeId);
-            var isAllowedToRun = IsGameModeAllowedToRun(gameMode);
-            OnStartGameMode(gameMode, playerId, isAllowedToRun);
+            RegisterGameMode(gameMode, playerId);
+            if (gameMode == GameModeType.Rest)
+            {
+                UpdateStartRestButton();
+            }
         }
 
         private void OnNotifyUnitJoinedMidCombat(long playerId, NotifyUnitJoinedMidCombat combat)
@@ -1036,7 +1071,6 @@ namespace WOTRMultiplayer.MP.Actors
 
             if (assigned.IsForceLoad)
             {
-                SetLoadingGame();
                 ForceLoadGame();
             }
         }
@@ -1298,6 +1332,10 @@ namespace WOTRMultiplayer.MP.Actors
                 var message = new NotifyPlayerDisconnected { PlayerId = playerId };
                 _networkServer.SendAllExcept(playerId, message);
                 ShowPlayerDisconnectedMessage(removedPlayer);
+
+                UpdateStartRestButton();
+                UpdateStartRestButtonAfterResults(playerId);
+                TryEnableDialogContinueButton();
             }
         }
 

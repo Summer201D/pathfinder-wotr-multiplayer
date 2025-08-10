@@ -1,4 +1,4 @@
-﻿using System.Collections.Concurrent;
+﻿using System.Collections.Generic;
 using ProtoBuf;
 
 namespace WOTRMultiplayer.Networking.Messages.Contracts
@@ -7,7 +7,7 @@ namespace WOTRMultiplayer.Networking.Messages.Contracts
     public class NetworkRandomEncounter
     {
         [ProtoMember(1)]
-        public ConcurrentDictionary<string, int> SpecialEncounters { get; set; } = [];
+        public Dictionary<string, int> SpecialEncounters { get; set; } = [];
 
         [ProtoMember(2)]
         public float HoursPassedBeforeEncounter { get; set; }
@@ -22,21 +22,21 @@ namespace WOTRMultiplayer.Networking.Messages.Contracts
         public int RandomUnitSeed { get; set; }
 
         [ProtoMember(6)]
-        public float PlaceUnitsInCampSharedYRoll { get; set; }
+        public Dictionary<string, float> PlaceUnitsInCampRangedRolls { get; set; } = [];
 
         [ProtoMember(7)]
-        public ConcurrentDictionary<string, float> PlaceUnitsInCampUnitYRolls { get; set; } = [];
+        public Dictionary<string, float> PlaceUnitsInCampUnitYRolls { get; set; } = [];
 
         [ProtoMember(8)]
-        public ConcurrentDictionary<string, float> PlaceUnitsInCampUnitEndPositionRolls { get; set; } = [];
+        public Dictionary<string, float> PlaceUnitsInCampUnitEndPositionRolls { get; set; } = [];
 
         [ProtoMember(9)]
         public float PlaceUnitsOutsideOfCampSharedYRoll { get; set; }
 
         [ProtoMember(10)]
-        public ConcurrentDictionary<string, float> PlaceUnitsOutsideOfCampUnitYRolls { get; set; } = [];
+        public Dictionary<string, float> PlaceUnitsOutsideOfCampUnitYRolls { get; set; } = [];
 
         [ProtoMember(11)]
-        public ConcurrentDictionary<string, float> PlaceUnitsOutsideOfCampUnitEndPositionRolls { get; set; } = [];
+        public Dictionary<string, float> PlaceUnitsOutsideOfCampUnitEndPositionRolls { get; set; } = [];
     }
 }

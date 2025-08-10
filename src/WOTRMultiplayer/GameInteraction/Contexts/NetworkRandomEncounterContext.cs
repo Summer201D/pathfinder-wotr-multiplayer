@@ -4,8 +4,8 @@ namespace WOTRMultiplayer.GameInteraction.Contexts
 {
     public class NetworkRandomEncounterContext
     {
-        public bool IsRecording { get; set; }
+        public NetworkRandomEncounter Recording { get; set; }
 
-        public NetworkRandomEncounter Encounter { get; set; }
+        public NetworkRandomEncounter PreRecorded { get; set; }
     }
 }

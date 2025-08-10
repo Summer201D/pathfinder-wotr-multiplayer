@@ -22,7 +22,6 @@ using WOTRMultiplayer.MP.Entities.Rolls.Claiming.Values;
 using WOTRMultiplayer.Networking.Messages.Game;
 using WOTRMultiplayer.Networking.Messages.Lobby;
 using WOTRMultiplayer.Networking.Messages.Requests;
-using WOTRMultiplayer.UI;
 
 namespace WOTRMultiplayer.MP.Actors
 {
@@ -313,7 +312,7 @@ namespace WOTRMultiplayer.MP.Actors
             Send(message);
         }
 
-        public void OnAreaScenesLoaded()
+        public virtual void OnAreaScenesLoaded()
         {
             SoftReset();
 
@@ -362,11 +361,6 @@ namespace WOTRMultiplayer.MP.Actors
 
             Game.SaveFilePath = savePath;
             Game.Id = gameId;
-
-            if (IsHost)
-            {
-                SetLoadingGame();
-            }
 
             ResetGameIdGenerator();
 
@@ -452,74 +446,61 @@ namespace WOTRMultiplayer.MP.Actors
 
         public bool OnStartGameMode(GameModeType type)
         {
-            var allowedToRun = IsGameModeAllowedToRun(type);
+            if (!IsGameModeAllowedToRun(type))
+            {
+                return false;
+            }
 
-            var playerId = GetLocalPlayerId();
-            OnStartGameMode(type, playerId, allowedToRun);
-
-            return allowedToRun;
+            var canRun = OnStartGameModeInternal(type);
+            return canRun;
         }
 
         public bool OnStopGameMode(GameModeType type)
         {
             Logger.LogInformation("Trying to stop GameModeType. Mode={mode}", type.Name);
 
-            if (type == GameModeType.Pause && Game.ForcedPause)
+            if (type == GameModeType.Pause && Game.ForcedPause != null)
             {
-                Logger.LogInformation("Pause can't be removed yet.");
-                GameInteraction.ShowWarningNotification(UIStringConsts.GameNotifications.TryingToUpauseWhileLoading);
+                GameInteraction.ShowWarningNotification(Game.ForcedPause.Reason);
                 return false;
             }
 
-            var localPlayer = GetLocalPlayerId();
-            OnStopGameMode(type, localPlayer);
-
-            return true;
+            var canRun = OnStopGameModeInternal(type);
+            return canRun;
         }
 
-        protected void SetLoadingGame()
+        protected abstract bool OnStartGameModeInternal(GameModeType type);
+
+        protected abstract bool OnStopGameModeInternal(GameModeType type);
+
+        //protected void OnStopGameMode(GameModeType type, long playerId)
+        //{
+        //    Logger.LogInformation("OnStopGameMode. Mode={mode}, PlayerId={playerId}", type.Name, playerId);
+        //    lock (ActionLock)
+        //    {
+        //        var isLocal = GetLocalPlayerId() == playerId;
+        //        if (type == GameModeType.Rest && isLocal && GameInteraction.IsRandomEncounter)
+        //        {
+        //            EnsureForcePaused(UIStringConsts.GameNotifications.ForcedPauseReasons.RandomEncounterLoading);
+        //            GameInteraction.Pause(true);
+        //        }
+
+        //        var isFirstTime = UnregisterGameMode(type, playerId);
+        //        OnGameModeEnded(type, isFirstTime);
+        //    }
+        //}
+
+        protected void EnsureForcePaused(string reason)
         {
-            Game.Stage = NetworkGameStage.Loading;
-            foreach (var player in Game.Players)
+            Game.ForcedPause ??= new NetworkForcedPause
             {
-                player.IsLoading = true;
-            }
+                Reason = reason
+            };
         }
 
-        protected void OnStartGameMode(GameModeType type, long playerId, bool isAllowedToRun)
-        {
-            Logger.LogInformation("OnStartGameMode. Mode={mode}, PlayerId={playerId}, AllowedToRun={allowedToRun}", type.Name, playerId, isAllowedToRun);
-            lock (ActionLock)
-            {
-                if (isAllowedToRun && RegisterGameMode(type, playerId))
-                {
-                    OnGameModeStarted(type);
-                }
-            }
-        }
+        //protected abstract void OnGameModeStarted(GameModeType type, bool isFirstTime);
 
-        protected void OnStopGameMode(GameModeType type, long playerId)
-        {
-            Logger.LogInformation("OnStopGameMode. Mode={mode}, PlayerId={playerId}", type.Name, playerId);
-            lock (ActionLock)
-            {
-                var isLocal = GetLocalPlayerId() == playerId;
-
-                if (isLocal && GameInteraction.IsRandomEncounter)
-                {
-                    GameInteraction.Pause(true);
-                }
-
-                if (UnregisterGameMode(type, playerId))
-                {
-                    OnGameModeEnded(type, isLocal);
-                }
-            }
-        }
-
-        protected abstract void OnGameModeStarted(GameModeType type);
-
-        protected abstract void OnGameModeEnded(GameModeType type, bool isLocalPlayer);
+        //protected abstract void OnGameModeEnded(GameModeType type, bool isFirstTime);
 
         protected bool RegisterGameMode(GameModeType type, long playerId)
         {
@@ -644,7 +625,7 @@ namespace WOTRMultiplayer.MP.Actors
         {
             // looks dumb af, but seems like combat could start before all initiatives are rolled
             // so let's make sure combat is 100% prepared before allowing to proceed
-            const int combatPreparationFramesDelay = 0;
+            const int combatPreparationFramesDelay = 10;
             if (Game.Combat.CombatPreparedFrames < combatPreparationFramesDelay)
             {
                 Game.Combat.CombatPreparedFrames++;
@@ -727,7 +708,7 @@ namespace WOTRMultiplayer.MP.Actors
 
             if (rollResponse.RollValue == null)
             {
-                Logger.LogError("Retrieved roll is null. RollId={rollId}", rollResponse?.RollId);
+                Logger.LogError("Specified roll is missing at remote player. RollId={rollId}", rollResponse?.RollId);
                 return null;
             }
 
@@ -767,6 +748,7 @@ namespace WOTRMultiplayer.MP.Actors
 
         protected bool IsRolledByHost(bool silent)
         {
+            silent = true;
             var isNotInCombat = Game.Combat == null;
             var isCombatNotInitialized = !(Game.Combat?.IsInitialized ?? false);
             var isTurnNotInitialized = Game.Combat?.Turn == null;
@@ -787,6 +769,7 @@ namespace WOTRMultiplayer.MP.Actors
 
         protected bool IsRolledByLocalPlayer(bool silent)
         {
+            silent = true;
             var isNotAI = !(Game.Combat?.Turn?.IsAI ?? false);
             var isLocalPlayer = Game.Combat?.Turn?.IsLocalPlayer ?? false;
             var result = isNotAI  // clients are getting their AI rolls from host
@@ -825,7 +808,7 @@ namespace WOTRMultiplayer.MP.Actors
             if (Game.Combat.Turn != null && Game.Combat.Turn.IsInProgress)
             {
                 UpdateConfirmedMidCombatUnits();
-
+                Logger.LogInformation("Turn start is allowed. UnitId={unitId}, IsActingInSurpiseRound={isActingInSurpriseRound}, TurnUnitId={turnUnitId}", unitId, isActingInSurpriseRound, Game.Combat.Turn.UnitId);
                 return true;
             }
 

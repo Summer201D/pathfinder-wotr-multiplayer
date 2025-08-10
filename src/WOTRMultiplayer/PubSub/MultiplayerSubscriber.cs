@@ -2,7 +2,6 @@
 using Kingmaker.EntitySystem.Entities;
 using Kingmaker.PubSubSystem;
 using Kingmaker.RuleSystem.Rules;
-using Kingmaker.UI;
 using Kingmaker.View.MapObjects;
 using Microsoft.Extensions.Logging;
 using WOTRMultiplayer.Abstractions.MP;
@@ -12,7 +11,6 @@ namespace WOTRMultiplayer.PubSub
 {
     public class MultiplayerSubscriber : MultiplayerSubscriberBase,
         IMultiplayerGlobalSubscriber,
-        IWarningNotificationUIHandler,
         IPartyLeaveAreaHandler,
         IPartyChangedUIHandler,
         IPartyHandler,
@@ -114,26 +112,6 @@ namespace WOTRMultiplayer.PubSub
         }
 
         public void HandleUnitNotSurprised(UnitEntityData unit, RuleSkillCheck perceptionCheck)
-        {
-        }
-
-        public void HandleWarning(WarningNotificationType warningType, bool addToLog = true)
-        {
-            if (ActorAccessor.Current == null)
-            {
-                return;
-            }
-
-            // looks dumb af, but seems like it's the only way to know game is loaded
-            if (warningType != WarningNotificationType.GameLoaded)
-            {
-                return;
-            }
-
-            ActorAccessor.Current.GameLoaded();
-        }
-
-        public void HandleWarning(string text, bool addToLog = true)
         {
         }
 

@@ -569,7 +569,7 @@ namespace WOTRMultiplayer.MP
 
             if (_multiplayerActorAccessor.Host.IsActive)
             {
-                _gameInteractionService.SetRandomEncounterContext(new NetworkRandomEncounterContext() { IsRecording = true, Encounter = new NetworkRandomEncounter() });
+                _gameInteractionService.SetRandomEncounterContext(new NetworkRandomEncounterContext() { Recording = new NetworkRandomEncounter() });
                 return;
             }
 

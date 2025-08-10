@@ -16,7 +16,7 @@ namespace WOTRMultiplayer.Networking
         private readonly ConcurrentDictionary<Type, Action<object>> _handlers = new();
         private readonly ConcurrentDictionary<string, TaskCompletionSource<object>> _awaiters = new(StringComparer.OrdinalIgnoreCase);
         private readonly ILogger<NetworkServerClient> _logger;
-        private readonly TimeSpan _defaultAwaiterTimeout = TimeSpan.FromSeconds(15);
+        private readonly TimeSpan _defaultAwaiterTimeout = TimeSpan.FromMinutes(1);
 
         public Action<Exception> OnError { get; set; }
         public Action<EndPoint> OnConnected { get; set; }
@@ -126,9 +126,7 @@ namespace WOTRMultiplayer.Networking
 
             try
             {
-                _logger.LogWarning("Before message handler: {type}", message.GetType().Name);
                 handler(message);
-                _logger.LogWarning("After message handler: {type}", message.GetType().Name);
             }
             catch (Exception ex)
             {

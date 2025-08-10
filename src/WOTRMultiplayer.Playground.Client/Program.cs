@@ -2,6 +2,7 @@
 using System.Linq;
 using AutoMapper;
 using CommandLine;
+using Kingmaker.GameModes;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using WOTR.Multiplayer.Playground.Core;
@@ -56,7 +57,18 @@ namespace WOTRMultiplayer.Playground.Client
                     client.ReadyChanged();
                     break;
                 case CommandVerbs.ClientLoadedCommandVerb:
-                    client.GameLoaded();
+                    client.OnAreaScenesLoaded();
+                    break;
+                case CommandVerbs.GameModeStartedCommandVerb gameModeStart:
+                    var start = GameModeType.All.First(m => m.Index == (int)gameModeStart.GameModeTypeId);
+                    client.OnStartGameMode(start);
+                    break;
+                case CommandVerbs.GameModeEndedCommandVerb gameModeEnd:
+                    var end = GameModeType.All.First(m => m.Index == (int)gameModeEnd.GameModeTypeId);
+                    client.OnStopGameMode(end);
+                    break;
+                case CommandVerbs.ShowRestViewCommandVerb showRestView:
+                    client.OnShowRestView(showRestView.Phase);
                     break;
                 case CommandVerbs.ConnectCommandVerb connect:
                     var result = client.Connect(connect.ServerAddress);

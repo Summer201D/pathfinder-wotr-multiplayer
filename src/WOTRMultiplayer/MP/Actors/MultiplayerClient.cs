@@ -139,14 +139,17 @@ namespace WOTRMultiplayer.MP.Actors
             _networkServerClient.Send(message);
         }
 
-        public void GameLoaded()
+        public override void OnAreaScenesLoaded()
         {
-            Logger.LogInformation("Game loaded");
+            base.OnAreaScenesLoaded();
 
-            Game.ForcedPause = true;
+            Logger.LogInformation("Area loaded");
+            Game.ForcedPause = new NetworkForcedPause
+            {
+                Reason = UIStringConsts.GameNotifications.ForcedPauseReasons.AreaLoading
+            };
             GameInteraction.Pause(true);
-
-            _networkServerClient.Send(new ClientGameLoaded());
+            _networkServerClient.Send(new ClientAreaLoaded());
         }
 
         public void OnAfterCueShow(string dialogName, string cueName, bool hasSystemAnswer)
@@ -295,7 +298,8 @@ namespace WOTRMultiplayer.MP.Actors
             {
                 Logger.LogInformation("Retrieving random encounter context");
 
-                var message = new RandomEncounterContextRequest { Timeout = TimeSpan.FromSeconds(10) };
+                // big timeout to make sure host is finished with banter. TODO: either deny or sync skipping banters
+                var message = new RandomEncounterContextRequest { Timeout = TimeSpan.FromSeconds(45) };
                 var response = _networkServerClient.SendAndWaitFor<RandomEncounterContextResponse>(message);
 
                 if (response?.Context == null)
@@ -306,8 +310,10 @@ namespace WOTRMultiplayer.MP.Actors
 
                 var context = new NetworkRandomEncounterContext
                 {
-                    Encounter = Mapper.Map<NetworkRandomEncounter>(response.Context)
+                    PreRecorded = Mapper.Map<NetworkRandomEncounter>(response.Context)
                 };
+
+                Logger.LogInformation("Random encounter context has been retrieved. Data={encounter}", context.PreRecorded);
 
                 GameInteraction.SetRandomEncounterContext(context);
             }
@@ -318,18 +324,39 @@ namespace WOTRMultiplayer.MP.Actors
             }
         }
 
-        protected override void OnGameModeStarted(GameModeType type)
+        protected override bool OnStartGameModeInternal(GameModeType type)
         {
+            var playerId = GetLocalPlayerId();
+            var isFirstTime = RegisterGameMode(type, playerId);
+            if (!isFirstTime)
+            {
+                return true;
+            }
+
             var message = new ClientGameModeTypeStarted { TypeId = type.Index };
             Logger.LogInformation("Sending {messageType}. TypeId={typeId}", nameof(ClientGameModeTypeStarted), message.TypeId);
             Send(message);
+            return true;
         }
 
-        protected override void OnGameModeEnded(GameModeType type, bool isLocalPlayer)
+        protected override bool OnStopGameModeInternal(GameModeType type)
         {
-            var message = new ClientGameModeTypeEnded { TypeId = type.Index };
-            Logger.LogInformation("Sending {messageType}. TypeId={typeId}", nameof(ClientGameModeTypeEnded), message.TypeId);
-            Send(message);
+            var playerId = GetLocalPlayerId();
+            var isFirstTime = UnregisterGameMode(type, playerId);
+            if (isFirstTime)
+            {
+                var message = new ClientGameModeTypeEnded { TypeId = type.Index };
+                Logger.LogInformation("Sending {messageType}. TypeId={typeId}", nameof(ClientGameModeTypeEnded), message.TypeId);
+                Send(message);
+            }
+
+            if (type == GameModeType.Rest && GameInteraction.IsRandomEncounter)
+            {
+                EnsureForcePaused(UIStringConsts.GameNotifications.ForcedPauseReasons.RandomEncounterLoading);
+                GameInteraction.Pause(true);
+            }
+
+            return true;
         }
 
         protected override DiceRollValueResponse RetrieveRoll(DiceRollValueRequest request, string unitId)
@@ -379,7 +406,7 @@ namespace WOTRMultiplayer.MP.Actors
                 .Register<NotifyCharactersOwnerChanged>(OnNotifyCharactersOwnerChanged)
                 .Register<NotifyGameStarted>(OnNotifyGameStarted)
                 .Register<NotifyCharacterMove>(OnNotifyCharacterMove)
-                .Register<NotifyGameLoaded>(OnNotifyGameLoaded)
+                .Register<NotifyForcedPauseEnded>(OnNotifyForcedPauseEnded)
                 .Register<NotifyPartyLeaveArea>(OnNotifyPartyLeaveArea)
                 .Register<NotifyDialogCueAnswerSuggested>(OnNotifyDialogCueAnswerSuggested)
                 .Register<NotifyDialogCueAnswerSelected>(OnNotifyDialogCueAnswerSelected)
@@ -741,10 +768,10 @@ namespace WOTRMultiplayer.MP.Actors
             GameInteraction.LeaveArea(area.AreaExitId);
         }
 
-        private void OnNotifyGameLoaded(NotifyGameLoaded changed)
+        private void OnNotifyForcedPauseEnded(NotifyForcedPauseEnded changed)
         {
-            Logger.LogInformation("Received {messageType}. Value={value}", nameof(NotifyGameLoaded));
-            Game.ForcedPause = false;
+            Logger.LogInformation("Received {messageType}. Value={value}", nameof(NotifyForcedPauseEnded));
+            Game.ForcedPause = null;
             GameInteraction.Pause(false);
         }
 

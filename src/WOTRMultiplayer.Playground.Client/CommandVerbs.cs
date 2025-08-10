@@ -1,4 +1,5 @@
 ﻿using CommandLine;
+using Kingmaker.GameModes;
 using WOTRMultiplayer.MP.Entities.Equipment;
 
 namespace WOTRMultiplayer.Playground.Client
@@ -23,6 +24,27 @@ namespace WOTRMultiplayer.Playground.Client
         [Verb("loaded", HelpText = "send gameloaded to host")]
         public class ClientLoadedCommandVerb
         {
+        }
+
+        [Verb("show-restview", HelpText = "RestPhase.ShowingResults means rest ended")]
+        public class ShowRestViewCommandVerb
+        {
+            [Option('p', "phase", Default = Kingmaker.Controllers.Rest.RestPhase.ShowingResults)]
+            public Kingmaker.Controllers.Rest.RestPhase Phase { get; set; }
+        }
+
+        [Verb("start-game-mode", HelpText = "send ClientGameModeStarted notification to host")]
+        public class GameModeStartedCommandVerb
+        {
+            [Option('m', "mode", Default = GameModeType.Enum.Rest)]
+            public GameModeType.Enum GameModeTypeId { get; set; }
+        }
+
+        [Verb("end-game-mode", HelpText = "send ClientGameModeEnded notification to host")]
+        public class GameModeEndedCommandVerb
+        {
+            [Option('m', "mode", Default = GameModeType.Enum.Rest)]
+            public GameModeType.Enum GameModeTypeId { get; set; }
         }
 
         [Verb("dialog-witness-cue", HelpText = "witness cue")]

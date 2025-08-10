@@ -94,7 +94,7 @@ namespace WOTRMultiplayer.GameInteraction
         private InGamePCView InGamePCView => (Game.Instance.RootUiContext.m_UIView as InGamePCView);
         private RestPCView RestView => InGamePCView?.m_StaticPartPCView?.m_RestContextPCView?.m_RestPCView;
 
-        public bool IsRandomEncounter => Game.Instance.RestController.Status?.NightRandomEncounter ?? false;
+        public bool IsRandomEncounter => (Game.Instance.RestController.Status?.NightRandomEncounter ?? false) || (Game.Instance.RestController.Status?.WasNightRandomEncounter ?? false);
 
         public GameInteractionService(
             ILogger<GameInteractionService> logger,
@@ -321,11 +321,13 @@ namespace WOTRMultiplayer.GameInteraction
             _logger.LogInformation("Pause game. Value={isPaused}", isPaused);
             if (isPaused)
             {
-                Game.Instance.StartMode(GameModeType.Pause);
+                Game.Instance.IsPaused = true;
                 return;
             }
 
-            Game.Instance.StopMode(GameModeType.Pause);
+            Game.Instance.m_WillBePaused = false;
+            Game.Instance.PauseOnLoadPendingTicks = 0;
+            Game.Instance.IsPaused = false;
         }
 
         public void SelectDialogAnswer(string dialogName, string cueName, string answerName, string manualUnitSelectionId)
@@ -741,6 +743,7 @@ namespace WOTRMultiplayer.GameInteraction
 
                 _mainThreadAccessor.Enqueue(() =>
                 {
+                    _logger.LogInformation("Running abilit use command. Caster={casterId}, AbilityId={abilityId}", caster.UniqueId, ((UnitUseAbility)command).Ability?.UniqueId);
                     caster.Commands.Run(command);
                 });
             }
@@ -1558,7 +1561,7 @@ namespace WOTRMultiplayer.GameInteraction
                 for (int level = 0; level < spellbook.m_MemorizedSpells.Length; level++)
                 {
                     var spellLevel = spellbook.m_MemorizedSpells[level];
-                    var spellSlot = spellLevel.FirstOrDefault(s => string.Equals(s.Spell.UniqueId, abilityUse.Id, StringComparison.OrdinalIgnoreCase));
+                    var spellSlot = spellLevel.FirstOrDefault(s => string.Equals(s.Spell?.UniqueId, abilityUse.Id, StringComparison.OrdinalIgnoreCase));
                     if (spellSlot != null)
                     {
                         _logger.LogInformation("Spell has been found. UnitId={unitId}, AbilityId={abilityId}, SpellbookName={spellbookName}, SpellLevel={spellLevel}", unit.UniqueId, abilityUse.Id, spellbook.Blueprint.Name, level);
@@ -1594,9 +1597,15 @@ namespace WOTRMultiplayer.GameInteraction
             return null;
         }
 
-        private static ActionsState GetGameActionsState()
+        private ActionsState GetGameActionsState()
         {
-            return Game.Instance.TurnBasedCombatController.CurrentTurn.GetActionsStates(Game.Instance.TurnBasedCombatController.CurrentTurn.SelectedUnit);
+            var selectedUnit = Game.Instance.TurnBasedCombatController.CurrentTurn.SelectedUnit;
+            if (selectedUnit == null)
+            {
+                _logger.LogError("Current turn unit is not selected");
+            }
+
+            return Game.Instance.TurnBasedCombatController.CurrentTurn.GetActionsStates(selectedUnit);
         }
 
         private void ExecuteClickHandler(IClickEventHandler clickEventHandler, NetworkClick click)

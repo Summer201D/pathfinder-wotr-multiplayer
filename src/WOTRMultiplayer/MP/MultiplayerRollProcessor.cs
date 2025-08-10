@@ -437,6 +437,7 @@ namespace WOTRMultiplayer.MP
                 var d20 = RetrieveRoll<RuleRollD20>(roll, ruleSkillCheck.Initiator);
                 if (d20 == null)
                 {
+                    _logger.LogInformation("Roll retrieving context={stackTrace}", Environment.StackTrace);
                     return true;
                 }
 
@@ -445,7 +446,7 @@ namespace WOTRMultiplayer.MP
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Unable to handle {methodName}", MethodBase.GetCurrentMethod().Name);
+                _logger.LogError(ex, "Unable to handle {methodName}. StackTrace={strackTrace}", MethodBase.GetCurrentMethod().Name, Environment.StackTrace);
                 throw;
             }
         }

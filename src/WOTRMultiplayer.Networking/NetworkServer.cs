@@ -15,7 +15,7 @@ namespace WOTRMultiplayer.Networking
 {
     public class NetworkServer : INetworkServer
     {
-        private readonly TimeSpan _defaultAwaiterTimeout = TimeSpan.FromSeconds(15);
+        private readonly TimeSpan _defaultAwaiterTimeout = TimeSpan.FromMinutes(1);
 
         private ServerBuilder<NetworkServerApp, NetworkClientToken, ProtobufPacket> _server;
         private ServerBuilder<NetworkServerApp, NetworkClientToken, ProtobufPacket> Server => _server ??= new ServerBuilder<NetworkServerApp, NetworkClientToken, ProtobufPacket>();
@@ -134,6 +134,12 @@ namespace WOTRMultiplayer.Networking
             {
                 _logger.LogInformation("Awaiter has been found, other handlers will be skipped. ClientId={clientId}, AwaiterKey={awaiterKey}", clientId, awaitable.GetKey());
                 awaiter.SetResult(args.Message);
+                return;
+            }
+
+            if (handler == null)
+            {
+                _logger.LogWarning("Skipping null handler. MessageType={messageType}", typeof(TMessage).Name);
                 return;
             }
 

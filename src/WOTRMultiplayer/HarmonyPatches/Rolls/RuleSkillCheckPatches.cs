@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Reflection;
 using System.Reflection.Emit;
 using HarmonyLib;
@@ -74,21 +75,29 @@ namespace WOTRMultiplayer.HarmonyPatches.Rolls
 
         public static RuleRollD20 SkillCheckRollD20(RuleSkillCheck ruleSkillCheck, int minRoll, int maxRoll)
         {
-            RuleRollD20 originalFunc() => minRoll == 0 ? ruleSkillCheck.RollD20()
-                : RuleRollD20.FromInt(ruleSkillCheck.Initiator, UnityEngine.Random.Range(minRoll, maxRoll));
-
-            if (!Main.Multiplayer.IsActive)
+            try
             {
+                RuleRollD20 originalFunc() => minRoll == 0 ? ruleSkillCheck.RollD20()
+                       : RuleRollD20.FromInt(ruleSkillCheck.Initiator, UnityEngine.Random.Range(minRoll, maxRoll));
+
+                if (!Main.Multiplayer.IsActive)
+                {
+                    return originalFunc();
+                }
+
+                var shouldRunOriginalLogic = Main.Rolls.OnBeforeRuleSkillCheckRoll(ruleSkillCheck);
+                if (!shouldRunOriginalLogic)
+                {
+                    return ruleSkillCheck.D20;
+                }
+
                 return originalFunc();
             }
-
-            var shouldRunOriginalLogic = Main.Rolls.OnBeforeRuleSkillCheckRoll(ruleSkillCheck);
-            if (!shouldRunOriginalLogic)
+            catch (Exception ex)
             {
-                return ruleSkillCheck.D20;
+                Main.GetLogger<RuleSkillCheckPatches>().LogError(ex, "Unable to roll {methodName}", MethodBase.GetCurrentMethod().Name);
+                throw;
             }
-
-            return originalFunc();
         }
 
         private static bool ReplaceRollD20(string target, CodeMatcher matcher, MethodInfo replaceWith)
