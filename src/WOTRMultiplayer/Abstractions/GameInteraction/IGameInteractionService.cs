@@ -9,6 +9,7 @@ using WOTRMultiplayer.MP.Entities;
 using WOTRMultiplayer.MP.Entities.Abilities;
 using WOTRMultiplayer.MP.Entities.Dialogs;
 using WOTRMultiplayer.MP.Entities.Equipment;
+using WOTRMultiplayer.MP.Entities.Inspect;
 using WOTRMultiplayer.MP.Entities.Loot;
 using WOTRMultiplayer.MP.Entities.MapObjects;
 using WOTRMultiplayer.MP.Entities.Rest;
@@ -102,6 +103,8 @@ namespace WOTRMultiplayer.Abstractions.GameInteraction
         bool IsSummoned(string unitId);
 
         void ApplyPerceptionCheck(NetworkPerceptionCheck check);
+
+        void ApplyInspectionKnowledgeCheck(NetworkInspectionKnowledgeCheck check);
 
         void UpdateCombatOrder(List<string> combatOrderUnits);
 

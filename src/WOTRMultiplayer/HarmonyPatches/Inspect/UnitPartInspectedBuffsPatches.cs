@@ -1,6 +1,5 @@
 ﻿using HarmonyLib;
 using Kingmaker.UnitLogic.Parts;
-using Microsoft.Extensions.Logging;
 
 namespace WOTRMultiplayer.HarmonyPatches.Inspect
 {
@@ -9,14 +8,14 @@ namespace WOTRMultiplayer.HarmonyPatches.Inspect
     {
         [HarmonyPatch(typeof(UnitPartInspectedBuffs), nameof(UnitPartInspectedBuffs.MakeCheck))]
         [HarmonyPrefix]
-        public static bool UnitPartInspectedBuffs_MakeCheck_Prefix()
+        public static bool UnitPartInspectedBuffs_MakeCheck_Prefix(UnitPartInspectedBuffs __instance, ref bool __result)
         {
             if (!Main.Multiplayer.IsActive)
             {
                 return true;
             }
 
-            Main.GetLogger<UnitPartInspectedBuffsPatches>().LogError("TODO");
+            __result = true;
             return false;
         }
     }

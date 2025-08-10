@@ -16,6 +16,7 @@ using WOTRMultiplayer.MP.Entities;
 using WOTRMultiplayer.MP.Entities.Abilities;
 using WOTRMultiplayer.MP.Entities.Dialogs;
 using WOTRMultiplayer.MP.Entities.Equipment;
+using WOTRMultiplayer.MP.Entities.Inspect;
 using WOTRMultiplayer.MP.Entities.Loot;
 using WOTRMultiplayer.MP.Entities.MapObjects;
 using WOTRMultiplayer.MP.Entities.Rest;
@@ -393,10 +394,21 @@ namespace WOTRMultiplayer.MP.Actors
 
         public void OnPerceptionCheck(NetworkPerceptionCheck check)
         {
-            Logger.LogInformation("Sending perception check to clients. UnitId={unitID}, MapObjectId={round}, Result={result}", check.UnitId, check.MapObject.Id);
+            Logger.LogInformation("Sending {messageType}. UnitId={unitID}, MapObjectId={round}, Result={result}", nameof(NotifyPerceptionCheckRolled), check.UnitId, check.MapObject.Id);
             var message = new NotifyPerceptionCheckRolled
             {
                 Check = Mapper.Map<Networking.Messages.Contracts.NetworkPerceptionCheck>(check)
+            };
+
+            Send(message);
+        }
+
+        public void OnInspectionKnowledgeCheck(NetworkInspectionKnowledgeCheck check)
+        {
+            Logger.LogInformation("Sending {messageType}. TargetUnitId={targetUnitId}, InitiatorUnitId={initiatorId}, StatType={statType}, DC={dc}", nameof(NotifyInspectionKnowledgeCheckRolled), check.TargetUnitId, check.InitiatorUnitId, check.StatType, check.DC);
+            var message = new NotifyInspectionKnowledgeCheckRolled
+            {
+                Check = Mapper.Map<Networking.Messages.Contracts.NetworkInspectionKnowledgeCheck>(check)
             };
 
             Send(message);

@@ -321,10 +321,7 @@ namespace WOTRMultiplayer.UI.Controllers
             var result = _multiplayerClient.Connect(address);
             if (!result.IsOk)
             {
-                EventBus.RaiseEvent<IMessageModalUIHandler>(window =>
-                {
-                    window.HandleOpen(result.Message, MessageModalBase.ModalType.Message);
-                });
+                EventBus.RaiseEvent<IMessageModalUIHandler>(x => x.HandleOpen(result.Message, MessageModalBase.ModalType.Message));
                 return;
             }
 

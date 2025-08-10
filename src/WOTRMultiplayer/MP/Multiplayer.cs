@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using Kingmaker.EntitySystem.Persistence;
+using Kingmaker.EntitySystem.Stats;
 using Kingmaker.GameModes;
 using Microsoft.Extensions.Logging;
 using WOTRMultiplayer.Abstractions.GameInteraction;
@@ -13,6 +14,7 @@ using WOTRMultiplayer.GameInteraction.Contexts;
 using WOTRMultiplayer.MP.Entities;
 using WOTRMultiplayer.MP.Entities.Abilities;
 using WOTRMultiplayer.MP.Entities.Equipment;
+using WOTRMultiplayer.MP.Entities.Inspect;
 using WOTRMultiplayer.MP.Entities.Loot;
 using WOTRMultiplayer.MP.Entities.MapObjects;
 using WOTRMultiplayer.MP.Entities.Rest;
@@ -439,16 +441,51 @@ namespace WOTRMultiplayer.MP
 
         public bool CanMakePerceptionCheck(string unitId, string mapObjectId)
         {
+            if (!_multiplayerActorAccessor.Client.IsActive)
+            {
+                return true;
+            }
+
+            var perceptionCheck = _gameInteractionService.RemoteContext?.PerceptionCheck;
+            if (perceptionCheck == null)
+            {
+                return false;
+            }
+
+            return string.Equals(unitId, perceptionCheck.UnitId, StringComparison.OrdinalIgnoreCase)
+                && string.Equals(mapObjectId, perceptionCheck.MapObjectId, StringComparison.OrdinalIgnoreCase);
+        }
+
+
+        public bool OnInspectionKnowledgeCheck(string targetUnitId, string initiatorUnitId, StatType statType, int dc)
+        {
+            if (_multiplayerActorAccessor.Current == null)
+            {
+                return true;
+            }
+
             if (_multiplayerActorAccessor.Client.IsActive)
             {
-                var perceptionCheck = _gameInteractionService.RemoteContext?.PerceptionCheck;
-                if (perceptionCheck == null)
-                {
-                    return false;
-                }
+                return false;
 
-                return string.Equals(unitId, perceptionCheck.UnitId, StringComparison.OrdinalIgnoreCase)
-                    && string.Equals(mapObjectId, perceptionCheck.MapObjectId, StringComparison.OrdinalIgnoreCase);
+            }
+
+            var check = new NetworkInspectionKnowledgeCheck
+            {
+                TargetUnitId = targetUnitId,
+                InitiatorUnitId = initiatorUnitId,
+                StatType = statType,
+                DC = dc
+            };
+            _multiplayerActorAccessor.Host.OnInspectionKnowledgeCheck(check);
+            return true;
+        }
+
+        public bool CanMakeInspectionBuffCheck()
+        {
+            if (!_multiplayerActorAccessor.Client.IsActive)
+            {
+                return true;
             }
 
             return true;

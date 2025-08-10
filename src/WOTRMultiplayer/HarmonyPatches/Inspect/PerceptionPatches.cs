@@ -2,6 +2,7 @@
 using Kingmaker.Controllers.MapObjects;
 using Kingmaker.EntitySystem;
 using Kingmaker.EntitySystem.Entities;
+using WOTRMultiplayer.MP.Entities.Inspect;
 using WOTRMultiplayer.MP.Entities.MapObjects;
 
 namespace WOTRMultiplayer.HarmonyPatches.Inspect

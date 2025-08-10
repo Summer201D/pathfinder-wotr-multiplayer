@@ -164,10 +164,7 @@ namespace WOTRMultiplayer.UI.Menu
                 _logger.LogInformation("Deactivation confirmation required");
 
                 var onModalClosed = confirmation.ModalType == MessageModalBase.ModalType.Dialog ? onCofirmDeactivation : null;
-                EventBus.RaiseEvent<IMessageModalUIHandler>(window =>
-                {
-                    window.HandleOpen(confirmation.Text, confirmation.ModalType, onModalClosed);
-                });
+                EventBus.RaiseEvent<IMessageModalUIHandler>(x => x.HandleOpen(confirmation.Text, confirmation.ModalType, onModalClosed));
                 return;
             }
 

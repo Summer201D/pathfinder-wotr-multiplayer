@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using Kingmaker.EntitySystem.Entities;
 using WOTRMultiplayer.MP.Entities.Equipment;
-using WOTRMultiplayer.MP.Entities.MapObjects;
+using WOTRMultiplayer.MP.Entities.Inspect;
 
 namespace WOTRMultiplayer.GameInteraction.Contexts
 {

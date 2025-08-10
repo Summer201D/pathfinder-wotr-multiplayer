@@ -14,17 +14,20 @@ using Kingmaker.Controllers.MapObjects;
 using Kingmaker.Controllers.Rest;
 using Kingmaker.Controllers.Rest.State;
 using Kingmaker.Craft;
+using Kingmaker.Designers;
 using Kingmaker.DialogSystem.Blueprints;
 using Kingmaker.EntitySystem;
 using Kingmaker.EntitySystem.Entities;
 using Kingmaker.EntitySystem.Persistence;
 using Kingmaker.GameModes;
 using Kingmaker.Globalmap.Blueprints;
+using Kingmaker.Inspect;
 using Kingmaker.Items;
 using Kingmaker.Items.Slots;
 using Kingmaker.Localization;
 using Kingmaker.Pathfinding;
 using Kingmaker.PubSubSystem;
+using Kingmaker.RuleSystem.Rules;
 using Kingmaker.Settings;
 using Kingmaker.TurnBasedMode;
 using Kingmaker.TurnBasedMode.Controllers;
@@ -56,6 +59,7 @@ using WOTRMultiplayer.MP.Entities.Abilities;
 using WOTRMultiplayer.MP.Entities.Combat;
 using WOTRMultiplayer.MP.Entities.Dialogs;
 using WOTRMultiplayer.MP.Entities.Equipment;
+using WOTRMultiplayer.MP.Entities.Inspect;
 using WOTRMultiplayer.MP.Entities.Loot;
 using WOTRMultiplayer.MP.Entities.MapObjects;
 using WOTRMultiplayer.MP.Entities.Rest;
@@ -445,10 +449,7 @@ namespace WOTRMultiplayer.GameInteraction
         {
             _mainThreadAccessor.Enqueue(() =>
             {
-                EventBus.RaiseEvent<IMessageModalUIHandler>(window =>
-                {
-                    window.HandleOpen(error, MessageModalBase.ModalType.Message, null);
-                });
+                EventBus.RaiseEvent<IMessageModalUIHandler>(x => x.HandleOpen(error, MessageModalBase.ModalType.Message, null));
             });
         }
 
@@ -1034,6 +1035,40 @@ namespace WOTRMultiplayer.GameInteraction
             });
         }
 
+        public void ApplyInspectionKnowledgeCheck(NetworkInspectionKnowledgeCheck check)
+        {
+            var targetUnit = GetUnitEntity(check.TargetUnitId);
+            if (targetUnit == null)
+            {
+                _logger.LogError("Unable to apply inspection knowledge check due to missing target unit. TargetUnitId={targetUnitId}", check.TargetUnitId);
+                return;
+            }
+
+            var initiatorUnit = GetUnitEntity(check.InitiatorUnitId);
+            if (initiatorUnit == null)
+            {
+                _logger.LogError("Unable to apply inspection knowledge check due to missing initiator unit. InitiatorUnitId={targetUnitId}", check.InitiatorUnitId);
+                return;
+            }
+
+            _mainThreadAccessor.Equals(() =>
+            {
+                var blueprintForInspection = targetUnit.Descriptor.BlueprintForInspection;
+                InspectUnitsManager.UnitInfo info = Game.Instance.Player.InspectUnitsManager.GetInfo(blueprintForInspection);
+                if (info == null)
+                {
+                    info = new InspectUnitsManager.UnitInfo(blueprintForInspection);
+                    Game.Instance.Player.InspectUnitsManager.m_UnitInfos.Add(info);
+                }
+                var ruleSkillCheck = GameHelper.TriggerSkillCheck(new RuleSkillCheck(initiatorUnit, check.StatType, check.DC)
+                {
+                    IgnoreDifficultyBonusToDC = true
+                }, null, true);
+
+                info.SetCheck(ruleSkillCheck.RollResult);
+                EventBus.RaiseEvent<IKnowledgeHandler>(x => x.HandleKnowledgeUpdated(info), true);
+            });
+        }
 
         public List<string> GetUnitsCombatOrder()
         {
@@ -1184,10 +1219,7 @@ namespace WOTRMultiplayer.GameInteraction
         {
             _mainThreadAccessor.Enqueue(() =>
             {
-                EventBus.RaiseEvent<IWarningNotificationUIHandler>(delegate (IWarningNotificationUIHandler h)
-                {
-                    h.HandleWarning(text, true);
-                }, true);
+                EventBus.RaiseEvent<IWarningNotificationUIHandler>(x => x.HandleWarning(text, true), true);
             });
         }
 
@@ -1388,10 +1420,7 @@ namespace WOTRMultiplayer.GameInteraction
 
         private void UpdateCraftingUI(CampingRoleType campingRoleType)
         {
-            EventBus.RaiseEvent<IRestRoleUIStageEvents>(delegate (IRestRoleUIStageEvents h)
-            {
-                h.RestStageClosed(campingRoleType, CraftStage.CraftFirstType, true);
-            }, true);
+            EventBus.RaiseEvent<IRestRoleUIStageEvents>(x => x.RestStageClosed(campingRoleType, CraftStage.CraftFirstType, true));
         }
 
         private void UpdateCookingRecipe(CampingState campingState, string cookingBlueprintRecipeId)

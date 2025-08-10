@@ -18,6 +18,7 @@ using WOTRMultiplayer.MP.Entities;
 using WOTRMultiplayer.MP.Entities.Abilities;
 using WOTRMultiplayer.MP.Entities.Dialogs;
 using WOTRMultiplayer.MP.Entities.Equipment;
+using WOTRMultiplayer.MP.Entities.Inspect;
 using WOTRMultiplayer.MP.Entities.Loot;
 using WOTRMultiplayer.MP.Entities.MapObjects;
 using WOTRMultiplayer.MP.Entities.Rest;
@@ -402,6 +403,7 @@ namespace WOTRMultiplayer.MP.Actors
                 .Register<NotifyOvertipInteracted>(OnNotifyOvertipInteracted)
                 .Register<NotifyUnitJoinedMidCombat>(OnNotifyUnitJoinedMidCombat)
                 .Register<NotifyPerceptionCheckRolled>(OnNotifyPerceptionCheckRolled)
+                .Register<NotifyInspectionKnowledgeCheckRolled>(OnNotifyInspectionKnowledgeCheckRolled)
                 .Register<NotifySpawnCampPlace>(OnNotifySpawnCampPlace)
                 .Register<NotifyCampingUseHealingSpellsChanged>(OnNotifyCampingUseHealingSpellsChanged)
                 .Register<NotifyCampingStateChanged>(OnNotifyCampingStateChanged)
@@ -455,6 +457,13 @@ namespace WOTRMultiplayer.MP.Actors
             Logger.LogInformation("Received {messageType}. UnitId={unitID}, MapObjectId={round}", nameof(NotifyPlayerDisconnected), disconnected.PlayerId);
             var player = CleanupPlayer(disconnected.PlayerId);
             ShowPlayerDisconnectedMessage(player);
+        }
+
+        private void OnNotifyInspectionKnowledgeCheckRolled(NotifyInspectionKnowledgeCheckRolled rolled)
+        {
+            Logger.LogInformation("Received {messageType}. TargetUnitId={targetUnitId}, InitiatorUnitId={initiatorId}, StatType={statType}, DC={dc}", nameof(NotifyInspectionKnowledgeCheckRolled), rolled.Check.TargetUnitId, rolled.Check.InitiatorUnitId, rolled.Check.StatType, rolled.Check.DC);
+            var check = Mapper.Map<NetworkInspectionKnowledgeCheck>(rolled.Check);
+            GameInteraction.ApplyInspectionKnowledgeCheck(check);
         }
 
         private void OnNotifyPerceptionCheckRolled(NotifyPerceptionCheckRolled rolled)

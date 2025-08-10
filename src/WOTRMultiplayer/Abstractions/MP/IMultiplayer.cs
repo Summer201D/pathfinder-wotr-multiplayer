@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using Kingmaker.EntitySystem.Persistence;
+using Kingmaker.EntitySystem.Stats;
 using Kingmaker.GameModes;
 using WOTRMultiplayer.Abstractions.Random;
 using WOTRMultiplayer.Abstractions.UI;
@@ -7,6 +8,7 @@ using WOTRMultiplayer.GameInteraction.Contexts;
 using WOTRMultiplayer.MP.Entities;
 using WOTRMultiplayer.MP.Entities.Abilities;
 using WOTRMultiplayer.MP.Entities.Equipment;
+using WOTRMultiplayer.MP.Entities.Inspect;
 using WOTRMultiplayer.MP.Entities.Loot;
 using WOTRMultiplayer.MP.Entities.MapObjects;
 using WOTRMultiplayer.MP.Entities.Rest;
@@ -88,6 +90,8 @@ namespace WOTRMultiplayer.Abstractions.MP
         bool CanUnitJoinCombat(string unitId);
 
         bool CanMakePerceptionCheck(string unitId, string mapObjectId);
+
+        bool OnInspectionKnowledgeCheck(string targetUnitId, string initiatorUnitId, StatType statType, int dc);
 
         void OnPerceptionCheck(NetworkPerceptionCheck check);
 
