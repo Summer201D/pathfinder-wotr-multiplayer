@@ -581,13 +581,21 @@ namespace WOTRMultiplayer.GameInteraction
             _logger.LogInformation("Starting turn. IsActingInSurpriseRound={isActingInSurpriseRound}", isActingInSurpriseRound);
             _mainThreadAccessor.Enqueue(() =>
             {
-                var currentUnit = Game.Instance.TurnBasedCombatController.CurrentTurn.Rider;
-                if (IsUnitAI(currentUnit.UniqueId))
+                try
                 {
-                    ForceAIRecalculateAction(currentUnit);
-                }
+                    var currentUnit = Game.Instance.TurnBasedCombatController.CurrentTurn.Rider;
+                    if (IsUnitAI(currentUnit.UniqueId))
+                    {
+                        ForceAIRecalculateAction(currentUnit);
+                    }
 
-                Game.Instance.TurnBasedCombatController.CurrentTurn.Start(isActingInSurpriseRound);
+                    Game.Instance.TurnBasedCombatController.CurrentTurn.Start(isActingInSurpriseRound);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Unable to start turn");
+                    throw;
+                }
             });
         }
 
@@ -1098,7 +1106,7 @@ namespace WOTRMultiplayer.GameInteraction
             var existingUnits = Game.Instance.TurnBasedCombatController.m_Units.ToList();
             if (unitsCombatOrder.Count != existingUnits.Count)
             {
-                _logger.LogError("Combat units mismatch. LocalCount={localCount}, RemoteCount={remoteCount}", existingUnits.Count, unitsCombatOrder.Count);
+                _logger.LogError("Combat units mismatch. LocalCount={localCount}, RemoteCount={remoteCount}, LocalUnits={localUnits}", existingUnits.Count, unitsCombatOrder.Count, existingUnits.Select(x => x.Unit.UniqueId));
                 return;
             }
 
@@ -1599,7 +1607,7 @@ namespace WOTRMultiplayer.GameInteraction
 
         private ActionsState GetGameActionsState()
         {
-            var selectedUnit = Game.Instance.TurnBasedCombatController.CurrentTurn.SelectedUnit;
+            var selectedUnit = Game.Instance.TurnBasedCombatController.CurrentTurn?.SelectedUnit;
             if (selectedUnit == null)
             {
                 _logger.LogError("Current turn unit is not selected");

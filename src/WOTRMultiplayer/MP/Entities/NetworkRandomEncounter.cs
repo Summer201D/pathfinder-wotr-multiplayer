@@ -14,9 +14,11 @@ namespace WOTRMultiplayer.MP.Entities
 
         public int CamouflageRoll { get; set; }
 
-        public int RandomUnitSeed { get; set; }
+        public int? RandomUnitSeed { get; set; }
 
         public Dictionary<string, float> PlaceUnitsInCampRangedRolls { get; set; } = [];
+
+        public Dictionary<string, string> PlaceUnitsInCampRangedTargetRolls { get; set; } = [];
 
         public Dictionary<string, float> PlaceUnitsInCampUnitYRolls { get; set; } = [];
 
@@ -38,6 +40,7 @@ namespace WOTRMultiplayer.MP.Entities
             sb.AppendLine($"CamouflageRoll={CamouflageRoll}");
             sb.AppendLine($"RandomUnitSeed={RandomUnitSeed}");
             sb.AppendLine($"PlaceUnitsInCampRangedRolls={string.Join(", ", PlaceUnitsInCampRangedRolls.Select(x => $"{{{x.Key}, {x.Value}}}"))}");
+            sb.AppendLine($"PlaceUnitsInCampRangedTargetRolls={string.Join(", ", PlaceUnitsInCampRangedTargetRolls.Select(x => $"{{{x.Key}, {x.Value}}}"))}");
             sb.AppendLine($"PlaceUnitsInCampUnitYRolls={string.Join(", ", PlaceUnitsInCampUnitYRolls.Select(x => $"{{{x.Key}, {x.Value}}}"))}");
             sb.AppendLine($"PlaceUnitsInCampUnitEndPositionRolls={string.Join(", ", PlaceUnitsInCampUnitEndPositionRolls.Select(x => $"{{{x.Key}, {x.Value}}}"))}");
             sb.AppendLine($"PlaceUnitsOutsideOfCampSharedYRoll={PlaceUnitsOutsideOfCampSharedYRoll}");

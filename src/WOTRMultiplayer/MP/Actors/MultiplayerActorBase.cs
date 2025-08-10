@@ -473,34 +473,19 @@ namespace WOTRMultiplayer.MP.Actors
 
         protected abstract bool OnStopGameModeInternal(GameModeType type);
 
-        //protected void OnStopGameMode(GameModeType type, long playerId)
-        //{
-        //    Logger.LogInformation("OnStopGameMode. Mode={mode}, PlayerId={playerId}", type.Name, playerId);
-        //    lock (ActionLock)
-        //    {
-        //        var isLocal = GetLocalPlayerId() == playerId;
-        //        if (type == GameModeType.Rest && isLocal && GameInteraction.IsRandomEncounter)
-        //        {
-        //            EnsureForcePaused(UIStringConsts.GameNotifications.ForcedPauseReasons.RandomEncounterLoading);
-        //            GameInteraction.Pause(true);
-        //        }
-
-        //        var isFirstTime = UnregisterGameMode(type, playerId);
-        //        OnGameModeEnded(type, isFirstTime);
-        //    }
-        //}
-
-        protected void EnsureForcePaused(string reason)
+        protected void EnsureForcePaused(string reason, TimeSpan? removalDelay)
         {
             Game.ForcedPause ??= new NetworkForcedPause
             {
-                Reason = reason
+                Reason = reason,
+                RemovalDelay = removalDelay
             };
         }
 
-        //protected abstract void OnGameModeStarted(GameModeType type, bool isFirstTime);
-
-        //protected abstract void OnGameModeEnded(GameModeType type, bool isFirstTime);
+        protected void EnsureForcePaused(string reason)
+        {
+            EnsureForcePaused(reason, TimeSpan.FromSeconds(5));
+        }
 
         protected bool RegisterGameMode(GameModeType type, long playerId)
         {
@@ -822,7 +807,7 @@ namespace WOTRMultiplayer.MP.Actors
             };
 
             Logger.LogInformation("OnTurnStart. UnitId={unitId}, IsLocalPlayer={isLocalPlayer}, IsAI={isAI}, IsActingInSurpriseRound={isActingInSurpriseRound}, IsInProgress={isInProgress}",
-                             unitId, Game.Combat.Turn.IsLocalPlayer, Game.Combat.Turn.IsAI, Game.Combat.Turn.IsActingInSurpriseRound, Game.Combat.Turn.IsInProgress);
+                unitId, Game.Combat.Turn.IsLocalPlayer, Game.Combat.Turn.IsAI, Game.Combat.Turn.IsActingInSurpriseRound, Game.Combat.Turn.IsInProgress);
 
             OnLocalPlayerTurnStart();
             return false;

@@ -502,6 +502,11 @@ namespace WOTRMultiplayer.MP.Actors
                 Game.RandomEncounter = Mapper.Map<NetworkRandomEncounter>(encounterContext.Recording);
 
                 Logger.LogInformation("Random encounter context has been stored. Data={encounter}", Game.RandomEncounter);
+
+                if (Game.RandomEncounter.RandomUnitSeed.HasValue)
+                {
+                    EnsureForcePaused(UIStringConsts.GameNotifications.ForcedPauseReasons.RandomEncounterLoading);
+                }
             }
             catch (Exception ex)
             {
@@ -550,13 +555,12 @@ namespace WOTRMultiplayer.MP.Actors
         protected override bool OnStopGameModeInternal(GameModeType type)
         {
             var playerId = GetLocalPlayerId();
-            UnregisterGameMode(type, playerId);
+            var isFirstTime = UnregisterGameMode(type, playerId);
 
-            if (type == GameModeType.Rest && GameInteraction.IsRandomEncounter)
+            if (isFirstTime && type == GameModeType.Rest && Game.ForcedPause != null)
             {
                 lock (ActionLock)
                 {
-                    EnsureForcePaused(UIStringConsts.GameNotifications.ForcedPauseReasons.RandomEncounterLoading);
                     Game.ForcedPause.ReadyPlayers.Add(playerId);
                     GameInteraction.Pause(true);
                     TryEndForcedPause();
@@ -724,7 +728,7 @@ namespace WOTRMultiplayer.MP.Actors
         {
             try
             {
-                Logger.LogInformation("Checking if forced pause could be removed. IsSet={isSet}", Game.ForcedPause != null);
+                Logger.LogInformation("Checking if forced pause could be removed. PauseIsNull={isNull}", Game.ForcedPause == null);
 
                 if (Game.ForcedPause == null)
                 {
@@ -733,15 +737,25 @@ namespace WOTRMultiplayer.MP.Actors
 
                 lock (ActionLock)
                 {
-                    if (Game.ForcedPause.ReadyPlayers.Count >= Game.Players.Count)
+                    var allReady = Game.ForcedPause.ReadyPlayers.Count >= Game.Players.Count;
+                    if (!allReady)
                     {
-                        Logger.LogInformation("Forced pause is ready to be removed");
-                        Game.Stage = NetworkGameStage.Playing;
-                        Game.ForcedPause = null;
+                        Logger.LogInformation("Not everyone is ready, forced pause will remain. ReadyPlayers={readyPlayers}", Game.ForcedPause.ReadyPlayers);
+                        return;
+                    }
+
+                    Game.Stage = NetworkGameStage.Playing;
+                    var removalDelay = Game.ForcedPause.RemovalDelay;
+                    var delay = removalDelay.HasValue ? Task.Delay(removalDelay.Value) : Task.CompletedTask;
+                    Game.ForcedPause = null;
+
+                    Logger.LogInformation("Forced pause is going to be ended. Delay={delay}", removalDelay);
+                    delay.ContinueWith(x =>
+                    {
                         GameInteraction.Pause(false);
                         var message = new NotifyForcedPauseEnded();
                         _networkServer.SendAll(message);
-                    }
+                    });
                 }
             }
             catch (Exception ex)
@@ -869,15 +883,13 @@ namespace WOTRMultiplayer.MP.Actors
 
         private void OnClientGameModeTypeEnded(long playerId, ClientGameModeTypeEnded ended)
         {
-            var isRandomEncounter = GameInteraction.IsRandomEncounter;
-            Logger.LogInformation("Received {messageType}. PlayerId={playerId}, TypeId={typeId}, IsRandomEncounter={isRandomEncounter}", nameof(ClientGameModeTypeEnded), playerId, ended.TypeId, isRandomEncounter);
+            Logger.LogInformation("Received {messageType}. PlayerId={playerId}, TypeId={typeId}", nameof(ClientGameModeTypeEnded), playerId, ended.TypeId);
             var gameMode = GameModeType.All.FirstOrDefault(g => g.Index == ended.TypeId);
             UnregisterGameMode(gameMode, playerId);
-            if (gameMode == GameModeType.Rest)
+            if (gameMode == GameModeType.Rest && Game.ForcedPause != null)
             {
                 lock (ActionLock)
                 {
-                    EnsureForcePaused(UIStringConsts.GameNotifications.ForcedPauseReasons.RandomEncounterLoading);
                     Game.ForcedPause.ReadyPlayers.Add(playerId);
                     TryEndForcedPause();
                 }
@@ -1028,7 +1040,7 @@ namespace WOTRMultiplayer.MP.Actors
             var click = Mapper.Map<NetworkClick>(clicked.Click);
             GameInteraction.ClickGroundInCombat(click);
 
-            Logger.LogInformation("Resending {messageType} to other players");
+            Logger.LogInformation("Resending {messageType} to other players", nameof(NotifyGroundClicked));
             _networkServer.SendAllExcept(playerId, click);
         }
 

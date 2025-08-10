@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace WOTRMultiplayer.MP.Entities
 {
@@ -7,5 +8,7 @@ namespace WOTRMultiplayer.MP.Entities
         public string Reason { get; set; }
 
         public HashSet<long> ReadyPlayers { get; set; } = [];
+
+        public TimeSpan? RemovalDelay { get; set; }
     }
 }

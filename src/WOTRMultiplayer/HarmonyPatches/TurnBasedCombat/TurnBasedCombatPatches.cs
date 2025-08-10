@@ -168,22 +168,22 @@ namespace WOTRMultiplayer.HarmonyPatches.TurnBasedCombat
             return result;
         }
 
-        /// <summary>
-        /// skips predictions if !IsDirectlyControllable
-        /// </summary>
-        /// <param name="instructions"></param>
-        /// <returns></returns>
-        [HarmonyPatch(typeof(TurnController), nameof(TurnController.UpdateActionPredictions))]
-        [HarmonyTranspiler]
-        public static IEnumerable<CodeInstruction> TurnController_UpdateActionPredictions_Transpiler(IEnumerable<CodeInstruction> instructions)
-        {
-            var target = PatchesUtils.GetTranspilerTarget(MethodBase.GetCurrentMethod());
-            var matcher = new CodeMatcher(instructions);
+        ///// <summary>
+        ///// skips predictions if !IsDirectlyControllable
+        ///// </summary>
+        ///// <param name="instructions"></param>
+        ///// <returns></returns>
+        //[HarmonyPatch(typeof(TurnController), nameof(TurnController.UpdateActionPredictions))]
+        //[HarmonyTranspiler]
+        //public static IEnumerable<CodeInstruction> TurnController_UpdateActionPredictions_Transpiler(IEnumerable<CodeInstruction> instructions)
+        //{
+        //    var target = PatchesUtils.GetTranspilerTarget(MethodBase.GetCurrentMethod());
+        //    var matcher = new CodeMatcher(instructions);
 
-            ReplaceIsDirectlyControllable(matcher, target);
+        //    ReplaceIsDirectlyControllable(matcher, target);
 
-            return matcher.Instructions();
-        }
+        //    return matcher.Instructions();
+        //}
 
         /// <summary>
         /// skips updating predictions if you have no controll over character
@@ -253,8 +253,13 @@ namespace WOTRMultiplayer.HarmonyPatches.TurnBasedCombat
 
         public static void UpdateActionPredictionsIfControlled()
         {
+            if (!Main.Multiplayer.IsActive)
+            {
+                return;
+            }
+
             var currentUnit = Game.Instance.TurnBasedCombatController.CurrentTurn?.Rider;
-            if (currentUnit == null || Main.Multiplayer.IsControlledByLocalPlayer(currentUnit.UniqueId))
+            if (currentUnit != null && Main.Multiplayer.IsControlledByLocalPlayer(currentUnit.UniqueId))
             {
                 Game.Instance.TurnBasedCombatController.CurrentTurn.UpdateActionPredictions();
             }
@@ -295,9 +300,92 @@ namespace WOTRMultiplayer.HarmonyPatches.TurnBasedCombat
             return matcher.Instructions();
         }
 
-        [HarmonyPatch(typeof(TurnController), nameof(TurnController.GetEnabledFullAttack))]
+        //[HarmonyPatch(typeof(TurnController), nameof(TurnController.GetEnabledFullAttack))]
+        //[HarmonyTranspiler]
+        //public static IEnumerable<CodeInstruction> TurnController_GetEnabledFullAttack_Transpiler(IEnumerable<CodeInstruction> instructions)
+        //{
+        //    var target = PatchesUtils.GetTranspilerTarget(MethodBase.GetCurrentMethod());
+        //    var matcher = new CodeMatcher(instructions);
+
+        //    ReplaceIsDirectlyControllable(matcher, target);
+
+        //    return matcher.Instructions();
+        //}
+
+        //[HarmonyPatch(typeof(TurnController), nameof(TurnController.HandleUnitCommandDidEnd))]
+        //[HarmonyTranspiler]
+        //public static IEnumerable<CodeInstruction> TurnController_HandleUnitCommandDidEnd_Transpiler(IEnumerable<CodeInstruction> instructions)
+        //{
+        //    var target = PatchesUtils.GetTranspilerTarget(MethodBase.GetCurrentMethod());
+        //    var matcher = new CodeMatcher(instructions);
+
+        //    ReplaceIsDirectlyControllable(matcher, target);
+
+        //    return matcher.Instructions();
+        //}
+
+        //[HarmonyPatch(typeof(TurnController), nameof(TurnController.OnInterruptCommand))]
+        //[HarmonyTranspiler]
+        //public static IEnumerable<CodeInstruction> TurnController_OnInterruptCommand_Transpiler(IEnumerable<CodeInstruction> instructions)
+        //{
+        //    var target = PatchesUtils.GetTranspilerTarget(MethodBase.GetCurrentMethod());
+        //    var matcher = new CodeMatcher(instructions);
+
+        //    ReplaceIsDirectlyControllable(matcher, target, true);
+        //    ReplaceIsDirectlyControllable(matcher, target, true);
+
+        //    return matcher.Instructions();
+        //}
+
+        //[HarmonyPatch(typeof(TurnController), nameof(TurnController.Prepare))]
+        //[HarmonyTranspiler]
+        //public static IEnumerable<CodeInstruction> TurnController_Prepare_Transpiler(IEnumerable<CodeInstruction> instructions)
+        //{
+        //    var target = PatchesUtils.GetTranspilerTarget(MethodBase.GetCurrentMethod());
+        //    var matcher = new CodeMatcher(instructions);
+
+        //    for (int i = 1; i <= 7; i++)
+        //    {
+        //        ReplaceIsDirectlyControllable(matcher, target, i == 7);
+        //    }
+
+        //    return matcher.Instructions();
+        //}
+
+        [HarmonyPatch(typeof(TurnController), nameof(TurnController.Tick))]
         [HarmonyTranspiler]
-        public static IEnumerable<CodeInstruction> TurnController_GetEnabledFullAttack_Transpiler(IEnumerable<CodeInstruction> instructions)
+        public static IEnumerable<CodeInstruction> TurnController_Tick_Transpiler(IEnumerable<CodeInstruction> instructions)
+        {
+            var target = PatchesUtils.GetTranspilerTarget(MethodBase.GetCurrentMethod());
+            var matcher = new CodeMatcher(instructions);
+
+            //ReplaceIsDirectlyControllable(matcher, target);
+            //ReplaceIsDirectlyControllable(matcher, target);
+            //ReplaceIsDirectlyControllable(matcher, target, fromEnd: true);
+
+
+            var replaceWith = AccessTools.Method(typeof(TurnBasedCombatPatches), nameof(TurnBasedCombatPatches.TryCatchedInvokeCursorUpdate));
+            var lookFor = AccessTools.Method(typeof(TurnController), nameof(TurnController.InvokeCursorUpdate));
+            var match = matcher.SearchForward(x => x.Calls(lookFor));
+            if (match.IsInvalid)
+            {
+                Main.GetLogger<TurnBasedCombatPatches>().LogError("Transpiler has not been applied. Target={target}", target);
+                return matcher.Instructions();
+            }
+
+            var call = new CodeInstruction(OpCodes.Call, replaceWith);
+
+            match.RemoveInstruction();
+            match.Insert(call);
+
+            PatchesUtils.Dump(matcher.Instructions());
+
+            return matcher.Instructions();
+        }
+
+        [HarmonyPatch(typeof(TurnController), nameof(TurnController.ContinueActing))]
+        [HarmonyTranspiler]
+        public static IEnumerable<CodeInstruction> TurnController_ContinueActing_Transpiler(IEnumerable<CodeInstruction> instructions)
         {
             var target = PatchesUtils.GetTranspilerTarget(MethodBase.GetCurrentMethod());
             var matcher = new CodeMatcher(instructions);
@@ -307,9 +395,9 @@ namespace WOTRMultiplayer.HarmonyPatches.TurnBasedCombat
             return matcher.Instructions();
         }
 
-        [HarmonyPatch(typeof(TurnController), nameof(TurnController.HandleUnitCommandDidEnd))]
+        [HarmonyPatch(typeof(TurnController), nameof(TurnController.TrySelectMovementLimit))]
         [HarmonyTranspiler]
-        public static IEnumerable<CodeInstruction> TurnController_HandleUnitCommandDidEnd_Transpiler(IEnumerable<CodeInstruction> instructions)
+        public static IEnumerable<CodeInstruction> TurnController_TrySelectMovementLimit_Transpiler(IEnumerable<CodeInstruction> instructions)
         {
             var target = PatchesUtils.GetTranspilerTarget(MethodBase.GetCurrentMethod());
             var matcher = new CodeMatcher(instructions);
@@ -331,64 +419,48 @@ namespace WOTRMultiplayer.HarmonyPatches.TurnBasedCombat
             return matcher.Instructions();
         }
 
-        [HarmonyPatch(typeof(TurnController), nameof(TurnController.OnInterruptCommand))]
-        [HarmonyTranspiler]
-        public static IEnumerable<CodeInstruction> TurnController_OnInterruptCommand_Transpiler(IEnumerable<CodeInstruction> instructions)
+        public static void TryCatchedInvokeCursorUpdate(TurnController turnController)
         {
-            var target = PatchesUtils.GetTranspilerTarget(MethodBase.GetCurrentMethod());
-            var matcher = new CodeMatcher(instructions);
-
-            ReplaceIsDirectlyControllable(matcher, target, true);
-            ReplaceIsDirectlyControllable(matcher, target, true);
-
-            return matcher.Instructions();
-        }
-
-        [HarmonyPatch(typeof(TurnController), nameof(TurnController.Prepare))]
-        [HarmonyTranspiler]
-        public static IEnumerable<CodeInstruction> TurnController_Prepare_Transpiler(IEnumerable<CodeInstruction> instructions)
-        {
-            var target = PatchesUtils.GetTranspilerTarget(MethodBase.GetCurrentMethod());
-            var matcher = new CodeMatcher(instructions);
-
-            for (int i = 1; i < 7; i++)
+            try
             {
-                ReplaceIsDirectlyControllable(matcher, target);
+                turnController.InvokeCursorUpdate();
             }
-
-            return matcher.Instructions();
+            catch (System.Exception)
+            {
+                // who cares about cursor
+            }
         }
 
-        [HarmonyPatch(typeof(TurnBasedCommandCancelController), nameof(TurnBasedCommandCancelController.HandleUnitMakeOffensiveAction))]
-        [HarmonyTranspiler]
-        public static IEnumerable<CodeInstruction> TurnBasedCommandCancelController_HandleUnitMakeOffensiveAction_Transpiler(IEnumerable<CodeInstruction> instructions)
-        {
-            var target = PatchesUtils.GetTranspilerTarget(MethodBase.GetCurrentMethod());
-            var matcher = new CodeMatcher(instructions);
+        //[HarmonyPatch(typeof(TurnBasedCommandCancelController), nameof(TurnBasedCommandCancelController.HandleUnitMakeOffensiveAction))]
+        //[HarmonyTranspiler]
+        //public static IEnumerable<CodeInstruction> TurnBasedCommandCancelController_HandleUnitMakeOffensiveAction_Transpiler(IEnumerable<CodeInstruction> instructions)
+        //{
+        //    var target = PatchesUtils.GetTranspilerTarget(MethodBase.GetCurrentMethod());
+        //    var matcher = new CodeMatcher(instructions);
 
-            ReplaceIsDirectlyControllable(matcher, target);
-            ReplaceIsDirectlyControllable(matcher, target);
+        //    ReplaceIsDirectlyControllable(matcher, target);
+        //    ReplaceIsDirectlyControllable(matcher, target);
 
-            return matcher.Instructions();
-        }
+        //    return matcher.Instructions();
+        //}
 
-        [HarmonyPatch(typeof(UnitProneController), nameof(UnitProneController.Tick), [typeof(UnitEntityData)])]
-        [HarmonyTranspiler]
-        public static IEnumerable<CodeInstruction> UnitProneController_Tick_Transpiler(IEnumerable<CodeInstruction> instructions)
-        {
-            var target = PatchesUtils.GetTranspilerTarget(MethodBase.GetCurrentMethod());
-            var matcher = new CodeMatcher(instructions);
+        //[HarmonyPatch(typeof(UnitProneController), nameof(UnitProneController.Tick), [typeof(UnitEntityData)])]
+        //[HarmonyTranspiler]
+        //public static IEnumerable<CodeInstruction> UnitProneController_Tick_Transpiler(IEnumerable<CodeInstruction> instructions)
+        //{
+        //    var target = PatchesUtils.GetTranspilerTarget(MethodBase.GetCurrentMethod());
+        //    var matcher = new CodeMatcher(instructions);
 
-            ReplaceIsDirectlyControllable(matcher, target);
+        //    ReplaceIsDirectlyControllable(matcher, target);
 
-            return matcher.Instructions();
-        }
+        //    return matcher.Instructions();
+        //}
 
-        private static void ReplaceIsDirectlyControllable(CodeMatcher matcher, string target, bool withLabels = false)
+        private static void ReplaceIsDirectlyControllable(CodeMatcher matcher, string target, bool withLabels = false, bool fromEnd = false)
         {
             var replaceWith = AccessTools.Method(typeof(TurnBasedCombatPatches), nameof(TurnBasedCombatPatches.IsControlledByPlayers));
             var lookFor = AccessTools.PropertyGetter(typeof(UnitEntityData), nameof(UnitEntityData.IsDirectlyControllable));
-            var match = matcher.SearchForward(x => x.Calls(lookFor));
+            var match = fromEnd ? matcher.End().SearchBackwards(x => x.Calls(lookFor)) : matcher.SearchForward(x => x.Calls(lookFor));
             if (match.IsInvalid)
             {
                 Main.GetLogger<TurnBasedCombatPatches>().LogError("Transpiler has not been applied. Target={target}", target);
@@ -410,8 +482,15 @@ namespace WOTRMultiplayer.HarmonyPatches.TurnBasedCombat
 
         public static bool IsControlledByPlayers(UnitEntityData unit)
         {
-            return unit.IsDirectlyControllable ||
-                Main.Multiplayer.IsActive && Main.Multiplayer.IsControlledByPlayers(unit.UniqueId);
+            try
+            {
+                return unit.IsDirectlyControllable || Main.Multiplayer.IsActive && Main.Multiplayer.IsControlledByPlayers(unit.UniqueId);
+            }
+            catch (System.Exception ex)
+            {
+                Main.GetLogger<TurnBasedCombatPatches>().LogError(ex, "Failed to check if controlled by players. UnitId={unitId}", unit?.UniqueId);
+                throw;
+            }
         }
     }
 }

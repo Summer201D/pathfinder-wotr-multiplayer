@@ -428,7 +428,7 @@ namespace WOTRMultiplayer.MP
         {
             try
             {
-                if (!ShouldRetrieveRoll(ruleSkillCheck))
+                if (!ShouldRetrieveSkillCheckRoll(ruleSkillCheck))
                 {
                     return true;
                 }
@@ -455,7 +455,7 @@ namespace WOTRMultiplayer.MP
         {
             try
             {
-                if (!ShouldStoreRoll(ruleSkillCheck))
+                if (!ShouldStoreSkillCheckRoll(ruleSkillCheck))
                 {
                     return;
                 }
@@ -655,6 +655,19 @@ namespace WOTRMultiplayer.MP
                 throw;
             }
         }
+
+        private bool ShouldRetrieveSkillCheckRoll(RuleSkillCheck rule)
+        {
+            var gameMode = _gameInteractionService.CurrentGameMode;
+            return _multiplayerActorAccessor.Current != null && IsMeaningfulRoll(gameMode, rule) && _multiplayerActorAccessor.Client.IsActive;
+        }
+
+        private bool ShouldStoreSkillCheckRoll(RuleSkillCheck rule)
+        {
+            var gameMode = _gameInteractionService.CurrentGameMode;
+            return _multiplayerActorAccessor.Current != null && IsMeaningfulRoll(gameMode, rule) && _multiplayerActorAccessor.Host.IsActive;
+        }
+
 
         private bool ShouldRetrieveRoll(object rule)
         {

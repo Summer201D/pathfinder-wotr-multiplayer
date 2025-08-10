@@ -144,10 +144,7 @@ namespace WOTRMultiplayer.MP.Actors
             base.OnAreaScenesLoaded();
 
             Logger.LogInformation("Area loaded");
-            Game.ForcedPause = new NetworkForcedPause
-            {
-                Reason = UIStringConsts.GameNotifications.ForcedPauseReasons.AreaLoading
-            };
+            EnsureForcePaused(UIStringConsts.GameNotifications.ForcedPauseReasons.AreaLoading);
             GameInteraction.Pause(true);
             _networkServerClient.Send(new ClientAreaLoaded());
         }
@@ -316,6 +313,11 @@ namespace WOTRMultiplayer.MP.Actors
                 Logger.LogInformation("Random encounter context has been retrieved. Data={encounter}", context.PreRecorded);
 
                 GameInteraction.SetRandomEncounterContext(context);
+
+                if (context.PreRecorded.RandomUnitSeed.HasValue)
+                {
+                    EnsureForcePaused(UIStringConsts.GameNotifications.ForcedPauseReasons.RandomEncounterLoading);
+                }
             }
             catch (Exception ex)
             {
@@ -348,12 +350,11 @@ namespace WOTRMultiplayer.MP.Actors
                 var message = new ClientGameModeTypeEnded { TypeId = type.Index };
                 Logger.LogInformation("Sending {messageType}. TypeId={typeId}", nameof(ClientGameModeTypeEnded), message.TypeId);
                 Send(message);
-            }
 
-            if (type == GameModeType.Rest && GameInteraction.IsRandomEncounter)
-            {
-                EnsureForcePaused(UIStringConsts.GameNotifications.ForcedPauseReasons.RandomEncounterLoading);
-                GameInteraction.Pause(true);
+                if (type == GameModeType.Rest && Game.ForcedPause != null)
+                {
+                    GameInteraction.Pause(true);
+                }
             }
 
             return true;
@@ -770,7 +771,7 @@ namespace WOTRMultiplayer.MP.Actors
 
         private void OnNotifyForcedPauseEnded(NotifyForcedPauseEnded changed)
         {
-            Logger.LogInformation("Received {messageType}. Value={value}", nameof(NotifyForcedPauseEnded));
+            Logger.LogInformation("Received {messageType}", nameof(NotifyForcedPauseEnded));
             Game.ForcedPause = null;
             GameInteraction.Pause(false);
         }

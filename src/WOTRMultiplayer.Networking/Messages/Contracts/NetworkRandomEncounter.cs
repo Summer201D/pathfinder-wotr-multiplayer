@@ -19,24 +19,27 @@ namespace WOTRMultiplayer.Networking.Messages.Contracts
         public int CamouflageRoll { get; set; }
 
         [ProtoMember(5)]
-        public int RandomUnitSeed { get; set; }
+        public int? RandomUnitSeed { get; set; }
 
         [ProtoMember(6)]
         public Dictionary<string, float> PlaceUnitsInCampRangedRolls { get; set; } = [];
 
         [ProtoMember(7)]
-        public Dictionary<string, float> PlaceUnitsInCampUnitYRolls { get; set; } = [];
+        public Dictionary<string, string> PlaceUnitsInCampRangedTargetRolls { get; set; } = [];
 
         [ProtoMember(8)]
-        public Dictionary<string, float> PlaceUnitsInCampUnitEndPositionRolls { get; set; } = [];
+        public Dictionary<string, float> PlaceUnitsInCampUnitYRolls { get; set; } = [];
 
         [ProtoMember(9)]
-        public float PlaceUnitsOutsideOfCampSharedYRoll { get; set; }
+        public Dictionary<string, float> PlaceUnitsInCampUnitEndPositionRolls { get; set; } = [];
 
         [ProtoMember(10)]
-        public Dictionary<string, float> PlaceUnitsOutsideOfCampUnitYRolls { get; set; } = [];
+        public float PlaceUnitsOutsideOfCampSharedYRoll { get; set; }
 
         [ProtoMember(11)]
+        public Dictionary<string, float> PlaceUnitsOutsideOfCampUnitYRolls { get; set; } = [];
+
+        [ProtoMember(12)]
         public Dictionary<string, float> PlaceUnitsOutsideOfCampUnitEndPositionRolls { get; set; } = [];
     }
 }
