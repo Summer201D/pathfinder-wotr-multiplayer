@@ -143,11 +143,6 @@ namespace WOTRMultiplayer.MP.Actors
             Game.Combat.Round = round;
         }
 
-        public int GetCombatRound()
-        {
-            return Game.Combat?.Round ?? 0;
-        }
-
         public void OnAbilityUse(NetworkAbility ability)
         {
             if (!ShouldNotifyAboutAbilityUse(ability.CasterId))

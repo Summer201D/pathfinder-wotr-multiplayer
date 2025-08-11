@@ -61,15 +61,13 @@ namespace WOTRMultiplayer.Abstractions.MP.Actors
 
         bool CanInitializeCombat();
 
+        bool CanContinueCombat();
+
         bool OnBeforeStartTurn(string unitId, bool actingInSurpriseRound);
 
         bool OnBeforeEndTurn(string unitId);
 
         void CombatRoundStarted(int round);
-
-        int GetCombatRound();
-
-        bool CanContinueCombat();
 
         void ForceLoadGame(string savePath, string gameId);
 

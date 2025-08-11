@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Reflection;
 using System.Reflection.Emit;
 using HarmonyLib;
@@ -159,9 +160,17 @@ namespace WOTRMultiplayer.HarmonyPatches.TurnBasedCombat
 
         public static int CompareUnitsByUniqueId(UnitEntityData xi, UnitEntityData yi)
         {
-            var result = string.Compare(xi.UniqueId, yi.UniqueId, System.StringComparison.OrdinalIgnoreCase);
-            Main.GetLogger<CombatController.UnitsOrderComaprer>().LogInformation("Units have same initiave order, comparing by uniqueId. Result={result}, Unit1={unit1}, Unit2={unit2}", result, xi.UniqueId, yi.UniqueId);
-            return result;
+            try
+            {
+                var result = string.Compare(xi.UniqueId, yi.UniqueId, System.StringComparison.OrdinalIgnoreCase);
+                Main.GetLogger<CombatController.UnitsOrderComaprer>().LogInformation("Units have same initiave order, comparing by uniqueId. Result={result}, Unit1={unit1}, Unit2={unit2}", result, xi.UniqueId, yi.UniqueId);
+                return result;
+            }
+            catch (Exception ex)
+            {
+                Main.GetLogger<CombatController.UnitsOrderComaprer>().LogError(ex, "Error while comparing by unique id. Unit1={unit1}, Unit2={unit2}", xi.UniqueId, yi.UniqueId);
+                throw;
+            }
         }
 
         ///// <summary>
