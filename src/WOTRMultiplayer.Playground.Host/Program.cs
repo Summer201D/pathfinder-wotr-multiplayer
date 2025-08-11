@@ -35,7 +35,7 @@ namespace WOTRMultiplayer.Playground.Host
                 serviceProvider.GetService<IFileSystemService>(),
                 serviceProvider.GetService<INetworkServer>(),
                 new DummyDiceRollStorage([new NetworkIntRollValue { Value = 66 }]),
-                serviceProvider.GetService<IUniqueIdGenerator>(),
+                serviceProvider.GetService<IValueGenerator>(),
                 serviceProvider.GetService<IMapper>());
             //var characters = new List<NetworkCharacter> {
             //    new() { Name = "xdd", Portrait = "KitsuneFemaleRogue_Portrait"},

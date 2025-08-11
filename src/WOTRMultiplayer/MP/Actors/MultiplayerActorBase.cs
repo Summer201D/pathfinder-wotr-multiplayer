@@ -33,6 +33,8 @@ namespace WOTRMultiplayer.MP.Actors
 
         public bool IsInCombat => Game?.Combat != null;
 
+        public int RestBanterSeed => Game.RestBanterSeed;
+
         internal NetworkGame Game { get; set; }
 
         public Action<string> OnStartGame { get; set; }
@@ -49,7 +51,7 @@ namespace WOTRMultiplayer.MP.Actors
 
         protected IMultiplayerSettingsProvider SettingsProvider { get; private set; }
 
-        private readonly IUniqueIdGenerator _uniqueIdGenerator;
+        private readonly IValueGenerator _valueGenerator;
 
         protected abstract bool IsHost { get; }
 
@@ -62,7 +64,7 @@ namespace WOTRMultiplayer.MP.Actors
             IGameInteractionService gameInteractionService,
             IDiceRollStorage diceRollStorage,
             IFileSystemService fileSystemService,
-            IUniqueIdGenerator uniqueIdGenerator)
+            IValueGenerator valueGenerator)
         {
             Logger = logger;
             Mapper = mapper;
@@ -70,7 +72,7 @@ namespace WOTRMultiplayer.MP.Actors
             DiceRollStorage = diceRollStorage;
             FileSystem = fileSystemService;
             SettingsProvider = multiplayerSettingsProvider;
-            _uniqueIdGenerator = uniqueIdGenerator;
+            _valueGenerator = valueGenerator;
         }
 
         public long GetLocalPlayerId()
@@ -639,7 +641,7 @@ namespace WOTRMultiplayer.MP.Actors
         protected void ResetGameIdGenerator()
         {
             Logger.LogInformation("Resetting id counters. GameId={gameId}", Game.Id);
-            _uniqueIdGenerator.Reset(Game.Id);
+            _valueGenerator.Reset(Game.Id);
         }
 
         protected void SoftReset()

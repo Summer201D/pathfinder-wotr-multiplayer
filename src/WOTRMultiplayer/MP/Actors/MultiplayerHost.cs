@@ -52,7 +52,7 @@ namespace WOTRMultiplayer.MP.Actors
             IFileSystemService fileSystemService,
             INetworkServer networkServer,
             IDiceRollStorage diceRollStorage,
-            IUniqueIdGenerator uniqueIdGenerator,
+            IValueGenerator valueGenerator,
             IMapper mapper)
             : base(logger,
                   mapper,
@@ -60,7 +60,7 @@ namespace WOTRMultiplayer.MP.Actors
                   gameInteractionService,
                   diceRollStorage,
                   fileSystemService,
-                  uniqueIdGenerator)
+                  valueGenerator)
         {
             _networkServer = networkServer;
         }
@@ -80,6 +80,7 @@ namespace WOTRMultiplayer.MP.Actors
             {
                 LocalPlayerId = LocalHostPlayerId,
                 Id = gameId,
+                RestBanterSeed = new System.Random().Next(int.MinValue, int.MaxValue)
             };
 
             Game.Characters.AddRange(characters);
@@ -1324,7 +1325,8 @@ namespace WOTRMultiplayer.MP.Actors
                 var message = new GameServerConnectionSucceeded
                 {
                     ClientPlayerId = playerId,
-                    GameSettings = Mapper.Map<Networking.Messages.Contracts.NetworkGameSettings>(settings)
+                    GameSettings = Mapper.Map<Networking.Messages.Contracts.NetworkGameSettings>(settings),
+                    RestBanterSeed = Game.RestBanterSeed
                 };
                 _networkServer.Send(playerId, message);
             }

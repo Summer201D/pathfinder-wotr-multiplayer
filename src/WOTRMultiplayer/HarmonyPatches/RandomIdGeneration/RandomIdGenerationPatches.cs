@@ -30,7 +30,7 @@ namespace WOTRMultiplayer.HarmonyPatches.RandomIdGeneration
                 return;
             }
 
-            //Main.GetLogger<Player>().LogInformation("New id generated: {id}", __result);
+            Main.GetLogger<RandomIdGenerationPatches>().LogError("Player.GetNewUniqueId should never be called", __result);
         }
 
         [HarmonyPatch(typeof(EntityCreationController), nameof(EntityCreationController.SpawnEntity))]
@@ -142,35 +142,35 @@ namespace WOTRMultiplayer.HarmonyPatches.RandomIdGeneration
         public static string GetNewEntityUniqueId(EntityViewBase prefab)
         {
             var identifier = $"{GetCommonIdPart()}:{prefab.GetType().Name}:{prefab.name}";
-            var id = Main.Multiplayer.IdGenerator.GenerateId(UniqueIdType.EntityView, Game.Instance.Player.GameId, identifier);
+            var id = Main.Multiplayer.ValueGenerator.GenerateUniqueId(UniqueIdType.EntityView, Game.Instance.Player.GameId, identifier);
             return id;
         }
 
         public static string GetNewUnitUniqueId(BlueprintUnit unit, UnitEntityView prefab)
         {
             var identifier = $"{GetCommonIdPart()}:{prefab.name}";
-            var id = Main.Multiplayer.IdGenerator.GenerateId(UniqueIdType.Unit, Game.Instance.Player.GameId, identifier);
+            var id = Main.Multiplayer.ValueGenerator.GenerateUniqueId(UniqueIdType.Unit, Game.Instance.Player.GameId, identifier);
             return id;
         }
 
         public static string GetNewEntityFactUniqueId(EntityFact fact)
         {
             var identifier = $"{GetCommonIdPart()}:{fact.GetType().Name}:{fact.NameForAcronym}:{fact.Owner?.UniqueId}";
-            var id = Main.Multiplayer.IdGenerator.GenerateId(UniqueIdType.Fact, Game.Instance.Player.GameId, identifier);
+            var id = Main.Multiplayer.ValueGenerator.GenerateUniqueId(UniqueIdType.Fact, Game.Instance.Player.GameId, identifier);
             return id;
         }
 
         public static string GetNewChangeBlueprintUniqueId(UnitEntityData unitEntityData, BlueprintUnit blueprintUnit)
         {
             var identifier = $"{GetCommonIdPart()}:{unitEntityData.CharacterName}";
-            var id = Main.Multiplayer.IdGenerator.GenerateId(UniqueIdType.ChangeBlueprintUnit, Game.Instance.Player.GameId, identifier);
+            var id = Main.Multiplayer.ValueGenerator.GenerateUniqueId(UniqueIdType.ChangeBlueprintUnit, Game.Instance.Player.GameId, identifier);
             return id;
         }
 
         public static string GetNewItemEntityId(BlueprintItem blueprintItem)
         {
             var identifier = $"{GetCommonIdPart()}:{blueprintItem.NameForAcronym}:{blueprintItem.ItemType}:{blueprintItem.MiscellaneousType}";
-            var id = Main.Multiplayer.IdGenerator.GenerateId(UniqueIdType.ItemEntity, Game.Instance.Player.GameId, identifier);
+            var id = Main.Multiplayer.ValueGenerator.GenerateUniqueId(UniqueIdType.ItemEntity, Game.Instance.Player.GameId, identifier);
             return id;
         }
 

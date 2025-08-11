@@ -35,7 +35,7 @@ namespace WOTRMultiplayer.MP
 
         public IUIFactory Factory { get; private set; }
 
-        public IUniqueIdGenerator IdGenerator { get; private set; }
+        public IValueGenerator ValueGenerator { get; private set; }
 
         public bool IsActive => _multiplayerActorAccessor.Current != null && _multiplayerActorAccessor.Current.IsActive;
 
@@ -49,14 +49,14 @@ namespace WOTRMultiplayer.MP
             ILobbyWindowController lobbyWindowController,
             IMultiplayerActorAccessor multiplayerActorAccessor,
             IGameInteractionService gameInteractionService,
-            IUniqueIdGenerator uniqueIdGenerator)
+            IValueGenerator valueGenerator)
         {
             _logger = logger;
             Factory = uiFactory;
             _multiplayerActorAccessor = multiplayerActorAccessor;
             _lobbyWindowController = lobbyWindowController;
             _gameInteractionService = gameInteractionService;
-            IdGenerator = uniqueIdGenerator;
+            ValueGenerator = valueGenerator;
         }
 
         public bool InitializeMultiplayer(InitializeMultiplayerContext context)
@@ -589,6 +589,18 @@ namespace WOTRMultiplayer.MP
             }
 
             _multiplayerActorAccessor.Host.OnAfterTryRollRandomEncounter();
+        }
+
+        public int? GetNextRestBanter(int minInclusive, int maxExclusive)
+        {
+            if (_multiplayerActorAccessor.Current == null)
+            {
+                return null;
+            }
+
+            var banterSeed = _multiplayerActorAccessor.Current.RestBanterSeed;
+            var nextBanter = ValueGenerator.Range(banterSeed, minInclusive, maxExclusive);
+            return nextBanter;
         }
 
         private void ShowEscMenuMultiplayerLobby()

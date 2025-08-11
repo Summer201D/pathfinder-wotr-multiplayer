@@ -21,7 +21,7 @@ namespace WOTRMultiplayer.Abstractions.MP
 
         IUIFactory Factory { get; }
 
-        IUniqueIdGenerator IdGenerator { get; }
+        IValueGenerator ValueGenerator { get; }
 
         bool InitializeMultiplayer(InitializeMultiplayerContext context);
 
@@ -108,5 +108,7 @@ namespace WOTRMultiplayer.Abstractions.MP
         void OnBeforeTryRollRandomEncounter();
 
         void OnAfterTryRollRandomEncounter();
+
+        int? GetNextRestBanter(int minInclusive, int maxExclusive);
     }
 }

@@ -26,7 +26,7 @@ namespace WOTRMultiplayer.UnitTests.MP
         private IMultiplayerHost _multiplayerHost;
         private IMultiplayerClient _multiplayerClient;
         private IGameInteractionService _gameInteractionService;
-        private IUniqueIdGenerator _idGenerator;
+        private IValueGenerator _idGenerator;
         private IMultiplayerActorAccessor _multiplerActorAccessor;
 
         [SetUp]
@@ -38,7 +38,7 @@ namespace WOTRMultiplayer.UnitTests.MP
             _multiplayerHost = A.Fake<IMultiplayerHost>();
             _multiplayerClient = A.Fake<IMultiplayerClient>();
             _gameInteractionService = A.Fake<IGameInteractionService>();
-            _idGenerator = A.Fake<IUniqueIdGenerator>();
+            _idGenerator = A.Fake<IValueGenerator>();
             _multiplerActorAccessor = A.Fake<IMultiplayerActorAccessor>();
 
             _multiplayer = new Multiplayer(

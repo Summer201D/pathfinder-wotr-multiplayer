@@ -49,10 +49,15 @@ namespace WOTRMultiplayer.HarmonyPatches.Rest
                 return allBanters.WeightedRandom<BlueprintBarkBanter>();
             }
 
-            var selectedBanter = allBanters.OrderBy(x => x.AssetGuid).FirstOrDefault();
+            if (allBanters.Count == 0)
+            {
+                return null;
+            }
+
+            var banterIndex = Main.Multiplayer.GetNextRestBanter(0, allBanters.Count + 1).Value;
+            var selectedBanter = allBanters[banterIndex];
             var firstPhraseKey = selectedBanter?.FirstPhrase?.FirstOrDefault()?.Key;
             Main.GetLogger<BarkBanterHelperPatches>().LogInformation("Selected camping banter. Id={banterId}, FirstPhraseKey={firstPhraseKey}", selectedBanter?.AssetGuid, firstPhraseKey);
-
             return selectedBanter;
         }
     }

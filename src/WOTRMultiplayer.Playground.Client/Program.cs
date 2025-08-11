@@ -33,7 +33,7 @@ namespace WOTRMultiplayer.Playground.Client
                 serviceProvider.GetService<IFileSystemService>(),
                 serviceProvider.GetService<INetworkServerClient>(),
                 new DummyDiceRollStorage([new NetworkIntRollValue { Value = 59 }]),
-                serviceProvider.GetService<IUniqueIdGenerator>(),
+                serviceProvider.GetService<IValueGenerator>(),
                 serviceProvider.GetService<IMapper>());
 
             var verbs = CommandLineHelper.LoadVerbs();

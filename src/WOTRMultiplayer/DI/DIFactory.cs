@@ -52,7 +52,7 @@ namespace WOTRMultiplayer.DI
             });
 
             serviceCollection.AddSingleton<IMainThreadAccessor, MainThreadAccessor>();
-            serviceCollection.AddSingleton<IUniqueIdGenerator, PredictableUniqueIdGenerator>();
+            serviceCollection.AddSingleton<IValueGenerator, PredictableValueGenerator>();
 
             serviceCollection.AddSingleton<IFileSystemService, FileSystemService>();
             serviceCollection.AddSingleton<IResourceProvider, ResourceBundleProvider>();

@@ -64,7 +64,7 @@ namespace WOTRMultiplayer.MP.Actors
             IFileSystemService fileSystemService,
             INetworkServerClient networkServerClient,
             IDiceRollStorage diceRollStorage,
-            IUniqueIdGenerator uniqueIdGenerator,
+            IValueGenerator valueGenerator,
             IMapper mapper)
             : base(logger,
                   mapper,
@@ -72,7 +72,7 @@ namespace WOTRMultiplayer.MP.Actors
                   gameInteractionService,
                   diceRollStorage,
                   fileSystemService,
-                  uniqueIdGenerator)
+                  valueGenerator)
         {
             _ipEndPointParser = ipEndPointParser;
             _networkServerClient = networkServerClient;
@@ -940,14 +940,11 @@ namespace WOTRMultiplayer.MP.Actors
 
         private void OnGameServerConnectionSucceeded(GameServerConnectionSucceeded succeeded)
         {
-            Logger.LogInformation("Received {messageType}. ClientPlayerId={clientPlayerId}", nameof(GameServerConnectionSucceeded), succeeded.ClientPlayerId);
-            if (Game == null)
-            {
-                Logger.LogError("Game has not been initialized yet");
-                return;
-            }
+            Logger.LogInformation("Received {messageType}. ClientPlayerId={clientPlayerId}, RestBanterSeed={restBanterSeed}", nameof(GameServerConnectionSucceeded), succeeded.ClientPlayerId, succeeded.RestBanterSeed);
 
             Game.LocalPlayerId = succeeded.ClientPlayerId;
+            Game.RestBanterSeed = succeeded.RestBanterSeed;
+
             var settings = Mapper.Map<NetworkGameSettings>(succeeded.GameSettings);
             GameInteraction.ApplyGameSettings(settings);
 

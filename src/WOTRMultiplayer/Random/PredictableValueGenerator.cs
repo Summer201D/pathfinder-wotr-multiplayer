@@ -1,5 +1,6 @@
 ﻿using System.Collections.Concurrent;
 using System.ComponentModel;
+using Kingmaker.Dungeon.Utils;
 using Microsoft.Extensions.Logging;
 using WOTRMultiplayer.Abstractions.GameInteraction;
 using WOTRMultiplayer.Abstractions.Hashing;
@@ -8,15 +9,16 @@ using WOTRMultiplayer.Extensions;
 
 namespace WOTRMultiplayer.Random
 {
-    public class PredictableUniqueIdGenerator : IUniqueIdGenerator
+    public class PredictableValueGenerator : IValueGenerator
     {
-        private readonly ConcurrentDictionary<string, UniqueIdCounters> _counters = new();
-        private readonly ILogger<PredictableUniqueIdGenerator> _logger;
+        private readonly ConcurrentDictionary<string, UniqueIdCounters> _entityCounters = new();
+        private readonly ConcurrentDictionary<int, PersistentRandom> _seedGenerators = new();
+        private readonly ILogger<PredictableValueGenerator> _logger;
         private readonly IGameInteractionService _gameInteractionService;
         private readonly IHashService _hashService;
 
-        public PredictableUniqueIdGenerator(
-            ILogger<PredictableUniqueIdGenerator> logger,
+        public PredictableValueGenerator(
+            ILogger<PredictableValueGenerator> logger,
             IGameInteractionService gameInteractionService,
             IHashService hashService)
         {
@@ -25,17 +27,24 @@ namespace WOTRMultiplayer.Random
             _hashService = hashService;
         }
 
+        public int Range(int seed, int minInclusive, int maxExclusive)
+        {
+            var generator = _seedGenerators.GetOrAdd(seed, k => new PersistentRandom(k));
+            var result = generator.Range(minInclusive, maxExclusive);
+            return result;
+        }
+
         public void Reset(string gameId)
         {
-            _counters.TryRemove(gameId, out _);
+            _entityCounters.TryRemove(gameId, out _);
             _logger.LogInformation("Counters have been cleared. GameId={gameId}", gameId);
         }
 
-        public string GenerateId(UniqueIdType uniqueIdType, string gameId, string identifier)
+        public string GenerateUniqueId(UniqueIdType uniqueIdType, string gameId, string identifier)
         {
             try
             {
-                var counter = _counters.GetOrAdd(gameId ?? "main-menu", k => new UniqueIdCounters());
+                var counter = _entityCounters.GetOrAdd(gameId ?? "main-menu", k => new UniqueIdCounters());
                 var hashed = _hashService.Murmur3(identifier).ToString();
 
                 if (!counter.NameIdentifiers.TryGetValue(hashed, out uint nameCounter))

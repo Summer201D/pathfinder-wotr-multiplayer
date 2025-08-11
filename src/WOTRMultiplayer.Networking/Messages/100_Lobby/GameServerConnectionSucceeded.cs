@@ -12,5 +12,8 @@ namespace WOTRMultiplayer.Networking.Messages.Lobby
 
         [ProtoMember(2)]
         public NetworkGameSettings GameSettings { get; set; }
+
+        [ProtoMember(3)]
+        public int RestBanterSeed { get; set; }
     }
 }
