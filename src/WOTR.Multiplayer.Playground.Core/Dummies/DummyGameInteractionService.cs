@@ -265,5 +265,9 @@ namespace WOTR.Multiplayer.Playground.Core.Dummies
         public void UpdateIsInCombatStatus()
         {
         }
+
+        public void TryInterruptRestBanter(NetworkRestBanter banter)
+        {
+        }
     }
 }

@@ -110,5 +110,7 @@ namespace WOTRMultiplayer.Abstractions.MP
         void OnAfterTryRollRandomEncounter();
 
         int? GetNextRestBanter(int minInclusive, int maxExclusive);
+
+        void OnInterrupRestBanterBark(NetworkRestBanter networkBanter);
     }
 }

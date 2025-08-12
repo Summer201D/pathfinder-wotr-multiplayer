@@ -428,10 +428,18 @@ namespace WOTRMultiplayer.MP.Actors
                 .Register<NotifyCampingStateChanged>(OnNotifyCampingStateChanged)
                 .Register<NotifyCampingUnitsRoleChanged>(OnNotifyCampingUnitsRoleChanged)
                 .Register<NotifyRestStarted>(OnNotifyRestStarted)
+                .Register<NotifyRestBanterInterrupted>(OnNotifyRestBanterInterrupted)
                 ;
 
             _networkServerClient.OnError = OnNetworkClientError;
             _networkServerClient.OnConnected = OnNetworkClientConnected;
+        }
+
+        private void OnNotifyRestBanterInterrupted(NotifyRestBanterInterrupted interrupted)
+        {
+            Logger.LogInformation("Received {messageType}. SpeakerUnitId={speakerUnitId}, Key={key}", nameof(NotifyRestBanterInterrupted), interrupted.Banter.SpeakerUnitId, interrupted.Banter.Key);
+            var banter = Mapper.Map<NetworkRestBanter>(interrupted.Banter);
+            GameInteraction.TryInterruptRestBanter(banter);
         }
 
         private void OnNotifyRestStarted(NotifyRestStarted started)

@@ -135,5 +135,7 @@ namespace WOTRMultiplayer.Abstractions.GameInteraction
         void SetNextUnitCombatTurn(string nextUnitTurn);
 
         void UpdateIsInCombatStatus();
+
+        void TryInterruptRestBanter(NetworkRestBanter banter);
     }
 }

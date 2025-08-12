@@ -1359,6 +1359,38 @@ namespace WOTRMultiplayer.GameInteraction
             });
         }
 
+        public void TryInterruptRestBanter(NetworkRestBanter networkRestBanter)
+        {
+            _mainThreadAccessor.Enqueue(() =>
+            {
+                try
+                {
+                    var currentBanterPlayer = Game.Instance.RestController?.m_BanterPlayer;
+                    if (currentBanterPlayer == null || currentBanterPlayer.m_NextEntryIndex == 0)
+                    {
+                        return;
+                    }
+
+                    var currentEntryIndex = currentBanterPlayer.m_NextEntryIndex - 1;
+                    var currentBark = currentBanterPlayer.m_Entries[currentEntryIndex];
+                    if (!string.Equals(currentBark.Text.Key, networkRestBanter.Key, StringComparison.OrdinalIgnoreCase) || !string.Equals(currentBark.Speaker.UniqueId, networkRestBanter.SpeakerUnitId, StringComparison.OrdinalIgnoreCase))
+                    {
+                        _logger.LogWarning("RestController is playing different banter. CurrentBanterKey={currentKey}, CurrentSpeakerUnitId={currentSpeakerUnitId}, NetworkBanterKey={networkBanterKey}, NetworkSpeakerUnitId={networkSpeakerUnitId}",
+                                currentBark.Text.Key, currentBark.Speaker.UniqueId, networkRestBanter.Key, networkRestBanter.SpeakerUnitId);
+                        return;
+                    }
+
+                    currentBanterPlayer.InterruptBark();
+                    _logger.LogInformation("Rest bark has been interrupted. NetworkBanterKey={networkBanterKey}, NetworkSpeakerUnitId={networkSpeakerUnitId}", networkRestBanter.Key, networkRestBanter.SpeakerUnitId);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Unable to interrupd bark. NetworkBanterKey={networkBanterKey}, NetworkSpeakerUnitId={networkSpeakerUnitId}", networkRestBanter.Key, networkRestBanter.SpeakerUnitId);
+                    throw;
+                }
+            });
+        }
+
         private CraftItemInfo GetCampingCraftItemInfo(UnitEntityData crafter, UsableItemType itemType, string itemBlueprintId)
         {
             if (crafter == null)
@@ -1570,66 +1602,74 @@ namespace WOTRMultiplayer.GameInteraction
             return null;
         }
 
-        private AbilityData FindAbilityInSpellbook(UnitEntityData unit, NetworkAbility abilityUse)
+        private AbilityData GetMemorizedSpell(Spellbook spellbook, string abilityId)
         {
-            var spellbook = unit.Spellbooks.FirstOrDefault(s => string.Equals(s.Blueprint.Name.Key, abilityUse.SpellbookId));
-            if (spellbook == null)
-            {
-                _logger.LogError("Unable to find ability due to missing spellbook. UnitId={unitId}, AbilityId={abilityId}, SpellbookId={spellbookId}", unit.UniqueId, abilityUse.Id, abilityUse.SpellbookId);
-                return null;
-            }
-
-            var cantrips = spellbook.m_KnownSpells.FirstOrDefault();
-            var cantrip = cantrips.FirstOrDefault(s => string.Equals(s.UniqueId, abilityUse.Id, StringComparison.OrdinalIgnoreCase));
-
-            if (cantrip != null)
-            {
-                _logger.LogInformation("Cantrip spell has been found. UnitId={unitId}, AbilityId={abilityId}, SpellbookName={spellbookName}", unit.UniqueId, abilityUse.Id, spellbook.Blueprint.Name);
-                return cantrip;
-            }
-
-            if (!string.IsNullOrEmpty(abilityUse.ConvertedFromId))
-            {
-                var spellConversionSource = GetKnownSpell(spellbook, abilityUse.ConvertedFromId);
-                if (spellConversionSource == null)
-                {
-                    _logger.LogError("Can't find spell for converted ability. UnitId={unitId}, AbilityId={abilityId}, SpellbookName={spellbookName}, ConvertedAbilityId={convertedId}", unit.UniqueId, abilityUse.Id, spellbook.Blueprint.Name, abilityUse.ConvertedFromId);
-                    return null;
-                }
-
-                var convertedSpell = spellConversionSource.GetConversions().FirstOrDefault(
-                    c => string.Equals(c.UniqueId, abilityUse.Id, StringComparison.OrdinalIgnoreCase)
-                    || string.Equals(c.NameForAcronym, abilityUse.Name, StringComparison.OrdinalIgnoreCase));
-
-                if (convertedSpell == null)
-                {
-                    _logger.LogError("Can't find target abiliy in spell conversion list. UnitId={unitId}, AbilityId={abilityId}, SpellbookName={spellbookName}, ConvertedAbilityId={convertedId}", unit.UniqueId, abilityUse.Id, spellbook.Blueprint.Name, abilityUse.ConvertedFromId);
-                    return null;
-                }
-
-                _logger.LogInformation("Converted spell has been found. UnitId={unitId}, AbilityId={abilityId}, SpellbookName={spellbookName}", unit.UniqueId, abilityUse.Id, spellbook.Blueprint.Name);
-                return convertedSpell;
-            }
-
-            var spell = GetKnownSpell(spellbook, abilityUse.Id);
-            if (spell != null)
-            {
-                _logger.LogInformation("Spell has been found in known spells. UnitId={unitId}, AbilityId={abilityId}, SpellbookName={spellbookName}", unit.UniqueId, abilityUse.Id, spellbook.Blueprint.Name);
-                return spell;
-            }
-
             for (int level = 0; level < spellbook.m_MemorizedSpells.Length; level++)
             {
                 var spellLevel = spellbook.m_MemorizedSpells[level];
-                var spellSlot = spellLevel.FirstOrDefault(s => string.Equals(s.Spell?.UniqueId, abilityUse.Id, StringComparison.OrdinalIgnoreCase));
+                var spellSlot = spellLevel.FirstOrDefault(s => string.Equals(s.Spell?.UniqueId, abilityId, StringComparison.OrdinalIgnoreCase));
                 if (spellSlot != null)
                 {
-                    _logger.LogInformation("Spell has been found in memorized spells. UnitId={unitId}, AbilityId={abilityId}, SpellbookName={spellbookName}, SpellLevel={spellLevel}", unit.UniqueId, abilityUse.Id, spellbook.Blueprint.Name, spellSlot.SpellLevel);
                     return spellSlot.Spell;
                 }
             }
 
             return null;
+        }
+
+        private AbilityData FindAbilityInSpellbook(UnitEntityData unit, NetworkAbility networkAbility)
+        {
+            var spellbook = unit.Spellbooks.FirstOrDefault(s => string.Equals(s.Blueprint.Name.Key, networkAbility.SpellbookId));
+            if (spellbook == null)
+            {
+                _logger.LogError("Unable to find ability due to missing spellbook. UnitId={unitId}, AbilityId={abilityId}, SpellbookId={spellbookId}", unit.UniqueId, networkAbility.Id, networkAbility.SpellbookId);
+                return null;
+            }
+
+            if (!string.IsNullOrEmpty(networkAbility.ConvertedFromId))
+            {
+                var spellConversionSource = GetKnownSpell(spellbook, networkAbility.ConvertedFromId) ?? GetMemorizedSpell(spellbook, networkAbility.ConvertedFromId);
+                if (spellConversionSource == null)
+                {
+                    _logger.LogError("Can't find spell conversion source for converted ability. UnitId={unitId}, AbilityId={abilityId}, SpellbookName={spellbookName}, ConvertedAbilityId={convertedId}", unit.UniqueId, networkAbility.Id, spellbook.Blueprint.Name, networkAbility.ConvertedFromId);
+                    return null;
+                }
+
+                var convertedSpell = GetConvertedAbility(spellConversionSource, networkAbility);
+                if (convertedSpell == null)
+                {
+                    _logger.LogError("Can't find target ability in spell conversion list. UnitId={unitId}, AbilityId={abilityId}, SpellbookName={spellbookName}, ConvertedAbilityId={convertedId}", unit.UniqueId, networkAbility.Id, spellbook.Blueprint.Name, networkAbility.ConvertedFromId);
+                    return null;
+                }
+
+                _logger.LogInformation("Converted spell has been found. UnitId={unitId}, AbilityId={abilityId}, SpellbookName={spellbookName}", unit.UniqueId, networkAbility.Id, spellbook.Blueprint.Name);
+                return convertedSpell;
+            }
+
+            var knownSpell = GetKnownSpell(spellbook, networkAbility.Id);
+            if (knownSpell != null)
+            {
+                _logger.LogInformation("Spell has been found in known spells. UnitId={unitId}, AbilityId={abilityId}, SpellbookName={spellbookName}", unit.UniqueId, networkAbility.Id, spellbook.Blueprint.Name);
+                return knownSpell;
+            }
+
+            var memorizedSpell = GetMemorizedSpell(spellbook, networkAbility.Id);
+            if (memorizedSpell != null)
+            {
+                _logger.LogInformation("Spell has been found in memorized spells. UnitId={unitId}, AbilityId={abilityId}, SpellbookName={spellbookName}", unit.UniqueId, networkAbility.Id, spellbook.Blueprint.Name);
+                return memorizedSpell;
+            }
+
+            return null;
+        }
+
+        private AbilityData GetConvertedAbility(AbilityData conversionSource, NetworkAbility networkAbility)
+        {
+            var convertedSpell = conversionSource.GetConversions().FirstOrDefault(
+                    c => string.Equals(c.UniqueId, networkAbility.Id, StringComparison.OrdinalIgnoreCase)
+                    || string.Equals(c.NameForAcronym, networkAbility.Name, StringComparison.OrdinalIgnoreCase));
+
+            return convertedSpell;
         }
 
         /// <summary>
@@ -1653,7 +1693,7 @@ namespace WOTRMultiplayer.GameInteraction
                     _logger.LogInformation("Unable to find ability for conversion. UnitId={unitId}, AbilityId={abilityId}", unit.UniqueId, abilityUse.ConvertedFromId);
                     return null;
                 }
-                var convertedAbility = conversionAbility.Data.GetConversions()?.FirstOrDefault(c => string.Equals(c.NameForAcronym, abilityUse.Name, StringComparison.OrdinalIgnoreCase));
+                var convertedAbility = GetConvertedAbility(conversionAbility.Data, abilityUse);
                 if (convertedAbility == null)
                 {
                     _logger.LogInformation("Unable to find ability in conversion list. UnitId={unitId}, AbilityId={abilityId}", unit.UniqueId, abilityUse.ConvertedFromId);

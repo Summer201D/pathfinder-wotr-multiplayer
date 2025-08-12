@@ -609,6 +609,16 @@ namespace WOTRMultiplayer.MP
             return nextBanter;
         }
 
+        public void OnInterrupRestBanterBark(NetworkRestBanter networkBanter)
+        {
+            if (_multiplayerActorAccessor == null)
+            {
+                return;
+            }
+
+            _multiplayerActorAccessor.Current.OnInterrupRestBanterBark(networkBanter);
+        }
+
         private void ShowEscMenuMultiplayerLobby()
         {
             _logger.LogInformation("Show lobby window");

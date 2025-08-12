@@ -850,7 +850,18 @@ namespace WOTRMultiplayer.MP.Actors
                 .Register<ClientGameModeTypeStarted>(OnClientGameModeTypeStarted)
                 .Register<ClientGameModeTypeEnded>(OnClientGameModeTypeEnded)
                 .Register<ClientRestEnded>(OnClientRestEnded)
+                .Register<NotifyRestBanterInterrupted>(OnNotifyRestBanterInterrupted)
                 ;
+        }
+
+        private void OnNotifyRestBanterInterrupted(long playerId, NotifyRestBanterInterrupted interrupted)
+        {
+            Logger.LogInformation("Received {messageType}. PlayerId={playerId}, SpeakerUnitId={speakerUnitId}, Key={key}", nameof(NotifyRestBanterInterrupted), playerId, interrupted.Banter.SpeakerUnitId, interrupted.Banter.Key);
+            var banter = Mapper.Map<NetworkRestBanter>(interrupted.Banter);
+            GameInteraction.TryInterruptRestBanter(banter);
+
+            Logger.LogInformation("Resending {messageType}", nameof(NotifyOvertipInteracted));
+            _networkServer.SendAllExcept(playerId, interrupted);
         }
 
         private async void OnRandomEncounterContextRequest(long playerId, RandomEncounterContextRequest request)

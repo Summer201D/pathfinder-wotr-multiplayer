@@ -18,6 +18,7 @@ using WOTRMultiplayer.MP.Entities.Combat;
 using WOTRMultiplayer.MP.Entities.Equipment;
 using WOTRMultiplayer.MP.Entities.Loot;
 using WOTRMultiplayer.MP.Entities.MapObjects;
+using WOTRMultiplayer.MP.Entities.Rest;
 using WOTRMultiplayer.MP.Entities.Rolls.Claiming.Values;
 using WOTRMultiplayer.Networking.Messages.Game;
 using WOTRMultiplayer.Networking.Messages.Lobby;
@@ -475,6 +476,17 @@ namespace WOTRMultiplayer.MP.Actors
 
             var canRun = OnStopGameModeInternal(type);
             return canRun;
+        }
+
+        public void OnInterrupRestBanterBark(NetworkRestBanter networkBanter)
+        {
+            var message = new NotifyRestBanterInterrupted
+            {
+                Banter = Mapper.Map<Networking.Messages.Contracts.NetworkRestBanter>(networkBanter),
+            };
+
+            Logger.LogInformation("Sending {messageType}. SpeakerUnitId={speakerUnitId}, Key={key}", nameof(NotifyRestBanterInterrupted), message.Banter.SpeakerUnitId, message.Banter.Key);
+            Send(message);
         }
 
         protected abstract bool OnStartGameModeInternal(GameModeType type);

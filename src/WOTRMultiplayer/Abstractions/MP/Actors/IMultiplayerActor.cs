@@ -7,6 +7,7 @@ using WOTRMultiplayer.MP.Entities.Abilities;
 using WOTRMultiplayer.MP.Entities.Equipment;
 using WOTRMultiplayer.MP.Entities.Loot;
 using WOTRMultiplayer.MP.Entities.MapObjects;
+using WOTRMultiplayer.MP.Entities.Rest;
 using WOTRMultiplayer.MP.Entities.Rolls.Claiming.Values;
 
 namespace WOTRMultiplayer.Abstractions.MP.Actors
@@ -107,5 +108,7 @@ namespace WOTRMultiplayer.Abstractions.MP.Actors
         bool OnStopGameMode(GameModeType type);
 
         bool OnShowRestView(RestPhase phase);
+
+        void OnInterrupRestBanterBark(NetworkRestBanter networkBanter);
     }
 }
