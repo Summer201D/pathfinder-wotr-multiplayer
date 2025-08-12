@@ -28,6 +28,7 @@ namespace WOTRMultiplayer.Networking.UnitTests.Messages
 
         [TestCase(100, 1000, "Lobby")]
         [TestCase(1000, 9000, "Game")]
+        [TestCase(9000, 10000, "Requests")]
         public void NetworkMessages_NoMissingIds(int start, int end, string groupName)
         {
             // Arrange

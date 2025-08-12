@@ -129,7 +129,7 @@ namespace WOTRMultiplayer.UnitTests.MP
             _multiplayer.InitializeEscMenuLobbyWindow(context);
 
             // Assert
-            A.CallTo(() => _uiFactory.InitializeEscMenuLobbyWindow(context, true, An<Action>.Ignored)).MustHaveHappenedOnceExactly();
+            A.CallTo(() => _uiFactory.InitializeEscMenuLobbyWindow(context, An<Action>.Ignored)).MustHaveHappenedOnceExactly();
         }
 
         [Test]
@@ -143,7 +143,7 @@ namespace WOTRMultiplayer.UnitTests.MP
             _multiplayer.InitializeEscMenuLobbyWindow(context);
 
             // Assert
-            A.CallTo(() => _uiFactory.InitializeEscMenuLobbyWindow(context, false, An<Action>.Ignored)).MustHaveHappenedOnceExactly();
+            A.CallTo(() => _uiFactory.InitializeEscMenuLobbyWindow(context, An<Action>.Ignored)).MustHaveHappenedOnceExactly();
         }
 
         [Test]
@@ -157,7 +157,7 @@ namespace WOTRMultiplayer.UnitTests.MP
             _multiplayer.InitializeEscMenuLobbyWindow(context);
 
             // Assert
-            A.CallTo(() => _uiFactory.InitializeEscMenuLobbyWindow(An<InitializeEscMenuLobbyWindowContext>.Ignored, An<bool>.Ignored, An<Action>.Ignored)).MustNotHaveHappened();
+            A.CallTo(() => _uiFactory.InitializeEscMenuLobbyWindow(An<InitializeEscMenuLobbyWindowContext>.Ignored, An<Action>.Ignored)).MustNotHaveHappened();
         }
 
 
@@ -168,7 +168,7 @@ namespace WOTRMultiplayer.UnitTests.MP
             var context = new InitializeEscMenuLobbyWindowContext(null);
             var windowFake = A.Fake<ILobbyWindow>();
             A.CallTo(() => _multiplayerClient.IsActive).Returns(true);
-            A.CallTo(() => _uiFactory.InitializeEscMenuLobbyWindow(An<InitializeEscMenuLobbyWindowContext>.Ignored, An<bool>.Ignored, An<Action>.Ignored)).Returns(windowFake);
+            A.CallTo(() => _uiFactory.InitializeEscMenuLobbyWindow(An<InitializeEscMenuLobbyWindowContext>.Ignored, An<Action>.Ignored)).Returns(windowFake);
 
             // Act
             _multiplayer.InitializeEscMenuLobbyWindow(context);
@@ -190,7 +190,7 @@ namespace WOTRMultiplayer.UnitTests.MP
             A.CallTo(() => _multiplayerHost.IsActive).Returns(true);
             var expectedConnectivity = A.Fake<NetworkGameConnectivity>();
             A.CallTo(() => _multiplayerHost.GetGameConnectivity()).Returns(expectedConnectivity);
-            A.CallTo(() => _uiFactory.InitializeEscMenuLobbyWindow(An<InitializeEscMenuLobbyWindowContext>.Ignored, An<bool>.Ignored, An<Action>.Ignored)).Returns(windowFake);
+            A.CallTo(() => _uiFactory.InitializeEscMenuLobbyWindow(An<InitializeEscMenuLobbyWindowContext>.Ignored, An<Action>.Ignored)).Returns(windowFake);
 
             // Act
             _multiplayer.InitializeEscMenuLobbyWindow(context);
@@ -210,7 +210,7 @@ namespace WOTRMultiplayer.UnitTests.MP
             A.CallTo(() => _multiplayerHost.IsActive).Returns(true);
             var expectedPlayers = A.Fake<List<NetworkPlayer>>();
             A.CallTo(() => _multiplayerHost.GetPlayers()).Returns(expectedPlayers);
-            A.CallTo(() => _uiFactory.InitializeEscMenuLobbyWindow(An<InitializeEscMenuLobbyWindowContext>.Ignored, An<bool>.Ignored, An<Action>.Ignored)).Returns(windowFake);
+            A.CallTo(() => _uiFactory.InitializeEscMenuLobbyWindow(An<InitializeEscMenuLobbyWindowContext>.Ignored, An<Action>.Ignored)).Returns(windowFake);
 
             // Act
             _multiplayer.InitializeEscMenuLobbyWindow(context);
@@ -230,7 +230,7 @@ namespace WOTRMultiplayer.UnitTests.MP
             A.CallTo(() => _multiplayerHost.IsActive).Returns(true);
             var expectedCharacters = A.Fake<List<NetworkCharacterOwnership>>();
             A.CallTo(() => _multiplayerHost.GetCharacters()).Returns(expectedCharacters);
-            A.CallTo(() => _uiFactory.InitializeEscMenuLobbyWindow(An<InitializeEscMenuLobbyWindowContext>.Ignored, An<bool>.Ignored, An<Action>.Ignored)).Returns(windowFake);
+            A.CallTo(() => _uiFactory.InitializeEscMenuLobbyWindow(An<InitializeEscMenuLobbyWindowContext>.Ignored, An<Action>.Ignored)).Returns(windowFake);
 
             // Act
             _multiplayer.InitializeEscMenuLobbyWindow(context);

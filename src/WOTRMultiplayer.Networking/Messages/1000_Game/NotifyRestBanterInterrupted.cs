@@ -4,7 +4,7 @@ using WOTRMultiplayer.Networking.Messages.Contracts;
 namespace WOTRMultiplayer.Networking.Messages.Game
 {
     [ProtoContract]
-    [BeetleX.Packets.MessageType(1041)]
+    [BeetleX.Packets.MessageType(1039)]
     public class NotifyRestBanterInterrupted
     {
         [ProtoMember(1)]

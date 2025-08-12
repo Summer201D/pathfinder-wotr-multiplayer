@@ -18,6 +18,7 @@ namespace WOTRMultiplayer.UI.Menu
         public Func<NetworkGameConnectivity> GetGameConnectivity { get; set; }
         public Func<List<NetworkPlayer>> GetPlayers { get; set; }
         public Func<List<NetworkCharacterOwnership>> GetCharacters { get; set; }
+        public Func<bool> GetIsHost { get; set; }
 
         public GameObject MenuItem { get; set; }
 
@@ -50,7 +51,7 @@ namespace WOTRMultiplayer.UI.Menu
                 var players = GetPlayers();
                 _lobbyWindowController.UpdatePlayers(players);
                 var characters = GetCharacters();
-                _lobbyWindowController.UpdateCharacters(characters);
+                _lobbyWindowController.UpdateCharacters(characters, GetIsHost());
 
                 for (int i = 0; i < characters.Count; i++)
                 {

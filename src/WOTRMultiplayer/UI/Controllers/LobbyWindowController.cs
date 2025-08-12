@@ -78,7 +78,7 @@ namespace WOTRMultiplayer.UI.Controllers
             _resourceProvider = resourceProvider;
         }
 
-        public void InitializeContent(LobbyWindowOwner owner, Transform parent, bool canUseCharacterDropdown)
+        public void InitializeContent(LobbyWindowOwner owner, Transform parent)
         {
             _logger.LogInformation("Initialize content. Owner={owner}", owner);
 
@@ -88,8 +88,7 @@ namespace WOTRMultiplayer.UI.Controllers
                 return;
             }
 
-            var canUseDropdown = canUseCharacterDropdown;
-            var lobbyContent = _uIFactory.CreateLobbyWindowContent(parent, canUseDropdown);
+            var lobbyContent = _uIFactory.CreateLobbyWindowContent(parent);
             lobbyContent.SetActive(false);
             _contents.TryAdd(owner, lobbyContent);
             _logger.LogInformation("Content has been created. Owner={owner}", owner);
@@ -183,7 +182,7 @@ namespace WOTRMultiplayer.UI.Controllers
                 current?.SetActive(false);
                 playerSection?.CleanupAllChildren();
                 serverSection?.CleanupAllChildren();
-                UpdateCharacters([]);
+                UpdateCharacters([], false);
             });
         }
 
@@ -202,7 +201,7 @@ namespace WOTRMultiplayer.UI.Controllers
             _contents.TryRemove(owner, out var _);
         }
 
-        public void UpdateCharacters(List<NetworkCharacterOwnership> characters)
+        public void UpdateCharacters(List<NetworkCharacterOwnership> characters, bool isHost)
         {
             if (GetContentOwnedObject() == null)
             {
@@ -216,7 +215,7 @@ namespace WOTRMultiplayer.UI.Controllers
                 {
                     var character = characters.Count > characterIndex ? characters[characterIndex] : null;
                     var sprite = string.IsNullOrEmpty(character?.Portrait) ? null : GetPortraitSprite(character.Portrait);
-                    UpdateCharacterPortrait(characterIndex, sprite);
+                    UpdateCharacterPortrait(characterIndex, sprite, isHost);
                 }
             });
         }
@@ -282,7 +281,7 @@ namespace WOTRMultiplayer.UI.Controllers
             dropdown.onValueChanged.AddListener(index => OnOwnerDropdownChanged(dropdown));
         }
 
-        private void UpdateCharacterPortrait(int characterIndex, Sprite portraitSprite)
+        private void UpdateCharacterPortrait(int characterIndex, Sprite portraitSprite, bool isHost)
         {
             var characterContainer = CharactersInfoContainer.transform.GetChild(characterIndex);
             if (characterContainer == null)
@@ -295,6 +294,8 @@ namespace WOTRMultiplayer.UI.Controllers
             var portraitImage = portraitObject.GetComponent<Image>();
             portraitImage.sprite = portraitSprite;
             portraitImage.color = portraitSprite == null ? Color.clear : Color.white;
+            characterContainer.Find(CharacterOwnerObjectName).Find(UIFactory.DropdownGameObjectName).GetComponent<TMP_Dropdown>().interactable = isHost && portraitSprite != null;
+
             _logger.LogInformation("Updated character portrait. Index={characterIndex}, SpriteName={spriteName}", characterIndex, portraitSprite?.name);
         }
 

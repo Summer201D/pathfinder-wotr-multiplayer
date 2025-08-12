@@ -253,7 +253,7 @@ namespace WOTRMultiplayer.UI
             return UnityEngine.Object.Instantiate(_borderDecoration, parent);
         }
 
-        public GameObject CreateLobbyWindowContent(Transform parent, bool interactableDropdown)
+        public GameObject CreateLobbyWindowContent(Transform parent)
         {
             var lobbyContent = CreateDefaultGameObject(parent);
             lobbyContent.name = LobbyWindowController.LobbyScreenRootObjectName;
@@ -271,12 +271,12 @@ namespace WOTRMultiplayer.UI
             CreateLobbyPlayersSection(verticalContent.transform);
 
             var width = parent.GetComponent<RectTransform>().sizeDelta.x;
-            CreateLobbyCharactersSection(width, verticalContent.transform, interactableDropdown);
+            CreateLobbyCharactersSection(width, verticalContent.transform);
 
             return lobbyContent;
         }
 
-        public ILobbyWindow InitializeEscMenuLobbyWindow(InitializeEscMenuLobbyWindowContext context, bool canUseCharacterDropdown, Action onShow)
+        public ILobbyWindow InitializeEscMenuLobbyWindow(InitializeEscMenuLobbyWindowContext context, Action onShow)
         {
             _logger.LogInformation("Creating esc menu MultiplayerLobby");
             var optionsButton = context.View.transform.Find("Window/ButtonBlock/OptionsButton");
@@ -307,7 +307,7 @@ namespace WOTRMultiplayer.UI
             var lobbyWindow = windowContainer.AddComponent<LobbyWindow>();
             lobbyWindow.SetLogger(_serviceProvider.GetService<ILogger<LobbyWindow>>());
             lobbyWindow.MenuItem = multiplayerMenu;
-            _serviceProvider.GetService<ILobbyWindowController>().InitializeContent(LobbyWindowOwner.EscMenu, windowContainer.transform, canUseCharacterDropdown);
+            _serviceProvider.GetService<ILobbyWindowController>().InitializeContent(LobbyWindowOwner.EscMenu, windowContainer.transform);
             windowContainer.SetActive(false);
 
             var button = multiplayerMenu.GetComponent<OwlcatButton>();
@@ -464,7 +464,7 @@ namespace WOTRMultiplayer.UI
             playersSectionContentObject.AddComponent<VerticalLayoutGroup>();
         }
 
-        private void CreateLobbyCharactersSection(float width, Transform parent, bool interactableDropdown)
+        private void CreateLobbyCharactersSection(float width, Transform parent)
         {
             var charactersSectionObject = CreateDefaultGameObject(parent);
             var charactersSectionRect = charactersSectionObject.GetComponent<RectTransform>();
@@ -508,7 +508,6 @@ namespace WOTRMultiplayer.UI
 
                 var dropdownObject = dropdownContainerObject.transform.Find(UIFactory.DropdownGameObjectName);
                 var tmpDropdown = dropdownObject.GetComponent<TMP_Dropdown>();
-                tmpDropdown.interactable = interactableDropdown;
             }
         }
 
@@ -523,6 +522,7 @@ namespace WOTRMultiplayer.UI
             lobbyWindow.GetGameConnectivity = null;
             lobbyWindow.GetPlayers = null;
             lobbyWindow.GetCharacters = null;
+            lobbyWindow.GetIsHost = null;
 
             if (lobbyWindow.MenuItem == null)
             {

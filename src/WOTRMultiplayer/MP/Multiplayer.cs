@@ -98,11 +98,12 @@ namespace WOTRMultiplayer.MP
             }
 
             _logger.LogInformation("Creating Esc menu multiplayer lobby window");
-            _lobbyWindow = Factory.InitializeEscMenuLobbyWindow(context, _multiplayerActorAccessor.Host.IsActive, ShowEscMenuMultiplayerLobby);
+            _lobbyWindow = Factory.InitializeEscMenuLobbyWindow(context, ShowEscMenuMultiplayerLobby);
 
             _lobbyWindow.GetGameConnectivity = _multiplayerActorAccessor.Current.GetGameConnectivity;
             _lobbyWindow.GetPlayers = _multiplayerActorAccessor.Current.GetPlayers;
             _lobbyWindow.GetCharacters = _multiplayerActorAccessor.Current.GetCharacters;
+            _lobbyWindow.GetIsHost = () => _multiplayerActorAccessor.Host.IsActive;
 
             _lobbyWindow.AssignLobbyController(_lobbyWindowController);
 

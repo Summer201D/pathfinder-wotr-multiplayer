@@ -165,7 +165,7 @@ namespace WOTRMultiplayer.UI.Controllers
             lobbyWindowVertical.padding = new RectOffset(0, 0, 0, 20);
             var lobbyWindowRect = lobbyWindow.GetComponent<RectTransform>();
             lobbyWindowRect.sizeDelta = menuContentRect.sizeDelta;
-            Lobby.InitializeContent(LobbyWindowOwner.JoinMenu, lobbyWindow.transform, false);
+            Lobby.InitializeContent(LobbyWindowOwner.JoinMenu, lobbyWindow.transform);
 
             // input + button ?
             var joinLobbyControlsMenu = _uIFactory.CreateDefaultGameObject(content.transform);
@@ -264,7 +264,7 @@ namespace WOTRMultiplayer.UI.Controllers
 
         private void OnMultiplayerGameCharactersChanged(List<NetworkCharacterOwnership> characters)
         {
-            Lobby.UpdateCharacters(characters);
+            Lobby.UpdateCharacters(characters, false);
         }
 
         private void OnMultiplayerError(string errorMessage)

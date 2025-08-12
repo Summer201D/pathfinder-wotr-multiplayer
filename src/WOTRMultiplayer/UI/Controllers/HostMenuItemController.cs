@@ -233,7 +233,7 @@ namespace WOTRMultiplayer.UI.Controllers
             var savePath = selectedSave.Reference.FolderName;
             var characters = portraits.Select(x => new NetworkCharacterOwnership { Name = x, Portrait = x, Owner = null }).ToList();
             characters.First().Name = selectedSave.CharacterName.Value;
-            Lobby.UpdateCharacters(characters);
+            Lobby.UpdateCharacters(characters, true);
 
             if (!_multiplayerHost.IsActive)
             {
@@ -300,7 +300,7 @@ namespace WOTRMultiplayer.UI.Controllers
             var lobbyWindowObjectRect = lobbyWindowObject.GetComponent<RectTransform>();
             lobbyWindowObjectRect.sizeDelta = new Vector2(parentContainerRect.sizeDelta.x * 0.9f, parentContainerRect.sizeDelta.y * 0.72f);
 
-            Lobby.InitializeContent(LobbyWindowOwner.HostMenu, lobbyWindowObject.transform, true);
+            Lobby.InitializeContent(LobbyWindowOwner.HostMenu, lobbyWindowObject.transform);
         }
 
         private void OnLobbyCharacterOwnerChanged(int characterIndex, int playerIndex)

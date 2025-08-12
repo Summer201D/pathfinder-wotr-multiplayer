@@ -1,5 +1,4 @@
 ﻿using System;
-using Kingmaker.UI.MVVM._PCView.EscMenu;
 using Kingmaker.UI.MVVM._PCView.SaveLoad;
 using Kingmaker.UI.MVVM._PCView.Settings.Entities;
 using TMPro;
@@ -17,9 +16,9 @@ namespace WOTRMultiplayer.Abstractions.UI
         GameObject CreateDropdown(float preferedWidth, Transform parent);
         GameObject CreateButton(Transform transform);
         GameObject CreateInput(Transform transform);
-        GameObject CreateLobbyWindowContent(Transform parent, bool interactableDropdown);
+        GameObject CreateLobbyWindowContent(Transform parent);
         SaveLoadPCView CreateSaveLoadPCView(Transform parent);
-        ILobbyWindow InitializeEscMenuLobbyWindow(InitializeEscMenuLobbyWindowContext context, bool canUseCharacterDropdown, Action onShow);
+        ILobbyWindow InitializeEscMenuLobbyWindow(InitializeEscMenuLobbyWindowContext context, Action onShow);
         GameObject CreateBackgroundArt(Transform parent);
         WOTRMultiplayer.UI.Mesh GetDefaultMesh();
         void StoreBorderDecoration(GameObject gameObject);

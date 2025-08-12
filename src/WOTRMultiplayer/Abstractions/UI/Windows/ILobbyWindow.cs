@@ -14,6 +14,8 @@ namespace WOTRMultiplayer.Abstractions.UI.Windows
 
         Func<List<NetworkPlayer>> GetPlayers { get; set; }
 
+        Func<bool> GetIsHost { get; set; }
+
         Func<List<NetworkCharacterOwnership>> GetCharacters { get; set; }
 
         void Show(bool state);
