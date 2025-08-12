@@ -510,6 +510,7 @@ namespace WOTRMultiplayer.MP.Actors
                 {
                     EnsureForcePaused(UIStringConsts.GameNotifications.ForcedPauseReasons.RandomEncounterLoading, SettingsProvider.Settings.ForcedPauseRandomEncounterTerminationDelay);
                     GameInteraction.UpdateIsInCombatStatus();
+                    GameInteraction.Pause(true);
                 }
             }
             catch (Exception ex)
