@@ -7,6 +7,7 @@ using HarmonyLib;
 using Kingmaker;
 using Kingmaker.AI;
 using Kingmaker.Controllers.Combat;
+using Kingmaker.Controllers.Units;
 using Kingmaker.EntitySystem.Entities;
 using Kingmaker.TurnBasedMode;
 using Microsoft.Extensions.Logging;
@@ -289,6 +290,22 @@ namespace WOTRMultiplayer.HarmonyPatches.TurnBasedCombat
             }
         }
 
+        /// <summary>
+        /// IsDirectlyControllable must be true to avoid gettin up automatically
+        /// </summary>
+        /// <param name="instructions"></param>
+        /// <returns></returns>
+        [HarmonyPatch(typeof(UnitProneController), nameof(UnitProneController.Tick))]
+        [HarmonyTranspiler]
+        public static IEnumerable<CodeInstruction> UnitProneController_Tick_Transpiler(IEnumerable<CodeInstruction> instructions)
+        {
+            var target = PatchesUtils.GetTranspilerTarget(MethodBase.GetCurrentMethod());
+            var matcher = new CodeMatcher(instructions);
+
+            ReplaceIsDirectlyControllable(matcher, target);
+
+            return matcher.Instructions();
+        }
 
         /// <summary>
         /// Resets path each frame if !IsDirectlyControllable which breaks Multi Command sticky touch abilities, e.g. Cure Wounds

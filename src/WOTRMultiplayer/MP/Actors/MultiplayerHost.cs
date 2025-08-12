@@ -882,7 +882,7 @@ namespace WOTRMultiplayer.MP.Actors
 
         private void OnClientRestEnded(long playerId, ClientRestEnded ended)
         {
-            Logger.LogInformation("Received {messageType}. PlayerId={playerId}", nameof(ClientRestEnded));
+            Logger.LogInformation("Received {messageType}. PlayerId={playerId}", nameof(ClientRestEnded), playerId);
 
             UpdateStartRestButtonAfterResults(playerId);
         }
