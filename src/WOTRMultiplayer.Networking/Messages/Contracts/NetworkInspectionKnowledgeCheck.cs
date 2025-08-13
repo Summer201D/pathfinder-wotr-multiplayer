@@ -16,5 +16,8 @@ namespace WOTRMultiplayer.Networking.Messages.Contracts
 
         [ProtoMember(4)]
         public int DC { get; set; }
+
+        [ProtoMember(5)]
+        public string InspectionBlueprintId { get; set; }
     }
 }

@@ -11,5 +11,7 @@ namespace WOTRMultiplayer.MP.Entities.Inspect
         public StatType StatType { get; set; }
 
         public int DC { get; set; }
+
+        public string InspectionBlueprintId { get; set; }
     }
 }

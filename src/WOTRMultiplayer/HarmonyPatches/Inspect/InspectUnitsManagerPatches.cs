@@ -9,6 +9,7 @@ using Kingmaker.EntitySystem.Stats;
 using Kingmaker.Inspect;
 using Kingmaker.UnitLogic.Parts;
 using Microsoft.Extensions.Logging;
+using WOTRMultiplayer.MP.Entities.Inspect;
 
 namespace WOTRMultiplayer.HarmonyPatches.Inspect
 {
@@ -71,7 +72,15 @@ namespace WOTRMultiplayer.HarmonyPatches.Inspect
                 return true;
             }
 
-            var canContinue = Main.Multiplayer.OnInspectionKnowledgeCheck(target.UniqueId, initiator.UniqueId, statType, dc);
+            var check = new NetworkInspectionKnowledgeCheck
+            {
+                TargetUnitId = target.UniqueId,
+                InitiatorUnitId = initiator?.UniqueId,
+                StatType = statType,
+                DC = dc,
+                InspectionBlueprintId = target.BlueprintForInspection?.AssetGuid.ToString()
+            };
+            var canContinue = Main.Multiplayer.OnInspectionKnowledgeCheck(check);
             Main.GetLogger<InspectUnitsManagerPatches>().LogInformation("Can continue Inspection Knowledge check. Result={result}", canContinue);
             return canContinue;
         }

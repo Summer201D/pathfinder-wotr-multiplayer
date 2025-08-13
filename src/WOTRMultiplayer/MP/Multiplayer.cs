@@ -491,7 +491,7 @@ namespace WOTRMultiplayer.MP
         }
 
 
-        public bool OnInspectionKnowledgeCheck(string targetUnitId, string initiatorUnitId, StatType statType, int dc)
+        public bool OnInspectionKnowledgeCheck(NetworkInspectionKnowledgeCheck check)
         {
             if (_multiplayerActorAccessor.Current == null)
             {
@@ -503,13 +503,6 @@ namespace WOTRMultiplayer.MP
                 return false;
             }
 
-            var check = new NetworkInspectionKnowledgeCheck
-            {
-                TargetUnitId = targetUnitId,
-                InitiatorUnitId = initiatorUnitId,
-                StatType = statType,
-                DC = dc
-            };
             _multiplayerActorAccessor.Host.OnInspectionKnowledgeCheck(check);
             return true;
         }

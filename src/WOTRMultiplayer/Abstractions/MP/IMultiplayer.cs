@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using Kingmaker.EntitySystem.Persistence;
-using Kingmaker.EntitySystem.Stats;
 using Kingmaker.GameModes;
 using WOTRMultiplayer.Abstractions.Random;
 using WOTRMultiplayer.Abstractions.UI;
@@ -92,7 +91,7 @@ namespace WOTRMultiplayer.Abstractions.MP
 
         bool CanMakePerceptionCheck(string unitId, string mapObjectId);
 
-        bool OnInspectionKnowledgeCheck(string targetUnitId, string initiatorUnitId, StatType statType, int dc);
+        bool OnInspectionKnowledgeCheck(NetworkInspectionKnowledgeCheck check);
 
         void OnPerceptionCheck(NetworkPerceptionCheck check);
 
