@@ -208,7 +208,7 @@ namespace WOTRMultiplayer.HarmonyPatches.RandomIdGeneration
 
         public static string GetNewUnitUniqueId(BlueprintUnit unit, UnitEntityView prefab)
         {
-            var identifier = $"{GetCommonIdPart()}:{prefab.name}";
+            var identifier = $"{GetCommonIdPart()}:{prefab.name}:{unit?.CharacterName}";
             var id = Main.Multiplayer.ValueGenerator.GenerateUniqueId(UniqueIdType.Unit, Game.Instance.Player.GameId, identifier);
             return id;
         }
@@ -222,7 +222,7 @@ namespace WOTRMultiplayer.HarmonyPatches.RandomIdGeneration
 
         public static string GetNewChangeBlueprintUniqueId(UnitEntityData unitEntityData, BlueprintUnit blueprintUnit)
         {
-            var identifier = $"{GetCommonIdPart()}:{unitEntityData.CharacterName}";
+            var identifier = $"{GetCommonIdPart()}:{unitEntityData.CharacterName}:{blueprintUnit?.name}";
             var id = Main.Multiplayer.ValueGenerator.GenerateUniqueId(UniqueIdType.ChangeBlueprintUnit, Game.Instance.Player.GameId, identifier);
             return id;
         }
