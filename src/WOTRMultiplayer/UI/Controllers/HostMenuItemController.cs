@@ -318,7 +318,7 @@ namespace WOTRMultiplayer.UI.Controllers
         {
             Lobby.UpdatePlayers(players);
             var canStart = players.All(p => p.IsReady);
-            MainThreadAccessor.Enqueue(() =>
+            MainThreadAccessor.Post(() =>
             {
                 StartButton.Interactable = canStart;
             });

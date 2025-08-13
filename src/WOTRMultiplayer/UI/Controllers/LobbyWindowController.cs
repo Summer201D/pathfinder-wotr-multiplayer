@@ -101,7 +101,7 @@ namespace WOTRMultiplayer.UI.Controllers
                 return;
             }
 
-            _mainThreadAccessor.Enqueue(() =>
+            _mainThreadAccessor.Post(() =>
             {
                 _logger.LogInformation("Updating player list. PlayersCount={playersCount}", players.Count);
                 PlayersSectionContent.CleanupAllChildren();
@@ -145,7 +145,7 @@ namespace WOTRMultiplayer.UI.Controllers
 
         public void UpdateCharacterOwnerDropdown(int characterIndex, int playerIndex, bool silent = false)
         {
-            _mainThreadAccessor.Enqueue(() =>
+            _mainThreadAccessor.Post(() =>
             {
                 var characterContainer = CharactersInfoContainer.transform.GetChild(characterIndex);
                 if (characterContainer == null)
@@ -177,7 +177,7 @@ namespace WOTRMultiplayer.UI.Controllers
             var current = GetContentOwnedObject();
             var playerSection = PlayersSectionContent;
             var serverSection = ServerInfoSectionContent;
-            _mainThreadAccessor.Enqueue(() =>
+            _mainThreadAccessor.Post(() =>
             {
                 current?.SetActive(false);
                 playerSection?.CleanupAllChildren();
@@ -209,7 +209,7 @@ namespace WOTRMultiplayer.UI.Controllers
                 return;
             }
 
-            _mainThreadAccessor.Enqueue(() =>
+            _mainThreadAccessor.Post(() =>
             {
                 for (int characterIndex = 0; characterIndex < Main.MaxCharacters; characterIndex++)
                 {

@@ -14,7 +14,7 @@ namespace WOTRMultiplayer.Unity
             _logger = logger;
         }
 
-        public void Enqueue(Action action)
+        public void Post(Action action)
         {
             MainThreadDispatcher.Post(x => action(), null);
         }

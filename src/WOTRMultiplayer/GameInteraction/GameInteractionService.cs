@@ -113,7 +113,7 @@ namespace WOTRMultiplayer.GameInteraction
 
         public void InteractWithOvertip(NetworkOvertip networkOvertip)
         {
-            _mainThreadAccessor.Enqueue(() =>
+            _mainThreadAccessor.Post(() =>
             {
                 var units = networkOvertip.Units.Select(GetUnitEntity).ToList();
                 using var context = _networkExecutionContext.Value = RemoteExecutionContext.Create(units);
@@ -183,7 +183,7 @@ namespace WOTRMultiplayer.GameInteraction
 
         public void LeaveArea(string areaExitId)
         {
-            _mainThreadAccessor.Enqueue(() =>
+            _mainThreadAccessor.Post(() =>
             {
                 var allTransitions = Game.Instance.State.MapObjects.All.Select(o => o.View.GetComponent<AreaTransition>()).Where(t => t != null).ToList();
                 var transition = allTransitions.FirstOrDefault(x => string.Equals(x.GetComponent<MapObjectView>().UniqueId, areaExitId, System.StringComparison.OrdinalIgnoreCase));
@@ -212,7 +212,7 @@ namespace WOTRMultiplayer.GameInteraction
 
         public void MarkSuggestedDialogAnswers(List<NetworkDialogAnswerSuggestion> suggestions)
         {
-            _mainThreadAccessor.Enqueue(() =>
+            _mainThreadAccessor.Post(() =>
             {
                 ImmediatlyMarkSuggestedDialogAnswers(suggestions);
             });
@@ -341,7 +341,7 @@ namespace WOTRMultiplayer.GameInteraction
                 return;
             }
 
-            _mainThreadAccessor.Enqueue(() =>
+            _mainThreadAccessor.Post(() =>
             {
                 var unityDestination = new UnityEngine.Vector3(destination.X, destination.Y, destination.Z);
                 var command = new UnitMoveTo(unityDestination, 0.3f)
@@ -370,7 +370,7 @@ namespace WOTRMultiplayer.GameInteraction
 
         public void SelectDialogAnswer(string dialogName, string cueName, string answerName, string manualUnitSelectionId)
         {
-            _mainThreadAccessor.Enqueue(() =>
+            _mainThreadAccessor.Post(() =>
             {
                 try
                 {
@@ -396,7 +396,7 @@ namespace WOTRMultiplayer.GameInteraction
 
         public void SetDialogContinueButtonState(bool isEnabled)
         {
-            _mainThreadAccessor.Enqueue(() =>
+            _mainThreadAccessor.Post(() =>
             {
                 const string NextOrEndBindingName = "NextOrEnd";
                 try
@@ -450,7 +450,7 @@ namespace WOTRMultiplayer.GameInteraction
             // unfortunately blueprints can be loaded in mainthread only which means we can't get result right away
             // so it's kinda a workaround so caller (MultiplayerHost) could wait to see if `NotifyDialogStarted` needs to be manually triggered
             var hasStartedDialogTask = new TaskCompletionSource<bool>();
-            _mainThreadAccessor.Enqueue(() =>
+            _mainThreadAccessor.Post(() =>
             {
                 _logger.LogInformation("Start dialog. DialogName={dialogName}, TargetUnitId={targetUnitId}, InitiatorUnitId={initiatorUnitId}, MapObjectId={mapObjectId}, SpeakerKey={speakerKey}",
                     dialogName, targetUnitId, initiatorUnitId, mapObjectId, speakerKey);
@@ -487,7 +487,7 @@ namespace WOTRMultiplayer.GameInteraction
 
         public void ShowModalMessage(string error)
         {
-            _mainThreadAccessor.Enqueue(() =>
+            _mainThreadAccessor.Post(() =>
             {
                 EventBus.RaiseEvent<IMessageModalUIHandler>(x => x.HandleOpen(error, MessageModalBase.ModalType.Message, null));
             });
@@ -495,7 +495,7 @@ namespace WOTRMultiplayer.GameInteraction
 
         public void ShowWarningNotification(string text)
         {
-            _mainThreadAccessor.Enqueue(() =>
+            _mainThreadAccessor.Post(() =>
             {
                 EventBus.RaiseEvent<IWarningNotificationUIHandler>(x => x.HandleWarning(text, true), true);
             });
@@ -503,7 +503,7 @@ namespace WOTRMultiplayer.GameInteraction
 
         public void AddCombatText(string text)
         {
-            _mainThreadAccessor.Enqueue(() =>
+            _mainThreadAccessor.Post(() =>
             {
                 Game.Instance.GameLogController.AddReadyEvent(new GameLogEventWarningNotification(text));
             });
@@ -545,7 +545,7 @@ namespace WOTRMultiplayer.GameInteraction
         public Task UpdateUnitsAsync(List<NetworkUnit> networkUnits)
         {
             var taskCompletion = new TaskCompletionSource<bool>();
-            _mainThreadAccessor.Enqueue(() =>
+            _mainThreadAccessor.Post(() =>
             {
                 foreach (var networkUnit in networkUnits)
                 {
@@ -598,7 +598,7 @@ namespace WOTRMultiplayer.GameInteraction
         public string QuickLoadGame(string savePath)
         {
             var save = LoadSave(savePath);
-            _mainThreadAccessor.Enqueue(() =>
+            _mainThreadAccessor.Post(() =>
             {
                 Game.Instance.LoadGame(save);
             });
@@ -608,7 +608,7 @@ namespace WOTRMultiplayer.GameInteraction
         public void LoadGameFromMainMenu(string savePath)
         {
             var save = LoadSave(savePath);
-            _mainThreadAccessor.Enqueue(() =>
+            _mainThreadAccessor.Post(() =>
             {
                 Game.Instance.RootUiContext.MainMenuVM.EnterLoadGame(save);
             });
@@ -634,7 +634,7 @@ namespace WOTRMultiplayer.GameInteraction
 
         public void StartTurnBasedCombatTurn(string unitId)
         {
-            _mainThreadAccessor.Enqueue(() =>
+            _mainThreadAccessor.Post(() =>
             {
                 try
                 {
@@ -659,7 +659,7 @@ namespace WOTRMultiplayer.GameInteraction
         public void StartTurnBasedCombatTurn(bool isActingInSurpriseRound)
         {
             _logger.LogInformation("Starting turn. IsActingInSurpriseRound={isActingInSurpriseRound}", isActingInSurpriseRound);
-            _mainThreadAccessor.Enqueue(() =>
+            _mainThreadAccessor.Post(() =>
             {
                 try
                 {
@@ -704,7 +704,7 @@ namespace WOTRMultiplayer.GameInteraction
                 Thread.Sleep(50);
             }
 
-            _mainThreadAccessor.Enqueue(() =>
+            _mainThreadAccessor.Post(() =>
             {
                 var turnStatus = Game.Instance.TurnBasedCombatController.CurrentTurn?.Status ?? null;
                 _logger.LogInformation("Ending combat turn if it's not ending yet. TurnStatus={turnStatus}", turnStatus);
@@ -745,7 +745,7 @@ namespace WOTRMultiplayer.GameInteraction
 
         public void ClickMapObject(NetworkClick click)
         {
-            _mainThreadAccessor.Enqueue(() =>
+            _mainThreadAccessor.Post(() =>
             {
                 try
                 {
@@ -782,7 +782,7 @@ namespace WOTRMultiplayer.GameInteraction
                 }
 
                 var target = GetUnitEntity(toggle.TargetId);
-                _mainThreadAccessor.Enqueue(() =>
+                _mainThreadAccessor.Post(() =>
                 {
                     ability.SetIsOn(toggle.IsActive, target);
                 });
@@ -826,7 +826,7 @@ namespace WOTRMultiplayer.GameInteraction
                     PathVisualizer.Instance.m_CurrentPath.Claim(PathVisualizer.Instance);
                 }
 
-                _mainThreadAccessor.Enqueue(() =>
+                _mainThreadAccessor.Post(() =>
                 {
                     _logger.LogInformation("Running ability use command. Caster={casterId}, AbilityId={abilityId}", caster.UniqueId, ((UnitUseAbility)command).Ability?.UniqueId);
                     caster.Commands.Run(command);
@@ -870,7 +870,7 @@ namespace WOTRMultiplayer.GameInteraction
 
         public void CollectContainerLoot(NetworkLootContainer networkLootContainer)
         {
-            _mainThreadAccessor.Enqueue(() =>
+            _mainThreadAccessor.Post(() =>
             {
                 try
                 {
@@ -932,7 +932,7 @@ namespace WOTRMultiplayer.GameInteraction
                 return;
             }
 
-            _mainThreadAccessor.Enqueue(() =>
+            _mainThreadAccessor.Post(() =>
             {
                 var countToDrop = dropItem.Item.Count;
                 foreach (var item in possibleItemsToDrop)
@@ -1001,7 +1001,7 @@ namespace WOTRMultiplayer.GameInteraction
 
         public void UpdateEquipmentSlot(NetworkEquipmentSlot slot)
         {
-            _mainThreadAccessor.Enqueue(() =>
+            _mainThreadAccessor.Post(() =>
             {
                 var unit = GetUnitEntity(slot.OwnerId);
                 if (unit == null)
@@ -1072,7 +1072,7 @@ namespace WOTRMultiplayer.GameInteraction
                 return;
             }
 
-            _mainThreadAccessor.Enqueue(() =>
+            _mainThreadAccessor.Post(() =>
             {
                 if (unit.Body.CurrentHandEquipmentSetIndex == set.Index)
                 {
@@ -1115,7 +1115,7 @@ namespace WOTRMultiplayer.GameInteraction
                 return;
             }
 
-            _mainThreadAccessor.Enqueue(() =>
+            _mainThreadAccessor.Post(() =>
             {
                 _logger.LogInformation("Trigerring perception check. MapObjectId={mapObjectId}", check.MapObject.Id);
                 using var context = _networkExecutionContext.Value = RemoteExecutionContext.Create(check);
@@ -1139,7 +1139,7 @@ namespace WOTRMultiplayer.GameInteraction
                 return;
             }
 
-            _mainThreadAccessor.Enqueue(() =>
+            _mainThreadAccessor.Post(() =>
             {
                 _logger.LogInformation("Applying inspection knowledge check. InitiatorUnitId={initiatorUnitId}, TargetUnitId={targetUnitId}, StatType={statType}", check.InitiatorUnitId, check.TargetUnitId, check.StatType);
                 var blueprintForInspection = targetUnit.Descriptor.BlueprintForInspection;
@@ -1263,7 +1263,7 @@ namespace WOTRMultiplayer.GameInteraction
 
         public void ApplyGameSettings(NetworkGameSettings gameSettings)
         {
-            _mainThreadAccessor.Enqueue(() =>
+            _mainThreadAccessor.Post(() =>
             {
                 _logger.LogInformation("Applying settings. Settings={settings}", gameSettings);
                 SettingsRoot.Game.TurnBased.EnableTurnBasedMode.SetValueAndConfirm(gameSettings.TurnBased.IsTurnBasedModeEnabled);
@@ -1312,7 +1312,7 @@ namespace WOTRMultiplayer.GameInteraction
 
         public void SpawnCampPlace(NetworkVector3 position)
         {
-            _mainThreadAccessor.Enqueue(() =>
+            _mainThreadAccessor.Post(() =>
             {
                 var campPosition = new Vector3(position.X, position.Y, position.Z);
                 RestHelper.SpawnCampPlace(campPosition);
@@ -1321,7 +1321,7 @@ namespace WOTRMultiplayer.GameInteraction
 
         public void SetCampingUseHealingSpells(bool isOn)
         {
-            _mainThreadAccessor.Enqueue(() =>
+            _mainThreadAccessor.Post(() =>
             {
                 var restView = RestView;
                 if (restView == null)
@@ -1343,7 +1343,7 @@ namespace WOTRMultiplayer.GameInteraction
 
         public void SetCampingState(NetworkCampingState state)
         {
-            _mainThreadAccessor.Enqueue(() =>
+            _mainThreadAccessor.Post(() =>
             {
                 try
                 {
@@ -1373,7 +1373,7 @@ namespace WOTRMultiplayer.GameInteraction
 
         public void SetCampingRoles(List<NetworkCampingRole> roles)
         {
-            _mainThreadAccessor.Enqueue(() =>
+            _mainThreadAccessor.Post(() =>
             {
                 var campingState = Game.Instance.Player.Camping;
                 if (campingState == null)
@@ -1391,7 +1391,7 @@ namespace WOTRMultiplayer.GameInteraction
 
         public void SetStartRestButtonState(bool isInteractable, int readyPlayersCount, int totalPlayersCount)
         {
-            _mainThreadAccessor.Enqueue(() =>
+            _mainThreadAccessor.Post(() =>
             {
                 if (RestView == null)
                 {
@@ -1415,7 +1415,7 @@ namespace WOTRMultiplayer.GameInteraction
 
         public void StartRest()
         {
-            _mainThreadAccessor.Enqueue(() =>
+            _mainThreadAccessor.Post(() =>
             {
                 RestView?.StartRest();
             });
@@ -1437,7 +1437,7 @@ namespace WOTRMultiplayer.GameInteraction
         public void UpdateIsInCombatStatus()
         {
             Game.Instance.Player.UpdateIsInCombat();
-            _mainThreadAccessor.Enqueue(() =>
+            _mainThreadAccessor.Post(() =>
             {
                 Game.Instance.Player.UpdateIsInCombat();
             });
@@ -1445,7 +1445,7 @@ namespace WOTRMultiplayer.GameInteraction
 
         public void TryInterruptRestBanter(NetworkRestBanter networkRestBanter)
         {
-            _mainThreadAccessor.Enqueue(() =>
+            _mainThreadAccessor.Post(() =>
             {
                 try
                 {
@@ -1477,7 +1477,7 @@ namespace WOTRMultiplayer.GameInteraction
 
         public void StartTurnBasedCombatTurnAsAnotherUnit(string unitId)
         {
-            _mainThreadAccessor.Enqueue(() =>
+            _mainThreadAccessor.Post(() =>
             {
                 var unit = GetUnitEntity(unitId);
                 if (unit == null)
@@ -1841,7 +1841,7 @@ namespace WOTRMultiplayer.GameInteraction
             var selectedUnit = selectedUnits.FirstOrDefault();
             var worldPosition = new Vector3(click.WorldPosition.X, click.WorldPosition.Y, click.WorldPosition.Z);
 
-            _mainThreadAccessor.Enqueue(() =>
+            _mainThreadAccessor.Post(() =>
             {
                 try
                 {
