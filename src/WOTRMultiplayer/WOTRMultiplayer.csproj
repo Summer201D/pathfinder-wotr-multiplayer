@@ -112,7 +112,7 @@
 		<Reference Include="UnityModManager">
 			<HintPath>..\..\..\..\Games\Steam\steamapps\common\Pathfinder Second Adventure\Wrath_Data\Managed\UnityModManager\UnityModManager.dll</HintPath>
 		</Reference>
-		<Reference Include="Owlcat.Runtime.UI">
+		<Reference Include="Owlcat.Runtime.UI" Publicize="true">
 			<HintPath>..\..\..\..\Games\Steam\steamapps\common\Pathfinder Second Adventure\Wrath_Data\Managed\Owlcat.Runtime.UI.dll</HintPath>
 		</Reference>
 	</ItemGroup>

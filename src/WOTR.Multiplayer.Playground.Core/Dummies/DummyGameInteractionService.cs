@@ -13,6 +13,7 @@ using WOTRMultiplayer.MP.Entities.Abilities;
 using WOTRMultiplayer.MP.Entities.Dialogs;
 using WOTRMultiplayer.MP.Entities.Equipment;
 using WOTRMultiplayer.MP.Entities.Inspect;
+using WOTRMultiplayer.MP.Entities.Leveling;
 using WOTRMultiplayer.MP.Entities.Loot;
 using WOTRMultiplayer.MP.Entities.MapObjects;
 using WOTRMultiplayer.MP.Entities.Rest;
@@ -305,6 +306,54 @@ namespace WOTR.Multiplayer.Playground.Core.Dummies
         }
 
         public void MemorizeSpell(NetworkSpellSlot slot)
+        {
+        }
+
+        public void StartLeveling(string unitId)
+        {
+        }
+
+        public void SelectLevelingClassArchetype(string archetypeId)
+        {
+        }
+
+        public void SelectLevelingClass(string classId)
+        {
+        }
+
+        public void UpdateLevelingPhaseControls(bool isEnabled)
+        {
+        }
+
+        public void SwitchLevelingPhase(NetworkLevelingPhase phase)
+        {
+        }
+
+        public void DecreaseLevelingSkillPoint(NetworkLevelingSkillPoint skillPoint)
+        {
+        }
+
+        public void IncreaseLevelingSkillPoint(NetworkLevelingSkillPoint skillPoint)
+        {
+        }
+
+        public void SelectLevelingFeature(NetworkLevelingFeature feature)
+        {
+        }
+
+        public void SelectLevelingSpell(NetworkLevelingSpell spell)
+        {
+        }
+
+        public void RemoveLevelingSpell(NetworkLevelingSpell spell)
+        {
+        }
+
+        public void CompleteLeveling()
+        {
+        }
+
+        public void TerminateLeveling()
         {
         }
     }

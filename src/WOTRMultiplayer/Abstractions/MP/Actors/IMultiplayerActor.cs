@@ -6,6 +6,7 @@ using WOTRMultiplayer.MP.Entities;
 using WOTRMultiplayer.MP.Entities.Abilities;
 using WOTRMultiplayer.MP.Entities.Combat;
 using WOTRMultiplayer.MP.Entities.Equipment;
+using WOTRMultiplayer.MP.Entities.Leveling;
 using WOTRMultiplayer.MP.Entities.Loot;
 using WOTRMultiplayer.MP.Entities.MapObjects;
 using WOTRMultiplayer.MP.Entities.Rest;
@@ -121,5 +122,27 @@ namespace WOTRMultiplayer.Abstractions.MP.Actors
         void OnMemorizeSpell(NetworkSpellSlot slot);
 
         void OnForgetSpell(NetworkSpellSlot slot);
+
+        void OnLevelingClassSelected(string classId);
+
+        void OnLevelingClassArchetypeSelected(string archetypeId);
+
+        void OnLevelingTerminated();
+
+        bool CanMakeLevelingDecisions();
+
+        void OnLevelingWitnessPhase(NetworkLevelingPhase phase);
+
+        void OnLevelingIncreaseSkillPoint(NetworkLevelingSkillPoint skill);
+
+        void OnLevelingDecreaseSkillPoint(NetworkLevelingSkillPoint skill);
+
+        void OnLevelingFeatureSelected(NetworkLevelingFeature feature);
+
+        void OnLevelingSpellRemoved(NetworkLevelingSpell spell);
+
+        void OnLevelingSpellChosen(NetworkLevelingSpell spell);
+
+        void OnLevelingCompleted();
     }
 }

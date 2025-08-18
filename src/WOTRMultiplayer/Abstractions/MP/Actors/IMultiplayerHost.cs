@@ -36,5 +36,7 @@ namespace WOTRMultiplayer.Abstractions.MP.Actors
 
         void OnMakeVendorDeal();
         void OnCloseVendorWindow();
+
+        void OnCharacterLevelingStarted(string unitId);
     }
 }

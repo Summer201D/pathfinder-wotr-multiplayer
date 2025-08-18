@@ -16,6 +16,7 @@ using WOTRMultiplayer.MP.Entities.Abilities;
 using WOTRMultiplayer.MP.Entities.Combat;
 using WOTRMultiplayer.MP.Entities.Equipment;
 using WOTRMultiplayer.MP.Entities.Inspect;
+using WOTRMultiplayer.MP.Entities.Leveling;
 using WOTRMultiplayer.MP.Entities.Loot;
 using WOTRMultiplayer.MP.Entities.MapObjects;
 using WOTRMultiplayer.MP.Entities.Rest;
@@ -23,6 +24,7 @@ using WOTRMultiplayer.MP.Entities.Spells;
 using WOTRMultiplayer.MP.Entities.Vendor;
 using WOTRMultiplayer.UI;
 using WOTRMultiplayer.UI.Menu;
+using static Kingmaker.Armies.TacticalCombat.Grid.TacticalCombatGrid;
 
 namespace WOTRMultiplayer.MP
 {
@@ -1055,6 +1057,134 @@ namespace WOTRMultiplayer.MP
                 _logger.LogError(ex, "{methodName}", MethodBase.GetCurrentMethod().Name);
                 throw;
             }
+        }
+
+        public void OnLevelingClassArchetypeSelected(string archetypeId)
+        {
+            if (_multiplayerActorAccessor.Current == null)
+            {
+                return;
+            }
+
+            _multiplayerActorAccessor.Current.OnLevelingClassArchetypeSelected(archetypeId);
+        }
+
+        public void OnLevelingClassSelected(string classId)
+        {
+            if (_multiplayerActorAccessor.Current == null)
+            {
+                return;
+            }
+
+            _multiplayerActorAccessor.Current.OnLevelingClassSelected(classId);
+        }
+
+        public bool RequestLevelingUI(string unitId)
+        {
+            if (_multiplayerActorAccessor.Current == null)
+            {
+                return true;
+            }
+
+            if (_multiplayerActorAccessor.Client.IsActive)
+            {
+                var canContinue = _multiplayerActorAccessor.Client.RequestLevelingUI(unitId);
+                return canContinue;
+            }
+
+            _multiplayerActorAccessor.Host.OnCharacterLevelingStarted(unitId);
+            return true;
+        }
+
+        public void OnLevelingTerminated()
+        {
+            if (_multiplayerActorAccessor.Current == null)
+            {
+                return;
+            }
+
+            _multiplayerActorAccessor.Current.OnLevelingTerminated();
+        }
+
+        public bool CanMakeLevelingDecisions()
+        {
+            if (_multiplayerActorAccessor.Current == null)
+            {
+                return true;
+            }
+
+            var canContinue = _multiplayerActorAccessor.Current.CanMakeLevelingDecisions();
+            return canContinue;
+        }
+
+        public void OnWitnessLevelingPhase(NetworkLevelingPhase phase)
+        {
+            if (_multiplayerActorAccessor.Current == null)
+            {
+                return;
+            }
+
+            _multiplayerActorAccessor.Current.OnLevelingWitnessPhase(phase);
+        }
+
+        public void OnLevelingIncreaseSkillPoint(NetworkLevelingSkillPoint skill)
+        {
+            if (_multiplayerActorAccessor.Current == null)
+            {
+                return;
+            }
+
+            _multiplayerActorAccessor.Current.OnLevelingIncreaseSkillPoint(skill);
+        }
+
+        public void OnLevelingDecreaseSkillPoint(NetworkLevelingSkillPoint skill)
+        {
+            if (_multiplayerActorAccessor.Current == null)
+            {
+                return;
+            }
+
+            _multiplayerActorAccessor.Current.OnLevelingDecreaseSkillPoint(skill);
+        }
+
+        public void OnLevelingFeatureSelected(NetworkLevelingFeature feature)
+        {
+            if (_multiplayerActorAccessor.Current == null)
+            {
+                return;
+            }
+
+            _multiplayerActorAccessor.Current.OnLevelingFeatureSelected(feature);
+        }
+
+        public void OnLevelingSpellRemoved(NetworkLevelingSpell spell)
+        {
+            if (_multiplayerActorAccessor.Current == null)
+            {
+                return;
+            }
+
+            _multiplayerActorAccessor.Current.OnLevelingSpellRemoved(spell);
+        }
+
+        public void OnLevelingSpellChosen(NetworkLevelingSpell spell)
+        {
+            if (_multiplayerActorAccessor.Current == null)
+            {
+                return;
+            }
+
+            _multiplayerActorAccessor.Current.OnLevelingSpellChosen(spell);
+        }
+
+        public void OnLevelingCompleted()
+        {
+            if (_multiplayerActorAccessor.Current == null)
+            {
+                return;
+            }
+
+            _multiplayerActorAccessor.Current.OnLevelingCompleted();
         }
 
         private void ShowEscMenuMultiplayerLobby()

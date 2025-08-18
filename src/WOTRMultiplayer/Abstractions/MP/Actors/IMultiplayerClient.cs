@@ -17,5 +17,6 @@ namespace WOTRMultiplayer.Abstractions.MP.Actors
         Action<int, int> OnCharacterOwnerChanged { get; set; }
 
         void OnBeforeTryRollRandomEncounter();
+        bool RequestLevelingUI(string unitId);
     }
 }

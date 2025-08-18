@@ -10,6 +10,7 @@ using WOTRMultiplayer.MP.Entities.Abilities;
 using WOTRMultiplayer.MP.Entities.Dialogs;
 using WOTRMultiplayer.MP.Entities.Equipment;
 using WOTRMultiplayer.MP.Entities.Inspect;
+using WOTRMultiplayer.MP.Entities.Leveling;
 using WOTRMultiplayer.MP.Entities.Loot;
 using WOTRMultiplayer.MP.Entities.MapObjects;
 using WOTRMultiplayer.MP.Entities.Rest;
@@ -154,7 +155,25 @@ namespace WOTRMultiplayer.Abstractions.GameInteraction
         void CloseVendorWindow();
 
         void MakeVendorDeal();
+
         void ForgetSpell(NetworkSpellSlot slot);
+
         void MemorizeSpell(NetworkSpellSlot slot);
+
+        void StartLeveling(string unitId);
+
+        void SelectLevelingClassArchetype(string archetypeId);
+
+        void SelectLevelingClass(string classId);
+
+        void UpdateLevelingPhaseControls(bool isEnabled);
+        void SwitchLevelingPhase(NetworkLevelingPhase phase);
+        void DecreaseLevelingSkillPoint(NetworkLevelingSkillPoint skillPoint);
+        void IncreaseLevelingSkillPoint(NetworkLevelingSkillPoint skillPoint);
+        void SelectLevelingFeature(NetworkLevelingFeature feature);
+        void SelectLevelingSpell(NetworkLevelingSpell spell);
+        void RemoveLevelingSpell(NetworkLevelingSpell spell);
+        void CompleteLeveling();
+        void TerminateLeveling();
     }
 }

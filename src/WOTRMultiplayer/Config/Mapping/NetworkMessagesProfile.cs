@@ -5,6 +5,7 @@ using WOTRMultiplayer.MP.Entities.Combat;
 using WOTRMultiplayer.MP.Entities.Dialogs;
 using WOTRMultiplayer.MP.Entities.Equipment;
 using WOTRMultiplayer.MP.Entities.Inspect;
+using WOTRMultiplayer.MP.Entities.Leveling;
 using WOTRMultiplayer.MP.Entities.Loot;
 using WOTRMultiplayer.MP.Entities.MapObjects;
 using WOTRMultiplayer.MP.Entities.Rest;
@@ -125,6 +126,18 @@ namespace WOTRMultiplayer.Config.Mapping
                 .ReverseMap();
 
             CreateMap<NetworkSpellSlot, Networking.Messages.Contracts.NetworkSpellSlot>()
+                .ReverseMap();
+
+            CreateMap<NetworkLevelingPhase, Networking.Messages.Contracts.NetworkLevelingPhase>()
+                .ReverseMap();
+
+            CreateMap<NetworkLevelingSkillPoint, Networking.Messages.Contracts.NetworkLevelingSkillPoint>()
+                .ReverseMap();
+
+            CreateMap<NetworkLevelingFeature, Networking.Messages.Contracts.NetworkLevelingFeature>()
+                .ReverseMap();
+
+            CreateMap<NetworkLevelingSpell, Networking.Messages.Contracts.NetworkLevelingSpell>()
                 .ReverseMap();
         }
     }

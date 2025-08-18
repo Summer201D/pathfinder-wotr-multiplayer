@@ -16,6 +16,7 @@ using WOTRMultiplayer.MP.Entities;
 using WOTRMultiplayer.MP.Entities.Abilities;
 using WOTRMultiplayer.MP.Entities.Combat;
 using WOTRMultiplayer.MP.Entities.Equipment;
+using WOTRMultiplayer.MP.Entities.Leveling;
 using WOTRMultiplayer.MP.Entities.Loot;
 using WOTRMultiplayer.MP.Entities.MapObjects;
 using WOTRMultiplayer.MP.Entities.Rest;
@@ -524,6 +525,169 @@ namespace WOTRMultiplayer.MP.Actors
             Send(message);
         }
 
+        public void OnLevelingClassSelected(string classId)
+        {
+            if (!CanMakeLevelingDecisions())
+            {
+                return;
+            }
+
+            var message = new NotifyLevelingClassSelected
+            {
+                ClassId = classId
+            };
+            Logger.LogInformation("Sending {messageType}. ClassId={classId}", nameof(NotifyLevelingClassSelected), classId);
+            Send(message);
+        }
+
+        public void OnLevelingClassArchetypeSelected(string archetypeId)
+        {
+            if (!CanMakeLevelingDecisions())
+            {
+                return;
+            }
+
+            var message = new NotifyLevelingClassArchetypeSelected
+            {
+                ArchetypeId = archetypeId
+            };
+            Logger.LogInformation("Sending {messageType}. ArchetypeId={archetypeId}", nameof(NotifyLevelingClassArchetypeSelected), archetypeId);
+            Send(message);
+        }
+
+        public bool CanMakeLevelingDecisions()
+        {
+            return Game.Leveling != null && IsControlledByLocalPlayer(Game.Leveling.UnitId) && Game.Leveling.PlayerReadiness.Count >= Game.Players.Count;
+        }
+
+        public void OnLevelingWitnessPhase(NetworkLevelingPhase phase)
+        {
+            if (Game.Leveling.PhaseIndex != phase.Index && CanMakeLevelingDecisions())
+            {
+                var phaseChangedMessage = new NotifyLevelingPhaseChanged
+                {
+                    Phase = Mapper.Map<Networking.Messages.Contracts.NetworkLevelingPhase>(phase)
+                };
+                Send(phaseChangedMessage);
+                Game.Leveling.PhaseIndex = phase.Index;
+                Game.Leveling.PlayerReadiness.Clear();
+                Logger.LogInformation("Sending {messageType}. Index={index}", nameof(NotifyLevelingPhaseChanged), phaseChangedMessage.Phase.Index);
+            }
+
+            var localPlayer = GetLocalPlayerId();
+            WitnessLevelingPhase(localPlayer);
+            var message = new NotifyLevelingPhaseWitnessed
+            {
+                PlayerId = localPlayer,
+                Phase = Mapper.Map<Networking.Messages.Contracts.NetworkLevelingPhase>(phase)
+            };
+            Logger.LogInformation("Sending {messageType}. PlayerId={playerId}, Index={index}", nameof(NotifyLevelingPhaseWitnessed), message.PlayerId, message.Phase.Index);
+            Send(message);
+        }
+
+        public void OnLevelingIncreaseSkillPoint(NetworkLevelingSkillPoint skill)
+        {
+            if (!CanMakeLevelingDecisions())
+            {
+                return;
+            }
+
+            var message = new NotifyLevelingSkillPointIncreased
+            {
+                Skill = Mapper.Map<Networking.Messages.Contracts.NetworkLevelingSkillPoint>(skill)
+            };
+            Logger.LogInformation("Sending {messageType}. StatType={type}", nameof(NotifyLevelingSkillPointIncreased), message.Skill.StatType);
+            Send(message);
+        }
+
+        public void OnLevelingDecreaseSkillPoint(NetworkLevelingSkillPoint skill)
+        {
+            if (!CanMakeLevelingDecisions())
+            {
+                return;
+            }
+
+            var message = new NotifyLevelingSkillPointDecreased
+            {
+                Skill = Mapper.Map<Networking.Messages.Contracts.NetworkLevelingSkillPoint>(skill)
+            };
+            Logger.LogInformation("Sending {messageType}. StatType={type}", nameof(NotifyLevelingSkillPointDecreased), message.Skill.StatType);
+            Send(message);
+        }
+
+        public void OnLevelingFeatureSelected(NetworkLevelingFeature feature)
+        {
+            if (!CanMakeLevelingDecisions())
+            {
+                return;
+            }
+
+            var message = new NotifyLevelingFeatureSelected
+            {
+                Feature = Mapper.Map<Networking.Messages.Contracts.NetworkLevelingFeature>(feature)
+            };
+            Logger.LogInformation("Sending {messageType}. StatType={type}", nameof(NetworkLevelingFeature), message.Feature.Name, message.Feature.Id);
+            Send(message);
+        }
+        public void OnLevelingSpellRemoved(NetworkLevelingSpell spell)
+        {
+            if (!CanMakeLevelingDecisions())
+            {
+                return;
+            }
+
+            var message = new NotifyLevelingSpellRemoved
+            {
+                Spell = Mapper.Map<Networking.Messages.Contracts.NetworkLevelingSpell>(spell)
+            };
+            Logger.LogInformation("Sending {messageType}. SpellName={name}, SpellId={id}", nameof(NotifyLevelingSpellRemoved), message.Spell.Name, message.Spell.Id);
+            Send(message);
+        }
+
+        public void OnLevelingSpellChosen(NetworkLevelingSpell spell)
+        {
+            if (!CanMakeLevelingDecisions())
+            {
+                return;
+            }
+
+            var message = new NotifyLevelingSpellChosen
+            {
+                Spell = Mapper.Map<Networking.Messages.Contracts.NetworkLevelingSpell>(spell)
+            };
+            Logger.LogInformation("Sending {messageType}. SpellName={name}, SpellId={id}", nameof(NotifyLevelingSpellChosen), message.Spell.Name, message.Spell.Id);
+            Send(message);
+        }
+
+        public void OnLevelingTerminated()
+        {
+            Logger.LogInformation("Leveling has been terminated. UnitId={unitId}", Game.Leveling.UnitId);
+
+            if (CanMakeLevelingDecisions())
+            {
+                var message = new NotifyLevelingTerminated();
+                Logger.LogInformation("Sending {messageType}", nameof(NotifyLevelingTerminated));
+                Send(message);
+            }
+
+            Game.Leveling = null;
+        }
+
+        public void OnLevelingCompleted()
+        {
+            Logger.LogInformation("Leveling has been completed. UnitId={unitId}", Game.Leveling.UnitId);
+
+            if (CanMakeLevelingDecisions())
+            {
+                var message = new NotifyLevelingCompleted();
+                Logger.LogInformation("Sending {messageType}", nameof(NotifyLevelingCompleted));
+                Send(message);
+                return;
+            }
+
+            Game.Leveling = null;
+        }
+
         protected abstract bool OnStartGameModeInternal(GameModeType type);
 
         protected abstract bool OnStopGameModeInternal(GameModeType type);
@@ -538,6 +702,17 @@ namespace WOTRMultiplayer.MP.Actors
                     RemovalDelay = removalDelay
                 };
                 Logger.LogInformation("Forced pause has been initialized. Delay={delay}", removalDelay);
+            }
+        }
+
+        protected void WitnessLevelingPhase(long playerId)
+        {
+            lock (ActionLock)
+            {
+                Game.Leveling.PlayerReadiness.Add(playerId);
+
+                var isEnabled = CanMakeLevelingDecisions();
+                GameInteraction.UpdateLevelingPhaseControls(isEnabled);
             }
         }
 
@@ -684,6 +859,7 @@ namespace WOTRMultiplayer.MP.Actors
             Game.Dialog = null;
             Game.SaveFilePath = null;
             Game.Combat = null;
+            Game.Leveling = null;
             DiceRollStorage.Reset();
         }
 

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Kingmaker.GameModes;
 using WOTRMultiplayer.MP.Entities.Combat;
 using WOTRMultiplayer.MP.Entities.Dialogs;
+using WOTRMultiplayer.MP.Entities.Leveling;
 
 namespace WOTRMultiplayer.MP.Entities
 {
@@ -36,6 +37,8 @@ namespace WOTRMultiplayer.MP.Entities
 
         public NetworkRandomEncounter RandomEncounter { get; set; }
 
+        public NetworkLeveling Leveling { get; set; }
+
         public NetworkGame(string saveFilePath)
         {
             SaveFilePath = saveFilePath;
@@ -57,6 +60,7 @@ namespace WOTRMultiplayer.MP.Entities
             ForcedPause = null;
             RandomEncounter = null;
             RestBanterSeed = 0;
+            Leveling = null;
         }
     }
 }

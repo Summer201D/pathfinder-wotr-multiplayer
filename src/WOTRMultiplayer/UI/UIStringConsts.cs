@@ -67,6 +67,8 @@
 
             public const string CantChangeSpellSlotsIfNoControl = "Changing spells is restricted to character owner only";
 
+            public const string MismatchedArchetypeSelection = "Unable to selected archetype due to mismatched game content (DLCs/mods)";
+
             public class ForcedPauseReasons
             {
                 public const string AreaLoading = "Please wait for other players to finish loading the area";

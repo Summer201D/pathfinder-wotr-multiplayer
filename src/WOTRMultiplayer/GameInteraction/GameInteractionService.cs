@@ -18,6 +18,7 @@ using Kingmaker.DialogSystem.Blueprints;
 using Kingmaker.EntitySystem;
 using Kingmaker.EntitySystem.Entities;
 using Kingmaker.EntitySystem.Persistence;
+using Kingmaker.EntitySystem.Stats;
 using Kingmaker.GameModes;
 using Kingmaker.Globalmap.Blueprints;
 using Kingmaker.Inspect;
@@ -33,12 +34,23 @@ using Kingmaker.TurnBasedMode.Controllers;
 using Kingmaker.UI;
 using Kingmaker.UI._ConsoleUI.Overtips;
 using Kingmaker.UI.Models.Log.Events;
+using Kingmaker.UI.MVVM._PCView.CharGen;
+using Kingmaker.UI.MVVM._PCView.CharGen.Phases;
+using Kingmaker.UI.MVVM._PCView.CharGen.Phases.Class;
+using Kingmaker.UI.MVVM._PCView.CharGen.Phases.FeatureSelector;
+using Kingmaker.UI.MVVM._PCView.CharGen.Phases.Skills;
+using Kingmaker.UI.MVVM._PCView.CharGen.Phases.Spells;
 using Kingmaker.UI.MVVM._PCView.Dialog.BookEvent;
 using Kingmaker.UI.MVVM._PCView.Dialog.Dialog;
 using Kingmaker.UI.MVVM._PCView.Dialog.Interchapter;
 using Kingmaker.UI.MVVM._PCView.InGame;
 using Kingmaker.UI.MVVM._PCView.Rest;
+using Kingmaker.UI.MVVM._VM.CharGen.Phases;
+using Kingmaker.UI.MVVM._VM.CharGen.Phases.Class;
+using Kingmaker.UI.MVVM._VM.CharGen.Phases.FeatureSelector;
+using Kingmaker.UI.MVVM._VM.CharGen.Phases.Spells;
 using Kingmaker.UI.MVVM._VM.Dialog.Dialog;
+using Kingmaker.UI.MVVM._VM.Party;
 using Kingmaker.UI.MVVM._VM.Rest;
 using Kingmaker.UI.MVVM._VM.ServiceWindows.Spellbook.MemorizingPanel;
 using Kingmaker.UI.MVVM._VM.Vendor;
@@ -51,6 +63,8 @@ using Kingmaker.Utility;
 using Kingmaker.View.MapObjects;
 using Microsoft.Extensions.Logging;
 using Owlcat.Runtime.UI.Controls.Button;
+using Owlcat.Runtime.UI.SelectionGroup;
+using UniRx;
 using UnityEngine;
 using WOTRMultiplayer.Abstractions.GameInteraction;
 using WOTRMultiplayer.Abstractions.UI;
@@ -63,6 +77,7 @@ using WOTRMultiplayer.MP.Entities.Combat;
 using WOTRMultiplayer.MP.Entities.Dialogs;
 using WOTRMultiplayer.MP.Entities.Equipment;
 using WOTRMultiplayer.MP.Entities.Inspect;
+using WOTRMultiplayer.MP.Entities.Leveling;
 using WOTRMultiplayer.MP.Entities.Loot;
 using WOTRMultiplayer.MP.Entities.MapObjects;
 using WOTRMultiplayer.MP.Entities.Rest;
@@ -101,6 +116,7 @@ namespace WOTRMultiplayer.GameInteraction
         private RestPCView RestView => InGamePCView?.m_StaticPartPCView?.m_RestContextPCView?.m_RestPCView;
         private VendorVM VendorViewVM => InGamePCView?.m_StaticPartPCView?.m_VendorPCView?.GetViewModel() as VendorVM;
         private SpellbookMemorizingPanelVM SpellbookMemorizingVM => InGamePCView.m_StaticPartPCView?.m_ServiceWindowsPCView?.m_SpellbookPCView?.m_MemorizingPanelView?.GetViewModel() as SpellbookMemorizingPanelVM;
+        private CharGenPCView CharGenView => InGamePCView.m_StaticPartPCView?.m_CharGenContextPCView?.m_CharGenPCView;
 
         public bool IsRandomEncounter => (Game.Instance.RestController.Status?.NightRandomEncounter ?? false) || (Game.Instance.RestController.Status?.WasNightRandomEncounter ?? false);
 
@@ -1570,6 +1586,403 @@ namespace WOTRMultiplayer.GameInteraction
                 AddCombatText(string.Format(UIStringConsts.GameNotifications.CombatLog.SpellMemorized, spell.Name, unit.CharacterName));
                 RefreshSpellbookUI();
             });
+        }
+
+        public void StartLeveling(string unitId)
+        {
+            _mainThreadAccessor.Post(() =>
+            {
+                try
+                {
+                    var partyView = InGamePCView.m_StaticPartPCView.m_PartyPCView?.m_Characters?.FirstOrDefault(p => string.Equals(p.UnitEntityData.UniqueId, unitId, StringComparison.OrdinalIgnoreCase));
+                    if (partyView?.GetViewModel() is not PartyCharacterVM partyVM)
+                    {
+                        _logger.LogError("Unable to start leveling due to missing party character vm. UnitId={unitId}", unitId);
+                        return;
+                    }
+
+                    _logger.LogInformation("Starting leveling process. UnitId={unitId}", unitId);
+                    partyVM.LevelUp();
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error while starting leveling process. UnitId={unitId}", unitId);
+                    throw;
+                }
+            });
+        }
+
+        public void SelectLevelingClassArchetype(string archetypeId)
+        {
+            _mainThreadAccessor.Post(() =>
+            {
+                try
+                {
+                    if (CharGenView == null)
+                    {
+                        _logger.LogWarning("Can't select class archetype due to missing CharGenView");
+                        return;
+                    }
+
+                    var viewModel = GetLevelingPhaseViewModel<CharGenClassPhaseVM>();
+                    if (viewModel == null)
+                    {
+                        _logger.LogError("Unable to get leveling phase viewmodel");
+                        return;
+                    }
+
+                    if (string.IsNullOrEmpty(archetypeId))
+                    {
+                        viewModel.SelectedClassVM.Value.TryUnselectArchetypes();
+                        viewModel.OnSelectorArchetypeChanged(null);
+                        return;
+                    }
+
+                    if (viewModel.SelectedClassVM.Value == null)
+                    {
+                        _logger.LogWarning("Class must be selected to select archetype");
+                        return;
+                    }
+
+                    var archetypes = viewModel.SelectedClassVM.Value.GetArchetypesList(viewModel.SelectedClassVM.Value.Class).Cast<CharGenClassSelectorItemVM>().ToList();
+                    var archetype = archetypes.FirstOrDefault(c => string.Equals(c.Archetype.AssetGuid.ToString(), archetypeId, StringComparison.OrdinalIgnoreCase));
+                    if (archetype == null)
+                    {
+                        ShowWarningNotification(UIStringConsts.GameNotifications.MismatchedArchetypeSelection);
+                        return;
+                    }
+
+                    archetype.IsSelected.Value = true;
+                    viewModel.SelectedClassVM.Value.SelectedArchetype.Value = archetype;
+                    viewModel.OnSelectorArchetypeChanged(archetype.Archetype);
+                    viewModel.LastSelectedArchetypeVM = archetype;
+                    _logger.LogInformation("Leveling archetype has been set. Class={class}, Archetype={archetype}", viewModel.SelectedClassVM.Value.Class.NameForAcronym, viewModel.SelectedClassVM.Value.SelectedArchetype.Value?.Archetype?.NameForAcronym);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error while selecting leveling class archetype. ArchetypeId={archetypeId}", archetypeId);
+                    throw;
+                }
+            });
+        }
+
+        public void SelectLevelingClass(string classId)
+        {
+            _mainThreadAccessor.Post(() =>
+            {
+                try
+                {
+                    if (CharGenView == null)
+                    {
+                        _logger.LogWarning("Can't select class archetype due to missing CharGenView");
+                        return;
+                    }
+
+                    var viewModel = GetLevelingPhaseViewModel<CharGenClassPhaseVM>();
+                    if (viewModel == null)
+                    {
+                        _logger.LogError("Unable to get leveling phase viewmodel");
+                        return;
+                    }
+
+                    var selectedClass = viewModel.m_ClassesVMs.FirstOrDefault(c => string.Equals(c.Class.AssetGuid.ToString(), classId, StringComparison.OrdinalIgnoreCase));
+                    viewModel.SelectedClassVM.Value = selectedClass;
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error while selecting leveling class. ClassId={classId}", classId);
+                    throw;
+                }
+            });
+        }
+
+        public void SelectLevelingFeature(NetworkLevelingFeature feature)
+        {
+            _mainThreadAccessor.Post(() =>
+            {
+                try
+                {
+                    if (CharGenView == null)
+                    {
+                        _logger.LogWarning("Can't select feature due to missing CharGenView");
+                        return;
+                    }
+
+                    var view = CharGenView?.SelectedDetailView as CharGenFeatureSelectorPhaseDetailedPCView;
+                    if (view == null)
+                    {
+                        _logger.LogError("Unable to get leveling feature view");
+                        return;
+                    }
+
+                    var featureToSelect = view.m_Selector.VirtualList.Elements.FirstOrDefault(x => x.Data is CharGenFeatureSelectorItemVM featureItem
+                         && string.Equals(featureItem.Feature.NameForAcronym, feature.Name, StringComparison.OrdinalIgnoreCase)
+                         && string.Equals(featureItem.Feature.Feature.AssetGuid.ToString(), feature.Id, StringComparison.OrdinalIgnoreCase));
+                    if (featureToSelect == null)
+                    {
+                        _logger.LogError("Unable to find requested feature in the list. Name={name}, Id={id}", feature.Name, feature.Id);
+                        return;
+                    }
+
+                    var requestedFeatureVM = (featureToSelect.Data as CharGenFeatureSelectorItemVM);
+                    requestedFeatureVM.SetSelected(true);
+                    _logger.LogInformation("Selected leveling feature. Name={name}, Id={id}", requestedFeatureVM.Feature.NameForAcronym, requestedFeatureVM.Feature.Feature.AssetGuid.ToString());
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error while selecting leveling feature. Name={name}, Id={id}", feature.Name, feature.Id);
+                    throw;
+                }
+            });
+        }
+
+        public void UpdateLevelingPhaseControls(bool isEnabled)
+        {
+            _mainThreadAccessor.Post(() =>
+            {
+                try
+                {
+                    if (CharGenView == null)
+                    {
+                        _logger.LogError("Unable to update leveling controls due too missing CharGenView");
+                        return;
+                    }
+
+                    _logger.LogInformation("Updating generic part of leveling screen. IsEnabled={isEnabled}", isEnabled);
+                    CharGenView.m_CloseButton.Interactable = isEnabled;
+                    CharGenView.SetActiveNextPhaseButton(isEnabled);
+
+                    var nextEnabled = CharGenView.CanGoNext.Value && isEnabled;
+                    CharGenView.m_NextButton.Interactable = nextEnabled;
+                    CharGenView.m_NextValidPageButton.Interactable = nextEnabled;
+                    var backEnabled = CharGenView.CanGoBack.Value && isEnabled;
+                    CharGenView.m_BackButton.Interactable = backEnabled;
+                    CharGenView.m_FirstPageButton.Interactable = backEnabled;
+
+                    foreach (var roadmapPhase in CharGenView.RoadmapMenuView.m_VisiblePhases)
+                    {
+                        var baseView = roadmapPhase as CharGenPhaseRoadmapBaseView<CharGenPhaseBaseVM>;
+                        if (baseView != null)
+                        {
+                            baseView.m_Button.Interactable = baseView.m_Button.Interactable && isEnabled;
+                            baseView.m_ButtonBackground.Interactable = baseView.m_ButtonBackground.Interactable && isEnabled;
+                            baseView.m_ButtonLabel.Interactable = baseView.m_ButtonLabel.Interactable && isEnabled;
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error while updating leveling phase controls");
+                    throw;
+                }
+            });
+        }
+
+        public void SwitchLevelingPhase(NetworkLevelingPhase phase)
+        {
+            _mainThreadAccessor.Post(() =>
+            {
+                if (CharGenView == null)
+                {
+                    _logger.LogError("Unable to update switch leveling phase due too missing CharGenView");
+                    return;
+                }
+
+                var roadmapVM = CharGenView.RoadmapMenuView.GetViewModel() as SelectionGroupRadioVM<CharGenPhaseBaseVM>;
+                if (phase.Index >= roadmapVM.EntitiesCollection.Count)
+                {
+                    _logger.LogError("Leveling phase is out of range. Index={index}, TotalCount={totalCount}", phase.Index, roadmapVM.EntitiesCollection.Count);
+                    return;
+                }
+
+                var phaseVM = roadmapVM.EntitiesCollection[phase.Index];
+                roadmapVM.SelectedEntity.Value = phaseVM;
+            });
+        }
+
+        public void SelectLevelingSpell(NetworkLevelingSpell spell)
+        {
+            _mainThreadAccessor.Post(() =>
+            {
+                try
+                {
+                    var spellsPhaseVM = GetCharGenSpellsPhaseVM();
+                    if (spellsPhaseVM == null)
+                    {
+                        return;
+                    }
+
+                    var spellToAdd = spellsPhaseVM.SpellsSelector.Value.EntitiesCollection.FirstOrDefault(x => string.Equals(x.Spell.AssetGuid.ToString(), spell.Id, StringComparison.OrdinalIgnoreCase));
+                    if (spellToAdd == null)
+                    {
+                        _logger.LogError("Unable to add missing leveling spell. SpellName={spellName}, SpellId={spellId}", spell.Name, spell.Id);
+                        return;
+                    }
+
+                    spellsPhaseVM.SpellsSelector.Value.SelectedEntitiesCollection.Add(spellToAdd);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error while selecting leveling spell. SpellName={spellName}, SpellId={spellId}", spell.Name, spell.Id);
+                    throw;
+                }
+            });
+        }
+
+        public void RemoveLevelingSpell(NetworkLevelingSpell spell)
+        {
+            _mainThreadAccessor.Post(() =>
+            {
+                try
+                {
+                    var spellsPhaseVM = GetCharGenSpellsPhaseVM();
+                    if (spellsPhaseVM == null)
+                    {
+                        return;
+                    }
+
+                    var spellToRemove = spellsPhaseVM.SpellsSelector.Value.SelectedEntitiesCollection.FirstOrDefault(x => string.Equals(x.Spell.AssetGuid.ToString(), spell.Id, StringComparison.OrdinalIgnoreCase));
+                    if (spellToRemove == null)
+                    {
+                        _logger.LogError("Unable to remove missing leveling spell. SpellName={spellName}, SpellId={spellId}", spell.Name, spell.Id);
+                        return;
+                    }
+
+                    spellsPhaseVM.SpellsSelector.Value.SelectedEntitiesCollection.Remove(spellToRemove);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error while removing selected leveling spell. SpellName={spellName}, SpellId={spellId}", spell.Name, spell.Id);
+                    throw;
+                }
+            });
+        }
+
+        public void IncreaseLevelingSkillPoint(NetworkLevelingSkillPoint skillPoint)
+        {
+            _mainThreadAccessor.Post(() =>
+            {
+                try
+                {
+                    var skillView = GetLevelingSkillAllocatorView(skillPoint.StatType);
+                    if (skillView == null)
+                    {
+                        return;
+                    }
+
+                    skillView.ViewModel.m_LevelUpController.SpendSkillPoint(skillView.ViewModel.StatType);
+                    skillView.OnChangedValue();
+                    _logger.LogInformation("Leveling skillpoint has been increased. StatType={statType}", skillPoint.StatType);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error while increasing leveling skill point. StatType={statType}", skillPoint.StatType);
+                    throw;
+                }
+            });
+        }
+
+        public void DecreaseLevelingSkillPoint(NetworkLevelingSkillPoint skillPoint)
+        {
+            _mainThreadAccessor.Post(() =>
+            {
+                try
+                {
+                    var skillView = GetLevelingSkillAllocatorView(skillPoint.StatType);
+                    if (skillView == null)
+                    {
+                        return;
+                    }
+                    skillView.ViewModel.m_LevelUpController.UnspendSkillPoint(skillView.ViewModel.StatType);
+                    skillView.OnChangedValue();
+                    _logger.LogInformation("Leveling skillpoint has been decreased. StatType={statType}", skillPoint.StatType);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error while decreasing leveling skill point. StatType={statType}", skillPoint.StatType);
+                    throw;
+                }
+            });
+        }
+
+        public void CompleteLeveling()
+        {
+            _mainThreadAccessor.Post(() =>
+            {
+                try
+                {
+                    CharGenView.ViewModel.Complete();
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error while completing char gen");
+                    throw;
+                }
+            });
+        }
+
+        public void TerminateLeveling()
+        {
+            _mainThreadAccessor.Post(() =>
+            {
+                try
+                {
+                    CharGenView.ViewModel.Close();
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error while closing char gen");
+                    throw;
+                }
+            });
+        }
+
+        private CharGenSkillAllocatorPCView GetLevelingSkillAllocatorView(StatType statType)
+        {
+            if (CharGenView == null)
+            {
+                _logger.LogError("Unable to get leveling skillpoint vm due too missing CharGenView");
+                return null;
+            }
+
+            if (CharGenView.SelectedDetailView is not CharGenSkillsPhaseDetailedPCView skillAllocator)
+            {
+                _logger.LogWarning("Unable to get leveling skillpoint vm because current phase is not skill phase");
+                return null;
+            }
+
+            var skillView = skillAllocator.m_StatAllocators.FirstOrDefault(x => x.ViewModel.StatType == statType);
+            if (skillView == null)
+            {
+                _logger.LogWarning("Unable to find leveling view for stat. StatType={statType}", statType);
+                return null;
+            }
+
+            return skillView;
+        }
+
+        private CharGenSpellsPhaseVM GetCharGenSpellsPhaseVM()
+        {
+            if (CharGenView == null)
+            {
+                _logger.LogError("Unable to get leveling spellphase vm due too missing CharGenView");
+                return null;
+            }
+
+            if (CharGenView.SelectedDetailView is not CharGenSpellsPhaseDetailedPCView spellsPhaseDetailedPCView)
+            {
+                _logger.LogWarning("Unable to get leveling spellphase vm because current phase is not spell phase");
+                return null;
+            }
+
+            return spellsPhaseDetailedPCView.ViewModel;
+        }
+
+        private T GetLevelingPhaseViewModel<T>()
+            where T : CharGenPhaseBaseVM
+        {
+            var viewModel = (CharGenView?.SelectedDetailView as CharGenClassPhaseDetailedPCView)?.GetViewModel() as T;
+            return viewModel;
         }
 
         private SpellSlot GetSpellSlot(Spellbook spellbook, NetworkSpellSlot slot)

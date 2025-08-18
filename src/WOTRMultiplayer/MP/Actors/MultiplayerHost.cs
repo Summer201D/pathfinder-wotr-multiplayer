@@ -18,6 +18,7 @@ using WOTRMultiplayer.MP.Entities.Combat;
 using WOTRMultiplayer.MP.Entities.Dialogs;
 using WOTRMultiplayer.MP.Entities.Equipment;
 using WOTRMultiplayer.MP.Entities.Inspect;
+using WOTRMultiplayer.MP.Entities.Leveling;
 using WOTRMultiplayer.MP.Entities.Loot;
 using WOTRMultiplayer.MP.Entities.MapObjects;
 using WOTRMultiplayer.MP.Entities.Rest;
@@ -550,6 +551,25 @@ namespace WOTRMultiplayer.MP.Actors
             Send(message);
         }
 
+        public void OnCharacterLevelingStarted(string unitId)
+        {
+            if (Game.Leveling != null)
+            {
+                Logger.LogWarning("Previous character leveling has not been disposed correctly. UnitId={unitId}", Game.Leveling.UnitId);
+            }
+
+            lock (ActionLock)
+            {
+                Game.Leveling = new NetworkLeveling(unitId);
+                var message = new NotifyCharacterLevelingStarted
+                {
+                    UnitId = unitId
+                };
+                Logger.LogInformation("Sending {messageType}. UnitId={unitId}", nameof(NotifyCharacterLevelingStarted), message.UnitId);
+                Send(message);
+            }
+        }
+
         private void UpdateStartRestButtonAfterResults(long player)
         {
             lock (ActionLock)
@@ -766,7 +786,7 @@ namespace WOTRMultiplayer.MP.Actors
         {
             if (Game.Dialog == null)
             {
-                Logger.LogError("Unable to enable continue button because current dialog is null");
+                Logger.LogWarning("Unable to enable continue button because current dialog is null");
                 return;
             }
 
@@ -920,7 +940,142 @@ namespace WOTRMultiplayer.MP.Actors
                 .Register<NotifyVendorItemTransferred>(OnNotifyVendorItemTransferred)
                 .Register<NotifySpellMemorized>(OnNotifySpellMemorized)
                 .Register<NotifySpellForgotten>(OnNotifySpellForgotten)
+
+                // leveling
+                .Register<ClientCharacterLevelingRequested>(OnClientCharacterLevelingRequested)
+                .Register<NotifyLevelingClassArchetypeSelected>(OnNotifyLevelingClassArchetypeSelected)
+                .Register<NotifyLevelingClassSelected>(OnNotifyLevelingClassSelected)
+                .Register<NotifyLevelingPhaseWitnessed>(OnNotifyLevelingPhaseWitnessed)
+                .Register<NotifyLevelingPhaseChanged>(OnNotifyLevelingPhaseChanged)
+                .Register<NotifyLevelingSkillPointIncreased>(OnNotifyLevelingSkillPointIncreased)
+                .Register<NotifyLevelingSkillPointDecreased>(OnNotifyLevelingSkillPointDecreased)
+                .Register<NotifyLevelingFeatureSelected>(OnNotifyLevelingFeatureSelected)
+                .Register<NotifyLevelingSpellChosen>(OnNotifyLevelingSpellChosen)
+                .Register<NotifyLevelingSpellRemoved>(OnNotifyLevelingSpellRemoved)
+                .Register<NotifyLevelingCompleted>(OnNotifyLevelingCompleted)
+                .Register<NotifyLevelingTerminated>(OnNotifyLevelingTerminated)
                 ;
+        }
+
+        private void OnNotifyLevelingCompleted(long playerId, NotifyLevelingCompleted completed)
+        {
+            Logger.LogInformation("Received {messageType}. PlayerId={playerId}", nameof(NotifyLevelingCompleted), playerId);
+            GameInteraction.CompleteLeveling();
+        }
+
+        private void OnNotifyLevelingTerminated(long playerId, NotifyLevelingTerminated terminated)
+        {
+            Logger.LogInformation("Received {messageType}. PlayerId={playerId}", nameof(NotifyLevelingTerminated), playerId);
+            GameInteraction.TerminateLeveling();
+        }
+
+        private void OnNotifyLevelingSpellRemoved(long playerId, NotifyLevelingSpellRemoved removed)
+        {
+            Logger.LogInformation("Received {messageType}. PlayerId={playerId}, SpellName={name}, SpellId={id}", nameof(NotifyLevelingSpellRemoved), playerId, removed.Spell.Name, removed.Spell.Id);
+            var spell = Mapper.Map<NetworkLevelingSpell>(removed.Spell);
+            GameInteraction.RemoveLevelingSpell(spell);
+
+            Logger.LogInformation("Resending {messageType}", nameof(NotifyLevelingSpellRemoved));
+            _networkServer.SendAllExcept(playerId, removed);
+        }
+
+        private void OnNotifyLevelingSpellChosen(long playerId, NotifyLevelingSpellChosen chosen)
+        {
+            Logger.LogInformation("Received {messageType}. PlayerId={playerId}, SpellName={name}, SpellId={id}", nameof(NotifyLevelingSpellChosen), playerId, chosen.Spell.Name, chosen.Spell.Id);
+            var spell = Mapper.Map<NetworkLevelingSpell>(chosen.Spell);
+            GameInteraction.SelectLevelingSpell(spell);
+
+            Logger.LogInformation("Resending {messageType}", nameof(NotifyLevelingSpellChosen));
+            _networkServer.SendAllExcept(playerId, chosen);
+        }
+
+        private void OnNotifyLevelingFeatureSelected(long playerId, NotifyLevelingFeatureSelected selected)
+        {
+            Logger.LogInformation("Received {messageType}. PlayerId={playerId}, Name={name}, Id={id}", nameof(NotifyLevelingFeatureSelected), playerId, selected.Feature.Name, selected.Feature.Id);
+            var feature = Mapper.Map<NetworkLevelingFeature>(selected.Feature);
+            GameInteraction.SelectLevelingFeature(feature);
+
+            Logger.LogInformation("Resending {messageType}", nameof(NotifyLevelingFeatureSelected));
+            _networkServer.SendAllExcept(playerId, selected);
+        }
+
+        private void OnNotifyLevelingSkillPointDecreased(long playerId, NotifyLevelingSkillPointDecreased decreased)
+        {
+            Logger.LogInformation("Received {messageType}. PlayerId={playerId}, PhaseType={phaseType}", nameof(NotifyLevelingSkillPointDecreased), playerId, decreased.Skill.StatType);
+            var skillPoint = Mapper.Map<NetworkLevelingSkillPoint>(decreased.Skill);
+            GameInteraction.DecreaseLevelingSkillPoint(skillPoint);
+
+            Logger.LogInformation("Resending {messageType}", nameof(NotifyLevelingSkillPointDecreased));
+            _networkServer.SendAllExcept(playerId, decreased);
+        }
+
+        private void OnNotifyLevelingSkillPointIncreased(long playerId, NotifyLevelingSkillPointIncreased increased)
+        {
+            Logger.LogInformation("Received {messageType}. PlayerId={playerId}, PhaseType={phaseType}", nameof(NotifyLevelingSkillPointIncreased), playerId, increased.Skill.StatType);
+            var skillPoint = Mapper.Map<NetworkLevelingSkillPoint>(increased.Skill);
+            GameInteraction.IncreaseLevelingSkillPoint(skillPoint);
+
+            Logger.LogInformation("Resending {messageType}", nameof(NotifyLevelingSkillPointIncreased));
+            _networkServer.SendAllExcept(playerId, increased);
+        }
+
+        private void OnNotifyLevelingPhaseChanged(long playerId, NotifyLevelingPhaseChanged changed)
+        {
+            Logger.LogInformation("Received {messageType}. PlayerId={playerId}, Index={index}", nameof(NotifyLevelingPhaseChanged), playerId, changed.Phase.Index);
+            var phase = Mapper.Map<NetworkLevelingPhase>(changed.Phase);
+            Game.Leveling.PlayerReadiness.Clear();
+            GameInteraction.SwitchLevelingPhase(phase);
+
+            Logger.LogInformation("Resending {messageType}", nameof(NotifyLevelingPhaseChanged));
+            _networkServer.SendAllExcept(playerId, changed);
+        }
+
+        private void OnNotifyLevelingPhaseWitnessed(long playerId, NotifyLevelingPhaseWitnessed witnessed)
+        {
+            Logger.LogInformation("Received {messageType}. PlayerId={playerId}", nameof(NotifyLevelingPhaseWitnessed), playerId);
+            WitnessLevelingPhase(playerId);
+
+            Logger.LogInformation("Resending {messageType}", nameof(NotifyLevelingPhaseWitnessed));
+            _networkServer.SendAllExcept(playerId, witnessed);
+        }
+
+        private void OnNotifyLevelingClassArchetypeSelected(long playerId, NotifyLevelingClassArchetypeSelected selected)
+        {
+            Logger.LogInformation("Received {messageType}. PlayerId={playerId}, ArchetypeId={archetypeId}", nameof(NotifyLevelingClassArchetypeSelected), playerId, selected.ArchetypeId);
+            GameInteraction.SelectLevelingClassArchetype(selected.ArchetypeId);
+
+            Logger.LogInformation("Resending {messageType}", nameof(NotifyLevelingClassArchetypeSelected));
+            _networkServer.SendAllExcept(playerId, selected);
+        }
+
+        private void OnNotifyLevelingClassSelected(long playerId, NotifyLevelingClassSelected selected)
+        {
+            Logger.LogInformation("Received {messageType}. PlayerId={playerId}, ClassId={unitId}", nameof(NotifyCharacterLevelingStarted), playerId, selected.ClassId);
+            GameInteraction.SelectLevelingClass(selected.ClassId);
+
+            Logger.LogInformation("Resending {messageType}", nameof(NotifyLevelingClassSelected));
+            _networkServer.SendAllExcept(playerId, selected);
+        }
+
+        private void OnClientCharacterLevelingRequested(long playerId, ClientCharacterLevelingRequested requested)
+        {
+            Logger.LogInformation("Received {messageType}. PlayerId={playerId}, UnitId={unitId}", nameof(ClientCharacterLevelingRequested), playerId, requested.UnitId);
+
+            lock (ActionLock)
+            {
+                if (Game.Leveling != null)
+                {
+                    Logger.LogInformation("Leveling is already in progress. UnitId={unitId}, RequestedUnitId={requestedUnitId}", Game.Leveling.UnitId, requested.UnitId);
+                    var message = new NotifyCharacterLevelingStarted
+                    {
+                        UnitId = Game.Leveling.UnitId
+                    };
+                    Send(message);
+                    return;
+                }
+
+                GameInteraction.StartLeveling(requested.UnitId);
+            }
         }
 
         private void OnNotifySpellForgotten(long playerId, NotifySpellForgotten spellForgotten)
