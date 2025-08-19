@@ -69,6 +69,9 @@
 
             public const string MismatchedArchetypeSelection = "Unable to selected archetype due to mismatched game content (DLCs/mods)";
 
+            public const string LevelingCompleted = "{0}'s leveling has been completed";
+            public const string LevelingTerminated = "{0}'s leveling has been terminated";
+
             public class ForcedPauseReasons
             {
                 public const string AreaLoading = "Please wait for other players to finish loading the area";

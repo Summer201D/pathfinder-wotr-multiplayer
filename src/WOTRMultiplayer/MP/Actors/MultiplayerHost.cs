@@ -949,6 +949,8 @@ namespace WOTRMultiplayer.MP.Actors
                 .Register<NotifyLevelingPhaseChanged>(OnNotifyLevelingPhaseChanged)
                 .Register<NotifyLevelingSkillPointIncreased>(OnNotifyLevelingSkillPointIncreased)
                 .Register<NotifyLevelingSkillPointDecreased>(OnNotifyLevelingSkillPointDecreased)
+                .Register<NotifyLevelingAbilityScoreIncreased>(OnNotifyLevelingAbilityScoreIncreased)
+                .Register<NotifyLevelingAbilityScoreDecreased>(OnNotifyLevelingAbilityScoreDecreased)
                 .Register<NotifyLevelingFeatureSelected>(OnNotifyLevelingFeatureSelected)
                 .Register<NotifyLevelingSpellChosen>(OnNotifyLevelingSpellChosen)
                 .Register<NotifyLevelingSpellRemoved>(OnNotifyLevelingSpellRemoved)
@@ -957,16 +959,44 @@ namespace WOTRMultiplayer.MP.Actors
                 ;
         }
 
+        private void OnNotifyLevelingAbilityScoreDecreased(long playerId, NotifyLevelingAbilityScoreDecreased decreased)
+        {
+            Logger.LogInformation("Received {messageType}. PlayerId={playerId}, StatType={statType}", nameof(NotifyLevelingAbilityScoreDecreased), playerId, decreased.AbilityScore.StatType);
+
+            var abilityScore = Mapper.Map<NetworkLevelingAbilityScore>(decreased.AbilityScore);
+            GameInteraction.DecreaseLevelingAbilityScore(abilityScore);
+
+            Logger.LogInformation("Resending {messageType}", nameof(NotifyLevelingAbilityScoreDecreased));
+            _networkServer.SendAllExcept(playerId, decreased);
+        }
+
+        private void OnNotifyLevelingAbilityScoreIncreased(long playerId, NotifyLevelingAbilityScoreIncreased increased)
+        {
+            Logger.LogInformation("Received {messageType}. PlayerId={playerId}, StatType={statType}", nameof(NotifyLevelingAbilityScoreIncreased), playerId, increased.AbilityScore.StatType);
+
+            var abilityScore = Mapper.Map<NetworkLevelingAbilityScore>(increased.AbilityScore);
+            GameInteraction.IncreaseLevelingAbilityScore(abilityScore);
+
+            Logger.LogInformation("Resending {messageType}", nameof(NotifyLevelingAbilityScoreIncreased));
+            _networkServer.SendAllExcept(playerId, increased);
+        }
+
         private void OnNotifyLevelingCompleted(long playerId, NotifyLevelingCompleted completed)
         {
             Logger.LogInformation("Received {messageType}. PlayerId={playerId}", nameof(NotifyLevelingCompleted), playerId);
             GameInteraction.CompleteLeveling();
+
+            Logger.LogInformation("Resending {messageType}", nameof(NotifyLevelingCompleted));
+            _networkServer.SendAllExcept(playerId, completed);
         }
 
         private void OnNotifyLevelingTerminated(long playerId, NotifyLevelingTerminated terminated)
         {
             Logger.LogInformation("Received {messageType}. PlayerId={playerId}", nameof(NotifyLevelingTerminated), playerId);
             GameInteraction.TerminateLeveling();
+
+            Logger.LogInformation("Resending {messageType}", nameof(NotifyLevelingTerminated));
+            _networkServer.SendAllExcept(playerId, terminated);
         }
 
         private void OnNotifyLevelingSpellRemoved(long playerId, NotifyLevelingSpellRemoved removed)
@@ -1001,7 +1031,7 @@ namespace WOTRMultiplayer.MP.Actors
 
         private void OnNotifyLevelingSkillPointDecreased(long playerId, NotifyLevelingSkillPointDecreased decreased)
         {
-            Logger.LogInformation("Received {messageType}. PlayerId={playerId}, PhaseType={phaseType}", nameof(NotifyLevelingSkillPointDecreased), playerId, decreased.Skill.StatType);
+            Logger.LogInformation("Received {messageType}. PlayerId={playerId}, StatType={statType}", nameof(NotifyLevelingSkillPointDecreased), playerId, decreased.Skill.StatType);
             var skillPoint = Mapper.Map<NetworkLevelingSkillPoint>(decreased.Skill);
             GameInteraction.DecreaseLevelingSkillPoint(skillPoint);
 
@@ -1011,7 +1041,7 @@ namespace WOTRMultiplayer.MP.Actors
 
         private void OnNotifyLevelingSkillPointIncreased(long playerId, NotifyLevelingSkillPointIncreased increased)
         {
-            Logger.LogInformation("Received {messageType}. PlayerId={playerId}, PhaseType={phaseType}", nameof(NotifyLevelingSkillPointIncreased), playerId, increased.Skill.StatType);
+            Logger.LogInformation("Received {messageType}. PlayerId={playerId}, StatType={statType}", nameof(NotifyLevelingSkillPointIncreased), playerId, increased.Skill.StatType);
             var skillPoint = Mapper.Map<NetworkLevelingSkillPoint>(increased.Skill);
             GameInteraction.IncreaseLevelingSkillPoint(skillPoint);
 

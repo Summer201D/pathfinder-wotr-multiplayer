@@ -139,6 +139,9 @@ namespace WOTRMultiplayer.Config.Mapping
 
             CreateMap<NetworkLevelingSpell, Networking.Messages.Contracts.NetworkLevelingSpell>()
                 .ReverseMap();
+
+            CreateMap<NetworkLevelingAbilityScore, Networking.Messages.Contracts.NetworkLevelingAbilityScore>()
+                .ReverseMap();
         }
     }
 }

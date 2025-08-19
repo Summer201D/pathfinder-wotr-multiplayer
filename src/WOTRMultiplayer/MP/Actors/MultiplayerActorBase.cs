@@ -615,6 +615,36 @@ namespace WOTRMultiplayer.MP.Actors
             Send(message);
         }
 
+        public void OnLevelingIncreaseAbilityScore(NetworkLevelingAbilityScore abilityScore)
+        {
+            if (!CanMakeLevelingDecisions())
+            {
+                return;
+            }
+
+            var message = new NotifyLevelingAbilityScoreIncreased
+            {
+                AbilityScore = Mapper.Map<Networking.Messages.Contracts.NetworkLevelingAbilityScore>(abilityScore)
+            };
+            Logger.LogInformation("Sending {messageType}. StatType={type}", nameof(NotifyLevelingAbilityScoreIncreased), message.AbilityScore.StatType);
+            Send(message);
+        }
+
+        public void OnLevelingDecreaseAbilityScore(NetworkLevelingAbilityScore abilityScore)
+        {
+            if (!CanMakeLevelingDecisions())
+            {
+                return;
+            }
+
+            var message = new NotifyLevelingAbilityScoreDecreased
+            {
+                AbilityScore = Mapper.Map<Networking.Messages.Contracts.NetworkLevelingAbilityScore>(abilityScore)
+            };
+            Logger.LogInformation("Sending {messageType}. StatType={type}", nameof(NotifyLevelingAbilityScoreDecreased), message.AbilityScore.StatType);
+            Send(message);
+        }
+
         public void OnLevelingFeatureSelected(NetworkLevelingFeature feature)
         {
             if (!CanMakeLevelingDecisions())
@@ -626,7 +656,7 @@ namespace WOTRMultiplayer.MP.Actors
             {
                 Feature = Mapper.Map<Networking.Messages.Contracts.NetworkLevelingFeature>(feature)
             };
-            Logger.LogInformation("Sending {messageType}. StatType={type}", nameof(NetworkLevelingFeature), message.Feature.Name, message.Feature.Id);
+            Logger.LogInformation("Sending {messageType}. Name={name}, Id={id}", nameof(NetworkLevelingFeature), message.Feature.Name, message.Feature.Id);
             Send(message);
         }
         public void OnLevelingSpellRemoved(NetworkLevelingSpell spell)
@@ -670,6 +700,8 @@ namespace WOTRMultiplayer.MP.Actors
                 Send(message);
             }
 
+            var character = GetCharacterOwnership(Game.Leveling.UnitId);
+            GameInteraction.ShowWarningNotification(string.Format(UIStringConsts.GameNotifications.LevelingTerminated, character?.Name));
             Game.Leveling = null;
         }
 
@@ -685,6 +717,8 @@ namespace WOTRMultiplayer.MP.Actors
                 return;
             }
 
+            var character = GetCharacterOwnership(Game.Leveling.UnitId);
+            GameInteraction.AddCombatText(string.Format(UIStringConsts.GameNotifications.LevelingCompleted, character?.Name));
             Game.Leveling = null;
         }
 

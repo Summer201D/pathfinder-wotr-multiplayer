@@ -167,13 +167,25 @@ namespace WOTRMultiplayer.Abstractions.GameInteraction
         void SelectLevelingClass(string classId);
 
         void UpdateLevelingPhaseControls(bool isEnabled);
+
         void SwitchLevelingPhase(NetworkLevelingPhase phase);
+
         void DecreaseLevelingSkillPoint(NetworkLevelingSkillPoint skillPoint);
+
         void IncreaseLevelingSkillPoint(NetworkLevelingSkillPoint skillPoint);
+
+        void DecreaseLevelingAbilityScore(NetworkLevelingAbilityScore abilityScore);
+
+        void IncreaseLevelingAbilityScore(NetworkLevelingAbilityScore abilityScore);
+
         void SelectLevelingFeature(NetworkLevelingFeature feature);
+
         void SelectLevelingSpell(NetworkLevelingSpell spell);
+
         void RemoveLevelingSpell(NetworkLevelingSpell spell);
+
         void CompleteLeveling();
+
         void TerminateLeveling();
     }
 }

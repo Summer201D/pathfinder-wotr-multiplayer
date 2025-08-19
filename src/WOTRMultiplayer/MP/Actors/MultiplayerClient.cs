@@ -509,6 +509,8 @@ namespace WOTRMultiplayer.MP.Actors
                 .Register<NotifyLevelingPhaseChanged>(OnNotifyLevelingPhaseChanged)
                 .Register<NotifyLevelingSkillPointIncreased>(OnNotifyLevelingSkillPointIncreased)
                 .Register<NotifyLevelingSkillPointDecreased>(OnNotifyLevelingSkillPointDecreased)
+                .Register<NotifyLevelingAbilityScoreIncreased>(OnNotifyLevelingAbilityScoreIncreased)
+                .Register<NotifyLevelingAbilityScoreDecreased>(OnNotifyLevelingAbilityScoreDecreased)
                 .Register<NotifyLevelingFeatureSelected>(OnNotifyLevelingFeatureSelected)
                 .Register<NotifyLevelingSpellChosen>(OnNotifyLevelingSpellChosen)
                 .Register<NotifyLevelingSpellRemoved>(OnNotifyLevelingSpellRemoved)
@@ -518,6 +520,22 @@ namespace WOTRMultiplayer.MP.Actors
 
             _networkServerClient.OnError = OnNetworkClientError;
             _networkServerClient.OnConnected = OnNetworkClientConnected;
+        }
+
+        private void OnNotifyLevelingAbilityScoreDecreased(NotifyLevelingAbilityScoreDecreased decreased)
+        {
+            Logger.LogInformation("Received {messageType}. StatType={statType}", nameof(NotifyLevelingAbilityScoreDecreased), decreased.AbilityScore.StatType);
+
+            var abilityScore = Mapper.Map<NetworkLevelingAbilityScore>(decreased.AbilityScore);
+            GameInteraction.DecreaseLevelingAbilityScore(abilityScore);
+        }
+
+        private void OnNotifyLevelingAbilityScoreIncreased(NotifyLevelingAbilityScoreIncreased increased)
+        {
+            Logger.LogInformation("Received {messageType}. StatType={statType}", nameof(NotifyLevelingAbilityScoreIncreased), increased.AbilityScore.StatType);
+
+            var abilityScore = Mapper.Map<NetworkLevelingAbilityScore>(increased.AbilityScore);
+            GameInteraction.IncreaseLevelingAbilityScore(abilityScore);
         }
 
         private void OnNotifyLevelingCompleted(NotifyLevelingCompleted completed)

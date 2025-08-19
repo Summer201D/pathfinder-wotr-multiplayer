@@ -144,5 +144,8 @@ namespace WOTRMultiplayer.Abstractions.MP.Actors
         void OnLevelingSpellChosen(NetworkLevelingSpell spell);
 
         void OnLevelingCompleted();
+
+        void OnLevelingIncreaseAbilityScore(NetworkLevelingAbilityScore abilityScore);
+        void OnLevelingDecreaseAbilityScore(NetworkLevelingAbilityScore abilityScore);
     }
 }

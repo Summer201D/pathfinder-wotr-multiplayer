@@ -1147,6 +1147,26 @@ namespace WOTRMultiplayer.MP
             _multiplayerActorAccessor.Current.OnLevelingDecreaseSkillPoint(skill);
         }
 
+        public void OnLevelingIncreaseAbilityScore(NetworkLevelingAbilityScore abilityScore)
+        {
+            if (_multiplayerActorAccessor.Current == null)
+            {
+                return;
+            }
+
+            _multiplayerActorAccessor.Current.OnLevelingIncreaseAbilityScore(abilityScore);
+        }
+
+        public void OnLevelingDecreaseAbilityScore(NetworkLevelingAbilityScore abilityScore)
+        {
+            if (_multiplayerActorAccessor.Current == null)
+            {
+                return;
+            }
+
+            _multiplayerActorAccessor.Current.OnLevelingDecreaseAbilityScore(abilityScore);
+        }
+
         public void OnLevelingFeatureSelected(NetworkLevelingFeature feature)
         {
             if (_multiplayerActorAccessor.Current == null)

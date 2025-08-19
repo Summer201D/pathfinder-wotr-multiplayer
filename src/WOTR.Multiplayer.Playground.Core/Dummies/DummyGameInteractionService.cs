@@ -356,5 +356,13 @@ namespace WOTR.Multiplayer.Playground.Core.Dummies
         public void TerminateLeveling()
         {
         }
+
+        public void DecreaseLevelingAbilityScore(NetworkLevelingAbilityScore abilityScore)
+        {
+        }
+
+        public void IncreaseLevelingAbilityScore(NetworkLevelingAbilityScore abilityScore)
+        {
+        }
     }
 }

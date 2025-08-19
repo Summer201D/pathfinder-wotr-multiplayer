@@ -36,6 +36,7 @@ using Kingmaker.UI._ConsoleUI.Overtips;
 using Kingmaker.UI.Models.Log.Events;
 using Kingmaker.UI.MVVM._PCView.CharGen;
 using Kingmaker.UI.MVVM._PCView.CharGen.Phases;
+using Kingmaker.UI.MVVM._PCView.CharGen.Phases.AbilityScores;
 using Kingmaker.UI.MVVM._PCView.CharGen.Phases.Class;
 using Kingmaker.UI.MVVM._PCView.CharGen.Phases.FeatureSelector;
 using Kingmaker.UI.MVVM._PCView.CharGen.Phases.Skills;
@@ -1905,6 +1906,53 @@ namespace WOTRMultiplayer.GameInteraction
             });
         }
 
+        public void IncreaseLevelingAbilityScore(NetworkLevelingAbilityScore abilityScore)
+        {
+            _mainThreadAccessor.Post(() =>
+            {
+                try
+                {
+                    var abilityScoreView = GetLevelingAbilityScoreAllocatorView(abilityScore.StatType);
+                    if (abilityScoreView == null)
+                    {
+                        return;
+                    }
+
+                    abilityScoreView.ViewModel.m_LevelUpController.SpendSkillPoint(abilityScoreView.ViewModel.StatType);
+                    abilityScoreView.OnChangedValue();
+                    _logger.LogInformation("Leveling ability score has been increased. StatType={statType}", abilityScore.StatType);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error while increasing leveling ability score. StatType={statType}", abilityScore.StatType);
+                    throw;
+                }
+            });
+        }
+
+        public void DecreaseLevelingAbilityScore(NetworkLevelingAbilityScore abilityScore)
+        {
+            _mainThreadAccessor.Post(() =>
+            {
+                try
+                {
+                    var abilityScoreView = GetLevelingAbilityScoreAllocatorView(abilityScore.StatType);
+                    if (abilityScoreView == null)
+                    {
+                        return;
+                    }
+                    abilityScoreView.ViewModel.m_LevelUpController.UnspendSkillPoint(abilityScoreView.ViewModel.StatType);
+                    abilityScoreView.OnChangedValue();
+                    _logger.LogInformation("Leveling ability score has been decreased. StatType={statType}", abilityScore.StatType);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error while decreasing leveling ability score. StatType={statType}", abilityScore.StatType);
+                    throw;
+                }
+            });
+        }
+
         public void CompleteLeveling()
         {
             _mainThreadAccessor.Post(() =>
@@ -1959,6 +2007,30 @@ namespace WOTRMultiplayer.GameInteraction
             }
 
             return skillView;
+        }
+
+        private CharGenAbilityScoreAllocatorPCView GetLevelingAbilityScoreAllocatorView(StatType statType)
+        {
+            if (CharGenView == null)
+            {
+                _logger.LogError("Unable to get leveling ability score vm due too missing CharGenView");
+                return null;
+            }
+
+            if (CharGenView.SelectedDetailView is not CharGenAbilityScoresDetailedPCView abilityScoresDetailedPCView)
+            {
+                _logger.LogWarning("Unable to get leveling ability score vm because current phase is not skill phase");
+                return null;
+            }
+
+            var abilityScoreView = abilityScoresDetailedPCView.m_StatAllocators.FirstOrDefault(x => x.ViewModel.StatType == statType);
+            if (abilityScoreView == null)
+            {
+                _logger.LogWarning("Unable to find ability score leveling view for stat. StatType={statType}", statType);
+                return null;
+            }
+
+            return abilityScoreView;
         }
 
         private CharGenSpellsPhaseVM GetCharGenSpellsPhaseVM()
