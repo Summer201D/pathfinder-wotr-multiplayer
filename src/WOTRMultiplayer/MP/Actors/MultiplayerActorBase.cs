@@ -722,6 +722,25 @@ namespace WOTRMultiplayer.MP.Actors
             Game.Leveling = null;
         }
 
+        public void MoveNonCombatCharacter(string unitId, NetworkVector3 destination, float delay, float orientation)
+        {
+            if (Game.Combat != null)
+            {
+                return;
+            }
+
+            Logger.LogInformation("Sending {messageType}. UnitId={unitId}, Destination={destination}, Delay={delay}, Orientation={orientation}", nameof(NotifyCharacterMove), unitId, destination, delay, orientation);
+            var message = new NotifyCharacterMove
+            {
+                UnitId = unitId,
+                Destination = new Networking.Messages.Contracts.NetworkVector3(destination.X, destination.Y, destination.Z),
+                Delay = delay,
+                Orientation = orientation
+            };
+
+            Send(message);
+        }
+
         protected abstract bool OnStartGameModeInternal(GameModeType type);
 
         protected abstract bool OnStopGameModeInternal(GameModeType type);

@@ -143,24 +143,6 @@ namespace WOTRMultiplayer.MP.Actors
             }
         }
 
-        public void MoveNonCombatCharacter(string unitId, NetworkVector3 destination, float delay, float orientation)
-        {
-            if (Game.Combat != null)
-            {
-                return;
-            }
-
-            Logger.LogInformation("Sending {messageType}. UnitId={unitId}, Destination={destination}, Delay={delay}, Orientation={orientation}", nameof(NotifyCharacterMove), unitId, destination, delay, orientation);
-            var message = new NotifyCharacterMove
-            {
-                UnitId = unitId,
-                Destination = new Networking.Messages.Contracts.NetworkVector3(destination.X, destination.Y, destination.Z),
-                Delay = delay,
-                Orientation = orientation
-            };
-            _networkServer.SendAll(message);
-        }
-
         public void Dispose()
         {
             Logger.LogInformation("Dispose");
@@ -900,23 +882,20 @@ namespace WOTRMultiplayer.MP.Actors
             _networkServer.OnServerStarted = OnServerStarted;
 
             _networkServer
-                // this is special case when client sends notify as usually all notifies are sent by host only
-                // we need to load game ASAP on both host/remaining clients
-                .Register<NotifySaveGameAssigned>(OnNotifySaveGameAssigned)
-                .Register<NotifyUnitClicked>(OnNotifyUnitClicked)
-                .Register<NotifyGroundClicked>(OnNotifyGroundClicked)
-                .Register<NotifyMapObjectClicked>(OnNotifyMapObjectClicked)
-
-                // this is kinda special because requester is blocking the game loop thread until <see cref="DiceRollValueResponse"/> is received
+                // this is kinda special because requester is blocking the thread (most likely game main loop) until <see cref="DiceRollValueResponse"/> is received
                 .Register<DiceRollValueRequest>(OnDiceRollValueRequest)
                 .Register<DiceRollValueResponse>(null) // usable as awaiter only
                 .Register<RandomEncounterContextRequest>(OnRandomEncounterContextRequest)
                 .Register<AIActionRequest>(OnAIActionRequest)
 
+                .Register<NotifySaveGameAssigned>(OnNotifySaveGameAssigned)
+                .Register<NotifyUnitClicked>(OnNotifyUnitClicked)
+                .Register<NotifyGroundClicked>(OnNotifyGroundClicked)
+                .Register<NotifyMapObjectClicked>(OnNotifyMapObjectClicked)
                 .Register<PlayerReadyStatusChanged>(OnPlayerReadyStatusChanged)
                 .Register<ClientGameServerConnectionConfirmed>(OnPlayerNameResponse)
                 .Register<PlayerSaveGameSyncChanged>(OnPlayerSaveGameSyncChanged)
-                .Register<CharacterMove>(OnCharacterMove)
+                .Register<NotifyCharacterMove>(OnNotifyCharacterMove)
                 .Register<ClientAreaLoaded>(OnClientAreaLoaded)
                 .Register<CueWitnessed>(OnCueWitnessed)
                 .Register<DialogCueAnswerSuggested>(OnDialogCueAnswerSuggested)
@@ -1537,21 +1516,15 @@ namespace WOTRMultiplayer.MP.Actors
             await SendLocalRollAsync(playerId, request);
         }
 
-        private void OnCharacterMove(long playerId, CharacterMove move)
+        private void OnNotifyCharacterMove(long playerId, NotifyCharacterMove move)
         {
-            Logger.LogInformation("Received {messageType}. PlayerId={playerId}, UnitId={unitId}, Destination={destination}", nameof(CharacterMove), playerId, move.UnitId, move.Destination);
+            Logger.LogInformation("Received {messageType}. PlayerId={playerId}, UnitId={unitId}, Destination={destination}", nameof(NotifyCharacterMove), playerId, move.UnitId, move.Destination);
 
             var destination = Mapper.Map<NetworkVector3>(move.Destination);
             GameInteraction.MoveNonCombatCharacter(move.UnitId, destination, move.Delay, move.Orientation);
 
-            var notifyMove = new NotifyCharacterMove
-            {
-                UnitId = move.UnitId,
-                Destination = move.Destination,
-                Delay = move.Delay,
-                Orientation = move.Orientation
-            };
-            _networkServer.SendAllExcept(playerId, notifyMove);
+            Logger.LogInformation("Resending {messageType}", nameof(NotifyCharacterMove));
+            _networkServer.SendAllExcept(playerId, move);
         }
 
         private void OnPlayerSaveGameSyncChanged(long playerId, PlayerSaveGameSyncChanged changed)

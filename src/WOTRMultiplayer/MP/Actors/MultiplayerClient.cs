@@ -125,24 +125,6 @@ namespace WOTRMultiplayer.MP.Actors
             _networkServerClient?.Dispose();
         }
 
-        public void MoveNonCombatCharacter(string unitId, NetworkVector3 destination, float delay, float orientation)
-        {
-            if (Game.Combat != null)
-            {
-                return;
-            }
-
-            Logger.LogInformation("Sending CharacterMove. UnitId={unitId}, Destination={destination}, Delay={delay}, Orientation={orientation}", unitId, destination, delay, orientation);
-            var message = new CharacterMove
-            {
-                UnitId = unitId,
-                Destination = Mapper.Map<Networking.Messages.Contracts.NetworkVector3>(destination),
-                Delay = delay,
-                Orientation = orientation
-            };
-            _networkServerClient.Send(message);
-        }
-
         public override void OnAreaScenesLoaded()
         {
             base.OnAreaScenesLoaded();
@@ -218,19 +200,11 @@ namespace WOTRMultiplayer.MP.Actors
             return false;
         }
 
-        /// <summary>
-        /// 35 - UnitCombatPrepareController
-        /// </summary>
-        /// <returns></returns>
         public bool CanInitializeCombat()
         {
             return Game.Combat != null && Game.Combat.IsInitialized;
         }
 
-        /// <summary>
-        /// 12 - CombatController
-        /// </summary>
-        /// <returns></returns>
         public bool CanContinueCombat()
         {
             if (Game.Combat == null)
@@ -451,7 +425,7 @@ namespace WOTRMultiplayer.MP.Actors
         private void RegisterHandlers()
         {
             _networkServerClient
-                // this is kinda special as well as the host is blocking the game loop thread until `RollResponse` is received
+                // this is kinda special because requester is blocking the thread (most likely game main loop) until <see cref="DiceRollValueResponse"/> is received
                 .Register<DiceRollValueRequest>(OnDiceRollValueRequest)
 
                 .Register<NotifyPlayerDisconnected>(OnNotifyPlayerDisconnected)
@@ -501,6 +475,7 @@ namespace WOTRMultiplayer.MP.Actors
                 .Register<NotifyVendorWindowClosed>(OnNotifyVendorWindowClosed)
                 .Register<NotifySpellMemorized>(OnNotifySpellMemorized)
                 .Register<NotifySpellForgotten>(OnNotifySpellForgotten)
+
                 // leveling
                 .Register<NotifyCharacterLevelingStarted>(OnNotifyCharacterLevelingStarted)
                 .Register<NotifyLevelingClassSelected>(OnNotifyLevelingClassSelected)
