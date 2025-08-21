@@ -27,5 +27,5 @@ jobs:
       run: dotnet restore ./src
     - name: Build
       run: dotnet build ./src --no-restore -c release
-    - name: Test
-      run: dotnet test ./src --no-build --verbosity normal
+    - name: Unit Tests
+      run: dotnet test ./src --no-build --verbosity normal -c release
