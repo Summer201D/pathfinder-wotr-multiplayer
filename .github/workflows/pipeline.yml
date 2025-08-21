@@ -2,10 +2,10 @@ name: build
 
 on:
   workflow_dispatch:
-  push:
-    branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
+#  push:
+#    branches: [ "main" ]
+#  pull_request:
+#    branches: [ "main" ]
 concurrency:
   group: pipeline-${{ github.head_ref || github.ref }}
   cancel-in-progress: true
@@ -14,7 +14,7 @@ jobs:
   build:
     timeout-minutes: 10
     env:
-      WOTR_PATH: /home/runner/work/pathfinder-wotr-multiplayer/pathfinder-wotr-multiplayer/libs
+      WOTR_PATH: ../../libs
     runs-on: windows-latest
 
     steps:
@@ -26,6 +26,6 @@ jobs:
     - name: Restore dependencies
       run: dotnet restore ./src
     - name: Build
-      run: dotnet build ./src --no-restore
+      run: dotnet build ./src --no-restore -c release
     - name: Test
-      run: dotnet test --no-build --verbosity normal ./src
+      run: dotnet test ./src --no-build --verbosity normal
