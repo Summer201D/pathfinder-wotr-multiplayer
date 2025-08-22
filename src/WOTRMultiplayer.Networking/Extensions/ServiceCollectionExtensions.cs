@@ -11,7 +11,7 @@ namespace WOTRMultiplayer.Networking.Extensions
             serviceCollection.AddSingleton<IIPEndPointParser, IPEndPointParser>();
 
             serviceCollection.AddScoped<INetworkServer, NetworkServer>();
-            serviceCollection.AddScoped<INetworkServerClient, NetworkServerClient>();
+            serviceCollection.AddScoped<INetworkClient, NetworkClient>();
             return serviceCollection;
         }
     }

@@ -10,12 +10,12 @@ using WOTRMultiplayer.Networking.Awaiters;
 
 namespace WOTRMultiplayer.Networking
 {
-    public class NetworkServerClient : INetworkServerClient
+    public class NetworkClient : INetworkClient
     {
         private AsyncTcpClient _client;
         private readonly ConcurrentDictionary<Type, Action<object>> _handlers = new();
         private readonly ConcurrentDictionary<string, TaskCompletionSource<object>> _awaiters = new(StringComparer.OrdinalIgnoreCase);
-        private readonly ILogger<NetworkServerClient> _logger;
+        private readonly ILogger<NetworkClient> _logger;
         private readonly TimeSpan _defaultAwaiterTimeout = TimeSpan.FromMinutes(1);
 
         public Action<Exception> OnError { get; set; }
@@ -26,7 +26,7 @@ namespace WOTRMultiplayer.Networking
 
         public bool IsConnecting { get; private set; } = false;
 
-        public NetworkServerClient(ILogger<NetworkServerClient> logger)
+        public NetworkClient(ILogger<NetworkClient> logger)
         {
             _logger = logger;
         }
@@ -57,7 +57,7 @@ namespace WOTRMultiplayer.Networking
             OnError?.Invoke(args.Error);
         }
 
-        public INetworkServerClient On<TMessage>(Action<TMessage> handler)
+        public INetworkClient On<TMessage>(Action<TMessage> handler)
             where TMessage : class
         {
             _logger.LogDebug("Adding message handler. Type={Type}", typeof(TMessage));

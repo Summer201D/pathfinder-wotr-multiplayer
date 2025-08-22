@@ -39,7 +39,7 @@ namespace WOTRMultiplayer.MP.Actors
     public class MultiplayerClient : MultiplayerActorBase, IMultiplayerClient
     {
         private readonly IIPEndPointParser _ipEndPointParser;
-        private readonly INetworkServerClient _networkServerClient;
+        private readonly INetworkClient _networkClient;
 
         public Action<string> OnNetworkError { get; set; }
 
@@ -51,9 +51,9 @@ namespace WOTRMultiplayer.MP.Actors
 
         public Action OnDisconnected { get; set; }
 
-        public bool IsActive => _networkServerClient.IsActive;
+        public bool IsActive => _networkClient.IsActive;
 
-        public bool IsConnecting => _networkServerClient.IsConnecting;
+        public bool IsConnecting => _networkClient.IsConnecting;
 
         private NetworkGameStage Status => Game?.Stage ?? NetworkGameStage.None;
 
@@ -67,7 +67,7 @@ namespace WOTRMultiplayer.MP.Actors
             IIPEndPointParser ipEndPointParser,
             IMultiplayerSettingsProvider multiplayerSettingsProvider,
             IFileSystemService fileSystemService,
-            INetworkServerClient networkServerClient,
+            INetworkClient networkClient,
             IDiceRollStorage diceRollStorage,
             IValueGenerator valueGenerator,
             IMapper mapper)
@@ -80,12 +80,12 @@ namespace WOTRMultiplayer.MP.Actors
                   valueGenerator)
         {
             _ipEndPointParser = ipEndPointParser;
-            _networkServerClient = networkServerClient;
+            _networkClient = networkClient;
         }
 
         public ConnectLobbyResult Connect(string address)
         {
-            if (_networkServerClient.IsActive)
+            if (_networkClient.IsActive)
             {
                 Reset();
             }
@@ -102,7 +102,7 @@ namespace WOTRMultiplayer.MP.Actors
 
             RegisterHandlers();
 
-            _networkServerClient.ConnectAsync(endpoint.Address.ToString(), endpoint.Port);
+            _networkClient.ConnectAsync(endpoint.Address.ToString(), endpoint.Port);
 
             return ConnectLobbyResult.Ok();
         }
@@ -123,7 +123,7 @@ namespace WOTRMultiplayer.MP.Actors
 
             Game?.Reset();
 
-            _networkServerClient?.Reset();
+            _networkClient?.Reset();
         }
 
         public override void OnAreaScenesLoaded()
@@ -240,7 +240,7 @@ namespace WOTRMultiplayer.MP.Actors
 
                 // big timeout to make sure host is finished with banter. TODO: either deny or sync skipping banters
                 var message = new RandomEncounterContextRequest { Timeout = TimeSpan.FromSeconds(45) };
-                var response = _networkServerClient.SendAndWaitFor<RandomEncounterContextResponse>(message);
+                var response = _networkClient.SendAndWaitFor<RandomEncounterContextResponse>(message);
 
                 if (response?.Encounter == null)
                 {
@@ -288,7 +288,7 @@ namespace WOTRMultiplayer.MP.Actors
 
                 Logger.LogInformation("Retrieving AI action. UnitId={unitID}, ActionIndex={inadex}", networkAIAction.UnitId, message.ActionIndex);
 
-                var response = _networkServerClient.SendAndWaitFor<AIActionResponse>(message);
+                var response = _networkClient.SendAndWaitFor<AIActionResponse>(message);
 
                 if (response?.Action == null)
                 {
@@ -368,12 +368,12 @@ namespace WOTRMultiplayer.MP.Actors
 
         protected override DiceRollValueResponse RetrieveRoll(DiceRollValueRequest rollRequest)
         {
-            return _networkServerClient.SendAndWaitFor<DiceRollValueResponse>(rollRequest);
+            return _networkClient.SendAndWaitFor<DiceRollValueResponse>(rollRequest);
         }
 
         protected override void Send(object message)
         {
-            _networkServerClient.Send(message);
+            _networkClient.Send(message);
         }
 
         protected override void Send(long playerId, object message)
@@ -399,7 +399,7 @@ namespace WOTRMultiplayer.MP.Actors
         }
         private void RegisterHandlers()
         {
-            _networkServerClient
+            _networkClient
                 // this is kinda special because requester is blocking the thread (most likely game main loop) until <see cref="DiceRollValueResponse"/> is received
                 .On<DiceRollValueRequest>(OnDiceRollValueRequest)
 
@@ -468,8 +468,8 @@ namespace WOTRMultiplayer.MP.Actors
                 .On<NotifyLevelingTerminated>(OnNotifyLevelingTerminated)
                 ;
 
-            _networkServerClient.OnError = OnNetworkClientError;
-            _networkServerClient.OnConnected = OnNetworkClientConnected;
+            _networkClient.OnError = OnNetworkClientError;
+            _networkClient.OnConnected = OnNetworkClientConnected;
         }
 
         private void OnNotifyLevelingAbilityScoreDecreased(NotifyLevelingAbilityScoreDecreased decreased)

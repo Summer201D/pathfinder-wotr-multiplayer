@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 
 namespace WOTRMultiplayer.Networking.Abstractions
 {
-    public interface INetworkServerClient
+    public interface INetworkClient
     {
         bool IsActive { get; }
 
@@ -12,7 +12,7 @@ namespace WOTRMultiplayer.Networking.Abstractions
 
         Task ConnectAsync(string host, int port);
 
-        INetworkServerClient On<T>(Action<T> handler)
+        INetworkClient On<T>(Action<T> handler)
             where T : class;
 
         void Send(object message);

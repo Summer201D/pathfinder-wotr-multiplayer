@@ -31,7 +31,7 @@ namespace WOTRMultiplayer.Playground.Client
                 serviceProvider.GetService<IIPEndPointParser>(),
                 serviceProvider.GetService<IMultiplayerSettingsProvider>(),
                 serviceProvider.GetService<IFileSystemService>(),
-                serviceProvider.GetService<INetworkServerClient>(),
+                serviceProvider.GetService<INetworkClient>(),
                 new DummyDiceRollStorage([new NetworkIntRollValue { Value = 59 }]),
                 serviceProvider.GetService<IValueGenerator>(),
                 serviceProvider.GetService<IMapper>());
