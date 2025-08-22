@@ -33,7 +33,7 @@ namespace WOTRMultiplayer.Abstractions.MP
 
         void InitializeEscMenuLobbyWindow(InitializeEscMenuLobbyWindowContext context);
 
-        void MoveNonCombatCharacter(NetworkCharacterMove move);
+        void MoveNonCombatCharacter(NetworkCharacterMove networkCharacterMove);
 
         bool OnStartGameMode(GameModeType type);
 
@@ -67,17 +67,17 @@ namespace WOTRMultiplayer.Abstractions.MP
 
         string GetMultiplayerOwnerName(string unitId);
 
-        void OnClickUnit(NetworkClick click);
+        void OnClickUnit(NetworkClick networkClick);
 
-        void OnClickGround(NetworkClick click);
+        void OnClickGround(NetworkClick networkClick);
 
-        void OnClickMapObject(NetworkClick click);
+        void OnClickMapObject(NetworkClick networkClick);
 
         void OnInteractWithMapObjectOvertip(NetworkOvertip networkOvertip);
 
-        void OnAbilityUse(NetworkAbility ability);
+        void OnAbilityUse(NetworkAbility networkAbility);
 
-        void OnToggleActivatableAbility(NetworkActivatableAbility ability);
+        void OnToggleActivatableAbility(NetworkActivatableAbility networkActivatableAbility);
 
         bool IsActive { get; }
 
@@ -85,25 +85,25 @@ namespace WOTRMultiplayer.Abstractions.MP
 
         NetworkActionsState GetActionsState();
 
-        void OnLootContainer(NetworkLootContainer container);
+        void OnLootContainer(NetworkLootContainer networkLootContainer);
 
-        void OnDropItem(NetworkDropItem dropItem);
+        void OnDropItem(NetworkDropItem networkDropItem);
 
-        void OnChangeActiveHandEquipmentSet(NetworkActiveHandEquipmentSet set);
+        void OnChangeActiveHandEquipmentSet(NetworkActiveHandEquipmentSet networkActiveHandEquipmentSet);
 
         bool CanUnitJoinCombat(string unitId);
 
         bool CanMakePerceptionCheck(string unitId, string mapObjectId);
 
-        bool OnInspectionKnowledgeCheck(NetworkInspectionKnowledgeCheck check);
+        bool OnInspectionKnowledgeCheck(NetworkInspectionKnowledgeCheck networkInspectionKnowledgeCheck);
 
-        void OnPerceptionCheck(NetworkPerceptionCheck check);
+        void OnPerceptionCheck(NetworkPerceptionCheck networkPerceptionCheck);
 
         bool OnSpawnCampPlace(NetworkVector3 position);
 
         bool OnCampingUseHealingSpellsChanged(bool isActive);
 
-        void OnCampingUnitsRoleChanged(List<NetworkCampingRole> roles);
+        void OnCampingUnitsRoleChanged(List<NetworkCampingRole> networkCampingRoles);
 
         void OnStartRest();
 
@@ -115,15 +115,15 @@ namespace WOTRMultiplayer.Abstractions.MP
 
         int? GetNextRestBanter(int minInclusive, int maxExclusive);
 
-        void OnInterrupRestBanterBark(NetworkRestBanter networkBanter);
+        void OnInterrupRestBanterBark(NetworkRestBanter networkRestBanter);
 
-        NetworkAIAction OnAfterAISelectedAction(NetworkAIAction action);
+        NetworkAIAction OnAfterAISelectedAction(NetworkAIAction networkAIAction);
 
         bool ShouldGroundHandlerMoveAllUnitsToPoint();
 
         void ResetExecutionContext();
 
-        void OnTransferVendorItem(NetworkVendorItemTransfer transfer);
+        void OnTransferVendorItem(NetworkVendorItemTransfer networkVendorItemTransfer);
 
         bool CanFullyControlVendorUI();
 
@@ -131,9 +131,9 @@ namespace WOTRMultiplayer.Abstractions.MP
 
         void OnCloseVendorWindow();
 
-        void OnMemorizeSpell(NetworkSpellSlot slot);
+        void OnMemorizeSpell(NetworkSpellSlot networkSpellSlot);
 
-        void OnForgetSpell(NetworkSpellSlot slot);
+        void OnForgetSpell(NetworkSpellSlot networkSpellSlot);
 
         bool RequestLevelingUI(string unitId);
 
@@ -145,22 +145,22 @@ namespace WOTRMultiplayer.Abstractions.MP
 
         bool CanMakeLevelingDecisions();
 
-        void OnWitnessLevelingPhase(NetworkLevelingPhase phase);
+        void OnWitnessLevelingPhase(NetworkLevelingPhase networkLevelingPhase);
 
-        void OnLevelingIncreaseSkillPoint(NetworkLevelingSkillPoint skill);
+        void OnLevelingIncreaseSkillPoint(NetworkLevelingSkillPoint networkLevelingSkillPoint);
 
-        void OnLevelingDecreaseSkillPoint(NetworkLevelingSkillPoint skill);
+        void OnLevelingDecreaseSkillPoint(NetworkLevelingSkillPoint networkLevelingSkillPoint);
 
-        void OnLevelingFeatureSelected(NetworkLevelingFeature feature);
+        void OnLevelingFeatureSelected(NetworkLevelingFeature networkLevelingFeature);
 
-        void OnLevelingSpellRemoved(NetworkLevelingSpell spell);
+        void OnLevelingSpellRemoved(NetworkLevelingSpell networkLevelingSpell);
 
-        void OnLevelingSpellChosen(NetworkLevelingSpell spell);
+        void OnLevelingSpellChosen(NetworkLevelingSpell networkLevelingSpell);
 
         void OnLevelingCompleted();
 
-        void OnLevelingIncreaseAbilityScore(NetworkLevelingAbilityScore abilityScore);
+        void OnLevelingIncreaseAbilityScore(NetworkLevelingAbilityScore networkLevelingAbilityScore);
 
-        void OnLevelingDecreaseAbilityScore(NetworkLevelingAbilityScore abilityScore);
+        void OnLevelingDecreaseAbilityScore(NetworkLevelingAbilityScore networkLevelingAbilityScore);
     }
 }

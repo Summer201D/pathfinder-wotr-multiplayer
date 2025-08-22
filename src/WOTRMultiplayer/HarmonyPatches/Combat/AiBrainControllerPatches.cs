@@ -106,18 +106,18 @@ namespace WOTRMultiplayer.HarmonyPatches.Combat
                 var customAction = unitEntityData.Brain.CustomActions.FirstOrDefault(ca => string.Equals(ca.Blueprint.AssetGuid.ToString(), networkAIAction.ActionBlueprintId));
                 if (customAction != null)
                 {
-                    Main.GetLogger<AiBrainControllerPatches>().LogInformation("Custom AI action has been selected. ActionBlueprintId={ActionBlueprintId}", customAction?.Blueprint.AssetGuid.ToString());
+                    Main.GetLogger<AiBrainControllerPatches>().LogInformation("Custom AI action has been selected. ActionBlueprintId={ActionBlueprintId}", customAction.Blueprint.AssetGuid.ToString());
                     return customAction;
                 }
 
                 var availableAction = unitEntityData.Brain.AvailableActions.FirstOrDefault(ca => string.Equals(ca.Blueprint.AssetGuid.ToString(), networkAIAction.ActionBlueprintId));
                 if (availableAction != null)
                 {
-                    Main.GetLogger<AiBrainControllerPatches>().LogInformation("Available AI action has been selected. ActionBlueprintId={ActionBlueprintId}", availableAction?.Blueprint.AssetGuid.ToString());
+                    Main.GetLogger<AiBrainControllerPatches>().LogInformation("Available AI action has been selected. ActionBlueprintId={ActionBlueprintId}", availableAction.Blueprint.AssetGuid.ToString());
                     return availableAction;
                 }
 
-                Main.GetLogger<AiBrainControllerPatches>().LogError("Unable to find AI action. ActionBlueprintId={ActionBlueprintId}", availableAction?.Blueprint.AssetGuid.ToString());
+                Main.GetLogger<AiBrainControllerPatches>().LogError("Unable to find AI action. ActionBlueprintId={ActionBlueprintId}", availableAction.Blueprint.AssetGuid.ToString());
                 return null;
             }
             catch (Exception ex)

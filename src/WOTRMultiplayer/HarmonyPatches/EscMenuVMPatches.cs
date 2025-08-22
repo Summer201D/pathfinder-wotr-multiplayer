@@ -13,7 +13,7 @@ namespace WOTRMultiplayer.HarmonyPatches
         public static void EscMenuVM_OnQuitToMainMenuAction_Prefix(MessageModalBase.ButtonType buttonType)
         {
             var logger = Main.GetLogger<EscMenuVMPatches>();
-            logger.LogInformation("Applying patch [{patchName}]", nameof(EscMenuVM_OnQuitToMainMenuAction_Prefix));
+            logger.LogInformation("Applying patch [{PatchName}]", nameof(EscMenuVM_OnQuitToMainMenuAction_Prefix));
             if (buttonType == MessageModalBase.ButtonType.Yes)
             {
                 logger.LogInformation("quit to main menu");

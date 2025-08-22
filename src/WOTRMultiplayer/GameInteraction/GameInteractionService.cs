@@ -234,11 +234,11 @@ namespace WOTRMultiplayer.GameInteraction
 
         }
 
-        public void MarkSuggestedDialogAnswers(List<NetworkDialogAnswerSuggestion> suggestions)
+        public void MarkSuggestedDialogAnswers(List<NetworkDialogAnswerSuggestion> networkDialogAnswerSuggestions)
         {
             _mainThreadAccessor.Post(() =>
             {
-                ImmediatlyMarkSuggestedDialogAnswers(suggestions);
+                ImmediatlyMarkSuggestedDialogAnswers(networkDialogAnswerSuggestions);
             });
         }
 
@@ -356,22 +356,22 @@ namespace WOTRMultiplayer.GameInteraction
             }
         }
 
-        public void MoveNonCombatCharacter(NetworkCharacterMove move)
+        public void MoveNonCombatCharacter(NetworkCharacterMove networkCharacterMove)
         {
-            var character = Game.Instance.Player.PartyAndPets.FirstOrDefault(f => string.Equals(f.UniqueId, move.UnitId, StringComparison.OrdinalIgnoreCase));
+            var character = Game.Instance.Player.PartyAndPets.FirstOrDefault(f => string.Equals(f.UniqueId, networkCharacterMove.UnitId, StringComparison.OrdinalIgnoreCase));
             if (character == null)
             {
-                _logger.LogError("Can't move missing character. UnitId={UnitId}", move.UnitId);
+                _logger.LogError("Can't move missing character. UnitId={UnitId}", networkCharacterMove.UnitId);
                 return;
             }
 
             _mainThreadAccessor.Post(() =>
             {
-                var unityDestination = new UnityEngine.Vector3(move.Destination.X, move.Destination.Y, move.Destination.Z);
+                var unityDestination = new UnityEngine.Vector3(networkCharacterMove.Destination.X, networkCharacterMove.Destination.Y, networkCharacterMove.Destination.Z);
                 var command = new UnitMoveTo(unityDestination, 0.3f)
                 {
-                    MovementDelay = move.Delay,
-                    Orientation = move.Orientation,
+                    MovementDelay = networkCharacterMove.Delay,
+                    Orientation = networkCharacterMove.Orientation,
                     CreatedByPlayer = true
                 };
                 character.Commands.Run(command);
@@ -543,12 +543,15 @@ namespace WOTRMultiplayer.GameInteraction
         {
             var unitsToSync = Game.Instance.State.Units.InCombat().ToList();
 
-            UnitEntityData anevia;
             switch (Game.Instance.CurrentlyLoadedArea.name)
             {
-                case "Prologue_Caves_1" when (anevia = Game.Instance.State.Units.FirstOrDefault(u => u.CharacterName == "Anevia")) != null:
-                    // Anevia, constantly joins midfight
-                    unitsToSync.Add(anevia);
+                case "Prologue_Caves_1":
+                    var anevia = Game.Instance.State.Units.FirstOrDefault(u => u.CharacterName == "Anevia");
+                    if (anevia != null)
+                    {
+                        // Anevia, constantly joins midfight
+                        unitsToSync.Add(anevia);
+                    }
                     break;
                 default:
                     break;
@@ -607,7 +610,6 @@ namespace WOTRMultiplayer.GameInteraction
                     catch (Exception ex)
                     {
                         _logger.LogError(ex, "Unable to update unit position. UnitId={UnitId}", networkUnit.Id);
-                        continue;
                     }
                 }
 
@@ -699,12 +701,12 @@ namespace WOTRMultiplayer.GameInteraction
             });
         }
 
-        public void ClickUnit(NetworkClick click)
+        public void ClickUnit(NetworkClick networkClick)
         {
             try
             {
                 var clickUnitHandler = Game.Instance.DefaultPointerController.m_ClickHandlers.FirstOrDefault(c => c is ClickUnitHandler);
-                ExecuteClickHandler(clickUnitHandler, click);
+                ExecuteClickHandler(clickUnitHandler, networkClick);
             }
             catch (Exception ex)
             {
@@ -713,12 +715,12 @@ namespace WOTRMultiplayer.GameInteraction
             }
         }
 
-        public void ClickGroundInCombat(NetworkClick click)
+        public void ClickGroundInCombat(NetworkClick networkClick)
         {
             try
             {
                 var clickGroundHandler = Game.Instance.DefaultPointerController.m_ClickHandlers.FirstOrDefault(c => c is ClickGroundHandler);
-                ExecuteClickHandler(clickGroundHandler, click);
+                ExecuteClickHandler(clickGroundHandler, networkClick);
             }
             catch (Exception ex)
             {
@@ -727,84 +729,84 @@ namespace WOTRMultiplayer.GameInteraction
             }
         }
 
-        public void ClickMapObject(NetworkClick click)
+        public void ClickMapObject(NetworkClick networkClick)
         {
             _mainThreadAccessor.Post(() =>
             {
                 try
                 {
                     // each client generates a random map object ID, so the easiest way is to look for the nearest bag(assuming its location is relatively the same)
-                    var mapObject = click.IsLootBagMapObject ? GetNeareastLootBagMapObject(click.WorldPosition) : GetMapObject(click.MapObjectId);
+                    var mapObject = networkClick.IsLootBagMapObject ? GetNeareastLootBagMapObject(networkClick.WorldPosition) : GetMapObject(networkClick.MapObjectId);
                     if (mapObject == null)
                     {
-                        _logger.LogWarning("Unable to click missing map object. MapObjectId={MapObjectId}", click.MapObjectId);
+                        _logger.LogWarning("Unable to click missing map object. MapObjectId={MapObjectId}", networkClick.MapObjectId);
                         return;
                     }
 
-                    var selectedUnits = click.SelectedUnits.Select(GetUnitEntity).ToList();
+                    var selectedUnits = networkClick.SelectedUnits.Select(GetUnitEntity).ToList();
 
-                    ClickMapObjectHandler.Interact(mapObject.View.gameObject, selectedUnits, forceOvertipInteractions: false, click.MuteEvents);
+                    ClickMapObjectHandler.Interact(mapObject.View.gameObject, selectedUnits, forceOvertipInteractions: false, networkClick.MuteEvents);
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "Unable to interact with map object. MapObjectId={MapObjectId}", click.MapObjectId);
+                    _logger.LogError(ex, "Unable to interact with map object. MapObjectId={MapObjectId}", networkClick.MapObjectId);
                     throw;
                 }
             });
         }
 
-        public void ToggleActivatableAbility(NetworkActivatableAbility toggle)
+        public void ToggleActivatableAbility(NetworkActivatableAbility networkActivatableAbility)
         {
             try
             {
-                var caster = GetUnitEntity(toggle.CasterId);
-                var ability = FindActivatableAbility(caster, toggle.Id);
+                var caster = GetUnitEntity(networkActivatableAbility.CasterId);
+                var ability = FindActivatableAbility(caster, networkActivatableAbility.Id);
                 if (ability == null)
                 {
-                    _logger.LogError("Unable to find activatable ability. UnitId={UnitId}, AbilityId={AbilityId}", caster.UniqueId, toggle.Id);
+                    _logger.LogError("Unable to find activatable ability. UnitId={UnitId}, AbilityId={AbilityId}", caster.UniqueId, networkActivatableAbility.Id);
                     return;
                 }
 
-                var target = GetUnitEntity(toggle.TargetId);
+                var target = GetUnitEntity(networkActivatableAbility.TargetId);
                 _mainThreadAccessor.Post(() =>
                 {
-                    ability.SetIsOn(toggle.IsActive, target);
+                    ability.SetIsOn(networkActivatableAbility.IsActive, target);
                 });
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Unable to initiate ToggleActivatableAbility.  CasterId={CasterId}, TargetId={TargetId}, AbilityId={AbilityId}", toggle.CasterId, toggle.TargetId, toggle.Id);
+                _logger.LogError(ex, "Unable to initiate ToggleActivatableAbility.  CasterId={CasterId}, TargetId={TargetId}, AbilityId={AbilityId}", networkActivatableAbility.CasterId, networkActivatableAbility.TargetId, networkActivatableAbility.Id);
                 throw;
             }
         }
 
-        public void UseAbility(NetworkAbility abilityUse)
+        public void UseAbility(NetworkAbility networkAbility)
         {
             try
             {
-                var caster = GetUnitEntity(abilityUse.CasterId);
-                var abilityData = FindAbility(caster, abilityUse);
+                var caster = GetUnitEntity(networkAbility.CasterId);
+                var abilityData = FindAbility(caster, networkAbility);
                 if (abilityData == null)
                 {
-                    _logger.LogError("Unable to find ability. UnitId={UnitId}, AbilityId={AbilityId}, SpellbookBlueprintId={SpellbookBlueprintId}", caster.UniqueId, abilityUse.Id, abilityUse.SpellbookId);
+                    _logger.LogError("Unable to find ability. UnitId={UnitId}, AbilityId={AbilityId}, SpellbookBlueprintId={SpellbookBlueprintId}", caster.UniqueId, networkAbility.Id, networkAbility.SpellbookId);
                     return;
                 }
 
-                var target = GetUnitEntity(abilityUse.TargetId);
-                var point = new Vector3(abilityUse.TargetPoint.X, abilityUse.TargetPoint.Y, abilityUse.TargetPoint.Z);
+                var target = GetUnitEntity(networkAbility.TargetId);
+                var point = new Vector3(networkAbility.TargetPoint.X, networkAbility.TargetPoint.Y, networkAbility.TargetPoint.Z);
                 var targetWrapper = new TargetWrapper(point, null, target);
 
-                if (abilityUse.ActionsState != null)
+                if (networkAbility.ActionsState != null)
                 {
-                    UpdateActionsState(abilityUse.ActionsState);
+                    UpdateActionsState(networkAbility.ActionsState);
                 }
 
-                Enum.TryParse<UnitCommand.CommandType>(abilityUse.CommandType, true, out var commandType);
+                Enum.TryParse<UnitCommand.CommandType>(networkAbility.CommandType, true, out var commandType);
                 var command = UnitUseAbility.CreateCastCommand(abilityData, targetWrapper, commandType);
                 command.CreatedByPlayer = true;
-                if (abilityUse.VectorPath != null)
+                if (networkAbility.VectorPath != null)
                 {
-                    var movementPath = abilityUse.VectorPath.Select(v => new Vector3(v.X, v.Y, v.Z)).ToList();
+                    var movementPath = networkAbility.VectorPath.Select(v => new Vector3(v.X, v.Y, v.Z)).ToList();
                     command.ForcedPath = new ForcedPath(movementPath);
                     PathVisualizer.Instance.m_CurrentPath = command.ForcedPath;
                     PathVisualizer.Instance.m_CurrentPath.Claim(PathVisualizer.Instance);
@@ -819,7 +821,7 @@ namespace WOTRMultiplayer.GameInteraction
             catch (Exception ex)
             {
 
-                _logger.LogError(ex, "Unable to initiate UseAbility.  CasterId={CasterId}, TargetId={TargetId}, AbilityId={AbilityId}", abilityUse.CasterId, abilityUse.TargetId, abilityUse.Id);
+                _logger.LogError(ex, "Unable to initiate UseAbility.  CasterId={CasterId}, TargetId={TargetId}, AbilityId={AbilityId}", networkAbility.CasterId, networkAbility.TargetId, networkAbility.Id);
                 throw;
             }
         }
@@ -889,37 +891,37 @@ namespace WOTRMultiplayer.GameInteraction
             });
         }
 
-        public void DropItem(NetworkDropItem dropItem)
+        public void DropItem(NetworkDropItem networkDropItem)
         {
-            var entity = GetUnitEntity(dropItem.OwnerEntityId);
+            var entity = GetUnitEntity(networkDropItem.OwnerEntityId);
             if (entity == null)
             {
-                _logger.LogError("Unable to find entity to drop item. EntityId={EntityId}", dropItem.OwnerEntityId);
+                _logger.LogError("Unable to find entity to drop item. EntityId={EntityId}", networkDropItem.OwnerEntityId);
                 return;
             }
 
             var possibleItemsToDrop = entity.Inventory
-                .Where(i => i.HoldingSlot == null && IsSameItem(i, dropItem.Item))
+                .Where(i => i.HoldingSlot == null && IsSameItem(i, networkDropItem.Item))
                 .OrderBy(x => x.Count)
                 .ToList();
 
             if (possibleItemsToDrop.Count == 0)
             {
-                _logger.LogWarning("Unable to find item to drop. EntityId={EntityId}, ItemId={ItemId}", dropItem.OwnerEntityId, dropItem.Item.UniqueId);
+                _logger.LogWarning("Unable to find item to drop. EntityId={EntityId}, ItemId={ItemId}", networkDropItem.OwnerEntityId, networkDropItem.Item.UniqueId);
                 return;
             }
 
             var totalCount = possibleItemsToDrop.Sum(x => x.Count);
-            if (totalCount < dropItem.Item.Count)
+            if (totalCount < networkDropItem.Item.Count)
             {
-                _logger.LogError("Not enough items to drop, possibly desynced somewhere else. EntityId={EntityId}, ItemId={ItemId}, TotalCount={TotalCount}, RequiredCount={RequiredCount}", dropItem.OwnerEntityId, dropItem.Item.UniqueId, totalCount, dropItem.Item.Count);
+                _logger.LogError("Not enough items to drop, possibly desynced somewhere else. EntityId={EntityId}, ItemId={ItemId}, TotalCount={TotalCount}, RequiredCount={RequiredCount}", networkDropItem.OwnerEntityId, networkDropItem.Item.UniqueId, totalCount, networkDropItem.Item.Count);
                 return;
             }
 
             _mainThreadAccessor.Post(() =>
             {
-                MatchSameNumberOfItems(possibleItemsToDrop, dropItem.Item.Count,
-                    (item) => DropItem(entity.Inventory, item, dropItem.OwnerEntityId));
+                MatchSameNumberOfItems(possibleItemsToDrop, networkDropItem.Item.Count,
+                    (item) => DropItem(entity.Inventory, item, networkDropItem.OwnerEntityId));
 
                 RefreshInventoryWindow();
             });
@@ -946,7 +948,6 @@ namespace WOTRMultiplayer.GameInteraction
                     // less than needed
                     countToDrop = difference;
                     onMatched(item);
-                    continue;
                 }
             }
         }
@@ -988,21 +989,21 @@ namespace WOTRMultiplayer.GameInteraction
             };
         }
 
-        public void UpdateEquipmentSlot(NetworkEquipmentSlot slot)
+        public void UpdateEquipmentSlot(NetworkEquipmentSlot networkEquipmentSlot)
         {
             _mainThreadAccessor.Post(() =>
             {
-                var unit = GetUnitEntity(slot.OwnerId);
+                var unit = GetUnitEntity(networkEquipmentSlot.OwnerId);
                 if (unit == null)
                 {
-                    _logger.LogError("Unable to update equipment slot for missing unit. UnitId={UnitId}", slot.OwnerId);
+                    _logger.LogError("Unable to update equipment slot for missing unit. UnitId={UnitId}", networkEquipmentSlot.OwnerId);
                     return;
                 }
 
-                var slotType = _equipmentDefinitions.GetSlotType(slot.Position.Type);
+                var slotType = _equipmentDefinitions.GetSlotType(networkEquipmentSlot.Position.Type);
                 if (slotType == null)
                 {
-                    _logger.LogError("Unable to update equipment slot with invalid slot type. UnitId={UnitId}, SlotType={SlotType}", slot.OwnerId, slot.Position.Type);
+                    _logger.LogError("Unable to update equipment slot with invalid slot type. UnitId={UnitId}, SlotType={SlotType}", networkEquipmentSlot.OwnerId, networkEquipmentSlot.Position.Type);
                     return;
                 }
 
@@ -1010,35 +1011,35 @@ namespace WOTRMultiplayer.GameInteraction
                     .Where(s => s.GetType() == slotType)
                     .ToList();
 
-                if (slotsOfSameType.Count < slot.Position.Index)
+                if (slotsOfSameType.Count < networkEquipmentSlot.Position.Index)
                 {
-                    _logger.LogError("Unable to update equipment slot with invalid slot index. UnitId={UnitId}, SlotType={SlotType}, SlotIndex={SlotIndex}", slot.OwnerId, slot.Position.Type, slot.Position.Index);
+                    _logger.LogError("Unable to update equipment slot with invalid slot index. UnitId={UnitId}, SlotType={SlotType}, SlotIndex={SlotIndex}", networkEquipmentSlot.OwnerId, networkEquipmentSlot.Position.Type, networkEquipmentSlot.Position.Index);
                     return;
                 }
 
-                using var context = _networkExecutionContext.Value = RemoteExecutionContext.Create(slot.Position);
+                using var context = _networkExecutionContext.Value = RemoteExecutionContext.Create(networkEquipmentSlot.Position);
 
-                var slotToUpdate = slotsOfSameType[slot.Position.Index];
-                if (slot.Item == null)
+                var slotToUpdate = slotsOfSameType[networkEquipmentSlot.Position.Index];
+                if (networkEquipmentSlot.Item == null)
                 {
                     slotToUpdate.RemoveItem();
                     RefreshInventoryWindow();
-                    _logger.LogInformation("Item has been unequipped. UnitId={UnitId}, SlotType={SlotType}, SlotIndex={SlotIndex}", slot.OwnerId, slot.Position.Type, slot.Position.Index);
+                    _logger.LogInformation("Item has been unequipped. UnitId={UnitId}, SlotType={SlotType}, SlotIndex={SlotIndex}", networkEquipmentSlot.OwnerId, networkEquipmentSlot.Position.Type, networkEquipmentSlot.Position.Index);
                     return;
                 }
 
-                var item = unit.Inventory.Items.FirstOrDefault(i => string.Equals(i.UniqueId, slot.Item.UniqueId, StringComparison.OrdinalIgnoreCase));
+                var item = unit.Inventory.Items.FirstOrDefault(i => string.Equals(i.UniqueId, networkEquipmentSlot.Item.UniqueId, StringComparison.OrdinalIgnoreCase));
                 if (item == null)
                 {
                     // Stacking / splitting items generates a new item ID, which causes a mismatch on the clients,
                     // so we can find the 'same' unequipped item and equip it
-                    var sameItem = unit.Inventory.Items.Where(i => i.HoldingSlot == null && IsSameItem(i, slot.Item))
+                    var sameItem = unit.Inventory.Items.Where(i => i.HoldingSlot == null && IsSameItem(i, networkEquipmentSlot.Item))
                         .OrderBy(x => x.Count)
                         .FirstOrDefault();
 
                     if (sameItem == null)
                     {
-                        _logger.LogError("Unable to update equipment slot with missing item. UnitId={UnitId}, SlotType={SlotType}, SlotIndex={SlotIndex}, ItemId={ItemId}", slot.OwnerId, slot.Position.Type, slot.Position.Index, slot.Item.UniqueId);
+                        _logger.LogError("Unable to update equipment slot with missing item. UnitId={UnitId}, SlotType={SlotType}, SlotIndex={SlotIndex}, ItemId={ItemId}", networkEquipmentSlot.OwnerId, networkEquipmentSlot.Position.Type, networkEquipmentSlot.Position.Index, networkEquipmentSlot.Item.UniqueId);
                         return;
                     }
 
@@ -1048,31 +1049,31 @@ namespace WOTRMultiplayer.GameInteraction
 
                 slotToUpdate.InsertItem(item);
                 RefreshInventoryWindow();
-                _logger.LogInformation("Item has been equipped. UnitId={UnitId}, SlotType={SlotType}, SlotIndex={SlotIndex}, ItemId={ItemId}", slot.OwnerId, slot.Position.Type, slot.Position.Index, slot.Item.UniqueId);
+                _logger.LogInformation("Item has been equipped. UnitId={UnitId}, SlotType={SlotType}, SlotIndex={SlotIndex}, ItemId={ItemId}", networkEquipmentSlot.OwnerId, networkEquipmentSlot.Position.Type, networkEquipmentSlot.Position.Index, networkEquipmentSlot.Item.UniqueId);
             });
         }
 
-        public void SetActiveHandEquipmentSet(NetworkActiveHandEquipmentSet set)
+        public void SetActiveHandEquipmentSet(NetworkActiveHandEquipmentSet networkActiveHandEquipmentSet)
         {
-            var unit = GetUnitEntity(set.UnitId);
+            var unit = GetUnitEntity(networkActiveHandEquipmentSet.UnitId);
             if (unit == null)
             {
-                _logger.LogError("Unable to set active hand equipment set for missing unit. UnitId={UnitId}", set.UnitId);
+                _logger.LogError("Unable to set active hand equipment set for missing unit. UnitId={UnitId}", networkActiveHandEquipmentSet.UnitId);
                 return;
             }
 
             _mainThreadAccessor.Post(() =>
             {
-                if (unit.Body.CurrentHandEquipmentSetIndex == set.Index)
+                if (unit.Body.CurrentHandEquipmentSetIndex == networkActiveHandEquipmentSet.Index)
                 {
                     return;
                 }
 
-                using var context = _networkExecutionContext.Value = RemoteExecutionContext.Create(set);
+                using var context = _networkExecutionContext.Value = RemoteExecutionContext.Create(networkActiveHandEquipmentSet);
                 var previousIndex = unit.Body.CurrentHandEquipmentSetIndex;
-                unit.Body.CurrentHandEquipmentSetIndex = set.Index;
+                unit.Body.CurrentHandEquipmentSetIndex = networkActiveHandEquipmentSet.Index;
                 RefreshInventoryWindow();
-                _logger.LogInformation("Changed active hand equipment slot. UnitId={UnitId}, PreviousIndex={PreviousIndex}, CurrentIndex={CurrentIndex}", set.UnitId, previousIndex, unit.Body.CurrentHandEquipmentSetIndex);
+                _logger.LogInformation("Changed active hand equipment slot. UnitId={UnitId}, PreviousIndex={PreviousIndex}, CurrentIndex={CurrentIndex}", networkActiveHandEquipmentSet.UnitId, previousIndex, unit.Body.CurrentHandEquipmentSetIndex);
             });
         }
 
@@ -1088,49 +1089,49 @@ namespace WOTRMultiplayer.GameInteraction
             return unit.IsSummoned();
         }
 
-        public void ApplyPerceptionCheck(NetworkPerceptionCheck check)
+        public void ApplyPerceptionCheck(NetworkPerceptionCheck networkPerceptionCheck)
         {
-            var mapObject = GetMapObject(check.MapObject.Id);
+            var mapObject = GetMapObject(networkPerceptionCheck.MapObject.Id);
             if (mapObject == null)
             {
-                _logger.LogError("Unable to apply perception check due to missing map object. MapObjectId={MapObjectId}", check.MapObject.Id);
+                _logger.LogError("Unable to apply perception check due to missing map object. MapObjectId={MapObjectId}", networkPerceptionCheck.MapObject.Id);
                 return;
             }
 
-            var unit = GetUnitEntity(check.UnitId);
+            var unit = GetUnitEntity(networkPerceptionCheck.UnitId);
             if (unit == null)
             {
-                _logger.LogError("Unable to apply perception check due to missing unit. MapObjectId={MapObjectId}, UnitId={UnitId}", check.MapObject.Id, check.UnitId);
+                _logger.LogError("Unable to apply perception check due to missing unit. MapObjectId={MapObjectId}, UnitId={UnitId}", networkPerceptionCheck.MapObject.Id, networkPerceptionCheck.UnitId);
                 return;
             }
 
             _mainThreadAccessor.Post(() =>
             {
-                _logger.LogInformation("Trigerring perception check. MapObjectId={MapObjectId}", check.MapObject.Id);
-                using var context = _networkExecutionContext.Value = RemoteExecutionContext.Create(check);
+                _logger.LogInformation("Trigerring perception check. MapObjectId={MapObjectId}", networkPerceptionCheck.MapObject.Id);
+                using var context = _networkExecutionContext.Value = RemoteExecutionContext.Create(networkPerceptionCheck);
                 PartyPerceptionController.RollPerception(unit, mapObject);
             });
         }
 
-        public void ApplyInspectionKnowledgeCheck(NetworkInspectionKnowledgeCheck check)
+        public void ApplyInspectionKnowledgeCheck(NetworkInspectionKnowledgeCheck networkInspectionKnowledgeCheck)
         {
-            var targetUnit = GetUnitEntity(check.TargetUnitId);
+            var targetUnit = GetUnitEntity(networkInspectionKnowledgeCheck.TargetUnitId);
             if (targetUnit == null)
             {
-                _logger.LogError("Unable to apply inspection knowledge check due to missing target unit. TargetUnitId={TargetUnitId}", check.TargetUnitId);
+                _logger.LogError("Unable to apply inspection knowledge check due to missing target unit. TargetUnitId={TargetUnitId}", networkInspectionKnowledgeCheck.TargetUnitId);
                 return;
             }
 
-            var initiatorUnit = GetUnitEntity(check.InitiatorUnitId);
+            var initiatorUnit = GetUnitEntity(networkInspectionKnowledgeCheck.InitiatorUnitId);
             if (initiatorUnit == null)
             {
-                _logger.LogError("Unable to apply inspection knowledge check due to missing initiator unit. InitiatorUnitId={InitiatorUnitId}", check.InitiatorUnitId);
+                _logger.LogError("Unable to apply inspection knowledge check due to missing initiator unit. InitiatorUnitId={InitiatorUnitId}", networkInspectionKnowledgeCheck.InitiatorUnitId);
                 return;
             }
 
             _mainThreadAccessor.Post(() =>
             {
-                _logger.LogInformation("Applying inspection knowledge check. InitiatorUnitId={InitiatorUnitId}, TargetUnitId={TargetUnitId}, StatType={StatType}", check.InitiatorUnitId, check.TargetUnitId, check.StatType);
+                _logger.LogInformation("Applying inspection knowledge check. InitiatorUnitId={InitiatorUnitId}, TargetUnitId={TargetUnitId}, StatType={StatType}", networkInspectionKnowledgeCheck.InitiatorUnitId, networkInspectionKnowledgeCheck.TargetUnitId, networkInspectionKnowledgeCheck.StatType);
                 var blueprintForInspection = targetUnit.Descriptor.BlueprintForInspection;
                 InspectUnitsManager.UnitInfo info = Game.Instance.Player.InspectUnitsManager.GetInfo(blueprintForInspection);
                 if (info == null)
@@ -1144,7 +1145,7 @@ namespace WOTRMultiplayer.GameInteraction
                     return;
                 }
 
-                var ruleSkillCheck = GameHelper.TriggerSkillCheck(new RuleSkillCheck(initiatorUnit, check.StatType, check.DC)
+                var ruleSkillCheck = GameHelper.TriggerSkillCheck(new RuleSkillCheck(initiatorUnit, networkInspectionKnowledgeCheck.StatType, networkInspectionKnowledgeCheck.DC)
                 {
                     IgnoreDifficultyBonusToDC = true
                 }, null, true);
@@ -1152,51 +1153,6 @@ namespace WOTRMultiplayer.GameInteraction
                 info.SetCheck(ruleSkillCheck.RollResult);
                 EventBus.RaiseEvent<IKnowledgeHandler>(x => x.HandleKnowledgeUpdated(info), true);
             });
-        }
-
-        public List<string> GetUnitsCombatOrder()
-        {
-            var units = Game.Instance.TurnBasedCombatController.m_Units.Select(u => u.Unit.UniqueId).ToList();
-            return units;
-        }
-
-        public string GetNextUnitTurn()
-        {
-            var nextUnit = Game.Instance.TurnBasedCombatController.m_NextUnit?.UniqueId;
-            return nextUnit;
-        }
-
-        public void SetNextUnitCombatTurn(string nextUnitId)
-        {
-            var nextUnit = GetUnitEntity(nextUnitId);
-            Game.Instance.TurnBasedCombatController.m_NextUnit = nextUnit;
-        }
-
-        public void UpdateCombatOrder(List<string> unitsCombatOrder)
-        {
-            _logger.LogInformation("Update units combat order. Order={Order}", unitsCombatOrder);
-
-            var existingUnits = Game.Instance.TurnBasedCombatController.m_Units.ToList();
-            if (unitsCombatOrder.Count != existingUnits.Count)
-            {
-                _logger.LogError("Combat units mismatch. LocalCount={LocalCount}, RemoteCount={RemoteCount}, LocalUnits={LocalUnits}", existingUnits.Count, unitsCombatOrder.Count, existingUnits.Select(x => x.Unit.UniqueId));
-                return;
-            }
-
-            Game.Instance.TurnBasedCombatController.m_Units.Clear();
-            foreach (var remoteUnitId in unitsCombatOrder)
-            {
-                var localUnit = existingUnits.FirstOrDefault(u => string.Equals(remoteUnitId, u.Unit.UniqueId, StringComparison.OrdinalIgnoreCase));
-                if (localUnit == null)
-                {
-                    _logger.LogError("Unable to find unit to set correct combat order. UnitId={UnitId}", remoteUnitId);
-                    Game.Instance.TurnBasedCombatController.m_Units.Clear();
-                    Game.Instance.TurnBasedCombatController.m_Units = [.. existingUnits];
-                    return;
-                }
-
-                Game.Instance.TurnBasedCombatController.m_Units.Add(localUnit);
-            }
         }
 
         public NetworkGameSettings GetGameSettings()
@@ -1250,52 +1206,52 @@ namespace WOTRMultiplayer.GameInteraction
             return settings;
         }
 
-        public void ApplyGameSettings(NetworkGameSettings gameSettings)
+        public void ApplyGameSettings(NetworkGameSettings networkGameSettings)
         {
             _mainThreadAccessor.Post(() =>
             {
-                _logger.LogInformation("Applying settings. Settings={Settings}", gameSettings);
-                SettingsRoot.Game.TurnBased.EnableTurnBasedMode.SetValueAndConfirm(gameSettings.TurnBased.IsTurnBasedModeEnabled);
-                SettingsRoot.Game.TurnBased.AutoEndTurn.SetValueAndConfirm(gameSettings.TurnBased.AutoEndTurn);
-                SettingsRoot.Game.TurnBased.AutoStopAfterFirstMoveAction.SetValueAndConfirm(gameSettings.TurnBased.AutoStopAfterFirstMoveAction);
-                if (gameSettings.TurnBased.TimeScaleInPlayerTurn.HasValue)
+                _logger.LogInformation("Applying settings. Settings={Settings}", networkGameSettings);
+                SettingsRoot.Game.TurnBased.EnableTurnBasedMode.SetValueAndConfirm(networkGameSettings.TurnBased.IsTurnBasedModeEnabled);
+                SettingsRoot.Game.TurnBased.AutoEndTurn.SetValueAndConfirm(networkGameSettings.TurnBased.AutoEndTurn);
+                SettingsRoot.Game.TurnBased.AutoStopAfterFirstMoveAction.SetValueAndConfirm(networkGameSettings.TurnBased.AutoStopAfterFirstMoveAction);
+                if (networkGameSettings.TurnBased.TimeScaleInPlayerTurn.HasValue)
                 {
-                    SettingsRoot.Game.TurnBased.TimeScaleInPlayerTurn.SetValueAndConfirm(gameSettings.TurnBased.TimeScaleInPlayerTurn.Value);
+                    SettingsRoot.Game.TurnBased.TimeScaleInPlayerTurn.SetValueAndConfirm(networkGameSettings.TurnBased.TimeScaleInPlayerTurn.Value);
                 }
-                if (gameSettings.TurnBased.TimeScaleInNonPlayerTurn.HasValue)
+                if (networkGameSettings.TurnBased.TimeScaleInNonPlayerTurn.HasValue)
                 {
-                    SettingsRoot.Game.TurnBased.TimeScaleInNonPlayerTurn.SetValueAndConfirm(gameSettings.TurnBased.TimeScaleInNonPlayerTurn.Value);
+                    SettingsRoot.Game.TurnBased.TimeScaleInNonPlayerTurn.SetValueAndConfirm(networkGameSettings.TurnBased.TimeScaleInNonPlayerTurn.Value);
                 }
 
-                SettingsRoot.Game.Main.LootInCombat.SetValueAndConfirm(gameSettings.Main.LootInCombat);
-                SettingsRoot.Game.Main.AcceleratedMove.SetValueAndConfirm(gameSettings.Main.QuickMovement);
+                SettingsRoot.Game.Main.LootInCombat.SetValueAndConfirm(networkGameSettings.Main.LootInCombat);
+                SettingsRoot.Game.Main.AcceleratedMove.SetValueAndConfirm(networkGameSettings.Main.QuickMovement);
 
-                SettingsRoot.Game.Autopause.ContinueMovementOnEngagement.SetValueAndConfirm(gameSettings.Autopause.ContinueMovementOnEngagement);
-                SettingsRoot.Game.Autopause.PauseOnAllyDown.SetValueAndConfirm(gameSettings.Autopause.PauseOnAllyDown);
-                SettingsRoot.Game.Autopause.PauseOnAreaLoaded.SetValueAndConfirm(gameSettings.Autopause.PauseOnAreaLoaded);
-                SettingsRoot.Game.Autopause.PauseOnAttackOfOpportunity.SetValueAndConfirm(gameSettings.Autopause.PauseOnAttackOfOpportunity);
-                SettingsRoot.Game.Autopause.PauseOnEndedBuffSummon.SetValueAndConfirm(gameSettings.Autopause.PauseOnEndedBuffSummon);
-                SettingsRoot.Game.Autopause.PauseOnEndOfPartyMembersRound.SetValueAndConfirm(gameSettings.Autopause.PauseOnEndOfPartyMembersRound);
-                SettingsRoot.Game.Autopause.PauseOnEndOfRound.SetValueAndConfirm(gameSettings.Autopause.PauseOnEndOfRound);
-                SettingsRoot.Game.Autopause.PauseOnEnemyDown.SetValueAndConfirm(gameSettings.Autopause.PauseOnEnemyDown);
-                SettingsRoot.Game.Autopause.PauseOnEnemySpotted.SetValueAndConfirm(gameSettings.Autopause.PauseOnEnemySpotted);
-                SettingsRoot.Game.Autopause.PauseOnEngagement.SetValueAndConfirm(gameSettings.Autopause.PauseOnEngagement);
-                SettingsRoot.Game.Autopause.PauseOnHiddenObjectDetected.SetValueAndConfirm(gameSettings.Autopause.PauseOnHiddenObjectDetected);
-                SettingsRoot.Game.Autopause.PauseOnLostFocus.SetValueAndConfirm(gameSettings.Autopause.PauseOnLostFocus);
-                SettingsRoot.Game.Autopause.PauseOnLowHealth.SetValueAndConfirm(gameSettings.Autopause.PauseOnLowHealth);
-                SettingsRoot.Game.Autopause.PauseOnMeleeEngagement.SetValueAndConfirm(gameSettings.Autopause.PauseOnMeleeEngagement);
-                SettingsRoot.Game.Autopause.PauseOnNewEnemyAppeared.SetValueAndConfirm(gameSettings.Autopause.PauseOnNewEnemyAppeared);
-                SettingsRoot.Game.Autopause.PauseOnPartyIsAttacked.SetValueAndConfirm(gameSettings.Autopause.PauseOnPartyIsAttacked);
-                SettingsRoot.Game.Autopause.PauseOnPartyMemberFinishedAbility.SetValueAndConfirm(gameSettings.Autopause.PauseOnPartyMemberFinishedAbility);
-                SettingsRoot.Game.Autopause.PauseOnPartyMemberRanOutOfConsumable.SetValueAndConfirm(gameSettings.Autopause.PauseOnPartyMemberRanOutOfConsumable);
-                SettingsRoot.Game.Autopause.PauseOnSpellcastFinished.SetValueAndConfirm(gameSettings.Autopause.PauseOnSpellcastFinished);
-                SettingsRoot.Game.Autopause.PauseOnSpellcastInterrupted.SetValueAndConfirm(gameSettings.Autopause.PauseOnSpellcastInterrupted);
-                SettingsRoot.Game.Autopause.PauseOnSpellcastStarted.SetValueAndConfirm(gameSettings.Autopause.PauseOnSpellcastStarted);
-                SettingsRoot.Game.Autopause.PauseOnTrapDetected.SetValueAndConfirm(gameSettings.Autopause.PauseOnTrapDetected);
-                SettingsRoot.Game.Autopause.PauseOnWeaponIsIneffective.SetValueAndConfirm(gameSettings.Autopause.PauseOnWeaponIsIneffective);
-                SettingsRoot.Game.Autopause.PauseWhenAllyUnconscious.SetValueAndConfirm(gameSettings.Autopause.PauseWhenAllyUnconscious);
-                SettingsRoot.Game.Autopause.PauseWhenEnemyUnconscious.SetValueAndConfirm(gameSettings.Autopause.PauseWhenEnemyUnconscious);
-                SettingsRoot.Game.Autopause.PauseWhenLastSleepingEnemyStays.SetValueAndConfirm(gameSettings.Autopause.PauseWhenLastSleepingEnemyStays);
+                SettingsRoot.Game.Autopause.ContinueMovementOnEngagement.SetValueAndConfirm(networkGameSettings.Autopause.ContinueMovementOnEngagement);
+                SettingsRoot.Game.Autopause.PauseOnAllyDown.SetValueAndConfirm(networkGameSettings.Autopause.PauseOnAllyDown);
+                SettingsRoot.Game.Autopause.PauseOnAreaLoaded.SetValueAndConfirm(networkGameSettings.Autopause.PauseOnAreaLoaded);
+                SettingsRoot.Game.Autopause.PauseOnAttackOfOpportunity.SetValueAndConfirm(networkGameSettings.Autopause.PauseOnAttackOfOpportunity);
+                SettingsRoot.Game.Autopause.PauseOnEndedBuffSummon.SetValueAndConfirm(networkGameSettings.Autopause.PauseOnEndedBuffSummon);
+                SettingsRoot.Game.Autopause.PauseOnEndOfPartyMembersRound.SetValueAndConfirm(networkGameSettings.Autopause.PauseOnEndOfPartyMembersRound);
+                SettingsRoot.Game.Autopause.PauseOnEndOfRound.SetValueAndConfirm(networkGameSettings.Autopause.PauseOnEndOfRound);
+                SettingsRoot.Game.Autopause.PauseOnEnemyDown.SetValueAndConfirm(networkGameSettings.Autopause.PauseOnEnemyDown);
+                SettingsRoot.Game.Autopause.PauseOnEnemySpotted.SetValueAndConfirm(networkGameSettings.Autopause.PauseOnEnemySpotted);
+                SettingsRoot.Game.Autopause.PauseOnEngagement.SetValueAndConfirm(networkGameSettings.Autopause.PauseOnEngagement);
+                SettingsRoot.Game.Autopause.PauseOnHiddenObjectDetected.SetValueAndConfirm(networkGameSettings.Autopause.PauseOnHiddenObjectDetected);
+                SettingsRoot.Game.Autopause.PauseOnLostFocus.SetValueAndConfirm(networkGameSettings.Autopause.PauseOnLostFocus);
+                SettingsRoot.Game.Autopause.PauseOnLowHealth.SetValueAndConfirm(networkGameSettings.Autopause.PauseOnLowHealth);
+                SettingsRoot.Game.Autopause.PauseOnMeleeEngagement.SetValueAndConfirm(networkGameSettings.Autopause.PauseOnMeleeEngagement);
+                SettingsRoot.Game.Autopause.PauseOnNewEnemyAppeared.SetValueAndConfirm(networkGameSettings.Autopause.PauseOnNewEnemyAppeared);
+                SettingsRoot.Game.Autopause.PauseOnPartyIsAttacked.SetValueAndConfirm(networkGameSettings.Autopause.PauseOnPartyIsAttacked);
+                SettingsRoot.Game.Autopause.PauseOnPartyMemberFinishedAbility.SetValueAndConfirm(networkGameSettings.Autopause.PauseOnPartyMemberFinishedAbility);
+                SettingsRoot.Game.Autopause.PauseOnPartyMemberRanOutOfConsumable.SetValueAndConfirm(networkGameSettings.Autopause.PauseOnPartyMemberRanOutOfConsumable);
+                SettingsRoot.Game.Autopause.PauseOnSpellcastFinished.SetValueAndConfirm(networkGameSettings.Autopause.PauseOnSpellcastFinished);
+                SettingsRoot.Game.Autopause.PauseOnSpellcastInterrupted.SetValueAndConfirm(networkGameSettings.Autopause.PauseOnSpellcastInterrupted);
+                SettingsRoot.Game.Autopause.PauseOnSpellcastStarted.SetValueAndConfirm(networkGameSettings.Autopause.PauseOnSpellcastStarted);
+                SettingsRoot.Game.Autopause.PauseOnTrapDetected.SetValueAndConfirm(networkGameSettings.Autopause.PauseOnTrapDetected);
+                SettingsRoot.Game.Autopause.PauseOnWeaponIsIneffective.SetValueAndConfirm(networkGameSettings.Autopause.PauseOnWeaponIsIneffective);
+                SettingsRoot.Game.Autopause.PauseWhenAllyUnconscious.SetValueAndConfirm(networkGameSettings.Autopause.PauseWhenAllyUnconscious);
+                SettingsRoot.Game.Autopause.PauseWhenEnemyUnconscious.SetValueAndConfirm(networkGameSettings.Autopause.PauseWhenEnemyUnconscious);
+                SettingsRoot.Game.Autopause.PauseWhenLastSleepingEnemyStays.SetValueAndConfirm(networkGameSettings.Autopause.PauseWhenLastSleepingEnemyStays);
             });
         }
 
@@ -1330,7 +1286,7 @@ namespace WOTRMultiplayer.GameInteraction
             });
         }
 
-        public void SetCampingState(NetworkCampingState state)
+        public void SetCampingState(NetworkCampingState networkCampingState)
         {
             _mainThreadAccessor.Post(() =>
             {
@@ -1339,18 +1295,18 @@ namespace WOTRMultiplayer.GameInteraction
                     var restView = RestView;
                     if (restView != null)
                     {
-                        restView.m_AutotuneToggle.isOn = state.AutotuneIterationsStatus;
-                        (restView.GetViewModel() as RestVM)?.HandleIterationsCountCalculated(state.IterationsCount);
+                        restView.m_AutotuneToggle.isOn = networkCampingState.AutotuneIterationsStatus;
+                        (restView.GetViewModel() as RestVM)?.HandleIterationsCountCalculated(networkCampingState.IterationsCount);
                     }
 
                     var campingState = Game.Instance.Player.Camping;
 
-                    UpdateCookingRecipe(campingState, state.CookingBlueprintRecipeId);
-                    UpdateAlchemistRecipe(campingState, state.PotionBlueprintRecipeId);
-                    UpdateScrollScribingRecipe(campingState, state.ScrollBlueprintRecipeId);
+                    UpdateCookingRecipe(campingState, networkCampingState.CookingBlueprintRecipeId);
+                    UpdateAlchemistRecipe(campingState, networkCampingState.PotionBlueprintRecipeId);
+                    UpdateScrollScribingRecipe(campingState, networkCampingState.ScrollBlueprintRecipeId);
 
-                    campingState.RestIterationsCount = state.IterationsCount;
-                    campingState.m_AutoTuneRestIterations = state.AutotuneIterationsStatus;
+                    campingState.RestIterationsCount = networkCampingState.IterationsCount;
+                    campingState.m_AutoTuneRestIterations = networkCampingState.AutotuneIterationsStatus;
                 }
                 catch (Exception ex)
                 {
@@ -1360,7 +1316,7 @@ namespace WOTRMultiplayer.GameInteraction
             });
         }
 
-        public void SetCampingRoles(List<NetworkCampingRole> roles)
+        public void SetCampingRoles(List<NetworkCampingRole> networkCampingRoles)
         {
             _mainThreadAccessor.Post(() =>
             {
@@ -1370,7 +1326,7 @@ namespace WOTRMultiplayer.GameInteraction
                     return;
                 }
 
-                foreach (var role in roles)
+                foreach (var role in networkCampingRoles)
                 {
                     campingState.CurrentCampingRoles[role.RoleType].PrimaryUnit = GetUnitEntity(role.PrimaryUnitId);
                     campingState.CurrentCampingRoles[role.RoleType].SecondaryUnit = GetUnitEntity(role.SecondaryUnitId);
@@ -1410,9 +1366,9 @@ namespace WOTRMultiplayer.GameInteraction
             });
         }
 
-        public void SetRandomEncounterContext(NetworkRandomEncounterContext context)
+        public void SetRandomEncounterContext(NetworkRandomEncounterContext networkRandomEncounterContext)
         {
-            _networkExecutionContext.Value = RemoteExecutionContext.Create(context);
+            _networkExecutionContext.Value = RemoteExecutionContext.Create(networkRandomEncounterContext);
         }
 
         public void SetGroundMoveEveryone()
@@ -1464,37 +1420,37 @@ namespace WOTRMultiplayer.GameInteraction
             });
         }
 
-        public void TransferVendorItem(NetworkVendorItemTransfer transfer)
+        public void TransferVendorItem(NetworkVendorItemTransfer networkVendorItemTransfer)
         {
             _mainThreadAccessor.Post(() =>
             {
                 try
                 {
-                    if (transfer.ItemActionTarget == VendorItemActionTarget.Sell && transfer.ItemAction == VendorItemAction.Add)
+                    if (networkVendorItemTransfer.ItemActionTarget == VendorItemActionTarget.Sell && networkVendorItemTransfer.ItemAction == VendorItemAction.Add)
                     {
                         // add for sell is different due to unsynced state of the player's inventory
-                        AddItemToVendorSellCollection(transfer);
+                        AddItemToVendorSellCollection(networkVendorItemTransfer);
                         RefreshVendorScreen();
                         return;
                     }
 
-                    var (item, action) = GetDataForVendorTransferAction(transfer.Item, transfer.Count, transfer.ItemActionTarget, transfer.ItemAction);
+                    var (item, action) = GetDataForVendorTransferAction(networkVendorItemTransfer.Item, networkVendorItemTransfer.Count, networkVendorItemTransfer.ItemActionTarget, networkVendorItemTransfer.ItemAction);
                     if (item == null)
                     {
-                        _logger.LogError("Unable to find item for make vendor transfer action. ItemId={ItemId}, ActionTarget={ActionTarget}, ActionType={ActionType}", transfer.Item.UniqueId, transfer.ItemActionTarget, transfer.ItemAction);
+                        _logger.LogError("Unable to find item for make vendor transfer action. ItemId={ItemId}, ActionTarget={ActionTarget}, ActionType={ActionType}", networkVendorItemTransfer.Item.UniqueId, networkVendorItemTransfer.ItemActionTarget, networkVendorItemTransfer.ItemAction);
                         return;
                     }
 
                     if (action == null)
                     {
-                        _logger.LogError("Unable to find to determine correct action to make vendor transfer. ItemId={ItemId}, ActionTarget={ActionTarget}, ActionType={ActionType}", transfer.Item.UniqueId, transfer.ItemActionTarget, transfer.ItemAction);
+                        _logger.LogError("Unable to find to determine correct action to make vendor transfer. ItemId={ItemId}, ActionTarget={ActionTarget}, ActionType={ActionType}", networkVendorItemTransfer.Item.UniqueId, networkVendorItemTransfer.ItemActionTarget, networkVendorItemTransfer.ItemAction);
                         return;
                     }
 
                     using var context = _networkExecutionContext.Value = RemoteExecutionContext.CreateVendorItemTransfer(item.UniqueId);
                     var transferredItem = action(item);
                     RefreshVendorScreen();
-                    _logger.LogInformation("Vendor item has been transferred. ItemId={ItemId}, Count={Count}, ActionTarget={ActionTarget}, ActionType={ActionType}", transferredItem.UniqueId, transferredItem.Count, transfer.ItemActionTarget, transfer.ItemAction);
+                    _logger.LogInformation("Vendor item has been transferred. ItemId={ItemId}, Count={Count}, ActionTarget={ActionTarget}, ActionType={ActionType}", transferredItem.UniqueId, transferredItem.Count, networkVendorItemTransfer.ItemActionTarget, networkVendorItemTransfer.ItemAction);
                 }
                 catch (Exception ex)
                 {
@@ -1533,28 +1489,28 @@ namespace WOTRMultiplayer.GameInteraction
             });
         }
 
-        public void ForgetSpell(NetworkSpellSlot slot)
+        public void ForgetSpell(NetworkSpellSlot networkSpellSlot)
         {
-            var unit = GetUnitEntity(slot.UnitId);
+            var unit = GetUnitEntity(networkSpellSlot.UnitId);
             if (unit == null)
             {
-                _logger.LogError("Unable to find unit to forget spell. UnitId={UnitId}", slot.UnitId);
+                _logger.LogError("Unable to find unit to forget spell. UnitId={UnitId}", networkSpellSlot.UnitId);
                 return;
             }
 
-            var spellbook = unit.Spellbooks.FirstOrDefault(s => string.Equals(s.Blueprint.Name.Key, slot.SpellbookId, StringComparison.OrdinalIgnoreCase));
+            var spellbook = unit.Spellbooks.FirstOrDefault(s => string.Equals(s.Blueprint.Name.Key, networkSpellSlot.SpellbookId, StringComparison.OrdinalIgnoreCase));
             if (spellbook == null)
             {
-                _logger.LogError("Unable to find spellbook to forget spell. UnitId={UnitId}, SpellbookId={SpellbookId}", slot.UnitId, slot.SpellbookId);
+                _logger.LogError("Unable to find spellbook to forget spell. UnitId={UnitId}, SpellbookId={SpellbookId}", networkSpellSlot.UnitId, networkSpellSlot.SpellbookId);
                 return;
             }
 
             _mainThreadAccessor.Post(() =>
             {
-                var spellSlot = GetSpellSlot(spellbook, slot);
+                var spellSlot = GetSpellSlot(spellbook, networkSpellSlot);
                 if (spellSlot == null)
                 {
-                    _logger.LogError("Unable to find spellslot to forget. UnitId={UnitId}, SpellbookId={SpellbookId}, SpellSlotIndex={SpellSlotIndex}, SpellSlotType={SpellSlotType}", slot.UnitId, slot.SpellbookId, slot.Index, slot.Type);
+                    _logger.LogError("Unable to find spellslot to forget. UnitId={UnitId}, SpellbookId={SpellbookId}, SpellSlotIndex={SpellSlotIndex}, SpellSlotType={SpellSlotType}", networkSpellSlot.UnitId, networkSpellSlot.SpellbookId, networkSpellSlot.Index, networkSpellSlot.Type);
                     return;
                 }
 
@@ -1564,26 +1520,26 @@ namespace WOTRMultiplayer.GameInteraction
             });
         }
 
-        public void MemorizeSpell(NetworkSpellSlot slot)
+        public void MemorizeSpell(NetworkSpellSlot networkSpellSlot)
         {
-            var unit = GetUnitEntity(slot.UnitId);
+            var unit = GetUnitEntity(networkSpellSlot.UnitId);
             if (unit == null)
             {
-                _logger.LogError("Unable to find unit to memorize spell. UnitId={UnitId}", slot.UnitId);
+                _logger.LogError("Unable to find unit to memorize spell. UnitId={UnitId}", networkSpellSlot.UnitId);
                 return;
             }
 
-            var spellbook = unit.Spellbooks.FirstOrDefault(s => string.Equals(s.Blueprint.Name.Key, slot.SpellbookId, StringComparison.OrdinalIgnoreCase));
+            var spellbook = unit.Spellbooks.FirstOrDefault(s => string.Equals(s.Blueprint.Name.Key, networkSpellSlot.SpellbookId, StringComparison.OrdinalIgnoreCase));
             if (spellbook == null)
             {
-                _logger.LogError("Unable to find spellbook to memorize spell. UnitId={UnitId}, SpellbookId={SpellbookId}", slot.UnitId, slot.SpellbookId);
+                _logger.LogError("Unable to find spellbook to memorize spell. UnitId={UnitId}, SpellbookId={SpellbookId}", networkSpellSlot.UnitId, networkSpellSlot.SpellbookId);
                 return;
             }
 
             _mainThreadAccessor.Post(() =>
             {
-                var spellSlot = GetSpellSlot(spellbook, slot);
-                var spell = GetKnownSpell(spellbook, slot.SpellId, slot.SpellName);
+                var spellSlot = GetSpellSlot(spellbook, networkSpellSlot);
+                var spell = GetKnownSpell(spellbook, networkSpellSlot.SpellId, networkSpellSlot.SpellName);
                 spellbook.Memorize(spell, spellSlot);
                 AddCombatText(string.Format(UIStringConsts.GameNotifications.CombatLog.SpellMemorized, spell.Name, unit.CharacterName));
                 RefreshSpellbookUI();
@@ -1698,7 +1654,7 @@ namespace WOTRMultiplayer.GameInteraction
             });
         }
 
-        public void SelectLevelingFeature(NetworkLevelingFeature feature)
+        public void SelectLevelingFeature(NetworkLevelingFeature networkLevelingFeature)
         {
             _mainThreadAccessor.Post(() =>
             {
@@ -1718,11 +1674,11 @@ namespace WOTRMultiplayer.GameInteraction
                     }
 
                     var featureToSelect = view.m_Selector.VirtualList.Elements.FirstOrDefault(x => x.Data is CharGenFeatureSelectorItemVM featureItem
-                         && string.Equals(featureItem.Feature.NameForAcronym, feature.Name, StringComparison.OrdinalIgnoreCase)
-                         && string.Equals(featureItem.Feature.Feature.AssetGuid.ToString(), feature.Id, StringComparison.OrdinalIgnoreCase));
+                         && string.Equals(featureItem.Feature.NameForAcronym, networkLevelingFeature.Name, StringComparison.OrdinalIgnoreCase)
+                         && string.Equals(featureItem.Feature.Feature.AssetGuid.ToString(), networkLevelingFeature.Id, StringComparison.OrdinalIgnoreCase));
                     if (featureToSelect == null)
                     {
-                        _logger.LogError("Unable to find requested feature in the list. FeatureName={FeatureName}, FeatureId={FeatureId}", feature.Name, feature.Id);
+                        _logger.LogError("Unable to find requested feature in the list. FeatureName={FeatureName}, FeatureId={FeatureId}", networkLevelingFeature.Name, networkLevelingFeature.Id);
                         return;
                     }
 
@@ -1732,7 +1688,7 @@ namespace WOTRMultiplayer.GameInteraction
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "Error while selecting leveling feature. FeatureName={FeatureName}, FeatureId={FeatureId}", feature.Name, feature.Id);
+                    _logger.LogError(ex, "Error while selecting leveling feature. FeatureName={FeatureName}, FeatureId={FeatureId}", networkLevelingFeature.Name, networkLevelingFeature.Id);
                     throw;
                 }
             });
@@ -1780,7 +1736,7 @@ namespace WOTRMultiplayer.GameInteraction
             });
         }
 
-        public void SwitchLevelingPhase(NetworkLevelingPhase phase)
+        public void SwitchLevelingPhase(NetworkLevelingPhase networkLevelingPhase)
         {
             _mainThreadAccessor.Post(() =>
             {
@@ -1791,18 +1747,18 @@ namespace WOTRMultiplayer.GameInteraction
                 }
 
                 var roadmapVM = CharGenView.RoadmapMenuView.GetViewModel() as SelectionGroupRadioVM<CharGenPhaseBaseVM>;
-                if (phase.Index >= roadmapVM.EntitiesCollection.Count)
+                if (networkLevelingPhase.Index >= roadmapVM.EntitiesCollection.Count)
                 {
-                    _logger.LogError("Leveling phase is out of range. Index={Index}, TotalCount={TotalCount}", phase.Index, roadmapVM.EntitiesCollection.Count);
+                    _logger.LogError("Leveling phase is out of range. Index={Index}, TotalCount={TotalCount}", networkLevelingPhase.Index, roadmapVM.EntitiesCollection.Count);
                     return;
                 }
 
-                var phaseVM = roadmapVM.EntitiesCollection[phase.Index];
+                var phaseVM = roadmapVM.EntitiesCollection[networkLevelingPhase.Index];
                 roadmapVM.SelectedEntity.Value = phaseVM;
             });
         }
 
-        public void SelectLevelingSpell(NetworkLevelingSpell spell)
+        public void SelectLevelingSpell(NetworkLevelingSpell networkLevelingSpell)
         {
             _mainThreadAccessor.Post(() =>
             {
@@ -1814,10 +1770,10 @@ namespace WOTRMultiplayer.GameInteraction
                         return;
                     }
 
-                    var spellToAdd = spellsPhaseVM.SpellsSelector.Value.EntitiesCollection.FirstOrDefault(x => string.Equals(x.Spell.AssetGuid.ToString(), spell.Id, StringComparison.OrdinalIgnoreCase));
+                    var spellToAdd = spellsPhaseVM.SpellsSelector.Value.EntitiesCollection.FirstOrDefault(x => string.Equals(x.Spell.AssetGuid.ToString(), networkLevelingSpell.Id, StringComparison.OrdinalIgnoreCase));
                     if (spellToAdd == null)
                     {
-                        _logger.LogError("Unable to add missing leveling spell. SpellName={SpellName}, SpellId={SpellId}", spell.Name, spell.Id);
+                        _logger.LogError("Unable to add missing leveling spell. SpellName={SpellName}, SpellId={SpellId}", networkLevelingSpell.Name, networkLevelingSpell.Id);
                         return;
                     }
 
@@ -1825,13 +1781,13 @@ namespace WOTRMultiplayer.GameInteraction
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "Error while selecting leveling spell. SpellName={SpellName}, SpellId={SpellId}", spell.Name, spell.Id);
+                    _logger.LogError(ex, "Error while selecting leveling spell. SpellName={SpellName}, SpellId={SpellId}", networkLevelingSpell.Name, networkLevelingSpell.Id);
                     throw;
                 }
             });
         }
 
-        public void RemoveLevelingSpell(NetworkLevelingSpell spell)
+        public void RemoveLevelingSpell(NetworkLevelingSpell networkLevelingSpell)
         {
             _mainThreadAccessor.Post(() =>
             {
@@ -1843,10 +1799,10 @@ namespace WOTRMultiplayer.GameInteraction
                         return;
                     }
 
-                    var spellToRemove = spellsPhaseVM.SpellsSelector.Value.SelectedEntitiesCollection.FirstOrDefault(x => string.Equals(x.Spell.AssetGuid.ToString(), spell.Id, StringComparison.OrdinalIgnoreCase));
+                    var spellToRemove = spellsPhaseVM.SpellsSelector.Value.SelectedEntitiesCollection.FirstOrDefault(x => string.Equals(x.Spell.AssetGuid.ToString(), networkLevelingSpell.Id, StringComparison.OrdinalIgnoreCase));
                     if (spellToRemove == null)
                     {
-                        _logger.LogError("Unable to remove missing leveling spell. SpellName={SpellName}, SpellId={SpellId}", spell.Name, spell.Id);
+                        _logger.LogError("Unable to remove missing leveling spell. SpellName={SpellName}, SpellId={SpellId}", networkLevelingSpell.Name, networkLevelingSpell.Id);
                         return;
                     }
 
@@ -1854,19 +1810,19 @@ namespace WOTRMultiplayer.GameInteraction
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "Error while removing selected leveling spell. SpellName={SpellName}, SpellId={SpellId}", spell.Name, spell.Id);
+                    _logger.LogError(ex, "Error while removing selected leveling spell. SpellName={SpellName}, SpellId={SpellId}", networkLevelingSpell.Name, networkLevelingSpell.Id);
                     throw;
                 }
             });
         }
 
-        public void IncreaseLevelingSkillPoint(NetworkLevelingSkillPoint skillPoint)
+        public void IncreaseLevelingSkillPoint(NetworkLevelingSkillPoint networkLevelingSkillPoint)
         {
             _mainThreadAccessor.Post(() =>
             {
                 try
                 {
-                    var skillView = GetLevelingSkillAllocatorView(skillPoint.StatType);
+                    var skillView = GetLevelingSkillAllocatorView(networkLevelingSkillPoint.StatType);
                     if (skillView == null)
                     {
                         return;
@@ -1874,46 +1830,46 @@ namespace WOTRMultiplayer.GameInteraction
 
                     skillView.ViewModel.m_LevelUpController.SpendSkillPoint(skillView.ViewModel.StatType);
                     skillView.OnChangedValue();
-                    _logger.LogInformation("Leveling skillpoint has been increased. StatType={StatType}", skillPoint.StatType);
+                    _logger.LogInformation("Leveling skillpoint has been increased. StatType={StatType}", networkLevelingSkillPoint.StatType);
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "Error while increasing leveling skill point. StatType={StatType}", skillPoint.StatType);
+                    _logger.LogError(ex, "Error while increasing leveling skill point. StatType={StatType}", networkLevelingSkillPoint.StatType);
                     throw;
                 }
             });
         }
 
-        public void DecreaseLevelingSkillPoint(NetworkLevelingSkillPoint skillPoint)
+        public void DecreaseLevelingSkillPoint(NetworkLevelingSkillPoint networkLevelingSkillPoint)
         {
             _mainThreadAccessor.Post(() =>
             {
                 try
                 {
-                    var skillView = GetLevelingSkillAllocatorView(skillPoint.StatType);
+                    var skillView = GetLevelingSkillAllocatorView(networkLevelingSkillPoint.StatType);
                     if (skillView == null)
                     {
                         return;
                     }
                     skillView.ViewModel.m_LevelUpController.UnspendSkillPoint(skillView.ViewModel.StatType);
                     skillView.OnChangedValue();
-                    _logger.LogInformation("Leveling skillpoint has been decreased. StatType={StatType}", skillPoint.StatType);
+                    _logger.LogInformation("Leveling skillpoint has been decreased. StatType={StatType}", networkLevelingSkillPoint.StatType);
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "Error while decreasing leveling skill point. StatType={StatType}", skillPoint.StatType);
+                    _logger.LogError(ex, "Error while decreasing leveling skill point. StatType={StatType}", networkLevelingSkillPoint.StatType);
                     throw;
                 }
             });
         }
 
-        public void IncreaseLevelingAbilityScore(NetworkLevelingAbilityScore abilityScore)
+        public void IncreaseLevelingAbilityScore(NetworkLevelingAbilityScore networkLevelingAbilityScore)
         {
             _mainThreadAccessor.Post(() =>
             {
                 try
                 {
-                    var abilityScoreView = GetLevelingAbilityScoreAllocatorView(abilityScore.StatType);
+                    var abilityScoreView = GetLevelingAbilityScoreAllocatorView(networkLevelingAbilityScore.StatType);
                     if (abilityScoreView == null)
                     {
                         return;
@@ -1921,34 +1877,34 @@ namespace WOTRMultiplayer.GameInteraction
 
                     abilityScoreView.ViewModel.m_LevelUpController.SpendSkillPoint(abilityScoreView.ViewModel.StatType);
                     abilityScoreView.OnChangedValue();
-                    _logger.LogInformation("Leveling ability score has been increased. StatType={StatType}", abilityScore.StatType);
+                    _logger.LogInformation("Leveling ability score has been increased. StatType={StatType}", networkLevelingAbilityScore.StatType);
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "Error while increasing leveling ability score. StatType={StatType}", abilityScore.StatType);
+                    _logger.LogError(ex, "Error while increasing leveling ability score. StatType={StatType}", networkLevelingAbilityScore.StatType);
                     throw;
                 }
             });
         }
 
-        public void DecreaseLevelingAbilityScore(NetworkLevelingAbilityScore abilityScore)
+        public void DecreaseLevelingAbilityScore(NetworkLevelingAbilityScore networkLevelingAbilityScore)
         {
             _mainThreadAccessor.Post(() =>
             {
                 try
                 {
-                    var abilityScoreView = GetLevelingAbilityScoreAllocatorView(abilityScore.StatType);
+                    var abilityScoreView = GetLevelingAbilityScoreAllocatorView(networkLevelingAbilityScore.StatType);
                     if (abilityScoreView == null)
                     {
                         return;
                     }
                     abilityScoreView.ViewModel.m_LevelUpController.UnspendSkillPoint(abilityScoreView.ViewModel.StatType);
                     abilityScoreView.OnChangedValue();
-                    _logger.LogInformation("Leveling ability score has been decreased. StatType={StatType}", abilityScore.StatType);
+                    _logger.LogInformation("Leveling ability score has been decreased. StatType={StatType}", networkLevelingAbilityScore.StatType);
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "Error while decreasing leveling ability score. StatType={StatType}", abilityScore.StatType);
+                    _logger.LogError(ex, "Error while decreasing leveling ability score. StatType={StatType}", networkLevelingAbilityScore.StatType);
                     throw;
                 }
             });
@@ -2096,23 +2052,20 @@ namespace WOTRMultiplayer.GameInteraction
             }
         }
 
-        private ItemEntity AddItemToVendorSellCollection(NetworkVendorItemTransfer transfer)
+        private void AddItemToVendorSellCollection(NetworkVendorItemTransfer transfer)
         {
             var possibleItems = Game.Instance.Player.Inventory.Where(i => IsSameItem(i, transfer.Item) &&
                 (string.IsNullOrEmpty(transfer.Item.HoldingSlotOwnerId) || string.Equals(i.HoldingSlot?.Owner?.Unit.UniqueId, transfer.Item.HoldingSlotOwnerId, StringComparison.OrdinalIgnoreCase)))
                 .OrderBy(x => x.Count)
                 .ToList();
 
-            ItemEntity lastAddedItem = null;
             MatchSameNumberOfItems(possibleItems, transfer.Count,
                 item =>
                 {
                     using var context = _networkExecutionContext.Value = RemoteExecutionContext.CreateVendorItemTransfer(item.UniqueId);
-                    lastAddedItem = Game.Instance.Vendor.AddForSell(item, item.Count);
+                    Game.Instance.Vendor.AddForSell(item, item.Count);
                     _logger.LogInformation("Vendor item has been transferred. ItemId={ItemId}, Count={Count}, ActionTarget={ActionTarget}, ActionType={ActionType}", item.UniqueId, item.Count, transfer.ItemActionTarget, transfer.ItemAction);
                 });
-
-            return lastAddedItem;
         }
 
         private (ItemEntity itemEntity, Func<ItemEntity, ItemEntity> vendorAction) GetDataForVendorTransferAction(NetworkItem networkItem, int count, VendorItemActionTarget target, VendorItemAction itemAction)
@@ -2476,7 +2429,7 @@ namespace WOTRMultiplayer.GameInteraction
         private void ExecuteClickHandler(IClickEventHandler clickEventHandler, NetworkClick click)
         {
             var targetUnit = GetUnitEntity(click.TargetUnitId);
-            var selectedUnits = click.SelectedUnits.Select(GetUnitEntity)?.ToList();
+            var selectedUnits = click.SelectedUnits.Select(GetUnitEntity).ToList();
             var selectedUnit = selectedUnits.FirstOrDefault();
             var worldPosition = new Vector3(click.WorldPosition.X, click.WorldPosition.Y, click.WorldPosition.Z);
 

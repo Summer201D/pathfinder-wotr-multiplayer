@@ -8,7 +8,7 @@ namespace WOTRMultiplayer.Abstractions.UI.Controllers
 {
     public interface ILobbyWindowController
     {
-        void UpdatePlayers(List<NetworkPlayer> playersList);
+        void UpdatePlayers(List<NetworkPlayer> players);
 
         void InitializeContent(LobbyWindowOwner owner, Transform parent);
         void ResetData();

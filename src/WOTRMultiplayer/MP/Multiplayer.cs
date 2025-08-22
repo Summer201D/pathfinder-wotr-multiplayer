@@ -115,7 +115,7 @@ namespace WOTRMultiplayer.MP
             _lobbyWindowController.OnCharacterOwnerChanged = OnLobbyCharacterOwnerChanged;
         }
 
-        public void MoveNonCombatCharacter(NetworkCharacterMove move)
+        public void MoveNonCombatCharacter(NetworkCharacterMove networkCharacterMove)
         {
             try
             {
@@ -125,7 +125,7 @@ namespace WOTRMultiplayer.MP
                     return;
                 }
 
-                _multiplayerActorAccessor.Current.MoveNonCombatCharacter(move);
+                _multiplayerActorAccessor.Current.MoveNonCombatCharacter(networkCharacterMove);
             }
             catch (Exception ex)
             {
@@ -417,7 +417,7 @@ namespace WOTRMultiplayer.MP
             }
         }
 
-        public void OnClickGround(NetworkClick click)
+        public void OnClickGround(NetworkClick networkClick)
         {
             try
             {
@@ -426,16 +426,16 @@ namespace WOTRMultiplayer.MP
                     return;
                 }
 
-                _multiplayerActorAccessor.Current.OnClickGround(click);
+                _multiplayerActorAccessor.Current.OnClickGround(networkClick);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error while clicking on ground. WorldPosition={WorldPosition}", click?.WorldPosition);
+                _logger.LogError(ex, "Error while clicking on ground. WorldPosition={WorldPosition}", networkClick?.WorldPosition);
                 throw;
             }
         }
 
-        public void OnClickMapObject(NetworkClick click)
+        public void OnClickMapObject(NetworkClick networkClick)
         {
             try
             {
@@ -444,16 +444,16 @@ namespace WOTRMultiplayer.MP
                     return;
                 }
 
-                _multiplayerActorAccessor.Current.OnClickMapObject(click);
+                _multiplayerActorAccessor.Current.OnClickMapObject(networkClick);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error while clicking map object. MapObjectId={MapObjectId}", click?.MapObjectId);
+                _logger.LogError(ex, "Error while clicking map object. MapObjectId={MapObjectId}", networkClick?.MapObjectId);
                 throw;
             }
         }
 
-        public void OnAbilityUse(NetworkAbility ability)
+        public void OnAbilityUse(NetworkAbility networkAbility)
         {
             try
             {
@@ -462,16 +462,16 @@ namespace WOTRMultiplayer.MP
                     return;
                 }
 
-                _multiplayerActorAccessor.Current.OnAbilityUse(ability);
+                _multiplayerActorAccessor.Current.OnAbilityUse(networkAbility);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error while using ability. AbilityName={AbilityName}", ability?.Name);
+                _logger.LogError(ex, "Error while using ability. AbilityName={AbilityName}", networkAbility?.Name);
                 throw;
             }
         }
 
-        public void OnToggleActivatableAbility(NetworkActivatableAbility activatableAbilityUse)
+        public void OnToggleActivatableAbility(NetworkActivatableAbility networkActivatableAbility)
         {
             try
             {
@@ -480,11 +480,11 @@ namespace WOTRMultiplayer.MP
                     return;
                 }
 
-                _multiplayerActorAccessor.Current.OnToggleActivatableAbility(activatableAbilityUse);
+                _multiplayerActorAccessor.Current.OnToggleActivatableAbility(networkActivatableAbility);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error while toggling activatable ability. AbilityId={AbilityId}", activatableAbilityUse?.Id);
+                _logger.LogError(ex, "Error while toggling activatable ability. AbilityId={AbilityId}", networkActivatableAbility?.Id);
                 throw;
             }
         }
@@ -527,7 +527,7 @@ namespace WOTRMultiplayer.MP
             }
         }
 
-        public void OnLootContainer(NetworkLootContainer container)
+        public void OnLootContainer(NetworkLootContainer networkLootContainer)
         {
             try
             {
@@ -536,16 +536,16 @@ namespace WOTRMultiplayer.MP
                     return;
                 }
 
-                _multiplayerActorAccessor.Current.OnLootContainer(container);
+                _multiplayerActorAccessor.Current.OnLootContainer(networkLootContainer);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error while looting container. ContainerId={ContainerId}", container?.Id);
+                _logger.LogError(ex, "Error while looting container. ContainerId={ContainerId}", networkLootContainer?.Id);
                 throw;
             }
         }
 
-        public void OnDropItem(NetworkDropItem dropItem)
+        public void OnDropItem(NetworkDropItem networkDropItem)
         {
             try
             {
@@ -555,22 +555,22 @@ namespace WOTRMultiplayer.MP
                 }
 
                 var context = _gameInteractionService.RemoteContext?.DropItem;
-                if (context != null && string.Equals(context.UnitId, dropItem.OwnerEntityId, StringComparison.OrdinalIgnoreCase)
-                    && string.Equals(context.ItemId, dropItem.Item.UniqueId, StringComparison.OrdinalIgnoreCase))
+                if (context != null && string.Equals(context.UnitId, networkDropItem.OwnerEntityId, StringComparison.OrdinalIgnoreCase)
+                    && string.Equals(context.ItemId, networkDropItem.Item.UniqueId, StringComparison.OrdinalIgnoreCase))
                 {
                     return;
                 }
 
-                _multiplayerActorAccessor.Current.OnDropItem(dropItem);
+                _multiplayerActorAccessor.Current.OnDropItem(networkDropItem);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error while dropping item. ItemId={ItemId}", dropItem?.Item?.UniqueId);
+                _logger.LogError(ex, "Error while dropping item. ItemId={ItemId}", networkDropItem?.Item?.UniqueId);
                 throw;
             }
         }
 
-        public void OnChangeActiveHandEquipmentSet(NetworkActiveHandEquipmentSet set)
+        public void OnChangeActiveHandEquipmentSet(NetworkActiveHandEquipmentSet networkActiveHandEquipmentSet)
         {
             try
             {
@@ -581,17 +581,17 @@ namespace WOTRMultiplayer.MP
 
                 var context = _gameInteractionService.RemoteContext?.HandEquipment;
                 if (context != null
-                    && context.Index == set.Index
-                    && string.Equals(context.UnitId, set.UnitId, StringComparison.OrdinalIgnoreCase))
+                    && context.Index == networkActiveHandEquipmentSet.Index
+                    && string.Equals(context.UnitId, networkActiveHandEquipmentSet.UnitId, StringComparison.OrdinalIgnoreCase))
                 {
                     return;
                 }
 
-                _multiplayerActorAccessor.Current.OnChangeActiveHandEquipmentSet(set);
+                _multiplayerActorAccessor.Current.OnChangeActiveHandEquipmentSet(networkActiveHandEquipmentSet);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error while changing active hand equipment set. UnitId={UnitId}", set?.UnitId);
+                _logger.LogError(ex, "Error while changing active hand equipment set. UnitId={UnitId}", networkActiveHandEquipmentSet?.UnitId);
                 throw;
             }
         }
@@ -664,7 +664,7 @@ namespace WOTRMultiplayer.MP
             }
         }
 
-        public void OnPerceptionCheck(NetworkPerceptionCheck check)
+        public void OnPerceptionCheck(NetworkPerceptionCheck networkPerceptionCheck)
         {
             try
             {
@@ -673,11 +673,11 @@ namespace WOTRMultiplayer.MP
                     return;
                 }
 
-                _multiplayerActorAccessor.Host.OnPerceptionCheck(check);
+                _multiplayerActorAccessor.Host.OnPerceptionCheck(networkPerceptionCheck);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error while processing perception check. UnitId={UnitId}", check?.UnitId);
+                _logger.LogError(ex, "Error while processing perception check. UnitId={UnitId}", networkPerceptionCheck?.UnitId);
                 throw;
             }
         }
@@ -700,7 +700,7 @@ namespace WOTRMultiplayer.MP
         }
 
 
-        public bool OnInspectionKnowledgeCheck(NetworkInspectionKnowledgeCheck check)
+        public bool OnInspectionKnowledgeCheck(NetworkInspectionKnowledgeCheck networkInspectionKnowledgeCheck)
         {
             try
             {
@@ -714,12 +714,12 @@ namespace WOTRMultiplayer.MP
                     return false;
                 }
 
-                _multiplayerActorAccessor.Host.OnInspectionKnowledgeCheck(check);
+                _multiplayerActorAccessor.Host.OnInspectionKnowledgeCheck(networkInspectionKnowledgeCheck);
                 return true;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error while processing inspection knowledge check. InitiatorUnitId={InitiatorUnitId}", check?.InitiatorUnitId);
+                _logger.LogError(ex, "Error while processing inspection knowledge check. InitiatorUnitId={InitiatorUnitId}", networkInspectionKnowledgeCheck?.InitiatorUnitId);
                 throw;
             }
         }
@@ -784,7 +784,7 @@ namespace WOTRMultiplayer.MP
             }
         }
 
-        public void OnCampingUnitsRoleChanged(List<NetworkCampingRole> roles)
+        public void OnCampingUnitsRoleChanged(List<NetworkCampingRole> networkCampingRoles)
         {
             try
             {
@@ -798,7 +798,7 @@ namespace WOTRMultiplayer.MP
                     return;
                 }
 
-                _multiplayerActorAccessor.Host.OnCampingUnitsRoleChanged(roles);
+                _multiplayerActorAccessor.Host.OnCampingUnitsRoleChanged(networkCampingRoles);
             }
             catch (Exception ex)
             {
@@ -908,7 +908,7 @@ namespace WOTRMultiplayer.MP
             }
         }
 
-        public void OnInterrupRestBanterBark(NetworkRestBanter networkBanter)
+        public void OnInterrupRestBanterBark(NetworkRestBanter networkRestBanter)
         {
             try
             {
@@ -917,16 +917,16 @@ namespace WOTRMultiplayer.MP
                     return;
                 }
 
-                _multiplayerActorAccessor.Current.OnInterrupRestBanterBark(networkBanter);
+                _multiplayerActorAccessor.Current.OnInterrupRestBanterBark(networkRestBanter);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error while interrupting rest banter bark. BanterKey={BanterKey}", networkBanter.Key);
+                _logger.LogError(ex, "Error while interrupting rest banter bark. BanterKey={BanterKey}", networkRestBanter.Key);
                 throw;
             }
         }
 
-        public NetworkAIAction OnAfterAISelectedAction(NetworkAIAction action)
+        public NetworkAIAction OnAfterAISelectedAction(NetworkAIAction networkAIAction)
         {
             try
             {
@@ -935,17 +935,17 @@ namespace WOTRMultiplayer.MP
                     return null;
                 }
 
-                var possibleOverride = _multiplayerActorAccessor.Current.OnAfterAISelectedAction(action);
+                var possibleOverride = _multiplayerActorAccessor.Current.OnAfterAISelectedAction(networkAIAction);
                 return possibleOverride;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error after AI selected action. AIUnitId={AIUnitId}", action?.UnitId);
+                _logger.LogError(ex, "Error after AI selected action. AIUnitId={AIUnitId}", networkAIAction?.UnitId);
                 throw;
             }
         }
 
-        public void OnTransferVendorItem(NetworkVendorItemTransfer transfer)
+        public void OnTransferVendorItem(NetworkVendorItemTransfer networkVendorItemTransfer)
         {
             try
             {
@@ -955,16 +955,16 @@ namespace WOTRMultiplayer.MP
                 }
 
                 var vendorItemTransfer = _gameInteractionService.RemoteContext?.VendorItemTransfer;
-                if (vendorItemTransfer != null && string.Equals(vendorItemTransfer.ItemId, transfer.Item.UniqueId, StringComparison.OrdinalIgnoreCase))
+                if (vendorItemTransfer != null && string.Equals(vendorItemTransfer.ItemId, networkVendorItemTransfer.Item.UniqueId, StringComparison.OrdinalIgnoreCase))
                 {
                     return;
                 }
 
-                _multiplayerActorAccessor.Current.OnTransferVendorItem(transfer);
+                _multiplayerActorAccessor.Current.OnTransferVendorItem(networkVendorItemTransfer);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error while transferring vendor item. ItemId={ItemId}", transfer?.Item?.UniqueId);
+                _logger.LogError(ex, "Error while transferring vendor item. ItemId={ItemId}", networkVendorItemTransfer?.Item?.UniqueId);
                 throw;
             }
         }
@@ -1020,7 +1020,7 @@ namespace WOTRMultiplayer.MP
             return _multiplayerActorAccessor.Current == null || _multiplayerActorAccessor.Host.IsActive;
         }
 
-        public void OnMemorizeSpell(NetworkSpellSlot slot)
+        public void OnMemorizeSpell(NetworkSpellSlot networkSpellSlot)
         {
             try
             {
@@ -1029,16 +1029,16 @@ namespace WOTRMultiplayer.MP
                     return;
                 }
 
-                _multiplayerActorAccessor.Current.OnMemorizeSpell(slot);
+                _multiplayerActorAccessor.Current.OnMemorizeSpell(networkSpellSlot);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error while memorizing spell. UnitId={UnitId}", slot?.UnitId);
+                _logger.LogError(ex, "Error while memorizing spell. UnitId={UnitId}", networkSpellSlot?.UnitId);
                 throw;
             }
         }
 
-        public void OnForgetSpell(NetworkSpellSlot slot)
+        public void OnForgetSpell(NetworkSpellSlot networkSpellSlot)
         {
             try
             {
@@ -1047,11 +1047,11 @@ namespace WOTRMultiplayer.MP
                     return;
                 }
 
-                _multiplayerActorAccessor.Current.OnForgetSpell(slot);
+                _multiplayerActorAccessor.Current.OnForgetSpell(networkSpellSlot);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error while forgetting spell. UnitId={UnitId}", slot?.UnitId);
+                _logger.LogError(ex, "Error while forgetting spell. UnitId={UnitId}", networkSpellSlot?.UnitId);
                 throw;
             }
         }
@@ -1114,84 +1114,84 @@ namespace WOTRMultiplayer.MP
             return canContinue;
         }
 
-        public void OnWitnessLevelingPhase(NetworkLevelingPhase phase)
+        public void OnWitnessLevelingPhase(NetworkLevelingPhase networkLevelingPhase)
         {
             if (_multiplayerActorAccessor.Current == null)
             {
                 return;
             }
 
-            _multiplayerActorAccessor.Current.OnLevelingWitnessPhase(phase);
+            _multiplayerActorAccessor.Current.OnLevelingWitnessPhase(networkLevelingPhase);
         }
 
-        public void OnLevelingIncreaseSkillPoint(NetworkLevelingSkillPoint skill)
+        public void OnLevelingIncreaseSkillPoint(NetworkLevelingSkillPoint networkLevelingSkillPoint)
         {
             if (_multiplayerActorAccessor.Current == null)
             {
                 return;
             }
 
-            _multiplayerActorAccessor.Current.OnLevelingIncreaseSkillPoint(skill);
+            _multiplayerActorAccessor.Current.OnLevelingIncreaseSkillPoint(networkLevelingSkillPoint);
         }
 
-        public void OnLevelingDecreaseSkillPoint(NetworkLevelingSkillPoint skill)
+        public void OnLevelingDecreaseSkillPoint(NetworkLevelingSkillPoint networkLevelingSkillPoint)
         {
             if (_multiplayerActorAccessor.Current == null)
             {
                 return;
             }
 
-            _multiplayerActorAccessor.Current.OnLevelingDecreaseSkillPoint(skill);
+            _multiplayerActorAccessor.Current.OnLevelingDecreaseSkillPoint(networkLevelingSkillPoint);
         }
 
-        public void OnLevelingIncreaseAbilityScore(NetworkLevelingAbilityScore abilityScore)
+        public void OnLevelingIncreaseAbilityScore(NetworkLevelingAbilityScore networkLevelingAbilityScore)
         {
             if (_multiplayerActorAccessor.Current == null)
             {
                 return;
             }
 
-            _multiplayerActorAccessor.Current.OnLevelingIncreaseAbilityScore(abilityScore);
+            _multiplayerActorAccessor.Current.OnLevelingIncreaseAbilityScore(networkLevelingAbilityScore);
         }
 
-        public void OnLevelingDecreaseAbilityScore(NetworkLevelingAbilityScore abilityScore)
+        public void OnLevelingDecreaseAbilityScore(NetworkLevelingAbilityScore networkLevelingAbilityScore)
         {
             if (_multiplayerActorAccessor.Current == null)
             {
                 return;
             }
 
-            _multiplayerActorAccessor.Current.OnLevelingDecreaseAbilityScore(abilityScore);
+            _multiplayerActorAccessor.Current.OnLevelingDecreaseAbilityScore(networkLevelingAbilityScore);
         }
 
-        public void OnLevelingFeatureSelected(NetworkLevelingFeature feature)
+        public void OnLevelingFeatureSelected(NetworkLevelingFeature networkLevelingFeature)
         {
             if (_multiplayerActorAccessor.Current == null)
             {
                 return;
             }
 
-            _multiplayerActorAccessor.Current.OnLevelingFeatureSelected(feature);
+            _multiplayerActorAccessor.Current.OnLevelingFeatureSelected(networkLevelingFeature);
         }
 
-        public void OnLevelingSpellRemoved(NetworkLevelingSpell spell)
+        public void OnLevelingSpellRemoved(NetworkLevelingSpell networkLevelingSpell)
         {
             if (_multiplayerActorAccessor.Current == null)
             {
                 return;
             }
 
-            _multiplayerActorAccessor.Current.OnLevelingSpellRemoved(spell);
+            _multiplayerActorAccessor.Current.OnLevelingSpellRemoved(networkLevelingSpell);
         }
 
-        public void OnLevelingSpellChosen(NetworkLevelingSpell spell)
+        public void OnLevelingSpellChosen(NetworkLevelingSpell networkLevelingSpell)
         {
             if (_multiplayerActorAccessor.Current == null)
             {
                 return;
             }
 
-            _multiplayerActorAccessor.Current.OnLevelingSpellChosen(spell);
+            _multiplayerActorAccessor.Current.OnLevelingSpellChosen(networkLevelingSpell);
         }
 
         public void OnLevelingCompleted()

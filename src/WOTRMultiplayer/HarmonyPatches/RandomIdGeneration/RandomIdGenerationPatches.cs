@@ -37,7 +37,7 @@ namespace WOTRMultiplayer.HarmonyPatches.RandomIdGeneration
                 return;
             }
 
-            Main.GetLogger<RandomIdGenerationPatches>().LogError("Player.GetNewUniqueId should never be called, Result={result}, StackTrace={stackTrace}", __result, Environment.StackTrace);
+            Main.GetLogger<RandomIdGenerationPatches>().LogError("Player.GetNewUniqueId should never be called, Result={Result}, StackTrace={StackTrace}", __result, Environment.StackTrace);
         }
 
 
@@ -181,7 +181,7 @@ namespace WOTRMultiplayer.HarmonyPatches.RandomIdGeneration
 
             if (match.Instruction.opcode != OpCodes.Call)
             {
-                Main.GetLogger<RandomIdGenerationPatches>().LogError("Invalid transpiler position. Target={Target}, OpCode={opCode}", target, match.Instruction.opcode);
+                Main.GetLogger<RandomIdGenerationPatches>().LogError("Invalid transpiler position. Target={Target}, OpCode={OpCode}", target, match.Instruction.opcode);
                 return matcher.Instructions();
             }
 
@@ -202,7 +202,7 @@ namespace WOTRMultiplayer.HarmonyPatches.RandomIdGeneration
             }
             catch (Exception ex)
             {
-                Main.GetLogger<RandomIdGenerationPatches>().LogError(ex, "Error while generating {type}", UniqueIdType.AreaEffect);
+                Main.GetLogger<RandomIdGenerationPatches>().LogError(ex, "Error while generating unique Id. Type={Type}", UniqueIdType.AreaEffect);
                 throw;
             }
         }
@@ -217,7 +217,7 @@ namespace WOTRMultiplayer.HarmonyPatches.RandomIdGeneration
             }
             catch (Exception ex)
             {
-                Main.GetLogger<RandomIdGenerationPatches>().LogError(ex, "Error while generating {type}", UniqueIdType.EntityView);
+                Main.GetLogger<RandomIdGenerationPatches>().LogError(ex, "Error while generating unique Id. Type={Type}", UniqueIdType.EntityView);
                 throw;
             }
         }
@@ -232,7 +232,7 @@ namespace WOTRMultiplayer.HarmonyPatches.RandomIdGeneration
             }
             catch (Exception ex)
             {
-                Main.GetLogger<RandomIdGenerationPatches>().LogError(ex, "Error while generating {type}", UniqueIdType.Unit);
+                Main.GetLogger<RandomIdGenerationPatches>().LogError(ex, "Error while generating unique Id. Type={Type}", UniqueIdType.Unit);
                 throw;
             }
         }
@@ -247,7 +247,7 @@ namespace WOTRMultiplayer.HarmonyPatches.RandomIdGeneration
             }
             catch (Exception ex)
             {
-                Main.GetLogger<RandomIdGenerationPatches>().LogError(ex, "Error while generating {type}", UniqueIdType.Fact);
+                Main.GetLogger<RandomIdGenerationPatches>().LogError(ex, "Error while generating unique Id. Type={Type}", UniqueIdType.Fact);
                 throw;
             }
         }
@@ -262,7 +262,7 @@ namespace WOTRMultiplayer.HarmonyPatches.RandomIdGeneration
             }
             catch (Exception ex)
             {
-                Main.GetLogger<RandomIdGenerationPatches>().LogError(ex, "Error while generating {type}", UniqueIdType.ChangeBlueprintUnit);
+                Main.GetLogger<RandomIdGenerationPatches>().LogError(ex, "Error while generating unique Id. Type={Type}", UniqueIdType.ChangeBlueprintUnit);
                 throw;
             }
         }
@@ -277,7 +277,7 @@ namespace WOTRMultiplayer.HarmonyPatches.RandomIdGeneration
             }
             catch (Exception ex)
             {
-                Main.GetLogger<RandomIdGenerationPatches>().LogError(ex, "Error while generating {type}", UniqueIdType.ItemEntity);
+                Main.GetLogger<RandomIdGenerationPatches>().LogError(ex, "Error while generating unique Id. Type={Type}", UniqueIdType.ItemEntity);
                 throw;
             }
         }
@@ -292,7 +292,7 @@ namespace WOTRMultiplayer.HarmonyPatches.RandomIdGeneration
             }
             catch (Exception ex)
             {
-                Main.GetLogger<RandomIdGenerationPatches>().LogError(ex, "Error while generating {type}", UniqueIdType.AbilityData);
+                Main.GetLogger<RandomIdGenerationPatches>().LogError(ex, "Error while generating unique Id. Type={Type}", UniqueIdType.AbilityData);
                 throw;
             }
         }

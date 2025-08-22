@@ -25,7 +25,7 @@ namespace WOTRMultiplayer.HarmonyPatches.Inspect
                 return true;
             }
 
-            Main.GetLogger<InspectUnitsManagerPatches>().LogError("TODO: check if second knowledge check must by synced. TargetUnitId={targetUnitId}, InitiatorUnitId={initiatorUnitId}, OverrideStatType={overrideStatType}", unit?.UniqueId, inspector?.UniqueId, overrideStat);
+            Main.GetLogger<InspectUnitsManagerPatches>().LogError("TODO: check if second knowledge check must by synced. TargetUnitId={TargetUnitId}, InitiatorUnitId={InitiatorUnitId}, OverrideStatType={OverrideStatType}", unit?.UniqueId, inspector?.UniqueId, overrideStat);
             return true;
         }
 
@@ -81,7 +81,6 @@ namespace WOTRMultiplayer.HarmonyPatches.Inspect
                 InspectionBlueprintId = target.BlueprintForInspection?.AssetGuid.ToString()
             };
             var canContinue = Main.Multiplayer.OnInspectionKnowledgeCheck(check);
-            Main.GetLogger<InspectUnitsManagerPatches>().LogInformation("Can continue Inspection Knowledge check. Result={result}", canContinue);
             return canContinue;
         }
     }

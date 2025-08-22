@@ -578,7 +578,7 @@ namespace WOTRMultiplayer.MP.Actors
             return true;
         }
 
-        protected override DiceRollValueResponse RetrieveRoll(DiceRollValueRequest request)
+        protected override DiceRollValueResponse RetrieveRoll(DiceRollValueRequest rollRequest)
         {
             // the only case when host is retrieving rolls - he is not the turn owner + it's not AI turn
             var character = GetCharacterOwnership(Game.Combat.Turn.UnitId);
@@ -594,7 +594,7 @@ namespace WOTRMultiplayer.MP.Actors
                 return null;
             }
 
-            return _networkServer.SendAndWaitFor<DiceRollValueResponse>(character.Owner.Id, request);
+            return _networkServer.SendAndWaitFor<DiceRollValueResponse>(character.Owner.Id, rollRequest);
         }
 
         protected override void Send(object message)
@@ -1535,27 +1535,27 @@ namespace WOTRMultiplayer.MP.Actors
             }
         }
 
-        private void OnPlayerNameResponse(long playerId, ClientGameServerConnectionConfirmed response)
+        private void OnPlayerNameResponse(long playerId, ClientGameServerConnectionConfirmed connectionConfirmed)
         {
             try
             {
-                Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}, Name={Name}", nameof(ClientGameServerConnectionConfirmed), playerId, response?.PlayerName);
+                Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}, Name={Name}", nameof(ClientGameServerConnectionConfirmed), playerId, connectionConfirmed.PlayerName);
                 lock (ActionLock)
                 {
                     var existingPlayer = GetPlayer(playerId);
                     if (existingPlayer == null)
                     {
-                        Logger.LogWarning("Can't process player name update because player doesn't exist. PlayerId={playPlayerIderId}, Name={Name}", playerId, response?.PlayerName);
+                        Logger.LogWarning("Can't process player name update because player doesn't exist. PlayerId={playPlayerIderId}, Name={Name}", playerId, connectionConfirmed.PlayerName);
                         return;
                     }
 
-                    if (string.IsNullOrEmpty(response.PlayerName))
+                    if (string.IsNullOrEmpty(connectionConfirmed.PlayerName))
                     {
-                        Logger.LogWarning("Can't process player name update because player name is missing. PlayerId={PlayerId}, Name={Name}", playerId, response?.PlayerName);
+                        Logger.LogWarning("Can't process player name update because player name is missing. PlayerId={PlayerId}, Name={Name}", playerId, connectionConfirmed.PlayerName);
                         return;
                     }
 
-                    existingPlayer.Name = response.PlayerName;
+                    existingPlayer.Name = connectionConfirmed.PlayerName;
 
                     OnPlayersChanged?.Invoke(Game.Players);
 

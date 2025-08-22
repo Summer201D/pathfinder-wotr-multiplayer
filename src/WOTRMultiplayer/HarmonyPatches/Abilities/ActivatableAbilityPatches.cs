@@ -21,15 +21,13 @@ namespace WOTRMultiplayer.HarmonyPatches.Abilities
             }
 
             if (__instance.Blueprint.SelectTargetAbility != null &&
-                __instance.Blueprint.SelectTargetAbility.TargetRestrictions.Any(r => r is AbilityTargetIsSuitableMount))
+                __instance.Blueprint.SelectTargetAbility.TargetRestrictions.Any(r => r is AbilityTargetIsSuitableMount)
+                && (__instance.m_IsOn
+                    || !__instance.Owner.Unit.Buffs.Enumerable.Any(a => string.Equals(a.Blueprint.NameForAcronym, "MountedBuff", System.StringComparison.OrdinalIgnoreCase))))
             {
                 // mount toggle is messing up with AbilityUse, so we need to handle Dismount only as everything else is handled by AbilityUse
-                if (__instance.m_IsOn
-                    || !__instance.Owner.Unit.Buffs.Enumerable.Any(a => string.Equals(a.Blueprint.NameForAcronym, "MountedBuff", System.StringComparison.OrdinalIgnoreCase)))
-                {
-                    Main.GetLogger<ActivatableAbilityPatches>().LogInformation("Mount toggle is ignored. IsActive={IsActive}", __instance.m_IsOn);
-                    return;
-                }
+                Main.GetLogger<ActivatableAbilityPatches>().LogInformation("Mount toggle is ignored. IsActive={IsActive}", __instance.m_IsOn);
+                return;
             }
 
             if (PatchesUtils.IsHelperUnit(__instance.Owner.Unit.UniqueId))

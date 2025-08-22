@@ -16,7 +16,7 @@ namespace WOTRMultiplayer.Networking.Abstractions
         INetworkServer On<TMessage>(Action<long, TMessage> messageHandler)
             where TMessage : class;
 
-        void Send(long playerId, object message);
+        void Send(long clientId, object message);
 
         T SendAndWaitFor<T>(long clientId, object message)
             where T : class;

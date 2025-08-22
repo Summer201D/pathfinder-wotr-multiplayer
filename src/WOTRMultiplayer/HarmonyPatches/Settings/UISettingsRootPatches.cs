@@ -60,7 +60,6 @@ namespace WOTRMultiplayer.HarmonyPatches.Settings
                     if (entityValue != null)
                     {
                         entityValue.ManualModificationLock = true;
-                        continue;
                     }
                 }
             }

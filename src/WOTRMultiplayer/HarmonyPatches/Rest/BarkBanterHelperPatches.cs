@@ -26,7 +26,6 @@ namespace WOTRMultiplayer.HarmonyPatches.Rest
         {
             var target = PatchesUtils.GetTranspilerTarget(MethodBase.GetCurrentMethod());
             var replaceWith = AccessTools.Method(typeof(BarkBanterHelperPatches), nameof(SelectBanter));
-            var lookFor = AccessTools.PropertyGetter(typeof(BlueprintRoot), nameof(BlueprintRoot.Instance));
             var matcher = new CodeMatcher(instructions);
             var match = matcher.Start().RemoveInstructions(19); // linq class wrapper takes a lot
 

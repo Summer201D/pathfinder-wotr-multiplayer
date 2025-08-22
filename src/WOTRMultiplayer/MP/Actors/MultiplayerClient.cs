@@ -113,7 +113,7 @@ namespace WOTRMultiplayer.MP.Actors
             var player = Game.Players.First(p => p.Id == Game.LocalPlayerId);
             player.IsReady = !player.IsReady;
             var readyChanged = new PlayerReadyStatusChanged { PlayerId = player.Id, IsReady = player.IsReady };
-            _networkServerClient.Send(readyChanged);
+            Send(readyChanged);
             return readyChanged.IsReady;
         }
 
@@ -129,7 +129,7 @@ namespace WOTRMultiplayer.MP.Actors
         public override void OnAreaScenesLoaded()
         {
             base.OnAreaScenesLoaded();
-            _networkServerClient.Send(new ClientAreaLoaded());
+            Send(new ClientAreaLoaded());
         }
 
         public void OnAfterCueShow(string dialogName, string cueName, bool hasSystemAnswer)
@@ -144,7 +144,7 @@ namespace WOTRMultiplayer.MP.Actors
             Game.Dialog.Answer = null;
 
             var message = new CueWitnessed { CueName = cueName, DialogName = dialogName };
-            _networkServerClient.Send(message);
+            Send(message);
         }
 
         public bool OnBeforeSelectDialogAnswer(string dialogName, string cueName, string answerName, bool isExitAnswer, string manualUnitSelectionId)
@@ -174,7 +174,7 @@ namespace WOTRMultiplayer.MP.Actors
 
             var message = new DialogCueAnswerSuggested { DialogName = dialogName, CueName = cueName, AnswerName = answerName };
             Logger.LogInformation("Sending dialog answer suggestion. DialogName={dialogName}, CueName={cueName}, AnswerName={answerName}", message.DialogName, message.CueName, message.AnswerName);
-            _networkServerClient.Send(message);
+            Send(message);
             Game.Dialog.IsSelectingAnswer = true;
             return false;
         }
@@ -196,7 +196,7 @@ namespace WOTRMultiplayer.MP.Actors
                 MapObjectId = mapObjectId,
                 SpeakerKey = speakerKey
             };
-            _networkServerClient.Send(message);
+            Send(message);
 
             return false;
         }
@@ -366,9 +366,9 @@ namespace WOTRMultiplayer.MP.Actors
             return true;
         }
 
-        protected override DiceRollValueResponse RetrieveRoll(DiceRollValueRequest request)
+        protected override DiceRollValueResponse RetrieveRoll(DiceRollValueRequest rollRequest)
         {
-            return _networkServerClient.SendAndWaitFor<DiceRollValueResponse>(request);
+            return _networkServerClient.SendAndWaitFor<DiceRollValueResponse>(rollRequest);
         }
 
         protected override void Send(object message)
@@ -384,7 +384,7 @@ namespace WOTRMultiplayer.MP.Actors
         protected override void OnLocalPlayerTurnEnded()
         {
             var message = new PlayerCombatTurnEnded { UnitId = Game.Combat.Turn.UnitId };
-            _networkServerClient.Send(message);
+            Send(message);
         }
 
         protected override void OnLocalPlayerTurnStart()
@@ -395,7 +395,7 @@ namespace WOTRMultiplayer.MP.Actors
                 Round = Game.Combat.Round
             };
 
-            _networkServerClient.Send(message);
+            Send(message);
         }
         private void RegisterHandlers()
         {
@@ -757,7 +757,7 @@ namespace WOTRMultiplayer.MP.Actors
 
                 var message = new ClientCombatTurnSynchronized { UnitId = unitId };
                 Logger.LogInformation("Units have been synchronized. Sending {MessageType} confirmation. UnitId={UnitId}", nameof(NotifyCombatTurnSynchronizationRequired), unitId);
-                _networkServerClient.Send(message);
+                Send(message);
             }
             catch (Exception ex)
             {
@@ -854,7 +854,7 @@ namespace WOTRMultiplayer.MP.Actors
 
             Logger.LogInformation("Sending {MessageType}", nameof(ClientCombatInitialized));
             var message = new ClientCombatInitialized();
-            _networkServerClient.Send(message);
+            Send(message);
 
             Game.Combat.IsInitialized = true;
         }
@@ -1029,7 +1029,7 @@ namespace WOTRMultiplayer.MP.Actors
             }
 
             Logger.LogInformation("Game is ready to be started. SavePath={SavePath}", Game.SaveFilePath);
-            _networkServerClient.Send(new PlayerSaveGameSyncChanged { IsSynced = true });
+            Send(new PlayerSaveGameSyncChanged { IsSynced = true });
         }
 
         private void OnPlayerReadyStatusChanged(PlayerReadyStatusChanged readyStatusChanged)
@@ -1137,7 +1137,7 @@ namespace WOTRMultiplayer.MP.Actors
 
             var message = new ClientGameServerConnectionConfirmed() { PlayerName = SettingsProvider.Settings.PlayerName };
             Logger.LogInformation("Sending {MessageType}. PlayerName={PlayerName}", nameof(ClientGameServerConnectionConfirmed), message.PlayerName);
-            _networkServerClient.Send(message);
+            Send(message);
         }
     }
 }

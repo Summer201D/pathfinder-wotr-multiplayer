@@ -43,11 +43,11 @@ namespace WOTRMultiplayer.Abstractions.GameInteraction
 
         void LeaveArea(string areaExitId);
 
-        void MarkSuggestedDialogAnswers(List<NetworkDialogAnswerSuggestion> suggestions);
+        void MarkSuggestedDialogAnswers(List<NetworkDialogAnswerSuggestion> networkDialogAnswerSuggestions);
 
         void ResetSuggestedDialogAnswers();
 
-        void MoveNonCombatCharacter(NetworkCharacterMove move);
+        void MoveNonCombatCharacter(NetworkCharacterMove networkCharacterMove);
 
         void Pause(bool isPaused);
 
@@ -85,29 +85,29 @@ namespace WOTRMultiplayer.Abstractions.GameInteraction
 
         Task UpdateUnitsAsync(List<NetworkUnit> networkUnits);
 
-        void ClickUnit(NetworkClick click);
+        void ClickUnit(NetworkClick networkClick);
 
-        void ClickGroundInCombat(NetworkClick click);
+        void ClickGroundInCombat(NetworkClick networkClick);
 
-        void ClickMapObject(NetworkClick click);
+        void ClickMapObject(NetworkClick networkClick);
 
         bool CombatTurnHasBeenFinished();
 
         NetworkActionsState GetActionsState();
 
-        void UseAbility(NetworkAbility use);
+        void UseAbility(NetworkAbility networkAbility);
 
-        void ToggleActivatableAbility(NetworkActivatableAbility toggle);
+        void ToggleActivatableAbility(NetworkActivatableAbility networkActivatableAbility);
 
-        void CollectContainerLoot(NetworkLootContainer container);
+        void CollectContainerLoot(NetworkLootContainer networkLootContainer);
 
-        void DropItem(NetworkDropItem dropItem);
+        void DropItem(NetworkDropItem networkDropItem);
 
         NetworkEquipmentSlotPosition GetEquipmentSlotPosition(ItemSlot slot);
 
-        void UpdateEquipmentSlot(NetworkEquipmentSlot slot);
+        void UpdateEquipmentSlot(NetworkEquipmentSlot networkEquipmentSlot);
 
-        void SetActiveHandEquipmentSet(NetworkActiveHandEquipmentSet set);
+        void SetActiveHandEquipmentSet(NetworkActiveHandEquipmentSet networkActiveHandEquipmentSet);
 
         void InteractWithOvertip(NetworkOvertip networkOvertip);
 
@@ -115,51 +115,43 @@ namespace WOTRMultiplayer.Abstractions.GameInteraction
 
         bool IsSummoned(string unitId);
 
-        void ApplyPerceptionCheck(NetworkPerceptionCheck check);
+        void ApplyPerceptionCheck(NetworkPerceptionCheck networkPerceptionCheck);
 
-        void ApplyInspectionKnowledgeCheck(NetworkInspectionKnowledgeCheck check);
-
-        void UpdateCombatOrder(List<string> combatOrderUnits);
-
-        List<string> GetUnitsCombatOrder();
+        void ApplyInspectionKnowledgeCheck(NetworkInspectionKnowledgeCheck networkInspectionKnowledgeCheck);
 
         NetworkGameSettings GetGameSettings();
 
-        void ApplyGameSettings(NetworkGameSettings gameSettings);
+        void ApplyGameSettings(NetworkGameSettings networkGameSettings);
 
         void SpawnCampPlace(NetworkVector3 position);
 
         void SetCampingUseHealingSpells(bool isOn);
 
-        void SetCampingState(NetworkCampingState state);
+        void SetCampingState(NetworkCampingState networkCampingState);
 
-        void SetCampingRoles(List<NetworkCampingRole> roles);
+        void SetCampingRoles(List<NetworkCampingRole> networkCampingRoles);
 
         void SetStartRestButtonState(bool isInteractable, int readyPlayersCount, int totalPlayersCount);
 
         void StartRest();
 
-        void SetRandomEncounterContext(NetworkRandomEncounterContext context);
-
-        string GetNextUnitTurn();
-
-        void SetNextUnitCombatTurn(string nextUnitTurn);
+        void SetRandomEncounterContext(NetworkRandomEncounterContext networkRandomEncounterContext);
 
         void UpdateIsInCombatStatus();
 
-        void TryInterruptRestBanter(NetworkRestBanter banter);
+        void TryInterruptRestBanter(NetworkRestBanter networkRestBanter);
 
         void SetGroundMoveEveryone();
 
-        void TransferVendorItem(NetworkVendorItemTransfer transfer);
+        void TransferVendorItem(NetworkVendorItemTransfer networkVendorItemTransfer);
 
         void CloseVendorWindow();
 
         void MakeVendorDeal();
 
-        void ForgetSpell(NetworkSpellSlot slot);
+        void ForgetSpell(NetworkSpellSlot networkSpellSlot);
 
-        void MemorizeSpell(NetworkSpellSlot slot);
+        void MemorizeSpell(NetworkSpellSlot networkSpellSlot);
 
         void StartLeveling(string unitId);
 
@@ -169,21 +161,21 @@ namespace WOTRMultiplayer.Abstractions.GameInteraction
 
         void UpdateLevelingPhaseControls(bool isEnabled);
 
-        void SwitchLevelingPhase(NetworkLevelingPhase phase);
+        void SwitchLevelingPhase(NetworkLevelingPhase networkLevelingPhase);
 
-        void DecreaseLevelingSkillPoint(NetworkLevelingSkillPoint skillPoint);
+        void DecreaseLevelingSkillPoint(NetworkLevelingSkillPoint networkLevelingSkillPoint);
 
-        void IncreaseLevelingSkillPoint(NetworkLevelingSkillPoint skillPoint);
+        void IncreaseLevelingSkillPoint(NetworkLevelingSkillPoint networkLevelingSkillPoint);
 
-        void DecreaseLevelingAbilityScore(NetworkLevelingAbilityScore abilityScore);
+        void DecreaseLevelingAbilityScore(NetworkLevelingAbilityScore networkLevelingAbilityScore);
 
-        void IncreaseLevelingAbilityScore(NetworkLevelingAbilityScore abilityScore);
+        void IncreaseLevelingAbilityScore(NetworkLevelingAbilityScore networkLevelingAbilityScore);
 
-        void SelectLevelingFeature(NetworkLevelingFeature feature);
+        void SelectLevelingFeature(NetworkLevelingFeature networkLevelingFeature);
 
-        void SelectLevelingSpell(NetworkLevelingSpell spell);
+        void SelectLevelingSpell(NetworkLevelingSpell networkLevelingSpell);
 
-        void RemoveLevelingSpell(NetworkLevelingSpell spell);
+        void RemoveLevelingSpell(NetworkLevelingSpell networkLevelingSpell);
 
         void CompleteLeveling();
 

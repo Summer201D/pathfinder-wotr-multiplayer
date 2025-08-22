@@ -193,7 +193,7 @@ namespace WOTRMultiplayer.UI
             return inputObject;
         }
 
-        public GameObject CreateDropdown(float sizeDeltaX, Transform parent)
+        public GameObject CreateDropdown(float preferedWidth, Transform parent)
         {
             var dropdownContainerObject = UnityEngine.Object.Instantiate(_dropdownPrefab, parent);
             dropdownContainerObject.CleanupAllChildren(x => x.name != DropdownGameObjectName);
@@ -202,7 +202,7 @@ namespace WOTRMultiplayer.UI
             rect.anchorMin = new Vector2(1, 0);
             rect.anchorMax = new Vector2(1, 0);
             rect.anchoredPosition = Vector2.zero;
-            rect.sizeDelta = new Vector2(sizeDeltaX, rect.sizeDelta.y);
+            rect.sizeDelta = new Vector2(preferedWidth, rect.sizeDelta.y);
 
             var dropdown = dropdownObject.GetComponent<TMP_Dropdown>();
             dropdown.ClearOptions();
@@ -505,9 +505,6 @@ namespace WOTRMultiplayer.UI
                 dropdownContainerObject.name = LobbyWindowController.CharacterOwnerObjectName;
                 var characterIndexComponent = dropdownContainerObject.AddComponent<CharacterIndexMonoBehaviour>();
                 characterIndexComponent.CharacterIndex = characterIndex;
-
-                var dropdownObject = dropdownContainerObject.transform.Find(UIFactory.DropdownGameObjectName);
-                var tmpDropdown = dropdownObject.GetComponent<TMP_Dropdown>();
             }
         }
 

@@ -802,6 +802,11 @@ namespace WOTRMultiplayer.MP.Actors
             }
         }
 
+        protected void EnsureForcePaused(string reason)
+        {
+            EnsureForcePaused(reason, SettingsProvider.Settings.ForcedPauseDefaultTerminationDelay);
+        }
+
         protected void WitnessLevelingPhase(long playerId)
         {
             lock (ActionLock)
@@ -813,22 +818,17 @@ namespace WOTRMultiplayer.MP.Actors
             }
         }
 
-        protected void EnsureForcePaused(string reason)
-        {
-            EnsureForcePaused(reason, SettingsProvider.Settings.ForcedPauseDefaultTerminationDelay);
-        }
-
         protected bool RegisterGameMode(GameModeType type, long playerId)
         {
             var isNew = true;
-            var registeredPlayers = Game.PlayersInGameMode.AddOrUpdate(type,
-                 k => new HashSet<long>([playerId]),
-                 (k, existing) =>
-                 {
-                     // side effects are fine
-                     isNew = existing.Add(playerId);
-                     return existing;
-                 });
+            Game.PlayersInGameMode.AddOrUpdate(type,
+                k => new HashSet<long>([playerId]),
+                (k, existing) =>
+                {
+                    // side effects are fine
+                    isNew = existing.Add(playerId);
+                    return existing;
+                });
 
             return isNew;
         }

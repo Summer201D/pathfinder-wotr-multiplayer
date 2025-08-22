@@ -70,7 +70,7 @@ namespace WOTR.Multiplayer.Playground.Core.Dummies
         {
         }
 
-        public void MarkSuggestedDialogAnswers(List<NetworkDialogAnswerSuggestion> suggestions)
+        public void MarkSuggestedDialogAnswers(List<NetworkDialogAnswerSuggestion> networkDialogAnswerSuggestions)
         {
         }
 
@@ -354,7 +354,7 @@ namespace WOTR.Multiplayer.Playground.Core.Dummies
         {
         }
 
-        public void MoveNonCombatCharacter(NetworkCharacterMove move)
+        public void MoveNonCombatCharacter(NetworkCharacterMove networkCharacterMove)
         {
         }
     }

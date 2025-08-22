@@ -15,7 +15,7 @@ namespace WOTRMultiplayer.HarmonyPatches
         public static void EscMenuPCView_BindViewImplementation_Postfix(EscMenuPCView __instance)
         {
             var logger = Main.GetLogger<EscMenuPCViewPatches>();
-            logger.LogInformation("Applying patch [{patchName}]", nameof(EscMenuPCView_BindViewImplementation_Postfix));
+            logger.LogInformation("Applying patch [{PatchName}]", nameof(EscMenuPCView_BindViewImplementation_Postfix));
             try
             {
                 var mainMenu = __instance.transform.Find($"Window/ButtonBlock/{UIFactory.MultiplayerMenuObjectName}")?.gameObject;

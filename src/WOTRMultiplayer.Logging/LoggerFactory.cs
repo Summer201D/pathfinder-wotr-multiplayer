@@ -1,5 +1,4 @@
-﻿using System.IO;
-using Serilog;
+﻿using Serilog;
 using WOTRMultiplayer.Logging.Enrichers;
 using WOTRMultiplayer.Logging.Sinks;
 
@@ -7,7 +6,6 @@ namespace WOTRMultiplayer.Logging
 {
     public static class LoggerFactory
     {
-        private static TextWriter _debugConsole;
         private readonly static object _consoleSinkRoot = new();
 
         public static ILogger Create(bool addConsoleSink, Serilog.Events.LogEventLevel minimumLevel)
@@ -32,8 +30,8 @@ namespace WOTRMultiplayer.Logging
 
         private static void ConfigureConsoleSink(LoggerConfiguration logConfig, string template)
         {
-            _debugConsole = WinApi.SpawnConsole();
-            logConfig.WriteTo.DebugConsole(_debugConsole, outputTemplate: template, syncRoot: _consoleSinkRoot);
+            var debugConsole = WinApi.SpawnConsole();
+            logConfig.WriteTo.DebugConsole(debugConsole, outputTemplate: template, syncRoot: _consoleSinkRoot);
         }
     }
 }

@@ -17,8 +17,6 @@ namespace WOTRMultiplayer.Networking.Abstractions
 
         void Send(object message);
 
-        Task SendAsync(object message);
-
         T SendAndWaitFor<T>(object message)
             where T : class;
 

@@ -13,23 +13,38 @@ namespace WOTRMultiplayer.Abstractions.UI
         IMultiplayerWindow InitializeMultiplayerWindow(InitializeMultiplayerContext context, Action onShow);
 
         GameObject CreateDefaultGameObject(Transform parent);
+
         GameObject CreateDropdown(float preferedWidth, Transform parent);
-        GameObject CreateButton(Transform transform);
-        GameObject CreateInput(Transform transform);
+
+        GameObject CreateButton(Transform parent);
+
+        GameObject CreateInput(Transform parent);
+
         GameObject CreateLobbyWindowContent(Transform parent);
+
         SaveLoadPCView CreateSaveLoadPCView(Transform parent);
+
         ILobbyWindow InitializeEscMenuLobbyWindow(InitializeEscMenuLobbyWindowContext context, Action onShow);
+
         GameObject CreateBackgroundArt(Transform parent);
+
         WOTRMultiplayer.UI.Mesh GetDefaultMesh();
+
         void StoreBorderDecoration(GameObject gameObject);
+
         void StoreDefaultGameObject(GameObject gameObject);
+
         void StoreDefaultTextMesh(TextMeshProUGUI defaultTextMesh);
+
         void StoreDropdownPrefab(SettingsEntityDropdownPCView view);
+
         void StoreInputPrefab(GameObject inputObject);
+
         void StoreButtonPrefab(GameObject buttonObject);
 
         void StoreSaveLoadPCViewPrefab(SaveLoadPCView view);
-        void StoreBackgroundArt(GameObject gameObject);
+
+        void StoreBackgroundArt(GameObject backgroundArt);
 
         void DestroyLobbyWindow(ILobbyWindow lobbyWindow);
     }

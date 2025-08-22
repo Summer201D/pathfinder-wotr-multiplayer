@@ -84,7 +84,7 @@ namespace WOTRMultiplayer.HarmonyPatches.Clicks
                 float num3 = 30.Feet().Meters / 3f;
                 float? num4 = num2;
                 float num5 = num3;
-                if (num4.GetValueOrDefault() < num5 & num4 != null)
+                if (num4.GetValueOrDefault() < num5 && num4 != null)
                 {
                     num2 = new float?(num3);
                 }

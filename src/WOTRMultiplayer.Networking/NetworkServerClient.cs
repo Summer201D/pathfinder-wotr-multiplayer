@@ -38,7 +38,7 @@ namespace WOTRMultiplayer.Networking
             _client.Connected = OnClientConnected;
             _client.PacketReceive = OnPackedReceived;
             IsConnecting = true;
-            var status = await _client.Connect();
+            await _client.Connect();
         }
 
         private void OnClientConnected(IClient client)
@@ -69,11 +69,6 @@ namespace WOTRMultiplayer.Networking
         public void Send(object message)
         {
             _client.Send(message).Wait();
-        }
-
-        public Task SendAsync(object message)
-        {
-            return _client.Send(message);
         }
 
         public T SendAndWaitFor<T>(object message)
