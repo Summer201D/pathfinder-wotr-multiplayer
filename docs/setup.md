@@ -1,4 +1,7 @@
-# How to debug
+### Env config
+Set `WOTR_PATH` environment var to target Wrath game folder, e.g. `D:\Games\Steam\steamapps\common\Pathfinder Second Adventure`
+
+### Debugging
 1. Get Unity debug DLLs - `UnityPlayer.dll` and `WinPixEventRuntime.dll` in a preferred way
     - Download Unity `2020.3.48f1` https://unity.com/releases/editor/whats-new/2020.3.48. Look for required DLLs in `Unity 2020.3.48f1\Editor\Data\PlaybackEngines\windowsstandalonesupport\Variations\win64_development_mono`
     - use DLLs from `/tools/debugging`
