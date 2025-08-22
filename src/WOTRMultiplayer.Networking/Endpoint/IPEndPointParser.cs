@@ -7,13 +7,9 @@ namespace WOTRMultiplayer.Networking.Endpoint
 {
     public class IPEndPointParser : IIPEndPointParser
     {
-        public bool TryParse(string value, out IPEndPoint result)
+        public IPEndPoint Parse(string rawValue)
         {
-            return TryParse(value.AsSpan(), out result);
-        }
-
-        public bool TryParse(ReadOnlySpan<char> value, out IPEndPoint result)
-        {
+            var value = rawValue.AsSpan();
             int addressLength = value.Length;  // If there's no port then send the entire string to the address parser
             int lastColonPos = value.LastIndexOf(':');
 
@@ -29,13 +25,12 @@ namespace WOTRMultiplayer.Networking.Endpoint
                     uint.TryParse(value.Slice(addressLength + 1).ToString(), NumberStyles.None, CultureInfo.InvariantCulture, out port) && port <= IPEndPoint.MaxPort)
 
                 {
-                    result = new IPEndPoint(address, (int)port);
-                    return true;
+                    var result = new IPEndPoint(address, (int)port);
+                    return result;
                 }
             }
 
-            result = null;
-            return false;
+            return null;
         }
     }
 }

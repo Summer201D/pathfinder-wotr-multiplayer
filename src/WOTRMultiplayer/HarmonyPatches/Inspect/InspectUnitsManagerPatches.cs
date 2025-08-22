@@ -18,7 +18,7 @@ namespace WOTRMultiplayer.HarmonyPatches.Inspect
     {
         [HarmonyPatch(typeof(InspectUnitsManager), nameof(InspectUnitsManager.TryMakeKnowledgeCheck), [typeof(UnitEntityData), typeof(UnitEntityData), typeof(StatType?)])]
         [HarmonyPrefix]
-        public static bool InspectUnitsManager_TryMakeKnowledgeCheck_Prefix(UnitPartInspectedBuffs __instance, UnitEntityData unit, UnitEntityData inspector, StatType? overrideStat = null)
+        public static bool InspectUnitsManager_TryMakeKnowledgeCheck_Prefix(UnitEntityData unit, UnitEntityData inspector, StatType? overrideStat = null)
         {
             if (!Main.Multiplayer.IsActive)
             {

@@ -1479,7 +1479,15 @@ namespace WOTRMultiplayer.MP.Actors
                 && character.Owner.Id != playerId)
             {
                 Logger.LogInformation("Asking another client for a roll. PlayerId={PlayerId}, RollId={RollId}, UnitId={UnitId}", character.Owner.Id, request.RollId, request.UnitId);
-                var rollFromAnotherClient = RetrieveRoll(request);
+                var message = new DiceRollValueRequest
+                {
+                    RollId = request.RollId,
+                    UnitId = request.UnitId,
+                    Timeout = request.Timeout,
+                    PlayerId = playerId
+                };
+
+                var rollFromAnotherClient = _networkServer.SendAndWaitFor<DiceRollValueResponse>(playerId, message);
                 Send(playerId, rollFromAnotherClient);
                 return;
             }

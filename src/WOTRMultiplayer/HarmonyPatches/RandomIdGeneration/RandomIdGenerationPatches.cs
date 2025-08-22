@@ -30,7 +30,7 @@ namespace WOTRMultiplayer.HarmonyPatches.RandomIdGeneration
 
         [HarmonyPatch(typeof(Player), nameof(Player.GetNewUniqueId))]
         [HarmonyPostfix]
-        public static void Player_GetNewUniqueId_Postfix(Player __instance, ref string __result)
+        public static void Player_GetNewUniqueId_Postfix(ref string __result)
         {
             if (!Main.Multiplayer.IsActive)
             {

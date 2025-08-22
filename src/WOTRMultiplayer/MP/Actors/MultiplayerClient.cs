@@ -90,12 +90,13 @@ namespace WOTRMultiplayer.MP.Actors
                 Reset();
             }
 
-            if (!_ipEndPointParser.TryParse(address, out IPEndPoint endpoint))
+            var endpoint = _ipEndPointParser.Parse(address);
+            if (endpoint == null)
             {
                 return ConnectLobbyResult.Error(UIStringConsts.MultiplayerClient.Errors.InvalidIP);
             }
 
-            if (endpoint.Port <= 0 || endpoint.Port > ushort.MaxValue)
+            if (endpoint.Port == 0)
             {
                 return ConnectLobbyResult.Error(UIStringConsts.MultiplayerClient.Errors.InvalidPort);
             }
@@ -810,8 +811,8 @@ namespace WOTRMultiplayer.MP.Actors
         private async void OnDiceRollValueRequest(DiceRollValueRequest request)
         {
             Logger.LogInformation("Received {MessageType}. RollId={RollId}", nameof(DiceRollValueRequest), request.RollId);
-            // only host could ask for a roll since there is no direct connection between clients
-            await SendLocalRollAsync(LocalHostPlayerId, request);
+            // either proxied request for another player or host
+            await SendLocalRollAsync(request.PlayerId ?? LocalHostPlayerId, request);
         }
 
         private void OnNotifyCombatTurnStarted(NotifyCombatTurnStarted started)

@@ -9,6 +9,7 @@ namespace WOTRMultiplayer.Networking.Extensions
         public static ServiceCollection ConfigureNetworking(this ServiceCollection serviceCollection)
         {
             serviceCollection.AddSingleton<IIPEndPointParser, IPEndPointParser>();
+            serviceCollection.AddSingleton<ITcpClientFactory, TcpClientFactory>();
 
             serviceCollection.AddScoped<INetworkServer, NetworkServer>();
             serviceCollection.AddScoped<INetworkClient, NetworkClient>();

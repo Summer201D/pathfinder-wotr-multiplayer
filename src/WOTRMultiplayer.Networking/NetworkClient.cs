@@ -2,7 +2,6 @@
 using System.Collections.Concurrent;
 using System.Net;
 using System.Threading.Tasks;
-using BeetleX;
 using BeetleX.Clients;
 using Microsoft.Extensions.Logging;
 using WOTRMultiplayer.Networking.Abstractions;
@@ -12,10 +11,11 @@ namespace WOTRMultiplayer.Networking
 {
     public class NetworkClient : INetworkClient
     {
-        private AsyncTcpClient _client;
+        private ITcpClient _client;
         private readonly ConcurrentDictionary<Type, Action<object>> _handlers = new();
         private readonly ConcurrentDictionary<string, TaskCompletionSource<object>> _awaiters = new(StringComparer.OrdinalIgnoreCase);
         private readonly ILogger<NetworkClient> _logger;
+        private readonly ITcpClientFactory _tcpClientFactory;
         private readonly TimeSpan _defaultAwaiterTimeout = TimeSpan.FromMinutes(1);
 
         public Action<Exception> OnError { get; set; }
@@ -26,14 +26,18 @@ namespace WOTRMultiplayer.Networking
 
         public bool IsConnecting { get; private set; } = false;
 
-        public NetworkClient(ILogger<NetworkClient> logger)
+        public NetworkClient(
+            ILogger<NetworkClient> logger,
+            ITcpClientFactory tcpClientFactory)
         {
             _logger = logger;
+            _tcpClientFactory = tcpClientFactory;
         }
 
         public async Task ConnectAsync(string host, int port)
         {
-            _client = SocketFactory.CreateClient<AsyncTcpClient>(new Messages.ProtobufClientPacket(), host, port);
+            _client = _tcpClientFactory.Create(host, port);
+
             _client.ClientError = OnClientError;
             _client.Connected = OnClientConnected;
             _client.PacketReceive = OnPackedReceived;
