@@ -149,7 +149,7 @@ You can either ignore it (if the outcome is more or less the same for everyone) 
 
 ## Not implemented
 ### Abilities
-- only basic usage of abilities is completed. Any extra conditions like metamagic will not work properly as those modifications will not be applied for remote players
+Only basic usage of abilities is available. Any extra conditions like metamagic will not work properly as those modifications will not be applied for remote players
 
 ### Action Bars
 Action bars are not synced yet
