@@ -21,6 +21,7 @@ using WOTRMultiplayer.MP.Entities.Inspect;
 using WOTRMultiplayer.MP.Entities.Leveling;
 using WOTRMultiplayer.MP.Entities.Rest;
 using WOTRMultiplayer.MP.Entities.Settings;
+using WOTRMultiplayer.Networking;
 using WOTRMultiplayer.Networking.Abstractions;
 using WOTRMultiplayer.Networking.Messages.Game;
 using WOTRMultiplayer.Networking.Messages.Lobby;
@@ -563,7 +564,7 @@ namespace WOTRMultiplayer.MP.Actors
         {
             Logger.LogInformation("Received {MessageType}. RollId={RollId}", nameof(DiceRollValueRequest), request.RollId);
             // either proxied request for another player or host
-            await SendLocalRollAsync(request.PlayerId ?? LocalHostPlayerId, request);
+            await SendLocalRollAsync(request.PlayerId ?? NetworkingConsts.HostPlayerId, request);
         }
 
         private void OnNotifyCombatTurnStarted(long playerId, NotifyCombatTurnStarted started)

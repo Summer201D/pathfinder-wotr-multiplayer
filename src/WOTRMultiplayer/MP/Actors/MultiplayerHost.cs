@@ -19,6 +19,7 @@ using WOTRMultiplayer.MP.Entities.Inspect;
 using WOTRMultiplayer.MP.Entities.Leveling;
 using WOTRMultiplayer.MP.Entities.Rest;
 using WOTRMultiplayer.MP.Entities.Settings;
+using WOTRMultiplayer.Networking;
 using WOTRMultiplayer.Networking.Abstractions;
 using WOTRMultiplayer.Networking.Messages.Game;
 using WOTRMultiplayer.Networking.Messages.Lobby;
@@ -77,7 +78,7 @@ namespace WOTRMultiplayer.MP.Actors
 
             Game = new NetworkGame(saveFilePath)
             {
-                LocalPlayerId = LocalHostPlayerId,
+                LocalPlayerId = NetworkingConsts.HostPlayerId,
                 Id = gameId,
                 RestBanterSeed = new System.Random().Next(int.MinValue, int.MaxValue)
             };
@@ -582,7 +583,7 @@ namespace WOTRMultiplayer.MP.Actors
                 return null;
             }
 
-            if (character.Owner.Id == LocalHostPlayerId)
+            if (character.Owner.Id == NetworkingConsts.HostPlayerId)
             {
                 Logger.LogError("Host is character owner, but tries to retrieve network roll");
                 return null;
@@ -1134,7 +1135,7 @@ namespace WOTRMultiplayer.MP.Actors
             if (Game.Combat != null
                 && !isAI
                 && character?.Owner != null
-                && character.Owner.Id != LocalHostPlayerId
+                && character.Owner.Id != NetworkingConsts.HostPlayerId
                 && character.Owner.Id != playerId)
             {
                 Logger.LogInformation("Asking another client for a roll. PlayerId={PlayerId}, RollId={RollId}, UnitId={UnitId}", character.Owner.Id, request.RollId, request.UnitId);
@@ -1285,7 +1286,7 @@ namespace WOTRMultiplayer.MP.Actors
 
         private void OnServerStarted(EndPoint endpoint)
         {
-            var hostPlayer = new NetworkPlayer(LocalHostPlayerId)
+            var hostPlayer = new NetworkPlayer(NetworkingConsts.HostPlayerId)
             {
                 Name = SettingsProvider.Settings.PlayerName
             };

@@ -131,7 +131,7 @@ namespace WOTRMultiplayer.Networking
 
             try
             {
-                handler(0, message);
+                handler(NetworkingConsts.HostPlayerId, message);
             }
             catch (Exception ex)
             {

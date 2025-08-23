@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
 using AutoMapper;
@@ -14,6 +13,7 @@ using WOTRMultiplayer.Config.Mapping;
 using WOTRMultiplayer.MP.Actors;
 using WOTRMultiplayer.MP.Entities;
 using WOTRMultiplayer.MP.Entities.Rolls.Claiming.Values;
+using WOTRMultiplayer.Networking;
 using WOTRMultiplayer.Networking.Abstractions;
 using WOTRMultiplayer.Networking.Messages.Game;
 using WOTRMultiplayer.Networking.Messages.Requests;
@@ -157,14 +157,14 @@ namespace WOTRMultiplayer.UnitTests.MP
             var handler = FakeUtils.GetNetworkReceiverHandler<DiceRollValueRequest>(_networkClient);
             var request = new DiceRollValueRequest { RollId = 1, Timeout = TimeSpan.FromDays(1), UnitId = Guid.NewGuid().ToString(), PlayerId = null };
             var getRollTask = Task.FromResult<RollValueBase>(new NetworkIntRollValue());
-            A.CallTo(() => _diceRollStorage.GetAsync<RollValueBase>(request.RollId, MultiplayerActorBase.LocalHostPlayerId, request.Timeout)).Returns(getRollTask);
+            A.CallTo(() => _diceRollStorage.GetAsync<RollValueBase>(request.RollId, NetworkingConsts.HostPlayerId, request.Timeout)).Returns(getRollTask);
 
             // Act
             handler.Invoke(1, request);
             await getRollTask;
 
             // Assert
-            A.CallTo(() => _diceRollStorage.GetAsync<RollValueBase>(request.RollId, MultiplayerActorBase.LocalHostPlayerId, request.Timeout)).MustHaveHappened();
+            A.CallTo(() => _diceRollStorage.GetAsync<RollValueBase>(request.RollId, NetworkingConsts.HostPlayerId, request.Timeout)).MustHaveHappened();
             A.CallTo(() => _networkClient.Send(A<DiceRollValueResponse>.Ignored)).MustHaveHappened();
         }
 

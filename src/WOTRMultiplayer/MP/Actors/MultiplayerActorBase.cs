@@ -24,6 +24,7 @@ using WOTRMultiplayer.MP.Entities.Rest;
 using WOTRMultiplayer.MP.Entities.Rolls.Claiming.Values;
 using WOTRMultiplayer.MP.Entities.Spells;
 using WOTRMultiplayer.MP.Entities.Vendor;
+using WOTRMultiplayer.Networking;
 using WOTRMultiplayer.Networking.Abstractions;
 using WOTRMultiplayer.Networking.Messages.Game;
 using WOTRMultiplayer.Networking.Messages.Lobby;
@@ -34,8 +35,6 @@ namespace WOTRMultiplayer.MP.Actors
 {
     public abstract class MultiplayerActorBase
     {
-        public const int LocalHostPlayerId = -1;
-
         private readonly object _actionLock = new();
 
         public bool IsInCombat => Game?.Combat != null;
@@ -351,7 +350,7 @@ namespace WOTRMultiplayer.MP.Actors
 
             var oldCharacters = Game.Characters.ToList();
             Game.Characters = [.. partyCharacters];
-            var defaultOwner = GetPlayer(LocalHostPlayerId);
+            var defaultOwner = GetPlayer(NetworkingConsts.HostPlayerId);
             foreach (var character in Game.Characters)
             {
                 var existingOwnershipConfiguration = oldCharacters.FirstOrDefault(old =>
@@ -880,7 +879,7 @@ namespace WOTRMultiplayer.MP.Actors
             {
                 if (characterOwnership.Owner == existingPlayer)
                 {
-                    characterOwnership.Owner = GetPlayer(LocalHostPlayerId);
+                    characterOwnership.Owner = GetPlayer(NetworkingConsts.HostPlayerId);
                 }
             }
 
