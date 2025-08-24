@@ -11,12 +11,37 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  get-version:
+    needs: [build]
+    timeout-minutes: 10
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version-parser.outputs.version }}
+    env:
+      INFO_PATH: ./src/WOTRMultiplayer/Info.json
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Read current version
+        id: version-parser
+        run: |
+          baseFullVersion=$(jq '.version' ${{ env.INFO_PATH }})
+          echo $baseFullVersion
+          majorMinor=$(echo "${baseFullVersion%.*}")
+          echo $majorMinor
+          releaseVersion=$(echo $majorMinor.${{ github.run_number }})"\""
+          echo $releaseVersion
+          echo "version=$releaseVersion" >> $GITHUB_OUTPUT
+
   build:
+    needs: [get-version]
     timeout-minutes: 10
     env:
       WOTR_PATH: ../../libs
       BUILD_PATH: ".\\src\\WOTRMultiplayer\\bin\\Release\\net481"
       RELEASE_OUTPUT_PATH: ".\\__releases\\WOTRMultiplayer"
+      CURRENT_VERSION: ${{needs.get-version.outputs.version}}
     runs-on: windows-latest
 
     steps:
@@ -25,8 +50,14 @@ jobs:
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 8.x
-      - name: Build/Test
+      - run: echo "$CURRENT_VERSION"
+      - name: Build
+        run: dotnet build ./src /p:AssemblyVersion=${{ env.CURRENT_VERSION }} --configuration Release
+      - name: Test
         run: dotnet test ./src --configuration Release --verbosity normal --logger trx --collect:"XPlat Code Coverage"
+      - name: Update Info.json
+        run: |
+          echo "`jq '.version=${{ env.CURRENT_VERSION }}' "${{ env.BUILD_PATH }}\Info.json"`" > "${{ env.BUILD_PATH }}\Info.json"
       - name: Prepare Release
         run: |
           xcopy /q /y "${{ env.BUILD_PATH }}\Info.json" "${{ env.RELEASE_OUTPUT_PATH }}\*"
@@ -155,34 +186,3 @@ jobs:
           artifact: test-results
           reporter: dotnet-trx
           fail-on-error: false
-
-  create-release:
-    needs: [build]
-    if: github.ref == 'refs/heads/main'
-    timeout-minutes: 10
-    runs-on: ubuntu-latest
-    env:
-      INFO_PATH: ./src/WOTRMultiplayer/Info.json
-      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      
-    steps:
-    - uses: actions/checkout@v4
-    - name: Read current version
-      run: |
-        baseFullVersion=$(jq '.version' ${{ env.INFO_PATH }})
-        echo $baseFullVersion
-        majorMinor=$(echo "${baseFullVersion%.*}")
-        echo $majorMinor
-        releaseVersion=$(echo $majorMinor.${{ github.run_number }})"\""
-        echo $releaseVersion
-        echo "CURRENT_VERSION=$releaseVersion" >> $GITHUB_ENV
-    - name: Create Release
-      run: |
-        echo ${{ env.CURRENT_VERSION }}
-        echo $CURRENT_VERSION
-    # - name: Create Release
-    #   uses: actions/create-release@v1
-    #   with:
-    #     tag_name: 'v${{ github.run_number }}'
-    #     release_name: 'Release v${{ github.run_number }}'
-    #     body: 'Description of the changes in this release'
