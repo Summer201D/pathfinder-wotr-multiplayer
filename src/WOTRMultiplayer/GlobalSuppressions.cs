@@ -6,7 +6,8 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 
-[assembly: SuppressMessage("Style", "IDE0290:Use primary constructor", Justification = "I DON'T CARE")]
+[assembly: SuppressMessage("Style", "IDE0290:Use primary constructor", Justification = "THANKS FOR ASKING")]
 
 [assembly: InternalsVisibleTo("WOTRMultiplayer.Playground.Client")]
 [assembly: InternalsVisibleTo("WOTRMultiplayer.Playground.Host")]
+[assembly: InternalsVisibleTo("WOTRMultiplayer.UnitTests")]

@@ -5,4 +5,4 @@
 
 using System.Diagnostics.CodeAnalysis;
 
-[assembly: SuppressMessage("Style", "IDE0290:Use primary constructor", Justification = "I DON'T CARE")]
+[assembly: SuppressMessage("Style", "IDE0290:Use primary constructor", Justification = "THANKS FOR ASKING")]

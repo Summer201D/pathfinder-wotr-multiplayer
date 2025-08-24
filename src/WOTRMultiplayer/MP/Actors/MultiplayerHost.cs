@@ -172,7 +172,7 @@ namespace WOTRMultiplayer.MP.Actors
 
             lock (ActionLock)
             {
-                var saveGameMessageAssigned = new NotifySaveGameAssigned { GameId = Game.Id, Content = content, IsForceLoad = false };
+                var saveGameMessageAssigned = new NotifyLobbySaveGameChanged { GameId = Game.Id, Content = content, IsForceLoad = false };
                 Logger.LogInformation("Sending save game file content to all players. Size={Size}", saveGameMessageAssigned.Content.Length);
                 _networkServer.SendAll(saveGameMessageAssigned);
                 Game.Stage = NetworkGameStage.WaitingForPlayersInitialization;
@@ -852,7 +852,7 @@ namespace WOTRMultiplayer.MP.Actors
 
                // lobby
                .On<PlayerSaveGameSyncChanged>(OnPlayerSaveGameSyncChanged)
-               .On<NotifySaveGameAssigned>(OnNotifySaveGameAssigned)
+               .On<NotifyLobbySaveGameChanged>(OnNotifyLobbySaveGameChanged)
                .On<PlayerReadyStatusChanged>(OnPlayerReadyStatusChanged)
                .On<ClientGameServerConnectionConfirmed>(OnPlayerNameResponse)
 
@@ -1014,15 +1014,15 @@ namespace WOTRMultiplayer.MP.Actors
             TryStartTurn();
         }
 
-        private void OnNotifySaveGameAssigned(long playerId, NotifySaveGameAssigned assigned)
+        private void OnNotifyLobbySaveGameChanged(long playerId, NotifyLobbySaveGameChanged notifyLobbySaveGameChanged)
         {
-            Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}, IsForceLoad={IsForceLoad}, SaveGameSize={SaveGameSize}", nameof(NotifySaveGameAssigned), playerId, assigned.IsForceLoad, assigned.Content.Length);
+            Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}, IsForceLoad={IsForceLoad}, SaveGameSize={SaveGameSize}", nameof(NotifyLobbySaveGameChanged), playerId, notifyLobbySaveGameChanged.IsForceLoad, notifyLobbySaveGameChanged.Content.Length);
 
-            OnAfterNetworkMessageHandled(playerId, assigned);
+            OnAfterNetworkMessageHandled(playerId, notifyLobbySaveGameChanged);
 
-            Game.SaveFilePath = StoreSaveFile(assigned.Content);
+            Game.SaveFilePath = StoreSaveFile(notifyLobbySaveGameChanged.Content);
 
-            if (assigned.IsForceLoad)
+            if (notifyLobbySaveGameChanged.IsForceLoad)
             {
                 ForceLoadGame();
             }

@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
 using AutoMapper;
@@ -16,6 +18,7 @@ using WOTRMultiplayer.MP.Entities.Rolls.Claiming.Values;
 using WOTRMultiplayer.Networking;
 using WOTRMultiplayer.Networking.Abstractions;
 using WOTRMultiplayer.Networking.Messages.Game;
+using WOTRMultiplayer.Networking.Messages.Lobby;
 using WOTRMultiplayer.Networking.Messages.Requests;
 using WOTRMultiplayer.UnitTests.FakeRules;
 
@@ -187,6 +190,80 @@ namespace WOTRMultiplayer.UnitTests.MP
 
             // Assert
             A.CallTo(() => _gameInteractionService.ClickUnit(A<NetworkClick>.Ignored)).MustHaveHappened();
+        }
+
+        [Test]
+        public void OnNotifyLobbySaveGameChanged_NonForceLoad_StoresSaveFileAndSendsConfirmation()
+        {
+            // Arrange
+            var parsedHost = "192.168.1.1";
+            var parsedPort = 555;
+            IPAddress.TryParse(parsedHost, out var parsedAddress);
+            var endpoint = new IPEndPoint(parsedAddress, parsedPort);
+            var address = Guid.NewGuid().ToString();
+            A.CallTo(() => _endpointParser.Parse(address)).Returns(endpoint);
+            _multiplayerClient.Connect(address);
+            _multiplayerClient.Game = new NetworkGame("whatever");
+            var handler = FakeUtils.GetNetworkReceiverHandler<NotifyLobbySaveGameChanged>(_networkClient);
+            var request = new NotifyLobbySaveGameChanged { Content = [], GameId = Guid.NewGuid().ToString(), IsForceLoad = false };
+
+            // Act
+            handler.Invoke(1, request);
+
+            // Assert
+            A.CallTo(() => _fileSystemService.WriteFile(A<string>.Ignored, request.Content)).MustHaveHappened();
+            A.CallTo(() => _networkClient.Send(A<PlayerSaveGameSyncChanged>.Ignored)).MustHaveHappened();
+        }
+
+        [Test]
+        public void OnNotifyLobbySaveGameChanged_ForceLoad_StoresSaveFileAnCallsQuickLoad()
+        {
+            // Arrange
+            var parsedHost = "192.168.1.1";
+            var parsedPort = 555;
+            IPAddress.TryParse(parsedHost, out var parsedAddress);
+            var endpoint = new IPEndPoint(parsedAddress, parsedPort);
+            var address = Guid.NewGuid().ToString();
+            A.CallTo(() => _endpointParser.Parse(address)).Returns(endpoint);
+            _multiplayerClient.Connect(address);
+            _multiplayerClient.Game = new NetworkGame("whatever");
+            var handler = FakeUtils.GetNetworkReceiverHandler<NotifyLobbySaveGameChanged>(_networkClient);
+            var request = new NotifyLobbySaveGameChanged { Content = [], GameId = Guid.NewGuid().ToString(), IsForceLoad = true };
+
+            // Act
+            handler.Invoke(1, request);
+
+            // Assert
+            A.CallTo(() => _fileSystemService.WriteFile(A<string>.Ignored, request.Content)).MustHaveHappened();
+            A.CallTo(() => _gameInteractionService.QuickLoadGame(A<string>.Ignored)).MustHaveHappened();
+            A.CallTo(() => _networkClient.Send(A<PlayerSaveGameSyncChanged>.Ignored)).MustNotHaveHappened();
+        }
+
+        [TestCaseSource(nameof(AllNetworkGameStages))]
+        public void OnNotifyGameStageChanged_GameStageIsUpdated(NetworkGameStage expected)
+        {
+            // Arrange
+            var parsedHost = "192.168.1.1";
+            var parsedPort = 555;
+            IPAddress.TryParse(parsedHost, out var parsedAddress);
+            var endpoint = new IPEndPoint(parsedAddress, parsedPort);
+            var address = Guid.NewGuid().ToString();
+            A.CallTo(() => _endpointParser.Parse(address)).Returns(endpoint);
+            _multiplayerClient.Connect(address);
+            _multiplayerClient.Game = new NetworkGame("whatever");
+            var handler = FakeUtils.GetNetworkReceiverHandler<NotifyGameStageChanged>(_networkClient);
+            var request = new NotifyGameStageChanged { Stage = expected.ToString() };
+
+            // Act
+            handler.Invoke(1, request);
+
+            // Assert
+            Assert.That(_multiplayerClient.Game.Stage, Is.EqualTo(expected));
+        }
+
+        private static IEnumerable<NetworkGameStage> AllNetworkGameStages()
+        {
+            return Enum.GetValues(typeof(NetworkGameStage)).Cast<NetworkGameStage>();
         }
     }
 }

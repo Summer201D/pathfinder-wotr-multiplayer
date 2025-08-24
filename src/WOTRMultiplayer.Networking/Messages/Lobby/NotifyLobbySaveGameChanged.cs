@@ -3,8 +3,8 @@
 namespace WOTRMultiplayer.Networking.Messages.Lobby
 {
     [ProtoContract]
-    [BeetleX.Packets.MessageType((int)MessageTypes.Lobby.NotifySaveGameAssigned)]
-    public class NotifySaveGameAssigned
+    [BeetleX.Packets.MessageType((int)MessageTypes.Lobby.NotifyLobbySaveGameChanged)]
+    public class NotifyLobbySaveGameChanged
     {
         [ProtoMember(1)]
         public byte[] Content { get; set; }

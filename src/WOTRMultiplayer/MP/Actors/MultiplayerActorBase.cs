@@ -381,7 +381,7 @@ namespace WOTRMultiplayer.MP.Actors
             ResetGameIdGenerator();
 
             Logger.LogInformation("Notifying other players to force load save game. GameId={GameId}, Path={Path}", Game.Id, savePath);
-            var message = new NotifySaveGameAssigned
+            var message = new NotifyLobbySaveGameChanged
             {
                 GameId = Game.Id,
                 Content = FileSystem.GetFile(savePath),

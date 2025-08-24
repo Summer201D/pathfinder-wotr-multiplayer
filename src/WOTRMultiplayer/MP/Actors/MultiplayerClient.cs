@@ -130,7 +130,7 @@ namespace WOTRMultiplayer.MP.Actors
 
         public void OnAfterCueShow(string dialogName, string cueName, bool hasSystemAnswer)
         {
-            Logger.LogInformation("Showing dialog Cue. DialogName={dialogName}, CueName={cueName}, HasSystemAnswer={hasSystemAnswer}", dialogName, cueName, hasSystemAnswer);
+            Logger.LogInformation("Showing dialog Cue. DialogName={DialogName}, CueName={CueName}, HasSystemAnswer={HasSystemAnswer}", dialogName, cueName, hasSystemAnswer);
             if (hasSystemAnswer)
             {
                 GameInteraction.SetDialogContinueButtonState(false);
@@ -145,7 +145,7 @@ namespace WOTRMultiplayer.MP.Actors
 
         public bool OnBeforeSelectDialogAnswer(string dialogName, string cueName, string answerName, bool isExitAnswer, string manualUnitSelectionId)
         {
-            Logger.LogInformation("Select Dialog Answer. DialogName={dialogName}, CueName={cueName}, Answer={answer}, IsExitAnswer={isExitAnswer}, ManualUnitSelectionId={unitId}", dialogName, cueName, answerName, isExitAnswer, manualUnitSelectionId);
+            Logger.LogInformation("Select Dialog Answer. DialogName={DialogName}, CueName={CueName}, Answer={Answer}, IsExitAnswer={IsExitAnswer}, ManualUnitSelectionId={ManualUnitSelectionId}", dialogName, cueName, answerName, isExitAnswer, manualUnitSelectionId);
             if (Game.Dialog == null)
             {
                 Logger.LogError("Current dialog is null");
@@ -155,7 +155,7 @@ namespace WOTRMultiplayer.MP.Actors
             if (!string.Equals(Game.Dialog.Name, dialogName, StringComparison.OrdinalIgnoreCase)
                 || !string.Equals(Game.Dialog.CurrentCueName, cueName, StringComparison.OrdinalIgnoreCase))
             {
-                Logger.LogError("Dialog answer mismatch. ExpectedDialogName={expectedDialogName}, ExpectedCueName={expectedCueName}, ActualDialogName={actualDialogName}, ActualCueName={actualCueName}", Game.Dialog.Name, Game.Dialog.CurrentCueName, dialogName, cueName);
+                Logger.LogError("Dialog answer mismatch. ExpectedDialogName={ExpectedDialogName}, ExpectedCueName={ExpectedCueName}, ActualDialogName={ActualDialogName}, ActualCueName={ActualCueName}", Game.Dialog.Name, Game.Dialog.CurrentCueName, dialogName, cueName);
                 return false;
             }
 
@@ -163,13 +163,13 @@ namespace WOTRMultiplayer.MP.Actors
             // so it means we have a response from host and shouldn't skip default game logic
             if (Game.Dialog.Answer != null && string.Equals(answerName, Game.Dialog.Answer.AnswerName, StringComparison.OrdinalIgnoreCase))
             {
-                Logger.LogInformation("Proceeding with dialog answer without extra steps. DialogName={dialogName}, CueName={cueName}, AnswerName={answerName}", dialogName, cueName, answerName);
+                Logger.LogInformation("Proceeding with dialog answer without extra steps. DialogName={DialogName}, CueName={CueName}, AnswerName={AnswerName}", dialogName, cueName, answerName);
                 Game.Dialog.IsSelectingAnswer = false;
                 return true;
             }
 
             var message = new DialogCueAnswerSuggested { DialogName = dialogName, CueName = cueName, AnswerName = answerName };
-            Logger.LogInformation("Sending dialog answer suggestion. DialogName={dialogName}, CueName={cueName}, AnswerName={answerName}", message.DialogName, message.CueName, message.AnswerName);
+            Logger.LogInformation("Sending dialog answer suggestion. DialogName={DialogName}, CueName={CueName}, AnswerName={AnswerName}", message.DialogName, message.CueName, message.AnswerName);
             Send(message);
             Game.Dialog.IsSelectingAnswer = true;
             return false;
@@ -179,11 +179,11 @@ namespace WOTRMultiplayer.MP.Actors
         {
             if (string.Equals(Game.Dialog?.Name, dialogName, StringComparison.OrdinalIgnoreCase))
             {
-                Logger.LogInformation("Dialog has been initiated, proceeding with default game logic.  DialogName={dialogName}", dialogName);
+                Logger.LogInformation("Dialog has been initiated, proceeding with default game logic.  DialogName={DialogName}", dialogName);
                 return true;
             }
 
-            Logger.LogInformation("Sending dialog request to host. DialogueName={dialogName}", dialogName);
+            Logger.LogInformation("Sending dialog request to host. DialogueName={DialogueName}", dialogName);
             var message = new ClientDialogStartRequested
             {
                 DialogName = dialogName,
@@ -350,7 +350,7 @@ namespace WOTRMultiplayer.MP.Actors
             if (isFirstTime)
             {
                 var message = new ClientGameModeTypeEnded { TypeId = type.Index };
-                Logger.LogInformation("Sending {MessageType}. TypeId={typeId}", nameof(ClientGameModeTypeEnded), message.TypeId);
+                Logger.LogInformation("Sending {MessageType}. TypeId={TypeId}", nameof(ClientGameModeTypeEnded), message.TypeId);
                 Send(message);
 
                 if (type == GameModeType.Rest && Game.ForcedPause != null)
@@ -400,7 +400,7 @@ namespace WOTRMultiplayer.MP.Actors
                .On<DiceRollValueRequest>(OnDiceRollValueRequest)
 
                // lobby
-               .On<NotifySaveGameAssigned>(OnNotifySaveGameAssigned)
+               .On<NotifyLobbySaveGameChanged>(OnNotifyLobbySaveGameChanged)
                .On<NotifyPlayerDisconnected>(OnNotifyPlayerDisconnected)
                .On<GameServerConnectionSucceeded>(OnGameServerConnectionSucceeded)
                .On<PlayerReadyStatusChanged>(OnPlayerReadyStatusChanged)
@@ -468,7 +468,7 @@ namespace WOTRMultiplayer.MP.Actors
 
         private void OnNotifyInvalidCombatTurnStarted(long playerId, NotifyInvalidCombatTurnStarted started)
         {
-            Logger.LogInformation("Received {MessageType}. UnitId={unitId}", nameof(NotifyInvalidCombatTurnStarted), started.UnitId);
+            Logger.LogInformation("Received {MessageType}. UnitId={UnitId}", nameof(NotifyInvalidCombatTurnStarted), started.UnitId);
             GameInteraction.AddCombatText(UIStringConsts.GameNotifications.CombatLog.ClientIsFixingCombaTurnOrderDesync);
             Game.Combat.Turn = null;
             GameInteraction.StartTurnBasedCombatTurn(started.UnitId);
@@ -491,7 +491,7 @@ namespace WOTRMultiplayer.MP.Actors
 
         private void OnNotifyCampingStateChanged(long playerId, NotifyCampingStateChanged changed)
         {
-            Logger.LogInformation("Received {MessageType}. CookingBlueprintRecipeId={cookingId}, PotionBlueprintRecipeId={potionId}, ScrollBlueprintRecipeId={ScrollId}, IterationsCount={iterations}, AutotuneIterations={autotuneIterations}", nameof(NotifyCampingStateChanged),
+            Logger.LogInformation("Received {MessageType}. CookingBlueprintRecipeId={CookingBlueprintRecipeId}, PotionBlueprintRecipeId={PotionBlueprintRecipeId}, ScrollBlueprintRecipeId={ScrollBlueprintRecipeId}, IterationsCount={IterationsCount}, AutotuneIterations={AutotuneIterations}", nameof(NotifyCampingStateChanged),
                 changed.State.CookingBlueprintRecipeId, changed.State.PotionBlueprintRecipeId, changed.State.ScrollBlueprintRecipeId, changed.State.IterationsCount, changed.State.AutotuneIterationsStatus);
 
             var state = Mapper.Map<NetworkCampingState>(changed.State);
@@ -500,34 +500,34 @@ namespace WOTRMultiplayer.MP.Actors
 
         private void OnNotifyCampingUseHealingSpellsChanged(long playerId, NotifyCampingUseHealingSpellsChanged changed)
         {
-            Logger.LogInformation("Received {MessageType}. IsOn={isOn}", nameof(NotifyCampingUseHealingSpellsChanged), changed.IsOn);
+            Logger.LogInformation("Received {MessageType}. IsOn={IsOn}", nameof(NotifyCampingUseHealingSpellsChanged), changed.IsOn);
             GameInteraction.SetCampingUseHealingSpells(changed.IsOn);
         }
 
         private void OnNotifySpawnCampPlace(long playerId, NotifySpawnCampPlace place)
         {
-            Logger.LogInformation("Received {MessageType}. Position={position}", nameof(NotifySpawnCampPlace), place.Position);
+            Logger.LogInformation("Received {MessageType}. Position={Position}", nameof(NotifySpawnCampPlace), place.Position);
             var position = Mapper.Map<NetworkVector3>(place.Position);
             GameInteraction.SpawnCampPlace(position);
         }
 
         private void OnNotifyPlayerDisconnected(long playerId, NotifyPlayerDisconnected disconnected)
         {
-            Logger.LogInformation("Received {MessageType}. UnitId={unitID}, MapObjectId={round}", nameof(NotifyPlayerDisconnected), disconnected.PlayerId);
+            Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}", nameof(NotifyPlayerDisconnected), disconnected.PlayerId);
             var player = CleanupPlayer(disconnected.PlayerId);
             ShowPlayerDisconnectedMessage(player);
         }
 
         private void OnNotifyInspectionKnowledgeCheckRolled(long playerId, NotifyInspectionKnowledgeCheckRolled rolled)
         {
-            Logger.LogInformation("Received {MessageType}. TargetUnitId={targetUnitId}, InitiatorUnitId={initiatorId}, StatType={statType}, DC={dc}", nameof(NotifyInspectionKnowledgeCheckRolled), rolled.Check.TargetUnitId, rolled.Check.InitiatorUnitId, rolled.Check.StatType, rolled.Check.DC);
+            Logger.LogInformation("Received {MessageType}. TargetUnitId={TargetUnitId}, InitiatorUnitId={InitiatorUnitId}, StatType={StatType}, DC={DC}", nameof(NotifyInspectionKnowledgeCheckRolled), rolled.Check.TargetUnitId, rolled.Check.InitiatorUnitId, rolled.Check.StatType, rolled.Check.DC);
             var check = Mapper.Map<NetworkInspectionKnowledgeCheck>(rolled.Check);
             GameInteraction.ApplyInspectionKnowledgeCheck(check);
         }
 
         private void OnNotifyPerceptionCheckRolled(long playerId, NotifyPerceptionCheckRolled rolled)
         {
-            Logger.LogInformation("Received {MessageType}. UnitId={unitID}, MapObjectId={round}", nameof(NotifyPerceptionCheckRolled), rolled.Check.UnitId, rolled.Check.MapObject.Id);
+            Logger.LogInformation("Received {MessageType}. UnitId={UnitId}, MapObjectId={MapObjectId}", nameof(NotifyPerceptionCheckRolled), rolled.Check.UnitId, rolled.Check.MapObject.Id);
 
             var check = Mapper.Map<NetworkPerceptionCheck>(rolled.Check);
             GameInteraction.ApplyPerceptionCheck(check);
@@ -760,21 +760,22 @@ namespace WOTRMultiplayer.MP.Actors
             Game.Stage = (NetworkGameStage)Enum.Parse(typeof(NetworkGameStage), changed.Stage, true);
         }
 
-        private void OnNotifySaveGameAssigned(long playerId, NotifySaveGameAssigned assigned)
+        private void OnNotifyLobbySaveGameChanged(long playerId, NotifyLobbySaveGameChanged notifyLobbySaveGameChanged)
         {
-            Logger.LogInformation("Received {MessageType}. GameStatus={GameStatus}, Size={Size}, IsForceLoad={IsForceLoad}", nameof(NotifySaveGameAssigned), Game.Stage, assigned.Content.Length, assigned.IsForceLoad);
+            Logger.LogInformation("Received {MessageType}. GameStatus={GameStatus}, Size={Size}, IsForceLoad={IsForceLoad}", nameof(NotifyLobbySaveGameChanged), Game.Stage, notifyLobbySaveGameChanged.Content.Length, notifyLobbySaveGameChanged.IsForceLoad);
 
-            Game.SaveFilePath = StoreSaveFile(assigned.Content);
-            Game.Id = assigned.GameId;
+            Game.SaveFilePath = StoreSaveFile(notifyLobbySaveGameChanged.Content);
+            Game.Id = notifyLobbySaveGameChanged.GameId;
 
-            if (assigned.IsForceLoad)
+            if (notifyLobbySaveGameChanged.IsForceLoad)
             {
                 ForceLoadGame();
                 return;
             }
 
             Logger.LogInformation("Game is ready to be started. SavePath={SavePath}", Game.SaveFilePath);
-            Send(new PlayerSaveGameSyncChanged { IsSynced = true });
+            var confirmationMessage = new PlayerSaveGameSyncChanged { IsSynced = true };
+            Send(confirmationMessage);
         }
 
         private void OnPlayerReadyStatusChanged(long playerId, PlayerReadyStatusChanged readyStatusChanged)

@@ -17,7 +17,7 @@
             NotifyGameStarted,
             NotifyPlayerDisconnected,
             NotifyPlayersChanged,
-            NotifySaveGameAssigned,
+            NotifyLobbySaveGameChanged,
             PlayerSaveGameSyncChanged,
             PlayerReadyStatusChanged
         }
