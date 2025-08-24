@@ -1,13 +1,13 @@
 ﻿{
-  "AssemblyName": "WOTRMultiplayer.dll",
-  "Author": "fl01",
-  "DisplayName": "Multiplayer",
-  "EntryMethod": "WOTRMultiplayer.Main.Load",
-  "Id": "WOTRMultiplayer",
-  "HomePage": "",
-  "Repository": "https://github.com/fl01/pathfinder-wotr-multiplayer",
-  "Requirements": [],
-  "GameVersion": "2.7.0x",
-  "ManagerVersion": "0.23.0",
-  "Version": "0.1.0"
+  "assemblyName": "WOTRMultiplayer.dll",
+  "author": "fl01",
+  "displayName": "Multiplayer",
+  "entryMethod": "WOTRMultiplayer.Main.Load",
+  "id": "WOTRMultiplayer",
+  "homePage": "",
+  "repository": "https://github.com/fl01/pathfinder-wotr-multiplayer",
+  "requirements": [],
+  "gameVersion": "2.7.0x",
+  "managerVersion": "0.23.0",
+  "version": "0.1.0"
 }

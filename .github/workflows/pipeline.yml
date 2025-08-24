@@ -155,3 +155,27 @@ jobs:
           artifact: test-results
           reporter: dotnet-trx
           fail-on-error: false
+
+  create-release:
+    needs: [build]
+    if: github.ref == 'refs/heads/main'
+    timeout-minutes: 10
+    runs-on: ubuntu-latest
+    env:
+      INFO_PATH: ./src/WOTRMultiplayer/Info.json
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      
+    steps:
+    - name: Read current version
+      run: |
+        echo "CURRENT_VERSION=$(jq '.version' ${{ env.INFO_PATH }} | grep '^\d\.\d.')" >> "$GITHUB_ENV"
+    - name: Create Release
+      run: |
+        echo ${{ env.CURRENT_VERSION }}
+        echo $CURRENT_VERSION
+    # - name: Create Release
+    #   uses: actions/create-release@v1
+    #   with:
+    #     tag_name: 'v${{ github.run_number }}'
+    #     release_name: 'Release v${{ github.run_number }}'
+    #     body: 'Description of the changes in this release'
