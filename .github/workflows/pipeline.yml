@@ -49,14 +49,14 @@ jobs:
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 8.x
-      - run: echo "$CURRENT_VERSION"
+      - run: echo $CURRENT_VERSION
       - name: Build
         run: dotnet build ./src /p:AssemblyVersion=${{ env.CURRENT_VERSION }} --configuration Release
-      - name: Test
-        run: dotnet test ./src --configuration Release --verbosity normal --logger trx --collect:"XPlat Code Coverage"
+      - name: Run unit tests
+        run: dotnet test ./src --configuration Release --no-build --verbosity normal --logger trx --collect:"XPlat Code Coverage"
       - name: Update Info.json
         run: |
-          echo "`jq '.version=${{ env.CURRENT_VERSION }}' "${{ env.BUILD_PATH }}\Info.json"`" > "${{ env.BUILD_PATH }}\Info.json"
+          echo $(jq '.version=${{ env.CURRENT_VERSION }}' "${{ env.BUILD_PATH }}\Info.json") > "${{ env.BUILD_PATH }}\Info.json"
       - name: Prepare Release
         run: |
           xcopy /q /y "${{ env.BUILD_PATH }}\Info.json" "${{ env.RELEASE_OUTPUT_PATH }}\*"
