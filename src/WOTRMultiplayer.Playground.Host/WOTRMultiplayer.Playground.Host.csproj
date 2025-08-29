@@ -8,7 +8,7 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\WOTR.Multiplayer.Playground.Core\WOTR.Multiplayer.Playground.Core.csproj" />
+		<ProjectReference Include="..\WOTRMultiplayer.Playground.Core\WOTRMultiplayer.Playground.Core.csproj" />
 		<ProjectReference Include="..\WOTRMultiplayer\WOTRMultiplayer.csproj" />
 	</ItemGroup>
 

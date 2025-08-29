@@ -17,7 +17,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WOTRMultiplayer.UnitTests",
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WOTRMultiplayer.Networking.UnitTests", "WOTRMultiplayer.Networking.UnitTests\WOTRMultiplayer.Networking.UnitTests.csproj", "{EDEBB9C9-6CBF-4BC1-81E0-F3A5139CD34C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WOTR.Multiplayer.Playground.Core", "WOTR.Multiplayer.Playground.Core\WOTR.Multiplayer.Playground.Core.csproj", "{08BB7B1E-4775-4EC1-902E-BB38F4AF471E}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WOTRMultiplayer.Playground.Core", "WOTRMultiplayer.Playground.Core\WOTRMultiplayer.Playground.Core.csproj", "{08BB7B1E-4775-4EC1-902E-BB38F4AF471E}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Playground", "Playground", "{02EA681E-C7D8-13C7-8484-4AC65E1B71E8}"
 EndProject
