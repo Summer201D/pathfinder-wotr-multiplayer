@@ -8,12 +8,14 @@ using System.Threading.Tasks;
 using AutoMapper;
 using Kingmaker.GameModes;
 using Microsoft.Extensions.Logging;
+using UniRx;
 using WOTRMultiplayer.Abstractions.GameInteraction;
 using WOTRMultiplayer.Abstractions.IO;
 using WOTRMultiplayer.Abstractions.MP;
 using WOTRMultiplayer.Abstractions.Random;
 using WOTRMultiplayer.MP.Entities;
 using WOTRMultiplayer.MP.Entities.Abilities;
+using WOTRMultiplayer.MP.Entities.ActionBar;
 using WOTRMultiplayer.MP.Entities.Combat;
 using WOTRMultiplayer.MP.Entities.Equipment;
 using WOTRMultiplayer.MP.Entities.Leveling;
@@ -788,6 +790,41 @@ namespace WOTRMultiplayer.MP.Actors
             Send(message);
         }
 
+        public void OnMoveActionBarSlot(NetworkActionBarSlot sourceActionBarSlot, NetworkActionBarSlot targetActionBarSlot)
+        {
+            if (!IsControlledByLocalPlayer(sourceActionBarSlot.UnitId))
+            {
+                return;
+            }
+
+            var message = new NotifyActionBarSlotMoved
+            {
+                SourceActionBarSlot = Mapper.Map<Networking.Messages.Contracts.NetworkActionBarSlot>(sourceActionBarSlot),
+                TargetActionBarSlot = Mapper.Map<Networking.Messages.Contracts.NetworkActionBarSlot>(targetActionBarSlot),
+            };
+
+            Logger.LogInformation("Sending {MessageType}. UnitId={UnitId}, SourceSlotIndex={SourceSlotIndex}, SourceSlotAbilityId={SourceSlotAbilityId}, SourceSlotActivatableAbilityId={SourceSlotActivatableAbilityId}, SourceSlotItemId={SourceSlotItemId}, TargetSlotIndex={TargetSlotIndex}, TargetSlotAbilityId={TargetSlotAbilityId}, TargetSlotActivatableAbilityId={TargetSlotActivatableAbilityId}, TargetSlotItemId={TargetSlotItemId}",
+                nameof(NotifyActionBarSlotMoved), sourceActionBarSlot.UnitId, sourceActionBarSlot.Index, sourceActionBarSlot.Ability?.Id, sourceActionBarSlot.ActivatableAbility?.Id, sourceActionBarSlot.Item?.UniqueId, targetActionBarSlot.Index, targetActionBarSlot.Ability?.Id, targetActionBarSlot.ActivatableAbility?.Id, targetActionBarSlot.Item?.UniqueId);
+
+            Send(message);
+        }
+
+        public void OnClearActionBarSlot(NetworkActionBarSlot actionBarSlot)
+        {
+            if (!IsControlledByLocalPlayer(actionBarSlot.UnitId))
+            {
+                return;
+            }
+
+            var message = new NotifyActionBarSlotCleared
+            {
+                ActionBarSlot = Mapper.Map<Networking.Messages.Contracts.NetworkActionBarSlot>(actionBarSlot)
+            };
+            Logger.LogInformation("Sending {MessageType}. SlotIndex={SlotIndex}, UnitId={UnitId}", nameof(NetworkActionBarSlot), message.ActionBarSlot.Index, message.ActionBarSlot.UnitId);
+
+            Send(message);
+        }
+
         protected abstract bool OnStartGameModeInternal(GameModeType type);
 
         protected abstract bool OnStopGameModeInternal(GameModeType type);
@@ -1164,7 +1201,34 @@ namespace WOTRMultiplayer.MP.Actors
                 .On<NotifyMapObjectClicked>(OnNotifyMapObjectClicked)
                 // movement
                 .On<NotifyCharacterMove>(OnNotifyCharacterMove)
+                // action bar
+                .On<NotifyActionBarSlotCleared>(OnNotifyActionBarSlotCleared)
+                .On<NotifyActionBarSlotMoved>(OnNotifyActionBarSlotMoved)
                 ;
+        }
+
+        private void OnNotifyActionBarSlotMoved(long playerId, NotifyActionBarSlotMoved actionBarSlotMoved)
+        {
+            Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}, UnitId={UnitId}, SourceSlotIndex={SourceSlotIndex}, SourceSlotAbilityId={SourceSlotAbilityId}, SourceSlotActivatableAbilityId={SourceSlotActivatableAbilityId}, SourceSlotItemId={SourceSlotItemId}, TargetSlotIndex={TargetSlotIndex}, TargetSlotAbilityId={TargetSlotAbilityId}, TargetSlotActivatableAbilityId={TargetSlotActivatableAbilityId}, TargetSlotItemId={TargetSlotItemId}",
+                nameof(NotifyActionBarSlotMoved), playerId, actionBarSlotMoved.TargetActionBarSlot.UnitId, actionBarSlotMoved.SourceActionBarSlot.Index, actionBarSlotMoved.SourceActionBarSlot.Ability?.Id, actionBarSlotMoved.SourceActionBarSlot.ActivatableAbility?.Id, actionBarSlotMoved.SourceActionBarSlot.Item?.UniqueId, actionBarSlotMoved.TargetActionBarSlot.Index, actionBarSlotMoved.TargetActionBarSlot.Ability?.Id, actionBarSlotMoved.TargetActionBarSlot.ActivatableAbility?.Id, actionBarSlotMoved.TargetActionBarSlot.Item?.UniqueId);
+
+            var sourceActionBarSlot = Mapper.Map<NetworkActionBarSlot>(actionBarSlotMoved.SourceActionBarSlot);
+            var targetActionBarSlot = Mapper.Map<NetworkActionBarSlot>(actionBarSlotMoved.TargetActionBarSlot);
+
+            GameInteraction.MoveActionBarSlots(sourceActionBarSlot, targetActionBarSlot);
+
+            OnAfterNetworkMessageHandled(playerId, actionBarSlotMoved);
+        }
+
+        private void OnNotifyActionBarSlotCleared(long playerId, NotifyActionBarSlotCleared actionBarSlotCleared)
+        {
+            Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}, UnitId={UnitId}, SlotIndex={SlotIndex}", nameof(NotifyActionBarSlotCleared), playerId, actionBarSlotCleared.ActionBarSlot.UnitId, actionBarSlotCleared.ActionBarSlot.Index);
+
+            var actionBarSlot = Mapper.Map<NetworkActionBarSlot>(actionBarSlotCleared.ActionBarSlot);
+
+            GameInteraction.ClearActionBarSlot(actionBarSlot);
+
+            OnAfterNetworkMessageHandled(playerId, actionBarSlotCleared);
         }
 
         private void OnNotifyCharacterMove(long playerId, NotifyCharacterMove characterMove)

@@ -86,6 +86,8 @@
             NotifyVendorItemTransferred,
             NotifyVendorWindowClosed,
             PlayerCombatTurnEnded,
+            NotifyActionBarSlotCleared,
+            NotifyActionBarSlotMoved,
         }
 
         public enum Request

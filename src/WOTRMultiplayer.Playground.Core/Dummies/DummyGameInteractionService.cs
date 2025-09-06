@@ -10,6 +10,7 @@ using WOTRMultiplayer.Abstractions.GameInteraction;
 using WOTRMultiplayer.GameInteraction.Contexts;
 using WOTRMultiplayer.MP.Entities;
 using WOTRMultiplayer.MP.Entities.Abilities;
+using WOTRMultiplayer.MP.Entities.ActionBar;
 using WOTRMultiplayer.MP.Entities.Dialogs;
 using WOTRMultiplayer.MP.Entities.Equipment;
 using WOTRMultiplayer.MP.Entities.Inspect;
@@ -57,6 +58,10 @@ namespace WOTR.Multiplayer.Playground.Core.Dummies
         }
 
         public void ApplyPerceptionCheck(NetworkPerceptionCheck networkPerceptionCheck)
+        {
+        }
+
+        public void ClearActionBarSlot(NetworkActionBarSlot actionBarSlot)
         {
         }
 
@@ -190,6 +195,10 @@ namespace WOTR.Multiplayer.Playground.Core.Dummies
         }
 
         public void MemorizeSpell(NetworkSpellSlot networkSpellSlot)
+        {
+        }
+
+        public void MoveActionBarSlots(NetworkActionBarSlot sourceActionBarSlot, NetworkActionBarSlot targetActionBarSlot)
         {
         }
 

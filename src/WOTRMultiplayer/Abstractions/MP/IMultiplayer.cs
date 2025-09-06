@@ -6,6 +6,7 @@ using WOTRMultiplayer.Abstractions.UI;
 using WOTRMultiplayer.GameInteraction.Contexts;
 using WOTRMultiplayer.MP.Entities;
 using WOTRMultiplayer.MP.Entities.Abilities;
+using WOTRMultiplayer.MP.Entities.ActionBar;
 using WOTRMultiplayer.MP.Entities.Combat;
 using WOTRMultiplayer.MP.Entities.Equipment;
 using WOTRMultiplayer.MP.Entities.Inspect;
@@ -162,5 +163,9 @@ namespace WOTRMultiplayer.Abstractions.MP
         void OnLevelingIncreaseAbilityScore(NetworkLevelingAbilityScore networkLevelingAbilityScore);
 
         void OnLevelingDecreaseAbilityScore(NetworkLevelingAbilityScore networkLevelingAbilityScore);
+
+        void OnMoveActionBarSlot(NetworkActionBarSlot sourceActionBarSlot, NetworkActionBarSlot targetActionBarSlot);
+
+        void OnClearActionBarSlot(NetworkActionBarSlot actionBarSlot);
     }
 }

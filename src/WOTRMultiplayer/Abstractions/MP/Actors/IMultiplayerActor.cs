@@ -4,6 +4,7 @@ using Kingmaker.Controllers.Rest;
 using Kingmaker.GameModes;
 using WOTRMultiplayer.MP.Entities;
 using WOTRMultiplayer.MP.Entities.Abilities;
+using WOTRMultiplayer.MP.Entities.ActionBar;
 using WOTRMultiplayer.MP.Entities.Combat;
 using WOTRMultiplayer.MP.Entities.Equipment;
 using WOTRMultiplayer.MP.Entities.Leveling;
@@ -148,5 +149,8 @@ namespace WOTRMultiplayer.Abstractions.MP.Actors
 
         void OnLevelingIncreaseAbilityScore(NetworkLevelingAbilityScore abilityScore);
         void OnLevelingDecreaseAbilityScore(NetworkLevelingAbilityScore abilityScore);
+
+        void OnMoveActionBarSlot(NetworkActionBarSlot sourceActionBarSlot, NetworkActionBarSlot targetActionBarSlot);
+        void OnClearActionBarSlot(NetworkActionBarSlot actionBarSlot);
     }
 }

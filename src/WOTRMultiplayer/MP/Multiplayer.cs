@@ -13,6 +13,7 @@ using WOTRMultiplayer.Abstractions.UI.Windows;
 using WOTRMultiplayer.GameInteraction.Contexts;
 using WOTRMultiplayer.MP.Entities;
 using WOTRMultiplayer.MP.Entities.Abilities;
+using WOTRMultiplayer.MP.Entities.ActionBar;
 using WOTRMultiplayer.MP.Entities.Combat;
 using WOTRMultiplayer.MP.Entities.Equipment;
 using WOTRMultiplayer.MP.Entities.Inspect;
@@ -1202,6 +1203,26 @@ namespace WOTRMultiplayer.MP
             }
 
             _multiplayerActorAccessor.Current.OnLevelingCompleted();
+        }
+
+        public void OnMoveActionBarSlot(NetworkActionBarSlot sourceActionBarSlot, NetworkActionBarSlot targetActionBarSlot)
+        {
+            if (_multiplayerActorAccessor.Current == null)
+            {
+                return;
+            }
+
+            _multiplayerActorAccessor.Current.OnMoveActionBarSlot(sourceActionBarSlot, targetActionBarSlot);
+        }
+
+        public void OnClearActionBarSlot(NetworkActionBarSlot actionBarSlot)
+        {
+            if (_multiplayerActorAccessor.Current == null)
+            {
+                return;
+            }
+
+            _multiplayerActorAccessor.Current.OnClearActionBarSlot(actionBarSlot);
         }
 
         private void ShowEscMenuMultiplayerLobby()

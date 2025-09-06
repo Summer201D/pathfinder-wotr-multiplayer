@@ -55,6 +55,7 @@ using Kingmaker.UI.MVVM._VM.Party;
 using Kingmaker.UI.MVVM._VM.Rest;
 using Kingmaker.UI.MVVM._VM.ServiceWindows.Spellbook.MemorizingPanel;
 using Kingmaker.UI.MVVM._VM.Vendor;
+using Kingmaker.UI.UnitSettings;
 using Kingmaker.UnitLogic;
 using Kingmaker.UnitLogic.Abilities;
 using Kingmaker.UnitLogic.ActivatableAbilities;
@@ -74,6 +75,7 @@ using WOTRMultiplayer.Extensions;
 using WOTRMultiplayer.GameInteraction.Contexts;
 using WOTRMultiplayer.MP.Entities;
 using WOTRMultiplayer.MP.Entities.Abilities;
+using WOTRMultiplayer.MP.Entities.ActionBar;
 using WOTRMultiplayer.MP.Entities.Combat;
 using WOTRMultiplayer.MP.Entities.Dialogs;
 using WOTRMultiplayer.MP.Entities.Equipment;
@@ -760,7 +762,7 @@ namespace WOTRMultiplayer.GameInteraction
             try
             {
                 var caster = GetUnitEntity(networkActivatableAbility.CasterId);
-                var ability = FindActivatableAbility(caster, networkActivatableAbility.Id);
+                var ability = FindActivatableAbility(caster, networkActivatableAbility);
                 if (ability == null)
                 {
                     _logger.LogError("Unable to find activatable ability. UnitId={UnitId}, AbilityId={AbilityId}", caster.UniqueId, networkActivatableAbility.Id);
@@ -1948,6 +1950,131 @@ namespace WOTRMultiplayer.GameInteraction
             });
         }
 
+        public void MoveActionBarSlots(NetworkActionBarSlot sourceActionBarSlot, NetworkActionBarSlot targetActionBarSlot)
+        {
+            _mainThreadAccessor.Post(() =>
+            {
+                try
+                {
+                    var unit = GetUnitEntity(sourceActionBarSlot.UnitId);
+                    if (unit == null)
+                    {
+                        _logger.LogError("Unable to move action bar slot for missing unit. UnitId={UnitId}", sourceActionBarSlot.UnitId);
+                        return;
+                    }
+
+                    if (targetActionBarSlot.Index == -1)
+                    {
+                        return;
+                    }
+
+                    if (sourceActionBarSlot.Index == -1)
+                    {
+                        // adding from spells/abilities/items panel
+                        var slot = LoadActionBarSlot(unit, sourceActionBarSlot);
+                        if (slot == null)
+                        {
+                            _logger.LogError("Unable to load action bar slot from existing spells/abilities/items. UnitId={UnitId}, SourceSlotIndex={SourceSlotIndex}", sourceActionBarSlot.Index);
+                            return;
+                        }
+
+                        unit.UISettings.SetSlot(slot, targetActionBarSlot.Index);
+                        return;
+                    }
+
+                    var sourceSlot = unit.UISettings.GetSlot(sourceActionBarSlot.Index, unit);
+                    var targetSlot = unit.UISettings.GetSlot(targetActionBarSlot.Index, unit);
+                    unit.UISettings.SetSlot(sourceSlot, targetActionBarSlot.Index);
+                    unit.UISettings.SetSlot(targetSlot, sourceActionBarSlot.Index);
+
+                    _logger.LogInformation("Action bar slots have been updated for unit. UnitId={UnitId}", targetActionBarSlot.UnitId);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Unable to move action bar slots");
+                    throw;
+                }
+            });
+        }
+
+        private MechanicActionBarSlot LoadActionBarSlot(UnitEntityData unit, NetworkActionBarSlot networkActionBarSlot)
+        {
+            if (networkActionBarSlot.ActivatableAbility != null)
+            {
+                var activatableAbility = FindActivatableAbility(unit, networkActionBarSlot.ActivatableAbility);
+                if (activatableAbility == null)
+                {
+                    _logger.LogError("Unable to find activatable ability slot content. UnitId={UnitId}, AbilityId={AbilityId}, AbilityName={AbilityName}", unit.UniqueId, networkActionBarSlot.ActivatableAbility.Id, networkActionBarSlot.ActivatableAbility.Name);
+                    return null;
+                }
+
+                var activatableAbilitySlot = new MechanicActionBarSlotActivableAbility { ActivatableAbility = activatableAbility, Unit = unit };
+                return activatableAbilitySlot;
+            }
+
+            if (networkActionBarSlot.Item != null)
+            {
+                var itemSlot = unit.Body.QuickSlots.FirstOrDefault(s => IsSameItem(s.Item, networkActionBarSlot.Item));
+                if (itemSlot == null)
+                {
+                    _logger.LogError("Unable to find item slot content. UnitId={UnitId}, ItemId={ItemId}, ItemName={ItemName}", unit.UniqueId, networkActionBarSlot.Item.UniqueId, networkActionBarSlot.Item.Name);
+                    return null;
+                }
+
+                var itemActionBarSlot = new MechanicActionBarSlotItem { Item = itemSlot.Item, Unit = unit };
+                return itemActionBarSlot;
+            }
+
+            var ability = FindAbility(unit, networkActionBarSlot.Ability);
+            if (ability == null)
+            {
+                _logger.LogError("Unable to find ability/spell slot content. UnitId={UnitId}, AbilityId={AbilityId}, AbilityName={AbilityName}", unit.UniqueId, networkActionBarSlot.Ability.Id, networkActionBarSlot.Ability.Name);
+                return null;
+            }
+
+            if (ability.Spellbook == null)
+            {
+                var abilitySpellSlot = new MechanicActionBarSlotAbility { Ability = ability, Unit = unit };
+                return abilitySpellSlot;
+            }
+
+            if (ability.SpellLevel == 0)
+            {
+                if (!string.IsNullOrEmpty(networkActionBarSlot.Ability.ConvertedFromId))
+                {
+                    var convertedSpellSlot = new MechanicActionBarSlotSpontaneusConvertedSpell { Spell = ability, Unit = unit };
+                    return convertedSpellSlot;
+                }
+
+                var cantripSpellSlot = new MechanicActionBarSlotSpontaneousSpell(ability) { Unit = unit };
+                return cantripSpellSlot;
+            }
+
+            var spellSlot = new MechanicActionBarSlotMemorizedSpell(ability.SpellSlot) { Unit = unit };
+            return spellSlot;
+        }
+
+        public void ClearActionBarSlot(NetworkActionBarSlot actionBarSlot)
+        {
+            _mainThreadAccessor.Post(() =>
+            {
+                var unit = GetUnitEntity(actionBarSlot.UnitId);
+                if (unit == null)
+                {
+                    _logger.LogError("Unable to clear action bar slot for missing unit. UnitId={UnitId}", actionBarSlot.UnitId);
+                    return;
+                }
+
+                if (actionBarSlot.Index == -1)
+                {
+                    return;
+                }
+
+                var emptySlot = new MechanicActionBarSlotEmpty();
+                unit.UISettings.SetSlot(emptySlot, actionBarSlot.Index);
+            });
+        }
+
         private CharGenSkillAllocatorPCView GetLevelingSkillAllocatorView(StatType statType)
         {
             if (CharGenView == null)
@@ -2284,9 +2411,11 @@ namespace WOTRMultiplayer.GameInteraction
             };
         }
 
-        private ActivatableAbility FindActivatableAbility(UnitEntityData caster, string id)
+        private ActivatableAbility FindActivatableAbility(UnitEntityData caster, NetworkActivatableAbility activatableAbility)
         {
-            var ability = caster.ActivatableAbilities.Enumerable.FirstOrDefault(a => string.Equals(a.UniqueId, id, StringComparison.OrdinalIgnoreCase));
+            var ability = caster.ActivatableAbilities.Enumerable.FirstOrDefault(a => string.Equals(a.UniqueId, activatableAbility.Id, StringComparison.OrdinalIgnoreCase)
+                || string.Equals(a.NameForAcronym, activatableAbility.Name, StringComparison.OrdinalIgnoreCase));
+
             return ability;
         }
 

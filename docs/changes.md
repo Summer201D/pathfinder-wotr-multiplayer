@@ -93,6 +93,8 @@ Automatically passed on both host/client
 ## Combat
 Turn-Based only. You can't even enable Tactical Combat within MP session
 
+Switching character control after a turn has already started isn't supported. Some calculations break when you do that, and re-running them isn't really in scope right now.
+
 ### Players
 
 Combat start is synced for all players. Every unit's position gets synced at the start of each turn, and turn order comes from the host - so no one can start a turn out of order.
@@ -106,6 +108,9 @@ Combat flow:
 AI actions don't have any randomness, so their turns play out the same for everyone in multiplayer. AI rolls are handled by the host when out of combat, or by the `Turn Owner` during combat.
 
 In rare cases, AI might attack a different target or make an extra attack after moving - usually because of position desync or low FPS. There's a basic AI sync option that forces AI to attack the same target, but you can turn it off in 'Multiplayer Settings' if it causes issues
+
+## Action Bars
+Action bars stay synced. Any changes you make are instantly reflected for everyone in the multiplayer session.
 
 ## Inventory
 Inventory item positions are not synced, so you can sort or split items however you want - but keep in mind that loading a save will reset everything to the save owner version.
@@ -150,9 +155,6 @@ You can either ignore it (if the outcome is more or less the same for everyone) 
 ## Not implemented
 ### Abilities
 Only basic usage of abilities is available. Any extra conditions like metamagic will not work properly as those modifications will not be applied for remote players
-
-### Action Bars
-Action bars are not synced yet
 
 ### Mythic leveling
 would work the same as regular leveling

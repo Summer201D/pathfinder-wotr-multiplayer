@@ -39,6 +39,7 @@ namespace WOTRMultiplayer.HarmonyPatches.Abilities
             var ability = new NetworkActivatableAbility
             {
                 Id = __instance.UniqueId,
+                Name = __instance.NameForAcronym,
                 CasterId = __instance.Owner.Unit.UniqueId,
                 TargetId = target?.UniqueId,
                 IsActive = __instance.m_IsOn
