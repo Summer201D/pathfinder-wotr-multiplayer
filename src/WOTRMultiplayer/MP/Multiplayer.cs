@@ -1235,6 +1235,16 @@ namespace WOTRMultiplayer.MP
             return canToggle;
         }
 
+        public void OnAutoPausedByTrapDetection()
+        {
+            if (_multiplayerActorAccessor.Current == null)
+            {
+                return;
+            }
+
+            _multiplayerActorAccessor.Current.OnAutoPausedByTrapDetection();
+        }
+
         private void ShowEscMenuMultiplayerLobby()
         {
             _logger.LogInformation("Show lobby window");

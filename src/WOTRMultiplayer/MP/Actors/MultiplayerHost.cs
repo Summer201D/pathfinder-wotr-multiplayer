@@ -569,6 +569,16 @@ namespace WOTRMultiplayer.MP.Actors
             return true;
         }
 
+        public void OnAutoPausedByTrapDetection()
+        {
+            lock (ActionLock)
+            {
+                EnsureForcePaused(UIStringConsts.GameNotifications.ForcedPauseReasons.TrapDetected);
+                var playerId = GetLocalPlayerId();
+                Game.ForcedPause.ReadyPlayers.Add(playerId);
+            }
+        }
+
         protected override bool OnStartGameModeInternal(GameModeType type)
         {
             var playerId = GetLocalPlayerId();
@@ -747,7 +757,21 @@ namespace WOTRMultiplayer.MP.Actors
                .On<DialogCueAnswerSuggested>(OnDialogCueAnswerSuggested)
                .On<ClientDialogStartRequested>(OnClientDialogStartRequested)
                .On<CueWitnessed>(OnCueWitnessed)
+
+               // pause
+               .On<ClientGameAutoPaused>(OnClientGameAutoPaused)
                ;
+        }
+
+        private void OnClientGameAutoPaused(long playerId, ClientGameAutoPaused clientGameAutoPaused)
+        {
+            Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}, UnitId={UnitId}", nameof(ClientGameAutoPaused), playerId);
+            lock (ActionLock)
+            {
+                // single autopause case doesn't require clientGameAutoPaused.Reason for now
+                EnsureForcePaused(UIStringConsts.GameNotifications.ForcedPauseReasons.TrapDetected);
+                Game.ForcedPause.ReadyPlayers.Add(playerId);
+            }
         }
 
         private void OnClientCharacterLevelingRequested(long playerId, ClientCharacterLevelingRequested requested)

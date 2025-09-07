@@ -86,6 +86,7 @@
                 public const string AreaLoading = "Please wait for other players to finish loading the area";
                 public const string RandomEncounterLoading = "Please wait for other players to finish loading the random encounter";
                 public const string WaitingForPlayersToPause = "Can't unpause until everyone is paused";
+                public const string TrapDetected = "Waiting for everyone to detect trap";
             }
 
             public class CombatLog

@@ -336,6 +336,13 @@ namespace WOTRMultiplayer.MP.Actors
             return false;
         }
 
+        public void OnAutoPausedByTrapDetection()
+        {
+            var message = new ClientGameAutoPaused();
+            Send(message);
+            EnsureForcePaused(null);
+        }
+
         public bool OnStopGameMode(GameModeType type)
         {
             var playerId = GetLocalPlayerId();

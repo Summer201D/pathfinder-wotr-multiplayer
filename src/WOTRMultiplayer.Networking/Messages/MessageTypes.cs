@@ -89,6 +89,7 @@
             NotifyActionBarSlotCleared,
             NotifyActionBarSlotMoved,
             NotifyGamePauseStarted,
+            ClientGameAutoPaused,
         }
 
         public enum Request
