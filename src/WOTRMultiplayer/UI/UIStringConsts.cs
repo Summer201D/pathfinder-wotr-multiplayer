@@ -79,10 +79,13 @@
             public const string InvalidRemoteDamageRoll = "Network damage contains an invalid number of damage values which guarantees desync in the game";
             public const string FailedToAcquireRemoteRoll = "Failed to acquire {0} roll from remote player which guarantees desync in the game.";
 
+            public const string TryingToUnpauseAsAClient = "Pause can be removed by host only";
+
             public class ForcedPauseReasons
             {
                 public const string AreaLoading = "Please wait for other players to finish loading the area";
                 public const string RandomEncounterLoading = "Please wait for other players to finish loading the random encounter";
+                public const string WaitingForPlayersToPause = "Can't unpause until everyone is paused";
             }
 
             public class CombatLog

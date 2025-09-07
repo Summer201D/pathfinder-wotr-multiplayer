@@ -324,22 +324,19 @@ namespace WOTRMultiplayer.MP.Actors
             return false;
         }
 
-        protected override bool OnStartGameModeInternal(GameModeType type)
+        public bool CanTogglePause(bool isPaused)
         {
-            var playerId = GetLocalPlayerId();
-            var isFirstTime = RegisterGameMode(type, playerId);
-            if (!isFirstTime)
+            if (Game.ForcedPause != null && isPaused)
             {
-                return true;
+                var warningText = string.IsNullOrEmpty(Game.ForcedPause.Reason) ? UIStringConsts.GameNotifications.TryingToUnpauseAsAClient : Game.ForcedPause.Reason;
+                GameInteraction.ShowWarningNotification(warningText);
             }
 
-            var message = new ClientGameModeTypeStarted { TypeId = type.Index };
-            Logger.LogInformation("Sending {MessageType}. TypeId={typeId}", nameof(ClientGameModeTypeStarted), message.TypeId);
-            Send(message);
-            return true;
+            // client has no control over manual pausing at all
+            return false;
         }
 
-        protected override bool OnStopGameModeInternal(GameModeType type)
+        public bool OnStopGameMode(GameModeType type)
         {
             var playerId = GetLocalPlayerId();
             var isFirstTime = UnregisterGameMode(type, playerId);
@@ -355,6 +352,21 @@ namespace WOTRMultiplayer.MP.Actors
                 }
             }
 
+            return true;
+        }
+
+        protected override bool OnStartGameModeInternal(GameModeType type)
+        {
+            var playerId = GetLocalPlayerId();
+            var isFirstTime = RegisterGameMode(type, playerId);
+            if (!isFirstTime)
+            {
+                return true;
+            }
+
+            var message = new ClientGameModeTypeStarted { TypeId = type.Index };
+            Logger.LogInformation("Sending {MessageType}. TypeId={typeId}", nameof(ClientGameModeTypeStarted), message.TypeId);
+            Send(message);
             return true;
         }
 
@@ -407,7 +419,8 @@ namespace WOTRMultiplayer.MP.Actors
                .On<NotifyGameStarted>(OnNotifyGameStarted)
 
                // pausing
-               .On<NotifyForcedPauseEnded>(OnNotifyForcedPauseEnded)
+               .On<NotifyGamePauseStarted>(OnNotifyGamePauseStarted)
+               .On<NotifyGamePauseEnded>(OnNotifyGamePauseEnded)
 
                // area transitioning
                .On<NotifyPartyLeaveArea>(OnNotifyPartyLeaveArea)
@@ -441,6 +454,13 @@ namespace WOTRMultiplayer.MP.Actors
                .On<NotifyPerceptionCheckRolled>(OnNotifyPerceptionCheckRolled)
                .On<NotifyInspectionKnowledgeCheckRolled>(OnNotifyInspectionKnowledgeCheckRolled)
                ;
+        }
+
+        private void OnNotifyGamePauseStarted(long playerId, NotifyGamePauseStarted pauseStarted)
+        {
+            Logger.LogInformation("Received {MessageType}", nameof(NotifyGamePauseStarted));
+            EnsureForcePaused(null);
+            GameInteraction.Pause(true);
         }
 
         private void OnNotifyCharacterLevelingStarted(long playerId, NotifyCharacterLevelingStarted started)
@@ -705,9 +725,9 @@ namespace WOTRMultiplayer.MP.Actors
             GameInteraction.LeaveArea(area.AreaExitId);
         }
 
-        private void OnNotifyForcedPauseEnded(long playerId, NotifyForcedPauseEnded changed)
+        private void OnNotifyGamePauseEnded(long playerId, NotifyGamePauseEnded changed)
         {
-            Logger.LogInformation("Received {MessageType}", nameof(NotifyForcedPauseEnded));
+            Logger.LogInformation("Received {MessageType}", nameof(NotifyGamePauseEnded));
             Game.ForcedPause = null;
             GameInteraction.Pause(false);
         }

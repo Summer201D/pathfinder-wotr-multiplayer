@@ -53,7 +53,7 @@
             NotifyDialogStarted,
             NotifyDropItem,
             NotifyEquipmentSlotChanged,
-            NotifyForcedPauseEnded,
+            NotifyGamePauseEnded,
             NotifyGroundClicked,
             NotifyInspectionKnowledgeCheckRolled,
             NotifyInvalidCombatTurnStarted,
@@ -88,6 +88,7 @@
             PlayerCombatTurnEnded,
             NotifyActionBarSlotCleared,
             NotifyActionBarSlotMoved,
+            NotifyGamePauseStarted,
         }
 
         public enum Request

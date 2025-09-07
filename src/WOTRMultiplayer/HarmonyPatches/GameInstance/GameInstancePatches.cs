@@ -1,4 +1,7 @@
-﻿using HarmonyLib;
+﻿using System.Collections.Generic;
+using System.Reflection;
+using System.Reflection.Emit;
+using HarmonyLib;
 using Kingmaker;
 using Kingmaker.EntitySystem.Persistence;
 using Kingmaker.GameModes;
@@ -51,6 +54,42 @@ namespace WOTRMultiplayer.HarmonyPatches.GameInstance
 
             var allowedToRun = Main.Multiplayer.OnStopGameMode(type);
             return allowedToRun;
+        }
+
+        [HarmonyPatch(typeof(Game), nameof(Game.PauseBind))]
+        [HarmonyTranspiler]
+        public static IEnumerable<CodeInstruction> Game_PauseBind_Transpiler(IEnumerable<CodeInstruction> instructions)
+        {
+            var target = PatchesUtils.GetTranspilerTarget(MethodBase.GetCurrentMethod());
+            var replaceWith = AccessTools.Method(typeof(GameInstancePatches), nameof(GameInstancePatches.TogglePause));
+            var lookFor = AccessTools.PropertyGetter(typeof(Game), nameof(Game.IsPaused));
+            var matcher = new CodeMatcher(instructions);
+            var match = matcher.SearchForward(x => x.Calls(lookFor));
+            if (match.IsInvalid)
+            {
+                Main.GetLogger<GameInstancePatches>().LogError("Transpiler has not been applied. Target={Target}", target);
+                return instructions;
+            }
+
+            match = match.Advance(-2).RemoveInstructions(6);
+            var newInstructions = new List<CodeInstruction>()
+            {
+                new (OpCodes.Ldarg_0),
+                new (OpCodes.Call, replaceWith),
+            };
+            match.Insert(newInstructions);
+            Main.GetLogger<GameInstancePatches>().LogInformation("Transpiler has been applied. Target={Target}", target);
+            return matcher.Instructions();
+        }
+
+        private static void TogglePause(Game game)
+        {
+            var isPaused = game.IsPaused;
+            var canTogglePause = Main.Multiplayer.CanTogglePause(isPaused);
+            if (!Main.Multiplayer.IsActive || canTogglePause)
+            {
+                game.IsPaused = !game.IsPaused;
+            }
         }
     }
 }

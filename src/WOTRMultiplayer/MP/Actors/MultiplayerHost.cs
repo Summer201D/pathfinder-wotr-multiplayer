@@ -518,44 +518,40 @@ namespace WOTRMultiplayer.MP.Actors
             }
         }
 
-        private void UpdateStartRestButtonAfterResults(long player)
+        public bool CanTogglePause(bool isPaused)
         {
             lock (ActionLock)
             {
-                Game.PlayersFinishedRest.Add(player);
-                var readyPlayersCount = Game.PlayersFinishedRest.Count;
-                UpdateStartRestButton(readyPlayersCount);
+                if (isPaused)
+                {
+                    var isUnpaused = TryEndForcedPause();
+                    if (isUnpaused)
+                    {
+                        return true;
+                    }
+
+                    GameInteraction.ShowWarningNotification(Game.ForcedPause.Reason);
+                    return false;
+                }
+
+                if (Game.ForcedPause == null)
+                {
+                    // removalDelay doesn't matter since returning true from this method will end pause immediately
+                    EnsureForcePaused(UIStringConsts.GameNotifications.ForcedPauseReasons.WaitingForPlayersToPause, removalDelay: null);
+                    var localPlayer = GetLocalPlayerId();
+                    Game.ForcedPause.ReadyPlayers.Add(localPlayer);
+
+                    var pauseStarted = new NotifyGamePauseStarted();
+                    Logger.LogInformation("Sending {MessageType}", nameof(NotifyGamePauseStarted));
+                    Send(pauseStarted);
+                    return true;
+                }
+
+                return false;
             }
         }
 
-        private void UpdateStartRestButton()
-        {
-            Game.PlayersInGameMode.TryGetValue(GameModeType.Rest, out var readyPlayers);
-            var readyPlayersCount = (readyPlayers ?? []).Count;
-            UpdateStartRestButton(readyPlayersCount);
-        }
-
-        private void UpdateStartRestButton(int readyPlayersCount)
-        {
-            var totalPlayersCount = Game.Players.Count;
-            var isInteractable = readyPlayersCount >= totalPlayersCount;
-            GameInteraction.SetStartRestButtonState(isInteractable, readyPlayersCount, totalPlayersCount);
-        }
-
-        protected override bool OnStartGameModeInternal(GameModeType type)
-        {
-            var playerId = GetLocalPlayerId();
-            RegisterGameMode(type, playerId);
-
-            if (type == GameModeType.Rest)
-            {
-                UpdateStartRestButton();
-            }
-
-            return true;
-        }
-
-        protected override bool OnStopGameModeInternal(GameModeType type)
+        public bool OnStopGameMode(GameModeType type)
         {
             var playerId = GetLocalPlayerId();
             var isFirstTime = UnregisterGameMode(type, playerId);
@@ -568,6 +564,19 @@ namespace WOTRMultiplayer.MP.Actors
                     GameInteraction.Pause(true);
                     TryEndForcedPause();
                 }
+            }
+
+            return true;
+        }
+
+        protected override bool OnStartGameModeInternal(GameModeType type)
+        {
+            var playerId = GetLocalPlayerId();
+            RegisterGameMode(type, playerId);
+
+            if (type == GameModeType.Rest)
+            {
+                UpdateStartRestButton();
             }
 
             return true;
@@ -689,150 +698,10 @@ namespace WOTRMultiplayer.MP.Actors
             GameInteraction.StartTurnBasedCombatTurn(Game.Combat.Turn.UnitId);
         }
 
-        private void AddCueWitness(string cueName, long playerId)
+        protected override void OnAfterNetworkMessageHandled(long playerId, object message)
         {
-            if (Game.Dialog == null)
-            {
-                Logger.LogError("Trying to add witness to null dialog. CueName={CueName}, PlayerId={PlayerId}", cueName, playerId);
-                return;
-            }
-
-            Game.Dialog.CueViews.AddOrUpdate(cueName, (key) => new HashSet<long>([playerId]), (key, existing) =>
-            {
-                existing.Add(playerId);
-                return existing;
-            });
-
-            Logger.LogInformation("Cue witness has been added. CueName={CueName}, PlayerId={PlayerId}", cueName, playerId);
-        }
-
-        private List<NetworkPlayer> GetPlayersWhoHaveNotSeenCueYet(string cueName)
-        {
-            if (Game.Dialog == null)
-            {
-                Logger.LogWarning("Trying to get cue players, but dialog is null. CueName={CueName}", cueName);
-                return [];
-            }
-
-            if (!Game.Dialog.CueViews.TryGetValue(cueName, out var cueViews))
-            {
-                Logger.LogWarning("Specified cue doesn't exist in the views history. CueName={CueName}", cueName);
-                return [];
-            }
-
-            var players = Game.Players.Where(p => !cueViews.Contains(p.Id)).ToList();
-            return players;
-        }
-
-        private void TryEnableDialogContinueButton()
-        {
-            if (Game.Dialog == null)
-            {
-                Logger.LogWarning("Unable to enable continue button because current dialog is null");
-                return;
-            }
-
-            var currentCue = Game.Dialog.CurrentCueName;
-            if (string.IsNullOrEmpty(currentCue))
-            {
-                Logger.LogWarning("Current CueName is not set for the dialog");
-                return;
-            }
-
-            var missingPlayers = GetPlayersWhoHaveNotSeenCueYet(currentCue);
-            if (missingPlayers.Count > 0)
-            {
-                Logger.LogInformation("Cannot proceed with dialog yet. CurrentCue={CurrentCue}, MissingPlayers={MissingPlayers}", currentCue, string.Join(";", missingPlayers.Select(x => x.Name)));
-                return;
-            }
-
-            Logger.LogInformation("All players have witnessed current cue. CueName={CueName}", currentCue);
-            GameInteraction.SetDialogContinueButtonState(true);
-        }
-
-        private void TryEndForcedPause()
-        {
-            try
-            {
-                Logger.LogInformation("Checking if forced pause could be removed. PauseIsNull={PauseIsNull}", Game.ForcedPause == null);
-
-                if (Game.ForcedPause == null)
-                {
-                    return;
-                }
-
-                lock (ActionLock)
-                {
-                    var allReady = Game.ForcedPause.ReadyPlayers.Count >= Game.Players.Count;
-                    if (!allReady)
-                    {
-                        Logger.LogInformation("Not everyone is ready, forced pause will remain. ReadyPlayers={ReadyPlayers}", Game.ForcedPause.ReadyPlayers);
-                        return;
-                    }
-
-                    Game.Stage = NetworkGameStage.Playing;
-                    var removalDelay = Game.ForcedPause.RemovalDelay;
-                    var delay = removalDelay.HasValue ? Task.Delay(removalDelay.Value) : Task.CompletedTask;
-                    Game.ForcedPause = null;
-
-                    Logger.LogInformation("Forced pause will be lifted soon. Delay={Delay}", removalDelay.GetValueOrDefault());
-                    delay.ContinueWith(x =>
-                    {
-                        GameInteraction.Pause(false);
-                        var message = new NotifyForcedPauseEnded();
-                        _networkServer.SendAll(message);
-                    });
-                }
-            }
-            catch (Exception ex)
-            {
-                Logger.LogError(ex, "Unable to end forced pause");
-                throw;
-            }
-        }
-
-        private void OnClientAreaLoaded(long playerId, ClientAreaLoaded loaded)
-        {
-            Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}", nameof(ClientAreaLoaded), playerId);
-            lock (ActionLock)
-            {
-                EnsureForcePaused(UIStringConsts.GameNotifications.ForcedPauseReasons.AreaLoading);
-                Game.ForcedPause.ReadyPlayers.Add(playerId);
-            }
-
-            TryEndForcedPause();
-        }
-
-        private void TryStartGame()
-        {
-            var canStart = false;
-
-            lock (ActionLock)
-            {
-                canStart = Game.Players.All(p => p.IsSyncedToStartGame);
-            }
-
-            if (canStart)
-            {
-                Logger.LogInformation("Starting game");
-                _networkServer.SendAll(new NotifyGameStarted());
-                InvokeOnStartGame();
-            }
-        }
-
-        private NotifyCharactersOwnerChanged CreateNotifyCharactersOwnerChanged()
-        {
-            var charactersOwnerChanged = new NotifyCharactersOwnerChanged
-            {
-                Owners = [.. Game.Characters.Select((character, index) => new Networking.Messages.Contracts.NetworkCharacterOwner { CharacterIndex = index, PlayerId = character.Owner.Id })]
-            };
-
-            return charactersOwnerChanged;
-        }
-
-        private NetworkPlayer GetHost()
-        {
-            return Game.Players.First(f => f.Id == Game.LocalPlayerId);
+            Logger.LogInformation("Resending message. ExceptPlayerId={ExceptPlayerId}, MessageType={MessageType}", playerId, message.GetType().Name);
+            _networkServer.SendAllExcept(playerId, message);
         }
 
         protected override void SetupNetworkMessageHandlers()
@@ -879,12 +748,6 @@ namespace WOTRMultiplayer.MP.Actors
                .On<ClientDialogStartRequested>(OnClientDialogStartRequested)
                .On<CueWitnessed>(OnCueWitnessed)
                ;
-        }
-
-        protected override void OnAfterNetworkMessageHandled(long playerId, object message)
-        {
-            Logger.LogInformation("Resending message. ExceptPlayerId={ExceptPlayerId}, MessageType={MessageType}", playerId, message.GetType().Name);
-            _networkServer.SendAllExcept(playerId, message);
         }
 
         private void OnClientCharacterLevelingRequested(long playerId, ClientCharacterLevelingRequested requested)
@@ -996,6 +859,13 @@ namespace WOTRMultiplayer.MP.Actors
             if (gameMode == GameModeType.Rest)
             {
                 UpdateStartRestButton();
+            }
+            else if (gameMode == GameModeType.Pause && Game.ForcedPause != null)
+            {
+                lock (ActionLock)
+                {
+                    Game.ForcedPause.ReadyPlayers.Add(playerId);
+                }
             }
         }
 
@@ -1343,6 +1213,178 @@ namespace WOTRMultiplayer.MP.Actors
                 Characters = Mapper.Map<List<Networking.Messages.Contracts.NetworkCharacterOwnership>>(Game.Characters)
             };
             return message;
+        }
+
+        private void AddCueWitness(string cueName, long playerId)
+        {
+            if (Game.Dialog == null)
+            {
+                Logger.LogError("Trying to add witness to null dialog. CueName={CueName}, PlayerId={PlayerId}", cueName, playerId);
+                return;
+            }
+
+            Game.Dialog.CueViews.AddOrUpdate(cueName, (key) => new HashSet<long>([playerId]), (key, existing) =>
+            {
+                existing.Add(playerId);
+                return existing;
+            });
+
+            Logger.LogInformation("Cue witness has been added. CueName={CueName}, PlayerId={PlayerId}", cueName, playerId);
+        }
+
+        private List<NetworkPlayer> GetPlayersWhoHaveNotSeenCueYet(string cueName)
+        {
+            if (Game.Dialog == null)
+            {
+                Logger.LogWarning("Trying to get cue players, but dialog is null. CueName={CueName}", cueName);
+                return [];
+            }
+
+            if (!Game.Dialog.CueViews.TryGetValue(cueName, out var cueViews))
+            {
+                Logger.LogWarning("Specified cue doesn't exist in the views history. CueName={CueName}", cueName);
+                return [];
+            }
+
+            var players = Game.Players.Where(p => !cueViews.Contains(p.Id)).ToList();
+            return players;
+        }
+
+        private void TryEnableDialogContinueButton()
+        {
+            if (Game.Dialog == null)
+            {
+                Logger.LogWarning("Unable to enable continue button because current dialog is null");
+                return;
+            }
+
+            var currentCue = Game.Dialog.CurrentCueName;
+            if (string.IsNullOrEmpty(currentCue))
+            {
+                Logger.LogWarning("Current CueName is not set for the dialog");
+                return;
+            }
+
+            var missingPlayers = GetPlayersWhoHaveNotSeenCueYet(currentCue);
+            if (missingPlayers.Count > 0)
+            {
+                Logger.LogInformation("Cannot proceed with dialog yet. CurrentCue={CurrentCue}, MissingPlayers={MissingPlayers}", currentCue, string.Join(";", missingPlayers.Select(x => x.Name)));
+                return;
+            }
+
+            Logger.LogInformation("All players have witnessed current cue. CueName={CueName}", currentCue);
+            GameInteraction.SetDialogContinueButtonState(true);
+        }
+
+        private bool TryEndForcedPause()
+        {
+            try
+            {
+                Logger.LogInformation("Checking if forced pause could be removed. PauseIsNull={PauseIsNull}", Game.ForcedPause == null);
+
+                if (Game.ForcedPause == null)
+                {
+                    return false;
+                }
+
+                lock (ActionLock)
+                {
+                    var allReady = Game.ForcedPause.ReadyPlayers.Count >= Game.Players.Count;
+                    if (!allReady)
+                    {
+                        Logger.LogInformation("Not everyone is ready, forced pause will remain. ReadyPlayers={ReadyPlayers}", Game.ForcedPause.ReadyPlayers);
+                        return false;
+                    }
+
+                    Game.Stage = NetworkGameStage.Playing;
+                    var removalDelay = Game.ForcedPause.RemovalDelay;
+                    var delay = removalDelay.HasValue ? Task.Delay(removalDelay.Value) : Task.CompletedTask;
+                    Game.ForcedPause = null;
+
+                    Logger.LogInformation("Forced pause will be lifted soon. Delay={Delay}", removalDelay.GetValueOrDefault());
+                    delay.ContinueWith(x =>
+                    {
+                        GameInteraction.Pause(false);
+                        var message = new NotifyGamePauseEnded();
+                        _networkServer.SendAll(message);
+                    });
+                    return true;
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, "Unable to end forced pause");
+                throw;
+            }
+        }
+
+        private void OnClientAreaLoaded(long playerId, ClientAreaLoaded loaded)
+        {
+            Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}", nameof(ClientAreaLoaded), playerId);
+            lock (ActionLock)
+            {
+                EnsureForcePaused(UIStringConsts.GameNotifications.ForcedPauseReasons.AreaLoading);
+                Game.ForcedPause.ReadyPlayers.Add(playerId);
+            }
+
+            TryEndForcedPause();
+        }
+
+        private void TryStartGame()
+        {
+            var canStart = false;
+
+            lock (ActionLock)
+            {
+                canStart = Game.Players.All(p => p.IsSyncedToStartGame);
+            }
+
+            if (canStart)
+            {
+                Logger.LogInformation("Starting game");
+                _networkServer.SendAll(new NotifyGameStarted());
+                InvokeOnStartGame();
+            }
+        }
+
+        private NotifyCharactersOwnerChanged CreateNotifyCharactersOwnerChanged()
+        {
+            var charactersOwnerChanged = new NotifyCharactersOwnerChanged
+            {
+                Owners = [.. Game.Characters.Select((character, index) => new Networking.Messages.Contracts.NetworkCharacterOwner { CharacterIndex = index, PlayerId = character.Owner.Id })]
+            };
+
+            return charactersOwnerChanged;
+        }
+
+        private NetworkPlayer GetHost()
+        {
+            return Game.Players.First(f => f.Id == Game.LocalPlayerId);
+        }
+
+        private void UpdateStartRestButtonAfterResults(long player)
+        {
+            lock (ActionLock)
+            {
+                Game.PlayersFinishedRest.Add(player);
+                var readyPlayersCount = Game.PlayersFinishedRest.Count;
+                UpdateStartRestButton(readyPlayersCount);
+            }
+        }
+
+        private void UpdateStartRestButton()
+        {
+            Game.PlayersInGameMode.TryGetValue(GameModeType.Rest, out var readyPlayers);
+            var readyPlayersCount = (readyPlayers ?? []).Count;
+            UpdateStartRestButton(readyPlayersCount);
+        }
+
+
+        private void UpdateStartRestButton(int readyPlayersCount)
+        {
+            var totalPlayersCount = Game.Players.Count;
+            var isInteractable = readyPlayersCount >= totalPlayersCount;
+            GameInteraction.SetStartRestButtonState(isInteractable, readyPlayersCount, totalPlayersCount);
         }
     }
 }

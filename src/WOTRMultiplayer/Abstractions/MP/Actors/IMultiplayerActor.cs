@@ -152,5 +152,7 @@ namespace WOTRMultiplayer.Abstractions.MP.Actors
 
         void OnMoveActionBarSlot(NetworkActionBarSlot sourceActionBarSlot, NetworkActionBarSlot targetActionBarSlot);
         void OnClearActionBarSlot(NetworkActionBarSlot actionBarSlot);
+
+        bool CanTogglePause(bool isPaused);
     }
 }

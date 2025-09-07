@@ -380,6 +380,7 @@ namespace WOTRMultiplayer.MP.Actors
             Game.SaveFilePath = savePath;
             Game.Id = gameId;
 
+            Game.ForcedPause = null;
             ResetGameIdGenerator();
 
             Logger.LogInformation("Notifying other players to force load save game. GameId={GameId}, Path={Path}", Game.Id, savePath);
@@ -517,20 +518,6 @@ namespace WOTRMultiplayer.MP.Actors
             }
 
             var canRun = OnStartGameModeInternal(type);
-            return canRun;
-        }
-
-        public bool OnStopGameMode(GameModeType type)
-        {
-            Logger.LogInformation("Trying to stop GameModeType. Mode={Mode}", type.Name);
-
-            if (type == GameModeType.Pause && Game.ForcedPause != null)
-            {
-                GameInteraction.ShowWarningNotification(Game.ForcedPause.Reason);
-                return false;
-            }
-
-            var canRun = OnStopGameModeInternal(type);
             return canRun;
         }
 
@@ -827,8 +814,6 @@ namespace WOTRMultiplayer.MP.Actors
 
         protected abstract bool OnStartGameModeInternal(GameModeType type);
 
-        protected abstract bool OnStopGameModeInternal(GameModeType type);
-
         protected void EnsureForcePaused(string reason, TimeSpan? removalDelay)
         {
             if (Game.ForcedPause == null)
@@ -836,7 +821,7 @@ namespace WOTRMultiplayer.MP.Actors
                 Game.ForcedPause = new NetworkForcedPause
                 {
                     Reason = reason,
-                    RemovalDelay = removalDelay
+                    RemovalDelay = removalDelay,
                 };
                 Logger.LogInformation("Forced pause has been initialized. Delay={Delay}", removalDelay);
             }
@@ -979,6 +964,7 @@ namespace WOTRMultiplayer.MP.Actors
         {
             Logger.LogInformation("Force loading save game. SavePath={SavePath}", Game.SaveFilePath);
             Game.Id = GameInteraction.QuickLoadGame(Game.SaveFilePath);
+            Game.ForcedPause = null;
             ResetGameIdGenerator();
         }
 

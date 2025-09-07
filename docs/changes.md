@@ -44,13 +44,21 @@ Some options can't be changed mid-game - you will see those grayed out in the se
 
 ## Pausing
 
-Opening the Esc menu or a fullscreen window won't pause the game anymore.
+Opening the Esc menu or a fullscreen window will not pause the game anymore. You can freely change settings/expore inventory/etc without affecting anyone.
 
-Sometimes the game will hit a `forced pause` that you can't unpause yourself, but it'll go away automatically once everyone is synced up again.
+### Manual Pause
+Only the host can pause the game (with spacebar or whatever key they have set). Once paused, it can only be unpaused if everyone else has paused too.
+
+### Forced Pause
+
+Sometimes the game will hit a `forced pause` that you can't unpause yourself (neither as a host nor a client), but it will go away automatically once everyone is synced up again.
 
 Forced pause occurrences:
 - loading area
 - loading random REST encounter
+
+### Autopause
+The only time autopause kicks in is for trap detection, and it follows the same rules as manual pause
 
 ## Overtips
 The name of the player controlling a character shows up after the character's name. For example: "Seelah" → "Seelah (player-name)"

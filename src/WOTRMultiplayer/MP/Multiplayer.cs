@@ -1224,6 +1224,16 @@ namespace WOTRMultiplayer.MP
 
             _multiplayerActorAccessor.Current.OnClearActionBarSlot(actionBarSlot);
         }
+        public bool CanTogglePause(bool isPaused)
+        {
+            if (_multiplayerActorAccessor.Current == null)
+            {
+                return true;
+            }
+
+            var canToggle = _multiplayerActorAccessor.Current.CanTogglePause(isPaused);
+            return canToggle;
+        }
 
         private void ShowEscMenuMultiplayerLobby()
         {
