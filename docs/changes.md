@@ -61,7 +61,7 @@ Forced pause occurrences:
 The only time autopause kicks in is for trap detection, and it follows the same rules as manual pause
 
 ## Overtips
-The name of the player controlling a character shows up after the character's name. For example: "Seelah" → "Seelah (player-name)"
+The name of the player controlling a character shows up after the character's name. For example: "Seelah" -> "Seelah (player-name)"
 
 ## Dialogs
 
