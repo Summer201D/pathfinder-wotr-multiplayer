@@ -42,8 +42,6 @@ namespace WOTRMultiplayer.Abstractions.MP.Actors
 
         void Reset();
 
-        Action<string> OnStartGame { get; set; }
-
         Action<NetworkGameConnectivity> OnConnected { get; set; }
 
         Action<List<NetworkPlayer>> OnPlayersChanged { get; set; }

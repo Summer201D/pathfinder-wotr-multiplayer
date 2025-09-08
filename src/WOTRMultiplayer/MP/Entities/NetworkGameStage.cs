@@ -4,8 +4,7 @@
     {
         None,
         Lobby,
-        Initializing,
-        WaitingForPlayersInitialization,
+        SyncingSaveGame,
         Loading,
         Playing
     }

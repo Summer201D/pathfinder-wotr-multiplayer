@@ -212,7 +212,7 @@ namespace WOTRMultiplayer.UnitTests.MP
 
             // Assert
             A.CallTo(() => _fileSystemService.WriteFile(A<string>.Ignored, request.Content)).MustHaveHappened();
-            A.CallTo(() => _networkClient.Send(A<PlayerSaveGameSyncChanged>.Ignored)).MustHaveHappened();
+            A.CallTo(() => _networkClient.Send(A<ClientSaveGameSyncChanged>.Ignored)).MustHaveHappened();
         }
 
         [Test]
@@ -236,34 +236,7 @@ namespace WOTRMultiplayer.UnitTests.MP
             // Assert
             A.CallTo(() => _fileSystemService.WriteFile(A<string>.Ignored, request.Content)).MustHaveHappened();
             A.CallTo(() => _gameInteractionService.QuickLoadGame(A<string>.Ignored)).MustHaveHappened();
-            A.CallTo(() => _networkClient.Send(A<PlayerSaveGameSyncChanged>.Ignored)).MustNotHaveHappened();
-        }
-
-        [TestCaseSource(nameof(AllNetworkGameStages))]
-        public void OnNotifyGameStageChanged_GameStageIsUpdated(NetworkGameStage expected)
-        {
-            // Arrange
-            var parsedHost = "192.168.1.1";
-            var parsedPort = 555;
-            IPAddress.TryParse(parsedHost, out var parsedAddress);
-            var endpoint = new IPEndPoint(parsedAddress, parsedPort);
-            var address = Guid.NewGuid().ToString();
-            A.CallTo(() => _endpointParser.Parse(address)).Returns(endpoint);
-            _multiplayerClient.Connect(address);
-            _multiplayerClient.Game = new NetworkGame("whatever");
-            var handler = FakeUtils.GetNetworkReceiverHandler<NotifyGameStageChanged>(_networkClient);
-            var request = new NotifyGameStageChanged { Stage = expected.ToString() };
-
-            // Act
-            handler.Invoke(1, request);
-
-            // Assert
-            Assert.That(_multiplayerClient.Game.Stage, Is.EqualTo(expected));
-        }
-
-        private static IEnumerable<NetworkGameStage> AllNetworkGameStages()
-        {
-            return Enum.GetValues(typeof(NetworkGameStage)).Cast<NetworkGameStage>();
+            A.CallTo(() => _networkClient.Send(A<ClientSaveGameSyncChanged>.Ignored)).MustNotHaveHappened();
         }
     }
 }

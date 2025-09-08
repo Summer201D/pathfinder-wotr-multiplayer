@@ -6,7 +6,6 @@ using Owlcat.Runtime.UI.Controls.Button;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
-using WOTRMultiplayer.Abstractions.GameInteraction;
 using WOTRMultiplayer.Abstractions.MP.Actors;
 using WOTRMultiplayer.Abstractions.UI;
 using WOTRMultiplayer.Abstractions.UI.Controllers;
@@ -76,9 +75,8 @@ namespace WOTRMultiplayer.UI.Controllers
             IMainThreadAccessor mainThreadAccessor,
             ILobbyWindowController lobbyWindowController,
             IMultiplayerClient multiplayerClient,
-            IUIFactory uIFactory,
-            IGameInteractionService gameInteractionService)
-            : base(logger, lobbyWindowController, mainThreadAccessor, gameInteractionService)
+            IUIFactory uIFactory)
+            : base(logger, lobbyWindowController, mainThreadAccessor)
         {
             _logger = logger;
             _uIFactory = uIFactory;
@@ -235,19 +233,12 @@ namespace WOTRMultiplayer.UI.Controllers
             _multiplayerClient.OnPlayersChanged = enable ? OnMultiplayerPlayersChanged : null;
             _multiplayerClient.OnGameCharactersChanged = enable ? OnMultiplayerGameCharactersChanged : null;
             _multiplayerClient.OnCharacterOwnerChanged = enable ? OnMultiplayerCharacterOwnerChanged : null;
-            _multiplayerClient.OnStartGame = enable ? OnMultiplayerStartGame : null;
         }
 
         protected override void DisposeInternal()
         {
             SetupHandlers(false);
             base.DisposeInternal();
-        }
-
-        private void OnMultiplayerStartGame(string saveFilePath)
-        {
-            _logger.LogInformation("Starting multiplayer game as a client");
-            GameInteraction.LoadGameFromMainMenu(saveFilePath);
         }
 
         private void OnMultiplayerConnected(NetworkGameConnectivity connectivity)

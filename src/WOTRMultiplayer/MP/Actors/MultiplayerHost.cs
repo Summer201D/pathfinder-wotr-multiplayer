@@ -34,8 +34,6 @@ namespace WOTRMultiplayer.MP.Actors
 
         private NetworkGameStage Status => Game?.Stage ?? NetworkGameStage.None;
 
-        public Action<List<NetworkPlayer>> OnPlayersChanged { get; set; }
-
         public Action<NetworkGameConnectivity> OnConnected { get; set; }
 
         public bool IsActive => _networkServer.IsActive;
@@ -166,19 +164,18 @@ namespace WOTRMultiplayer.MP.Actors
                 return;
             }
 
-            Game.Stage = NetworkGameStage.Initializing;
-            var gameStageChanged = new NotifyGameStageChanged { Stage = Game.Stage.ToString() };
-            _networkServer.SendAll(gameStageChanged);
-
-            lock (ActionLock)
+            foreach (var player in Game.Players)
             {
-                var saveGameMessageAssigned = new NotifyLobbySaveGameChanged { GameId = Game.Id, Content = content, IsForceLoad = false };
-                Logger.LogInformation("Sending save game file content to all players. Size={Size}", saveGameMessageAssigned.Content.Length);
-                _networkServer.SendAll(saveGameMessageAssigned);
-                Game.Stage = NetworkGameStage.WaitingForPlayersInitialization;
-                Logger.LogInformation("Waiting for players to confirm delivery. GameStatus={GameStatus}", Game.Stage);
-                GetHost().IsSyncedToStartGame = true;
+                var status = player.Id == NetworkingConsts.HostPlayerId ? NetworkPlayerSaveGameSyncStatus.Succeed : NetworkPlayerSaveGameSyncStatus.None;
+                UpdatePlayerSaveGameSyncStatus(player, status);
             }
+
+            Game.Stage = NetworkGameStage.SyncingSaveGame;
+
+            var saveGameChanged = new NotifyLobbySaveGameChanged { GameId = Game.Id, Content = content, IsForceLoad = false };
+            Logger.LogInformation("Sending save game file content to all players. Size={Size}", saveGameChanged.Content.Length);
+            _networkServer.SendAll(saveGameChanged);
+            Logger.LogInformation("Waiting for players to confirm save game sync. GameStatus={GameStatus}", Game.Stage);
 
             TryStartGame();
         }
@@ -730,10 +727,11 @@ namespace WOTRMultiplayer.MP.Actors
                .On<AIActionRequest>(OnAIActionRequest)
 
                // lobby
-               .On<PlayerSaveGameSyncChanged>(OnPlayerSaveGameSyncChanged)
-               .On<NotifyLobbySaveGameChanged>(OnNotifyLobbySaveGameChanged)
+               .On<ClientSaveGameSyncChanged>(OnClientSaveGameSyncChanged)
                .On<PlayerReadyStatusChanged>(OnPlayerReadyStatusChanged)
                .On<ClientGameServerConnectionConfirmed>(OnPlayerNameResponse)
+               // quick load by another player
+               .On<NotifyLobbySaveGameChanged>(OnNotifyLobbySaveGameChanged)
 
                // area transitioning
                .On<ClientAreaLoaded>(OnClientAreaLoaded)
@@ -916,10 +914,12 @@ namespace WOTRMultiplayer.MP.Actors
 
             Game.SaveFilePath = StoreSaveFile(notifyLobbySaveGameChanged.Content);
 
-            if (notifyLobbySaveGameChanged.IsForceLoad)
+            if (!notifyLobbySaveGameChanged.IsForceLoad)
             {
-                ForceLoadGame();
+                Logger.LogWarning("Host received save game changed without force load flag");
             }
+
+            ForceLoadGame();
         }
 
         private void OnClientCombatInitialized(long playerId, ClientCombatInitialized initialized)
@@ -1049,41 +1049,31 @@ namespace WOTRMultiplayer.MP.Actors
             await SendLocalRollAsync(playerId, request);
         }
 
-        private void OnPlayerSaveGameSyncChanged(long playerId, PlayerSaveGameSyncChanged changed)
+        private void OnClientSaveGameSyncChanged(long playerId, ClientSaveGameSyncChanged changed)
         {
-            Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}, SyncStatus={SyncStatus}", nameof(PlayerSaveGameSyncChanged), playerId, changed.IsSynced);
-            lock (ActionLock)
+            Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}, Status={Status}", nameof(ClientSaveGameSyncChanged), playerId, changed.Status);
+            var player = GetPlayer(playerId);
+            if (player == null)
             {
-                var player = GetPlayer(playerId);
-                if (player == null)
-                {
-                    Logger.LogError("Player is missing. Game won't start. PlayerId={PlayerId}", playerId);
-                    return;
-                }
-
-                player.IsSyncedToStartGame = changed.IsSynced;
+                Logger.LogError("Received save game sync status for missing player. PlayerId={PlayerId}", playerId);
+                return;
             }
+
+            var status = Mapper.Map<NetworkPlayerSaveGameSyncStatus>(changed.Status);
+            UpdatePlayerSaveGameSyncStatus(playerId, status);
+
+            var message = new NotifyPlayerSaveGameSyncStatusChanged { PlayerId = playerId, Status = status.ToString() };
+            Send(message);
 
             TryStartGame();
         }
 
         private void OnPlayerReadyStatusChanged(long playerId, PlayerReadyStatusChanged readyStatusChanged)
         {
-            lock (ActionLock)
-            {
-                var existingPlayer = GetPlayer(playerId);
-                if (existingPlayer == null)
-                {
-                    Logger.LogWarning("Can't find existing player. PlayerId={PlayerId}", playerId);
-                    return;
-                }
-
-                existingPlayer.IsReady = readyStatusChanged.IsReady;
-
-                OnPlayersChanged?.Invoke(Game.Players);
-
-                OnAfterNetworkMessageHandled(playerId, readyStatusChanged);
-            }
+            Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}, IsReady={IsReady}", nameof(PlayerReadyStatusChanged), playerId, readyStatusChanged.IsReady);
+            UpdatePlayerReadyStatus(playerId, readyStatusChanged.IsReady);
+            // including original client so his UI can be properly updated as well
+            _networkServer.SendAll(readyStatusChanged);
         }
 
         private void OnPlayerNameResponse(long playerId, ClientGameServerConnectionConfirmed connectionConfirmed)
@@ -1320,7 +1310,6 @@ namespace WOTRMultiplayer.MP.Actors
                         return false;
                     }
 
-                    Game.Stage = NetworkGameStage.Playing;
                     var removalDelay = Game.ForcedPause.RemovalDelay;
                     var delay = removalDelay.HasValue ? Task.Delay(removalDelay.Value) : Task.CompletedTask;
                     Game.ForcedPause = null;
@@ -1360,14 +1349,14 @@ namespace WOTRMultiplayer.MP.Actors
 
             lock (ActionLock)
             {
-                canStart = Game.Players.All(p => p.IsSyncedToStartGame);
+                canStart = Game.Players.All(p => p.SaveGameSyncStatus == NetworkPlayerSaveGameSyncStatus.Succeed);
             }
 
             if (canStart)
             {
                 Logger.LogInformation("Starting game");
                 _networkServer.SendAll(new NotifyGameStarted());
-                InvokeOnStartGame();
+                LoadSaveGame();
             }
         }
 

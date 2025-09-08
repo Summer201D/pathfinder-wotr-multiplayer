@@ -288,6 +288,8 @@ namespace WOTRMultiplayer.UI
             textObject.GetComponent<TextMeshProUGUI>().SetText(UIStringConsts.EscMenu.LobbyMenuItemTitle);
 
             var windowContainer = CreateDefaultGameObject(context.View.transform.parent);
+            // Backgroud - n is missing in the game object name
+            UnityEngine.Object.Instantiate(context.View.gameObject.transform.Find("BackgroudWorldCover"), windowContainer.transform);
             windowContainer.name = "EscMultiplayerLobbyWindowContainer";
             var windowContainerRect = windowContainer.GetComponent<RectTransform>();
             var windowHeight = Math.Min(Screen.height * 0.65f, 1000);
@@ -312,7 +314,11 @@ namespace WOTRMultiplayer.UI
 
             var button = multiplayerMenu.GetComponent<OwlcatButton>();
             button.OnLeftClick.RemoveAllListeners();
-            button.OnLeftClick.AddListener(new UnityEngine.Events.UnityAction(onShow));
+            button.OnLeftClick.AddListener(() =>
+                {
+                    context.View.m_CloseButton.m_OnLeftClick.Invoke();
+                    onShow();
+                });
             return lobbyWindow;
         }
 

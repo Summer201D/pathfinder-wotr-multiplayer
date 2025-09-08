@@ -74,7 +74,7 @@ namespace WOTRMultiplayer.Abstractions.GameInteraction
 
         string QuickLoadGame(string savePath);
 
-        void LoadGameFromMainMenu(string savePath);
+        string LoadGameFromMainMenu(string savePath);
 
         string GetSaveGamePath();
 

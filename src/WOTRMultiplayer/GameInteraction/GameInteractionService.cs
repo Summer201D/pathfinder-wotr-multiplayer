@@ -633,13 +633,15 @@ namespace WOTRMultiplayer.GameInteraction
             return save.GameId;
         }
 
-        public void LoadGameFromMainMenu(string savePath)
+        public string LoadGameFromMainMenu(string savePath)
         {
             var save = LoadSave(savePath);
             _mainThreadAccessor.Post(() =>
             {
                 Game.Instance.RootUiContext.MainMenuVM.EnterLoadGame(save);
             });
+
+            return save.GameId;
         }
 
         public string GetPetOwnerId(string unitId)

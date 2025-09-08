@@ -182,8 +182,9 @@ namespace WOTR.Multiplayer.Playground.Core.Dummies
         {
         }
 
-        public void LoadGameFromMainMenu(string savePath)
+        public string LoadGameFromMainMenu(string savePath)
         {
+            return string.Empty;
         }
 
         public void MakeVendorDeal()

@@ -13,13 +13,13 @@
             ClientGameServerConnectionConfirmed,
             NotifyCharactersOwnerChanged,
             NotifyGameCharactersChanged,
-            NotifyGameStageChanged,
             NotifyGameStarted,
             NotifyPlayerDisconnected,
             NotifyPlayersChanged,
             NotifyLobbySaveGameChanged,
-            PlayerSaveGameSyncChanged,
-            PlayerReadyStatusChanged
+            ClientSaveGameSyncChanged,
+            PlayerReadyStatusChanged,
+            NotifyPlayerStartFailed
         }
 
         public enum Game

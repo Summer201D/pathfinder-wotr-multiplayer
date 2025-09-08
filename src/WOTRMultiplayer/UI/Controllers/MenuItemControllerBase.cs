@@ -42,13 +42,11 @@ namespace WOTRMultiplayer.UI.Controllers
         protected MenuItemControllerBase(
             Microsoft.Extensions.Logging.ILogger logger,
             ILobbyWindowController lobbyWindowController,
-            IMainThreadAccessor mainThreadAccessor,
-            IGameInteractionService gameInteractionService)
+            IMainThreadAccessor mainThreadAccessor)
         {
             _logger = logger;
             Lobby = lobbyWindowController;
             MainThreadAccessor = mainThreadAccessor;
-            GameInteraction = gameInteractionService;
         }
 
         public void Dispose()

@@ -43,9 +43,9 @@ namespace WOTRMultiplayer.MP.Actors
 
         public int RestBanterSeed => Game.RestBanterSeed;
 
-        internal NetworkGame Game { get; set; }
+        public Action<List<NetworkPlayer>> OnPlayersChanged { get; set; }
 
-        public Action<string> OnStartGame { get; set; }
+        internal NetworkGame Game { get; set; }
 
         protected ILogger Logger { get; private set; }
 
@@ -322,6 +322,8 @@ namespace WOTRMultiplayer.MP.Actors
         public virtual void OnAreaScenesLoaded()
         {
             Logger.LogInformation("Area loaded");
+
+            Game.Stage = NetworkGameStage.Playing;
 
             SoftReset();
 
@@ -953,19 +955,30 @@ namespace WOTRMultiplayer.MP.Actors
             UnitJoinedMidCombat
         }
 
-        protected void InvokeOnStartGame()
+        protected void LoadSaveGame()
         {
             ResetGameIdGenerator();
-            OnStartGame?.Invoke(Game.SaveFilePath);
+            Game.ForcedPause = null;
+
+            // We need to use different save load method if someone joined mid game
+            // I assume game just need to load more resources or whatever if you are not in the game already
+            if (Game.Stage == NetworkGameStage.Playing)
+            {
+                Game.Id = GameInteraction.QuickLoadGame(Game.SaveFilePath);
+            }
+            else
+            {
+                Game.Id = GameInteraction.LoadGameFromMainMenu(Game.SaveFilePath);
+            }
+
             Game.Stage = NetworkGameStage.Loading;
         }
 
         protected void ForceLoadGame()
         {
-            Logger.LogInformation("Force loading save game. SavePath={SavePath}", Game.SaveFilePath);
-            Game.Id = GameInteraction.QuickLoadGame(Game.SaveFilePath);
-            Game.ForcedPause = null;
-            ResetGameIdGenerator();
+            Logger.LogInformation("Force loading save game. Stage={Stage}, SavePath={SavePath}", Game.Stage, Game.SaveFilePath);
+
+            LoadSaveGame();
         }
 
         protected void ResetGameIdGenerator()
@@ -1142,6 +1155,41 @@ namespace WOTRMultiplayer.MP.Actors
 
         protected virtual void OnAfterNetworkMessageHandled(long playerId, object message)
         {
+        }
+
+        protected void UpdatePlayerSaveGameSyncStatus(long playerId, NetworkPlayerSaveGameSyncStatus status)
+        {
+            var player = GetPlayer(playerId);
+            if (player == null)
+            {
+                Logger.LogWarning("Unable to update save game sync status for missing player. PlayerId={PlayerId}", playerId);
+                return;
+            }
+
+            UpdatePlayerSaveGameSyncStatus(player, status);
+        }
+
+        protected void UpdatePlayerSaveGameSyncStatus(NetworkPlayer player, NetworkPlayerSaveGameSyncStatus status)
+        {
+            player.SaveGameSyncStatus = status;
+            OnPlayersChanged?.Invoke(Game.Players);
+        }
+
+        protected void UpdatePlayerReadyStatus(long playerId, bool isReady)
+        {
+            lock (ActionLock)
+            {
+                var existingPlayer = GetPlayer(playerId);
+                if (existingPlayer == null)
+                {
+                    Logger.LogWarning("Unable to update ready status for missing player. PlayerId={PlayerId}", playerId);
+                    return;
+                }
+
+                existingPlayer.IsReady = isReady;
+
+                OnPlayersChanged?.Invoke(Game.Players);
+            }
         }
 
         protected virtual void SetupNetworkMessageHandlers()

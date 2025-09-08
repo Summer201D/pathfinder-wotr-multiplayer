@@ -14,7 +14,6 @@ using TMPro;
 using UniRx;
 using UnityEngine;
 using UnityEngine.Events;
-using WOTRMultiplayer.Abstractions.GameInteraction;
 using WOTRMultiplayer.Abstractions.MP.Actors;
 using WOTRMultiplayer.Abstractions.UI.Controllers;
 using WOTRMultiplayer.Abstractions.UI.Controllers.Menu;
@@ -80,9 +79,8 @@ namespace WOTRMultiplayer.UI.Controllers
             ILogger<HostMenuItemController> logger,
             IMultiplayerHost multiplayerHost,
             IMainThreadAccessor mainThreadAccessor,
-            ILobbyWindowController lobbyWindowController,
-            IGameInteractionService gameInteractionService)
-            : base(logger, lobbyWindowController, mainThreadAccessor, gameInteractionService)
+            ILobbyWindowController lobbyWindowController)
+            : base(logger, lobbyWindowController, mainThreadAccessor)
         {
             _logger = logger;
             _multiplayerHost = multiplayerHost;
@@ -186,15 +184,8 @@ namespace WOTRMultiplayer.UI.Controllers
         {
             _multiplayerHost.OnConnected = enable ? OnMultiplayerConnected : null;
             _multiplayerHost.OnPlayersChanged = enable ? OnMultiplayerPlayersChanged : null;
-            _multiplayerHost.OnStartGame = enable ? OnMultiplayerStartGame : null;
 
             Lobby.OnCharacterOwnerChanged = enable ? OnLobbyCharacterOwnerChanged : null;
-        }
-
-        private void OnMultiplayerStartGame(string saveFilePath)
-        {
-            _logger.LogInformation("Starting multiplayer game as a host");
-            GameInteraction.LoadGameFromMainMenu(saveFilePath);
         }
 
         protected override void DisposeInternal()

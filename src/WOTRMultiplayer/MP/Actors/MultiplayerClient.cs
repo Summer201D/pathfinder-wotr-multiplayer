@@ -39,7 +39,6 @@ namespace WOTRMultiplayer.MP.Actors
 
         public Action<NetworkGameConnectivity> OnConnected { get; set; }
 
-        public Action<List<NetworkPlayer>> OnPlayersChanged { get; set; }
         public Action<List<NetworkCharacterOwnership>> OnGameCharactersChanged { get; set; }
         public Action<int, int> OnCharacterOwnerChanged { get; set; }
 
@@ -421,9 +420,9 @@ namespace WOTRMultiplayer.MP.Actors
                .On<PlayerReadyStatusChanged>(OnPlayerReadyStatusChanged)
                .On<NotifyPlayersChanged>(OnNotifyPlayersChanged)
                .On<NotifyGameCharactersChanged>(OnNotifyGameCharactersChanged)
-               .On<NotifyGameStageChanged>(OnNotifyGameStageChanged)
                .On<NotifyCharactersOwnerChanged>(OnNotifyCharactersOwnerChanged)
                .On<NotifyGameStarted>(OnNotifyGameStarted)
+               .On<NotifyPlayerSaveGameSyncStatusChanged>(OnNotifyPlayerSaveGameSyncStatusChanged)
 
                // pausing
                .On<NotifyGamePauseStarted>(OnNotifyGamePauseStarted)
@@ -461,6 +460,14 @@ namespace WOTRMultiplayer.MP.Actors
                .On<NotifyPerceptionCheckRolled>(OnNotifyPerceptionCheckRolled)
                .On<NotifyInspectionKnowledgeCheckRolled>(OnNotifyInspectionKnowledgeCheckRolled)
                ;
+        }
+
+        private void OnNotifyPlayerSaveGameSyncStatusChanged(long playerId, NotifyPlayerSaveGameSyncStatusChanged playerSaveGameSyncStatus)
+        {
+            Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}, Status={Status}", nameof(NotifyGamePauseStarted), playerSaveGameSyncStatus.PlayerId, playerSaveGameSyncStatus.Status);
+
+            var status = Mapper.Map<NetworkPlayerSaveGameSyncStatus>(playerSaveGameSyncStatus.Status);
+            UpdatePlayerSaveGameSyncStatus(playerSaveGameSyncStatus.PlayerId, status);
         }
 
         private void OnNotifyGamePauseStarted(long playerId, NotifyGamePauseStarted pauseStarted)
@@ -748,7 +755,7 @@ namespace WOTRMultiplayer.MP.Actors
                 return;
             }
 
-            InvokeOnStartGame();
+            LoadSaveGame();
         }
 
         private void OnNotifyCharactersOwnerChanged(long playerId, NotifyCharactersOwnerChanged changed)
@@ -777,18 +784,14 @@ namespace WOTRMultiplayer.MP.Actors
             }
         }
 
-        private void OnNotifyGameStageChanged(long playerId, NotifyGameStageChanged changed)
-        {
-            Logger.LogInformation("Received {MessageType}. Status={Status}", nameof(NotifyGameStarted), changed.Stage);
-            Game.Stage = (NetworkGameStage)Enum.Parse(typeof(NetworkGameStage), changed.Stage, true);
-        }
-
         private void OnNotifyLobbySaveGameChanged(long playerId, NotifyLobbySaveGameChanged notifyLobbySaveGameChanged)
         {
             Logger.LogInformation("Received {MessageType}. GameStatus={GameStatus}, Size={Size}, IsForceLoad={IsForceLoad}", nameof(NotifyLobbySaveGameChanged), Game.Stage, notifyLobbySaveGameChanged.Content.Length, notifyLobbySaveGameChanged.IsForceLoad);
 
             Game.SaveFilePath = StoreSaveFile(notifyLobbySaveGameChanged.Content);
             Game.Id = notifyLobbySaveGameChanged.GameId;
+
+            // TODO: check dlc ?
 
             if (notifyLobbySaveGameChanged.IsForceLoad)
             {
@@ -797,7 +800,7 @@ namespace WOTRMultiplayer.MP.Actors
             }
 
             Logger.LogInformation("Game is ready to be started. SavePath={SavePath}", Game.SaveFilePath);
-            var confirmationMessage = new PlayerSaveGameSyncChanged { IsSynced = true };
+            var confirmationMessage = new ClientSaveGameSyncChanged { Status = NetworkPlayerSaveGameSyncStatus.Succeed.ToString() };
             Send(confirmationMessage);
         }
 
@@ -805,18 +808,7 @@ namespace WOTRMultiplayer.MP.Actors
         {
             Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}, IsReady={IsReady}", nameof(PlayerReadyStatusChanged), readyStatusChanged.PlayerId, readyStatusChanged.IsReady);
 
-            lock (ActionLock)
-            {
-                var existingPlayer = GetPlayer(readyStatusChanged.PlayerId);
-                if (existingPlayer == null)
-                {
-                    Logger.LogWarning("Can't find existing player. PlayerId={PlayerId}", readyStatusChanged.PlayerId);
-                    return;
-                }
-
-                existingPlayer.IsReady = readyStatusChanged.IsReady;
-                OnPlayersChanged?.Invoke(Game.Players);
-            }
+            UpdatePlayerReadyStatus(playerId, readyStatusChanged.IsReady);
         }
 
         private void OnNotifyGameCharactersChanged(long playerId, NotifyGameCharactersChanged changed)
