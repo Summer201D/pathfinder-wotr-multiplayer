@@ -51,6 +51,7 @@ using Kingmaker.UI.MVVM._VM.CharGen.Phases.Class;
 using Kingmaker.UI.MVVM._VM.CharGen.Phases.FeatureSelector;
 using Kingmaker.UI.MVVM._VM.CharGen.Phases.Spells;
 using Kingmaker.UI.MVVM._VM.Dialog.Dialog;
+using Kingmaker.UI.MVVM._VM.Lockpick;
 using Kingmaker.UI.MVVM._VM.Party;
 using Kingmaker.UI.MVVM._VM.Rest;
 using Kingmaker.UI.MVVM._VM.ServiceWindows.Spellbook.MemorizingPanel;
@@ -2066,6 +2067,23 @@ namespace WOTRMultiplayer.GameInteraction
 
                 var emptySlot = new MechanicActionBarSlotEmpty();
                 unit.UISettings.SetSlot(emptySlot, actionBarSlot.Index);
+            });
+        }
+
+        public void LockpickMapObject(NetworkLockpickInteraction lockpickInteraction)
+        {
+            _mainThreadAccessor.Post(() =>
+            {
+                var mapObject = GetMapObject(lockpickInteraction.MapObject.Id);
+                List<UnitEntityData> units = [.. lockpickInteraction.Units.Select(GetUnitEntity)];
+
+                using var lockpickVM = new LockpickVM(mapObject.View, null);
+                using var context = _networkExecutionContext.Value = new RemoteExecutionContext
+                {
+                    SelectedUnits = units,
+                    LockpickContext = new MapObjectLockpickContext { MapObjectId = lockpickInteraction.MapObject.Id }
+                };
+                lockpickVM.OnInteraction(lockpickInteraction.LockpickType);
             });
         }
 

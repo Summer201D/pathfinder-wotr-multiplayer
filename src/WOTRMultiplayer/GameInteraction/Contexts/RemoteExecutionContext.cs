@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Kingmaker.EntitySystem.Entities;
 using WOTRMultiplayer.MP.Entities.Equipment;
 using WOTRMultiplayer.MP.Entities.Inspect;
+using WOTRMultiplayer.MP.Entities.MapObjects;
 
 namespace WOTRMultiplayer.GameInteraction.Contexts
 {
@@ -25,6 +26,8 @@ namespace WOTRMultiplayer.GameInteraction.Contexts
         public UnitsMovementContext UnitsMovement { get; set; }
 
         public VendorItemTransferContext VendorItemTransfer { get; set; }
+
+        public MapObjectLockpickContext LockpickContext { get; set; }
 
         public void Dispose()
         {

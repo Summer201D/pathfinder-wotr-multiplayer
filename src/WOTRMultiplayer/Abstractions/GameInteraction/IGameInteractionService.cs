@@ -183,7 +183,11 @@ namespace WOTRMultiplayer.Abstractions.GameInteraction
         void CompleteLeveling();
 
         void TerminateLeveling();
+
         void MoveActionBarSlots(NetworkActionBarSlot sourceActionBarSlot, NetworkActionBarSlot targetActionBarSlot);
+
         void ClearActionBarSlot(NetworkActionBarSlot actionBarSlot);
+
+        void LockpickMapObject(NetworkLockpickInteraction lockpickInteraction);
     }
 }

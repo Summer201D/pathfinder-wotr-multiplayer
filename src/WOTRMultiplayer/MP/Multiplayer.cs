@@ -1264,6 +1264,22 @@ namespace WOTRMultiplayer.MP
             _multiplayerActorAccessor.Current.OnAutoPausedByTrapDetection();
         }
 
+        public void OnLockpickInteraction(NetworkLockpickInteraction lockpickInteraction)
+        {
+            if (_multiplayerActorAccessor.Current == null)
+            {
+                return;
+            }
+
+            var lockpickContext = _gameInteractionService.RemoteContext?.LockpickContext;
+            if (lockpickContext != null && string.Equals(lockpickContext.MapObjectId, lockpickInteraction.MapObject.Id, StringComparison.OrdinalIgnoreCase))
+            {
+                return;
+            }
+
+            _multiplayerActorAccessor.Current.OnLockpickInteraction(lockpickInteraction);
+        }
+
         private void ShowEscMenuMultiplayerLobby()
         {
             _logger.LogInformation("Show lobby window");

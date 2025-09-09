@@ -3,7 +3,7 @@ using System.Linq;
 using System.Reflection;
 using CommandLine;
 
-namespace WOTR.Multiplayer.Playground.Core
+namespace WOTRMultiplayer.Playground.Core
 {
     public static class CommandLineHelper
     {

@@ -1,0 +1,13 @@
+﻿using ProtoBuf;
+using WOTRMultiplayer.Networking.Messages.Contracts;
+
+namespace WOTRMultiplayer.Networking.Messages.Game
+{
+    [ProtoContract]
+    [BeetleX.Packets.MessageType((int)MessageTypes.Game.NotifyMapObjectLockpicked)]
+    public class NotifyMapObjectLockpicked
+    {
+        [ProtoMember(1)]
+        public NetworkLockpickInteraction LockpickInteraction { get; set; }
+    }
+}

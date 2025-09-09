@@ -90,6 +90,7 @@
             NotifyGamePauseStarted,
             ClientGameAutoPaused,
             NotifyContainerSkinned,
+            NotifyMapObjectLockpicked,
         }
 
         public enum Request

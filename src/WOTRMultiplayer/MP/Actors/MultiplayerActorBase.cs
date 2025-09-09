@@ -825,6 +825,16 @@ namespace WOTRMultiplayer.MP.Actors
             Send(message);
         }
 
+        public void OnLockpickInteraction(NetworkLockpickInteraction lockpickInteraction)
+        {
+            var message = new NotifyMapObjectLockpicked
+            {
+                LockpickInteraction = Mapper.Map<Networking.Messages.Contracts.NetworkLockpickInteraction>(lockpickInteraction)
+            };
+            Logger.LogInformation("Sending {MessageType}. MapObjectId={MapObjectId}, MapObjectPosition={MapObjectPosition}, Units={Units}", nameof(NotifyMapObjectLockpicked), message.LockpickInteraction.MapObject.Id, message.LockpickInteraction.MapObject.Position, message.LockpickInteraction.Units);
+            Send(message);
+        }
+
         protected abstract bool OnStartGameModeInternal(GameModeType type);
 
         protected void EnsureForcePaused(string reason, TimeSpan? removalDelay)
@@ -1245,7 +1255,8 @@ namespace WOTRMultiplayer.MP.Actors
                 .On<NotifyDropItem>(OnNotifyDropItem)
                 .On<NotifyEquipmentSlotChanged>(OnNotifyEquipmentSlotChanged)
                 .On<NotifyActiveHandEquipmentSetChanged>(OnNotifyActiveHandEquipmentSetChanged)
-
+                // lockpick
+                .On<NotifyMapObjectLockpicked>(OnNotifyMapObjectLockpicked)
                 // abilities
                 .On<NotifyAbilityUse>(OnNotifyAbilityUsed)
                 .On<NotifyToggleActivatableAbility>(OnNotifyToggleActivatableAbility)
@@ -1259,6 +1270,16 @@ namespace WOTRMultiplayer.MP.Actors
                 .On<NotifyActionBarSlotCleared>(OnNotifyActionBarSlotCleared)
                 .On<NotifyActionBarSlotMoved>(OnNotifyActionBarSlotMoved)
                 ;
+        }
+
+        private void OnNotifyMapObjectLockpicked(long playerId, NotifyMapObjectLockpicked mapObjectLockpicked)
+        {
+            Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}, MapObjectId={MapObjectId}, MapObjectPosition={MapObjectPosition}, Units={Units}", nameof(NotifyMapObjectLockpicked), playerId, mapObjectLockpicked.LockpickInteraction.MapObject.Id, mapObjectLockpicked.LockpickInteraction.MapObject.Position, mapObjectLockpicked.LockpickInteraction.Units);
+            var lockpickInteraction = Mapper.Map<NetworkLockpickInteraction>(mapObjectLockpicked.LockpickInteraction);
+
+            GameInteraction.LockpickMapObject(lockpickInteraction);
+
+            OnAfterNetworkMessageHandled(playerId, mapObjectLockpicked);
         }
 
         private void OnNotifyActionBarSlotMoved(long playerId, NotifyActionBarSlotMoved actionBarSlotMoved)

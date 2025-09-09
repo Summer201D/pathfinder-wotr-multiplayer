@@ -23,7 +23,7 @@ using WOTRMultiplayer.MP.Entities.Settings;
 using WOTRMultiplayer.MP.Entities.Spells;
 using WOTRMultiplayer.MP.Entities.Vendor;
 
-namespace WOTR.Multiplayer.Playground.Core.Dummies
+namespace WOTRMultiplayer.Playground.Core.Dummies
 {
     public class DummyGameInteractionService : IGameInteractionService
     {
@@ -185,6 +185,11 @@ namespace WOTR.Multiplayer.Playground.Core.Dummies
         public string LoadGameFromMainMenu(string savePath)
         {
             return string.Empty;
+        }
+
+        public void LockpickMapObject(NetworkLockpickInteraction lockpickInteraction)
+        {
+            throw new NotImplementedException();
         }
 
         public void MakeVendorDeal()

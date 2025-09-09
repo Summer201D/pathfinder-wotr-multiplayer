@@ -156,5 +156,7 @@ namespace WOTRMultiplayer.Abstractions.MP.Actors
         bool CanTogglePause(bool isPaused);
 
         void OnAutoPausedByTrapDetection();
+
+        void OnLockpickInteraction(NetworkLockpickInteraction lockpickInteraction);
     }
 }

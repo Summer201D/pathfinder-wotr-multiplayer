@@ -5,6 +5,7 @@ using Kingmaker;
 using Kingmaker.Controllers.Clicks.Handlers;
 using Kingmaker.EntitySystem.Entities;
 using Kingmaker.TurnBasedMode;
+using Kingmaker.UI.MVVM._VM.Lockpick;
 using Kingmaker.View;
 using Kingmaker.View.MapObjects;
 using Microsoft.Extensions.Logging;
@@ -103,13 +104,14 @@ namespace WOTRMultiplayer.HarmonyPatches.Clicks
         [HarmonyPostfix]
         public static void ClickMapObjectHandler_OnClick_Postfix(ClickMapObjectHandler __instance, bool __result, GameObject gameObject, Vector3 worldPosition, int button, bool simulate, bool muteEvents, bool IsTMBClick)
         {
-            if (!Main.Multiplayer.IsActive || simulate || !__result)
+            if (!Main.Multiplayer.IsActive || simulate || !__result || gameObject != null && LockpickVM.NeedLockpick(gameObject.GetComponent<MapObjectView>()))
             {
                 return;
             }
 
             try
             {
+
                 var click = CreateClick(gameObject, button, worldPosition, muteEvents, IsTMBClick);
                 Main.Multiplayer.OnClickMapObject(click);
             }

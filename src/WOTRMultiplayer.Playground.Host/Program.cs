@@ -4,7 +4,6 @@ using System.IO;
 using AutoMapper;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using WOTR.Multiplayer.Playground.Core.Dummies;
 using WOTRMultiplayer.Abstractions.IO;
 using WOTRMultiplayer.Abstractions.MP;
 using WOTRMultiplayer.Abstractions.Random;
@@ -14,6 +13,7 @@ using WOTRMultiplayer.MP.Entities.Dialogs;
 using WOTRMultiplayer.MP.Entities.Movement;
 using WOTRMultiplayer.MP.Entities.Rolls.Claiming.Values;
 using WOTRMultiplayer.Networking.Abstractions;
+using WOTRMultiplayer.Playground.Core.Dummies;
 
 namespace WOTRMultiplayer.Playground.Host
 {

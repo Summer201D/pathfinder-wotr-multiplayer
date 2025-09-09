@@ -153,6 +153,9 @@ namespace WOTRMultiplayer.Config.Mapping
 
             CreateMap<NetworkActionBarSlot, Networking.Messages.Contracts.NetworkActionBarSlot>()
                 .ReverseMap();
+
+            CreateMap<NetworkLockpickInteraction, Networking.Messages.Contracts.NetworkLockpickInteraction>()
+                .ReverseMap();
         }
     }
 }

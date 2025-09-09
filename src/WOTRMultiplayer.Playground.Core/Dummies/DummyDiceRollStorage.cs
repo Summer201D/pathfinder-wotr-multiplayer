@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 using WOTRMultiplayer.Abstractions.MP;
 using WOTRMultiplayer.MP.Entities.Rolls.Claiming.Values;
 
-namespace WOTR.Multiplayer.Playground.Core.Dummies
+namespace WOTRMultiplayer.Playground.Core.Dummies
 {
     public class DummyDiceRollStorage : IDiceRollStorage
     {
