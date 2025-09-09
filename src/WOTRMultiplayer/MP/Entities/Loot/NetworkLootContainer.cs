@@ -10,5 +10,7 @@ namespace WOTRMultiplayer.MP.Entities.Loot
         public NetworkVector3 Position { get; set; }
 
         public List<NetworkItem> Items { get; set; } = [];
+
+        public bool IsUnit { get; set; }
     }
 }

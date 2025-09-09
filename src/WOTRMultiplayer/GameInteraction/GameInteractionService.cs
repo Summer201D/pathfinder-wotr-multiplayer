@@ -858,27 +858,22 @@ namespace WOTRMultiplayer.GameInteraction
             };
         }
 
-        public void CollectContainerLoot(NetworkLootContainer networkLootContainer)
+        public void CollectLootContainer(NetworkLootContainer networkLootContainer)
         {
             _mainThreadAccessor.Post(() =>
             {
                 try
                 {
-                    var mapObject = GetMapObject(networkLootContainer.Id);
-                    var lookupTargets = mapObject != null ? [mapObject]
-                        : GetNeareastLootableMapObjects(networkLootContainer.Position);
-
+                    var lookupTargets = GetLootContainers(networkLootContainer);
                     foreach (var container in lookupTargets)
                     {
-                        var interaction = (InteractionLootPart)container.Interactions.FirstOrDefault(i => i is InteractionLootPart);
-
-                        List<LootTransferPair> transferList = [.. interaction.Loot.Items
+                        List<LootTransferPair> transferList = [.. container.Items
                             .Select(item => new LootTransferPair { ItemEntity = item, NetworkItem = networkLootContainer.Items.FirstOrDefault(ni => IsSameItem(item, ni)) })
                             .Where(x => x.NetworkItem != null)];
 
                         if (transferList.Count == networkLootContainer.Items.Count)
                         {
-                            TransferItems(interaction.Loot, Game.Instance.Player.Inventory, transferList);
+                            TransferItems(container, Game.Instance.Player.Inventory, transferList);
                             RefreshLootUI();
                             RefreshInventoryWindow();
                             return;
@@ -890,6 +885,60 @@ namespace WOTRMultiplayer.GameInteraction
                 catch (Exception ex)
                 {
                     _logger.LogError(ex, "Unable to collect container loot");
+                    throw;
+                }
+            });
+        }
+
+        public void SkinLootContainer(NetworkLootContainer networkLootContainer)
+        {
+            _mainThreadAccessor.Post(() =>
+            {
+                try
+                {
+                    var unit = GetUnitEntity(networkLootContainer.Id);
+                    if (unit == null)
+                    {
+                        _logger.LogError("Unable to find unit to skin. UnitId={UnitId}, Position={Position}", networkLootContainer.Id, networkLootContainer.Position);
+                        return;
+                    }
+
+                    var itemsToSkin = unit.Inventory.Where(i => i.NeedSkinningForCollect).ToList();
+                    foreach (var item in itemsToSkin)
+                    {
+                        item.UseSkinning();
+                    }
+
+                    RefreshLootUI();
+                    RefreshInventoryWindow();
+                    _logger.LogInformation("Loot container has been skinned. ContainerId={ContainerId}, Position={Position}", networkLootContainer.Id, networkLootContainer.Position);
+
+                    //var mapObject = GetMapObject(networkLootContainer.Id);
+                    //var lookupTargets = mapObject != null ? [mapObject]
+                    //    : GetNeareastLootableMapObjects(networkLootContainer.Position);
+
+                    //foreach (var container in lookupTargets)
+                    //{
+                    //    var interaction = (InteractionLootPart)container.Interactions.FirstOrDefault(i => i is InteractionLootPart);
+                    //    var itemsToSkin = interaction.Loot.Where((ItemEntity i) => i.NeedSkinningForCollect).ToList();
+                    //    foreach (var item in itemsToSkin)
+                    //    {
+                    //        item.UseSkinning();
+                    //    }
+
+                    //    if (itemsToSkin.Count > 0)
+                    //    {
+                    //        RefreshLootUI();
+                    //        RefreshInventoryWindow();
+                    //        _logger.LogInformation("Loot container has been skinned. ContainerId={ContainerId}, Position={Position}", networkLootContainer.Id, networkLootContainer.Position);
+                    //        return;
+                    //    }
+                    //}
+
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Unable to use skinning on loot container");
                     throw;
                 }
             });
@@ -1999,6 +2048,49 @@ namespace WOTRMultiplayer.GameInteraction
             });
         }
 
+        public void ClearActionBarSlot(NetworkActionBarSlot actionBarSlot)
+        {
+            _mainThreadAccessor.Post(() =>
+            {
+                var unit = GetUnitEntity(actionBarSlot.UnitId);
+                if (unit == null)
+                {
+                    _logger.LogError("Unable to clear action bar slot for missing unit. UnitId={UnitId}", actionBarSlot.UnitId);
+                    return;
+                }
+
+                if (actionBarSlot.Index == -1)
+                {
+                    return;
+                }
+
+                var emptySlot = new MechanicActionBarSlotEmpty();
+                unit.UISettings.SetSlot(emptySlot, actionBarSlot.Index);
+            });
+        }
+
+        private IEnumerable<ItemsCollection> GetLootContainers(NetworkLootContainer networkLootContainer)
+        {
+            if (networkLootContainer.IsUnit)
+            {
+                var unit = GetUnitEntity(networkLootContainer.Id);
+                if (unit == null)
+                {
+                    _logger.LogError("Unable to find unit to loot. UnitId={UnitId}", networkLootContainer.Id);
+                    return [];
+                }
+
+                return [unit.Inventory];
+            }
+
+            var mapObject = GetMapObject(networkLootContainer.Id);
+            var lookupTargets = mapObject != null ? [mapObject]
+                : GetNeareastLootableMapObjects(networkLootContainer.Position);
+
+            var mapObjectContainers = lookupTargets.Select(x => ((InteractionLootPart)x.Interactions.FindOrDefault(i => i is InteractionLootPart)).Loot);
+            return mapObjectContainers;
+        }
+
         private MechanicActionBarSlot LoadActionBarSlot(UnitEntityData unit, NetworkActionBarSlot networkActionBarSlot)
         {
             if (networkActionBarSlot.ActivatableAbility != null)
@@ -2054,27 +2146,6 @@ namespace WOTRMultiplayer.GameInteraction
 
             var spellSlot = new MechanicActionBarSlotMemorizedSpell(ability.SpellSlot) { Unit = unit };
             return spellSlot;
-        }
-
-        public void ClearActionBarSlot(NetworkActionBarSlot actionBarSlot)
-        {
-            _mainThreadAccessor.Post(() =>
-            {
-                var unit = GetUnitEntity(actionBarSlot.UnitId);
-                if (unit == null)
-                {
-                    _logger.LogError("Unable to clear action bar slot for missing unit. UnitId={UnitId}", actionBarSlot.UnitId);
-                    return;
-                }
-
-                if (actionBarSlot.Index == -1)
-                {
-                    return;
-                }
-
-                var emptySlot = new MechanicActionBarSlotEmpty();
-                unit.UISettings.SetSlot(emptySlot, actionBarSlot.Index);
-            });
         }
 
         private CharGenSkillAllocatorPCView GetLevelingSkillAllocatorView(StatType statType)

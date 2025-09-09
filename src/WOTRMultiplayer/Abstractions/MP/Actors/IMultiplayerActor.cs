@@ -93,6 +93,8 @@ namespace WOTRMultiplayer.Abstractions.MP.Actors
 
         void OnLootContainer(NetworkLootContainer container);
 
+        void OnSkinLootContainer(NetworkLootContainer container);
+
         void OnDropItem(NetworkDropItem dropItem);
 
         void OnEquipmentSlotChanged(NetworkEquipmentSlot networkSlot);

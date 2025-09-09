@@ -33,6 +33,21 @@ namespace WOTRMultiplayer.HarmonyPatches.Loot
             return false;
         }
 
+        [HarmonyPatch(typeof(LootObjectVM), nameof(LootObjectVM.UseSkinning))]
+        [HarmonyPrefix]
+        public static void LootObjectVM_UseSkinning_Prefix(LootObjectVM __instance)
+        {
+            if (!Main.Multiplayer.IsActive)
+            {
+                return;
+            }
+
+            var lootOwner = __instance.ItemsCollection.OwnerRef.Entity;
+            var container = CreateLootContainer(lootOwner, []);
+
+            Main.Multiplayer.OnSkinLootContainer(container);
+        }
+
         [HarmonyPatch(typeof(LootObjectVM), nameof(LootObjectVM.TransferAllItems))]
         [HarmonyPrefix]
         public static void LootObjectVM_TransferAllItems_Prefix(LootObjectVM __instance)
@@ -89,7 +104,8 @@ namespace WOTRMultiplayer.HarmonyPatches.Loot
             {
                 Id = lootOwner.UniqueId,
                 Position = new NetworkVector3(lootOwner.Position.x, lootOwner.Position.y, lootOwner.Position.z),
-                Items = [.. itemEntities.Select(NetworkItem.FromItemEntity)]
+                Items = [.. itemEntities.Select(NetworkItem.FromItemEntity)],
+                IsUnit = lootOwner is UnitEntityData
             };
 
             return container;

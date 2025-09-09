@@ -546,6 +546,25 @@ namespace WOTRMultiplayer.MP
             }
         }
 
+
+        public void OnSkinLootContainer(NetworkLootContainer container)
+        {
+            try
+            {
+                if (_multiplayerActorAccessor.Current == null)
+                {
+                    return;
+                }
+
+                _multiplayerActorAccessor.Current.OnSkinLootContainer(container);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while skinning loot container. ContainerId={ContainerId}", container?.Id);
+                throw;
+            }
+        }
+
         public void OnDropItem(NetworkDropItem networkDropItem)
         {
             try

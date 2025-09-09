@@ -81,7 +81,7 @@ namespace WOTR.Multiplayer.Playground.Core.Dummies
         {
         }
 
-        public void CollectContainerLoot(NetworkLootContainer networkLootContainer)
+        public void CollectLootContainer(NetworkLootContainer networkLootContainer)
         {
         }
 
@@ -285,6 +285,10 @@ namespace WOTR.Multiplayer.Playground.Core.Dummies
         }
 
         public void ShowWarningNotification(string text)
+        {
+        }
+
+        public void SkinLootContainer(NetworkLootContainer container)
         {
         }
 

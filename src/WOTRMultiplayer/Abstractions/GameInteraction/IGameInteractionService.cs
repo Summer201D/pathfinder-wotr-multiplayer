@@ -100,7 +100,9 @@ namespace WOTRMultiplayer.Abstractions.GameInteraction
 
         void ToggleActivatableAbility(NetworkActivatableAbility networkActivatableAbility);
 
-        void CollectContainerLoot(NetworkLootContainer networkLootContainer);
+        void CollectLootContainer(NetworkLootContainer networkLootContainer);
+
+        void SkinLootContainer(NetworkLootContainer container);
 
         void DropItem(NetworkDropItem networkDropItem);
 

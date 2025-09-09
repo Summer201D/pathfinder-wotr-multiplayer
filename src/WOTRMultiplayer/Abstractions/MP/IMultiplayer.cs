@@ -88,6 +88,8 @@ namespace WOTRMultiplayer.Abstractions.MP
 
         void OnLootContainer(NetworkLootContainer networkLootContainer);
 
+        void OnSkinLootContainer(NetworkLootContainer container);
+
         void OnDropItem(NetworkDropItem networkDropItem);
 
         void OnChangeActiveHandEquipmentSet(NetworkActiveHandEquipmentSet networkActiveHandEquipmentSet);

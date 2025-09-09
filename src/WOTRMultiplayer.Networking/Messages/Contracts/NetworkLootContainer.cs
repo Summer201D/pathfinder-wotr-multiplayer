@@ -18,5 +18,7 @@ namespace WOTRMultiplayer.Networking.Messages.Contracts
         [ProtoMember(4)]
         public List<NetworkItem> Items { get; set; } = [];
 
+        [ProtoMember(5)]
+        public bool IsUnit { get; set; }
     }
 }
