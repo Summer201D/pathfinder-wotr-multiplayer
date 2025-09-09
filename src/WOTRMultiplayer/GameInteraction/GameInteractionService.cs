@@ -881,7 +881,7 @@ namespace WOTRMultiplayer.GameInteraction
                         }
                     }
 
-                    _logger.LogError("Unable to find valid nearest lootable map object. ContainerId={ContainerId}, Position={Position}", networkLootContainer.Id, networkLootContainer.Position);
+                    _logger.LogError("Unable to find valid lootable unit / map object. ContainerId={ContainerId}, Position={Position}, IsUnit={IsUnit}", networkLootContainer.Id, networkLootContainer.Position, networkLootContainer.IsUnit);
                 }
                 catch (Exception ex)
                 {
@@ -2770,7 +2770,7 @@ namespace WOTRMultiplayer.GameInteraction
                 return null;
             }
 
-            return Game.Instance.State.Units.FirstOrDefault(u => string.Equals(u.UniqueId, uniqueId, StringComparison.OrdinalIgnoreCase));
+            return Game.Instance.State.Units.All.FirstOrDefault(u => string.Equals(u.UniqueId, uniqueId, StringComparison.OrdinalIgnoreCase));
         }
     }
 }

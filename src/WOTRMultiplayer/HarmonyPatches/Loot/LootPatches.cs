@@ -97,7 +97,6 @@ namespace WOTRMultiplayer.HarmonyPatches.Loot
             Main.Multiplayer.OnDropItem(dropItem);
         }
 
-
         private static NetworkLootContainer CreateLootContainer(EntityDataBase lootOwner, List<ItemEntity> itemEntities)
         {
             var container = new NetworkLootContainer
