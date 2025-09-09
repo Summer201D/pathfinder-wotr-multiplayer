@@ -148,9 +148,11 @@ namespace WOTRMultiplayer.Abstractions.MP.Actors
         void OnLevelingCompleted();
 
         void OnLevelingIncreaseAbilityScore(NetworkLevelingAbilityScore abilityScore);
+
         void OnLevelingDecreaseAbilityScore(NetworkLevelingAbilityScore abilityScore);
 
         void OnMoveActionBarSlot(NetworkActionBarSlot sourceActionBarSlot, NetworkActionBarSlot targetActionBarSlot);
+
         void OnClearActionBarSlot(NetworkActionBarSlot actionBarSlot);
 
         bool CanTogglePause(bool isPaused);
@@ -158,5 +160,7 @@ namespace WOTRMultiplayer.Abstractions.MP.Actors
         void OnAutoPausedByTrapDetection();
 
         void OnLockpickInteraction(NetworkLockpickInteraction lockpickInteraction);
+
+        bool OnRequestLevelingUI(string unitId);
     }
 }

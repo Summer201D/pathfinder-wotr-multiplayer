@@ -704,19 +704,27 @@ namespace WOTRMultiplayer.MP
 
         public bool CanMakePerceptionCheck(string unitId, string mapObjectId)
         {
-            if (!_multiplayerActorAccessor.Client.IsActive)
+            try
             {
-                return true;
-            }
+                if (!_multiplayerActorAccessor.Client.IsActive)
+                {
+                    return true;
+                }
 
-            var perceptionCheck = _gameInteractionService.RemoteContext?.PerceptionCheck;
-            if (perceptionCheck == null)
+                var perceptionCheck = _gameInteractionService.RemoteContext?.PerceptionCheck;
+                if (perceptionCheck == null)
+                {
+                    return false;
+                }
+
+                return string.Equals(unitId, perceptionCheck.UnitId, StringComparison.OrdinalIgnoreCase)
+                    && string.Equals(mapObjectId, perceptionCheck.MapObjectId, StringComparison.OrdinalIgnoreCase);
+            }
+            catch (Exception ex)
             {
-                return false;
+                _logger.LogError(ex, "Error while checking perception check permissions. UnitId={UnitId}", unitId);
+                throw;
             }
-
-            return string.Equals(unitId, perceptionCheck.UnitId, StringComparison.OrdinalIgnoreCase)
-                && string.Equals(mapObjectId, perceptionCheck.MapObjectId, StringComparison.OrdinalIgnoreCase);
         }
 
 
@@ -1078,206 +1086,355 @@ namespace WOTRMultiplayer.MP
 
         public void OnLevelingClassArchetypeSelected(string archetypeId)
         {
-            if (_multiplayerActorAccessor.Current == null)
+            try
             {
-                return;
-            }
+                if (_multiplayerActorAccessor.Current == null)
+                {
+                    return;
+                }
 
-            _multiplayerActorAccessor.Current.OnLevelingClassArchetypeSelected(archetypeId);
+                _multiplayerActorAccessor.Current.OnLevelingClassArchetypeSelected(archetypeId);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while processing leveling class archetype selection. ArchetypeId={ArchetypeId}", archetypeId);
+                throw;
+            }
         }
 
         public void OnLevelingClassSelected(string classId)
         {
-            if (_multiplayerActorAccessor.Current == null)
+            try
             {
-                return;
-            }
+                if (_multiplayerActorAccessor.Current == null)
+                {
+                    return;
+                }
 
-            _multiplayerActorAccessor.Current.OnLevelingClassSelected(classId);
+                _multiplayerActorAccessor.Current.OnLevelingClassSelected(classId);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while processing leveling class selection. ClassId={ClassId}", classId);
+                throw;
+            }
         }
 
         public bool RequestLevelingUI(string unitId)
         {
-            if (_multiplayerActorAccessor.Current == null)
+            try
             {
-                return true;
-            }
+                if (_multiplayerActorAccessor.Current == null)
+                {
+                    return true;
+                }
 
-            if (_multiplayerActorAccessor.Client.IsActive)
+                var canStartLeveling = _multiplayerActorAccessor.Current.OnRequestLevelingUI(unitId);
+                return canStartLeveling;
+            }
+            catch (Exception ex)
             {
-                var canContinue = _multiplayerActorAccessor.Client.RequestLevelingUI(unitId);
-                return canContinue;
+                _logger.LogError(ex, "Error while requesting leveling UI. UnitId={UnitId}", unitId);
+                throw;
             }
-
-            _multiplayerActorAccessor.Host.OnCharacterLevelingStarted(unitId);
-            return true;
         }
 
         public void OnLevelingTerminated()
         {
-            if (_multiplayerActorAccessor.Current == null)
+            try
             {
-                return;
-            }
+                if (_multiplayerActorAccessor.Current == null)
+                {
+                    return;
+                }
 
-            _multiplayerActorAccessor.Current.OnLevelingTerminated();
+                _multiplayerActorAccessor.Current.OnLevelingTerminated();
+            }
+            catch (Exception ex)
+            {
+
+                _logger.LogError(ex, "Error while terminating leveling");
+                throw;
+            }
         }
 
         public bool CanMakeLevelingDecisions()
         {
-            if (_multiplayerActorAccessor.Current == null)
+            try
             {
-                return true;
-            }
+                if (_multiplayerActorAccessor.Current == null)
+                {
+                    return true;
+                }
 
-            var canContinue = _multiplayerActorAccessor.Current.CanMakeLevelingDecisions();
-            return canContinue;
+                var canContinue = _multiplayerActorAccessor.Current.CanMakeLevelingDecisions();
+                return canContinue;
+            }
+            catch (Exception ex)
+            {
+
+                _logger.LogError(ex, "Error while checking leveling decisions permissions");
+                throw;
+            }
         }
 
         public void OnWitnessLevelingPhase(NetworkLevelingPhase networkLevelingPhase)
         {
-            if (_multiplayerActorAccessor.Current == null)
+            try
             {
-                return;
-            }
+                if (_multiplayerActorAccessor.Current == null)
+                {
+                    return;
+                }
 
-            _multiplayerActorAccessor.Current.OnLevelingWitnessPhase(networkLevelingPhase);
+                _multiplayerActorAccessor.Current.OnLevelingWitnessPhase(networkLevelingPhase);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while witnessing leveling phase. Index={Index}", networkLevelingPhase.Index);
+                throw;
+            }
         }
 
         public void OnLevelingIncreaseSkillPoint(NetworkLevelingSkillPoint networkLevelingSkillPoint)
         {
-            if (_multiplayerActorAccessor.Current == null)
+            try
             {
-                return;
-            }
+                if (_multiplayerActorAccessor.Current == null)
+                {
+                    return;
+                }
 
-            _multiplayerActorAccessor.Current.OnLevelingIncreaseSkillPoint(networkLevelingSkillPoint);
+                _multiplayerActorAccessor.Current.OnLevelingIncreaseSkillPoint(networkLevelingSkillPoint);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while increasing leveling skillpoint. StatType={StatType}", networkLevelingSkillPoint.StatType);
+                throw;
+            }
         }
 
         public void OnLevelingDecreaseSkillPoint(NetworkLevelingSkillPoint networkLevelingSkillPoint)
         {
-            if (_multiplayerActorAccessor.Current == null)
+            try
             {
-                return;
-            }
+                if (_multiplayerActorAccessor.Current == null)
+                {
+                    return;
+                }
 
-            _multiplayerActorAccessor.Current.OnLevelingDecreaseSkillPoint(networkLevelingSkillPoint);
+                _multiplayerActorAccessor.Current.OnLevelingDecreaseSkillPoint(networkLevelingSkillPoint);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while decreasing leveling skillpoint. StatType={StatType}", networkLevelingSkillPoint.StatType);
+                throw;
+            }
         }
 
         public void OnLevelingIncreaseAbilityScore(NetworkLevelingAbilityScore networkLevelingAbilityScore)
         {
-            if (_multiplayerActorAccessor.Current == null)
+            try
             {
-                return;
-            }
+                if (_multiplayerActorAccessor.Current == null)
+                {
+                    return;
+                }
 
-            _multiplayerActorAccessor.Current.OnLevelingIncreaseAbilityScore(networkLevelingAbilityScore);
+                _multiplayerActorAccessor.Current.OnLevelingIncreaseAbilityScore(networkLevelingAbilityScore);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while increasing leveling ability. StatType={StatType}", networkLevelingAbilityScore.StatType);
+                throw;
+            }
         }
 
         public void OnLevelingDecreaseAbilityScore(NetworkLevelingAbilityScore networkLevelingAbilityScore)
         {
-            if (_multiplayerActorAccessor.Current == null)
+            try
             {
-                return;
-            }
+                if (_multiplayerActorAccessor.Current == null)
+                {
+                    return;
+                }
 
-            _multiplayerActorAccessor.Current.OnLevelingDecreaseAbilityScore(networkLevelingAbilityScore);
+                _multiplayerActorAccessor.Current.OnLevelingDecreaseAbilityScore(networkLevelingAbilityScore);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while decreasing leveling ability. StatType={StatType}", networkLevelingAbilityScore.StatType);
+                throw;
+            }
         }
 
         public void OnLevelingFeatureSelected(NetworkLevelingFeature networkLevelingFeature)
         {
-            if (_multiplayerActorAccessor.Current == null)
+            try
             {
-                return;
-            }
+                if (_multiplayerActorAccessor.Current == null)
+                {
+                    return;
+                }
 
-            _multiplayerActorAccessor.Current.OnLevelingFeatureSelected(networkLevelingFeature);
+                _multiplayerActorAccessor.Current.OnLevelingFeatureSelected(networkLevelingFeature);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while selecting leveling feature. FeatureName={FeatureName}", networkLevelingFeature.Name);
+                throw;
+            }
         }
 
         public void OnLevelingSpellRemoved(NetworkLevelingSpell networkLevelingSpell)
         {
-            if (_multiplayerActorAccessor.Current == null)
+            try
             {
-                return;
-            }
+                if (_multiplayerActorAccessor.Current == null)
+                {
+                    return;
+                }
 
-            _multiplayerActorAccessor.Current.OnLevelingSpellRemoved(networkLevelingSpell);
+                _multiplayerActorAccessor.Current.OnLevelingSpellRemoved(networkLevelingSpell);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while removing leveling spell. SpellName={SpellName}", networkLevelingSpell.Name);
+                throw;
+            }
         }
 
         public void OnLevelingSpellChosen(NetworkLevelingSpell networkLevelingSpell)
         {
-            if (_multiplayerActorAccessor.Current == null)
+            try
             {
-                return;
-            }
+                if (_multiplayerActorAccessor.Current == null)
+                {
+                    return;
+                }
 
-            _multiplayerActorAccessor.Current.OnLevelingSpellChosen(networkLevelingSpell);
+                _multiplayerActorAccessor.Current.OnLevelingSpellChosen(networkLevelingSpell);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while choosing leveling spell. SpellName={SpellName}", networkLevelingSpell.Name);
+                throw;
+            }
         }
 
         public void OnLevelingCompleted()
         {
-            if (_multiplayerActorAccessor.Current == null)
+            try
             {
-                return;
-            }
+                if (_multiplayerActorAccessor.Current == null)
+                {
+                    return;
+                }
 
-            _multiplayerActorAccessor.Current.OnLevelingCompleted();
+                _multiplayerActorAccessor.Current.OnLevelingCompleted();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while completing leveling");
+                throw;
+            }
         }
 
         public void OnMoveActionBarSlot(NetworkActionBarSlot sourceActionBarSlot, NetworkActionBarSlot targetActionBarSlot)
         {
-            if (_multiplayerActorAccessor.Current == null)
+            try
             {
-                return;
-            }
+                if (_multiplayerActorAccessor.Current == null)
+                {
+                    return;
+                }
 
-            _multiplayerActorAccessor.Current.OnMoveActionBarSlot(sourceActionBarSlot, targetActionBarSlot);
+                _multiplayerActorAccessor.Current.OnMoveActionBarSlot(sourceActionBarSlot, targetActionBarSlot);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while moving action bar slot");
+                throw;
+            }
         }
 
         public void OnClearActionBarSlot(NetworkActionBarSlot actionBarSlot)
         {
-            if (_multiplayerActorAccessor.Current == null)
+            try
             {
-                return;
-            }
+                if (_multiplayerActorAccessor.Current == null)
+                {
+                    return;
+                }
 
-            _multiplayerActorAccessor.Current.OnClearActionBarSlot(actionBarSlot);
+                _multiplayerActorAccessor.Current.OnClearActionBarSlot(actionBarSlot);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while clearing action bar slot");
+                throw;
+            }
         }
+
         public bool CanTogglePause(bool isPaused)
         {
-            if (_multiplayerActorAccessor.Current == null)
+            try
             {
-                return true;
-            }
+                if (_multiplayerActorAccessor.Current == null)
+                {
+                    return true;
+                }
 
-            var canToggle = _multiplayerActorAccessor.Current.CanTogglePause(isPaused);
-            return canToggle;
+                var canToggle = _multiplayerActorAccessor.Current.CanTogglePause(isPaused);
+                return canToggle;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while toggling pause. IsPaused={IsPaused}", isPaused);
+                throw;
+            }
         }
 
         public void OnAutoPausedByTrapDetection()
         {
-            if (_multiplayerActorAccessor.Current == null)
+            try
             {
-                return;
-            }
+                if (_multiplayerActorAccessor.Current == null)
+                {
+                    return;
+                }
 
-            _multiplayerActorAccessor.Current.OnAutoPausedByTrapDetection();
+                _multiplayerActorAccessor.Current.OnAutoPausedByTrapDetection();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while processing autopause by trap detection");
+                throw;
+            }
         }
 
         public void OnLockpickInteraction(NetworkLockpickInteraction lockpickInteraction)
         {
-            if (_multiplayerActorAccessor.Current == null)
+            try
             {
-                return;
-            }
+                if (_multiplayerActorAccessor.Current == null)
+                {
+                    return;
+                }
 
-            var lockpickContext = _gameInteractionService.RemoteContext?.LockpickContext;
-            if (lockpickContext != null && string.Equals(lockpickContext.MapObjectId, lockpickInteraction.MapObject.Id, StringComparison.OrdinalIgnoreCase))
+                var lockpickContext = _gameInteractionService.RemoteContext?.LockpickContext;
+                if (lockpickContext != null && string.Equals(lockpickContext.MapObjectId, lockpickInteraction.MapObject.Id, StringComparison.OrdinalIgnoreCase))
+                {
+                    return;
+                }
+
+                _multiplayerActorAccessor.Current.OnLockpickInteraction(lockpickInteraction);
+            }
+            catch (Exception ex)
             {
-                return;
+                _logger.LogError(ex, "Error while processing lockpick interaction. MapObjectId={MapObjectId}", lockpickInteraction.MapObject.Id);
+                throw;
             }
-
-            _multiplayerActorAccessor.Current.OnLockpickInteraction(lockpickInteraction);
         }
 
         private void ShowEscMenuMultiplayerLobby()

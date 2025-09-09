@@ -496,7 +496,7 @@ namespace WOTRMultiplayer.MP.Actors
             Send(message);
         }
 
-        public void OnCharacterLevelingStarted(string unitId)
+        public bool OnRequestLevelingUI(string unitId)
         {
             if (Game.Leveling != null)
             {
@@ -513,6 +513,8 @@ namespace WOTRMultiplayer.MP.Actors
                 Logger.LogInformation("Sending {MessageType}. UnitId={UnitId}", nameof(NotifyCharacterLevelingStarted), message.UnitId);
                 Send(message);
             }
+
+            return true;
         }
 
         public bool CanTogglePause(bool isPaused)

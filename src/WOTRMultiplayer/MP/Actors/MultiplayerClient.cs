@@ -307,7 +307,7 @@ namespace WOTRMultiplayer.MP.Actors
             }
         }
 
-        public bool RequestLevelingUI(string unitId)
+        public bool OnRequestLevelingUI(string unitId)
         {
             if (Game.Leveling != null)
             {

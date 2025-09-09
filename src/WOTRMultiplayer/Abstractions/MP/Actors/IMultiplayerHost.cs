@@ -35,8 +35,7 @@ namespace WOTRMultiplayer.Abstractions.MP.Actors
         void OnAfterTryRollRandomEncounter();
 
         void OnMakeVendorDeal();
-        void OnCloseVendorWindow();
 
-        void OnCharacterLevelingStarted(string unitId);
+        void OnCloseVendorWindow();
     }
 }
