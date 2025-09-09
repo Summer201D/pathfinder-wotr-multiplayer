@@ -1100,9 +1100,8 @@ namespace WOTRMultiplayer.MP.Actors
 
                     OnPlayersChanged?.Invoke(Game.Players);
 
-                    var players = Game.Players.Select(x => new Networking.Messages.Contracts.NetworkPlayer { Id = x.Id, Name = x.Name, IsReady = x.IsReady }).ToList();
-                    var playersChanged = new NotifyPlayersChanged { Players = players };
-                    Logger.LogInformation("Sending {MessageType} to ALL players", nameof(NotifyPlayersChanged));
+                    var playersChanged = CreateNotifyLobbyPlayersChanged();
+                    Logger.LogInformation("Sending {MessageType} to ALL players", nameof(NotifyLobbyPlayersChanged));
                     _networkServer.SendAll(playersChanged);
 
                     var notifyGameCharactersChanged = CreateNotifyGameCharactersChanged();
@@ -1163,14 +1162,24 @@ namespace WOTRMultiplayer.MP.Actors
                 }
 
                 OnPlayersChanged?.Invoke(Game.Players);
-                var message = new NotifyPlayerDisconnected { PlayerId = playerId };
-                _networkServer.SendAllExcept(playerId, message);
+                var playersChanged = CreateNotifyLobbyPlayersChanged();
+                Logger.LogInformation("Sending {MessageType}", nameof(NotifyLobbyPlayersChanged));
+                _networkServer.SendAllExcept(playerId, playersChanged);
                 ShowPlayerDisconnectedMessage(removedPlayer);
 
                 UpdateStartRestButton();
                 UpdateStartRestButtonAfterResults(playerId);
                 TryEnableDialogContinueButton();
             }
+        }
+
+        private NotifyLobbyPlayersChanged CreateNotifyLobbyPlayersChanged()
+        {
+            var playersChanged = new NotifyLobbyPlayersChanged
+            {
+                Players = Mapper.Map<List<Networking.Messages.Contracts.NetworkPlayer>>(Game.Players)
+            };
+            return playersChanged;
         }
 
         private void OnServerStarted(EndPoint endpoint)
@@ -1373,11 +1382,6 @@ namespace WOTRMultiplayer.MP.Actors
             };
 
             return charactersOwnerChanged;
-        }
-
-        private NetworkPlayer GetHost()
-        {
-            return Game.Players.First(f => f.Id == Game.LocalPlayerId);
         }
 
         private void UpdateStartRestButtonAfterResults(long player)

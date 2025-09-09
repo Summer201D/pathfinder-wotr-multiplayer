@@ -5,8 +5,8 @@ using WOTRMultiplayer.Networking.Messages.Contracts;
 namespace WOTRMultiplayer.Networking.Messages.Lobby
 {
     [ProtoContract]
-    [BeetleX.Packets.MessageType((int)MessageTypes.Lobby.NotifyPlayersChanged)]
-    public class NotifyPlayersChanged
+    [BeetleX.Packets.MessageType((int)MessageTypes.Lobby.NotifyLobbyPlayersChanged)]
+    public class NotifyLobbyPlayersChanged
     {
         [ProtoMember(1)]
         public List<NetworkPlayer> Players { get; set; } = [];

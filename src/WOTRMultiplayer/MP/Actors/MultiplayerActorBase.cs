@@ -893,21 +893,25 @@ namespace WOTRMultiplayer.MP.Actors
             var existingPlayer = GetPlayer(playerId);
             if (existingPlayer == null)
             {
-                Logger.LogWarning("Nothing to cleanup since player doesn't exist. PlayerId={PlayerId}", playerId);
                 return null;
             }
 
-            Game.Players.Remove(existingPlayer);
+            CleanupPlayer(existingPlayer);
+
+            return existingPlayer;
+        }
+
+        protected void CleanupPlayer(NetworkPlayer player)
+        {
+            Game.Players.Remove(player);
 
             foreach (var characterOwnership in Game.Characters)
             {
-                if (characterOwnership.Owner == existingPlayer)
+                if (characterOwnership.Owner == player)
                 {
                     characterOwnership.Owner = GetPlayer(NetworkingConsts.HostPlayerId);
                 }
             }
-
-            return existingPlayer;
         }
 
         protected HashSet<long> AddPlayerReadyStatus(PlayerTurnReadinessType playerReadinessType, long playerId, string unitId)
@@ -970,6 +974,11 @@ namespace WOTRMultiplayer.MP.Actors
             {
                 Game.Id = GameInteraction.LoadGameFromMainMenu(Game.SaveFilePath);
             }
+        }
+
+        protected NetworkPlayer GetHost()
+        {
+            return Game.Players.First(p => p.Id == NetworkingConsts.HostPlayerId);
         }
 
         protected void ForceLoadGame()

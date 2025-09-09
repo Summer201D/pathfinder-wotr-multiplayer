@@ -25,14 +25,17 @@ namespace WOTRMultiplayer.Config.Mapping
             CreateMap<NetworkVector3, Networking.Messages.Contracts.NetworkVector3>()
                 .ReverseMap();
 
+            CreateMap<NetworkPlayer, Networking.Messages.Contracts.NetworkPlayer>()
+                .ReverseMap();
+
             CreateMap<NetworkCharacterMove, Networking.Messages.Contracts.NetworkCharacterMove>()
-              .ReverseMap();
+                .ReverseMap();
 
             CreateMap<NetworkDialogAnswerSuggestion, Networking.Messages.Contracts.NetworkDialogAnswerSuggestion>()
-               .ReverseMap();
+                .ReverseMap();
 
             CreateMap<NetworkCharacterOwnership, Networking.Messages.Contracts.NetworkCharacterOwnership>()
-               .ReverseMap();
+                .ReverseMap();
 
             CreateMap<NetworkClick, Networking.Messages.Contracts.NetworkClick>()
                 .ReverseMap();

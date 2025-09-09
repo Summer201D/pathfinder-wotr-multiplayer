@@ -415,10 +415,9 @@ namespace WOTRMultiplayer.MP.Actors
 
                // lobby
                .On<NotifyLobbySaveGameChanged>(OnNotifyLobbySaveGameChanged)
-               .On<NotifyPlayerDisconnected>(OnNotifyPlayerDisconnected)
                .On<GameServerConnectionSucceeded>(OnGameServerConnectionSucceeded)
                .On<PlayerReadyStatusChanged>(OnPlayerReadyStatusChanged)
-               .On<NotifyPlayersChanged>(OnNotifyPlayersChanged)
+               .On<NotifyLobbyPlayersChanged>(OnNotifyLobbyPlayersChanged)
                .On<NotifyGameCharactersChanged>(OnNotifyGameCharactersChanged)
                .On<NotifyCharactersOwnerChanged>(OnNotifyCharactersOwnerChanged)
                .On<NotifyGameStarted>(OnNotifyGameStarted)
@@ -539,13 +538,6 @@ namespace WOTRMultiplayer.MP.Actors
             Logger.LogInformation("Received {MessageType}. Position={Position}", nameof(NotifySpawnCampPlace), place.Position);
             var position = Mapper.Map<NetworkVector3>(place.Position);
             GameInteraction.SpawnCampPlace(position);
-        }
-
-        private void OnNotifyPlayerDisconnected(long playerId, NotifyPlayerDisconnected disconnected)
-        {
-            Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}", nameof(NotifyPlayerDisconnected), disconnected.PlayerId);
-            var player = CleanupPlayer(disconnected.PlayerId);
-            ShowPlayerDisconnectedMessage(player);
         }
 
         private void OnNotifyInspectionKnowledgeCheckRolled(long playerId, NotifyInspectionKnowledgeCheckRolled rolled)
@@ -819,17 +811,22 @@ namespace WOTRMultiplayer.MP.Actors
             OnGameCharactersChanged?.Invoke(Game.Characters);
         }
 
-        private void OnNotifyPlayersChanged(long playerId, NotifyPlayersChanged changed)
+        private void OnNotifyLobbyPlayersChanged(long playerId, NotifyLobbyPlayersChanged changed)
         {
-            Logger.LogInformation("Received {MessageType}. PlayersCount={PlayersCount}", nameof(NotifyPlayersChanged), changed.Players.Count);
-            Game.Players.Clear();
-            var players = changed.Players.Select(p => new NetworkPlayer(p.Id) { IsReady = p.IsReady, Name = p.Name }).ToList();
-            Game.Players.AddRange(players);
+            Logger.LogInformation("Received {MessageType}. PlayersCount={PlayersCount}", nameof(NotifyLobbyPlayersChanged), changed.Players.Count);
 
-            // add or remove players should cause owner reset
-            foreach (var character in Game.Characters)
+            foreach (var changedPlayer in changed.Players)
             {
-                character.Owner = Game.Players.First();
+                var existingPlayer = Game.Players.FirstOrDefault(p => p.Id == changedPlayer.Id);
+                if (existingPlayer == null)
+                {
+                    var newPlayer = Mapper.Map<NetworkPlayer>(changedPlayer);
+                    Game.Players.Add(newPlayer);
+                    continue;
+                }
+
+                CleanupPlayer(existingPlayer);
+                ShowPlayerDisconnectedMessage(existingPlayer);
             }
 
             OnPlayersChanged?.Invoke(Game.Players);
