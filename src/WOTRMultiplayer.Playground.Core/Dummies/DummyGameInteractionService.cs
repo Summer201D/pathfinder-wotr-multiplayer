@@ -359,5 +359,10 @@ namespace WOTRMultiplayer.Playground.Core.Dummies
         {
             return Task.CompletedTask;
         }
+
+        public bool IsUnitAlive(string unitId)
+        {
+            return false;
+        }
     }
 }
