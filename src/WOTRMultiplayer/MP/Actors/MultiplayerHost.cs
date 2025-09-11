@@ -572,7 +572,7 @@ namespace WOTRMultiplayer.MP.Actors
         {
             lock (ActionLock)
             {
-                EnsureForcePaused(UIStringConsts.GameNotifications.ForcedPauseReasons.TrapDetected);
+                EnsureForcePaused(UIStringConsts.GameNotifications.ForcedPauseReasons.TrapDetected, removalDelay: null);
                 var playerId = GetLocalPlayerId();
                 Game.ForcedPause.ReadyPlayers.Add(playerId);
             }
@@ -769,7 +769,7 @@ namespace WOTRMultiplayer.MP.Actors
             lock (ActionLock)
             {
                 // single autopause case doesn't require clientGameAutoPaused.Reason for now
-                EnsureForcePaused(UIStringConsts.GameNotifications.ForcedPauseReasons.TrapDetected);
+                EnsureForcePaused(UIStringConsts.GameNotifications.ForcedPauseReasons.TrapDetected, removalDelay: null);
                 Game.ForcedPause.ReadyPlayers.Add(playerId);
             }
         }

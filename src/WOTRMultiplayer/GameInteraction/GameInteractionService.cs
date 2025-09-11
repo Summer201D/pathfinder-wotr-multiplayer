@@ -160,6 +160,15 @@ namespace WOTRMultiplayer.GameInteraction
                 if (mapObject.Interactions.Count == 0)
                 {
                     var view = FindOvertipForObject(mapObject);
+                    // game doesn't render overtips if it's not visible on your screen
+                    var areaTransitionComponent = mapObject.View.GetComponent<AreaTransition>();
+                    if (view == null && areaTransitionComponent != null)
+                    {
+                        var transitionOvertipVM = new EntityOvertipVM(mapObject, OvertipsView.Instance.GetViewModel() as OvertipsVM);
+                        OvertipsView.Instance.AddMapObject(transitionOvertipVM);
+                        view = FindOvertipForObject(mapObject);
+                    }
+
                     if (view is AreaTransitionOvertipView areaTransitionOvertip)
                     {
                         _logger.LogInformation("Interacting with {overtipType}. MapObjectId={MapObjectId}", nameof(AreaTransitionOvertipView), mapObject.UniqueId);
@@ -167,7 +176,7 @@ namespace WOTRMultiplayer.GameInteraction
                         return;
                     }
 
-                    _logger.LogWarning("Unable to find overtip for object with 0 interactions. MapObjectId={MapObjectId}", mapObject.UniqueId);
+                    _logger.LogWarning("Unable to interact with target object. MapObjectId={MapObjectId}", mapObject.UniqueId);
                     return;
                 }
 
@@ -565,7 +574,7 @@ namespace WOTRMultiplayer.GameInteraction
                 {
                     Id = c.UniqueId,
                     Position = new NetworkVector3(c.Position.x, c.Position.y, c.Position.z),
-                    Orientation = c.Orientation
+                    Orientation = c.Orientation,
                 })
                 .ToList();
 
@@ -803,7 +812,7 @@ namespace WOTRMultiplayer.GameInteraction
 
                 if (networkAbility.ActionsState != null)
                 {
-                    UpdateActionsState(networkAbility.ActionsState);
+                    //UpdateActionsState(networkAbility.ActionsState);
                 }
 
                 Enum.TryParse<UnitCommand.CommandType>(networkAbility.CommandType, true, out var commandType);
@@ -2671,7 +2680,7 @@ namespace WOTRMultiplayer.GameInteraction
 
                     if (click.ActionsState != null)
                     {
-                        UpdateActionsState(click.ActionsState);
+                        //UpdateActionsState(click.ActionsState);
                     }
 
                     if (click.VectorPath != null && click.VectorPath.Count > 0)
@@ -2694,6 +2703,7 @@ namespace WOTRMultiplayer.GameInteraction
                         _logger.LogInformation("AttackMode has been set. AttackMode={AttackMode}", click.AttackMode.Value);
                     }
 
+                    clickEventHandler.OnClick(targetUnit?.View?.gameObject, worldPosition, click.Button, simulate: true, click.MuteEvents, IsTMBClick: false);
                     clickEventHandler.OnClick(targetUnit?.View?.gameObject, worldPosition, click.Button, simulate: false, click.MuteEvents, IsTMBClick: false);
                 }
                 catch (Exception ex)

@@ -31,7 +31,7 @@ namespace WOTRMultiplayer.Networking.Messages.Contracts
         public NetworkActionsState ActionsState { get; set; }
 
         [ProtoMember(9)]
-        public bool IsTurnBasedModeClick { get; set; }
+        public bool IsTMBClick { get; set; }
 
         [ProtoMember(10)]
         public bool IsLootBagMapObject { get; set; }

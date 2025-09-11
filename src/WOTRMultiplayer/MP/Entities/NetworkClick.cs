@@ -23,7 +23,7 @@ namespace WOTRMultiplayer.MP.Entities
 
         public NetworkActionsState ActionsState { get; set; }
 
-        public bool IsTurnBasedModeClick { get; set; }
+        public bool IsTMBClick { get; set; }
 
         public TurnController.AttackMode? AttackMode { get; set; }
     }

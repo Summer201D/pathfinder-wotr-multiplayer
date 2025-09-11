@@ -64,11 +64,48 @@ namespace WOTRMultiplayer.HarmonyPatches
             Main.GetLogger<TurnBasedCombatPatches>().LogInformation("Transpiler has been applied. Target={Target}", target);
         }
 
+        public static void ReplaceIsDirectlyControllableWithLocalPlayerCheck(CodeMatcher matcher, string target, bool withLabels = false, bool fromEnd = false)
+        {
+            var replaceWith = AccessTools.Method(typeof(CommonTranspilerReplacements), nameof(CommonTranspilerReplacements.IsControlledByLocalPlayer));
+            var lookFor = AccessTools.PropertyGetter(typeof(UnitEntityData), nameof(UnitEntityData.IsDirectlyControllable));
+            var match = fromEnd ? matcher.End().SearchBackwards(x => x.Calls(lookFor)) : matcher.SearchForward(x => x.Calls(lookFor));
+            if (match.IsInvalid)
+            {
+                Main.GetLogger<TurnBasedCombatPatches>().LogError("Transpiler has not been applied. Target={Target}", target);
+                return;
+            }
+
+            var call = new CodeInstruction(OpCodes.Call, replaceWith);
+            if (withLabels)
+            {
+                var labels = match.Instruction.ExtractLabels();
+                call = call.WithLabels(labels);
+            }
+
+            match.RemoveInstruction();
+            match.Insert(call);
+
+            Main.GetLogger<TurnBasedCombatPatches>().LogInformation("Transpiler has been applied. Target={Target}", target);
+        }
+
         public static bool IsControlledByPlayers(UnitEntityData unit)
         {
             try
             {
                 return unit.IsDirectlyControllable || Main.Multiplayer.IsActive && Main.Multiplayer.IsControlledByPlayers(unit.UniqueId);
+            }
+            catch (System.Exception ex)
+            {
+                Main.GetLogger<CommonTranspilerReplacements>().LogError(ex, "Failed to check if controlled by players. UnitId={unitId}", unit?.UniqueId);
+                throw;
+            }
+        }
+
+        public static bool IsControlledByLocalPlayer(UnitEntityData unit)
+        {
+            try
+            {
+                return unit.IsDirectlyControllable && Main.Multiplayer.IsActive && Main.Multiplayer.IsControlledByLocalPlayer(unit.UniqueId);
             }
             catch (System.Exception ex)
             {

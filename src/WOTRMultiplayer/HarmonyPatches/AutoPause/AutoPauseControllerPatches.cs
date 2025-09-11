@@ -12,17 +12,17 @@ namespace WOTRMultiplayer.HarmonyPatches.AutoPause
     [HarmonyPatch]
     public class AutoPauseControllerPatches
     {
-        [HarmonyPatch(typeof(AutoPauseController), nameof(AutoPauseController.Pause))]
-        [HarmonyTranspiler]
-        public static IEnumerable<CodeInstruction> AutoPauseController_Pause_Transpiler(IEnumerable<CodeInstruction> instructions)
-        {
-            var target = PatchesUtils.GetTranspilerTarget(MethodBase.GetCurrentMethod());
-            var matcher = new CodeMatcher(instructions);
+        //[HarmonyPatch(typeof(AutoPauseController), nameof(AutoPauseController.Pause))]
+        //[HarmonyTranspiler]
+        //public static IEnumerable<CodeInstruction> AutoPauseController_Pause_Transpiler(IEnumerable<CodeInstruction> instructions)
+        //{
+        //    var target = PatchesUtils.GetTranspilerTarget(MethodBase.GetCurrentMethod());
+        //    var matcher = new CodeMatcher(instructions);
 
-            CommonTranspilerReplacements.ReplaceIsDirectlyControllable(matcher, target);
+        //    CommonTranspilerReplacements.ReplaceIsDirectlyControllable(matcher, target);
 
-            return matcher.Instructions();
-        }
+        //    return matcher.Instructions();
+        //}
 
         [HarmonyPatch(typeof(AutoPauseController), nameof(AutoPauseController.OnEntityNoticed))]
         [HarmonyPostfix]

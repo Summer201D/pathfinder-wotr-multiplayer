@@ -339,7 +339,8 @@ namespace WOTRMultiplayer.MP.Actors
         {
             var message = new ClientGameAutoPaused();
             Send(message);
-            EnsureForcePaused(null);
+            // reason is null because we need to show generic 'unpausable as a client' message
+            EnsureForcePaused(reason: null, removalDelay: null);
         }
 
         public bool OnStopGameMode(GameModeType type)

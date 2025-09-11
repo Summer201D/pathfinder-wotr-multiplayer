@@ -984,6 +984,7 @@ namespace WOTRMultiplayer.MP.Actors
         {
             ResetGameIdGenerator();
             Game.ForcedPause = null;
+            Game.Dialog = null;
 
             // We need to use different save load method if someone joined mid game
             // I assume game just need to load more resources or whatever if you are not in the game already
@@ -1018,7 +1019,6 @@ namespace WOTRMultiplayer.MP.Actors
         protected void SoftReset()
         {
             Logger.LogInformation("Doing soft reset");
-            Game.Dialog = null;
             Game.SaveFilePath = null;
             Game.Combat = null;
             Game.Leveling = null;

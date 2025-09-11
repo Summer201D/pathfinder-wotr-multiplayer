@@ -122,7 +122,7 @@ namespace WOTRMultiplayer.HarmonyPatches.Clicks
             }
         }
 
-        private static NetworkClick CreateClick(GameObject gameObject, int button, Vector3 worldPosition, bool muteEvents, bool isTurnBasedModeClick)
+        private static NetworkClick CreateClick(GameObject gameObject, int button, Vector3 worldPosition, bool muteEvents, bool isTMBClick)
         {
             var selectedUnits = Game.Instance.SelectionCharacter.SelectedUnits.Select(x => x.UniqueId)?.ToList();
             var targetUnitId = gameObject?.GetComponent<UnitEntityView>()?.UniqueId;
@@ -137,7 +137,7 @@ namespace WOTRMultiplayer.HarmonyPatches.Clicks
                 TargetUnitId = targetUnitId,
                 MapObjectId = mapObject?.UniqueId,
                 IsLootBagMapObject = mapObject?.Data is DroppedLoot.EntityData,
-                IsTurnBasedModeClick = isTurnBasedModeClick,
+                IsTMBClick = isTMBClick,
                 Button = button,
                 WorldPosition = new NetworkVector3(worldPosition.x, worldPosition.y, worldPosition.z),
                 MuteEvents = muteEvents,
