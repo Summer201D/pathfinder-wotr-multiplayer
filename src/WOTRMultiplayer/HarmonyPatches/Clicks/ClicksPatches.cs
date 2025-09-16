@@ -111,7 +111,6 @@ namespace WOTRMultiplayer.HarmonyPatches.Clicks
 
             try
             {
-
                 var click = CreateClick(gameObject, button, worldPosition, muteEvents, IsTMBClick);
                 Main.Multiplayer.OnClickMapObject(click);
             }

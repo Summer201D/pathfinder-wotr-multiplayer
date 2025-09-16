@@ -38,7 +38,7 @@ namespace WOTRMultiplayer.HarmonyPatches.Combat
 
         [HarmonyPatch(typeof(AiBrainController), nameof(AiBrainController.FindBestAction))]
         [HarmonyPostfix]
-        public static void AiBrainController_FindBestAction_Postfix(UnitEntityData unit, DecisionContext context, ref AiAction bestActionResult, ref UnitEntityData bestTargetResult, bool isAutoUseAbility)
+        public static void AiBrainController_FindBestAction_Postfix(UnitEntityData unit, DecisionContext context, ref AiAction bestActionResult, ref UnitEntityData bestTargetResult, ref bool isAutoUseAbility)
         {
             if (!Main.Multiplayer.IsActive)
             {
@@ -63,13 +63,13 @@ namespace WOTRMultiplayer.HarmonyPatches.Combat
 
             if (!string.Equals(bestActionResult.Blueprint.AssetGuid.ToString(), possibleOverride.ActionBlueprintId, StringComparison.OrdinalIgnoreCase))
             {
-                Main.GetLogger<AiBrainControllerPatches>().LogWarning("Replacing best action result. NewActionBlueprintId={NewActionBlueprintId}", possibleOverride.ActionBlueprintId);
+                Main.GetLogger<AiBrainControllerPatches>().LogWarning("Replacing best action result. PreviousActionBlueprintId={PreviousActionBlueprintId}, NewActionBlueprintId={NewActionBlueprintId}", bestActionResult.Blueprint.AssetGuid.ToString(), possibleOverride.ActionBlueprintId);
                 bestActionResult = FindAIAction(unit, isAutoUseAbility, possibleOverride);
             }
 
             if (!string.Equals(bestTargetResult?.UniqueId, possibleOverride.TargetId, StringComparison.OrdinalIgnoreCase))
             {
-                Main.GetLogger<AiBrainControllerPatches>().LogWarning("Replacing best target result. NewTargetUnitId={NewTargetUnitId}", possibleOverride.TargetId);
+                Main.GetLogger<AiBrainControllerPatches>().LogWarning("Replacing best target result. PreviousTargetUnitId={PreviousTargetUnitId}, NewTargetUnitId={NewTargetUnitId}", bestTargetResult?.UniqueId, possibleOverride.TargetId);
                 bestTargetResult = FindActionTarget(possibleOverride.TargetId);
             }
 

@@ -2068,6 +2068,37 @@ namespace WOTRMultiplayer.GameInteraction
             });
         }
 
+        public void AttackUnit(NetworkUnitAttack attack)
+        {
+            _mainThreadAccessor.Post(() =>
+            {
+                var executor = GetUnitEntity(attack.ExecutorUnitId);
+                if (executor == null)
+                {
+                    _logger.LogError("Unable to find executor unit to perform unit attack command. ExecutorUnitId={ExecutorUnitId}", attack.ExecutorUnitId);
+                    return;
+                }
+                var target = GetUnitEntity(attack.TargetUnitId);
+                if (target == null)
+                {
+                    _logger.LogError("Unable to find target unit to perform unit attack command. TargetUnitId={TargetUnitId}", attack.TargetUnitId);
+                    return;
+                }
+
+                var command = UnitAttack.CreateAttackCommand(executor, target) as UnitAttack;
+                if (attack.IsFullAttack)
+                {
+                    command.ForceFullAttack = true;
+                }
+
+                var movementPath = attack.VectorPath.Select(v => new Vector3(v.X, v.Y, v.Z)).ToList();
+                command.ForcedPath = new ForcedPath(movementPath);
+                command.CreatedByPlayer = true;
+                _logger.LogInformation("Starting unit attack command. ExecutorUnitId={ExecutorUnitId}, TargetUnitId={TargetUnitId}, ForceFullAttack={ForceFullAttack}", attack.ExecutorUnitId, attack.TargetUnitId, attack.IsFullAttack);
+                executor.Commands.Run(command);
+            });
+        }
+
         private List<NetworkUnit> GetUnitsInCombat()
         {
             var unitsInCombat = Game.Instance.State.Units.InCombat().ToList();

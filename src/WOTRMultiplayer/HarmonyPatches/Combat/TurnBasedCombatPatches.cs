@@ -92,6 +92,41 @@ namespace WOTRMultiplayer.HarmonyPatches.Combat
             return canContinue;
         }
 
+        //[HarmonyPatch(typeof(TurnController), nameof(TurnController.GetRemainingMovementRange))]
+        //[HarmonyPostfix]
+        //public static void TurnController_GetRemainingMovementRange_Prefix(TurnController __instance, UnitEntityData unit, bool total, bool singleActionMove, ref float __result)
+        //{
+        //    if (!Main.Multiplayer.IsActive)
+        //    {
+        //        return;
+        //    }
+
+        //    if (Main.Multiplayer.HasUnlimitedCombatMovement(unit.UniqueId))
+        //    {
+        //        __result = __result * 1.1f;
+        //        __instance.m_RiderCooldown.MoveAction = 0f;
+        //        __instance.m_RiderCooldown.StandardAction = 0f;
+        //        __instance.m_RiderCooldown.SwiftAction = 0f;
+        //    }
+        //}
+
+        //[HarmonyPatch(typeof(TurnController), nameof(TurnController.GetRemainingMovementTime))]
+        //[HarmonyPostfix]
+        //public static void TurnController_GetRemainingMovementTime_Prefix(TurnController __instance, UnitEntityData unit, bool total, bool singleActionMove, ref float __result)
+        //{
+        //    if (!Main.Multiplayer.IsActive)
+        //    {
+        //        return;
+        //    }
+
+        //    if (Main.Multiplayer.HasUnlimitedCombatMovement(unit.UniqueId))
+        //    {
+        //        __result = __result * 1.1f;
+        //        __instance.m_RiderCooldown.MoveAction = 0f;
+        //        __instance.m_RiderCooldown.StandardAction = 0f;
+        //        __instance.m_RiderCooldown.SwiftAction = 0f;
+        //    }
+        //}
 
         [HarmonyPatch(typeof(TurnController), nameof(TurnController.Tick))]
         [HarmonyPrefix]
@@ -482,6 +517,25 @@ namespace WOTRMultiplayer.HarmonyPatches.Combat
 
         //    return matcher.Instructions();
         //}
+
+        [HarmonyPatch(typeof(PathVisualizer), nameof(PathVisualizer.Update))]
+        [HarmonyPrefix]
+        public static bool PathVisualizer_Update_Prefix()
+        {
+            if (!Main.Multiplayer.IsActive)
+            {
+                return true;
+            }
+
+            var rider = Game.Instance.TurnBasedCombatController.CurrentTurn?.Rider;
+            var isLocal = rider != null && Main.Multiplayer.IsControlledByLocalPlayer(rider.UniqueId);
+            if (!isLocal)
+            {
+                PathVisualizer.Instance.Clear();
+            }
+
+            return isLocal;
+        }
 
         /// <summary>
         /// Resets path each frame if !IsDirectlyControllable which breaks Multi Command sticky touch abilities, e.g. Cure Wounds

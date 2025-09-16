@@ -1438,6 +1438,24 @@ namespace WOTRMultiplayer.MP
             }
         }
 
+        public void OnUnitAttack(NetworkUnitAttack networkUnitAttack)
+        {
+            try
+            {
+                if (_multiplayerActorAccessor.Current == null)
+                {
+                    return;
+                }
+
+                _multiplayerActorAccessor.Current.OnUnitAttack(networkUnitAttack);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while processing unit attack. UnitId={UnitId}, TargetUnitId={TargetUnitId}", networkUnitAttack.ExecutorUnitId, networkUnitAttack.TargetUnitId);
+                throw;
+            }
+        }
+
         private void ShowEscMenuMultiplayerLobby()
         {
             _logger.LogInformation("Show lobby window");

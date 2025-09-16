@@ -159,6 +159,9 @@ namespace WOTRMultiplayer.Config.Mapping
 
             CreateMap<NetworkCombatState, Networking.Messages.Contracts.NetworkCombatState>()
                 .ReverseMap();
+
+            CreateMap<NetworkUnitAttack, Networking.Messages.Contracts.NetworkUnitAttack>()
+                .ReverseMap();
         }
     }
 }

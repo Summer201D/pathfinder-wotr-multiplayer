@@ -164,9 +164,33 @@ namespace WOTRMultiplayer.MP.Actors
             Logger.LogInformation("Sending ability use. CasterId={CasterId}, TargetId={TargetId}, TargetPoint={TargetPoint}, AbilityId={AbilityId}, SpellbookId={SpellbookId}, VectorPathCount={VectorPathCount}",
               ability.CasterId, ability.TargetId, ability.TargetPoint, ability.Id, ability.SpellbookId, ability.VectorPath?.Count);
 
-            var message = new NotifyAbilityUse
+            var message = new NotifyAbilityUsed
             {
                 Ability = Mapper.Map<Networking.Messages.Contracts.NetworkAbility>(ability)
+            };
+
+            Send(message);
+        }
+
+        public void OnUnitAttack(NetworkUnitAttack networkUnitAttack)
+        {
+            if (Game.Combat == null)
+            {
+                Logger.LogInformation("Skipping UnitAttack notification due to non combat state");
+                return;
+            }
+
+            var isLocal = IsControlledByLocalPlayer(networkUnitAttack.ExecutorUnitId);
+            if (!isLocal || (Game.Combat.Turn?.IsAI ?? false))
+            {
+                Logger.LogInformation("Skipping UnitAttack notification as executor is not controlled by local player. UnitId={UnitId}", networkUnitAttack.ExecutorUnitId);
+                return;
+            }
+
+            Logger.LogInformation("Sending Unit Attack use. ExecutorUnitId={ExecutorUnitId}, TargetUnitId={TargetUnitId}, IsFullAttack={IsFullAttack}", networkUnitAttack.ExecutorUnitId, networkUnitAttack.TargetUnitId, networkUnitAttack.IsFullAttack);
+            var message = new NotifyUnitAttacked
+            {
+                Attack = Mapper.Map<Networking.Messages.Contracts.NetworkUnitAttack>(networkUnitAttack)
             };
 
             Send(message);
@@ -436,6 +460,8 @@ namespace WOTRMultiplayer.MP.Actors
                 if (!string.Equals(Game.Combat.Turn.UnitId, unitId, StringComparison.OrdinalIgnoreCase))
                 {
                     Logger.LogError("Invalid unit turn start detected. ExpectedUnitId={ExpectedUnitId}, ActualUnitId={ActualUnitId}", Game.Combat.Turn.UnitId, unitId);
+                    InitializeNewTurn(unitId, actingInSurpriseRound);
+                    return false;
                 }
 
                 UpdateConfirmedMidCombatUnits();
@@ -444,19 +470,7 @@ namespace WOTRMultiplayer.MP.Actors
                 return true;
             }
 
-            Game.Combat.Turn = new NetworkCombatTurn
-            {
-                UnitId = unitId,
-                IsInProgress = false,
-                IsActingInSurpriseRound = actingInSurpriseRound,
-                IsLocalPlayer = IsControlledByLocalPlayer(unitId),
-                IsAI = GameInteraction.IsUnitAI(unitId),
-            };
-
-            Logger.LogWarning("OnTurnStart. UnitId={UnitId}, IsLocalPlayer={IsLocalPlayer}, IsAI={IsAI}, IsActingInSurpriseRound={IsActingInSurpriseRound}, IsInProgress={IsInProgress}",
-                unitId, Game.Combat.Turn.IsLocalPlayer, Game.Combat.Turn.IsAI, Game.Combat.Turn.IsActingInSurpriseRound, Game.Combat.Turn.IsInProgress);
-
-            OnLocalPlayerTurnStart();
+            InitializeNewTurn(unitId, actingInSurpriseRound);
 
             return false;
         }
@@ -1252,6 +1266,7 @@ namespace WOTRMultiplayer.MP.Actors
                 // combat
                 .On<NotifyUnitJoinedMidCombat>(OnNotifyUnitJoinedMidCombat)
                 .On<NotifyPlayerCombatTurnEnded>(OnNotifyPlayerCombatTurnEnded)
+                .On<NotifyUnitAttacked>(OnNotifyUnitAttacked)
                 // overtips
                 .On<NotifyOvertipInteracted>(OnNotifyOvertipInteracted)
                 // items&inventory
@@ -1263,7 +1278,7 @@ namespace WOTRMultiplayer.MP.Actors
                 // lockpick
                 .On<NotifyMapObjectLockpicked>(OnNotifyMapObjectLockpicked)
                 // abilities
-                .On<NotifyAbilityUse>(OnNotifyAbilityUsed)
+                .On<NotifyAbilityUsed>(OnNotifyAbilityUsed)
                 .On<NotifyToggleActivatableAbility>(OnNotifyToggleActivatableAbility)
                 // clicks
                 .On<NotifyUnitClicked>(OnNotifyUnitClicked)
@@ -1366,14 +1381,24 @@ namespace WOTRMultiplayer.MP.Actors
             OnAfterNetworkMessageHandled(playerId, activatableAbility);
         }
 
-        private void OnNotifyAbilityUsed(long playerId, NotifyAbilityUse abilityUse)
+        private void OnNotifyAbilityUsed(long playerId, NotifyAbilityUsed abilityUse)
         {
-            Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}, AbilityId={AbilityId}", nameof(NotifyAbilityUse), playerId, abilityUse.Ability.Id);
+            Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}, AbilityId={AbilityId}", nameof(NotifyAbilityUsed), playerId, abilityUse.Ability.Id);
 
             var ability = Mapper.Map<NetworkAbility>(abilityUse.Ability);
             GameInteraction.UseAbility(ability);
 
             OnAfterNetworkMessageHandled(playerId, abilityUse);
+        }
+
+        private void OnNotifyUnitAttacked(long playerId, NotifyUnitAttacked unitAttacked)
+        {
+            Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}, ExecutorUnitId={ExecutorUnitId}, TargetUnitId={TargetUnitId}, IsFullAttack={IsFullAttack}", nameof(NotifyUnitAttacked), playerId, unitAttacked.Attack.ExecutorUnitId, unitAttacked.Attack.TargetUnitId, unitAttacked.Attack.IsFullAttack);
+
+            var attack = Mapper.Map<NetworkUnitAttack>(unitAttacked.Attack);
+            GameInteraction.AttackUnit(attack);
+
+            OnAfterNetworkMessageHandled(playerId, unitAttacked);
         }
 
         private void OnNotifyPlayerCombatTurnEnded(long playerId, NotifyPlayerCombatTurnEnded ended)
@@ -1642,6 +1667,23 @@ namespace WOTRMultiplayer.MP.Actors
                     }
                 }
             }
+        }
+
+        private void InitializeNewTurn(string unitId, bool actingInSurpriseRound)
+        {
+            Game.Combat.Turn = new NetworkCombatTurn
+            {
+                UnitId = unitId,
+                IsInProgress = false,
+                IsActingInSurpriseRound = actingInSurpriseRound,
+                IsLocalPlayer = IsControlledByLocalPlayer(unitId),
+                IsAI = GameInteraction.IsUnitAI(unitId),
+            };
+
+            Logger.LogWarning("OnTurnStart. UnitId={UnitId}, IsLocalPlayer={IsLocalPlayer}, IsAI={IsAI}, IsActingInSurpriseRound={IsActingInSurpriseRound}, IsInProgress={IsInProgress}",
+                unitId, Game.Combat.Turn.IsLocalPlayer, Game.Combat.Turn.IsAI, Game.Combat.Turn.IsActingInSurpriseRound, Game.Combat.Turn.IsInProgress);
+
+            OnLocalPlayerTurnStart();
         }
     }
 }

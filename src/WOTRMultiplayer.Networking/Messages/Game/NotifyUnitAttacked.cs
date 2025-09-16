@@ -4,10 +4,10 @@ using WOTRMultiplayer.Networking.Messages.Contracts;
 namespace WOTRMultiplayer.Networking.Messages.Game
 {
     [ProtoContract]
-    [BeetleX.Packets.MessageType((int)MessageTypes.Game.NotifyAbilityUse)]
-    public class NotifyAbilityUse
+    [BeetleX.Packets.MessageType((int)MessageTypes.Game.NotifyUnitAttacked)]
+    public class NotifyUnitAttacked
     {
         [ProtoMember(1)]
-        public NetworkAbility Ability { get; set; }
+        public NetworkUnitAttack Attack { get; set; }
     }
 }

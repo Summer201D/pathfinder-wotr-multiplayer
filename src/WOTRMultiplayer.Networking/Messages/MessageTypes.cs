@@ -36,7 +36,7 @@
             CueWitnessed,
             DialogCueAnswerSuggested,
             GamePauseChanged,
-            NotifyAbilityUse,
+            NotifyAbilityUsed,
             NotifyActiveHandEquipmentSetChanged,
             NotifyCampingStateChanged,
             NotifyCampingUnitsRoleChanged,
@@ -91,6 +91,7 @@
             ClientGameAutoPaused,
             NotifyContainerSkinned,
             NotifyMapObjectLockpicked,
+            NotifyUnitAttacked,
         }
 
         public enum Request

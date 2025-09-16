@@ -175,5 +175,7 @@ namespace WOTRMultiplayer.Abstractions.MP
         void OnAutoPausedByTrapDetection();
 
         void OnLockpickInteraction(NetworkLockpickInteraction lockpickInteraction);
+
+        void OnUnitAttack(NetworkUnitAttack networkUnitAttack);
     }
 }
