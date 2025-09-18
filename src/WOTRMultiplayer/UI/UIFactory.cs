@@ -292,8 +292,8 @@ namespace WOTRMultiplayer.UI
             UnityEngine.Object.Instantiate(context.View.gameObject.transform.Find("BackgroudWorldCover"), windowContainer.transform);
             windowContainer.name = "EscMultiplayerLobbyWindowContainer";
             var windowContainerRect = windowContainer.GetComponent<RectTransform>();
-            var windowHeight = Math.Min(Screen.height * 0.65f, 1000);
             var windowWidth = Math.Min(Screen.width * 0.45f, 1444);
+            var windowHeight = Math.Min(Screen.height * 0.65f, 1000);
             _logger.LogInformation("Settings lobby window size. ScreenWidth={ScreenWidth}, ScreenHeight={ScreenHeight}, WindowWidth={WindowWidth}, WindowHeight={WindowHeight}", Screen.width, Screen.height, windowWidth, windowHeight);
             windowContainerRect.sizeDelta = new Vector2(windowWidth, windowHeight);
             windowContainerRect.anchorMin = new Vector2(0.5f, 0.5f);

@@ -580,7 +580,6 @@ namespace WOTRMultiplayer.MP.Actors
             }
         }
 
-
         private async void OnDiceRollValueRequest(long playerId, DiceRollValueRequest request)
         {
             Logger.LogInformation("Received {MessageType}. RollId={RollId}", nameof(DiceRollValueRequest), request.RollId);
