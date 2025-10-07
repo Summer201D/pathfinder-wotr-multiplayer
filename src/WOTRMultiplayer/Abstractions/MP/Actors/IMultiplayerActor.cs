@@ -167,5 +167,9 @@ namespace WOTRMultiplayer.Abstractions.MP.Actors
         void OnHandleDelayCombatTurn(string unitId, string targetUnitId);
 
         void OnSetUnitStealthEnabled(string unitId, bool isEnabled, bool isForced);
+
+        void OnShowGroupChangerUI();
+
+        bool OnClickGroupChangerUnit(string unitId);
     }
 }

@@ -14,8 +14,7 @@ namespace WOTRMultiplayer.HarmonyPatches.Rest
     public class PlaceRestMarkerHandlerPatches
     {
         /// <summary>
-        /// the only reason why this is a transpiler of PlaceRestMarkerHandler because RestHelper throws TypeInitialization exception on attempt to patch
-        /// (thank you for accessing UIStrings.Instance.Rest in a static field)
+        /// RestHelper type initializer depends on other static fields (UIStrings.Instance.Rest) which can't be initialized early on, so we have to patch this class/method instead
         /// </summary>
         /// <param name="instructions"></param>
         /// <returns></returns>
@@ -49,12 +48,11 @@ namespace WOTRMultiplayer.HarmonyPatches.Rest
         {
             var position = new NetworkVector3(worldPosition.x, worldPosition.y, worldPosition.z);
             var canContinue = Main.Multiplayer.OnSpawnCampPlace(position);
-            if (!canContinue)
+            if (canContinue)
             {
-                return;
+                Main.GetLogger<PlaceRestMarkerHandlerPatches>().LogInformation("Spawning camp place. Position={Position}", position);
+                RestHelper.SpawnCampPlace(worldPosition);
             }
-
-            RestHelper.SpawnCampPlace(worldPosition);
         }
     }
 }

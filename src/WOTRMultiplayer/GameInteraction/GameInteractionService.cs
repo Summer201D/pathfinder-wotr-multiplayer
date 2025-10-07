@@ -44,6 +44,7 @@ using Kingmaker.UI.MVVM._PCView.CharGen.Phases.Spells;
 using Kingmaker.UI.MVVM._PCView.Dialog.BookEvent;
 using Kingmaker.UI.MVVM._PCView.Dialog.Dialog;
 using Kingmaker.UI.MVVM._PCView.Dialog.Interchapter;
+using Kingmaker.UI.MVVM._PCView.GroupChanger;
 using Kingmaker.UI.MVVM._PCView.InGame;
 using Kingmaker.UI.MVVM._PCView.Rest;
 using Kingmaker.UI.MVVM._VM.CharGen.Phases;
@@ -51,6 +52,7 @@ using Kingmaker.UI.MVVM._VM.CharGen.Phases.Class;
 using Kingmaker.UI.MVVM._VM.CharGen.Phases.FeatureSelector;
 using Kingmaker.UI.MVVM._VM.CharGen.Phases.Spells;
 using Kingmaker.UI.MVVM._VM.Dialog.Dialog;
+using Kingmaker.UI.MVVM._VM.GroupChanger;
 using Kingmaker.UI.MVVM._VM.Lockpick;
 using Kingmaker.UI.MVVM._VM.Party;
 using Kingmaker.UI.MVVM._VM.Rest;
@@ -67,6 +69,7 @@ using Kingmaker.View.MapObjects;
 using Microsoft.Extensions.Logging;
 using Owlcat.Runtime.UI.Controls.Button;
 using Owlcat.Runtime.UI.SelectionGroup;
+using TMPro;
 using UniRx;
 using UnityEngine;
 using WOTRMultiplayer.Abstractions.GameInteraction;
@@ -119,6 +122,7 @@ namespace WOTRMultiplayer.GameInteraction
 
         private InGamePCView InGamePCView => (Game.Instance.RootUiContext.m_UIView as InGamePCView);
         private RestPCView RestView => InGamePCView?.m_StaticPartPCView?.m_RestContextPCView?.m_RestPCView;
+        private GroupChangerPCView GroupChangerView => InGamePCView?.m_StaticPartPCView?.m_GroupChangerContextPCView?.m_GroupChangerPCView;
         private VendorVM VendorViewVM => InGamePCView?.m_StaticPartPCView?.m_VendorPCView?.GetViewModel() as VendorVM;
         private SpellbookMemorizingPanelVM SpellbookMemorizingVM => InGamePCView.m_StaticPartPCView?.m_ServiceWindowsPCView?.m_SpellbookPCView?.m_MemorizingPanelView?.GetViewModel() as SpellbookMemorizingPanelVM;
         private CharGenPCView CharGenView => InGamePCView.m_StaticPartPCView?.m_CharGenContextPCView?.m_CharGenPCView;
@@ -1301,6 +1305,7 @@ namespace WOTRMultiplayer.GameInteraction
             _mainThreadAccessor.Post(() =>
             {
                 var campPosition = new Vector3(position.X, position.Y, position.Z);
+                _logger.LogInformation("Spawning camp place. Position={Position}", position);
                 RestHelper.SpawnCampPlace(campPosition);
             });
         }
@@ -1375,27 +1380,130 @@ namespace WOTRMultiplayer.GameInteraction
             });
         }
 
-        public void SetStartRestButtonState(bool isInteractable, int readyPlayersCount, int totalPlayersCount)
+        public void UpdateGroupChangerUI(bool isInteractable, int readyPlayersCount, int totalPlayersCount)
         {
             _mainThreadAccessor.Post(() =>
             {
-                if (RestView == null)
+                try
                 {
-                    return;
+                    if (GroupChangerView == null)
+                    {
+                        return;
+                    }
+
+                    _logger.LogInformation("Changing group manager view state. IsInteractable={IsInteractable}, ReadyPlayers={ReadyPlayers}, TotalPlayers={TotalPlayers}", isInteractable, readyPlayersCount, totalPlayersCount);
+
+                    GroupChangerView.m_AcceptButton.Interactable = isInteractable;
+                    GroupChangerView.m_CloseButton.Interactable = isInteractable;
+                    var acceptButtonText = GroupChangerView.m_AcceptButton.GetComponentInChildren<TextMeshProUGUI>();
+                    UpdateButtonTextCounter(acceptButtonText, readyPlayersCount, totalPlayersCount);
                 }
-
-                _logger.LogInformation("Changing rest button state. IsInteractable={IsInteractable}, ReadyPlayers={ReadyPlayers}, TotalPlayers={TotalPlayers}", isInteractable, readyPlayersCount, totalPlayersCount);
-
-                RestView.m_StartRestButton.Interactable = isInteractable;
-
-                var baseText = RestView.m_StartRestButtonText.text;
-                if (baseText.EndsWith(")"))
+                catch (Exception ex)
                 {
-                    var parts = baseText.Split(' ');
-                    baseText = string.Join(" ", parts.Take(parts.Length - 1));
+                    _logger.LogError(ex, "Unable to update group manager view state");
+                    throw;
                 }
-                baseText += $" ({readyPlayersCount}/{totalPlayersCount})";
-                RestView.m_StartRestButtonText.SetText(baseText);
+            });
+        }
+
+        public void AcceptGroupChangerParty()
+        {
+            _mainThreadAccessor.Post(() =>
+            {
+                try
+                {
+                    if (GroupChangerView == null)
+                    {
+                        return;
+                    }
+
+                    var viewModel = GroupChangerView.GetViewModel() as GroupChangerVM;
+                    viewModel.InternalGo();
+                    viewModel.m_ActionGo?.Invoke();
+                    _logger.LogInformation("Group manager party has been accepted");
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Unable to accept group manager party");
+                    throw;
+                }
+            });
+        }
+
+        public void ClickGroupChangerUnit(string unitId)
+        {
+            _mainThreadAccessor.Post(() =>
+            {
+                try
+                {
+                    if (GroupChangerView == null)
+                    {
+                        return;
+                    }
+
+                    var view = GroupChangerView.m_CharacterViews.FirstOrDefault(v => string.Equals(v.UnitRef.UniqueId, unitId, StringComparison.OrdinalIgnoreCase));
+                    if (view == null)
+                    {
+                        _logger.LogError("Unable to find character view in group manager ui. UnitId={UnitId}", unitId);
+                        return;
+                    }
+
+                    var viewModel = view.GetViewModel() as GroupChangerCharacterVM;
+                    viewModel.Click.Execute(viewModel);
+                    _logger.LogInformation("Executed click on group manager unit. UnitId={UnitId}", unitId);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Unable to execute click for group manager unit. UnitId={UnitId}", unitId);
+                    throw;
+                }
+            });
+        }
+
+        public void CloseGroupChangerUI()
+        {
+            _mainThreadAccessor.Post(() =>
+            {
+                try
+                {
+                    if (GroupChangerView == null)
+                    {
+                        return;
+                    }
+
+                    _logger.LogInformation("Closing group manager view");
+                    var viewModel = GroupChangerView.GetViewModel() as GroupChangerVM;
+                    viewModel?.m_ActionClose?.Invoke();
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Unable to close group manager");
+                    throw;
+                }
+            });
+        }
+
+        public void UpdateStartRestButtonState(bool isInteractable, int readyPlayersCount, int totalPlayersCount)
+        {
+            _mainThreadAccessor.Post(() =>
+            {
+                try
+                {
+                    if (RestView == null)
+                    {
+                        return;
+                    }
+
+                    _logger.LogInformation("Changing rest button state. IsInteractable={IsInteractable}, ReadyPlayers={ReadyPlayers}, TotalPlayers={TotalPlayers}", isInteractable, readyPlayersCount, totalPlayersCount);
+
+                    RestView.m_StartRestButton.Interactable = isInteractable;
+                    UpdateButtonTextCounter(RestView.m_StartRestButtonText, readyPlayersCount, totalPlayersCount);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Unable to update start rest button state");
+                    throw;
+                }
             });
         }
 
@@ -2138,6 +2246,18 @@ namespace WOTRMultiplayer.GameInteraction
 
                 _logger.LogInformation("Unit stealth has been changed. UnitId={UnitId}, IsEnabled={IsEnabled}, IsForced={IsForced}", unitId, isEnabled, isForced);
             });
+        }
+
+        private void UpdateButtonTextCounter(TextMeshProUGUI buttonText, int readyPlayersCount, int totalPlayersCount)
+        {
+            var baseText = buttonText.text;
+            if (baseText.EndsWith(")"))
+            {
+                var parts = baseText.Split(' ');
+                baseText = string.Join(" ", parts.Take(parts.Length - 1));
+            }
+            baseText += $" ({readyPlayersCount}/{totalPlayersCount})";
+            buttonText.SetText(baseText);
         }
 
         private List<NetworkUnit> GetUnitsInCombat()

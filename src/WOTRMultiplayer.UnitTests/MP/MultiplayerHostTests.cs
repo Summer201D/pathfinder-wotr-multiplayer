@@ -118,7 +118,7 @@ namespace WOTRMultiplayer.UnitTests.MP
             handler.Invoke(playerId, request);
 
             // Assert
-            A.CallTo(() => _gameInteractionService.SetStartRestButtonState(true, 1, 0)).MustHaveHappenedOnceExactly();
+            A.CallTo(() => _gameInteractionService.UpdateStartRestButtonState(true, 1, 0)).MustHaveHappenedOnceExactly();
             Assert.That(_multiplayerHost.Game.PlayersFinishedRest, Contains.Item(playerId));
         }
     }

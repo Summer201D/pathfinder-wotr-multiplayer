@@ -6,6 +6,6 @@ namespace WOTRMultiplayer.Networking.Messages.Game
     [BeetleX.Packets.MessageType((int)MessageTypes.Game.ClientGameAutoPaused)]
     public class ClientGameAutoPaused
     {
-        // autopause type?
+        // autopause reason?
     }
 }

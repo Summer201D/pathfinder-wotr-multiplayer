@@ -766,15 +766,15 @@ namespace WOTRMultiplayer.MP
         {
             try
             {
+                if (_multiplayerActorAccessor.Current == null)
+                {
+                    return true;
+                }
+
                 if (_multiplayerActorAccessor.Client.IsActive)
                 {
                     _gameInteractionService.ShowWarningNotification(UIStringConsts.GameNotifications.TryingToSetUpCampAsAClient);
                     return false;
-                }
-
-                if (!_multiplayerActorAccessor.Host.IsActive)
-                {
-                    return true;
                 }
 
                 var canContinue = _multiplayerActorAccessor.Host.OnSpawnCampPlace(position);
@@ -861,6 +861,79 @@ namespace WOTRMultiplayer.MP
         public bool CanUseCampingUI()
         {
             return _multiplayerActorAccessor.Current != null && _multiplayerActorAccessor.Host.IsActive;
+        }
+
+        public void OnShowGroupChangerUI()
+        {
+            try
+            {
+                if (_multiplayerActorAccessor.Current == null)
+                {
+                    return;
+                }
+
+                _multiplayerActorAccessor.Current.OnShowGroupChangerUI();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while showing group changing ui");
+                throw;
+            }
+        }
+
+        public bool OnClickGroupChangerUnit(string unitId)
+        {
+            try
+            {
+                if (_multiplayerActorAccessor.Current == null)
+                {
+                    return true;
+                }
+
+                var canUse = _multiplayerActorAccessor.Current.OnClickGroupChangerUnit(unitId);
+                return canUse;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while checking group manager ui permissions");
+                throw;
+            }
+        }
+
+        public void OnCloseGroupChangerUI()
+        {
+            try
+            {
+                if (_multiplayerActorAccessor.Current == null || _multiplayerActorAccessor.Client.IsActive)
+                {
+                    return;
+                }
+
+                _multiplayerActorAccessor.Host.OnCloseGroupChangerPartyUI();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while closing group changing ui");
+                throw;
+            }
+        }
+
+        public void OnAcceptGroupChangerParty()
+        {
+            try
+            {
+                if (_multiplayerActorAccessor.Current == null || _multiplayerActorAccessor.Client.IsActive)
+                {
+                    return;
+                }
+
+                _multiplayerActorAccessor.Host.OnAcceptGroupChangerParty();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while accepting group changer ui");
+                throw;
+            }
         }
 
         public void OnBeforeTryRollRandomEncounter()

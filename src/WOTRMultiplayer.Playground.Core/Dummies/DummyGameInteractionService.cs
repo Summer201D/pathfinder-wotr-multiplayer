@@ -281,7 +281,7 @@ namespace WOTRMultiplayer.Playground.Core.Dummies
         {
         }
 
-        public void SetStartRestButtonState(bool isInteractable, int readyPlayersCount, int totalPlayersCount)
+        public void UpdateStartRestButtonState(bool isInteractable, int readyPlayersCount, int totalPlayersCount)
         {
         }
 
@@ -368,6 +368,22 @@ namespace WOTRMultiplayer.Playground.Core.Dummies
         }
 
         public void ChangeUnitStealth(string unitId, bool isEnabled, bool isForced)
+        {
+        }
+
+        public void UpdateGroupChangerUI(bool isInteractable, int readyPlayersCount, int totalPlayersCount)
+        {
+        }
+
+        public void CloseGroupChangerUI()
+        {
+        }
+
+        public void ClickGroupChangerUnit(string unitId)
+        {
+        }
+
+        public void AcceptGroupChangerParty()
         {
         }
     }

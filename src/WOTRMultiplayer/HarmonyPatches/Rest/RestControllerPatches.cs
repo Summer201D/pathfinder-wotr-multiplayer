@@ -13,15 +13,9 @@ namespace WOTRMultiplayer.HarmonyPatches.Rest
     [HarmonyPatch]
     public class RestControllerPatches
     {
-        /// <summary>
-        /// the only reason why this is a transpiler of PlaceRestMarkerHandler because RestHelper throws TypeInitialization exception on attempt to patch
-        /// (thank you for accessing UIStrings.Instance.Rest in a static field)
-        /// </summary>
-        /// <param name="instructions"></param>
-        /// <returns></returns>
         [HarmonyPatch(typeof(RestController), nameof(RestController.SkipPhase))]
         [HarmonyTranspiler]
-        public static IEnumerable<CodeInstruction> PlaceRestMarkerHandler_OnClick_Transpiler(IEnumerable<CodeInstruction> instructions)
+        public static IEnumerable<CodeInstruction> RestController_SkipPhase_Transpiler(IEnumerable<CodeInstruction> instructions)
         {
             var target = PatchesUtils.GetTranspilerTarget(MethodBase.GetCurrentMethod());
             var replaceWith = AccessTools.Method(typeof(RestControllerPatches), nameof(RestControllerPatches.OnInterruptBanterBark));

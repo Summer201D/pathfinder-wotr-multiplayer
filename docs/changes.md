@@ -3,7 +3,8 @@
 #### Disclaimer: All of the changes below only kick in when you’re playing in Multiplayer (started or joined through the Multiplayer Window). Single-player isn't affected at all, so you can keep playing normally. But if you are curious about what the mod adds, you can always host a solo game to check it out.
 
 ## Other Mods Compatibility
-Most of the syncing relies on the blueprint asset ID, so in **THEORY** things should work fine as long as those IDs line up for abilities, spells, etc. That said, compatibility with other mods hasn't really been tested and there are no plans to support it just yet.
+Most of the syncing relies on the blueprint asset ID (or something similiar) to replicate action for other players, so in **THEORY** things should work fine as long as those IDs are the same for abilities, spells, etc. This also includes any extra rolls (e.g. Skill Check or Attack Roll) added by mods, but those roll types must be available within base game.
+That said, compatibility with other mods hasn't really been tested at all and there are no plans to support it.
 
 However, this might be revised later on once multiplayer is stable enough to start focusing on making things play nicely with popular mods.
 
@@ -39,7 +40,7 @@ Some options can't be changed mid-game - you will see those grayed out in the se
 
 ## Basics
 
-- You need an existing save file to host a multiplayer game. That save gets shared with everyone in the lobby automatically.
+- You will need an existing save file to host a multiplayer game. If you are starting fresh, someone will have to kick things off in single-player first, which means you will miss a few opening dialogs and cutscenes - kinda annoying, but it is what it is.
 - The most recent multiplayer save is stored at `%APP_DATA%\LocalLow\Owlcat Games\Pathfinder Wrath Of The Righteous\Saved Multiplayer Games`
 - Mod logs are located in `Mods/WOTRMultiplayer/logs` folder
 - Once the game actually starts, a save copy is also stored in your normal save folder.
@@ -78,6 +79,14 @@ Everyone in the session has to see the dialog line before the host can pick an a
 ## Vendor
 
 Certain vendor actions are host-only, like finalizing a deal or closing the shop window. Everything else is fully synced and open to everyone - like moving items to buy/sell, bulk selling, or removing items in bulk.
+
+## Group Changer
+
+### Leaving zone
+Client is only a watcher with no permissions to change anything. Host can't change anything until everyone is ready (opened group changer screen). There is a counter within Accept button to see how many players are ready. Closing screen as a host will result in closing screen for everyone
+
+### Mid Zone (aka recruiting companions)
+TBD
 
 ## Area Transitions
 When someone triggers an area transition, the game tries to move the whole party (even characters you don't control) to the exit. Usually that works fine, but you can still cancel movement for your own characters. Because of network delay, this might not sync instantly for others, which can lead to one player loading the next area while the rest are still behind.
@@ -178,7 +187,7 @@ CharGen screen is synced for leveling only. You will need to create initial merc
 This might be available later, but it has very low priority
 
 ### TL/DR
-Right now, everything past the prologue isn't supported/implemented. The Tavern is the last safe location - you can't leave it without causing a full desync
+Act1 is mostly playable. Crusades are not implemented at all so your MP journey will end after Tavern Defense
 
 ## Long term plans
 

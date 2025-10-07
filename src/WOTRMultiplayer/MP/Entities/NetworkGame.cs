@@ -27,6 +27,8 @@ namespace WOTRMultiplayer.MP.Entities
 
         public HashSet<long> PlayersFinishedRest { get; set; } = [];
 
+        public HashSet<long> PlayersInGroupChanger { get; set; } = [];
+
         public NetworkCombat Combat { get; set; }
 
         public NetworkDialog Dialog { get; set; }
@@ -47,10 +49,12 @@ namespace WOTRMultiplayer.MP.Entities
 
         public void Reset()
         {
-            LocalPlayerId = 0; // -1 host << 0 default << 1+ clients
+            LocalPlayerId = default; // -1 host << 0 default << 1+ clients
             Players.Clear();
             Characters.Clear();
             PlayersInGameMode.Clear();
+            PlayersFinishedRest.Clear();
+            PlayersInGroupChanger.Clear();
             SaveFilePath = null;
             Connectivity = null;
             Stage = NetworkGameStage.None;

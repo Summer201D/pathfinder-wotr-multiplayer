@@ -220,6 +220,7 @@ namespace WOTRMultiplayer.MP.Actors
 
             return false;
         }
+
         public void OnBeforeTryRollRandomEncounter()
         {
             try
@@ -359,6 +360,19 @@ namespace WOTRMultiplayer.MP.Actors
             return true;
         }
 
+        public void OnShowGroupChangerUI()
+        {
+            OnShowGroupManager();
+
+            UpdateGroupManagerUIState(hasControlOverUI: false);
+        }
+
+        public bool OnClickGroupChangerUnit(string unitId)
+        {
+            // client is not allowed to move characters (no restrictions, just to avoid implementing extra synchronization)
+            return false;
+        }
+
         protected override bool OnStartGameModeInternal(GameModeType type)
         {
             var playerId = GetLocalPlayerId();
@@ -456,7 +470,41 @@ namespace WOTRMultiplayer.MP.Actors
                // inspection
                .On<NotifyPerceptionCheckRolled>(OnNotifyPerceptionCheckRolled)
                .On<NotifyInspectionKnowledgeCheckRolled>(OnNotifyInspectionKnowledgeCheckRolled)
+
+               // group management
+               .On<NotifyGroupChangerOpened>(OnNotifyGroupChangerOpened)
+               .On<NotifyGroupChangerClosed>(OnNotifyGroupChangerClosed)
+               .On<NotifyGroupChangerUnitClicked>(OnNotifyGroupChangerUnitClicked)
+               .On<NotifyGroupChangerPartyAccepted>(OnNotifyGroupChangerPartyAccepted)
                ;
+        }
+
+        private void OnNotifyGroupChangerPartyAccepted(long playerId, NotifyGroupChangerPartyAccepted groupChangerPartyAccepted)
+        {
+            Logger.LogInformation("Received {MessageType}", nameof(NotifyGroupChangerPartyAccepted));
+            Game.PlayersInGroupChanger.Clear();
+            GameInteraction.AcceptGroupChangerParty();
+        }
+
+        private void OnNotifyGroupChangerUnitClicked(long playerId, NotifyGroupChangerUnitClicked groupChangerUnitClicked)
+        {
+            Logger.LogInformation("Received {MessageType}. UnitId={UnitId}", nameof(NotifyGroupChangerUnitClicked), groupChangerUnitClicked.UnitId);
+            GameInteraction.ClickGroupChangerUnit(groupChangerUnitClicked.UnitId);
+        }
+
+        private void OnNotifyGroupChangerClosed(long playerId, NotifyGroupChangerClosed groupChangerClosed)
+        {
+            Logger.LogInformation("Received {MessageType}", nameof(NotifyGroupChangerClosed));
+
+            Game.PlayersInGroupChanger.Clear();
+            GameInteraction.CloseGroupChangerUI();
+        }
+
+        private void OnNotifyGroupChangerOpened(long playerId, NotifyGroupChangerOpened groupChangerOpened)
+        {
+            Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}", nameof(NotifyGroupChangerOpened), groupChangerOpened.PlayerId);
+            AddPlayersInGroupManager(groupChangerOpened.PlayerId);
+            UpdateGroupManagerUIState(hasControlOverUI: false);
         }
 
         private void OnNotifyPlayerSaveGameSyncStatusChanged(long playerId, NotifyPlayerSaveGameSyncStatusChanged playerSaveGameSyncStatus)

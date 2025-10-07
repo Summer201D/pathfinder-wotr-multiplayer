@@ -883,6 +883,46 @@ namespace WOTRMultiplayer.MP.Actors
 
         protected abstract bool OnStartGameModeInternal(GameModeType type);
 
+        protected abstract DiceRollValueResponse RetrieveRoll(DiceRollValueRequest rollRequest);
+
+        protected abstract void OnLocalPlayerTurnStart();
+
+        protected abstract void Send(object message);
+
+        protected abstract void Send(long playerId, object message);
+
+        protected void OnShowGroupManager()
+        {
+            var localPlayer = GetLocalPlayerId();
+            AddPlayersInGroupManager(localPlayer);
+
+            var message = new NotifyGroupChangerOpened
+            {
+                PlayerId = localPlayer
+            };
+            Logger.LogInformation("Sending {MessageType}. PlayerId={PlayerId}", nameof(NotifyGroupChangerOpened), message.PlayerId);
+            Send(message);
+        }
+
+        protected void UpdateGroupManagerUIState(bool hasControlOverUI)
+        {
+            lock (ActionLock)
+            {
+                var readyPlayers = Game.PlayersInGroupChanger.Count;
+                var totalPlayers = Game.Players.Count;
+                var canUse = hasControlOverUI && readyPlayers >= totalPlayers;
+                GameInteraction.UpdateGroupChangerUI(canUse, readyPlayers, totalPlayers);
+            }
+        }
+
+        protected void AddPlayersInGroupManager(long playerId)
+        {
+            lock (ActionLock)
+            {
+                Game.PlayersInGroupChanger.Add(playerId);
+            }
+        }
+
         protected void EnsureForcePaused(string reason, TimeSpan? removalDelay)
         {
             if (Game.ForcedPause == null)
@@ -937,13 +977,6 @@ namespace WOTRMultiplayer.MP.Actors
             return false;
         }
 
-        protected abstract DiceRollValueResponse RetrieveRoll(DiceRollValueRequest rollRequest);
-
-        protected abstract void OnLocalPlayerTurnStart();
-
-        protected abstract void Send(object message);
-
-        protected abstract void Send(long playerId, object message);
 
         protected void ShowPlayerDisconnectedMessage(NetworkPlayer networkPlayer)
         {

@@ -134,7 +134,7 @@ namespace WOTRMultiplayer.Abstractions.GameInteraction
 
         void SetCampingRoles(List<NetworkCampingRole> networkCampingRoles);
 
-        void SetStartRestButtonState(bool isInteractable, int readyPlayersCount, int totalPlayersCount);
+        void UpdateStartRestButtonState(bool isInteractable, int readyPlayersCount, int totalPlayersCount);
 
         void StartRest();
 
@@ -195,5 +195,13 @@ namespace WOTRMultiplayer.Abstractions.GameInteraction
         void DelayCombatTurn(string unitId, string targetUnitId);
 
         void ChangeUnitStealth(string unitId, bool isEnabled, bool isForced);
+
+        void UpdateGroupChangerUI(bool isInteractable, int readyPlayersCount, int totalPlayersCount);
+
+        void CloseGroupChangerUI();
+
+        void ClickGroupChangerUnit(string unitId);
+
+        void AcceptGroupChangerParty();
     }
 }

@@ -105,11 +105,16 @@ namespace WOTRMultiplayer.MP.Actors
             _networkServer.SendAll(message);
         }
 
+        /// <summary>
+        /// Initial save file info has no character IDs loaded, so we are kinda forced do deal with indexes
+        /// </summary>
+        /// <param name="characterIndex"></param>
+        /// <param name="playerIndex"></param>
         public void ChangeCharacterOwner(int characterIndex, int playerIndex)
         {
             lock (ActionLock)
             {
-                if (Game.Players.Count < playerIndex)
+                if (Game.Players.Count <= playerIndex)
                 {
                     Logger.LogError("Unable to change character owner as playerIndex is out of range. PlayersCount={PlayersCount}, PlayerIndex={PlayerIndex}", Game.Players.Count, playerIndex);
                     return;
@@ -572,6 +577,53 @@ namespace WOTRMultiplayer.MP.Actors
             }
         }
 
+        public void OnShowGroupChangerUI()
+        {
+            OnShowGroupManager();
+
+            UpdateGroupManagerUIState(hasControlOverUI: true);
+        }
+
+        public void OnCloseGroupChangerPartyUI()
+        {
+            var playerId = GetLocalPlayerId();
+            lock (ActionLock)
+            {
+                Game.PlayersInGroupChanger.Remove(playerId);
+            }
+
+            var message = new NotifyGroupChangerClosed();
+            Logger.LogInformation("Sending {MessageType}", nameof(NotifyGroupChangerClosed));
+            Send(message);
+        }
+
+        public bool OnClickGroupChangerUnit(string unitId)
+        {
+            var canUse = Game.PlayersInGroupChanger.Count >= Game.Players.Count;
+            if (!canUse)
+            {
+                return canUse;
+            }
+
+            var message = new NotifyGroupChangerUnitClicked
+            {
+                UnitId = unitId
+            };
+
+            Logger.LogInformation("Sending {MessageType}. UnitId={UnitId}", nameof(NotifyGroupChangerUnitClicked), message.UnitId);
+            Send(message);
+
+            return true;
+        }
+
+        public void OnAcceptGroupChangerParty()
+        {
+            var message = new NotifyGroupChangerPartyAccepted();
+
+            Logger.LogInformation("Sending {MessageType}", nameof(NotifyGroupChangerPartyAccepted));
+            Send(message);
+        }
+
         protected override bool OnStartGameModeInternal(GameModeType type)
         {
             var playerId = GetLocalPlayerId();
@@ -715,10 +767,10 @@ namespace WOTRMultiplayer.MP.Actors
             }
         }
 
-        protected override void OnAfterNetworkMessageHandled(long playerId, object message)
+        protected override void OnAfterNetworkMessageHandled(long senderPlayerId, object message)
         {
-            Logger.LogInformation("Resending message. ExceptPlayerId={ExceptPlayerId}, MessageType={MessageType}", playerId, message.GetType().Name);
-            _networkServer.SendAllExcept(playerId, message);
+            Logger.LogInformation("Resending message. ExceptPlayerId={ExceptPlayerId}, MessageType={MessageType}", senderPlayerId, message.GetType().Name);
+            _networkServer.SendAllExcept(senderPlayerId, message);
         }
 
         protected override void SetupNetworkMessageHandlers()
@@ -768,7 +820,19 @@ namespace WOTRMultiplayer.MP.Actors
 
                // pause
                .On<ClientGameAutoPaused>(OnClientGameAutoPaused)
+
+               // group management
+               .On<NotifyGroupChangerOpened>(OnNotifyGroupChangerVisible)
                ;
+        }
+
+        private void OnNotifyGroupChangerVisible(long playerId, NotifyGroupChangerOpened groupChangerVisible)
+        {
+            Logger.LogInformation("Received {MessageType}. SenderPlayerId={SenderPlayerId} PlayerId={PlayerId}", nameof(NotifyGroupChangerOpened), playerId, groupChangerVisible.PlayerId);
+            AddPlayersInGroupManager(groupChangerVisible.PlayerId);
+            UpdateGroupManagerUIState(hasControlOverUI: true);
+
+            OnAfterNetworkMessageHandled(playerId, groupChangerVisible);
         }
 
         private void OnClientGameAutoPaused(long playerId, ClientGameAutoPaused clientGameAutoPaused)
@@ -1411,12 +1475,11 @@ namespace WOTRMultiplayer.MP.Actors
             UpdateStartRestButton(readyPlayersCount);
         }
 
-
         private void UpdateStartRestButton(int readyPlayersCount)
         {
             var totalPlayersCount = Game.Players.Count;
             var isInteractable = readyPlayersCount >= totalPlayersCount;
-            GameInteraction.SetStartRestButtonState(isInteractable, readyPlayersCount, totalPlayersCount);
+            GameInteraction.UpdateStartRestButtonState(isInteractable, readyPlayersCount, totalPlayersCount);
         }
     }
 }

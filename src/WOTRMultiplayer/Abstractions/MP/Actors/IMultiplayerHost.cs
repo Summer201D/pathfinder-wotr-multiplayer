@@ -37,5 +37,9 @@ namespace WOTRMultiplayer.Abstractions.MP.Actors
         void OnMakeVendorDeal();
 
         void OnCloseVendorWindow();
+
+        void OnAcceptGroupChangerParty();
+
+        void OnCloseGroupChangerPartyUI();
     }
 }

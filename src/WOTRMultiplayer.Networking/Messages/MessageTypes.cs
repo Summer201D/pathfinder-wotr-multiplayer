@@ -94,6 +94,10 @@
             NotifyUnitAttacked,
             NotifyCombatTurnDelayed,
             NotifyUnitStealthChanged,
+            NotifyGroupChangerOpened,
+            NotifyGroupChangerClosed,
+            NotifyGroupChangerUnitClicked,
+            NotifyGroupChangerPartyAccepted,
         }
 
         public enum Request
