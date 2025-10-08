@@ -179,13 +179,12 @@ namespace WOTRMultiplayer.MP
                     return true;
                 }
 
-
                 var canContinue = _multiplayerActorAccessor.Current.OnStartGameMode(type);
                 return canContinue;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "{methodName}", MethodBase.GetCurrentMethod().Name);
+                _logger.LogError(ex, "Error while starting game mode. GameMode={GameMode}", type);
                 throw;
             }
         }
@@ -204,7 +203,7 @@ namespace WOTRMultiplayer.MP
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "{methodName}", MethodBase.GetCurrentMethod().Name);
+                _logger.LogError(ex, "Error while stopping game mode. GameMode={GameMode}", type);
                 throw;
             }
         }
@@ -227,7 +226,7 @@ namespace WOTRMultiplayer.MP
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "{methodName}", MethodBase.GetCurrentMethod().Name);
+                _logger.LogError(ex, "Error after cue show");
                 throw;
             }
         }
@@ -246,7 +245,7 @@ namespace WOTRMultiplayer.MP
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "{methodName}", MethodBase.GetCurrentMethod().Name);
+                _logger.LogError(ex, "Error before selecting dialog answer");
                 throw;
             }
         }
@@ -264,7 +263,7 @@ namespace WOTRMultiplayer.MP
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "{methodName}", MethodBase.GetCurrentMethod().Name);
+                _logger.LogError(ex, "Error after playing dialog cue");
                 throw;
             }
         }
@@ -1560,6 +1559,24 @@ namespace WOTRMultiplayer.MP
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error while changing unit stealth. UnitId={UnitId}, IsEnabled={IsEnabled}", unitId, isEnabled);
+                throw;
+            }
+        }
+
+        public void OnGlobalMapRestOpened()
+        {
+            try
+            {
+                if (_multiplayerActorAccessor.Current == null || _multiplayerActorAccessor.Client.IsActive)
+                {
+                    return;
+                }
+
+                _multiplayerActorAccessor.Host.OnGlobalMapRestMenuOpened();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while opening rest menu on global map");
                 throw;
             }
         }

@@ -386,5 +386,9 @@ namespace WOTRMultiplayer.Playground.Core.Dummies
         public void AcceptGroupChangerParty()
         {
         }
+
+        public void OpenGlobalMapRestMenu()
+        {
+        }
     }
 }

@@ -188,5 +188,7 @@ namespace WOTRMultiplayer.Abstractions.MP
         bool OnClickGroupChangerUnit(string unitId);
 
         void OnAcceptGroupChangerParty();
+
+        void OnGlobalMapRestOpened();
     }
 }

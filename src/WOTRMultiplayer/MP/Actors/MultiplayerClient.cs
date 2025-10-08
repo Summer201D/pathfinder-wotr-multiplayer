@@ -476,7 +476,16 @@ namespace WOTRMultiplayer.MP.Actors
                .On<NotifyGroupChangerClosed>(OnNotifyGroupChangerClosed)
                .On<NotifyGroupChangerUnitClicked>(OnNotifyGroupChangerUnitClicked)
                .On<NotifyGroupChangerPartyAccepted>(OnNotifyGroupChangerPartyAccepted)
+
+               // global map
+               .On<NotifyGlobalMapRestMenuOpened>(OnNotifyGlobalMapRestMenuOpened)
                ;
+        }
+
+        private void OnNotifyGlobalMapRestMenuOpened(long playerId, NotifyGlobalMapRestMenuOpened opened)
+        {
+            Logger.LogInformation("Received {MessageType}", nameof(NotifyGlobalMapRestMenuOpened));
+            GameInteraction.OpenGlobalMapRestMenu();
         }
 
         private void OnNotifyGroupChangerPartyAccepted(long playerId, NotifyGroupChangerPartyAccepted groupChangerPartyAccepted)

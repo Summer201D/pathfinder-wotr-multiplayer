@@ -203,5 +203,7 @@ namespace WOTRMultiplayer.Abstractions.GameInteraction
         void ClickGroupChangerUnit(string unitId);
 
         void AcceptGroupChangerParty();
+
+        void OpenGlobalMapRestMenu();
     }
 }

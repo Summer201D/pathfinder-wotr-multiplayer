@@ -41,5 +41,7 @@ namespace WOTRMultiplayer.Abstractions.MP.Actors
         void OnAcceptGroupChangerParty();
 
         void OnCloseGroupChangerPartyUI();
+
+        void OnGlobalMapRestMenuOpened();
     }
 }

@@ -123,7 +123,7 @@ namespace WOTRMultiplayer.GameInteraction
 
         private InGamePCView InGamePCView => (Game.Instance.RootUiContext.m_UIView as InGamePCView);
         private GlobalMapPCView GlobalMapPCView => (Game.Instance.RootUiContext.m_UIView as GlobalMapPCView);
-        private RestPCView RestView => InGamePCView?.m_StaticPartPCView?.m_RestContextPCView?.m_RestPCView;
+        private RestPCView RestView => InGamePCView?.m_StaticPartPCView?.m_RestContextPCView?.m_RestPCView ?? GlobalMapPCView?.m_RestPCView;
         private GroupChangerPCView GroupChangerView => (InGamePCView?.m_StaticPartPCView?.m_GroupChangerContextPCView ?? GlobalMapPCView?.m_GroupChangerContextPCView)?.m_GroupChangerPCView;
         private VendorVM VendorViewVM => InGamePCView?.m_StaticPartPCView?.m_VendorPCView?.GetViewModel() as VendorVM;
         private SpellbookMemorizingPanelVM SpellbookMemorizingVM => InGamePCView.m_StaticPartPCView?.m_ServiceWindowsPCView?.m_SpellbookPCView?.m_MemorizingPanelView?.GetViewModel() as SpellbookMemorizingPanelVM;
@@ -2247,6 +2247,21 @@ namespace WOTRMultiplayer.GameInteraction
                 Game.Instance.StealthController.TickUnit(unit);
 
                 _logger.LogInformation("Unit stealth has been changed. UnitId={UnitId}, IsEnabled={IsEnabled}, IsForced={IsForced}", unitId, isEnabled, isForced);
+            });
+        }
+
+        public void OpenGlobalMapRestMenu()
+        {
+            _mainThreadAccessor.Post(() =>
+            {
+                var isOk = RestHelper.TryStartRest();
+                if (!isOk)
+                {
+                    _logger.LogError("Unable to start global map rest");
+                    return;
+                }
+
+                _logger.LogInformation("Opened global map rest menu");
             });
         }
 

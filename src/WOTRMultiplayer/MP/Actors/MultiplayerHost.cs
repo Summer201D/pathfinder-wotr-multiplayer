@@ -624,6 +624,13 @@ namespace WOTRMultiplayer.MP.Actors
             Send(message);
         }
 
+        public void OnGlobalMapRestMenuOpened()
+        {
+            var message = new NotifyGlobalMapRestMenuOpened();
+            Logger.LogInformation("Sending {MessageType}", nameof(NotifyGlobalMapRestMenuOpened));
+            Send(message);
+        }
+
         protected override bool OnStartGameModeInternal(GameModeType type)
         {
             var playerId = GetLocalPlayerId();

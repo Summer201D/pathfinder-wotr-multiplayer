@@ -176,20 +176,21 @@ If a roll doesn't come through for some reason, you will get a stutter and a pop
 You can either ignore it (if the outcome is more or less the same for everyone) or do a quicksave/quickload to resync all players.
 
 ## Not implemented
+
+### TL/DR
+Prologue and Act1 are mostly playable. Anything beyond that is not implemented, so your MP journey will end after reclaiming the Garrison
+
 ### Abilities
 Only basic usage of abilities is available. Any extra conditions like metamagic will not work properly as those modifications will not be applied for remote players
 
 ### Mythic leveling
-would work the same as regular leveling
+not ready yet, but it will work the same way as regular leveling
 
 ### Hiring Merc
 CharGen screen is synced for leveling only. You will need to create initial merc locally and then host multiplayer game. Further merc leveling will be available within MP session
 This might be available later, but it has very low priority
 
-### TL/DR
-Act1 is mostly playable. Crusades are not implemented at all so your MP journey will end after Tavern Defense
-
 ## Long term plans
 
 ### Rolls
-Roll syncing will get a rework once the rest of multiplayer is stable enough. The plan is to move to 'predictable rolls' for both host and clients, which should reduce stutters by not blocking the main loop as much. This needs proper isolation of the random generation process though, so it might not work for every single roll
+Roll syncing will get an update once the rest of multiplayer is stable enough. The plan is to move to 'predictable rolls' where both the host and client use the same seed to roll random values, which should reduce stutters by not blocking the main loop as much, as there is no need for real-time network communication for each single roll

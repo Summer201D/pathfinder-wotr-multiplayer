@@ -98,6 +98,7 @@
             NotifyGroupChangerClosed,
             NotifyGroupChangerUnitClicked,
             NotifyGroupChangerPartyAccepted,
+            NotifyGlobalMapRestMenuOpened,
         }
 
         public enum Request
