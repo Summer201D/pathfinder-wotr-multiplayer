@@ -44,6 +44,7 @@ using Kingmaker.UI.MVVM._PCView.CharGen.Phases.Spells;
 using Kingmaker.UI.MVVM._PCView.Dialog.BookEvent;
 using Kingmaker.UI.MVVM._PCView.Dialog.Dialog;
 using Kingmaker.UI.MVVM._PCView.Dialog.Interchapter;
+using Kingmaker.UI.MVVM._PCView.GlobalMap;
 using Kingmaker.UI.MVVM._PCView.GroupChanger;
 using Kingmaker.UI.MVVM._PCView.InGame;
 using Kingmaker.UI.MVVM._PCView.Rest;
@@ -121,8 +122,9 @@ namespace WOTRMultiplayer.GameInteraction
         public int CampingIterationsCount => Game.Instance.Player.Camping.RestIterationsCount;
 
         private InGamePCView InGamePCView => (Game.Instance.RootUiContext.m_UIView as InGamePCView);
+        private GlobalMapPCView GlobalMapPCView => (Game.Instance.RootUiContext.m_UIView as GlobalMapPCView);
         private RestPCView RestView => InGamePCView?.m_StaticPartPCView?.m_RestContextPCView?.m_RestPCView;
-        private GroupChangerPCView GroupChangerView => InGamePCView?.m_StaticPartPCView?.m_GroupChangerContextPCView?.m_GroupChangerPCView;
+        private GroupChangerPCView GroupChangerView => (InGamePCView?.m_StaticPartPCView?.m_GroupChangerContextPCView ?? GlobalMapPCView?.m_GroupChangerContextPCView)?.m_GroupChangerPCView;
         private VendorVM VendorViewVM => InGamePCView?.m_StaticPartPCView?.m_VendorPCView?.GetViewModel() as VendorVM;
         private SpellbookMemorizingPanelVM SpellbookMemorizingVM => InGamePCView.m_StaticPartPCView?.m_ServiceWindowsPCView?.m_SpellbookPCView?.m_MemorizingPanelView?.GetViewModel() as SpellbookMemorizingPanelVM;
         private CharGenPCView CharGenView => InGamePCView.m_StaticPartPCView?.m_CharGenContextPCView?.m_CharGenPCView;
