@@ -99,6 +99,7 @@
             NotifyGroupChangerUnitClicked,
             NotifyGroupChangerPartyAccepted,
             NotifyGlobalMapRestMenuOpened,
+            NotifyGlobalMapTravelStarted,
         }
 
         public enum Request

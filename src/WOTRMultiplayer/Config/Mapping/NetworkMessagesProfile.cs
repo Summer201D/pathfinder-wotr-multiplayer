@@ -4,6 +4,7 @@ using WOTRMultiplayer.MP.Entities.ActionBar;
 using WOTRMultiplayer.MP.Entities.Combat;
 using WOTRMultiplayer.MP.Entities.Dialogs;
 using WOTRMultiplayer.MP.Entities.Equipment;
+using WOTRMultiplayer.MP.Entities.GlobalMap;
 using WOTRMultiplayer.MP.Entities.Inspect;
 using WOTRMultiplayer.MP.Entities.Leveling;
 using WOTRMultiplayer.MP.Entities.Loot;
@@ -167,6 +168,9 @@ namespace WOTRMultiplayer.Config.Mapping
                 .ReverseMap();
 
             CreateMap<NetworkUnitCombatState, Networking.Messages.Contracts.NetworkUnitCombatState>()
+                .ReverseMap();
+
+            CreateMap<NetworkGlobalMapLocation, Networking.Messages.Contracts.NetworkGlobalMapLocation>()
                 .ReverseMap();
         }
     }

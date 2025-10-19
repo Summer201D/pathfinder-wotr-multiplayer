@@ -17,6 +17,7 @@ using WOTRMultiplayer.GameInteraction.Contexts;
 using WOTRMultiplayer.MP.Entities;
 using WOTRMultiplayer.MP.Entities.Combat;
 using WOTRMultiplayer.MP.Entities.Dialogs;
+using WOTRMultiplayer.MP.Entities.GlobalMap;
 using WOTRMultiplayer.MP.Entities.Inspect;
 using WOTRMultiplayer.MP.Entities.Leveling;
 using WOTRMultiplayer.MP.Entities.Rest;
@@ -479,10 +480,20 @@ namespace WOTRMultiplayer.MP.Actors
 
                // global map
                .On<NotifyGlobalMapRestMenuOpened>(OnNotifyGlobalMapRestMenuOpened)
+               .On<NotifyGlobalMapTravelStarted>(OnNotifyGlobalMapTravelStarted)
                ;
         }
 
-        private void OnNotifyGlobalMapRestMenuOpened(long playerId, NotifyGlobalMapRestMenuOpened opened)
+        private void OnNotifyGlobalMapTravelStarted(long playerId, NotifyGlobalMapTravelStarted globalMapTravelStarted)
+        {
+            Logger.LogInformation("Received {MessageType}. DestinationId={DestinationId}, DestinationName={DestinationName}", nameof(NotifyGlobalMapTravelStarted), globalMapTravelStarted.Destination.Id, globalMapTravelStarted.Destination.Name);
+
+            var destination = Mapper.Map<NetworkGlobalMapLocation>(globalMapTravelStarted.Destination);
+
+            GameInteraction.StartGlobalMapTravel(destination);
+        }
+
+        private void OnNotifyGlobalMapRestMenuOpened(long playerId, NotifyGlobalMapRestMenuOpened globalMapRestMenuOpened)
         {
             Logger.LogInformation("Received {MessageType}", nameof(NotifyGlobalMapRestMenuOpened));
             GameInteraction.OpenGlobalMapRestMenu();

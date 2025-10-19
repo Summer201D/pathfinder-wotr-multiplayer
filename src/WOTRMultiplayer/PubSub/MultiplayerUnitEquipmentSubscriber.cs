@@ -1,4 +1,5 @@
-﻿using Kingmaker.Items;
+﻿using System;
+using Kingmaker.Items;
 using Kingmaker.Items.Slots;
 using Kingmaker.PubSubSystem;
 using Kingmaker.UnitLogic;
@@ -62,13 +63,21 @@ namespace WOTRMultiplayer.PubSub
                 return;
             }
 
-            var set = new NetworkActiveHandEquipmentSet
+            var networkActiveHandEquipmentSet = new NetworkActiveHandEquipmentSet
             {
                 Index = unit.Body.CurrentHandEquipmentSetIndex,
                 UnitId = unit.Unit.UniqueId,
             };
 
-            Main.Multiplayer.OnChangeActiveHandEquipmentSet(set);
+            var context = _gameInteractionService.RemoteContext?.HandEquipment;
+            if (context != null
+                && context.Index == networkActiveHandEquipmentSet.Index
+                && string.Equals(context.UnitId, networkActiveHandEquipmentSet.UnitId, StringComparison.OrdinalIgnoreCase))
+            {
+                return;
+            }
+
+            ActorAccessor.Current.OnChangeActiveHandEquipmentSet(networkActiveHandEquipmentSet);
         }
     }
 }

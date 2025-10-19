@@ -14,7 +14,7 @@ using WOTRMultiplayer.GameInteraction.Contexts;
 using WOTRMultiplayer.MP.Entities;
 using WOTRMultiplayer.MP.Entities.ActionBar;
 using WOTRMultiplayer.MP.Entities.Combat;
-using WOTRMultiplayer.MP.Entities.Equipment;
+using WOTRMultiplayer.MP.Entities.GlobalMap;
 using WOTRMultiplayer.MP.Entities.Inspect;
 using WOTRMultiplayer.MP.Entities.Leveling;
 using WOTRMultiplayer.MP.Entities.Loot;
@@ -585,32 +585,6 @@ namespace WOTRMultiplayer.MP
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error while dropping item. ItemId={ItemId}", networkDropItem?.Item?.UniqueId);
-                throw;
-            }
-        }
-
-        public void OnChangeActiveHandEquipmentSet(NetworkActiveHandEquipmentSet networkActiveHandEquipmentSet)
-        {
-            try
-            {
-                if (_multiplayerActorAccessor.Current == null)
-                {
-                    return;
-                }
-
-                var context = _gameInteractionService.RemoteContext?.HandEquipment;
-                if (context != null
-                    && context.Index == networkActiveHandEquipmentSet.Index
-                    && string.Equals(context.UnitId, networkActiveHandEquipmentSet.UnitId, StringComparison.OrdinalIgnoreCase))
-                {
-                    return;
-                }
-
-                _multiplayerActorAccessor.Current.OnChangeActiveHandEquipmentSet(networkActiveHandEquipmentSet);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error while changing active hand equipment set. UnitId={UnitId}", networkActiveHandEquipmentSet?.UnitId);
                 throw;
             }
         }
@@ -1579,6 +1553,29 @@ namespace WOTRMultiplayer.MP
                 _logger.LogError(ex, "Error while opening rest menu on global map");
                 throw;
             }
+        }
+
+        public void OnGlobalMapStartTravel(NetworkGlobalMapLocation destination)
+        {
+            try
+            {
+                if (_multiplayerActorAccessor.Current == null || _multiplayerActorAccessor.Client.IsActive)
+                {
+                    return;
+                }
+
+                _multiplayerActorAccessor.Host.OnGlobalMapStartTravel(destination);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while starting travel on global map");
+                throw;
+            }
+        }
+
+        public bool OnGlobalMapBeforeRollTravelEncounter()
+        {
+            return _multiplayerActorAccessor.Current == null || _multiplayerActorAccessor.Host.IsActive;
         }
 
         private void ShowEscMenuMultiplayerLobby()

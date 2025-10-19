@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using WOTRMultiplayer.MP.Entities;
+using WOTRMultiplayer.MP.Entities.GlobalMap;
 using WOTRMultiplayer.MP.Entities.Inspect;
 using WOTRMultiplayer.MP.Entities.Rest;
 
@@ -43,5 +44,7 @@ namespace WOTRMultiplayer.Abstractions.MP.Actors
         void OnCloseGroupChangerPartyUI();
 
         void OnGlobalMapRestMenuOpened();
+
+        void OnGlobalMapStartTravel(NetworkGlobalMapLocation destination);
     }
 }

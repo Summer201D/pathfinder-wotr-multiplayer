@@ -100,7 +100,7 @@ namespace WOTRMultiplayer.Abstractions.MP.Actors
 
         void OnEquipmentSlotChanged(NetworkEquipmentSlot networkSlot);
 
-        void OnChangeActiveHandEquipmentSet(NetworkActiveHandEquipmentSet set);
+        void OnChangeActiveHandEquipmentSet(NetworkActiveHandEquipmentSet networkActiveHandEquipmentSet);
 
         void OnInteractWithMapObjectOvertip(NetworkOvertip networkOvertip);
 

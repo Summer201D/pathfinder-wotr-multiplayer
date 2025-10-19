@@ -15,6 +15,7 @@ using WOTRMultiplayer.Abstractions.Random;
 using WOTRMultiplayer.MP.Entities;
 using WOTRMultiplayer.MP.Entities.Combat;
 using WOTRMultiplayer.MP.Entities.Dialogs;
+using WOTRMultiplayer.MP.Entities.GlobalMap;
 using WOTRMultiplayer.MP.Entities.Inspect;
 using WOTRMultiplayer.MP.Entities.Leveling;
 using WOTRMultiplayer.MP.Entities.Rest;
@@ -634,6 +635,16 @@ namespace WOTRMultiplayer.MP.Actors
         {
             var message = new NotifyGlobalMapRestMenuOpened();
             Logger.LogInformation("Sending {MessageType}", nameof(NotifyGlobalMapRestMenuOpened));
+            Send(message);
+        }
+
+        public void OnGlobalMapStartTravel(NetworkGlobalMapLocation destination)
+        {
+            var message = new NotifyGlobalMapTravelStarted
+            {
+                Destination = Mapper.Map<Networking.Messages.Contracts.NetworkGlobalMapLocation>(destination)
+            };
+            Logger.LogInformation("Sending {MessageType}. DestinationId={DestinationId}, DestinationName={DestinationName}", nameof(NotifyGlobalMapTravelStarted), message.Destination.Id, message.Destination.Name);
             Send(message);
         }
 

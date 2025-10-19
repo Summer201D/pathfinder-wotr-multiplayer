@@ -21,6 +21,8 @@ using Kingmaker.EntitySystem.Persistence;
 using Kingmaker.EntitySystem.Stats;
 using Kingmaker.GameModes;
 using Kingmaker.Globalmap.Blueprints;
+using Kingmaker.Globalmap.State;
+using Kingmaker.Globalmap.View;
 using Kingmaker.Inspect;
 using Kingmaker.Items;
 using Kingmaker.Items.Slots;
@@ -83,6 +85,7 @@ using WOTRMultiplayer.MP.Entities.ActionBar;
 using WOTRMultiplayer.MP.Entities.Combat;
 using WOTRMultiplayer.MP.Entities.Dialogs;
 using WOTRMultiplayer.MP.Entities.Equipment;
+using WOTRMultiplayer.MP.Entities.GlobalMap;
 using WOTRMultiplayer.MP.Entities.Inspect;
 using WOTRMultiplayer.MP.Entities.Leveling;
 using WOTRMultiplayer.MP.Entities.Loot;
@@ -2262,6 +2265,24 @@ namespace WOTRMultiplayer.GameInteraction
                 }
 
                 _logger.LogInformation("Opened global map rest menu");
+            });
+        }
+
+        public void StartGlobalMapTravel(NetworkGlobalMapLocation destination)
+        {
+            _mainThreadAccessor.Post(() =>
+            {
+                var point = GlobalMapView.Instance.Points.FirstOrDefault(p => string.Equals(p.Blueprint.AssetGuid.ToString(), destination.Id, StringComparison.OrdinalIgnoreCase));
+                if (point == null)
+                {
+                    _logger.LogError("Unable to find global map point. PointId={PointId}, PointName={PointName}", destination.Id, destination.Name);
+                    return;
+                }
+
+                var traveler = Game.Instance.GlobalMapController.SelectedTraveler;
+                GlobalMapTravelData globalMapTravelData = GlobalMapView.Instance.State.PathManager.CalculateTravelerPathToLocation(traveler, point.Blueprint);
+                traveler.StartTravel(globalMapTravelData, true);
+                _logger.LogInformation("Global map traveler has been started. Destination={DestinationId}, DestinationName={DestinationName}", point.Blueprint.AssetGuid.ToString(), point.name);
             });
         }
 

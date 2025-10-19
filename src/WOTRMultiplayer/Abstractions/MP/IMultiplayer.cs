@@ -7,7 +7,7 @@ using WOTRMultiplayer.GameInteraction.Contexts;
 using WOTRMultiplayer.MP.Entities;
 using WOTRMultiplayer.MP.Entities.ActionBar;
 using WOTRMultiplayer.MP.Entities.Combat;
-using WOTRMultiplayer.MP.Entities.Equipment;
+using WOTRMultiplayer.MP.Entities.GlobalMap;
 using WOTRMultiplayer.MP.Entities.Inspect;
 using WOTRMultiplayer.MP.Entities.Leveling;
 using WOTRMultiplayer.MP.Entities.Loot;
@@ -90,8 +90,6 @@ namespace WOTRMultiplayer.Abstractions.MP
         void OnSkinLootContainer(NetworkLootContainer container);
 
         void OnDropItem(NetworkDropItem networkDropItem);
-
-        void OnChangeActiveHandEquipmentSet(NetworkActiveHandEquipmentSet networkActiveHandEquipmentSet);
 
         bool CanUnitJoinCombat(string unitId);
 
@@ -190,5 +188,9 @@ namespace WOTRMultiplayer.Abstractions.MP
         void OnAcceptGroupChangerParty();
 
         void OnGlobalMapRestOpened();
+
+        bool OnGlobalMapBeforeRollTravelEncounter();
+
+        void OnGlobalMapStartTravel(NetworkGlobalMapLocation destination);
     }
 }
