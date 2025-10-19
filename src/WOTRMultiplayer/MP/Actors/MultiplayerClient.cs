@@ -363,15 +363,18 @@ namespace WOTRMultiplayer.MP.Actors
 
         public void OnShowGroupChangerUI()
         {
-            OnShowGroupChanger();
-
-            UpdateGroupManagerUIState(hasControlOverUI: false);
+            OnShowGroupChangerUI(hasControlOverUI: false);
         }
 
         public bool OnClickGroupChangerUnit(string unitId)
         {
             // client is not allowed to move characters (no restrictions, just to avoid implementing extra synchronization)
             return false;
+        }
+
+        public void OnSkipTimeOpened()
+        {
+            OnSkipTimeOpened(hasControlOverUI: false);
         }
 
         protected override bool OnStartGameModeInternal(GameModeType type)
@@ -478,10 +481,35 @@ namespace WOTRMultiplayer.MP.Actors
                .On<NotifyGroupChangerUnitClicked>(OnNotifyGroupChangerUnitClicked)
                .On<NotifyGroupChangerPartyAccepted>(OnNotifyGroupChangerPartyAccepted)
 
+               // skip time
+               .On<NotifySkipTimeClosed>(OnNotifySkipTimeClosed)
+               .On<NotifySkipTimeHoursChanged>(OnNotifySkipTimeHoursChanged)
+               .On<NotifySkipTimeStarted>(OnNotifySkipTimeStarted)
+
                // global map
                .On<NotifyGlobalMapRestMenuOpened>(OnNotifyGlobalMapRestMenuOpened)
                .On<NotifyGlobalMapTravelStarted>(OnNotifyGlobalMapTravelStarted)
                ;
+        }
+
+        private void OnNotifySkipTimeStarted(long playerId, NotifySkipTimeStarted skipTimeStarted)
+        {
+            Logger.LogInformation("Received {MessageType}", nameof(NotifySkipTimeStarted));
+            ResetPlayersTracker(Game.PlayersInSkipTime);
+            GameInteraction.StartSkipTime();
+        }
+
+        private void OnNotifySkipTimeHoursChanged(long playerId, NotifySkipTimeHoursChanged skipTimeHoursChanged)
+        {
+            Logger.LogInformation("Received {MessageType}. Hours={Hours}", nameof(NotifySkipTimeHoursChanged), skipTimeHoursChanged.Hours);
+            GameInteraction.UpdateSkipTimeHours(skipTimeHoursChanged.Hours);
+        }
+
+        private void OnNotifySkipTimeClosed(long playerId, NotifySkipTimeClosed skipTimeClosed)
+        {
+            Logger.LogInformation("Received {MessageType}", nameof(NotifySkipTimeOpened));
+            GameInteraction.CloseSkipTimeUI();
+            ResetPlayersTracker(Game.PlayersInSkipTime);
         }
 
         private void OnNotifyGlobalMapTravelStarted(long playerId, NotifyGlobalMapTravelStarted globalMapTravelStarted)
@@ -503,7 +531,7 @@ namespace WOTRMultiplayer.MP.Actors
         {
             Logger.LogInformation("Received {MessageType}", nameof(NotifyGroupChangerPartyAccepted));
             GameInteraction.AcceptGroupChangerParty();
-            ResetGroupChangerTracker();
+            ResetPlayersTracker(Game.PlayersInGroupChanger);
         }
 
         private void OnNotifyGroupChangerUnitClicked(long playerId, NotifyGroupChangerUnitClicked groupChangerUnitClicked)
@@ -517,13 +545,13 @@ namespace WOTRMultiplayer.MP.Actors
             Logger.LogInformation("Received {MessageType}", nameof(NotifyGroupChangerClosed));
 
             GameInteraction.CloseGroupChangerUI();
-            ResetGroupChangerTracker();
+            ResetPlayersTracker(Game.PlayersInGroupChanger);
         }
 
         private void OnNotifyGroupChangerOpened(long playerId, NotifyGroupChangerOpened groupChangerOpened)
         {
             Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}", nameof(NotifyGroupChangerOpened), groupChangerOpened.PlayerId);
-            AddPlayersInGroupChanger(groupChangerOpened.PlayerId);
+            AddPlayerToTracker(Game.PlayersInGroupChanger, groupChangerOpened.PlayerId);
             UpdateGroupManagerUIState(hasControlOverUI: false);
         }
 

@@ -100,6 +100,10 @@
             NotifyGroupChangerPartyAccepted,
             NotifyGlobalMapRestMenuOpened,
             NotifyGlobalMapTravelStarted,
+            NotifySkipTimeOpened,
+            NotifySkipTimeClosed,
+            NotifySkipTimeHoursChanged,
+            NotifySkipTimeStarted,
         }
 
         public enum Request

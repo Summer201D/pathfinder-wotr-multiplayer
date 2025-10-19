@@ -394,7 +394,26 @@ namespace WOTRMultiplayer.Playground.Core.Dummies
 
         public void StartGlobalMapTravel(NetworkGlobalMapLocation destination)
         {
-            throw new NotImplementedException();
+        }
+
+        public void UpdateSkipTimeUI(bool canUse, int readyPlayers, int totalPlayers)
+        {
+        }
+
+        public void CloseSkipTimeUI()
+        {
+        }
+
+        public void OpenSkipTimeUI()
+        {
+        }
+
+        public void UpdateSkipTimeHours(float hours)
+        {
+        }
+
+        public void StartSkipTime()
+        {
         }
     }
 }

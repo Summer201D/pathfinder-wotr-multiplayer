@@ -192,5 +192,13 @@ namespace WOTRMultiplayer.Abstractions.MP
         bool OnGlobalMapBeforeRollTravelEncounter();
 
         void OnGlobalMapStartTravel(NetworkGlobalMapLocation destination);
+
+        void OnSkipTimeOpened();
+
+        void OnSkipTimeClosed();
+
+        void OnSkipTimeHoursChanged(float hours);
+
+        void OnSkipTimeStarted();
     }
 }

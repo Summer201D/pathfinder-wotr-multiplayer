@@ -81,12 +81,16 @@ Everyone in the session has to see the dialog line before the host can pick an a
 Certain vendor actions are host-only, like finalizing a deal or closing the shop window. Everything else is fully synced and open to everyone - like moving items to buy/sell, bulk selling, or removing items in bulk.
 
 ## Group Changer
+##### Note: Group Changer data is stored within the UI itself, so for the sake of it must be opened for everyone before Host is allowed to make any changes (just for the sake of simplified sync implementation)
 
 ### Leaving zone
-Client is only a watcher with no permissions to change anything. Host can't change anything until everyone is ready (opened group changer screen). There is a counter within Accept button to see how many players are ready. Closing screen as a host will result in closing screen for everyone
+Client is only a watcher with no permissions to change anything. There is a counter within Accept button to see how many players are ready. Closing screen as a host will result in closing screen for everyone
 
 ### Mid Zone (aka recruiting companions)
 TBD
+
+## Skip Time
+works the same way as Group Changer due to same data storage reasons
 
 ## Area Transitions
 When someone triggers an area transition, the game tries to move the whole party (even characters you don't control) to the exit. Usually that works fine, but you can still cancel movement for your own characters. Because of network delay, this might not sync instantly for others, which can lead to one player loading the next area while the rest are still behind.
@@ -142,11 +146,11 @@ Inventory item positions are not synced, so you can sort or split items however 
 Looting is synced for all multiplayer players, so everyone can grab items from the same container at the same time.
 
 ## Rest
-Only the host can set up camp, including managing roles and picking crafting recipes, but the Camp UI updates for everyone.
-
-Banter (small talk) is randomly picked in a way that stays consistent - host and clients roll separately but still get the same results without extra network syncing. Each multiplayer session has its own "random seed", so rehosting the game gives different banter. Skipping banter lines is synced for all players.
+Only the host can set up camp, including managing roles and picking crafting recipes, but the Camp UI updates for everyone. Host can do changes even if UI is not opened for everyone since Rest configuration (roles/recipes/etc) is not tied to UI, so it can be updated in background
 
 Rest can't start until everyone is in 'rest mode' (aka opened the rest window). The Start button now shows a counter for how many players are ready to go.
+
+Banter (small talk) is randomly picked in a way that stays consistent - host and clients roll separately but still get the same results without extra network syncing. Each multiplayer session has its own "random seed", so rehosting the game gives different banter. Skipping banter lines is synced for all players.
 
 ### Random encounter
 Everything about random encounters is synced from the host. That synchronization comes to play after banter has ended.

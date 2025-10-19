@@ -29,6 +29,8 @@ namespace WOTRMultiplayer.MP.Entities
 
         public HashSet<long> PlayersInGroupChanger { get; set; } = [];
 
+        public HashSet<long> PlayersInSkipTime { get; set; } = [];
+
         public NetworkCombat Combat { get; set; }
 
         public NetworkDialog Dialog { get; set; }
@@ -55,6 +57,7 @@ namespace WOTRMultiplayer.MP.Entities
             PlayersInGameMode.Clear();
             PlayersFinishedRest.Clear();
             PlayersInGroupChanger.Clear();
+            PlayersInSkipTime.Clear();
             SaveFilePath = null;
             Connectivity = null;
             Stage = NetworkGameStage.None;

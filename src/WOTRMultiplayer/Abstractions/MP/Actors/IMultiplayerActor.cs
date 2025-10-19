@@ -171,5 +171,7 @@ namespace WOTRMultiplayer.Abstractions.MP.Actors
         void OnShowGroupChangerUI();
 
         bool OnClickGroupChangerUnit(string unitId);
+
+        void OnSkipTimeOpened();
     }
 }

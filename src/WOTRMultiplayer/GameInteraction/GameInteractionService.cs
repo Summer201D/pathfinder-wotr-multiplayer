@@ -43,6 +43,7 @@ using Kingmaker.UI.MVVM._PCView.CharGen.Phases.Class;
 using Kingmaker.UI.MVVM._PCView.CharGen.Phases.FeatureSelector;
 using Kingmaker.UI.MVVM._PCView.CharGen.Phases.Skills;
 using Kingmaker.UI.MVVM._PCView.CharGen.Phases.Spells;
+using Kingmaker.UI.MVVM._PCView.Common.MessageModal;
 using Kingmaker.UI.MVVM._PCView.Dialog.BookEvent;
 using Kingmaker.UI.MVVM._PCView.Dialog.Dialog;
 using Kingmaker.UI.MVVM._PCView.Dialog.Interchapter;
@@ -126,6 +127,7 @@ namespace WOTRMultiplayer.GameInteraction
 
         private InGamePCView InGamePCView => (Game.Instance.RootUiContext.m_UIView as InGamePCView);
         private GlobalMapPCView GlobalMapPCView => (Game.Instance.RootUiContext.m_UIView as GlobalMapPCView);
+        private SkipTimePCView SkipTimeView => InGamePCView?.m_StaticPartPCView?.m_SkipTimePCView ?? GlobalMapPCView?.m_SkipTimePCView;
         private RestPCView RestView => InGamePCView?.m_StaticPartPCView?.m_RestContextPCView?.m_RestPCView ?? GlobalMapPCView?.m_RestPCView;
         private GroupChangerPCView GroupChangerView => (InGamePCView?.m_StaticPartPCView?.m_GroupChangerContextPCView ?? GlobalMapPCView?.m_GroupChangerContextPCView)?.m_GroupChangerPCView;
         private VendorVM VendorViewVM => InGamePCView?.m_StaticPartPCView?.m_VendorPCView?.GetViewModel() as VendorVM;
@@ -1488,6 +1490,115 @@ namespace WOTRMultiplayer.GameInteraction
             });
         }
 
+        public void UpdateSkipTimeUI(bool isInteractable, int readyPlayersCount, int totalPlayersCount)
+        {
+            _mainThreadAccessor.Post(() =>
+            {
+                try
+                {
+                    if (SkipTimeView == null)
+                    {
+                        _logger.LogWarning("Unable to update skip time due to missing UI");
+                        return;
+                    }
+
+                    _logger.LogInformation("Updating skip time ui state. IsInteractable={IsInteractable}, ReadyPlayers={ReadyPlayers}, TotalPlayers={TotalPlayers}", isInteractable, readyPlayersCount, totalPlayersCount);
+
+                    SkipTimeView.m_CloseButton.Interactable = isInteractable;
+                    SkipTimeView.m_HoursSlider.interactable = isInteractable;
+                    SkipTimeView.m_SkipTimeButton.Interactable = isInteractable;
+                    var skipTimeButtonText = SkipTimeView.m_SkipTimeButton.GetComponentInChildren<TextMeshProUGUI>();
+                    UpdateButtonTextCounter(skipTimeButtonText, readyPlayersCount, totalPlayersCount);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Unable to update skip time ui");
+                    throw;
+                }
+            });
+        }
+
+        public void CloseSkipTimeUI()
+        {
+            _mainThreadAccessor.Post(() =>
+            {
+                try
+                {
+                    if (SkipTimeView == null)
+                    {
+                        return;
+                    }
+
+                    SkipTimeView.m_CloseButton.OnLeftClick.Invoke();
+                    _logger.LogInformation("Skip time has been closed");
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Unable to close skip time ui");
+                    throw;
+                }
+            });
+        }
+
+        public void OpenSkipTimeUI()
+        {
+            _mainThreadAccessor.Post(() =>
+            {
+                if (SkipTimeView != null)
+                {
+                    return;
+                }
+
+                EventBus.RaiseEvent<ISkipTimeWindowUIHandler>(x => x.HandleOpenSkipTime(), true);
+            });
+        }
+
+        public void UpdateSkipTimeHours(float hours)
+        {
+            _mainThreadAccessor.Post(() =>
+            {
+                try
+                {
+                    if (SkipTimeView == null)
+                    {
+                        _logger.LogWarning("Unable to update skip time hours due to missing UI");
+                        return;
+                    }
+
+                    SkipTimeView.m_HoursSlider.value = hours;
+                    _logger.LogInformation("Skip time hours has been updated. Hours={Hours}", hours);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Unable to update skip time hours slider");
+                    throw;
+                }
+            });
+        }
+
+        public void StartSkipTime()
+        {
+            _mainThreadAccessor.Post(() =>
+            {
+                try
+                {
+                    if (SkipTimeView == null)
+                    {
+                        _logger.LogWarning("Unable to start skip time due to missing UI");
+                        return;
+                    }
+
+                    SkipTimeView.m_SkipTimeButton.OnLeftClick.Invoke();
+                    _logger.LogInformation("Skip time has been started");
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Unable to start skip time");
+                    throw;
+                }
+            });
+        }
+
         public void UpdateStartRestButtonState(bool isInteractable, int readyPlayersCount, int totalPlayersCount)
         {
             _mainThreadAccessor.Post(() =>
@@ -2257,6 +2368,11 @@ namespace WOTRMultiplayer.GameInteraction
         {
             _mainThreadAccessor.Post(() =>
             {
+                if (RestView != null)
+                {
+                    return;
+                }
+
                 var isOk = RestHelper.TryStartRest();
                 if (!isOk)
                 {

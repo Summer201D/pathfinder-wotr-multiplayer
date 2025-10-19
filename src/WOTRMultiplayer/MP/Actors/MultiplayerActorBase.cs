@@ -891,10 +891,25 @@ namespace WOTRMultiplayer.MP.Actors
 
         protected abstract void Send(long playerId, object message);
 
-        protected void OnShowGroupChanger()
+        protected void OnSkipTimeOpened(bool hasControlOverUI)
         {
             var localPlayer = GetLocalPlayerId();
-            AddPlayersInGroupChanger(localPlayer);
+            AddPlayerToTracker(Game.PlayersInSkipTime, localPlayer);
+
+            var message = new NotifySkipTimeOpened
+            {
+                PlayerId = localPlayer
+            };
+            Logger.LogInformation("Sending {MessageType}. PlayerId={PlayerId}", nameof(NotifySkipTimeOpened), message.PlayerId);
+            Send(message);
+
+            UpdateSkipTimeUIState(hasControlOverUI);
+        }
+
+        protected void OnShowGroupChangerUI(bool hasControlOverUI)
+        {
+            var localPlayer = GetLocalPlayerId();
+            AddPlayerToTracker(Game.PlayersInGroupChanger, localPlayer);
 
             var message = new NotifyGroupChangerOpened
             {
@@ -902,6 +917,8 @@ namespace WOTRMultiplayer.MP.Actors
             };
             Logger.LogInformation("Sending {MessageType}. PlayerId={PlayerId}", nameof(NotifyGroupChangerOpened), message.PlayerId);
             Send(message);
+
+            UpdateGroupManagerUIState(hasControlOverUI);
         }
 
         protected void UpdateGroupManagerUIState(bool hasControlOverUI)
@@ -915,19 +932,38 @@ namespace WOTRMultiplayer.MP.Actors
             }
         }
 
-        protected void AddPlayersInGroupChanger(long playerId)
+        protected void UpdateSkipTimeUIState(bool hasControlOverUI)
         {
             lock (ActionLock)
             {
-                Game.PlayersInGroupChanger.Add(playerId);
+                var readyPlayers = Game.PlayersInSkipTime.Count;
+                var totalPlayers = Game.Players.Count;
+                var canUse = hasControlOverUI && readyPlayers >= totalPlayers;
+                GameInteraction.UpdateSkipTimeUI(canUse, readyPlayers, totalPlayers);
             }
         }
 
-        protected void ResetGroupChangerTracker()
+        protected void ResetPlayersTracker(HashSet<long> tracker)
         {
             lock (ActionLock)
             {
-                Game.PlayersInGroupChanger.Clear();
+                tracker.Clear();
+            }
+        }
+
+        protected void AddPlayerToTracker(HashSet<long> tracker, long playerId)
+        {
+            lock (ActionLock)
+            {
+                tracker.Add(playerId);
+            }
+        }
+
+        protected void RemovePlayerFromTracker(HashSet<long> tracker, long playerId)
+        {
+            lock (ActionLock)
+            {
+                tracker.Remove(playerId);
             }
         }
 
@@ -1325,43 +1361,70 @@ namespace WOTRMultiplayer.MP.Actors
                 .On<NotifyLevelingSpellRemoved>(OnNotifyLevelingSpellRemoved)
                 .On<NotifyLevelingCompleted>(OnNotifyLevelingCompleted)
                 .On<NotifyLevelingTerminated>(OnNotifyLevelingTerminated)
+
                 // spellbook management
                 .On<NotifySpellMemorized>(OnNotifySpellMemorized)
                 .On<NotifySpellForgotten>(OnNotifySpellForgotten)
+
                 // vendor interaction
                 .On<NotifyVendorItemTransferred>(OnNotifyVendorItemTransferred)
+
                 // rest
                 .On<NotifyRestBanterInterrupted>(OnNotifyRestBanterInterrupted)
+
                 // combat
                 .On<NotifyUnitJoinedMidCombat>(OnNotifyUnitJoinedMidCombat)
                 .On<NotifyPlayerCombatTurnEnded>(OnNotifyPlayerCombatTurnEnded)
                 .On<NotifyUnitAttacked>(OnNotifyUnitAttacked)
                 .On<NotifyCombatTurnDelayed>(OnNotifyCombatTurnDelayed)
+
                 // overtips
                 .On<NotifyOvertipInteracted>(OnNotifyOvertipInteracted)
+
                 // items&inventory
                 .On<NotifyContainerLooted>(OnNotifyContainerLooted)
                 .On<NotifyContainerSkinned>(OnNotifyContainerSkinned)
                 .On<NotifyDropItem>(OnNotifyDropItem)
                 .On<NotifyEquipmentSlotChanged>(OnNotifyEquipmentSlotChanged)
                 .On<NotifyActiveHandEquipmentSetChanged>(OnNotifyActiveHandEquipmentSetChanged)
+
                 // lockpick
                 .On<NotifyMapObjectLockpicked>(OnNotifyMapObjectLockpicked)
+
                 // abilities
                 .On<NotifyAbilityUsed>(OnNotifyAbilityUsed)
                 .On<NotifyToggleActivatableAbility>(OnNotifyToggleActivatableAbility)
+
                 // clicks
                 .On<NotifyUnitClicked>(OnNotifyUnitClicked)
                 .On<NotifyGroundClicked>(OnNotifyGroundClicked)
                 .On<NotifyMapObjectClicked>(OnNotifyMapObjectClicked)
+
                 // movement
                 .On<NotifyCharacterMove>(OnNotifyCharacterMove)
+
                 // action bar
                 .On<NotifyActionBarSlotCleared>(OnNotifyActionBarSlotCleared)
                 .On<NotifyActionBarSlotMoved>(OnNotifyActionBarSlotMoved)
+
                 // stealth
                 .On<NotifyUnitStealthChanged>(OnNotifyUnitStealthChanged)
+
+                // skip time
+                .On<NotifySkipTimeOpened>(OnNotifySkipTimeOpened)
                 ;
+        }
+
+        private void OnNotifySkipTimeOpened(long playerId, NotifySkipTimeOpened skipTimeOpened)
+        {
+            Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}", nameof(NotifySkipTimeOpened), skipTimeOpened.PlayerId);
+            AddPlayerToTracker(Game.PlayersInSkipTime, skipTimeOpened.PlayerId);
+            GameInteraction.OpenSkipTimeUI();
+            // sent by host = you are a client
+            var hasControlOverUI = playerId != NetworkingConsts.HostPlayerId;
+            UpdateSkipTimeUIState(hasControlOverUI);
+
+            OnAfterNetworkMessageHandled(playerId, skipTimeOpened);
         }
 
         private void OnNotifyUnitStealthChanged(long playerId, NotifyUnitStealthChanged unitStealthChanged)

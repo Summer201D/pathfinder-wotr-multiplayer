@@ -1578,6 +1578,78 @@ namespace WOTRMultiplayer.MP
             return _multiplayerActorAccessor.Current == null || _multiplayerActorAccessor.Host.IsActive;
         }
 
+        public void OnSkipTimeOpened()
+        {
+            try
+            {
+                if (_multiplayerActorAccessor.Current == null)
+                {
+                    return;
+                }
+
+                _multiplayerActorAccessor.Current.OnSkipTimeOpened();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while opening skip time menu");
+                throw;
+            }
+        }
+
+        public void OnSkipTimeClosed()
+        {
+            try
+            {
+                if (_multiplayerActorAccessor.Current == null || _multiplayerActorAccessor.Client.IsActive)
+                {
+                    return;
+                }
+
+                _multiplayerActorAccessor.Host.OnSkipTimeClosed();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while closing skip time menu");
+                throw;
+            }
+        }
+
+        public void OnSkipTimeHoursChanged(float hours)
+        {
+            try
+            {
+                if (_multiplayerActorAccessor.Current == null || _multiplayerActorAccessor.Client.IsActive)
+                {
+                    return;
+                }
+
+                _multiplayerActorAccessor.Host.OnSkipTimeHoursChanged(hours);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while processing skip time value change. Hours={Hours}", hours);
+                throw;
+            }
+        }
+
+        public void OnSkipTimeStarted()
+        {
+            try
+            {
+                if (_multiplayerActorAccessor.Current == null || _multiplayerActorAccessor.Client.IsActive)
+                {
+                    return;
+                }
+
+                _multiplayerActorAccessor.Host.OnSkipTimeStarted();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while starting skip time");
+                throw;
+            }
+        }
+
         private void ShowEscMenuMultiplayerLobby()
         {
             _logger.LogInformation("Show lobby window");
