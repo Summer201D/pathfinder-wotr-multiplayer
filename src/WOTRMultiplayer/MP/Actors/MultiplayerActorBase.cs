@@ -61,7 +61,7 @@ namespace WOTRMultiplayer.MP.Actors
         private readonly IValueGenerator _valueGenerator;
         private readonly INetworkReceiver _networkReceiver;
 
-        protected abstract bool IsHost { get; }
+        protected abstract bool HasControlOverUI { get; }
 
         protected object ActionLock => _actionLock;
 
@@ -881,32 +881,37 @@ namespace WOTRMultiplayer.MP.Actors
             Send(message);
         }
 
-        protected abstract bool OnStartGameModeInternal(GameModeType type);
-
-        protected abstract DiceRollValueResponse RetrieveRoll(DiceRollValueRequest rollRequest);
-
-        protected abstract void OnLocalPlayerTurnStart();
-
-        protected abstract void Send(object message);
-
-        protected abstract void Send(long playerId, object message);
-
-        protected void OnSkipTimeOpened(bool hasControlOverUI)
+        public void OnGlobalMapMessageBoxClosed()
         {
             var localPlayer = GetLocalPlayerId();
-            AddPlayerToTracker(Game.PlayersInSkipTime, localPlayer);
+            RemovePlayerFromTracker(Game.PlayersInGlobalMapMessageBox, localPlayer);
 
-            var message = new NotifySkipTimeOpened
+            var message = new NotifyGlobalMapMessageBoxClosed
             {
                 PlayerId = localPlayer
             };
-            Logger.LogInformation("Sending {MessageType}. PlayerId={PlayerId}", nameof(NotifySkipTimeOpened), message.PlayerId);
+            Logger.LogInformation("Sending {MessageType}. PlayerId={PlayerId}", nameof(NotifyGlobalMapMessageBoxClosed), message.PlayerId);
             Send(message);
 
-            UpdateSkipTimeUIState(hasControlOverUI);
+            UpdateGlobalMapMessageBoxUIState();
         }
 
-        protected void OnShowGroupChangerUI(bool hasControlOverUI)
+        public void OnGlobalMapMessageBoxShown()
+        {
+            var localPlayer = GetLocalPlayerId();
+            AddPlayerToTracker(Game.PlayersInGlobalMapMessageBox, localPlayer);
+
+            var message = new NotifyGlobalMapMessageBoxShown
+            {
+                PlayerId = localPlayer
+            };
+            Logger.LogInformation("Sending {MessageType}. PlayerId={PlayerId}", nameof(NotifyGlobalMapMessageBoxShown), message.PlayerId);
+            Send(message);
+
+            UpdateGlobalMapMessageBoxUIState();
+        }
+
+        public void OnShowGroupChangerUI()
         {
             var localPlayer = GetLocalPlayerId();
             AddPlayerToTracker(Game.PlayersInGroupChanger, localPlayer);
@@ -918,28 +923,64 @@ namespace WOTRMultiplayer.MP.Actors
             Logger.LogInformation("Sending {MessageType}. PlayerId={PlayerId}", nameof(NotifyGroupChangerOpened), message.PlayerId);
             Send(message);
 
-            UpdateGroupManagerUIState(hasControlOverUI);
+            UpdateGroupManagerUIState();
         }
 
-        protected void UpdateGroupManagerUIState(bool hasControlOverUI)
+        public void OnSkipTimeOpened()
+        {
+            var localPlayer = GetLocalPlayerId();
+            AddPlayerToTracker(Game.PlayersInSkipTime, localPlayer);
+
+            var message = new NotifySkipTimeOpened
+            {
+                PlayerId = localPlayer
+            };
+            Logger.LogInformation("Sending {MessageType}. PlayerId={PlayerId}", nameof(NotifySkipTimeOpened), message.PlayerId);
+            Send(message);
+
+            UpdateSkipTimeUIState();
+        }
+
+        protected abstract bool OnStartGameModeInternal(GameModeType type);
+
+        protected abstract DiceRollValueResponse RetrieveRoll(DiceRollValueRequest rollRequest);
+
+        protected abstract void OnLocalPlayerTurnStart();
+
+        protected abstract void Send(object message);
+
+        protected abstract void Send(long playerId, object message);
+
+        protected void UpdateGroupManagerUIState()
         {
             lock (ActionLock)
             {
                 var readyPlayers = Game.PlayersInGroupChanger.Count;
                 var totalPlayers = Game.Players.Count;
-                var canUse = hasControlOverUI && readyPlayers >= totalPlayers;
+                var canUse = HasControlOverUI && readyPlayers >= totalPlayers;
                 GameInteraction.UpdateGroupChangerUI(canUse, readyPlayers, totalPlayers);
             }
         }
 
-        protected void UpdateSkipTimeUIState(bool hasControlOverUI)
+        protected void UpdateSkipTimeUIState()
         {
             lock (ActionLock)
             {
                 var readyPlayers = Game.PlayersInSkipTime.Count;
                 var totalPlayers = Game.Players.Count;
-                var canUse = hasControlOverUI && readyPlayers >= totalPlayers;
+                var canUse = HasControlOverUI && readyPlayers >= totalPlayers;
                 GameInteraction.UpdateSkipTimeUI(canUse, readyPlayers, totalPlayers);
+            }
+        }
+
+        protected void UpdateGlobalMapMessageBoxUIState()
+        {
+            lock (ActionLock)
+            {
+                var readyPlayers = Game.PlayersInGlobalMapMessageBox.Count;
+                var totalPlayers = Game.Players.Count;
+                var canUse = HasControlOverUI && readyPlayers >= totalPlayers;
+                GameInteraction.UpdateGlobalMapMessageBoxUI(canUse, readyPlayers, totalPlayers);
             }
         }
 
@@ -1175,7 +1216,7 @@ namespace WOTRMultiplayer.MP.Actors
             if (Game.Combat.Turn == null)
             {
                 Logger.LogWarning("Midfight action. UnitId={UnitId}", sourceUnitId);
-                return IsHost;
+                return HasControlOverUI;
             }
 
             return Game.Combat.Turn.IsLocalPlayer && !GameInteraction.CombatTurnHasBeenFinished();
@@ -1412,7 +1453,41 @@ namespace WOTRMultiplayer.MP.Actors
 
                 // skip time
                 .On<NotifySkipTimeOpened>(OnNotifySkipTimeOpened)
+
+                // global map
+                .On<NotifyGlobalMapMessageBoxShown>(OnNotifyGlobalMapMessageBoxShown)
+                .On<NotifyGlobalMapMessageBoxClosed>(OnNotifyGlobalMapMessageBoxClosed)
+
+                // group management
+                .On<NotifyGroupChangerOpened>(OnNotifyGroupChangerOpened)
                 ;
+        }
+
+        private void OnNotifyGroupChangerOpened(long playerId, NotifyGroupChangerOpened groupChangerVisible)
+        {
+            Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}", nameof(NotifyGroupChangerOpened), groupChangerVisible.PlayerId);
+            AddPlayerToTracker(Game.PlayersInGroupChanger, groupChangerVisible.PlayerId);
+            UpdateGroupManagerUIState();
+
+            OnAfterNetworkMessageHandled(playerId, groupChangerVisible);
+        }
+
+        private void OnNotifyGlobalMapMessageBoxClosed(long playerId, NotifyGlobalMapMessageBoxClosed globalMapMessageBoxClosed)
+        {
+            Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}", nameof(NotifyGlobalMapMessageBoxClosed), globalMapMessageBoxClosed.PlayerId);
+            RemovePlayerFromTracker(Game.PlayersInGlobalMapMessageBox, globalMapMessageBoxClosed.PlayerId);
+            UpdateGlobalMapMessageBoxUIState();
+
+            OnAfterNetworkMessageHandled(playerId, globalMapMessageBoxClosed);
+        }
+
+        private void OnNotifyGlobalMapMessageBoxShown(long playerId, NotifyGlobalMapMessageBoxShown globalMapMessageBoxShown)
+        {
+            Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}", nameof(NotifyGlobalMapMessageBoxClosed), globalMapMessageBoxShown.PlayerId);
+            AddPlayerToTracker(Game.PlayersInGlobalMapMessageBox, globalMapMessageBoxShown.PlayerId);
+            UpdateGlobalMapMessageBoxUIState();
+
+            OnAfterNetworkMessageHandled(playerId, globalMapMessageBoxShown);
         }
 
         private void OnNotifySkipTimeOpened(long playerId, NotifySkipTimeOpened skipTimeOpened)
@@ -1420,9 +1495,8 @@ namespace WOTRMultiplayer.MP.Actors
             Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}", nameof(NotifySkipTimeOpened), skipTimeOpened.PlayerId);
             AddPlayerToTracker(Game.PlayersInSkipTime, skipTimeOpened.PlayerId);
             GameInteraction.OpenSkipTimeUI();
-            // sent by host = you are a client
-            var hasControlOverUI = playerId != NetworkingConsts.HostPlayerId;
-            UpdateSkipTimeUIState(hasControlOverUI);
+
+            UpdateSkipTimeUIState();
 
             OnAfterNetworkMessageHandled(playerId, skipTimeOpened);
         }

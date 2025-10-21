@@ -1682,7 +1682,7 @@ namespace WOTRMultiplayer.MP
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error while trying to continue global map travel");
+                _logger.LogError(ex, "Error while continuing global map travel");
                 throw;
             }
         }
@@ -1700,7 +1700,43 @@ namespace WOTRMultiplayer.MP
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error while trying to stop global map travel");
+                _logger.LogError(ex, "Error while stopping global map travel");
+                throw;
+            }
+        }
+
+        public void OnGlobalMapMessageBoxShown()
+        {
+            try
+            {
+                if (_multiplayerActorAccessor.Current == null)
+                {
+                    return;
+                }
+
+                _multiplayerActorAccessor.Current.OnGlobalMapMessageBoxShown();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while showing global map message box");
+                throw;
+            }
+        }
+
+        public void OnGlobalMapMessageBoxClosed()
+        {
+            try
+            {
+                if (_multiplayerActorAccessor.Current == null)
+                {
+                    return;
+                }
+
+                _multiplayerActorAccessor.Current.OnGlobalMapMessageBoxClosed();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while closing global map message box");
                 throw;
             }
         }

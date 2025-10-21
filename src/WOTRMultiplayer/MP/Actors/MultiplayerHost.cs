@@ -41,7 +41,7 @@ namespace WOTRMultiplayer.MP.Actors
 
         public bool IsInLobby => IsActive && Status == NetworkGameStage.Lobby;
 
-        protected override bool IsHost => true;
+        protected override bool HasControlOverUI => true;
 
         public MultiplayerHost(
             ILogger<MultiplayerHost> logger,
@@ -578,11 +578,6 @@ namespace WOTRMultiplayer.MP.Actors
             }
         }
 
-        public void OnShowGroupChangerUI()
-        {
-            OnShowGroupChangerUI(hasControlOverUI: true);
-        }
-
         public void OnCloseGroupChangerPartyUI()
         {
             ResetPlayersTracker(Game.PlayersInGroupChanger);
@@ -640,11 +635,6 @@ namespace WOTRMultiplayer.MP.Actors
             };
             Logger.LogInformation("Sending {MessageType}. DestinationId={DestinationId}, DestinationName={DestinationName}", nameof(NotifyGlobalMapTravelStarted), message.Destination.Id, message.Destination.Name);
             Send(message);
-        }
-
-        public void OnSkipTimeOpened()
-        {
-            OnSkipTimeOpened(hasControlOverUI: true);
         }
 
         public void OnSkipTimeClosed()
@@ -894,19 +884,7 @@ namespace WOTRMultiplayer.MP.Actors
 
                // pause
                .On<ClientGameAutoPaused>(OnClientGameAutoPaused)
-
-               // group management
-               .On<NotifyGroupChangerOpened>(OnNotifyGroupChangerOpened)
                ;
-        }
-
-        private void OnNotifyGroupChangerOpened(long playerId, NotifyGroupChangerOpened groupChangerVisible)
-        {
-            Logger.LogInformation("Received {MessageType}. SenderPlayerId={SenderPlayerId} PlayerId={PlayerId}", nameof(NotifyGroupChangerOpened), playerId, groupChangerVisible.PlayerId);
-            AddPlayerToTracker(Game.PlayersInGroupChanger, groupChangerVisible.PlayerId);
-            UpdateGroupManagerUIState(hasControlOverUI: true);
-
-            OnAfterNetworkMessageHandled(playerId, groupChangerVisible);
         }
 
         private void OnClientGameAutoPaused(long playerId, ClientGameAutoPaused clientGameAutoPaused)

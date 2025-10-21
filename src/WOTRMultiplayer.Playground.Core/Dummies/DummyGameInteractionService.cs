@@ -424,5 +424,9 @@ namespace WOTRMultiplayer.Playground.Core.Dummies
         public void StopGlobalMapTravel(NetworkGlobalMapState globalMapState)
         {
         }
+
+        public void UpdateGlobalMapMessageBoxUI(bool isInteractable, int readyPlayersCount, int totalPlayersCount)
+        {
+        }
     }
 }

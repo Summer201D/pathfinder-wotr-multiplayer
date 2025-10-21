@@ -206,5 +206,9 @@ namespace WOTRMultiplayer.Abstractions.MP
         void OnGlobalMapContinueTravel(NetworkGlobalMapState globalMapState);
 
         void OnGlobalMapStopTravel(NetworkGlobalMapState globalMapState);
+
+        void OnGlobalMapMessageBoxShown();
+
+        void OnGlobalMapMessageBoxClosed();
     }
 }

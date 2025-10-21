@@ -15,6 +15,8 @@ namespace WOTRMultiplayer.MP.Entities
 
         public long LocalPlayerId { get; set; }
 
+        public string SaveFilePath { get; set; }
+
         public NetworkGameConnectivity Connectivity { get; set; }
 
         public NetworkGameStage Stage { get; set; }
@@ -22,6 +24,16 @@ namespace WOTRMultiplayer.MP.Entities
         public List<NetworkPlayer> Players { get; set; } = [];
 
         public List<NetworkCharacterOwnership> Characters { get; set; } = [];
+
+        public NetworkCombat Combat { get; set; }
+
+        public NetworkDialog Dialog { get; set; }
+
+        public NetworkForcedPause ForcedPause { get; set; }
+
+        public NetworkRandomEncounter RandomEncounter { get; set; }
+
+        public NetworkLeveling Leveling { get; set; }
 
         public ConcurrentDictionary<GameModeType, HashSet<long>> PlayersInGameMode { get; set; } = [];
 
@@ -31,17 +43,7 @@ namespace WOTRMultiplayer.MP.Entities
 
         public HashSet<long> PlayersInSkipTime { get; set; } = [];
 
-        public NetworkCombat Combat { get; set; }
-
-        public NetworkDialog Dialog { get; set; }
-
-        public string SaveFilePath { get; set; }
-
-        public NetworkForcedPause ForcedPause { get; set; }
-
-        public NetworkRandomEncounter RandomEncounter { get; set; }
-
-        public NetworkLeveling Leveling { get; set; }
+        public HashSet<long> PlayersInGlobalMapMessageBox { get; set; } = [];
 
         public NetworkGame(string saveFilePath)
         {

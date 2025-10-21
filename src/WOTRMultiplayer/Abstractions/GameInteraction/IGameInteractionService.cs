@@ -220,5 +220,7 @@ namespace WOTRMultiplayer.Abstractions.GameInteraction
         void ContinueGlobalMapTravel(NetworkGlobalMapState globalMapState);
 
         void StopGlobalMapTravel(NetworkGlobalMapState globalMapState);
+
+        void UpdateGlobalMapMessageBoxUI(bool isInteractable, int readyPlayersCount, int totalPlayersCount);
     }
 }

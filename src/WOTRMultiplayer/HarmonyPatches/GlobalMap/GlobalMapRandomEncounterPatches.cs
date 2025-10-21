@@ -92,14 +92,12 @@ namespace WOTRMultiplayer.HarmonyPatches.GlobalMap
         [HarmonyPostfix]
         public static void GlobalMapEnterMessagePCView_BindViewImplementation_Postfix(GlobalMapEnterMessagePCView __instance)
         {
-            if (!Main.Multiplayer.IsActive || __instance.GetViewModel() is not GlobalMapEnterMessageVM messageVM || !messageVM.IsCurrentLocation)
+            if (!Main.Multiplayer.IsActive)
             {
-                __instance.m_AcceptButton.Interactable = true;
                 return;
             }
 
-            __instance.m_AcceptButton.Interactable = false;
-            Main.GetLogger<GlobalMapRandomEncounterPatches>().LogWarning("Enter target location message box confirmation");
+            Main.Multiplayer.OnGlobalMapMessageBoxShown();
         }
 
         [HarmonyPatch(typeof(GlobalMapEnterMessageVM), nameof(GlobalMapEnterMessageVM.Close))]
@@ -111,7 +109,7 @@ namespace WOTRMultiplayer.HarmonyPatches.GlobalMap
                 return;
             }
 
-            Main.GetLogger<GlobalMapRandomEncounterPatches>().LogWarning("Close 'Enter location' message box");
+            Main.Multiplayer.OnGlobalMapMessageBoxClosed();
         }
 
         [HarmonyPatch(typeof(GlobalMapEnterMessageVM), nameof(GlobalMapEnterMessageVM.CanLocationSelect))]

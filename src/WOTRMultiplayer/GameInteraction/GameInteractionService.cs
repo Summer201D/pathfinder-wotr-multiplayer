@@ -57,6 +57,7 @@ using Kingmaker.UI.MVVM._VM.CharGen.Phases.Class;
 using Kingmaker.UI.MVVM._VM.CharGen.Phases.FeatureSelector;
 using Kingmaker.UI.MVVM._VM.CharGen.Phases.Spells;
 using Kingmaker.UI.MVVM._VM.Dialog.Dialog;
+using Kingmaker.UI.MVVM._VM.GlobalMap.Message;
 using Kingmaker.UI.MVVM._VM.GroupChanger;
 using Kingmaker.UI.MVVM._VM.Lockpick;
 using Kingmaker.UI.MVVM._VM.Party;
@@ -472,7 +473,7 @@ namespace WOTRMultiplayer.GameInteraction
                         }
                     }
 
-                    _logger.LogInformation("Continue button updated. IsInteractable={IsInteractable}, HotkeysEnabled={HotkeysEnabled}", isEnabled, hotkeysEnabled);
+                    _logger.LogInformation("Dialog continue button updated. IsInteractable={IsInteractable}, HotkeysEnabled={HotkeysEnabled}", isEnabled, hotkeysEnabled);
                 }
                 catch (Exception ex)
                 {
@@ -2425,6 +2426,37 @@ namespace WOTRMultiplayer.GameInteraction
             });
         }
 
+        public void UpdateGlobalMapMessageBoxUI(bool isInteractable, int readyPlayersCount, int totalPlayersCount)
+        {
+            _mainThreadAccessor.Post(() =>
+            {
+                if (GlobalMapPCView == null)
+                {
+                    return;
+                }
+
+                var messageBoxView = GlobalMapPCView.m_GlobalMapEnterMessagePCView;
+                if (messageBoxView.GetViewModel() is not GlobalMapEnterMessageVM messageBoxVM)
+                {
+                    return;
+                }
+
+                messageBoxView.m_AcceptButton.Interactable = !messageBoxVM.IsCurrentLocation || isInteractable;
+
+                var buttonText = messageBoxView.m_AcceptButton.GetComponentInChildren<TextMeshProUGUI>();
+                if (messageBoxVM.IsCurrentLocation)
+                {
+                    UpdateButtonTextCounter(buttonText, readyPlayersCount, totalPlayersCount);
+                }
+                else
+                {
+                    RemoveButtonTextCounter(buttonText);
+                }
+
+                _logger.LogInformation("Global Map Message box accept button has been updated. IsInteractable={IsInteractable}, ReadyPlayers={ReadyPlayers}, TotalPlayers={TotalPlayers}", isInteractable, readyPlayersCount, totalPlayersCount);
+            });
+        }
+
         private void UpdateGlobalMapState(NetworkGlobalMapState globalMapState)
         {
             // not sure if player position is unavailable while army is selected (act2+), need to check later
@@ -2442,14 +2474,27 @@ namespace WOTRMultiplayer.GameInteraction
 
         private void UpdateButtonTextCounter(TextMeshProUGUI buttonText, int readyPlayersCount, int totalPlayersCount)
         {
+            var baseText = GetButtonTextWithoutCounter(buttonText);
+            baseText += $" ({readyPlayersCount}/{totalPlayersCount})";
+            buttonText.SetText(baseText);
+        }
+
+        private void RemoveButtonTextCounter(TextMeshProUGUI buttonText)
+        {
+            var baseText = GetButtonTextWithoutCounter(buttonText);
+            buttonText.SetText(baseText);
+        }
+
+        private string GetButtonTextWithoutCounter(TextMeshProUGUI buttonText)
+        {
             var baseText = buttonText.text;
             if (baseText.EndsWith(")"))
             {
                 var parts = baseText.Split(' ');
                 baseText = string.Join(" ", parts.Take(parts.Length - 1));
             }
-            baseText += $" ({readyPlayersCount}/{totalPlayersCount})";
-            buttonText.SetText(baseText);
+
+            return baseText;
         }
 
         private List<NetworkUnit> GetUnitsInCombat()

@@ -53,7 +53,7 @@ namespace WOTRMultiplayer.MP.Actors
 
         public bool IsInLobby => IsActive && Status == NetworkGameStage.Lobby;
 
-        protected override bool IsHost => false;
+        protected override bool HasControlOverUI => false;
 
         public MultiplayerClient(
             ILogger<MultiplayerClient> logger,
@@ -361,11 +361,6 @@ namespace WOTRMultiplayer.MP.Actors
             return true;
         }
 
-        public void OnShowGroupChangerUI()
-        {
-            OnShowGroupChangerUI(hasControlOverUI: false);
-        }
-
         public bool OnClickGroupChangerUnit(string unitId)
         {
             // client is not allowed to move characters (no restrictions, just to avoid implementing extra synchronization)
@@ -376,11 +371,6 @@ namespace WOTRMultiplayer.MP.Actors
         {
             var canSelectLocation = GameInteraction.IsAtGlobalMapLocation(locationId);
             return canSelectLocation;
-        }
-
-        public void OnSkipTimeOpened()
-        {
-            OnSkipTimeOpened(hasControlOverUI: false);
         }
 
         protected override bool OnStartGameModeInternal(GameModeType type)
@@ -482,7 +472,6 @@ namespace WOTRMultiplayer.MP.Actors
                .On<NotifyInspectionKnowledgeCheckRolled>(OnNotifyInspectionKnowledgeCheckRolled)
 
                // group management
-               .On<NotifyGroupChangerOpened>(OnNotifyGroupChangerOpened)
                .On<NotifyGroupChangerClosed>(OnNotifyGroupChangerClosed)
                .On<NotifyGroupChangerUnitClicked>(OnNotifyGroupChangerUnitClicked)
                .On<NotifyGroupChangerPartyAccepted>(OnNotifyGroupChangerPartyAccepted)
@@ -569,13 +558,6 @@ namespace WOTRMultiplayer.MP.Actors
 
             GameInteraction.CloseGroupChangerUI();
             ResetPlayersTracker(Game.PlayersInGroupChanger);
-        }
-
-        private void OnNotifyGroupChangerOpened(long playerId, NotifyGroupChangerOpened groupChangerOpened)
-        {
-            Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}", nameof(NotifyGroupChangerOpened), groupChangerOpened.PlayerId);
-            AddPlayerToTracker(Game.PlayersInGroupChanger, groupChangerOpened.PlayerId);
-            UpdateGroupManagerUIState(hasControlOverUI: false);
         }
 
         private void OnNotifyPlayerSaveGameSyncStatusChanged(long playerId, NotifyPlayerSaveGameSyncStatusChanged playerSaveGameSyncStatus)

@@ -175,5 +175,9 @@ namespace WOTRMultiplayer.Abstractions.MP.Actors
         void OnSkipTimeOpened();
 
         bool OnGlobalMapSelectLocation(string locationId);
+
+        void OnGlobalMapMessageBoxShown();
+
+        void OnGlobalMapMessageBoxClosed();
     }
 }

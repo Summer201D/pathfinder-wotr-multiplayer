@@ -106,6 +106,8 @@
             NotifySkipTimeStarted,
             NotifyGlobalMapTravelContinued,
             NotifyGlobalMapTravelStopped,
+            NotifyGlobalMapMessageBoxClosed,
+            NotifyGlobalMapMessageBoxShown,
         }
 
         public enum Request
