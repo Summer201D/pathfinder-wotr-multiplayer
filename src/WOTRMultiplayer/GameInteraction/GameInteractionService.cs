@@ -2477,7 +2477,7 @@ namespace WOTRMultiplayer.GameInteraction
             });
         }
 
-        public void CollectGlobalMapIngredients(NetworkGlobalMapLocation location)
+        public void CollectGlobalMapIngredients(NetworkGlobalMapLocation globalMapLocation)
         {
             _mainThreadAccessor.Post(() =>
             {
@@ -2496,10 +2496,10 @@ namespace WOTRMultiplayer.GameInteraction
 
                 // no message box means client closed his message box right before host clicked accept
                 // autocollecting items since we are at the same place anyway
-                var point = GetGlobalMapPoint(location.Id);
+                var point = GetGlobalMapPoint(globalMapLocation.Id);
                 if (point == null)
                 {
-                    _logger.LogError("Unable to autocollect global map ingredients due to missing point. LocationId={LocationId}, LocationName={LocationName}", location.Id, location.Name);
+                    _logger.LogError("Unable to autocollect global map ingredients due to missing point. LocationId={LocationId}, LocationName={LocationName}", globalMapLocation.Id, globalMapLocation.Name);
                     return;
                 }
 
@@ -2511,7 +2511,25 @@ namespace WOTRMultiplayer.GameInteraction
                 point.State.IngredientWasCollected = true;
                 point.State.SetVisited();
 
-                _logger.LogInformation("Global map ingredients have been collected via auto collection. LocationId={LocationId}, LocationName={LocationName}", location.Id, location.Name);
+                _logger.LogInformation("Global map ingredients have been collected via auto collection. LocationId={LocationId}, LocationName={LocationName}", globalMapLocation.Id, globalMapLocation.Name);
+            });
+        }
+
+        public void EnterGlobalMapLocation(NetworkGlobalMapLocation globalMapLocation)
+        {
+            _mainThreadAccessor.Post(() =>
+            {
+                var point = GetGlobalMapPoint(globalMapLocation.Id);
+                if (point == null || GlobalMapView.Instance.State.Player.Location != point)
+                {
+                    _logger.LogError("Unable to enter desynced global map location. ExpectedLocationId={ExpectedLocationId}, ExpectedLocationName={ExpectedLocationName}, ActualLocationId={ActualLocationId}, ActualLocationName={ActualLocationName}", globalMapLocation.Id, globalMapLocation.Name, point?.Blueprint.AssetGuid.ToString(), point?.Blueprint.name);
+                    return;
+                }
+
+                GlobalMapPCView?.m_GlobalMapEnterMessagePCView?.ViewModel?.Close();
+
+                GlobalMapView.Instance.EnterLocation();
+                _logger.LogInformation("Global map location has been entered. LocationId={LocationId}, LocationName={LocationName}", globalMapLocation.Id, globalMapLocation.Name);
             });
         }
 

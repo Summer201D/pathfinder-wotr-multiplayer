@@ -58,5 +58,7 @@ namespace WOTRMultiplayer.Abstractions.MP.Actors
         void OnGlobalMapStopTravel(NetworkGlobalMapState globalMapState);
 
         void OnGlobalMapIngredientCollectionAccepted(NetworkGlobalMapLocation globalMapLocation);
+
+        void OnGlobalMapEnterLocation(NetworkGlobalMapLocation globalMapLocation);
     }
 }

@@ -73,6 +73,19 @@ namespace WOTRMultiplayer.HarmonyPatches.GlobalMap
             Main.GetLogger<GlobalMapRandomEncounterPatches>().LogWarning("GlobalMapPlayerState_FinishTravel_Prefix");
         }
 
+        [HarmonyPatch(typeof(GlobalMapView), nameof(GlobalMapView.EnterLocation))]
+        [HarmonyPrefix]
+        public static void GlobalMapView_EnterLocation_Prefix(GlobalMapView __instance)
+        {
+            if (!Main.Multiplayer.IsActive || __instance.State.Player.Location == null)
+            {
+                return;
+            }
+
+            var location = GetNetworkGlobalMapLocation(__instance.State.Player.Location);
+            Main.Multiplayer.OnGlobalMapEnterLocation(location);
+        }
+
         [HarmonyPatch(typeof(GlobalMapEnterMessagePCView), nameof(GlobalMapEnterMessagePCView.BindViewImplementation))]
         [HarmonyPostfix]
         public static void GlobalMapEnterMessagePCView_BindViewImplementation_Postfix(GlobalMapEnterMessagePCView __instance)

@@ -487,7 +487,16 @@ namespace WOTRMultiplayer.MP.Actors
                .On<NotifyGlobalMapTravelStopped>(OnNotifyGlobalMapTravelStopped)
                .On<NotifyGlobalMapTravelContinued>(OnNotifyGlobalMapTravelContinued)
                .On<NotifyGlobalMapIngredientCollectionAccepted>(OnNotifyGlobalMapIngredientCollectionAccepted)
+               .On<NotifyGlobalMapLocationEntered>(OnNotifyGlobalMapLocationEntered)
                ;
+        }
+
+        private void OnNotifyGlobalMapLocationEntered(long playerId, NotifyGlobalMapLocationEntered globalMapLocationEntered)
+        {
+            Logger.LogInformation("Received {MessageType}. LocationId={LocationId}, LocationName={LocationName}", nameof(NotifyGlobalMapLocationEntered), globalMapLocationEntered.Location.Id, globalMapLocationEntered.Location.Name);
+
+            var location = Mapper.Map<NetworkGlobalMapLocation>(globalMapLocationEntered.Location);
+            GameInteraction.EnterGlobalMapLocation(location);
         }
 
         private void OnNotifyGlobalMapIngredientCollectionAccepted(long playerId, NotifyGlobalMapIngredientCollectionAccepted globalMapIngredientCollectionAccepted)

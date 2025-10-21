@@ -436,5 +436,9 @@ namespace WOTRMultiplayer.Playground.Core.Dummies
         public void CollectGlobalMapIngredients(NetworkGlobalMapLocation globalMapLocation)
         {
         }
+
+        public void EnterGlobalMapLocation(NetworkGlobalMapLocation globalMapLocation)
+        {
+        }
     }
 }

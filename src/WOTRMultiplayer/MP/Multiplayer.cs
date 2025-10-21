@@ -1795,6 +1795,24 @@ namespace WOTRMultiplayer.MP
             }
         }
 
+        public void OnGlobalMapEnterLocation(NetworkGlobalMapLocation globalMapLocation)
+        {
+            try
+            {
+                if (_multiplayerActorAccessor.Current == null || _multiplayerActorAccessor.Client.IsActive)
+                {
+                    return;
+                }
+
+                _multiplayerActorAccessor.Host.OnGlobalMapEnterLocation(globalMapLocation);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while entering global map location. LocationId={LocationId}, LocationName={LocationName}", globalMapLocation.Id, globalMapLocation.Name);
+                throw;
+            }
+        }
+
         private void ShowEscMenuMultiplayerLobby()
         {
             _logger.LogInformation("Show lobby window");
