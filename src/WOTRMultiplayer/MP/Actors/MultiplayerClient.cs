@@ -367,9 +367,9 @@ namespace WOTRMultiplayer.MP.Actors
             return false;
         }
 
-        public bool OnGlobalMapSelectLocation(string locationId)
+        public bool OnGlobalMapSelectLocation(NetworkGlobalMapLocation globalMapLocation)
         {
-            var canSelectLocation = GameInteraction.IsAtGlobalMapLocation(locationId);
+            var canSelectLocation = GameInteraction.IsAtGlobalMapLocation(globalMapLocation);
             return canSelectLocation;
         }
 
@@ -486,7 +486,16 @@ namespace WOTRMultiplayer.MP.Actors
                .On<NotifyGlobalMapTravelStarted>(OnNotifyGlobalMapTravelStarted)
                .On<NotifyGlobalMapTravelStopped>(OnNotifyGlobalMapTravelStopped)
                .On<NotifyGlobalMapTravelContinued>(OnNotifyGlobalMapTravelContinued)
+               .On<NotifyGlobalMapIngredientCollectionAccepted>(OnNotifyGlobalMapIngredientCollectionAccepted)
                ;
+        }
+
+        private void OnNotifyGlobalMapIngredientCollectionAccepted(long playerId, NotifyGlobalMapIngredientCollectionAccepted globalMapIngredientCollectionAccepted)
+        {
+            Logger.LogInformation("Received {MessageType}. LocationId={LocationId}, LocationName={LocationName}", nameof(NotifyGlobalMapIngredientCollectionAccepted), globalMapIngredientCollectionAccepted.Location.Id, globalMapIngredientCollectionAccepted.Location.Name);
+
+            var location = Mapper.Map<NetworkGlobalMapLocation>(globalMapIngredientCollectionAccepted.Location);
+            GameInteraction.CollectGlobalMapIngredients(location);
         }
 
         private void OnNotifyGlobalMapTravelContinued(long playerId, NotifyGlobalMapTravelContinued globalMapTravelContinued)

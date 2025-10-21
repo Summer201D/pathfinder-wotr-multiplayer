@@ -1,11 +1,15 @@
-﻿using HarmonyLib;
-using Kingmaker;
+﻿using System.Linq;
+using HarmonyLib;
 using Kingmaker.Assets.Controllers.GlobalMap;
+using Kingmaker.Blueprints.Root;
+using Kingmaker.Blueprints.Root.Strings;
 using Kingmaker.Globalmap;
+using Kingmaker.Globalmap.Blueprints;
 using Kingmaker.Globalmap.State;
 using Kingmaker.Globalmap.View;
+using Kingmaker.UI;
+using Kingmaker.UI.Common;
 using Kingmaker.UI.GlobalMap;
-using Kingmaker.UI.MVVM._PCView.Common;
 using Kingmaker.UI.MVVM._PCView.GlobalMap.Message;
 using Kingmaker.UI.MVVM._VM.GlobalMap.Message;
 using Microsoft.Extensions.Logging;
@@ -52,11 +56,7 @@ namespace WOTRMultiplayer.HarmonyPatches.GlobalMap
             }
 
             // not sure if location is always available during act2+ travels due to navigation arrows
-            var destination = new NetworkGlobalMapLocation
-            {
-                Id = travelData.To.Location.AssetGuid.ToString(),
-                Name = travelData.To.Location.name,
-            };
+            var destination = GetNetworkGlobalMapLocation(travelData.To.Location);
 
             Main.Multiplayer.OnGlobalMapStartTravel(destination);
         }
@@ -71,21 +71,6 @@ namespace WOTRMultiplayer.HarmonyPatches.GlobalMap
             }
 
             Main.GetLogger<GlobalMapRandomEncounterPatches>().LogWarning("GlobalMapPlayerState_FinishTravel_Prefix");
-        }
-
-        [HarmonyPatch(typeof(GlobalMapMovementUtility), nameof(GlobalMapMovementUtility.ShowCollectIngredientMessage))]
-        [HarmonyPostfix]
-        public static void GlobalMapMovementUtility_ShowCollectIngredientMessage_Postfix(IGlobalMapTraveler traveler)
-        {
-            if (!Main.Multiplayer.IsActive)
-            {
-                return;
-            }
-
-            var modalMessage = (Game.Instance.RootUiContext.m_CommonView as CommonPCView).m_MessageModalPCView;
-            modalMessage.m_AcceptButton.Interactable = false;
-            var locationId = traveler.Location.AssetGuid.ToString();
-            Main.GetLogger<GlobalMapRandomEncounterPatches>().LogWarning("Show ingridients confirmation. LocationId={LocationId}", locationId);
         }
 
         [HarmonyPatch(typeof(GlobalMapEnterMessagePCView), nameof(GlobalMapEnterMessagePCView.BindViewImplementation))]
@@ -121,8 +106,8 @@ namespace WOTRMultiplayer.HarmonyPatches.GlobalMap
                 return;
             }
 
-            var locationId = locationView.Blueprint.AssetGuid.ToString();
-            var canSelectLocation = Main.Multiplayer.OnGlobalMapSelectLocation(locationId);
+            var location = GetNetworkGlobalMapLocation(locationView.Blueprint);
+            var canSelectLocation = Main.Multiplayer.OnGlobalMapSelectLocation(location);
             __result = __result && canSelectLocation;
         }
 
@@ -152,6 +137,48 @@ namespace WOTRMultiplayer.HarmonyPatches.GlobalMap
             Main.Multiplayer.OnGlobalMapStopTravel(globalMapState);
         }
 
+        [HarmonyPatch(typeof(GlobalMapMovementUtility), nameof(GlobalMapMovementUtility.ShowCollectIngredientMessage))]
+        [HarmonyPrefix]
+        public static bool GlobalMapMovementUtility_ShowCollectIngredientMessage_Prefix(IGlobalMapTraveler traveler, GlobalMapPointState pointState)
+        {
+            if (!Main.Multiplayer.IsActive)
+            {
+                return true;
+            }
+
+            // looks super weird to use different approach to show message box confirmation for ingredient collection, but it is what it is
+            // slightly modified copy paste of the original method since creating transpiler for compiler generated classes is way worse
+            var craftRoot = BlueprintRoot.Instance.CraftRoot.CollectRoot;
+            if (pointState.IngredientWasCollected)
+            {
+                // this one doesn't make sense to sync, so we just ignore it
+                UIUtility.ShowMessageBox(craftRoot.AlreadyCollected, MessageModalBase.ModalType.Message, null);
+                return false;
+            }
+
+            Main.Multiplayer.OnGlobalMapIngredientCollectionShown();
+            UIUtility.ShowMessageBox(craftRoot.PointResources, MessageModalBase.ModalType.Dialog, delegate (MessageModalBase.ButtonType result)
+            {
+                if (result != MessageModalBase.ButtonType.Yes)
+                {
+                    Main.Multiplayer.OnGlobalMapIngredientCollectionClosed();
+                    return;
+                }
+
+                var collected = craftRoot.CollectIngredient(traveler.Location);
+                var warningMessage = collected.Count > 0 ? craftRoot.SuccessCollect : craftRoot.FailCollected;
+                UIUtility.SendWarning(warningMessage, addLog: false);
+                Kingmaker.PubSubSystem.EventBus.RaiseEvent<Kingmaker.PubSubSystem.ILogMessageUIHandler>(x => x.HandleLogMessage((collected.Count > 0) ? $"{craftRoot.SuccessCollect}:\n{BlueprintGlobalMapPoint.IngredientToString(collected)}" : ((string)craftRoot.FailCollected)));
+                pointState.IngredientWasCollected = true;
+                pointState.SetVisited();
+
+                var location = GetNetworkGlobalMapLocation(traveler.Location);
+                Main.Multiplayer.OnGlobalMapIngredientCollectionAccepted(location);
+            }, null, 0, UIStrings.Instance.Tooltips.Collect, null, [.. traveler.Location.Ingredients.Select(i => i.Ingredient.Get())]);
+
+            return false;
+        }
+
         private static NetworkGlobalMapState GetGlobalMapState()
         {
             var state = new NetworkGlobalMapState
@@ -176,6 +203,17 @@ namespace WOTRMultiplayer.HarmonyPatches.GlobalMap
                 Edge = globalMapPosition.EdgePosition
             };
             return position;
+        }
+
+        private static NetworkGlobalMapLocation GetNetworkGlobalMapLocation(BlueprintGlobalMapPoint globalMapPoint)
+        {
+            var location = new NetworkGlobalMapLocation
+            {
+                Id = globalMapPoint.AssetGuid.ToString(),
+                Name = globalMapPoint.name,
+            };
+
+            return location;
         }
     }
 }

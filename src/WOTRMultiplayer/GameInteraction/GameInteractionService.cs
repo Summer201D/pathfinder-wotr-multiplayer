@@ -36,6 +36,7 @@ using Kingmaker.TurnBasedMode;
 using Kingmaker.TurnBasedMode.Controllers;
 using Kingmaker.UI;
 using Kingmaker.UI._ConsoleUI.Overtips;
+using Kingmaker.UI.Common;
 using Kingmaker.UI.Models.Log.Events;
 using Kingmaker.UI.MVVM._PCView.CharGen;
 using Kingmaker.UI.MVVM._PCView.CharGen.Phases;
@@ -44,6 +45,7 @@ using Kingmaker.UI.MVVM._PCView.CharGen.Phases.Class;
 using Kingmaker.UI.MVVM._PCView.CharGen.Phases.FeatureSelector;
 using Kingmaker.UI.MVVM._PCView.CharGen.Phases.Skills;
 using Kingmaker.UI.MVVM._PCView.CharGen.Phases.Spells;
+using Kingmaker.UI.MVVM._PCView.Common;
 using Kingmaker.UI.MVVM._PCView.Common.MessageModal;
 using Kingmaker.UI.MVVM._PCView.Dialog.BookEvent;
 using Kingmaker.UI.MVVM._PCView.Dialog.Dialog;
@@ -2400,9 +2402,9 @@ namespace WOTRMultiplayer.GameInteraction
             });
         }
 
-        public bool IsAtGlobalMapLocation(string locationId)
+        public bool IsAtGlobalMapLocation(NetworkGlobalMapLocation globalMapLocation)
         {
-            var targetPoint = GetGlobalMapPoint(locationId);
+            var targetPoint = GetGlobalMapPoint(globalMapLocation.Id);
             return targetPoint != null && GlobalMapView.Instance.State.Player.Location == targetPoint.Blueprint;
         }
 
@@ -2454,6 +2456,62 @@ namespace WOTRMultiplayer.GameInteraction
                 }
 
                 _logger.LogInformation("Global Map Message box accept button has been updated. IsInteractable={IsInteractable}, ReadyPlayers={ReadyPlayers}, TotalPlayers={TotalPlayers}", isInteractable, readyPlayersCount, totalPlayersCount);
+            });
+        }
+
+        public void UpdateGlobalMapIngredientCollectionUI(bool isInteractable, int readyPlayersCount, int totalPlayersCount)
+        {
+            _mainThreadAccessor.Post(() =>
+            {
+                if (GlobalMapPCView == null)
+                {
+                    return;
+                }
+
+                var modalMessage = (Game.Instance.RootUiContext.m_CommonView as CommonPCView).m_MessageModalPCView;
+                modalMessage.m_AcceptButton.Interactable = isInteractable;
+                var buttonText = modalMessage.m_AcceptButton.GetComponentInChildren<TextMeshProUGUI>();
+                UpdateButtonTextCounter(buttonText, readyPlayersCount, totalPlayersCount);
+
+                _logger.LogInformation("Global Map Ingredient Collection Accept button has been updated. IsInteractable={IsInteractable}, ReadyPlayers={ReadyPlayers}, TotalPlayers={TotalPlayers}", isInteractable, readyPlayersCount, totalPlayersCount);
+            });
+        }
+
+        public void CollectGlobalMapIngredients(NetworkGlobalMapLocation location)
+        {
+            _mainThreadAccessor.Post(() =>
+            {
+                if (GlobalMapPCView == null)
+                {
+                    return;
+                }
+
+                var modalMessage = (Game.Instance.RootUiContext.m_CommonView as CommonPCView)?.m_MessageModalPCView;
+                if (modalMessage != null)
+                {
+                    modalMessage.m_AcceptButton.OnLeftClick?.Invoke();
+                    _logger.LogInformation("Global map ingredients have been collected via Accept button");
+                    return;
+                }
+
+                // no message box means client closed his message box right before host clicked accept
+                // autocollecting items since we are at the same place anyway
+                var point = GetGlobalMapPoint(location.Id);
+                if (point == null)
+                {
+                    _logger.LogError("Unable to autocollect global map ingredients due to missing point. LocationId={LocationId}, LocationName={LocationName}", location.Id, location.Name);
+                    return;
+                }
+
+                var craftRoot = BlueprintRoot.Instance.CraftRoot.CollectRoot;
+                var collected = craftRoot.CollectIngredient(point.Blueprint);
+                var warningMessage = collected.Count > 0 ? craftRoot.SuccessCollect : craftRoot.FailCollected;
+                UIUtility.SendWarning(warningMessage, addLog: false);
+                EventBus.RaiseEvent<ILogMessageUIHandler>(x => x.HandleLogMessage((collected.Count > 0) ? $"{craftRoot.SuccessCollect}:\n{BlueprintGlobalMapPoint.IngredientToString(collected)}" : ((string)craftRoot.FailCollected)));
+                point.State.IngredientWasCollected = true;
+                point.State.SetVisited();
+
+                _logger.LogInformation("Global map ingredients have been collected via auto collection. LocationId={LocationId}, LocationName={LocationName}", location.Id, location.Name);
             });
         }
 

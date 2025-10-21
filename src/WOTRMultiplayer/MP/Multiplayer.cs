@@ -1650,7 +1650,7 @@ namespace WOTRMultiplayer.MP
             }
         }
 
-        public bool OnGlobalMapSelectLocation(string locationId)
+        public bool OnGlobalMapSelectLocation(NetworkGlobalMapLocation globalMapLocation)
         {
             try
             {
@@ -1659,12 +1659,12 @@ namespace WOTRMultiplayer.MP
                     return true;
                 }
 
-                var canSelect = _multiplayerActorAccessor.Current.OnGlobalMapSelectLocation(locationId);
+                var canSelect = _multiplayerActorAccessor.Current.OnGlobalMapSelectLocation(globalMapLocation);
                 return canSelect;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error while selecting global map location. LocationId={LocationId}", locationId);
+                _logger.LogError(ex, "Error while selecting global map location. LocationId={LocationId}, LocationName={LocationName}", globalMapLocation.Id, globalMapLocation.Name);
                 throw;
             }
         }
@@ -1737,6 +1737,60 @@ namespace WOTRMultiplayer.MP
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error while closing global map message box");
+                throw;
+            }
+        }
+
+        public void OnGlobalMapIngredientCollectionShown()
+        {
+            try
+            {
+                if (_multiplayerActorAccessor.Current == null)
+                {
+                    return;
+                }
+
+                _multiplayerActorAccessor.Current.OnGlobalMapIngredientCollectionShown();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while showing global map ingredient collection");
+                throw;
+            }
+        }
+
+        public void OnGlobalMapIngredientCollectionClosed()
+        {
+            try
+            {
+                if (_multiplayerActorAccessor.Current == null)
+                {
+                    return;
+                }
+
+                _multiplayerActorAccessor.Current.OnGlobalMapIngredientCollectionClosed();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while closing global map ingredient collection");
+                throw;
+            }
+        }
+
+        public void OnGlobalMapIngredientCollectionAccepted(NetworkGlobalMapLocation globalMapLocation)
+        {
+            try
+            {
+                if (_multiplayerActorAccessor.Current == null || _multiplayerActorAccessor.Client.IsActive)
+                {
+                    return;
+                }
+
+                _multiplayerActorAccessor.Host.OnGlobalMapIngredientCollectionAccepted(globalMapLocation);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while accepting global map ingredient collection");
                 throw;
             }
         }

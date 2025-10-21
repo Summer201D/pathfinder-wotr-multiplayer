@@ -201,7 +201,7 @@ namespace WOTRMultiplayer.Abstractions.MP
 
         void OnSkipTimeStarted();
 
-        bool OnGlobalMapSelectLocation(string locationId);
+        bool OnGlobalMapSelectLocation(NetworkGlobalMapLocation globalMapLocation);
 
         void OnGlobalMapContinueTravel(NetworkGlobalMapState globalMapState);
 
@@ -210,5 +210,11 @@ namespace WOTRMultiplayer.Abstractions.MP
         void OnGlobalMapMessageBoxShown();
 
         void OnGlobalMapMessageBoxClosed();
+
+        void OnGlobalMapIngredientCollectionShown();
+
+        void OnGlobalMapIngredientCollectionClosed();
+
+        void OnGlobalMapIngredientCollectionAccepted(NetworkGlobalMapLocation globalMapLocation);
     }
 }

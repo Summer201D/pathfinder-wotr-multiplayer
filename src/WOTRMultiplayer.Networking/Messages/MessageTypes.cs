@@ -108,6 +108,9 @@
             NotifyGlobalMapTravelStopped,
             NotifyGlobalMapMessageBoxClosed,
             NotifyGlobalMapMessageBoxShown,
+            NotifyGlobalMapIngredientCollectionShown,
+            NotifyGlobalMapIngredientCollectionClosed,
+            NotifyGlobalMapIngredientCollectionAccepted,
         }
 
         public enum Request

@@ -941,6 +941,36 @@ namespace WOTRMultiplayer.MP.Actors
             UpdateSkipTimeUIState();
         }
 
+        public void OnGlobalMapIngredientCollectionShown()
+        {
+            var localPlayer = GetLocalPlayerId();
+            AddPlayerToTracker(Game.PlayersInIngredientCollection, localPlayer);
+
+            var message = new NotifyGlobalMapIngredientCollectionShown
+            {
+                PlayerId = localPlayer
+            };
+            Logger.LogInformation("Sending {MessageType}. PlayerId={PlayerId}", nameof(NotifyGlobalMapIngredientCollectionShown), message.PlayerId);
+            Send(message);
+
+            UpdateGlobalMapIngredientCollectionUIState();
+        }
+
+        public void OnGlobalMapIngredientCollectionClosed()
+        {
+            var localPlayer = GetLocalPlayerId();
+            RemovePlayerFromTracker(Game.PlayersInIngredientCollection, localPlayer);
+
+            var message = new NotifyGlobalMapIngredientCollectionClosed
+            {
+                PlayerId = localPlayer
+            };
+            Logger.LogInformation("Sending {MessageType}. PlayerId={PlayerId}", nameof(NotifyGlobalMapIngredientCollectionClosed), message.PlayerId);
+            Send(message);
+
+            UpdateGlobalMapIngredientCollectionUIState();
+        }
+
         protected abstract bool OnStartGameModeInternal(GameModeType type);
 
         protected abstract DiceRollValueResponse RetrieveRoll(DiceRollValueRequest rollRequest);
@@ -981,6 +1011,17 @@ namespace WOTRMultiplayer.MP.Actors
                 var totalPlayers = Game.Players.Count;
                 var canUse = HasControlOverUI && readyPlayers >= totalPlayers;
                 GameInteraction.UpdateGlobalMapMessageBoxUI(canUse, readyPlayers, totalPlayers);
+            }
+        }
+
+        protected void UpdateGlobalMapIngredientCollectionUIState()
+        {
+            lock (ActionLock)
+            {
+                var readyPlayers = Game.PlayersInIngredientCollection.Count;
+                var totalPlayers = Game.Players.Count;
+                var canUse = HasControlOverUI && readyPlayers >= totalPlayers;
+                GameInteraction.UpdateGlobalMapIngredientCollectionUI(canUse, readyPlayers, totalPlayers);
             }
         }
 
@@ -1457,10 +1498,30 @@ namespace WOTRMultiplayer.MP.Actors
                 // global map
                 .On<NotifyGlobalMapMessageBoxShown>(OnNotifyGlobalMapMessageBoxShown)
                 .On<NotifyGlobalMapMessageBoxClosed>(OnNotifyGlobalMapMessageBoxClosed)
+                .On<NotifyGlobalMapIngredientCollectionShown>(OnNotifyGlobalMapIngredientCollectionShown)
+                .On<NotifyGlobalMapIngredientCollectionClosed>(OnNotifyGlobalMapIngredientCollectionClosed)
 
                 // group management
                 .On<NotifyGroupChangerOpened>(OnNotifyGroupChangerOpened)
                 ;
+        }
+
+        private void OnNotifyGlobalMapIngredientCollectionClosed(long playerId, NotifyGlobalMapIngredientCollectionClosed globalMapIngredientCollectionClosed)
+        {
+            Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}", nameof(NotifyGlobalMapIngredientCollectionClosed), globalMapIngredientCollectionClosed.PlayerId);
+            RemovePlayerFromTracker(Game.PlayersInIngredientCollection, globalMapIngredientCollectionClosed.PlayerId);
+            UpdateGlobalMapIngredientCollectionUIState();
+
+            OnAfterNetworkMessageHandled(playerId, globalMapIngredientCollectionClosed);
+        }
+
+        private void OnNotifyGlobalMapIngredientCollectionShown(long playerId, NotifyGlobalMapIngredientCollectionShown globalMapIngredientCollectionShown)
+        {
+            Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}", nameof(NotifyGlobalMapIngredientCollectionShown), globalMapIngredientCollectionShown.PlayerId);
+            AddPlayerToTracker(Game.PlayersInIngredientCollection, globalMapIngredientCollectionShown.PlayerId);
+            UpdateGlobalMapIngredientCollectionUIState();
+
+            OnAfterNetworkMessageHandled(playerId, globalMapIngredientCollectionShown);
         }
 
         private void OnNotifyGroupChangerOpened(long playerId, NotifyGroupChangerOpened groupChangerVisible)

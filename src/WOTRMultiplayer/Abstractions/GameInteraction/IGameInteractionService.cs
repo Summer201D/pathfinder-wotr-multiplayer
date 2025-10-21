@@ -215,12 +215,16 @@ namespace WOTRMultiplayer.Abstractions.GameInteraction
 
         void StartSkipTime();
 
-        bool IsAtGlobalMapLocation(string locationId);
+        bool IsAtGlobalMapLocation(NetworkGlobalMapLocation globalMapLocation);
 
         void ContinueGlobalMapTravel(NetworkGlobalMapState globalMapState);
 
         void StopGlobalMapTravel(NetworkGlobalMapState globalMapState);
 
         void UpdateGlobalMapMessageBoxUI(bool isInteractable, int readyPlayersCount, int totalPlayersCount);
+
+        void UpdateGlobalMapIngredientCollectionUI(bool isInteractable, int readyPlayersCount, int totalPlayersCount);
+
+        void CollectGlobalMapIngredients(NetworkGlobalMapLocation globalMapLocation);
     }
 }

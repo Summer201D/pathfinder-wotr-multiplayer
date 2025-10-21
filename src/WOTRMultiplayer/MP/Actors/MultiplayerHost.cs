@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using AutoMapper;
 using Kingmaker.Controllers.Rest;
 using Kingmaker.GameModes;
+using Kingmaker.Globalmap.State;
 using Microsoft.Extensions.Logging;
 using WOTRMultiplayer.Abstractions.GameInteraction;
 using WOTRMultiplayer.Abstractions.IO;
@@ -663,7 +664,7 @@ namespace WOTRMultiplayer.MP.Actors
             Send(message);
         }
 
-        public bool OnGlobalMapSelectLocation(string locationId)
+        public bool OnGlobalMapSelectLocation(NetworkGlobalMapLocation globalMapLocation)
         {
             return true;
         }
@@ -685,6 +686,16 @@ namespace WOTRMultiplayer.MP.Actors
                 State = Mapper.Map<Networking.Messages.Contracts.NetworkGlobalMapState>(globalMapState)
             };
             Logger.LogInformation("Sending {MessageType}. PlayerEdge={PlayerEdge}", nameof(NotifyGlobalMapTravelStopped), message.State.Player.Position?.Edge);
+            Send(message);
+        }
+
+        public void OnGlobalMapIngredientCollectionAccepted(NetworkGlobalMapLocation networkGlobalMapLocation)
+        {
+            var message = new NotifyGlobalMapIngredientCollectionAccepted()
+            {
+                Location = Mapper.Map<Networking.Messages.Contracts.NetworkGlobalMapLocation>(networkGlobalMapLocation)
+            };
+            Logger.LogInformation("Sending {MessageType}. LocationId={LocationId}, LocationName={LocationName}", nameof(NotifyGlobalMapIngredientCollectionAccepted), message.Location.Id, message.Location.Name);
             Send(message);
         }
 

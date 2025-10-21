@@ -412,7 +412,7 @@ namespace WOTRMultiplayer.Playground.Core.Dummies
         {
         }
 
-        public bool IsAtGlobalMapLocation(string locationId)
+        public bool IsAtGlobalMapLocation(NetworkGlobalMapLocation globalMapLocation)
         {
             return true;
         }
@@ -426,6 +426,14 @@ namespace WOTRMultiplayer.Playground.Core.Dummies
         }
 
         public void UpdateGlobalMapMessageBoxUI(bool isInteractable, int readyPlayersCount, int totalPlayersCount)
+        {
+        }
+
+        public void UpdateGlobalMapIngredientCollectionUI(bool isInteractable, int readyPlayersCount, int totalPlayersCount)
+        {
+        }
+
+        public void CollectGlobalMapIngredients(NetworkGlobalMapLocation globalMapLocation)
         {
         }
     }

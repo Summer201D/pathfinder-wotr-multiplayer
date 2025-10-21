@@ -6,6 +6,7 @@ using WOTRMultiplayer.MP.Entities;
 using WOTRMultiplayer.MP.Entities.ActionBar;
 using WOTRMultiplayer.MP.Entities.Combat;
 using WOTRMultiplayer.MP.Entities.Equipment;
+using WOTRMultiplayer.MP.Entities.GlobalMap;
 using WOTRMultiplayer.MP.Entities.Leveling;
 using WOTRMultiplayer.MP.Entities.Loot;
 using WOTRMultiplayer.MP.Entities.MapObjects;
@@ -174,10 +175,14 @@ namespace WOTRMultiplayer.Abstractions.MP.Actors
 
         void OnSkipTimeOpened();
 
-        bool OnGlobalMapSelectLocation(string locationId);
+        bool OnGlobalMapSelectLocation(NetworkGlobalMapLocation globalMapLocation);
 
         void OnGlobalMapMessageBoxShown();
 
         void OnGlobalMapMessageBoxClosed();
+
+        void OnGlobalMapIngredientCollectionShown();
+
+        void OnGlobalMapIngredientCollectionClosed();
     }
 }
