@@ -53,17 +53,13 @@ using Kingmaker.UI.MVVM._PCView.Dialog.Interchapter;
 using Kingmaker.UI.MVVM._PCView.GlobalMap;
 using Kingmaker.UI.MVVM._PCView.GroupChanger;
 using Kingmaker.UI.MVVM._PCView.InGame;
+using Kingmaker.UI.MVVM._PCView.Party;
 using Kingmaker.UI.MVVM._PCView.Rest;
 using Kingmaker.UI.MVVM._VM.CharGen.Phases;
 using Kingmaker.UI.MVVM._VM.CharGen.Phases.Class;
 using Kingmaker.UI.MVVM._VM.CharGen.Phases.FeatureSelector;
 using Kingmaker.UI.MVVM._VM.CharGen.Phases.Spells;
-using Kingmaker.UI.MVVM._VM.Dialog.Dialog;
-using Kingmaker.UI.MVVM._VM.GlobalMap.Message;
-using Kingmaker.UI.MVVM._VM.GroupChanger;
 using Kingmaker.UI.MVVM._VM.Lockpick;
-using Kingmaker.UI.MVVM._VM.Party;
-using Kingmaker.UI.MVVM._VM.Rest;
 using Kingmaker.UI.MVVM._VM.ServiceWindows.Spellbook.MemorizingPanel;
 using Kingmaker.UI.MVVM._VM.Vendor;
 using Kingmaker.UI.UnitSettings;
@@ -76,7 +72,6 @@ using Kingmaker.Utility;
 using Kingmaker.View.MapObjects;
 using Microsoft.Extensions.Logging;
 using Owlcat.Runtime.UI.Controls.Button;
-using Owlcat.Runtime.UI.SelectionGroup;
 using TMPro;
 using UniRx;
 using UnityEngine;
@@ -129,11 +124,12 @@ namespace WOTRMultiplayer.GameInteraction
 
         private InGamePCView InGamePCView => (Game.Instance.RootUiContext.m_UIView as InGamePCView);
         private GlobalMapPCView GlobalMapPCView => (Game.Instance.RootUiContext.m_UIView as GlobalMapPCView);
+        private PartyPCView PartyPCView => InGamePCView?.m_StaticPartPCView?.m_PartyPCView ?? GlobalMapPCView?.m_PartyPCView;
         private SkipTimePCView SkipTimeView => InGamePCView?.m_StaticPartPCView?.m_SkipTimePCView ?? GlobalMapPCView?.m_SkipTimePCView;
         private RestPCView RestView => InGamePCView?.m_StaticPartPCView?.m_RestContextPCView?.m_RestPCView ?? GlobalMapPCView?.m_RestPCView;
         private GroupChangerPCView GroupChangerView => (InGamePCView?.m_StaticPartPCView?.m_GroupChangerContextPCView ?? GlobalMapPCView?.m_GroupChangerContextPCView)?.m_GroupChangerPCView;
-        private VendorVM VendorViewVM => InGamePCView?.m_StaticPartPCView?.m_VendorPCView?.GetViewModel() as VendorVM;
-        private SpellbookMemorizingPanelVM SpellbookMemorizingVM => (InGamePCView?.m_StaticPartPCView?.m_ServiceWindowsPCView ?? GlobalMapPCView.m_ServiceWindowsPCView)?.m_SpellbookPCView?.m_MemorizingPanelView?.GetViewModel() as SpellbookMemorizingPanelVM;
+        private VendorVM VendorViewVM => InGamePCView?.m_StaticPartPCView?.m_VendorPCView?.ViewModel;
+        private SpellbookMemorizingPanelVM SpellbookMemorizingVM => (InGamePCView?.m_StaticPartPCView?.m_ServiceWindowsPCView ?? GlobalMapPCView.m_ServiceWindowsPCView)?.m_SpellbookPCView?.m_MemorizingPanelView?.ViewModel;
         private CharGenPCView CharGenView => (InGamePCView?.m_StaticPartPCView?.m_CharGenContextPCView ?? GlobalMapPCView?.m_CharGenContextPCView)?.m_CharGenPCView;
 
         public GameInteractionService(
@@ -175,7 +171,7 @@ namespace WOTRMultiplayer.GameInteraction
                     var areaTransitionComponent = mapObject.View.GetComponent<AreaTransition>();
                     if (view == null && areaTransitionComponent != null)
                     {
-                        var transitionOvertipVM = new EntityOvertipVM(mapObject, OvertipsView.Instance.GetViewModel() as OvertipsVM);
+                        var transitionOvertipVM = new EntityOvertipVM(mapObject, OvertipsView.Instance.ViewModel);
                         OvertipsView.Instance.AddMapObject(transitionOvertipVM);
                         view = FindOvertipForObject(mapObject);
                     }
@@ -193,7 +189,7 @@ namespace WOTRMultiplayer.GameInteraction
 
                 _logger.LogInformation("Interacting with object via OvertipVM", mapObject.UniqueId);
                 // overtips are created by game on demand, but we need to make sure overtip exists
-                var overtipVM = new EntityOvertipVM(mapObject, OvertipsView.Instance.GetViewModel() as OvertipsVM);
+                var overtipVM = new EntityOvertipVM(mapObject, OvertipsView.Instance.ViewModel);
                 // TODO: maybe get exact interactionpart
                 overtipVM.Interact(mapObject.Interactions.FirstOrDefault());
                 overtipVM.Dispose();
@@ -347,7 +343,7 @@ namespace WOTRMultiplayer.GameInteraction
             {
                 var answer = answersContainer.GetChild(answerIndex);
                 var answerView = answer.GetComponent<DialogAnswerPCView>();
-                var answerName = (answerView.GetViewModel() as AnswerVM).Answer.Value.name;
+                var answerName = answerView.ViewModel.Answer.Value.name;
                 var suggestedAnswer = suggestions.FirstOrDefault(s => string.Equals(s.AnswerName, answerName));
 
                 answer.gameObject.CleanupAllChildren(x => x.name.StartsWith(SuggestionIconName));
@@ -1349,7 +1345,7 @@ namespace WOTRMultiplayer.GameInteraction
                     if (restView != null)
                     {
                         restView.m_AutotuneToggle.isOn = networkCampingState.AutotuneIterationsStatus;
-                        (restView.GetViewModel() as RestVM)?.HandleIterationsCountCalculated(networkCampingState.IterationsCount);
+                        restView.ViewModel?.HandleIterationsCountCalculated(networkCampingState.IterationsCount);
                     }
 
                     var campingState = Game.Instance.Player.Camping;
@@ -1424,7 +1420,7 @@ namespace WOTRMultiplayer.GameInteraction
                         return;
                     }
 
-                    var viewModel = GroupChangerView.GetViewModel() as GroupChangerVM;
+                    var viewModel = GroupChangerView.ViewModel;
                     viewModel.InternalGo();
                     viewModel.m_ActionGo?.Invoke();
                     _logger.LogInformation("Group manager party has been accepted");
@@ -1455,7 +1451,7 @@ namespace WOTRMultiplayer.GameInteraction
                         return;
                     }
 
-                    var viewModel = view.GetViewModel() as GroupChangerCharacterVM;
+                    var viewModel = view.ViewModel;
                     viewModel.Click.Execute(viewModel);
                     _logger.LogInformation("Executed click on group manager unit. UnitId={UnitId}", unitId);
                 }
@@ -1479,7 +1475,7 @@ namespace WOTRMultiplayer.GameInteraction
                     }
 
                     _logger.LogInformation("Closing group manager view");
-                    var viewModel = GroupChangerView.GetViewModel() as GroupChangerVM;
+                    var viewModel = GroupChangerView.ViewModel;
                     viewModel?.m_ActionClose?.Invoke();
                 }
                 catch (Exception ex)
@@ -1817,15 +1813,15 @@ namespace WOTRMultiplayer.GameInteraction
             {
                 try
                 {
-                    var partyView = InGamePCView.m_StaticPartPCView.m_PartyPCView?.m_Characters?.FirstOrDefault(p => string.Equals(p.UnitEntityData.UniqueId, unitId, StringComparison.OrdinalIgnoreCase));
-                    if (partyView?.GetViewModel() is not PartyCharacterVM partyVM)
+                    var partyView = PartyPCView?.m_Characters?.FirstOrDefault(p => string.Equals(p.UnitEntityData.UniqueId, unitId, StringComparison.OrdinalIgnoreCase));
+                    if (partyView?.ViewModel == null)
                     {
                         _logger.LogError("Unable to start leveling due to missing party character vm. UnitId={UnitId}", unitId);
                         return;
                     }
 
                     _logger.LogInformation("Starting leveling process. UnitId={UnitId}", unitId);
-                    partyVM.LevelUp();
+                    partyView.ViewModel.LevelUp();
                 }
                 catch (Exception ex)
                 {
@@ -1847,7 +1843,7 @@ namespace WOTRMultiplayer.GameInteraction
                         return;
                     }
 
-                    var viewModel = GetLevelingPhaseViewModel<CharGenClassPhaseVM>();
+                    var viewModel = GetLevelingPhaseViewModel();
                     if (viewModel == null)
                     {
                         _logger.LogError("Unable to get leveling phase viewmodel");
@@ -1901,7 +1897,7 @@ namespace WOTRMultiplayer.GameInteraction
                         return;
                     }
 
-                    var viewModel = GetLevelingPhaseViewModel<CharGenClassPhaseVM>();
+                    var viewModel = GetLevelingPhaseViewModel();
                     if (viewModel == null)
                     {
                         _logger.LogError("Unable to get leveling phase viewmodel");
@@ -2011,7 +2007,7 @@ namespace WOTRMultiplayer.GameInteraction
                     return;
                 }
 
-                var roadmapVM = CharGenView.RoadmapMenuView.GetViewModel() as SelectionGroupRadioVM<CharGenPhaseBaseVM>;
+                var roadmapVM = CharGenView.RoadmapMenuView.ViewModel;
                 if (networkLevelingPhase.Index >= roadmapVM.EntitiesCollection.Count)
                 {
                     _logger.LogError("Leveling phase is out of range. Index={Index}, TotalCount={TotalCount}", networkLevelingPhase.Index, roadmapVM.EntitiesCollection.Count);
@@ -2438,15 +2434,15 @@ namespace WOTRMultiplayer.GameInteraction
                 }
 
                 var messageBoxView = GlobalMapPCView.m_GlobalMapEnterMessagePCView;
-                if (messageBoxView.GetViewModel() is not GlobalMapEnterMessageVM messageBoxVM)
+                if (messageBoxView?.ViewModel == null)
                 {
                     return;
                 }
 
-                messageBoxView.m_AcceptButton.Interactable = !messageBoxVM.IsCurrentLocation || isInteractable;
+                messageBoxView.m_AcceptButton.Interactable = !messageBoxView.ViewModel.IsCurrentLocation || isInteractable;
 
                 var buttonText = messageBoxView.m_AcceptButton.GetComponentInChildren<TextMeshProUGUI>();
-                if (messageBoxVM.IsCurrentLocation)
+                if (messageBoxView.ViewModel.IsCurrentLocation)
                 {
                     UpdateButtonTextCounter(buttonText, readyPlayersCount, totalPlayersCount);
                 }
@@ -2946,10 +2942,9 @@ namespace WOTRMultiplayer.GameInteraction
             return spellsPhaseDetailedPCView.ViewModel;
         }
 
-        private T GetLevelingPhaseViewModel<T>()
-            where T : CharGenPhaseBaseVM
+        private CharGenClassPhaseVM GetLevelingPhaseViewModel()
         {
-            var viewModel = (CharGenView?.SelectedDetailView as CharGenClassPhaseDetailedPCView)?.GetViewModel() as T;
+            var viewModel = (CharGenView?.SelectedDetailView as CharGenClassPhaseDetailedPCView)?.ViewModel;
             return viewModel;
         }
 
