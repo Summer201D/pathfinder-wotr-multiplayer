@@ -169,6 +169,9 @@ Some rules for the leveling screen:
 - The character owner has to wait while the screen loads for everyone else. Switching phases (like from class selection to skill points) locks the owner until everyone has loaded the new phase.
 - Closing the leveling screen as the owner closes it for everyone.
 
+## Global Map
+TBD
+
 ## Entity ID Generation 
 The game originally used a single counter to generate new entity IDs (for characters, area effects, facts, map objects, etc.), which often caused desyncs. Now it uses a "consistent" generator that considers the current game state (gameId, location, etc.), so IDs mostly match across all multiplayer players.
 
