@@ -9,7 +9,6 @@ using Kingmaker.Globalmap.State;
 using Kingmaker.Globalmap.View;
 using Kingmaker.UI;
 using Kingmaker.UI.Common;
-using Kingmaker.UI.GlobalMap;
 using Kingmaker.UI.MVVM._PCView.GlobalMap.Message;
 using Kingmaker.UI.MVVM._VM.GlobalMap.Message;
 using Microsoft.Extensions.Logging;
@@ -39,12 +38,60 @@ namespace WOTRMultiplayer.HarmonyPatches.GlobalMap
             return true;
         }
 
-        [HarmonyPatch(typeof(GlobalMapRandomEncounterController), nameof(GlobalMapRandomEncounterController.OnRandomEncounterStarted))]
-        [HarmonyPrefix]
-        public static void GlobalMapRandomEncounterController_OnRandomEncounterStarted_Prefix()
+        [HarmonyPatch(typeof(RandomEncountersController), nameof(RandomEncountersController.RollTravelEncounter))]
+        [HarmonyPostfix]
+        public static void RandomEncountersController_RollTravelEncounter_Postfix(RandomEncountersController __instance, ref bool __result)
         {
-            Main.GetLogger<GlobalMapRandomEncounterPatches>().LogWarning("On Random Encounter");
+            if (!Main.Multiplayer.IsActive || !__result)
+            {
+                return;
+            }
+
+            Main.GetLogger<GlobalMapRandomEncounterPatches>().LogWarning("Random encounter has been rolled. BlueprintId={BlueprintId}", __instance.m_LastStartedEncounter?.Blueprint.AssetGuid.ToString());
         }
+
+        [HarmonyPatch(typeof(GlobalMapRandomEncounterPCView), nameof(GlobalMapRandomEncounterPCView.BindViewImplementation))]
+        [HarmonyPostfix]
+        public static void GlobalMapRandomEncounterPCView_BindViewImplementation_Postfix()
+        {
+            if (!Main.Multiplayer.IsActive)
+            {
+                return;
+            }
+
+            Main.Multiplayer.OnGlobalMapEncounterMessageShown();
+        }
+
+        [HarmonyPatch(typeof(GlobalMapRandomEncounterView), nameof(GlobalMapRandomEncounterView.AcceptAndStopCoroutine))]
+        [HarmonyPrefix]
+        public static void GlobalMapRandomEncounterView_AcceptAndStopCoroutine_Prefix()
+        {
+            if (!Main.Multiplayer.IsActive)
+            {
+                return;
+            }
+
+            Main.Multiplayer.OnGlobalMapEncounterAccepted();
+        }
+
+        [HarmonyPatch(typeof(GlobalMapRandomEncounterVM), nameof(GlobalMapRandomEncounterVM.Avoid))]
+        [HarmonyPrefix]
+        public static void GlobalMapRandomEncounterVM_Avoid_Prefix()
+        {
+            if (!Main.Multiplayer.IsActive)
+            {
+                return;
+            }
+
+            Main.Multiplayer.OnGlobalMapEncounterAvoided();
+        }
+
+        //[HarmonyPatch(typeof(GlobalMapRandomEncounterController), nameof(GlobalMapRandomEncounterController.OnRandomEncounterStarted))]
+        //[HarmonyPrefix]
+        //public static void GlobalMapRandomEncounterController_OnRandomEncounterStarted_Prefix()
+        //{
+        //    Main.GetLogger<GlobalMapRandomEncounterPatches>().LogWarning("On Random Encounter");
+        //}
 
         [HarmonyPatch(typeof(GlobalMapPlayerState), nameof(GlobalMapPlayerState.StartTravel))]
         [HarmonyPrefix]
@@ -88,7 +135,7 @@ namespace WOTRMultiplayer.HarmonyPatches.GlobalMap
 
         [HarmonyPatch(typeof(GlobalMapEnterMessagePCView), nameof(GlobalMapEnterMessagePCView.BindViewImplementation))]
         [HarmonyPostfix]
-        public static void GlobalMapEnterMessagePCView_BindViewImplementation_Postfix(GlobalMapEnterMessagePCView __instance)
+        public static void GlobalMapEnterMessagePCView_BindViewImplementation_Postfix()
         {
             if (!Main.Multiplayer.IsActive)
             {

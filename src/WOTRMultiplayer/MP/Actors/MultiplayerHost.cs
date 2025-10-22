@@ -697,6 +697,7 @@ namespace WOTRMultiplayer.MP.Actors
             Logger.LogInformation("Sending {MessageType}. LocationId={LocationId}, LocationName={LocationName}", nameof(NotifyGlobalMapIngredientCollectionAccepted), message.Location.Id, message.Location.Name);
             Send(message);
         }
+
         public void OnGlobalMapEnterLocation(NetworkGlobalMapLocation globalMapLocation)
         {
             var message = new NotifyGlobalMapLocationEntered
@@ -704,6 +705,20 @@ namespace WOTRMultiplayer.MP.Actors
                 Location = Mapper.Map<Networking.Messages.Contracts.NetworkGlobalMapLocation>(globalMapLocation)
             };
             Logger.LogInformation("Sending {MessageType}. LocationId={LocationId}, LocationName={LocationName}", nameof(NotifyGlobalMapLocationEntered), message.Location.Id, message.Location.Name);
+            Send(message);
+        }
+
+        public void OnGlobalMapEncounterAccepted()
+        {
+            var message = new NotifyGlobalMapEncounterAccepted();
+            Logger.LogInformation("Sending {MessageType}", nameof(NotifyGlobalMapEncounterAccepted));
+            Send(message);
+        }
+
+        public void OnGlobalMapEncounterAvoided()
+        {
+            var message = new NotifyGlobalMapEncounterAvoided();
+            Logger.LogInformation("Sending {MessageType}", nameof(NotifyGlobalMapEncounterAvoided));
             Send(message);
         }
 

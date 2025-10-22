@@ -184,5 +184,6 @@ namespace WOTRMultiplayer.Abstractions.MP.Actors
         void OnGlobalMapIngredientCollectionShown();
 
         void OnGlobalMapIngredientCollectionClosed();
+        void OnGlobalMapEncounterMessageShown();
     }
 }

@@ -112,6 +112,9 @@
             NotifyGlobalMapIngredientCollectionClosed,
             NotifyGlobalMapIngredientCollectionAccepted,
             NotifyGlobalMapLocationEntered,
+            NotifyGlobalMapEncounterMessageShown,
+            NotifyGlobalMapEncounterAccepted,
+            NotifyGlobalMapEncounterAvoided,
         }
 
         public enum Request

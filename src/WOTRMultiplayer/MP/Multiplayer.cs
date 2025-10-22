@@ -1813,6 +1813,60 @@ namespace WOTRMultiplayer.MP
             }
         }
 
+        public void OnGlobalMapEncounterMessageShown()
+        {
+            try
+            {
+                if (_multiplayerActorAccessor.Current == null)
+                {
+                    return;
+                }
+
+                _multiplayerActorAccessor.Current.OnGlobalMapEncounterMessageShown();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while showing global map encounter message");
+                throw;
+            }
+        }
+
+        public void OnGlobalMapEncounterAccepted()
+        {
+            try
+            {
+                if (_multiplayerActorAccessor.Current == null || _multiplayerActorAccessor.Client.IsActive)
+                {
+                    return;
+                }
+
+                _multiplayerActorAccessor.Host.OnGlobalMapEncounterAccepted();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while accepting global map encounter");
+                throw;
+            }
+        }
+
+        public void OnGlobalMapEncounterAvoided()
+        {
+            try
+            {
+                if (_multiplayerActorAccessor.Current == null || _multiplayerActorAccessor.Client.IsActive)
+                {
+                    return;
+                }
+
+                _multiplayerActorAccessor.Host.OnGlobalMapEncounterAvoided();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while avoiding global map encounter");
+                throw;
+            }
+        }
+
         private void ShowEscMenuMultiplayerLobby()
         {
             _logger.LogInformation("Show lobby window");

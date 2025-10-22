@@ -218,5 +218,11 @@ namespace WOTRMultiplayer.Abstractions.MP
         void OnGlobalMapIngredientCollectionAccepted(NetworkGlobalMapLocation globalMapLocation);
 
         void OnGlobalMapEnterLocation(NetworkGlobalMapLocation globalMapLocation);
+
+        void OnGlobalMapEncounterMessageShown();
+
+        void OnGlobalMapEncounterAccepted();
+
+        void OnGlobalMapEncounterAvoided();
     }
 }

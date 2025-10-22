@@ -228,5 +228,11 @@ namespace WOTRMultiplayer.Abstractions.GameInteraction
         void CollectGlobalMapIngredients(NetworkGlobalMapLocation globalMapLocation);
 
         void EnterGlobalMapLocation(NetworkGlobalMapLocation globalMapLocation);
+
+        void UpdateGlobalMapEncounterMessageUI(bool isInteractable, int readyPlayersCount, int totalPlayersCount);
+
+        void AvoidGlobalMapEncounter();
+
+        void AcceptGlobalMapEncounter();
     }
 }

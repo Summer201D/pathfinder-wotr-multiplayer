@@ -43,9 +43,11 @@ namespace WOTRMultiplayer.MP.Entities
 
         public HashSet<long> PlayersInSkipTime { get; set; } = [];
 
-        public HashSet<long> PlayersInGlobalMapMessageBox { get; set; } = [];
+        public HashSet<long> PlayersInGlobalMapLocationMessage { get; set; } = [];
 
-        public HashSet<long> PlayersInIngredientCollection { get; set; } = [];
+        public HashSet<long> PlayersInGlobalMapIngredientCollection { get; set; } = [];
+
+        public HashSet<long> PlayersInGlobalMapEncounterMessage { get; set; } = [];
 
         public NetworkGame(string saveFilePath)
         {
@@ -62,6 +64,9 @@ namespace WOTRMultiplayer.MP.Entities
             PlayersFinishedRest.Clear();
             PlayersInGroupChanger.Clear();
             PlayersInSkipTime.Clear();
+            PlayersInGlobalMapLocationMessage.Clear();
+            PlayersInGlobalMapIngredientCollection.Clear();
+            PlayersInGlobalMapEncounterMessage.Clear();
             SaveFilePath = null;
             Connectivity = null;
             Stage = NetworkGameStage.None;

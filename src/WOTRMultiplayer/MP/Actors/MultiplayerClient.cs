@@ -488,7 +488,25 @@ namespace WOTRMultiplayer.MP.Actors
                .On<NotifyGlobalMapTravelContinued>(OnNotifyGlobalMapTravelContinued)
                .On<NotifyGlobalMapIngredientCollectionAccepted>(OnNotifyGlobalMapIngredientCollectionAccepted)
                .On<NotifyGlobalMapLocationEntered>(OnNotifyGlobalMapLocationEntered)
+               .On<NotifyGlobalMapEncounterAccepted>(OnNotifyGlobalMapEncounterAccepted)
+               .On<NotifyGlobalMapEncounterAvoided>(OnNotifyGlobalMapEncounterAvoided)
                ;
+        }
+
+        private void OnNotifyGlobalMapEncounterAvoided(long playerId, NotifyGlobalMapEncounterAvoided globalMapEncounterAvoided)
+        {
+            Logger.LogInformation("Received {MessageType}", nameof(NotifyGlobalMapLocationEntered));
+            GameInteraction.AvoidGlobalMapEncounter();
+
+            ResetPlayersTracker(Game.PlayersInGlobalMapEncounterMessage);
+        }
+
+        private void OnNotifyGlobalMapEncounterAccepted(long playerId, NotifyGlobalMapEncounterAccepted notifyGlobalMapEncounterAccepted)
+        {
+            Logger.LogInformation("Received {MessageType}", nameof(NotifyGlobalMapEncounterAccepted));
+            GameInteraction.AcceptGlobalMapEncounter();
+
+            ResetPlayersTracker(Game.PlayersInGlobalMapEncounterMessage);
         }
 
         private void OnNotifyGlobalMapLocationEntered(long playerId, NotifyGlobalMapLocationEntered globalMapLocationEntered)
@@ -497,6 +515,8 @@ namespace WOTRMultiplayer.MP.Actors
 
             var location = Mapper.Map<NetworkGlobalMapLocation>(globalMapLocationEntered.Location);
             GameInteraction.EnterGlobalMapLocation(location);
+
+            ResetPlayersTracker(Game.PlayersInGlobalMapLocationMessage);
         }
 
         private void OnNotifyGlobalMapIngredientCollectionAccepted(long playerId, NotifyGlobalMapIngredientCollectionAccepted globalMapIngredientCollectionAccepted)
@@ -505,6 +525,8 @@ namespace WOTRMultiplayer.MP.Actors
 
             var location = Mapper.Map<NetworkGlobalMapLocation>(globalMapIngredientCollectionAccepted.Location);
             GameInteraction.CollectGlobalMapIngredients(location);
+
+            ResetPlayersTracker(Game.PlayersInGlobalMapIngredientCollection);
         }
 
         private void OnNotifyGlobalMapTravelContinued(long playerId, NotifyGlobalMapTravelContinued globalMapTravelContinued)

@@ -440,5 +440,17 @@ namespace WOTRMultiplayer.Playground.Core.Dummies
         public void EnterGlobalMapLocation(NetworkGlobalMapLocation globalMapLocation)
         {
         }
+
+        public void UpdateGlobalMapEncounterMessageUI(bool isInteractable, int readyPlayersCount, int totalPlayersCount)
+        {
+        }
+
+        public void AvoidGlobalMapEncounter()
+        {
+        }
+
+        public void AcceptGlobalMapEncounter()
+        {
+        }
     }
 }

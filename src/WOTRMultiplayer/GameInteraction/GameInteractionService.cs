@@ -2477,6 +2477,28 @@ namespace WOTRMultiplayer.GameInteraction
             });
         }
 
+        public void UpdateGlobalMapEncounterMessageUI(bool isInteractable, int readyPlayersCount, int totalPlayersCount)
+        {
+            _mainThreadAccessor.Post(() =>
+            {
+                if (GlobalMapPCView == null)
+                {
+                    return;
+                }
+
+                var modalMessage = GlobalMapPCView.m_GlobalMapRandomEncounterPCView;
+                modalMessage.m_AvoidButton.Interactable = isInteractable;
+                modalMessage.m_ContinueButton.Interactable = isInteractable;
+                modalMessage.m_EnterButton.Interactable = isInteractable;
+
+                UpdateButtonTextCounter(modalMessage.m_AvoidLabel, readyPlayersCount, totalPlayersCount);
+                UpdateButtonTextCounter(modalMessage.m_ContinueLabel, readyPlayersCount, totalPlayersCount);
+                UpdateButtonTextCounter(modalMessage.m_EnterLabel, readyPlayersCount, totalPlayersCount);
+
+                _logger.LogInformation("Global Map Encounter Message has been updated. IsInteractable={IsInteractable}, ReadyPlayers={ReadyPlayers}, TotalPlayers={TotalPlayers}", isInteractable, readyPlayersCount, totalPlayersCount);
+            });
+        }
+
         public void CollectGlobalMapIngredients(NetworkGlobalMapLocation globalMapLocation)
         {
             _mainThreadAccessor.Post(() =>
@@ -2530,6 +2552,36 @@ namespace WOTRMultiplayer.GameInteraction
 
                 GlobalMapView.Instance.EnterLocation();
                 _logger.LogInformation("Global map location has been entered. LocationId={LocationId}, LocationName={LocationName}", globalMapLocation.Id, globalMapLocation.Name);
+            });
+        }
+
+        public void AvoidGlobalMapEncounter()
+        {
+            _mainThreadAccessor.Post(() =>
+            {
+                if (GlobalMapPCView == null)
+                {
+                    _logger.LogWarning("Unable to avoid global map encounter when global map view is not available");
+                    return;
+                }
+
+                GlobalMapPCView.m_GlobalMapRandomEncounterPCView.ViewModel.Avoid();
+                _logger.LogInformation("Global map encounter has been avoided");
+            });
+        }
+
+        public void AcceptGlobalMapEncounter()
+        {
+            _mainThreadAccessor.Post(() =>
+            {
+                if (GlobalMapPCView == null)
+                {
+                    _logger.LogWarning("Unable to avoid global map encounter when global map view is not available");
+                    return;
+                }
+
+                GlobalMapPCView.m_GlobalMapRandomEncounterPCView.ViewModel.Accept();
+                _logger.LogInformation("Global map encounter has been accepted");
             });
         }
 
