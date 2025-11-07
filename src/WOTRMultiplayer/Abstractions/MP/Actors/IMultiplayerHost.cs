@@ -64,5 +64,7 @@ namespace WOTRMultiplayer.Abstractions.MP.Actors
         void OnGlobalMapEncounterAccepted();
 
         void OnGlobalMapEncounterAvoided();
+
+        void OnGlobalMapRandomEncounterRolled(NetworkGlobalMapEncounter globalMapEncounter);
     }
 }

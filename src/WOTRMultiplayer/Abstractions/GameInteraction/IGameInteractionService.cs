@@ -234,5 +234,7 @@ namespace WOTRMultiplayer.Abstractions.GameInteraction
         void AvoidGlobalMapEncounter();
 
         void AcceptGlobalMapEncounter();
+
+        void RollGlobalMapEncounter(NetworkGlobalMapEncounter encounter);
     }
 }

@@ -490,7 +490,16 @@ namespace WOTRMultiplayer.MP.Actors
                .On<NotifyGlobalMapLocationEntered>(OnNotifyGlobalMapLocationEntered)
                .On<NotifyGlobalMapEncounterAccepted>(OnNotifyGlobalMapEncounterAccepted)
                .On<NotifyGlobalMapEncounterAvoided>(OnNotifyGlobalMapEncounterAvoided)
+               .On<NotifyGlobalMapEncounterRolled>(OnNotifyGlobalMapEncounterRolled)
                ;
+        }
+
+        private void OnNotifyGlobalMapEncounterRolled(long playerId, NotifyGlobalMapEncounterRolled globalMapEncounterRolled)
+        {
+            Logger.LogInformation("Sending {MessageType}. Seed={Seed}, EncounterId={EncounterId}, Position={Position}, Avoidance={Avoidance}", nameof(NotifyGlobalMapEncounterRolled), globalMapEncounterRolled.Encounter.Seed, globalMapEncounterRolled.Encounter.BlueprintId, globalMapEncounterRolled.Encounter.Position, globalMapEncounterRolled.Encounter.AvoidanceResult);
+            var encounter = Mapper.Map<NetworkGlobalMapEncounter>(globalMapEncounterRolled.Encounter);
+
+            GameInteraction.RollGlobalMapEncounter(encounter);
         }
 
         private void OnNotifyGlobalMapEncounterAvoided(long playerId, NotifyGlobalMapEncounterAvoided globalMapEncounterAvoided)

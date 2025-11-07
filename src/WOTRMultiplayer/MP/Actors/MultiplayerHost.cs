@@ -7,6 +7,7 @@ using AutoMapper;
 using Kingmaker.Controllers.Rest;
 using Kingmaker.GameModes;
 using Microsoft.Extensions.Logging;
+using UnityEngine.Assertions.Must;
 using WOTRMultiplayer.Abstractions.GameInteraction;
 using WOTRMultiplayer.Abstractions.IO;
 using WOTRMultiplayer.Abstractions.MP;
@@ -719,6 +720,16 @@ namespace WOTRMultiplayer.MP.Actors
         {
             var message = new NotifyGlobalMapEncounterAvoided();
             Logger.LogInformation("Sending {MessageType}", nameof(NotifyGlobalMapEncounterAvoided));
+            Send(message);
+        }
+
+        public void OnGlobalMapRandomEncounterRolled(NetworkGlobalMapEncounter globalMapEncounter)
+        {
+            var message = new NotifyGlobalMapEncounterRolled
+            {
+                Encounter = Mapper.Map<Networking.Messages.Contracts.NetworkGlobalMapEncounter>(globalMapEncounter)
+            };
+            Logger.LogInformation("Sending {MessageType}. Seed={Seed}, EncounterId={EncounterId}, Position={Position}, Avoidance={Avoidance}", nameof(NotifyGlobalMapEncounterRolled), message.Encounter.Seed, message.Encounter.BlueprintId, message.Encounter.Position, message.Encounter.AvoidanceResult);
             Send(message);
         }
 

@@ -115,6 +115,7 @@
             NotifyGlobalMapEncounterMessageShown,
             NotifyGlobalMapEncounterAccepted,
             NotifyGlobalMapEncounterAvoided,
+            NotifyGlobalMapEncounterRolled,
         }
 
         public enum Request

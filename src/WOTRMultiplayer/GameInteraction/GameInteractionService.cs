@@ -2581,6 +2581,14 @@ namespace WOTRMultiplayer.GameInteraction
             });
         }
 
+        public void RollGlobalMapEncounter(NetworkGlobalMapEncounter encounter)
+        {
+            _mainThreadAccessor.Post(() =>
+            {
+                _logger.LogError("=====TBD: GLOBAL MAP RANDOM ENCOUNTER");
+            });
+        }
+
         private void UpdateGlobalMapState(NetworkGlobalMapState globalMapState)
         {
             // not sure if player position is unavailable while army is selected (act2+), need to check later

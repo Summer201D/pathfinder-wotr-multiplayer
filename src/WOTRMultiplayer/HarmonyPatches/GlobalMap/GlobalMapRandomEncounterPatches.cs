@@ -12,6 +12,7 @@ using Kingmaker.UI.Common;
 using Kingmaker.UI.MVVM._PCView.GlobalMap.Message;
 using Kingmaker.UI.MVVM._VM.GlobalMap.Message;
 using Microsoft.Extensions.Logging;
+using WOTRMultiplayer.MP.Entities;
 using WOTRMultiplayer.MP.Entities.GlobalMap;
 
 namespace WOTRMultiplayer.HarmonyPatches.GlobalMap
@@ -47,7 +48,15 @@ namespace WOTRMultiplayer.HarmonyPatches.GlobalMap
                 return;
             }
 
-            Main.GetLogger<GlobalMapRandomEncounterPatches>().LogWarning("Random encounter has been rolled. BlueprintId={BlueprintId}", __instance.m_LastStartedEncounter?.Blueprint.AssetGuid.ToString());
+            var encounter = RandomEncountersController.State.Player.CurrentEncounterData;
+            var randomEncounter = new NetworkGlobalMapEncounter
+            {
+                AvoidanceResult = encounter.AvoidanceCheckResult.ToString(),
+                BlueprintId = encounter.Blueprint.AssetGuid.ToString(),
+                Position = encounter.Position == null ? null : new NetworkVector3(encounter.Position.Value.x, encounter.Position.Value.y, encounter.Position.Value.z),
+                Seed = encounter.RandomCombat.Seed
+            };
+            Main.Multiplayer.OnGlobalMapEncounterRolled(randomEncounter);
         }
 
         [HarmonyPatch(typeof(GlobalMapRandomEncounterPCView), nameof(GlobalMapRandomEncounterPCView.BindViewImplementation))]

@@ -1867,6 +1867,24 @@ namespace WOTRMultiplayer.MP
             }
         }
 
+        public void OnGlobalMapEncounterRolled(NetworkGlobalMapEncounter globalMapEncounter)
+        {
+            try
+            {
+                if (_multiplayerActorAccessor.Current == null || _multiplayerActorAccessor.Client.IsActive)
+                {
+                    return;
+                }
+
+                _multiplayerActorAccessor.Host.OnGlobalMapRandomEncounterRolled(globalMapEncounter);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while rolling random encounter on global map");
+                throw;
+            }
+        }
+
         private void ShowEscMenuMultiplayerLobby()
         {
             _logger.LogInformation("Show lobby window");

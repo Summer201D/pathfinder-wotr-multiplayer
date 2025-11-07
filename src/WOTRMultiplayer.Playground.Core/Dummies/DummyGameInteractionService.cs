@@ -452,5 +452,9 @@ namespace WOTRMultiplayer.Playground.Core.Dummies
         public void AcceptGlobalMapEncounter()
         {
         }
+
+        public void RollGlobalMapEncounter(NetworkGlobalMapEncounter encounter)
+        {
+        }
     }
 }
