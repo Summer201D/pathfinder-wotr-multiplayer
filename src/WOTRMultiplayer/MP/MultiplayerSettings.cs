@@ -14,6 +14,6 @@ namespace WOTRMultiplayer.MP
 
         public TimeSpan? ForcedPauseRandomEncounterTerminationDelay { get; set; }
 
-        public bool EnableCombatAIActionsSync { get; set; }
+        public bool SyncAICombatActions { get; set; }
     }
 }

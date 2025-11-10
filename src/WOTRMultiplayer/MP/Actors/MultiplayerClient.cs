@@ -264,7 +264,7 @@ namespace WOTRMultiplayer.MP.Actors
         {
             try
             {
-                if (!SettingsProvider.Settings.EnableCombatAIActionsSync || string.IsNullOrEmpty(networkAIAction.ActionBlueprintId))
+                if (!SettingsProvider.Settings.SyncAICombatActions || string.IsNullOrEmpty(networkAIAction.ActionBlueprintId))
                 {
                     return null;
                 }

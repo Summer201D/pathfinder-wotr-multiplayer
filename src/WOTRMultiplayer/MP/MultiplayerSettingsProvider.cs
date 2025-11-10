@@ -19,7 +19,7 @@ namespace WOTRMultiplayer.MP
                 HostPortRangeEnd = ushort.MaxValue,
                 ForcedPauseDefaultTerminationDelay = TimeSpan.FromSeconds(3),
                 ForcedPauseRandomEncounterTerminationDelay = TimeSpan.FromSeconds(8),
-                EnableCombatAIActionsSync = true
+                SyncAICombatActions = true
             };
         }
     }
