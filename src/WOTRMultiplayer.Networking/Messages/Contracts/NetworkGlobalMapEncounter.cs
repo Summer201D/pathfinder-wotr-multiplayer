@@ -16,5 +16,8 @@ namespace WOTRMultiplayer.Networking.Messages.Contracts
 
         [ProtoMember(4)]
         public NetworkVector3 Position { get; set; }
+
+        [ProtoMember(5)]
+        public bool IsTrader { get; set; }
     }
 }

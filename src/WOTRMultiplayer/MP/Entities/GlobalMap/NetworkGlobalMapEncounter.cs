@@ -9,5 +9,7 @@
         public string AvoidanceResult { get; set; }
 
         public NetworkVector3 Position { get; set; }
+
+        public bool IsTrader { get; set; }
     }
 }

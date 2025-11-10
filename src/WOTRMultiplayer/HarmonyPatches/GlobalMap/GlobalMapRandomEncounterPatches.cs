@@ -54,8 +54,10 @@ namespace WOTRMultiplayer.HarmonyPatches.GlobalMap
                 AvoidanceResult = encounter.AvoidanceCheckResult.ToString(),
                 BlueprintId = encounter.Blueprint.AssetGuid.ToString(),
                 Position = encounter.Position == null ? null : new NetworkVector3(encounter.Position.Value.x, encounter.Position.Value.y, encounter.Position.Value.z),
-                Seed = encounter.RandomCombat.Seed
+                Seed = encounter.RandomCombat.Seed,
+                IsTrader = encounter.IsTraderRE,
             };
+
             Main.Multiplayer.OnGlobalMapEncounterRolled(randomEncounter);
         }
 

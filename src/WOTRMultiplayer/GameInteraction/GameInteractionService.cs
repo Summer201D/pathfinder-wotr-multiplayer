@@ -4,6 +4,8 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Kingmaker;
+using Kingmaker.Assets.Controllers.GlobalMap;
+using Kingmaker.Blueprints;
 using Kingmaker.Blueprints.Items.Equipment;
 using Kingmaker.Blueprints.Root;
 using Kingmaker.Cheats;
@@ -30,6 +32,8 @@ using Kingmaker.Items.Slots;
 using Kingmaker.Localization;
 using Kingmaker.Pathfinding;
 using Kingmaker.PubSubSystem;
+using Kingmaker.RandomEncounters;
+using Kingmaker.RandomEncounters.Settings;
 using Kingmaker.RuleSystem.Rules;
 using Kingmaker.Settings;
 using Kingmaker.TurnBasedMode;
@@ -794,7 +798,7 @@ namespace WOTRMultiplayer.GameInteraction
                     //UpdateActionsState(networkAbility.ActionsState);
                 }
 
-                Enum.TryParse<UnitCommand.CommandType>(networkAbility.CommandType, true, out var commandType);
+                System.Enum.TryParse<UnitCommand.CommandType>(networkAbility.CommandType, true, out var commandType);
                 var command = UnitUseAbility.CreateCastCommand(abilityData, targetWrapper, commandType);
                 command.CreatedByPlayer = true;
                 if (networkAbility.VectorPath != null)
@@ -2581,11 +2585,36 @@ namespace WOTRMultiplayer.GameInteraction
             });
         }
 
-        public void RollGlobalMapEncounter(NetworkGlobalMapEncounter encounter)
+        public void RollGlobalMapEncounter(NetworkGlobalMapEncounter globalMapEncounter)
         {
             _mainThreadAccessor.Post(() =>
             {
-                _logger.LogError("=====TBD: GLOBAL MAP RANDOM ENCOUNTER");
+                try
+                {
+                    var encounter = BlueprintRoot.Instance.RE.Encounters.FirstOrDefault(e => string.Equals(e.AssetGuid.ToString(), globalMapEncounter.BlueprintId));
+                    if (encounter == null)
+                    {
+                        _logger.LogError("Unable to find global map encounter. BlueprintId={BlueprintId}", globalMapEncounter.BlueprintId);
+                        return;
+                    }
+
+                    var position = new Vector3(globalMapEncounter.Position.X, globalMapEncounter.Position.Y, globalMapEncounter.Position.Z);
+                    var combatRandomEncounterData = new CombatRandomEncounterData(encounter, position)
+                    {
+                        IsTraderRE = globalMapEncounter.IsTrader,
+                        AvoidanceCheckResult = (RandomEncounterAvoidanceCheckResult)Enum.Parse(typeof(RandomEncounterAvoidanceCheckResult), globalMapEncounter.AvoidanceResult, true)
+                    };
+                    var component = encounter.AreaEntrance.Area.GetComponent<CombatRandomEncounterAreaSettings>();
+                    combatRandomEncounterData.RandomCombat = CombatRandomEncountersGenerator.GenerateRandomEncounter(globalMapEncounter.Seed, GlobalMapView.Instance.CurrentZone, component, null);
+                    RandomEncountersController.State.Player.StartEncounter(combatRandomEncounterData);
+                    Game.Instance.RandomEncountersController.m_LastStartedEncounter = RandomEncountersController.State.Player.CurrentEncounterData;
+                    _logger.LogInformation("Global map encounter has been rolled. BlueprintId={BlueprintId}, Seed={Seed}, AvoidanceResult={AvoidanceResult}", globalMapEncounter.BlueprintId, globalMapEncounter.Seed, globalMapEncounter.AvoidanceResult);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error while rolling global map encounter. BlueprintId={BlueprintId}, Seed={Seed}, AvoidanceResult={AvoidanceResult}", globalMapEncounter.BlueprintId, globalMapEncounter.Seed, globalMapEncounter.AvoidanceResult);
+                    throw;
+                }
             });
         }
 
@@ -3460,7 +3489,7 @@ namespace WOTRMultiplayer.GameInteraction
         private T? ParseEnum<T>(string value)
             where T : struct
         {
-            if (Enum.TryParse<T>(value, out var parsed))
+            if (System.Enum.TryParse<T>(value, out var parsed))
             {
                 return parsed;
             }
