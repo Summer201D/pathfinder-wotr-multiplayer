@@ -7,7 +7,7 @@ using Microsoft.Extensions.Logging;
 using TMPro;
 using WOTRMultiplayer.MP.Entities;
 
-namespace WOTRMultiplayer.HarmonyPatches
+namespace WOTRMultiplayer.HarmonyPatches.MenuPatches
 {
     [HarmonyPatch]
     public class MainMenuSideBarPCViewPatches

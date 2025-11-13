@@ -3,7 +3,7 @@ using Kingmaker.UI;
 using Kingmaker.UI.MVVM._VM.EscMenu;
 using Microsoft.Extensions.Logging;
 
-namespace WOTRMultiplayer.HarmonyPatches
+namespace WOTRMultiplayer.HarmonyPatches.MenuPatches
 {
     [HarmonyPatch]
     public class EscMenuVMPatches

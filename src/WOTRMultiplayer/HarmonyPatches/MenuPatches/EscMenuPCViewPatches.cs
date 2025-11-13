@@ -5,7 +5,7 @@ using Owlcat.Runtime.UI.Controls.Button;
 using UnityEngine;
 using WOTRMultiplayer.UI;
 
-namespace WOTRMultiplayer.HarmonyPatches
+namespace WOTRMultiplayer.HarmonyPatches.MenuPatches
 {
     [HarmonyPatch]
     public class EscMenuPCViewPatches
