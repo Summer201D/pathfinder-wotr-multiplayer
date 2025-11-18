@@ -34,7 +34,7 @@ namespace WOTRMultiplayer.DI
 {
     public static class DIFactory
     {
-        public static IServiceProvider Create(Config.UnityMod.UnityModManagerSettings settings)
+        public static IServiceProvider Create(UnityModManagerSettings settings)
         {
             var serviceCollection = new ServiceCollection();
             var logLevel = (LogEventLevel)settings.MinimumLogLevel;

@@ -10,8 +10,8 @@ using UnityEngine;
 using UnityModManagerNet;
 using WOTRMultiplayer.Abstractions.Localization;
 using WOTRMultiplayer.Abstractions.MP;
+using WOTRMultiplayer.Abstractions.Settings;
 using WOTRMultiplayer.Abstractions.UI;
-using WOTRMultiplayer.Config.UnityMod;
 using WOTRMultiplayer.DI;
 using WOTRMultiplayer.Localization;
 using WOTRMultiplayer.PubSub;
@@ -49,7 +49,7 @@ namespace WOTRMultiplayer
             }
             catch (Exception ex)
             {
-                // somethign when wrong and our logger is not available here
+                // something when wrong and our logger is not available here
                 entry.Logger.Error($"Unable to initialize mod. Error={ex}");
                 throw;
             }
@@ -98,6 +98,12 @@ namespace WOTRMultiplayer
         {
             _logger.LogInformation("Initializing portrait sprites");
             _serviceProvider.GetService<IResourceProvider>().Initialize();
+        }
+
+        public static void InitializeMultiplayerSettings()
+        {
+            _logger.LogInformation("Initializing multiplayer settings");
+            _serviceProvider.GetService<IMultiplayerSettingsService>().Initialize();
         }
 
         public static void UpdateLocale(string locale)

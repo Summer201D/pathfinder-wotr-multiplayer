@@ -8,5 +8,7 @@ namespace WOTRMultiplayer.Abstractions.Settings
         T GetValue<T>(WellKnownSettingKey<T> key);
 
         TimeSpan GetTimeSpanValue(WellKnownSettingKey<TimeSpan> key);
+
+        void CreateDefaultValue<TValue>(WellKnownSettingKey<TValue> settingKey);
     }
 }

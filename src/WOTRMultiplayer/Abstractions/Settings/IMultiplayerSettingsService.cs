@@ -1,9 +1,11 @@
-﻿using WOTRMultiplayer.Settings;
+﻿using WOTRMultiplayer.MP.Entities.Settings;
 
 namespace WOTRMultiplayer.Abstractions.Settings
 {
     public interface IMultiplayerSettingsService
     {
-        MultiplayerSettings GetSettings();
+        NetworkMultiplayerSettings GetSettings();
+
+        void Initialize();
     }
 }

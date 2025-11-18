@@ -1311,13 +1311,16 @@ namespace WOTRMultiplayer.MP.Actors
                 Game.Players.Add(player);
 
                 var settings = GameInteraction.GetGameSettings();
-                Logger.LogInformation("Sending {MessageType}. PlayerId={PlayerId}, Settings={Settings}", nameof(GameServerConnectionSucceeded), playerId, settings);
+                settings.Multiplayer = SettingsProvider.GetSettings();
+
                 var message = new GameServerConnectionSucceeded
                 {
                     ClientPlayerId = playerId,
                     GameSettings = Mapper.Map<Networking.Messages.Contracts.NetworkGameSettings>(settings),
                     RestBanterSeed = Game.RestBanterSeed
                 };
+                Logger.LogInformation("Sending {MessageType}. PlayerId={PlayerId}, Settings={Settings}", nameof(GameServerConnectionSucceeded), message.ClientPlayerId, message.GameSettings);
+
                 _networkServer.Send(playerId, message);
             }
         }

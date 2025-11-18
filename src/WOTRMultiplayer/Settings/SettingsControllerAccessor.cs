@@ -31,6 +31,17 @@ namespace WOTRMultiplayer.Settings
             return timeSpanValue;
         }
 
+        public void CreateDefaultValue<TValue>(WellKnownSettingKey<TValue> settingKey)
+        {
+            if (SettingsController.GeneralSettingsProvider.HasKey(settingKey.Key))
+            {
+                return;
+            }
+
+            SettingsController.GeneralSettingsProvider.SetValue(settingKey.Key, settingKey.DefaultValue);
+            _logger.LogInformation("Default value for setting key has been created. Key={Key}, DefaultValue={DefaultValue}", settingKey.Key, settingKey.DefaultValue);
+        }
+
         private T GetValue<T>(string key, T defaultValue)
         {
             try

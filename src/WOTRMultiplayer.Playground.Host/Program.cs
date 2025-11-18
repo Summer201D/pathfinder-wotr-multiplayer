@@ -14,6 +14,7 @@ using WOTRMultiplayer.MP.Entities.Movement;
 using WOTRMultiplayer.MP.Entities.Rolls.Claiming.Values;
 using WOTRMultiplayer.Networking.Abstractions;
 using WOTRMultiplayer.Playground.Core.Dummies;
+using WOTRMultiplayer.Settings;
 
 namespace WOTRMultiplayer.Playground.Host
 {
@@ -27,7 +28,7 @@ namespace WOTRMultiplayer.Playground.Host
             Console.WriteLine("Press enter to host");
             Console.ReadLine();
 
-            var serviceProvider = DI.DIFactory.Create(new Config.UnityMod.UnityModManagerSettings { UseDebugConsole = false });
+            var serviceProvider = DI.DIFactory.Create(new UnityModManagerSettings { UseDebugConsole = false });
             var gameInteractionService = new DummyGameInteractionService();
             var host = new MultiplayerHost(
                 serviceProvider.GetService<ILogger<MultiplayerHost>>(),

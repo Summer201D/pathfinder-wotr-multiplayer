@@ -11,9 +11,9 @@ using WOTRMultiplayer.Abstractions.Settings;
 using WOTRMultiplayer.Config.Mapping;
 using WOTRMultiplayer.MP.Actors;
 using WOTRMultiplayer.MP.Entities.Loot;
+using WOTRMultiplayer.MP.Entities.Settings;
 using WOTRMultiplayer.Networking.Abstractions;
 using WOTRMultiplayer.Networking.Messages.Game;
-using WOTRMultiplayer.Settings;
 using WOTRMultiplayer.UnitTests.FakeRules;
 
 namespace WOTRMultiplayer.UnitTests.MP
@@ -70,7 +70,7 @@ namespace WOTRMultiplayer.UnitTests.MP
             // Arrange
             var savePath = Guid.NewGuid().ToString();
             var gameId = Guid.NewGuid().ToString();
-            var settings = new MultiplayerSettings { HostPortRangeStart = 123, HostPortRangeEnd = 1234 };
+            var settings = new NetworkMultiplayerSettings { HostPortRangeStart = 123, HostPortRangeEnd = 1234 };
             A.CallTo(() => _multiplayerSettingsProvider.GetSettings()).Returns(settings);
 
             // Act
@@ -86,7 +86,7 @@ namespace WOTRMultiplayer.UnitTests.MP
             // Arrange
             var savePath = Guid.NewGuid().ToString();
             var gameId = Guid.NewGuid().ToString();
-            var settings = new MultiplayerSettings() { HostPortRangeStart = 123, HostPortRangeEnd = 1234 };
+            var settings = new NetworkMultiplayerSettings() { HostPortRangeStart = 123, HostPortRangeEnd = 1234 };
             A.CallTo(() => _multiplayerSettingsProvider.GetSettings()).Returns(settings);
             _multiplayerHost.Create(savePath, gameId, []);
             var handler = FakeUtils.GetNetworkReceiverHandler<NotifyDropItem>(_networkServer);
@@ -107,7 +107,7 @@ namespace WOTRMultiplayer.UnitTests.MP
             // Arrange
             var savePath = Guid.NewGuid().ToString();
             var gameId = Guid.NewGuid().ToString();
-            var settings = new MultiplayerSettings() { HostPortRangeStart = 123, HostPortRangeEnd = 1234 };
+            var settings = new NetworkMultiplayerSettings() { HostPortRangeStart = 123, HostPortRangeEnd = 1234 };
             A.CallTo(() => _multiplayerSettingsProvider.GetSettings()).Returns(settings);
             _multiplayerHost.Create(savePath, gameId, []);
             _multiplayerHost.Game = new WOTRMultiplayer.MP.Entities.NetworkGame("whatever");

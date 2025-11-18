@@ -622,13 +622,13 @@ namespace WOTRMultiplayer.UI
             yield return CreateStringInputSetting(
                 WellKnownKeys.Settings.DangerZone.DefaultForcedPauseTimeout.Title.Key,
                 WellKnownKeys.Settings.DangerZone.DefaultForcedPauseTimeout.Tooltip.Key,
-                WellKnownSettings.DangerZone.DefaultForcedPauseTimeout.AsString(),
+                WellKnownSettings.DangerZone.DefaultForcedPauseTimeout,
                 new TimeSpanValidator(),
                 PlayerNameValidator.MaxLength);
             yield return CreateStringInputSetting(
                 WellKnownKeys.Settings.DangerZone.RestEncounterForcedPauseTimeout.Title.Key,
                 WellKnownKeys.Settings.DangerZone.RestEncounterForcedPauseTimeout.Tooltip.Key,
-                WellKnownSettings.DangerZone.RestEncounterForcedPauseTimeout.AsString(),
+                WellKnownSettings.DangerZone.RestEncounterForcedPauseTimeout,
                 new TimeSpanValidator(),
                 PlayerNameValidator.MaxLength);
         }

@@ -1,7 +1,7 @@
 ﻿using Serilog.Events;
 using UnityModManagerNet;
 
-namespace WOTRMultiplayer.Config.UnityMod
+namespace WOTRMultiplayer.Settings
 {
     public class UnityModManagerSettings : UnityModManager.ModSettings
     {

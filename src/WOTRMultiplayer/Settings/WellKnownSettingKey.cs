@@ -11,14 +11,14 @@
             DefaultValue = defaultValue;
         }
 
-        public WellKnownSettingKey<string> AsString()
+        public static implicit operator WellKnownSettingKey<string>(WellKnownSettingKey<T> value)
         {
-            var asString = new WellKnownSettingKey<string>(DefaultValue.ToString())
+            var settingAsString = new WellKnownSettingKey<string>(value.DefaultValue?.ToString())
             {
-                Key = Key
+                Key = value.Key
             };
 
-            return asString;
+            return settingAsString;
         }
     }
 }

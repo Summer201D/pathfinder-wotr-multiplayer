@@ -1,8 +1,8 @@
 ﻿using System;
 
-namespace WOTRMultiplayer.Settings
+namespace WOTRMultiplayer.MP.Entities.Settings
 {
-    public class MultiplayerSettings
+    public class NetworkMultiplayerSettings
     {
         public string PlayerName { get; set; }
 

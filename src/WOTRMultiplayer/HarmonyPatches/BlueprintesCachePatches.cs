@@ -19,6 +19,7 @@ namespace WOTRMultiplayer.HarmonyPatches
             Main.GetLogger<BlueprintesCachePatches>().LogInformation("Applying patch. MethodName={MethodName}", MethodBase.GetCurrentMethod().Name);
 
             Main.InitializePortraits();
+            Main.InitializeMultiplayerSettings();
 
             SavePrefabsFromMainMenu();
             SavePrefabsFromCommonPcView();

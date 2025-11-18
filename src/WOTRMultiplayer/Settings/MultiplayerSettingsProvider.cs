@@ -1,4 +1,5 @@
 ﻿using WOTRMultiplayer.Abstractions.Settings;
+using WOTRMultiplayer.MP.Entities.Settings;
 
 namespace WOTRMultiplayer.Settings
 {
@@ -11,9 +12,19 @@ namespace WOTRMultiplayer.Settings
             _settingsControllerAccessor = settingsControllerAccessor;
         }
 
-        public MultiplayerSettings GetSettings()
+        public void Initialize()
         {
-            var settings = new MultiplayerSettings
+            _settingsControllerAccessor.CreateDefaultValue(WellKnownSettings.General.PlayerName);
+            _settingsControllerAccessor.CreateDefaultValue(WellKnownSettings.Combat.AISync);
+            _settingsControllerAccessor.CreateDefaultValue(WellKnownSettings.Networking.HostPortRangeStart);
+            _settingsControllerAccessor.CreateDefaultValue(WellKnownSettings.Networking.HostPortRangeEnd);
+            _settingsControllerAccessor.CreateDefaultValue<string>(WellKnownSettings.DangerZone.DefaultForcedPauseTimeout);
+            _settingsControllerAccessor.CreateDefaultValue<string>(WellKnownSettings.DangerZone.RestEncounterForcedPauseTimeout);
+        }
+
+        public NetworkMultiplayerSettings GetSettings()
+        {
+            var settings = new NetworkMultiplayerSettings
             {
                 PlayerName = _settingsControllerAccessor.GetValue(WellKnownSettings.General.PlayerName),
                 SyncAICombatActions = _settingsControllerAccessor.GetValue(WellKnownSettings.Combat.AISync),

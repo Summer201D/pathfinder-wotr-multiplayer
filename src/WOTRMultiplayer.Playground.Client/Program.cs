@@ -15,6 +15,7 @@ using WOTRMultiplayer.MP.Entities.Rolls.Claiming.Values;
 using WOTRMultiplayer.Networking.Abstractions;
 using WOTRMultiplayer.Playground.Core;
 using WOTRMultiplayer.Playground.Core.Dummies;
+using WOTRMultiplayer.Settings;
 
 namespace WOTRMultiplayer.Playground.Client
 {
@@ -23,7 +24,7 @@ namespace WOTRMultiplayer.Playground.Client
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "Playground")]
         public static void Main(string[] args)
         {
-            var serviceProvider = DI.DIFactory.Create(new Config.UnityMod.UnityModManagerSettings { UseDebugConsole = false });
+            var serviceProvider = DI.DIFactory.Create(new UnityModManagerSettings { UseDebugConsole = false });
             var gameInteractionService = new DummyGameInteractionService();
             Console.WriteLine("Default save game dir=" + gameInteractionService.GetSaveGamePath());
             var client = new MultiplayerClient(

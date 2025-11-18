@@ -100,6 +100,7 @@ using WOTRMultiplayer.MP.Entities.Settings;
 using WOTRMultiplayer.MP.Entities.Spells;
 using WOTRMultiplayer.MP.Entities.Units;
 using WOTRMultiplayer.MP.Entities.Vendor;
+using WOTRMultiplayer.Settings;
 using WOTRMultiplayer.UI;
 
 namespace WOTRMultiplayer.GameInteraction
@@ -1246,7 +1247,8 @@ namespace WOTRMultiplayer.GameInteraction
                     PauseWhenAllyUnconscious = SettingsRoot.Game.Autopause.PauseWhenAllyUnconscious.GetValue(),
                     PauseWhenEnemyUnconscious = SettingsRoot.Game.Autopause.PauseWhenEnemyUnconscious.GetValue(),
                     PauseWhenLastSleepingEnemyStays = SettingsRoot.Game.Autopause.PauseWhenLastSleepingEnemyStays.GetValue(),
-                }
+                },
+
             };
 
             return settings;
@@ -1263,6 +1265,7 @@ namespace WOTRMultiplayer.GameInteraction
             _mainThreadAccessor.Post(() =>
             {
                 _logger.LogInformation("Applying settings. Settings={Settings}", networkGameSettings);
+                // turn based
                 SettingsRoot.Game.TurnBased.EnableTurnBasedMode.SetValueAndConfirm(networkGameSettings.TurnBased.IsTurnBasedModeEnabled);
                 SettingsRoot.Game.TurnBased.AutoEndTurn.SetValueAndConfirm(networkGameSettings.TurnBased.AutoEndTurn);
                 SettingsRoot.Game.TurnBased.AutoStopAfterFirstMoveAction.SetValueAndConfirm(networkGameSettings.TurnBased.AutoStopAfterFirstMoveAction);
@@ -1275,9 +1278,11 @@ namespace WOTRMultiplayer.GameInteraction
                     SettingsRoot.Game.TurnBased.TimeScaleInNonPlayerTurn.SetValueAndConfirm(networkGameSettings.TurnBased.TimeScaleInNonPlayerTurn.Value);
                 }
 
+                // main
                 SettingsRoot.Game.Main.LootInCombat.SetValueAndConfirm(networkGameSettings.Main.LootInCombat);
                 SettingsRoot.Game.Main.AcceleratedMove.SetValueAndConfirm(networkGameSettings.Main.QuickMovement);
 
+                // autopause
                 SettingsRoot.Game.Autopause.ContinueMovementOnEngagement.SetValueAndConfirm(networkGameSettings.Autopause.ContinueMovementOnEngagement);
                 SettingsRoot.Game.Autopause.PauseOnAllyDown.SetValueAndConfirm(networkGameSettings.Autopause.PauseOnAllyDown);
                 SettingsRoot.Game.Autopause.PauseOnAreaLoaded.SetValueAndConfirm(networkGameSettings.Autopause.PauseOnAreaLoaded);
@@ -1304,6 +1309,12 @@ namespace WOTRMultiplayer.GameInteraction
                 SettingsRoot.Game.Autopause.PauseWhenAllyUnconscious.SetValueAndConfirm(networkGameSettings.Autopause.PauseWhenAllyUnconscious);
                 SettingsRoot.Game.Autopause.PauseWhenEnemyUnconscious.SetValueAndConfirm(networkGameSettings.Autopause.PauseWhenEnemyUnconscious);
                 SettingsRoot.Game.Autopause.PauseWhenLastSleepingEnemyStays.SetValueAndConfirm(networkGameSettings.Autopause.PauseWhenLastSleepingEnemyStays);
+
+                // mp settings
+                if (networkGameSettings.Multiplayer != null)
+                {
+                    SettingsController.GeneralSettingsProvider.SetValue(WellKnownSettings.Combat.AISync.Key, networkGameSettings.Multiplayer.SyncAICombatActions);
+                }
             });
         }
 
