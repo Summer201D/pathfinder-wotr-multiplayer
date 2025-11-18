@@ -1,0 +1,48 @@
+﻿using System.Collections.Generic;
+using NUnit.Framework;
+using WOTRMultiplayer.Localization;
+
+namespace WOTRMultiplayer.UnitTests.Localization
+{
+    [TestFixture]
+    public class WellKnownKeysTests
+    {
+        [TestCaseSource(nameof(GetWellKnownKeysTestCases))]
+        public void Initialize_KeyPathIsInitializedCorrectly(WellKnownKeyTestCase testCase)
+        {
+            // Act
+            WellKnownKeys.Initialize();
+            var key = testCase.Key();
+
+            // Assert
+            Assert.That(key, Is.Not.Null.Or.Empty);
+            Assert.That(key, Does.StartWith(WellKnownKeys.RootKey));
+            Assert.That(key, Contains.Substring(WellKnownKeys.KeyPathSeparator), "Atleast one key path separator is expected");
+        }
+
+        private static IEnumerable<WellKnownKeyTestCase> GetWellKnownKeysTestCases()
+        {
+            yield return new WellKnownKeyTestCase { Name = "settings->title", Key = () => WellKnownKeys.Settings.Title.Key };
+
+            yield return new WellKnownKeyTestCase { Name = "settings->general->title", Key = () => WellKnownKeys.Settings.General.Title.Key };
+            yield return new WellKnownKeyTestCase { Name = "settings->general->playerName->title", Key = () => WellKnownKeys.Settings.General.PlayerName.Title.Key };
+            yield return new WellKnownKeyTestCase { Name = "settings->general->playerName->tooltip", Key = () => WellKnownKeys.Settings.General.PlayerName.Tooltip.Key };
+
+            yield return new WellKnownKeyTestCase { Name = "settings->combat->title", Key = () => WellKnownKeys.Settings.Combat.Title.Key };
+            yield return new WellKnownKeyTestCase { Name = "settings->combat->aiSync->title", Key = () => WellKnownKeys.Settings.Combat.AISync.Title.Key };
+            yield return new WellKnownKeyTestCase { Name = "settings->combat->aiSync->tooltip", Key = () => WellKnownKeys.Settings.Combat.AISync.Tooltip.Key };
+
+            yield return new WellKnownKeyTestCase { Name = "settings->networking->title", Key = () => WellKnownKeys.Settings.Networking.Title.Key };
+            yield return new WellKnownKeyTestCase { Name = "settings->networking->hostPortStart->title", Key = () => WellKnownKeys.Settings.Networking.HostPortRangeStart.Title.Key };
+            yield return new WellKnownKeyTestCase { Name = "settings->networking->hostPortStart->tooltip", Key = () => WellKnownKeys.Settings.Networking.HostPortRangeStart.Tooltip.Key };
+            yield return new WellKnownKeyTestCase { Name = "settings->networking->hostPortEnd->title", Key = () => WellKnownKeys.Settings.Networking.HostPortRangeEnd.Title.Key };
+            yield return new WellKnownKeyTestCase { Name = "settings->networking->hostPortEnd->tooltip", Key = () => WellKnownKeys.Settings.Networking.HostPortRangeEnd.Tooltip.Key };
+
+            yield return new WellKnownKeyTestCase { Name = "settings->dangerZone->title", Key = () => WellKnownKeys.Settings.DangerZone.Title.Key };
+            yield return new WellKnownKeyTestCase { Name = "settings->dangerZone->defaultForcedPause->title", Key = () => WellKnownKeys.Settings.DangerZone.DefaultForcedPauseTimeout.Title.Key };
+            yield return new WellKnownKeyTestCase { Name = "settings->dangerZone->defaultForcedPause->tooltip", Key = () => WellKnownKeys.Settings.DangerZone.DefaultForcedPauseTimeout.Tooltip.Key };
+            yield return new WellKnownKeyTestCase { Name = "settings->dangerZone->restEncounterForcedPause->title", Key = () => WellKnownKeys.Settings.DangerZone.RestEncounterForcedPauseTimeout.Title.Key };
+            yield return new WellKnownKeyTestCase { Name = "settings->dangerZone->restEncounterForcedPause->tooltip", Key = () => WellKnownKeys.Settings.DangerZone.RestEncounterForcedPauseTimeout.Tooltip.Key };
+        }
+    }
+}

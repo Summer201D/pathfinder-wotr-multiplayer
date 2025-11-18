@@ -13,6 +13,7 @@ using WOTRMultiplayer.Abstractions.IO;
 using WOTRMultiplayer.Abstractions.MP;
 using WOTRMultiplayer.Abstractions.MP.Actors;
 using WOTRMultiplayer.Abstractions.Random;
+using WOTRMultiplayer.Abstractions.Settings;
 using WOTRMultiplayer.GameInteraction.Contexts;
 using WOTRMultiplayer.MP.Entities;
 using WOTRMultiplayer.MP.Entities.Combat;
@@ -59,7 +60,7 @@ namespace WOTRMultiplayer.MP.Actors
             ILogger<MultiplayerClient> logger,
             IGameInteractionService gameInteractionService,
             IIPEndPointParser ipEndPointParser,
-            IMultiplayerSettingsProvider multiplayerSettingsProvider,
+            IMultiplayerSettingsService multiplayerSettingsProvider,
             IFileSystemService fileSystemService,
             INetworkClient networkClient,
             IDiceRollStorage diceRollStorage,
@@ -264,7 +265,7 @@ namespace WOTRMultiplayer.MP.Actors
         {
             try
             {
-                if (!SettingsProvider.Settings.SyncAICombatActions || string.IsNullOrEmpty(networkAIAction.ActionBlueprintId))
+                if (!SettingsProvider.GetSettings().SyncAICombatActions || string.IsNullOrEmpty(networkAIAction.ActionBlueprintId))
                 {
                     return null;
                 }
@@ -1034,7 +1035,7 @@ namespace WOTRMultiplayer.MP.Actors
             var settings = Mapper.Map<NetworkGameSettings>(succeeded.GameSettings);
             GameInteraction.ApplyGameSettings(settings);
 
-            var message = new ClientGameServerConnectionConfirmed() { PlayerName = SettingsProvider.Settings.PlayerName };
+            var message = new ClientGameServerConnectionConfirmed() { PlayerName = SettingsProvider.GetSettings().PlayerName };
             Logger.LogInformation("Sending {MessageType}. PlayerName={PlayerName}", nameof(ClientGameServerConnectionConfirmed), message.PlayerName);
             Send(message);
         }

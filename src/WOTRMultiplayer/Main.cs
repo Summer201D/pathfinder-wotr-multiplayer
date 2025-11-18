@@ -8,11 +8,14 @@ using Microsoft.Extensions.Logging;
 using Serilog.Events;
 using UnityEngine;
 using UnityModManagerNet;
+using WOTRMultiplayer.Abstractions.Localization;
 using WOTRMultiplayer.Abstractions.MP;
 using WOTRMultiplayer.Abstractions.UI;
 using WOTRMultiplayer.Config.UnityMod;
 using WOTRMultiplayer.DI;
+using WOTRMultiplayer.Localization;
 using WOTRMultiplayer.PubSub;
+using WOTRMultiplayer.Settings;
 
 namespace WOTRMultiplayer
 {
@@ -26,7 +29,7 @@ namespace WOTRMultiplayer
 
         public static IMultiplayerRollsProcessor Rolls { get; private set; }
 
-        public const int MaxCharacters = 6;
+        public const int MaxCharactersInParty = 6;
 
         public static ILogger<T> GetLogger<T>()
         {
@@ -55,14 +58,17 @@ namespace WOTRMultiplayer
 
             try
             {
+                WellKnownKeys.Initialize();
+                WellKnownSettings.Initialize();
+
                 Multiplayer = _serviceProvider.GetService<IMultiplayer>();
                 Rolls = _serviceProvider.GetService<IMultiplayerRollsProcessor>();
-
                 entry.OnGUI += OnGui;
                 entry.OnSaveGUI += OnSaveGui;
                 entry.OnUnload += OnUnload;
 
                 _logger.LogInformation("harmony patching");
+
                 var harmony = new Harmony(entry.Info.Id);
                 harmony.PatchAll(Assembly.GetExecutingAssembly());
 
@@ -80,7 +86,7 @@ namespace WOTRMultiplayer
 
         private static void TaskScheduler_UnobservedTaskException(object sender, UnobservedTaskExceptionEventArgs e)
         {
-            _logger.LogError(e.Exception, "Unhandled task exception");
+            _logger.LogError(e.Exception, "Unobserved task exception");
         }
 
         private static void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
@@ -92,6 +98,11 @@ namespace WOTRMultiplayer
         {
             _logger.LogInformation("Initializing portrait sprites");
             _serviceProvider.GetService<IResourceProvider>().Initialize();
+        }
+
+        public static void UpdateLocale(string locale)
+        {
+            _serviceProvider.GetService<ILocalizationService>().UpdateLocale(locale);
         }
 
         private static void Subscribe()

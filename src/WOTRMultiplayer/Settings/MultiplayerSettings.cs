@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace WOTRMultiplayer.MP
+namespace WOTRMultiplayer.Settings
 {
     public class MultiplayerSettings
     {
@@ -10,9 +10,9 @@ namespace WOTRMultiplayer.MP
 
         public int HostPortRangeEnd { get; set; }
 
-        public TimeSpan? ForcedPauseDefaultTerminationDelay { get; set; }
+        public TimeSpan ForcedPauseDefaultTerminationDelay { get; set; }
 
-        public TimeSpan? ForcedPauseRandomEncounterTerminationDelay { get; set; }
+        public TimeSpan ForcedPauseRandomEncounterTerminationDelay { get; set; }
 
         public bool SyncAICombatActions { get; set; }
     }

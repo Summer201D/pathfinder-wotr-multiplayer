@@ -5,8 +5,8 @@ using AutoMapper;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using WOTRMultiplayer.Abstractions.IO;
-using WOTRMultiplayer.Abstractions.MP;
 using WOTRMultiplayer.Abstractions.Random;
+using WOTRMultiplayer.Abstractions.Settings;
 using WOTRMultiplayer.MP.Actors;
 using WOTRMultiplayer.MP.Entities;
 using WOTRMultiplayer.MP.Entities.Dialogs;
@@ -32,7 +32,7 @@ namespace WOTRMultiplayer.Playground.Host
             var host = new MultiplayerHost(
                 serviceProvider.GetService<ILogger<MultiplayerHost>>(),
                 gameInteractionService,
-                serviceProvider.GetService<IMultiplayerSettingsProvider>(),
+                serviceProvider.GetService<IMultiplayerSettingsService>(),
                 serviceProvider.GetService<IFileSystemService>(),
                 serviceProvider.GetService<INetworkServer>(),
                 new DummyDiceRollStorage([new NetworkIntRollValue { Value = 66 }]),

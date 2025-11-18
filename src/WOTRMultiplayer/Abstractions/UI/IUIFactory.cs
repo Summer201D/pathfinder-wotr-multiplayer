@@ -1,6 +1,8 @@
 ﻿using System;
 using Kingmaker.UI.MVVM._PCView.SaveLoad;
 using Kingmaker.UI.MVVM._PCView.Settings.Entities;
+using Kingmaker.UI.MVVM._VM.Settings;
+using Owlcat.Runtime.UI.VirtualListSystem;
 using TMPro;
 using UnityEngine;
 using WOTRMultiplayer.Abstractions.UI.Windows;
@@ -47,5 +49,11 @@ namespace WOTRMultiplayer.Abstractions.UI
         void StoreBackgroundArt(GameObject backgroundArt);
 
         void DestroyLobbyWindow(ILobbyWindow lobbyWindow);
+
+        void PopulateMultiplayerSettingsUI(SettingsVM instance);
+
+        IVirtualListElementView InitializeInputSettingTemplate(GameObject settingPrefab);
+
+        void CreateMultiplayerSettingsMenu(SettingsVM settingsVM);
     }
 }

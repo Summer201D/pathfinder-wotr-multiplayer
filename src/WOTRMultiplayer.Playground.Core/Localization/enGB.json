@@ -1,0 +1,19 @@
+﻿{
+  "wotrmultiplayer": {
+    "settings": {
+      "general": {
+        "player-name": {
+          "description": "asdasdasdasd",
+          "tooltip": "aethaeferafer"
+        }
+      },
+      "combat": {
+        "ai": "aaa",
+        "ai-sync": {
+          "tooltip": "dddd"
+        }
+      }
+    },
+    "test1": "abc"
+  }
+}

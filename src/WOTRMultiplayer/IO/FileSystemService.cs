@@ -13,10 +13,16 @@ namespace WOTRMultiplayer.IO
             _logger = logger;
         }
 
-        public byte[] GetFile(string path)
+        public byte[] GetRawFileContent(string path)
         {
-            _logger.LogInformation("Retrieving file. Path={Path}", path);
+            _logger.LogInformation("Retrieving file as byte[]. Path={Path}", path);
             return File.Exists(path) ? File.ReadAllBytes(path) : null;
+        }
+
+        public string GetFileContent(string path)
+        {
+            _logger.LogInformation("Retrieving file as string. Path={Path}", path);
+            return File.Exists(path) ? File.ReadAllText(path) : null;
         }
 
         public bool WriteFile(string path, byte[] content)

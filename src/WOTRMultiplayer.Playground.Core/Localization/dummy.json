@@ -1,0 +1,11 @@
+﻿{
+  "wotrmultiplayer": {
+    "settings": {
+      "general": {
+        "player-name": {
+          "tooltip": "override"
+        }
+      }
+    }
+  }
+}

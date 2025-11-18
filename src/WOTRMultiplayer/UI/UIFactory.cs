@@ -1,16 +1,25 @@
 ﻿using System;
+using System.Collections.Generic;
+using FluentValidation;
 using Kingmaker;
 using Kingmaker.Localization;
+using Kingmaker.Settings;
 using Kingmaker.UI;
 using Kingmaker.UI.Common;
 using Kingmaker.UI.MVVM._PCView.ContextMenu;
 using Kingmaker.UI.MVVM._PCView.SaveLoad;
 using Kingmaker.UI.MVVM._PCView.Settings.Entities;
 using Kingmaker.UI.MVVM._VM.ContextMenu;
+using Kingmaker.UI.MVVM._VM.Settings;
+using Kingmaker.UI.MVVM._VM.Settings.Entities;
+using Kingmaker.UI.MVVM._VM.Settings.Entities.Decorative;
 using Kingmaker.UI.ServiceWindow.Credits;
+using Kingmaker.UI.SettingsUI;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Owlcat.Runtime.UI.Controls.Button;
+using Owlcat.Runtime.UI.MVVM;
+using Owlcat.Runtime.UI.VirtualListSystem;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -19,15 +28,23 @@ using WOTRMultiplayer.Abstractions.UI.Controllers;
 using WOTRMultiplayer.Abstractions.UI.Controllers.Menu;
 using WOTRMultiplayer.Abstractions.UI.Windows;
 using WOTRMultiplayer.Extensions;
+using WOTRMultiplayer.HarmonyPatches.MenuPatches;
+using WOTRMultiplayer.Localization;
 using WOTRMultiplayer.MP.Entities;
+using WOTRMultiplayer.Settings;
+using WOTRMultiplayer.Settings.Validators;
 using WOTRMultiplayer.UI.Controllers;
 using WOTRMultiplayer.UI.Menu;
+using WOTRMultiplayer.UI.Settings;
+using WOTRMultiplayer.UI.Settings.Entities;
 using WOTRMultiplayer.Unity.Behaviours;
 
 namespace WOTRMultiplayer.UI
 {
     public class UIFactory : IUIFactory
     {
+        public const UISettingsManager.SettingsScreen MultiplayerSettingsMenuId = (UISettingsManager.SettingsScreen)125651235;
+
         public const string DropdownGameObjectName = "Dropdown";
         public const string InputPlaceholderObjectName = "PlaceholderText";
         public const string InputLabelObjectName = "Label_Input";
@@ -358,6 +375,7 @@ namespace WOTRMultiplayer.UI
                         {
                             UnityEngine.Object.DestroyImmediate(localizedTextComponent);
                         }
+                        UnityEngine.Object.DontDestroyOnLoad(_inputPrefab);
                     }
                 }
             }
@@ -387,6 +405,7 @@ namespace WOTRMultiplayer.UI
                         {
                             button.OnLeftClick.SetPersistentListenerState(i, UnityEngine.Events.UnityEventCallState.Off);
                         }
+                        UnityEngine.Object.DontDestroyOnLoad(_buttonPrefab);
                     }
                 }
             }
@@ -492,8 +511,8 @@ namespace WOTRMultiplayer.UI
             var charactersSectionContentObject = CreateDefaultGameObject(charactersSectionObject.transform);
             charactersSectionContentObject.name = LobbyWindowController.CharactersSectionContentObjectName;
             charactersSectionContentObject.AddComponent<HorizontalLayoutGroup>();
-            var preferedWidth = width / Main.MaxCharacters;
-            for (int characterIndex = 0; characterIndex < Main.MaxCharacters; characterIndex++)
+            var preferedWidth = width / Main.MaxCharactersInParty;
+            for (int characterIndex = 0; characterIndex < Main.MaxCharactersInParty; characterIndex++)
             {
                 var characterObject = CreateDefaultGameObject(charactersSectionContentObject.transform);
                 characterObject.name = LobbyWindowController.CharacterContainerObjectName;
@@ -534,6 +553,150 @@ namespace WOTRMultiplayer.UI
             }
 
             UnityEngine.Object.DestroyImmediate(lobbyWindow.MenuItem);
+        }
+
+        public void PopulateMultiplayerSettingsUI(SettingsVM settingsVM)
+        {
+            settingsVM.m_SettingEntities.Clear();
+
+            foreach (var settingEntity in GetSettingEntities())
+            {
+                settingsVM.m_SettingEntities.Add(settingsVM.AddDisposableAndReturn(settingEntity));
+            }
+
+            _logger.LogInformation("Multiplayer settings have been populated");
+        }
+
+        public IVirtualListElementView InitializeInputSettingTemplate(GameObject settingPrefab)
+        {
+            var stringView = UnityEngine.Object.Instantiate(settingPrefab);
+            UnityEngine.Object.DestroyImmediate(stringView.GetComponent<SettingsEntityBoolPCView>());
+            UnityEngine.Object.DontDestroyOnLoad(stringView);
+
+            var view = stringView.AddComponent<SettingsEntityInputView>();
+            var inputContainer = stringView.transform.Find("MultiButton").gameObject;
+            var placeAt = inputContainer.transform.Find("OffText");
+            var placeAtRect = placeAt.GetComponent<RectTransform>();
+            var input = Main.Multiplayer.Factory.CreateInput(inputContainer.transform);
+            input.transform.SetPositionAndRotation(placeAt.position, placeAt.rotation);
+            var inputRect = input.GetComponent<RectTransform>();
+            inputRect.pivot = placeAtRect.pivot;
+            inputRect.anchorMin = placeAtRect.anchorMin;
+            inputRect.anchorMax = placeAtRect.anchorMax;
+            inputRect.offsetMin = placeAtRect.offsetMin;
+            inputRect.offsetMax = placeAtRect.offsetMax;
+            inputRect.sizeDelta = new Vector2(inputRect.sizeDelta.x * 2.75f, inputRect.sizeDelta.y);
+            inputContainer.CleanupAllChildren(x => x.name != input.name);
+
+            return view;
+        }
+
+        private IEnumerable<VirtualListElementVMBase> GetSettingEntities()
+        {
+            yield return new SettingsEntityHeaderVM(new LocalizedString { Key = WellKnownKeys.Settings.General.Title.Key });
+            yield return CreateStringInputSetting(
+                WellKnownKeys.Settings.General.PlayerName.Title.Key,
+                WellKnownKeys.Settings.General.PlayerName.Tooltip.Key,
+                WellKnownSettings.General.PlayerName,
+                new PlayerNameValidator(),
+                PlayerNameValidator.MaxLength);
+
+            yield return new SettingsEntityHeaderVM(new LocalizedString { Key = WellKnownKeys.Settings.Combat.Title.Key });
+            yield return CreateBoolSetting(WellKnownKeys.Settings.Combat.AISync.Title.Key, WellKnownKeys.Settings.Combat.AISync.Tooltip.Key, WellKnownSettings.Combat.AISync);
+
+            yield return new SettingsEntityHeaderVM(new LocalizedString { Key = WellKnownKeys.Settings.Networking.Title.Key });
+            yield return CreateIntInputSetting(
+                WellKnownKeys.Settings.Networking.HostPortRangeStart.Title.Key,
+                WellKnownKeys.Settings.Networking.HostPortRangeStart.Tooltip.Key,
+                WellKnownSettings.Networking.HostPortRangeStart,
+                new NetworkPortValidator(),
+                NetworkPortValidator.MaxCharacters);
+            yield return CreateIntInputSetting(
+                WellKnownKeys.Settings.Networking.HostPortRangeEnd.Title.Key,
+                WellKnownKeys.Settings.Networking.HostPortRangeEnd.Tooltip.Key,
+                WellKnownSettings.Networking.HostPortRangeEnd,
+                new NetworkPortValidator(),
+                NetworkPortValidator.MaxCharacters);
+
+            yield return new SettingsEntityHeaderVM(new LocalizedString { Key = WellKnownKeys.Settings.DangerZone.Title.Key });
+            yield return CreateStringInputSetting(
+                WellKnownKeys.Settings.DangerZone.DefaultForcedPauseTimeout.Title.Key,
+                WellKnownKeys.Settings.DangerZone.DefaultForcedPauseTimeout.Tooltip.Key,
+                WellKnownSettings.DangerZone.DefaultForcedPauseTimeout.AsString(),
+                new TimeSpanValidator(),
+                PlayerNameValidator.MaxLength);
+            yield return CreateStringInputSetting(
+                WellKnownKeys.Settings.DangerZone.RestEncounterForcedPauseTimeout.Title.Key,
+                WellKnownKeys.Settings.DangerZone.RestEncounterForcedPauseTimeout.Tooltip.Key,
+                WellKnownSettings.DangerZone.RestEncounterForcedPauseTimeout.AsString(),
+                new TimeSpanValidator(),
+                PlayerNameValidator.MaxLength);
+        }
+
+        private SettingsEntityBoolVM CreateBoolSetting(string titleKey, string tooltipKey, WellKnownSettingKey<bool> settingKey)
+        {
+            var boolSetting = ScriptableObject.CreateInstance<UISettingsEntityBool>();
+            ConfigureSetting(boolSetting, titleKey, tooltipKey);
+            var setting = new SettingsEntityBool(settingKey.Key, settingKey.DefaultValue);
+            boolSetting.LinkSetting(setting);
+
+            var viewModel = new SettingsEntityBoolVM(boolSetting);
+            return viewModel;
+        }
+
+        private SettingsEntityStringInputVM CreateStringInputSetting(
+            string titleKey,
+            string tooltipKey,
+            WellKnownSettingKey<string> settingKey,
+            AbstractValidator<string> validator,
+            int characterLimit)
+        {
+            var inputSetting = ScriptableObject.CreateInstance<UIValidatableStringSettingsEntity>();
+            ConfigureSetting(inputSetting, titleKey, tooltipKey);
+            ConfigureValidation(inputSetting, validator, characterLimit);
+            var setting = new SettingsEntityString(settingKey.Key, settingKey.DefaultValue);
+            inputSetting.LinkSetting(setting);
+
+            var viewModel = new SettingsEntityStringInputVM(inputSetting);
+            return viewModel;
+        }
+
+        private SettingsEntityIntInputVM CreateIntInputSetting(
+            string titleKey,
+            string tooltipKey,
+            WellKnownSettingKey<int> settingKey,
+            AbstractValidator<int> validator,
+            int characterLimit)
+        {
+            var inputSetting = ScriptableObject.CreateInstance<UIValidatableIntSettingsEntity>();
+            ConfigureSetting(inputSetting, titleKey, tooltipKey);
+            ConfigureValidation(inputSetting, validator, characterLimit);
+            var setting = new SettingsEntityInt(settingKey.Key, settingKey.DefaultValue);
+            inputSetting.LinkSetting(setting);
+
+            var viewModel = new SettingsEntityIntInputVM(inputSetting);
+            return viewModel;
+        }
+
+        private void ConfigureValidation<TValue>(UIValidatableSettingsEntityBase<TValue> uiValidatableSettingsEntityBase, AbstractValidator<TValue> validator, int characterLimit)
+        {
+            uiValidatableSettingsEntityBase.Validator = validator;
+            uiValidatableSettingsEntityBase.CharacterLimit = characterLimit;
+        }
+
+        private void ConfigureSetting<TValue>(UISettingsEntityWithValueBase<TValue> uiSettingsEntityBase, string titleKey, string tooltipKey)
+        {
+            uiSettingsEntityBase.m_Description = new LocalizedString { Key = titleKey };
+            uiSettingsEntityBase.m_TooltipDescription = new LocalizedString { Key = tooltipKey };
+            uiSettingsEntityBase.ManualModificationLock = Main.Multiplayer.IsActive; // static call is fine as this entire class is untestable anyway due to direct dependency on Unity types
+            uiSettingsEntityBase.ModificationAllowedCheck = () => true;
+        }
+
+        public void CreateMultiplayerSettingsMenu(SettingsVM settingsVM)
+        {
+            var title = new LocalizedString { Key = WellKnownKeys.Settings.Title.Key };
+            settingsVM.CreateMenuEntity(title, MultiplayerSettingsMenuId);
+            Main.GetLogger<SettingsVMPatches>().LogInformation("Multiplayer settings menu has been added");
         }
     }
 }

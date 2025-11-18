@@ -7,12 +7,12 @@ using AutoMapper;
 using Kingmaker.Controllers.Rest;
 using Kingmaker.GameModes;
 using Microsoft.Extensions.Logging;
-using UnityEngine.Assertions.Must;
 using WOTRMultiplayer.Abstractions.GameInteraction;
 using WOTRMultiplayer.Abstractions.IO;
 using WOTRMultiplayer.Abstractions.MP;
 using WOTRMultiplayer.Abstractions.MP.Actors;
 using WOTRMultiplayer.Abstractions.Random;
+using WOTRMultiplayer.Abstractions.Settings;
 using WOTRMultiplayer.MP.Entities;
 using WOTRMultiplayer.MP.Entities.Combat;
 using WOTRMultiplayer.MP.Entities.Dialogs;
@@ -47,7 +47,7 @@ namespace WOTRMultiplayer.MP.Actors
         public MultiplayerHost(
             ILogger<MultiplayerHost> logger,
             IGameInteractionService gameInteractionService,
-            IMultiplayerSettingsProvider multiplayerSettingsProvider,
+            IMultiplayerSettingsService multiplayerSettingsProvider,
             IFileSystemService fileSystemService,
             INetworkServer networkServer,
             IDiceRollStorage diceRollStorage,
@@ -84,8 +84,8 @@ namespace WOTRMultiplayer.MP.Actors
             };
 
             Game.Characters.AddRange(characters);
-
-            _networkServer.Start(SettingsProvider.Settings.HostPortRangeStart, SettingsProvider.Settings.HostPortRangeEnd);
+            var settings = SettingsProvider.GetSettings();
+            _networkServer.Start(settings.HostPortRangeStart, settings.HostPortRangeEnd);
 
             Logger.LogInformation("Host has been created. SavePath={SavePath}, Portraits={Portraits}", saveFilePath, string.Join(";", Game.Characters.Select(c => c.Portrait)));
         }
@@ -164,7 +164,7 @@ namespace WOTRMultiplayer.MP.Actors
         {
             Logger.LogInformation("Starting game...");
             // it should be fine to block current thread
-            var content = FileSystem.GetFile(Game.SaveFilePath);
+            var content = FileSystem.GetRawFileContent(Game.SaveFilePath);
             if (content == null)
             {
                 Logger.LogError("Unable to start a game due to missing save file. Path={Path}", Game.SaveFilePath);
@@ -451,7 +451,7 @@ namespace WOTRMultiplayer.MP.Actors
 
                 if (Game.RandomEncounter.RandomUnitSeed.HasValue)
                 {
-                    EnsureForcePaused(UIStringConsts.GameNotifications.ForcedPauseReasons.RandomEncounterLoading, SettingsProvider.Settings.ForcedPauseRandomEncounterTerminationDelay);
+                    EnsureForcePaused(UIStringConsts.GameNotifications.ForcedPauseReasons.RandomEncounterLoading, SettingsProvider.GetSettings().ForcedPauseRandomEncounterTerminationDelay);
                     GameInteraction.UpdateIsInCombatStatus();
                     GameInteraction.Pause(true);
                 }
@@ -467,7 +467,7 @@ namespace WOTRMultiplayer.MP.Actors
         {
             try
             {
-                if (Game.Combat == null || !SettingsProvider.Settings.SyncAICombatActions)
+                if (Game.Combat == null || !SettingsProvider.GetSettings().SyncAICombatActions)
                 {
                     return null;
                 }
@@ -1357,7 +1357,7 @@ namespace WOTRMultiplayer.MP.Actors
         {
             var hostPlayer = new NetworkPlayer(NetworkingConsts.HostPlayerId)
             {
-                Name = SettingsProvider.Settings.PlayerName
+                Name = SettingsProvider.GetSettings().PlayerName
             };
 
             Game.Players.Add(hostPlayer);

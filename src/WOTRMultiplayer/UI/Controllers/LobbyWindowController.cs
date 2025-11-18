@@ -211,7 +211,7 @@ namespace WOTRMultiplayer.UI.Controllers
 
             _mainThreadAccessor.Post(() =>
             {
-                for (int characterIndex = 0; characterIndex < Main.MaxCharacters; characterIndex++)
+                for (int characterIndex = 0; characterIndex < Main.MaxCharactersInParty; characterIndex++)
                 {
                     var character = characters.Count > characterIndex ? characters[characterIndex] : null;
                     var sprite = string.IsNullOrEmpty(character?.Portrait) ? null : GetPortraitSprite(character.Portrait);
@@ -248,7 +248,7 @@ namespace WOTRMultiplayer.UI.Controllers
         private void UpdateCharacterOwnerDropdown(List<NetworkPlayer> networkPlayers)
         {
             var players = networkPlayers.Select(x => x.Name).ToList();
-            for (int characterIndex = 0; characterIndex < Main.MaxCharacters; characterIndex++)
+            for (int characterIndex = 0; characterIndex < Main.MaxCharactersInParty; characterIndex++)
             {
                 var characterContainer = CharactersInfoContainer.transform.GetChild(characterIndex);
                 if (characterContainer == null)

@@ -16,6 +16,9 @@
 		<Reference Include="Assembly-CSharp">
 			<HintPath>$(WOTR_PATH)\Wrath_Data\Managed\Assembly-CSharp.dll</HintPath>
 		</Reference>
+		<Reference Include="Newtonsoft.Json">
+		  <HintPath>$(WOTR_PATH)\Wrath_Data\Managed\Newtonsoft.Json.dll</HintPath>
+		</Reference>
 	</ItemGroup>
 
 </Project>

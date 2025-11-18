@@ -12,16 +12,17 @@ namespace WOTRMultiplayer.UI
         public const string UIBundleName = "ui";
 
         private readonly ILogger _logger;
-        private ConcurrentDictionary<string, ConcurrentDictionary<string, UnityEngine.Sprite>> _resources;
+        private ConcurrentDictionary<string, ConcurrentDictionary<string, UnityEngine.Sprite>> _sprites;
 
-        public ResourceBundleProvider(ILogger<ResourceBundleProvider> logger)
+        public ResourceBundleProvider(
+            ILogger<ResourceBundleProvider> logger)
         {
             _logger = logger;
         }
 
         public UnityEngine.Sprite GetPortrait(string name)
         {
-            _resources.TryGetValue(PortraitsBundleName, out var portraits);
+            _sprites.TryGetValue(PortraitsBundleName, out var portraits);
             if (!portraits.TryGetValue(name, out var sprite))
             {
                 _logger.LogWarning("Unable to find requested portrait. PortraitName={PortraitName}", name);
@@ -33,7 +34,7 @@ namespace WOTRMultiplayer.UI
 
         public UnityEngine.Sprite GetUISprite(string name)
         {
-            _resources.TryGetValue(UIBundleName, out var uiSprites);
+            _sprites.TryGetValue(UIBundleName, out var uiSprites);
             if (!uiSprites.TryGetValue(name, out var sprite))
             {
                 _logger.LogWarning("Unable to find requested sprite. SpriteName={SpriteName}", name);
@@ -44,29 +45,31 @@ namespace WOTRMultiplayer.UI
 
         public void Initialize()
         {
-            if (_resources == null)
+            if (_sprites == null)
             {
-                _resources = new ConcurrentDictionary<string, ConcurrentDictionary<string, UnityEngine.Sprite>>();
-                _resources.TryAdd(PortraitsBundleName, LoadAssets(PortraitsBundleName));
-                _resources.TryAdd(UIBundleName, LoadAssets(UIBundleName));
+                _sprites = new ConcurrentDictionary<string, ConcurrentDictionary<string, UnityEngine.Sprite>>();
+                _sprites.TryAdd(PortraitsBundleName, LoadSprites(PortraitsBundleName));
+                _sprites.TryAdd(UIBundleName, LoadSprites(UIBundleName));
+
+                var a = LoadSprites("mainmenupcview.res");
             }
         }
 
-        private ConcurrentDictionary<string, UnityEngine.Sprite> LoadAssets(string bundleName)
+        private ConcurrentDictionary<string, UnityEngine.Sprite> LoadSprites(string bundleName)
         {
             var bundle = BundlesLoadService.Instance.RequestBundle(bundleName);
             // had no success to limit loading
             // note: you can't delete (Object->Destroy or DestroyImmediate) redundant sprites as it causes texture errors later on
-            var allPortraits = bundle.LoadAllAssets<UnityEngine.Sprite>();
-            var characterPortraits = new ConcurrentDictionary<string, UnityEngine.Sprite>();
-            for (int i = 0; i < allPortraits.Length; i++)
+            var allSprites = bundle.LoadAllAssets<UnityEngine.Sprite>();
+            var keyValuePairs = new ConcurrentDictionary<string, UnityEngine.Sprite>();
+            for (int i = 0; i < allSprites.Length; i++)
             {
-                var portrait = allPortraits[i];
+                var portrait = allSprites[i];
 
-                characterPortraits.TryAdd(portrait.name, portrait);
+                keyValuePairs.TryAdd(portrait.name, portrait);
             }
 
-            return characterPortraits;
+            return keyValuePairs;
         }
     }
 }

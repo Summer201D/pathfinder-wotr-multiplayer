@@ -38,6 +38,7 @@ jobs:
     timeout-minutes: 10
     env:
       WOTR_PATH: ../../libs
+      LOCALIZATION_PATH: ../../localization
       BUILD_PATH: ".\\src\\WOTRMultiplayer\\bin\\Release\\net481"
       RELEASE_OUTPUT_PATH: ".\\__releases\\WOTRMultiplayer"
       CURRENT_VERSION: ${{needs.get-version.outputs.version}}
@@ -96,6 +97,10 @@ jobs:
 
           xcopy /q /y "${{ env.BUILD_PATH }}\AutoMapper.dll" "${{ env.RELEASE_OUTPUT_PATH }}\*"
           xcopy /q /y "${{ env.BUILD_PATH }}\AutoMapper.Extensions.Microsoft.DependencyInjection.dll" "${{ env.RELEASE_OUTPUT_PATH }}\*"
+
+          xcopy /q /y "${{ env.BUILD_PATH }}\FluentValidation.dll" "${{ env.RELEASE_OUTPUT_PATH }}\*"
+
+          xcopy /q /y "${{ env.LOCALIZATION_PATH }}\*.json" "${{ env.RELEASE_OUTPUT_PATH }}\Localization\*"
 
       - name: Upload Release
         uses: actions/upload-artifact@v4

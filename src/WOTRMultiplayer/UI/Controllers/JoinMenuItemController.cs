@@ -306,9 +306,7 @@ namespace WOTRMultiplayer.UI.Controllers
         private void OnJoinButtonClicked()
         {
             _logger.LogInformation("Join button clicked");
-            var rawAddress = ServerAddressObject.transform.Find(UIFactory.InputLabelObjectName).GetComponent<TextMeshProUGUI>().text;
-            // thank you for zero-width space
-            var address = rawAddress.Trim('\u200B').Trim();
+            var address = ServerAddressObject.GetComponent<TMP_InputField>().text.Trim();
             var result = _multiplayerClient.Connect(address);
             if (!result.IsOk)
             {

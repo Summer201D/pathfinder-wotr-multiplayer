@@ -1,0 +1,43 @@
+{
+    "wotrmultiplayer": {
+        "settings": {
+            "title": "Multiplayer",
+            "general": {
+                "title": "General",
+                "playerName": {
+                    "title": "Player Name",
+                    "tooltip": "Represents player name within multiplayer session. Limited to 24 characters"
+                }
+            },
+            "combat": {
+                "title": "Combat",
+                "aiSync": {
+                    "title": "Synchronize AI Actions",
+                    "tooltip": "AI actions don't have any randomness, so their turns play out the same for everyone in multiplayer.\nIn rare cases, AI might attack a different target or make an extra attack after moving - usually because of position desync or low FPS (it's messing up with best AI action score calculation).\nEnable this if you want to get extra synchronization(stability) at the expense of extra stuttering"
+                }
+            },
+            "networking": {
+                "title": "Networking",
+                "hostPortStart": {
+                    "title": "Host Port Start",
+                    "tooltip": "The first available port within the configured range is selected to host a multiplayer game. Keep this value equal to 'Host Port End' to always host on a specific port only.\nValid values are 1024-65535"
+                },
+                "hostPortEnd": {
+                    "title": "Host Port End",
+                    "tooltip": "The first available port within the configured range is selected to host a multiplayer game. Keep this value equal to 'Host Port Start' to always host on a specific port only.\nValid values are 1024-65535"
+                }
+            },
+            "dangerZone": {
+                "title": "Danger zone (make sure you know what you are doing)",
+                "defaultForcedPauseTimeout": {
+                    "title": "Default 'Forced pause' timeout",
+                    "tooltip": "Default delay to lift forced pause once specific criteria is met.\nBasic format is 00:00:00 (but not limited to) which means Hours:Minutes:Seconds"
+                },
+                "restEncounterForcedPauseTimeout": {
+                    "title": "Rest Encounter 'Forced pause' timeout",
+                    "tooltip": "Delay to lift forced pause once random rest encounter is synchronized for everyone.\nBasic format is 00:00:00 (but not limited to) which means Hours:Minutes:Seconds"
+                }
+            }
+        }
+    }
+}

@@ -8,6 +8,11 @@ That said, compatibility with other mods hasn't really been tested at all and th
 
 However, this might be revised later on once multiplayer is stable enough to start focusing on making things play nicely with popular mods.
 
+### Known mod compatibility issues:
+- ModMenu
+  - global edit of `SaveLoadPcView` causes some minor side-effects for our own copy of that view
+  - multiplayer settings are corrupted / not loaded correctly on Settings UI. Didn't look for a reason yet
+
 ## UnityModManager settings
 - Checkbox to show the debug console (for anyone curious about the behind-the-scenes stuff).
 - Checkbox to display the unitId in the name tag above your character, e.g., 'Seelah' → 'Seelah [my-unit-id]'.
@@ -31,11 +36,13 @@ A couple of notes:
 - The Rest window now shows a counter so you can see how many players are ready to rest (or finish resting)."
 
 ## Localization
-It's mostly just a few menu titles and notification messages, so there's no localization built in. For now (and probably a while), it will stay English-only.
+Custom-made localization that is fully integrated with native `LocalizationManager/LocalizedStrings`. Though `enGb` is the only option available by default.
+
+Look at [localization](/docs/localization/localization.md) for more details
 
 ## Game settings
 
-Multiplayer needs some settings to be locked in or synced across players. When you host, the required settings get applied automatically. If you join someone else's game, you will just get the host's settings.
+Multiplayer needs some settings to be locked in and synced across players. When you host, the required settings get applied automatically. If you join someone else's game, you will just get the host's settings.
 Some options can't be changed mid-game - you will see those grayed out in the settings menu.
 
 ## Basics

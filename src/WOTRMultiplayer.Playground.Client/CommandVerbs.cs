@@ -155,6 +155,11 @@ namespace WOTRMultiplayer.Playground.Client
             public string UnitId { get; set; }
         }
 
+        [Verb("dump-locale", HelpText = "print test locale")]
+        public class DumpLocaleCommandVerb
+        {
+        }
+
         [Verb("exit", HelpText = "cya next time")]
         public class ExitCommandVerb
         {

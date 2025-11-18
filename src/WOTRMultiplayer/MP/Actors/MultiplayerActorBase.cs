@@ -13,6 +13,7 @@ using WOTRMultiplayer.Abstractions.GameInteraction;
 using WOTRMultiplayer.Abstractions.IO;
 using WOTRMultiplayer.Abstractions.MP;
 using WOTRMultiplayer.Abstractions.Random;
+using WOTRMultiplayer.Abstractions.Settings;
 using WOTRMultiplayer.MP.Entities;
 using WOTRMultiplayer.MP.Entities.ActionBar;
 using WOTRMultiplayer.MP.Entities.Combat;
@@ -56,7 +57,7 @@ namespace WOTRMultiplayer.MP.Actors
 
         protected IFileSystemService FileSystem { get; private set; }
 
-        protected IMultiplayerSettingsProvider SettingsProvider { get; private set; }
+        protected IMultiplayerSettingsService SettingsProvider { get; private set; }
 
         private readonly IValueGenerator _valueGenerator;
         private readonly INetworkReceiver _networkReceiver;
@@ -68,7 +69,7 @@ namespace WOTRMultiplayer.MP.Actors
         protected MultiplayerActorBase(
             ILogger logger,
             IMapper mapper,
-            IMultiplayerSettingsProvider multiplayerSettingsProvider,
+            IMultiplayerSettingsService multiplayerSettingsProvider,
             IGameInteractionService gameInteractionService,
             IDiceRollStorage diceRollStorage,
             IFileSystemService fileSystemService,
@@ -423,7 +424,7 @@ namespace WOTRMultiplayer.MP.Actors
             var message = new NotifyLobbySaveGameChanged
             {
                 GameId = Game.Id,
-                Content = FileSystem.GetFile(savePath),
+                Content = FileSystem.GetRawFileContent(savePath),
                 IsForceLoad = true
             };
 
@@ -1090,7 +1091,7 @@ namespace WOTRMultiplayer.MP.Actors
 
         protected void EnsureForcePaused(string reason)
         {
-            EnsureForcePaused(reason, SettingsProvider.Settings.ForcedPauseDefaultTerminationDelay);
+            EnsureForcePaused(reason, SettingsProvider.GetSettings().ForcedPauseDefaultTerminationDelay);
         }
 
         protected void WitnessLevelingPhase(long playerId)

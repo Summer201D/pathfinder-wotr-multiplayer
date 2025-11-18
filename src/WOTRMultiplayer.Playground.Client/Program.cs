@@ -6,8 +6,9 @@ using Kingmaker.GameModes;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using WOTRMultiplayer.Abstractions.IO;
-using WOTRMultiplayer.Abstractions.MP;
 using WOTRMultiplayer.Abstractions.Random;
+using WOTRMultiplayer.Abstractions.Settings;
+using WOTRMultiplayer.Localization;
 using WOTRMultiplayer.MP.Actors;
 using WOTRMultiplayer.MP.Entities.Dialogs;
 using WOTRMultiplayer.MP.Entities.Rolls.Claiming.Values;
@@ -29,7 +30,7 @@ namespace WOTRMultiplayer.Playground.Client
                 serviceProvider.GetService<ILogger<MultiplayerClient>>(),
                 gameInteractionService,
                 serviceProvider.GetService<IIPEndPointParser>(),
-                serviceProvider.GetService<IMultiplayerSettingsProvider>(),
+                serviceProvider.GetService<IMultiplayerSettingsService>(),
                 serviceProvider.GetService<IFileSystemService>(),
                 serviceProvider.GetService<INetworkClient>(),
                 new DummyDiceRollStorage([new NetworkIntRollValue { Value = 59 }]),
@@ -45,11 +46,11 @@ namespace WOTRMultiplayer.Playground.Client
                 var inputArgs = input.Split(' ').Select(x => x.Trim(' ')).ToList();
                 Parser.Default
                     .ParseArguments(inputArgs, verbs)
-                    .WithParsed(command => RunCommand(client, command));
+                    .WithParsed(command => RunCommand(client, command, serviceProvider));
             }
         }
 
-        private static void RunCommand(MultiplayerClient client, object command)
+        private static void RunCommand(MultiplayerClient client, object command, IServiceProvider serviceProvider)
         {
             switch (command)
             {
@@ -122,6 +123,13 @@ namespace WOTRMultiplayer.Playground.Client
                     var set = new MP.Entities.Equipment.NetworkActiveHandEquipmentSet { Index = handSlot.SlotIndex, UnitId = handSlot.UnitId };
                     client.Game.Characters.FirstOrDefault().UnitId = set.UnitId;
                     client.OnChangeActiveHandEquipmentSet(set);
+                    break;
+                case CommandVerbs.DumpLocaleCommandVerb:
+                    var localization = new LocalizationService(
+                        serviceProvider.GetService<ILogger<LocalizationService>>(),
+                        serviceProvider.GetService<IFileSystemService>(),
+                        new DummyLocalizationManagerAccessor());
+                    localization.UpdateLocale("dummy1");
                     break;
                 default:
                     break;

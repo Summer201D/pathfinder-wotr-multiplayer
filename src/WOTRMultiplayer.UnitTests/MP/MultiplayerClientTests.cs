@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
 using AutoMapper;
@@ -11,6 +9,7 @@ using WOTRMultiplayer.Abstractions.GameInteraction;
 using WOTRMultiplayer.Abstractions.IO;
 using WOTRMultiplayer.Abstractions.MP;
 using WOTRMultiplayer.Abstractions.Random;
+using WOTRMultiplayer.Abstractions.Settings;
 using WOTRMultiplayer.Config.Mapping;
 using WOTRMultiplayer.MP.Actors;
 using WOTRMultiplayer.MP.Entities;
@@ -31,7 +30,7 @@ namespace WOTRMultiplayer.UnitTests.MP
 
         private ILogger<MultiplayerClient> _logger;
         private IGameInteractionService _gameInteractionService;
-        private IMultiplayerSettingsProvider _multiplayerSettingsProvider;
+        private IMultiplayerSettingsService _multiplayerSettingsProvider;
         private IIPEndPointParser _endpointParser;
         private IFileSystemService _fileSystemService;
         private INetworkClient _networkClient;
@@ -50,7 +49,7 @@ namespace WOTRMultiplayer.UnitTests.MP
             _logger = A.Fake<ILogger<MultiplayerClient>>();
             _gameInteractionService = A.Fake<IGameInteractionService>();
             _endpointParser = A.Fake<IIPEndPointParser>();
-            _multiplayerSettingsProvider = A.Fake<IMultiplayerSettingsProvider>();
+            _multiplayerSettingsProvider = A.Fake<IMultiplayerSettingsService>();
             _fileSystemService = A.Fake<IFileSystemService>();
 
             _networkClient = A.Fake<INetworkClient>();
