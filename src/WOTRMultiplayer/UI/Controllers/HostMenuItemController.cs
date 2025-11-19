@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Kingmaker;
+using Kingmaker.Localization;
 using Kingmaker.UI.Common;
 using Kingmaker.UI.MVVM;
 using Kingmaker.UI.MVVM._PCView.SaveLoad;
@@ -19,6 +20,7 @@ using WOTRMultiplayer.Abstractions.UI.Controllers;
 using WOTRMultiplayer.Abstractions.UI.Controllers.Menu;
 using WOTRMultiplayer.Abstractions.Unity;
 using WOTRMultiplayer.Extensions;
+using WOTRMultiplayer.Localization;
 using WOTRMultiplayer.MP.Entities;
 using WOTRMultiplayer.UI.Menu;
 
@@ -167,7 +169,7 @@ namespace WOTRMultiplayer.UI.Controllers
         protected override void InitializeInternal(GameObject baseLayout)
         {
             var label = MenuItem.GetComponentInChildren<TextMeshProUGUI>();
-            label.SetText(UIStringConsts.MultiplayerWindow.HostMenuLabel);
+            label.SetText(new LocalizedString { Key = WellKnownKeys.MultiplayerWindow.HostTab.Title.Key });
 
             _menuContent = UnityEngine.Object.Instantiate(baseLayout, baseLayout.transform);
             _menuContent.name = HostMenuItemContentObjectName;
@@ -197,16 +199,16 @@ namespace WOTRMultiplayer.UI.Controllers
 
         private void SetupButtons()
         {
-            SetButtonLabel(HostButtonObject, UIStringConsts.MultiplayerWindow.HostMenu.HostButtonLabel);
+            SetButtonLabel(HostButtonObject, new LocalizedString { Key = WellKnownKeys.MultiplayerWindow.HostTab.HostButton.HostText.Key });
             SetupButtonClick(HostButton, OnHostButtonClicked);
             HostButton.Interactable = false;
 
-            SetButtonLabel(ReadyButtonObject, UIStringConsts.MultiplayerWindow.HostMenu.ReadyNotReadyButtonLabel);
+            SetButtonLabel(ReadyButtonObject, new LocalizedString { Key = WellKnownKeys.MultiplayerWindow.HostTab.ReadyButton.NotReadyText.Key });
             SetupButtonClick(ReadyButton, OnReadyButtonClicked);
             ReadyButtonObject.SetActive(false);
             ReadyButton.Interactable = false;
 
-            SetButtonLabel(StartButtonObject, UIStringConsts.MultiplayerWindow.HostMenu.StartButtonLabel);
+            SetButtonLabel(StartButtonObject, new LocalizedString { Key = WellKnownKeys.MultiplayerWindow.HostTab.StartButton.Key });
             SetupButtonClick(StartButton, OnStartButtonClicked);
             StartButtonObject.SetActive(false);
             StartButton.Interactable = false;
@@ -232,7 +234,7 @@ namespace WOTRMultiplayer.UI.Controllers
                 ReadyButtonObject.SetActive(true);
                 ReadyButton.Interactable = true;
                 _multiplayerHost.Create(savePath, selectedSave.GameId.Value, characters);
-                SetButtonLabel(HostButtonObject, UIStringConsts.MultiplayerWindow.HostMenu.HostButtonActiveLabel);
+                SetButtonLabel(HostButtonObject, new LocalizedString { Key = WellKnownKeys.MultiplayerWindow.HostTab.HostButton.SelectSaveText.Key });
                 return;
             }
 
@@ -243,8 +245,8 @@ namespace WOTRMultiplayer.UI.Controllers
         {
             _logger.LogInformation("OnReadyButton");
             var isReady = _multiplayerHost.ReadyChanged();
-            var label = isReady ? UIStringConsts.MultiplayerWindow.HostMenu.ReadyButtonLabel
-                : UIStringConsts.MultiplayerWindow.HostMenu.ReadyNotReadyButtonLabel;
+            var label = isReady ? new LocalizedString { Key = WellKnownKeys.MultiplayerWindow.HostTab.ReadyButton.ReadyText.Key }
+                : new LocalizedString { Key = WellKnownKeys.MultiplayerWindow.HostTab.ReadyButton.NotReadyText.Key };
             SetButtonLabel(ReadyButtonObject, label);
         }
 

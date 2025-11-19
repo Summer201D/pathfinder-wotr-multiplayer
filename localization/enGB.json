@@ -10,6 +10,32 @@
                 "title": "Multiplayer Lobby"
             }
         },
+        "multiplaterWindow": {
+            "hostMenu": {
+                "title": "Host",
+                "hostButton": {
+                    "hostText": "Host",
+                    "selectSaveText": "Select Save"
+                },
+                "readyButton": {
+                    "readyText": "Ready",
+                    "notReadyText": "Not Ready"
+                },
+                "startButton": "Start"
+            },
+            "joinMenu": {
+                "title": "Join",
+                "joinButton": "Join",
+                "readyButton": {
+                    "readyText": "Ready",
+                    "notReadyText": "Not Ready"
+                },
+                "leaveButton": "Leave",
+                "serverAddress": {
+                    "placeholder": "Enter ip:port"
+                }
+            }
+        },
         "settings": {
             "title": "Multiplayer",
             "general": {

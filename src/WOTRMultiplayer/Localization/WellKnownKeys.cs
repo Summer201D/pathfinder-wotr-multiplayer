@@ -40,6 +40,107 @@ namespace WOTRMultiplayer.Localization
             }
         }
 
+        [Description("multiplaterWindow")]
+        public static class MultiplayerWindow
+        {
+            [Description("hostMenu")]
+            public static class HostTab
+            {
+                [Description("title")]
+                public static class Title
+                {
+                    public static string Key { get; set; }
+                }
+
+                [Description("hostButton")]
+                public static class HostButton
+                {
+
+                    [Description("hostText")]
+                    public static class HostText
+                    {
+                        public static string Key { get; set; }
+                    }
+
+                    [Description("selectSaveText")]
+                    public static class SelectSaveText
+                    {
+                        public static string Key { get; set; }
+                    }
+                }
+
+                [Description("readyButton")]
+                public static class ReadyButton
+                {
+                    [Description("readyText")]
+                    public static class ReadyText
+                    {
+                        public static string Key { get; set; }
+                    }
+
+                    [Description("notReadyText")]
+                    public static class NotReadyText
+                    {
+                        public static string Key { get; set; }
+                    }
+                }
+
+                [Description("startButton")]
+                public static class StartButton
+                {
+                    public static string Key { get; set; }
+                }
+            }
+
+            [Description("joinMenu")]
+            public static class JoinTab
+            {
+                [Description("title")]
+                public static class Title
+                {
+                    public static string Key { get; set; }
+                }
+
+                [Description("joinButton")]
+                public static class JoinButton
+                {
+                    public static string Key { get; set; }
+                }
+
+                [Description("readyButton")]
+                public static class ReadyButton
+                {
+                    [Description("readyText")]
+                    public static class ReadyText
+                    {
+                        public static string Key { get; set; }
+                    }
+
+                    [Description("notReadyText")]
+                    public static class NotReadyText
+                    {
+                        public static string Key { get; set; }
+                    }
+                }
+
+                [Description("leaveButton")]
+                public static class LeaveButton
+                {
+                    public static string Key { get; set; }
+                }
+
+                [Description("serverAddress")]
+                public static class ServerAddress
+                {
+                    [Description("placeholder")]
+                    public static class Placeholder
+                    {
+                        public static string Key { get; set; }
+                    }
+                }
+            }
+        }
+
         [Description("mainMenu")]
         public static class MainMenu
         {

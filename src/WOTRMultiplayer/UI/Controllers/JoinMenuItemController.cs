@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using Kingmaker.Localization;
 using Kingmaker.PubSubSystem;
 using Kingmaker.UI;
 using Microsoft.Extensions.Logging;
@@ -12,6 +13,7 @@ using WOTRMultiplayer.Abstractions.UI.Controllers;
 using WOTRMultiplayer.Abstractions.UI.Controllers.Menu;
 using WOTRMultiplayer.Abstractions.Unity;
 using WOTRMultiplayer.Extensions;
+using WOTRMultiplayer.Localization;
 using WOTRMultiplayer.MP.Entities;
 using WOTRMultiplayer.UI.Menu;
 
@@ -140,7 +142,7 @@ namespace WOTRMultiplayer.UI.Controllers
         protected override void InitializeInternal(GameObject baseLayout)
         {
             var label = MenuItem.GetComponentInChildren<TextMeshProUGUI>();
-            label.SetText(UIStringConsts.MultiplayerWindow.JoinMenuLabel);
+            label.SetText(new LocalizedString { Key = WellKnownKeys.MultiplayerWindow.JoinTab.Title.Key });
 
             _menuContent = Object.Instantiate(baseLayout, baseLayout.transform);
             _menuContent.name = JoinMenuItemContentObjectName;
@@ -178,7 +180,7 @@ namespace WOTRMultiplayer.UI.Controllers
             serverInfoInputObject.name = ServerAddressInputObjectName;
             var serverPlaceholder = serverInfoInputObject.transform.Find(UIFactory.InputPlaceholderObjectName);
             var serverPlaceholderInput = serverPlaceholder.GetComponent<TextMeshProUGUI>();
-            serverPlaceholderInput.SetText(UIStringConsts.MultiplayerWindow.JoinMenu.ServerInputPlaceholder);
+            serverPlaceholderInput.SetText(new LocalizedString { Key = WellKnownKeys.MultiplayerWindow.JoinTab.ServerAddress.Placeholder.Key });
             serverPlaceholderInput.alignment = TextAlignmentOptions.Center;
             var serverInfoInputLabelObject = serverInfoInputObject.transform.Find(UIFactory.InputLabelObjectName);
             var serverInfoInput = serverInfoInputLabelObject.GetComponent<TextMeshProUGUI>();
@@ -190,7 +192,7 @@ namespace WOTRMultiplayer.UI.Controllers
             var joinLobbyButtonObjectLayout = joinLobbyButtonObject.AddComponent<LayoutElement>();
             joinLobbyButtonObjectLayout.preferredWidth = menuContentRect.sizeDelta.x * 0.35f;
             joinLobbyButtonObject.AddComponent<ContentSizeFitter>().horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
-            joinLobbyButtonObject.GetComponentInChildren<TextMeshProUGUI>().SetText(UIStringConsts.MultiplayerWindow.JoinMenu.JoinButtonLabel);
+            joinLobbyButtonObject.GetComponentInChildren<TextMeshProUGUI>().SetText(new LocalizedString { Key = WellKnownKeys.MultiplayerWindow.JoinTab.JoinButton.Key });
             var button = joinLobbyButtonObject.GetComponent<OwlcatButton>();
             button.OnLeftClick.AddListener(OnJoinButtonClicked);
 
@@ -215,7 +217,7 @@ namespace WOTRMultiplayer.UI.Controllers
             var leaveButtonObjectLayout = leaveButtonObject.AddComponent<LayoutElement>();
             leaveButtonObjectLayout.preferredWidth = menuContentRect.sizeDelta.x * 0.2f;
             leaveButtonObject.AddComponent<ContentSizeFitter>().horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
-            leaveButtonObject.GetComponentInChildren<TextMeshProUGUI>().SetText(UIStringConsts.MultiplayerWindow.JoinMenu.LeaveButtonLabel);
+            leaveButtonObject.GetComponentInChildren<TextMeshProUGUI>().SetText(new LocalizedString { Key = WellKnownKeys.MultiplayerWindow.JoinTab.LeaveButton.Key });
             var leaveButton = leaveButtonObject.GetComponent<OwlcatButton>();
             leaveButton.OnLeftClick.AddListener(OnLeaveButtonClicked);
         }
@@ -267,8 +269,8 @@ namespace WOTRMultiplayer.UI.Controllers
         private void OnReadyButtonClicked()
         {
             var isReady = _multiplayerClient.ReadyChanged();
-            var label = isReady ? UIStringConsts.MultiplayerWindow.HostMenu.ReadyButtonLabel
-                : UIStringConsts.MultiplayerWindow.HostMenu.ReadyNotReadyButtonLabel;
+            var label = isReady ? new LocalizedString { Key = WellKnownKeys.MultiplayerWindow.JoinTab.ReadyButton.ReadyText.Key }
+                : new LocalizedString { Key = WellKnownKeys.MultiplayerWindow.JoinTab.ReadyButton.NotReadyText.Key };
             ReadyButtonObject.GetComponentInChildren<TextMeshProUGUI>().SetText(label);
         }
 
@@ -281,7 +283,7 @@ namespace WOTRMultiplayer.UI.Controllers
         {
             MainThreadAccessor.Post(() =>
             {
-                ReadyButtonObject.GetComponentInChildren<TextMeshProUGUI>().SetText(UIStringConsts.MultiplayerWindow.HostMenu.ReadyNotReadyButtonLabel);
+                ReadyButtonObject.GetComponentInChildren<TextMeshProUGUI>().SetText(new LocalizedString { Key = WellKnownKeys.MultiplayerWindow.JoinTab.ReadyButton.NotReadyText.Key });
 
                 JoinLobbyControlsObject.SetActive(false);
                 LobbyControls.SetActive(true);
