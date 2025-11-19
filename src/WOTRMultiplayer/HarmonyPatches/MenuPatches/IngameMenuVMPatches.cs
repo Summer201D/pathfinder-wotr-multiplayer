@@ -1,7 +1,7 @@
 ﻿using HarmonyLib;
 using Kingmaker.UI.MVVM._VM.IngameMenu;
 
-namespace WOTRMultiplayer.HarmonyPatches.Settings
+namespace WOTRMultiplayer.HarmonyPatches.MenuPatches
 {
     [HarmonyPatch]
     public class IngameMenuVMPatches

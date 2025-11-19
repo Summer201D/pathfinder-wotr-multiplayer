@@ -43,6 +43,9 @@ namespace WOTRMultiplayer.UnitTests.Localization
             yield return new WellKnownKeyTestCase { Name = "settings->dangerZone->defaultForcedPause->tooltip", Key = () => WellKnownKeys.Settings.DangerZone.DefaultForcedPauseTimeout.Tooltip.Key };
             yield return new WellKnownKeyTestCase { Name = "settings->dangerZone->restEncounterForcedPause->title", Key = () => WellKnownKeys.Settings.DangerZone.RestEncounterForcedPauseTimeout.Title.Key };
             yield return new WellKnownKeyTestCase { Name = "settings->dangerZone->restEncounterForcedPause->tooltip", Key = () => WellKnownKeys.Settings.DangerZone.RestEncounterForcedPauseTimeout.Tooltip.Key };
+
+            yield return new WellKnownKeyTestCase { Name = "escMenu->multiplayerLobby->title", Key = () => WellKnownKeys.EscMenu.MultiplayerLobby.Title.Key };
+            yield return new WellKnownKeyTestCase { Name = "mainMenu->multiplaye->title", Key = () => WellKnownKeys.MainMenu.Multiplayer.Title.Key };
         }
     }
 }

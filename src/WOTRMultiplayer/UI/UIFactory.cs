@@ -245,7 +245,7 @@ namespace WOTRMultiplayer.UI
             multiplayerWindow.Initialize();
 
             CreateBackgroundArt(multiplayerWindow.transform.Find("BackgroundGroup"));
-            var text = UIUtility.GetSaberBookFormat(UIStringConsts.MainMenu.MultiplayerMenu);
+            var text = UIUtility.GetSaberBookFormat(new LocalizedString { Key = WellKnownKeys.MainMenu.Multiplayer.Title.Key });
             var viewModel = new ContextMenuEntityVM(new ContextMenuCollectionEntity(UIUtility.GetSaberBookFormat(text), onShow));
             multiplayerMenuView.Bind(viewModel);
 
@@ -302,7 +302,7 @@ namespace WOTRMultiplayer.UI
             multiplayerMenu.name = MultiplayerMenuObjectName;
             var textObject = multiplayerMenu.transform.Find("Text");
             UnityEngine.Object.DestroyImmediate(textObject.GetComponent<LocalizedUIText>());
-            textObject.GetComponent<TextMeshProUGUI>().SetText(UIStringConsts.EscMenu.LobbyMenuItemTitle);
+            textObject.GetComponent<TextMeshProUGUI>().SetText(new LocalizedString { Key = WellKnownKeys.EscMenu.MultiplayerLobby.Title.Key });
 
             var windowContainer = CreateDefaultGameObject(context.View.transform.parent);
             // Backgroud - n is missing in the game object name

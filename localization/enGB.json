@@ -1,5 +1,15 @@
 {
     "wotrmultiplayer": {
+        "mainMenu": {
+            "multiplayer": {
+                "title": "Multiplayer"
+            }
+        },
+        "escMenu": {
+            "multiplayerLobby": {
+                "title": "Multiplayer Lobby"
+            }
+        },
         "settings": {
             "title": "Multiplayer",
             "general": {

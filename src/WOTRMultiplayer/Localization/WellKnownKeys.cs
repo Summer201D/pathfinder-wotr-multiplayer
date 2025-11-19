@@ -40,6 +40,34 @@ namespace WOTRMultiplayer.Localization
             }
         }
 
+        [Description("mainMenu")]
+        public static class MainMenu
+        {
+            [Description("multiplayer")]
+            public static class Multiplayer
+            {
+                [Description("title")]
+                public static class Title
+                {
+                    public static string Key { get; set; }
+                }
+            }
+        }
+
+        [Description("escMenu")]
+        public static class EscMenu
+        {
+            [Description("multiplayerLobby")]
+            public static class MultiplayerLobby
+            {
+                [Description("title")]
+                public static class Title
+                {
+                    public static string Key { get; set; }
+                }
+            }
+        }
+
         [Description("settings")]
         public static class Settings
         {
