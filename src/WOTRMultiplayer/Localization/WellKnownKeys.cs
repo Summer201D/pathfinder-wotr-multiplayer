@@ -40,6 +40,34 @@ namespace WOTRMultiplayer.Localization
             }
         }
 
+        [Description("mainMenu")]
+        public static class MainMenu
+        {
+            [Description("multiplayer")]
+            public static class Multiplayer
+            {
+                [Description("title")]
+                public static class Title
+                {
+                    public static string Key { get; set; }
+                }
+            }
+        }
+
+        [Description("escMenu")]
+        public static class EscMenu
+        {
+            [Description("multiplayerLobby")]
+            public static class MultiplayerLobby
+            {
+                [Description("title")]
+                public static class Title
+                {
+                    public static string Key { get; set; }
+                }
+            }
+        }
+
         [Description("multiplaterWindow")]
         public static class MultiplayerWindow
         {
@@ -141,11 +169,11 @@ namespace WOTRMultiplayer.Localization
             }
         }
 
-        [Description("mainMenu")]
-        public static class MainMenu
+        [Description("lobbyWindow")]
+        public static class LobbyWindow
         {
-            [Description("multiplayer")]
-            public static class Multiplayer
+            [Description("server")]
+            public static class Server
             {
                 [Description("title")]
                 public static class Title
@@ -153,13 +181,19 @@ namespace WOTRMultiplayer.Localization
                     public static string Key { get; set; }
                 }
             }
-        }
 
-        [Description("escMenu")]
-        public static class EscMenu
-        {
-            [Description("multiplayerLobby")]
-            public static class MultiplayerLobby
+            [Description("players")]
+            public static class Players
+            {
+                [Description("title")]
+                public static class Title
+                {
+                    public static string Key { get; set; }
+                }
+            }
+
+            [Description("characters")]
+            public static class Characters
             {
                 [Description("title")]
                 public static class Title

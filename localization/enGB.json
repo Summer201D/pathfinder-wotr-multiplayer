@@ -36,6 +36,17 @@
                 }
             }
         },
+        "lobbyWindow": {
+            "server": {
+                "title": "Server"
+            },
+            "players": {
+                "title": "Players"
+            },
+            "characters": {
+                "title": "Characters"
+            }
+        },
         "settings": {
             "title": "Multiplayer",
             "general": {

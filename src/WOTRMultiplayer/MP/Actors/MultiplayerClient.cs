@@ -79,24 +79,24 @@ namespace WOTRMultiplayer.MP.Actors
             _networkClient = networkClient;
         }
 
-        public ConnectLobbyResult Connect(string address)
+        public AddressParseResult Connect(string address)
         {
             var endpoint = _ipEndPointParser.Parse(address);
             if (endpoint == null)
             {
-                return ConnectLobbyResult.Error(UIStringConsts.MultiplayerClient.Errors.InvalidIP);
+                return AddressParseResult.Error(UIStringConsts.MultiplayerClient.Errors.InvalidIP);
             }
 
             if (endpoint.Port == 0)
             {
-                return ConnectLobbyResult.Error(UIStringConsts.MultiplayerClient.Errors.InvalidPort);
+                return AddressParseResult.Error(UIStringConsts.MultiplayerClient.Errors.InvalidPort);
             }
 
             SetupNetworkMessageHandlers();
 
             _networkClient.ConnectAsync(endpoint.Address.ToString(), endpoint.Port);
 
-            return ConnectLobbyResult.Ok();
+            return AddressParseResult.Ok();
         }
 
         public bool ReadyChanged()

@@ -29,13 +29,6 @@
             }
         }
 
-        public class LobbyInfoWindow
-        {
-            public const string ServerInfoSectionTitle = "Server";
-            public const string PlayersSectionTitle = "Players";
-            public const string CharactersSectionTitle = "Characters";
-        }
-
         public class GameNotifications
         {
             public const string TryingToSetUpCampAsAClient = "Camp can be placed by the host only";

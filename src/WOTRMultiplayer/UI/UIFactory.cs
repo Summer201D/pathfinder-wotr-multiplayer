@@ -457,7 +457,7 @@ namespace WOTRMultiplayer.UI
             serverInfoTitle.material = _defaultTextMesh.Material;
             serverInfoTitle.color = _defaultTextMesh.Color;
             serverInfoTitle.horizontalAlignment = HorizontalAlignmentOptions.Center;
-            serverInfoTitle.SetText(UIUtility.GetSaberBookFormat(UIStringConsts.LobbyInfoWindow.ServerInfoSectionTitle));
+            serverInfoTitle.SetText(UIUtility.GetSaberBookFormat(new LocalizedString { Key = WellKnownKeys.LobbyWindow.Server.Title.Key }));
 
             var serverInfoSectionContentObject = CreateDefaultGameObject(serverInfoSectionObject.transform);
             serverInfoSectionContentObject.name = LobbyWindowController.ServerInfoSectionContentObjectName;
@@ -482,7 +482,7 @@ namespace WOTRMultiplayer.UI
             playersTitle.material = _defaultTextMesh.Material;
             playersTitle.color = _defaultTextMesh.Color;
             playersTitle.horizontalAlignment = HorizontalAlignmentOptions.Center;
-            playersTitle.SetText(UIUtility.GetSaberBookFormat(UIStringConsts.LobbyInfoWindow.PlayersSectionTitle));
+            playersTitle.SetText(UIUtility.GetSaberBookFormat(new LocalizedString { Key = WellKnownKeys.LobbyWindow.Players.Title.Key }));
 
             var playersSectionContentObject = CreateDefaultGameObject(playersSectionObject.transform);
             playersSectionContentObject.name = LobbyWindowController.PlayersSectionContentObjectName;
@@ -507,7 +507,7 @@ namespace WOTRMultiplayer.UI
             characterControlTitle.material = _defaultTextMesh.Material;
             characterControlTitle.color = _defaultTextMesh.Color;
             characterControlTitle.horizontalAlignment = HorizontalAlignmentOptions.Center;
-            characterControlTitle.SetText(UIUtility.GetSaberBookFormat(UIStringConsts.LobbyInfoWindow.CharactersSectionTitle));
+            characterControlTitle.SetText(UIUtility.GetSaberBookFormat(new LocalizedString { Key = WellKnownKeys.LobbyWindow.Characters.Title.Key }));
             var charactersSectionContentObject = CreateDefaultGameObject(charactersSectionObject.transform);
             charactersSectionContentObject.name = LobbyWindowController.CharactersSectionContentObjectName;
             charactersSectionContentObject.AddComponent<HorizontalLayoutGroup>();

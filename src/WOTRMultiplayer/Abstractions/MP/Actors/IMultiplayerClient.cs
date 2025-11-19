@@ -6,7 +6,7 @@ namespace WOTRMultiplayer.Abstractions.MP.Actors
 {
     public interface IMultiplayerClient : IMultiplayerActor
     {
-        ConnectLobbyResult Connect(string address);
+        AddressParseResult Connect(string address);
 
         bool IsConnecting { get; }
 

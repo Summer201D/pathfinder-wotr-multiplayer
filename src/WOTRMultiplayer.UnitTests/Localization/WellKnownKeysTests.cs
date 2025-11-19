@@ -60,6 +60,10 @@ namespace WOTRMultiplayer.UnitTests.Localization
             yield return new WellKnownKeyTestCase { Name = "multiplayerWindow->joinMenu->readyButton->notReadyText", Key = () => WellKnownKeys.MultiplayerWindow.JoinMenu.ReadyButton.NotReadyText.Key };
             yield return new WellKnownKeyTestCase { Name = "multiplayerWindow->joinMenu->leaveButton->title", Key = () => WellKnownKeys.MultiplayerWindow.JoinMenu.LeaveButton.Key };
             yield return new WellKnownKeyTestCase { Name = "multiplayerWindow->joinMenu->serverAddress->placeholder", Key = () => WellKnownKeys.MultiplayerWindow.JoinMenu.ServerAddress.Placeholder.Key };
+
+            yield return new WellKnownKeyTestCase { Name = "lobbyWindow->server->title", Key = () => WellKnownKeys.LobbyWindow.Server.Title.Key };
+            yield return new WellKnownKeyTestCase { Name = "lobbyWindow->players->title", Key = () => WellKnownKeys.LobbyWindow.Players.Title.Key };
+            yield return new WellKnownKeyTestCase { Name = "lobbyWindow->characters->title", Key = () => WellKnownKeys.LobbyWindow.Characters.Title.Key };
         }
     }
 }
