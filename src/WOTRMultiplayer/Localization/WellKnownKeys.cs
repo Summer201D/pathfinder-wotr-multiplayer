@@ -44,7 +44,7 @@ namespace WOTRMultiplayer.Localization
         public static class MultiplayerWindow
         {
             [Description("hostMenu")]
-            public static class HostTab
+            public static class HostMenu
             {
                 [Description("title")]
                 public static class Title
@@ -93,7 +93,7 @@ namespace WOTRMultiplayer.Localization
             }
 
             [Description("joinMenu")]
-            public static class JoinTab
+            public static class JoinMenu
             {
                 [Description("title")]
                 public static class Title

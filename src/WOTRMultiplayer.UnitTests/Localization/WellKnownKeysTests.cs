@@ -47,19 +47,19 @@ namespace WOTRMultiplayer.UnitTests.Localization
             yield return new WellKnownKeyTestCase { Name = "mainMenu->multiplaye->title", Key = () => WellKnownKeys.MainMenu.Multiplayer.Title.Key };
             yield return new WellKnownKeyTestCase { Name = "escMenu->multiplayerLobby->title", Key = () => WellKnownKeys.EscMenu.MultiplayerLobby.Title.Key };
 
-            yield return new WellKnownKeyTestCase { Name = "multiplayerWindow->hostMenu->title", Key = () => WellKnownKeys.MultiplayerWindow.HostTab.Title.Key };
-            yield return new WellKnownKeyTestCase { Name = "multiplayerWindow->hostMenu->hostButton->hostText", Key = () => WellKnownKeys.MultiplayerWindow.HostTab.HostButton.HostText.Key };
-            yield return new WellKnownKeyTestCase { Name = "multiplayerWindow->hostMenu->hostButton->selectSaveText", Key = () => WellKnownKeys.MultiplayerWindow.HostTab.HostButton.SelectSaveText.Key };
-            yield return new WellKnownKeyTestCase { Name = "multiplayerWindow->hostMenu->readyButton->readyText", Key = () => WellKnownKeys.MultiplayerWindow.HostTab.ReadyButton.ReadyText.Key };
-            yield return new WellKnownKeyTestCase { Name = "multiplayerWindow->hostMenu->readyButton->notReadyText", Key = () => WellKnownKeys.MultiplayerWindow.HostTab.ReadyButton.NotReadyText.Key };
-            yield return new WellKnownKeyTestCase { Name = "multiplayerWindow->hostMenu->startButton->title", Key = () => WellKnownKeys.MultiplayerWindow.HostTab.StartButton.Key };
+            yield return new WellKnownKeyTestCase { Name = "multiplayerWindow->hostMenu->title", Key = () => WellKnownKeys.MultiplayerWindow.HostMenu.Title.Key };
+            yield return new WellKnownKeyTestCase { Name = "multiplayerWindow->hostMenu->hostButton->hostText", Key = () => WellKnownKeys.MultiplayerWindow.HostMenu.HostButton.HostText.Key };
+            yield return new WellKnownKeyTestCase { Name = "multiplayerWindow->hostMenu->hostButton->selectSaveText", Key = () => WellKnownKeys.MultiplayerWindow.HostMenu.HostButton.SelectSaveText.Key };
+            yield return new WellKnownKeyTestCase { Name = "multiplayerWindow->hostMenu->readyButton->readyText", Key = () => WellKnownKeys.MultiplayerWindow.HostMenu.ReadyButton.ReadyText.Key };
+            yield return new WellKnownKeyTestCase { Name = "multiplayerWindow->hostMenu->readyButton->notReadyText", Key = () => WellKnownKeys.MultiplayerWindow.HostMenu.ReadyButton.NotReadyText.Key };
+            yield return new WellKnownKeyTestCase { Name = "multiplayerWindow->hostMenu->startButton->title", Key = () => WellKnownKeys.MultiplayerWindow.HostMenu.StartButton.Key };
 
-            yield return new WellKnownKeyTestCase { Name = "multiplayerWindow->joinMenu->title", Key = () => WellKnownKeys.MultiplayerWindow.JoinTab.Title.Key };
-            yield return new WellKnownKeyTestCase { Name = "multiplayerWindow->joinMenu->hostButton->title", Key = () => WellKnownKeys.MultiplayerWindow.JoinTab.JoinButton.Key };
-            yield return new WellKnownKeyTestCase { Name = "multiplayerWindow->joinMenu->readyButton->readyText", Key = () => WellKnownKeys.MultiplayerWindow.JoinTab.ReadyButton.ReadyText.Key };
-            yield return new WellKnownKeyTestCase { Name = "multiplayerWindow->joinMenu->readyButton->notReadyText", Key = () => WellKnownKeys.MultiplayerWindow.JoinTab.ReadyButton.NotReadyText.Key };
-            yield return new WellKnownKeyTestCase { Name = "multiplayerWindow->joinMenu->leaveButton->title", Key = () => WellKnownKeys.MultiplayerWindow.JoinTab.LeaveButton.Key };
-            yield return new WellKnownKeyTestCase { Name = "multiplayerWindow->joinMenu->serverAddress->placeholder", Key = () => WellKnownKeys.MultiplayerWindow.JoinTab.ServerAddress.Placeholder.Key };
+            yield return new WellKnownKeyTestCase { Name = "multiplayerWindow->joinMenu->title", Key = () => WellKnownKeys.MultiplayerWindow.JoinMenu.Title.Key };
+            yield return new WellKnownKeyTestCase { Name = "multiplayerWindow->joinMenu->hostButton->title", Key = () => WellKnownKeys.MultiplayerWindow.JoinMenu.JoinButton.Key };
+            yield return new WellKnownKeyTestCase { Name = "multiplayerWindow->joinMenu->readyButton->readyText", Key = () => WellKnownKeys.MultiplayerWindow.JoinMenu.ReadyButton.ReadyText.Key };
+            yield return new WellKnownKeyTestCase { Name = "multiplayerWindow->joinMenu->readyButton->notReadyText", Key = () => WellKnownKeys.MultiplayerWindow.JoinMenu.ReadyButton.NotReadyText.Key };
+            yield return new WellKnownKeyTestCase { Name = "multiplayerWindow->joinMenu->leaveButton->title", Key = () => WellKnownKeys.MultiplayerWindow.JoinMenu.LeaveButton.Key };
+            yield return new WellKnownKeyTestCase { Name = "multiplayerWindow->joinMenu->serverAddress->placeholder", Key = () => WellKnownKeys.MultiplayerWindow.JoinMenu.ServerAddress.Placeholder.Key };
         }
     }
 }
