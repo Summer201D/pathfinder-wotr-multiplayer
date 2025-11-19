@@ -3,7 +3,6 @@ using TMPro;
 using UniRx;
 using UnityEngine;
 using UnityEngine.UI;
-using WOTRMultiplayer.HarmonyPatches.MenuPatches;
 
 namespace WOTRMultiplayer.UI.Settings
 {
@@ -19,7 +18,7 @@ namespace WOTRMultiplayer.UI.Settings
         {
             base.BindViewImplementation();
 
-            // restoring references since everything is detached due to object cloning
+            // restoring references since everything is detached
             m_HighlightedImage = this.gameObject.transform.Find("HighlightedImage").GetComponent<Image>();
             m_Title = this.gameObject.transform.Find("HorizontalLayoutGroup/Text").GetComponent<TextMeshProUGUI>();
             m_MarkImage = this.gameObject.transform.Find("HorizontalLayoutGroup/PointGroup/MarkImage").GetComponent<Image>();
