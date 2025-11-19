@@ -1,7 +1,6 @@
 ﻿using Kingmaker.UI.MVVM._VM.Settings.Entities;
 using Kingmaker.UI.SettingsUI;
 using UniRx;
-using WOTRMultiplayer.HarmonyPatches.MenuPatches;
 
 namespace WOTRMultiplayer.UI.Settings
 {
