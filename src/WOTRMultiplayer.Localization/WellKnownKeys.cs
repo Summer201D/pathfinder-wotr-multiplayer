@@ -1,5 +1,6 @@
-/* Manual changes will be discarded since this is a compile time generated file based on default localization file (enGB.json).
-Refer to WOTRMultiplayer.Localization.Generator project for more details on generation */
+/* This is a compile-time generated file based on the default localization file (enGB.json).
+Any manual modifications are not persisted.
+Refer to WOTRMultiplayer.Localization.Generator project for more details */
 using System.ComponentModel;
 
 [Description("wotrmultiplayer")]

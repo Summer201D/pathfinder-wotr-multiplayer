@@ -110,7 +110,7 @@ namespace WOTRMultiplayer.Localization.Generator
             fullTree = fullTree.WithIdentifier(SyntaxFactory.Identifier(OutputClassName)).WithAttributeLists(CreateDescriptionAttribute(RootName));
             unit = unit.AddMembers(fullTree);
 
-            var comment = SyntaxFactory.Comment($"/* Manual changes will be discarded since this is a compile time generated file based on default localization file ({DefaultLocalizationFileName}).{Environment.NewLine}Refer to {Assembly.GetExecutingAssembly().GetName().Name} project for more details on generation */");
+            var comment = SyntaxFactory.Comment($"/* This is a compile-time generated file based on the default localization file ({DefaultLocalizationFileName}).{Environment.NewLine}Any manual modifications are not persisted.{Environment.NewLine}Refer to {Assembly.GetExecutingAssembly().GetName().Name} project for more details */");
             unit = unit.WithLeadingTrivia(comment);
             using var writer = new StreamWriter(outputFile, append: false);
             var sourceCode = unit.NormalizeWhitespace().ToFullString();
