@@ -7,7 +7,6 @@ using Kingmaker.Designers;
 using Kingmaker.EntitySystem.Entities;
 using Kingmaker.EntitySystem.Stats;
 using Kingmaker.Inspect;
-using Kingmaker.UnitLogic.Parts;
 using Microsoft.Extensions.Logging;
 using WOTRMultiplayer.MP.Entities.Inspect;
 

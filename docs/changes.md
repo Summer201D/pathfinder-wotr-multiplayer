@@ -180,9 +180,9 @@ Some rules for the leveling screen:
 TBD
 
 ## Entity ID Generation 
-The game originally used a single counter to generate new entity IDs (for characters, area effects, facts, map objects, etc.), which often caused desyncs. Now it uses a "consistent" generator that considers the current game state (gameId, location, etc.), so IDs mostly match across all multiplayer players.
+The game originally used a single counter to generate new entity IDs (for characters, area effects, facts, map objects, etc.), however this approach didn't work well in network environment. Now it uses a "consistent" generator that considers the current game state (gameId, location, etc.), so IDs should match across all multiplayer players.
 
-The tricky part is ItemId generation - stacking or splitting items creates new IDs locally. Fully syncing that (plus inventory positions) would be a lot of work for almost no benefit. Instead, any network item action (like dropping an item or looting a container) just falls back to matching the item by everything except its UniqueId. In short, the mod just looks for 'the exact same item' and applies the action to it.
+The tricky part is `Item.UniqueId` generation - stacking or splitting items creates new IDs locally. Fully syncing that (plus inventory positions) would be a lot of work for almost no benefit. Instead, any network item action (like dropping an item or looting a container) just falls back to matching the item by everything except its `UniqueId`. In short, the mod just looks for 'the exact same item' and applies the action to it.
 
 ## How to deal with desync
 If a roll doesn't come through for some reason, you will get a stutter and a popup warning. In that case, the roll will be rolled locally, which might lead to different results.

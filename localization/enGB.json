@@ -23,7 +23,7 @@
                 },
                 "startButton": "Start",
                 "deactivation": {
-                    "hosting": "You are currently hosting a game. Proceeding with this action will result in game termination."
+                    "hosting": "You are about to end the multiplayer session. Are you sure?"
                 }
             },
             "joinMenu": {
@@ -38,7 +38,7 @@
                     "placeholder": "Enter ip:port"
                 },
                 "deactivation": {
-                    "connected": "You are currently in a game. Proceeding with this action will result in leaving it",
+                    "connected": "You are about to leave the multiplayer session. Are you sure?",
                     "connecting": "Can't leave while connecting.\nPlease wait"
                 }
             }
