@@ -58,7 +58,7 @@ namespace WOTRMultiplayer.Abstractions.MP.Actors
 
         bool StartDialog(string dialogName, string targetUnitId, string initiatorUnitId, string mapObjectId, string speakerKey);
 
-        void PartyChanged();
+        void UpdateCharactersOwnership();
 
         void CombatStarted();
 

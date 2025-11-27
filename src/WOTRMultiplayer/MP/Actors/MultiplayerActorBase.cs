@@ -14,7 +14,6 @@ using WOTRMultiplayer.Abstractions.IO;
 using WOTRMultiplayer.Abstractions.MP;
 using WOTRMultiplayer.Abstractions.Random;
 using WOTRMultiplayer.Abstractions.Settings;
-using WOTRMultiplayer.Localization;
 using WOTRMultiplayer.MP.Entities;
 using WOTRMultiplayer.MP.Entities.ActionBar;
 using WOTRMultiplayer.MP.Entities.Combat;
@@ -362,7 +361,7 @@ namespace WOTRMultiplayer.MP.Actors
 
             SoftReset();
 
-            PartyChanged();
+            UpdateCharactersOwnership();
 
             lock (ActionLock)
             {
@@ -376,7 +375,7 @@ namespace WOTRMultiplayer.MP.Actors
         /// <summary>
         /// Reloads current party characters and tries to merge ownership
         /// </summary>
-        public void PartyChanged()
+        public void UpdateCharactersOwnership()
         {
             Logger.LogInformation("Updating current characters & merging ownership");
 
@@ -387,22 +386,34 @@ namespace WOTRMultiplayer.MP.Actors
                 return;
             }
 
-            var oldCharacters = Game.Characters.ToList();
+            List<NetworkCharacterOwnership> oldCharacters = [.. Game.Characters];
             Game.Characters = [.. partyCharacters];
             var defaultOwner = GetPlayer(NetworkingConsts.HostPlayerId);
             foreach (var character in Game.Characters)
             {
-                var existingOwnershipConfiguration = oldCharacters.FirstOrDefault(old =>
-                    old.Name == character.Name || old.Name.Contains(character.Name));
+                if (Game.CharactersOwnershipHistory.TryGetValue(character.UnitId, out var playerId))
+                {
+                    var player = GetPlayer(playerId) ?? defaultOwner;
+                    character.Owner = player;
+                    UpdateCharacterOwnershipHistory(character);
+                    Logger.LogInformation("Character ownership has been updated. UnitId={UnitId}, CharacterName={CharacterName}, Owner={Owner}", character.UnitId, character.Name, character.Owner.Id);
+                    continue;
+                }
 
+                Logger.LogInformation("Processing character with no ownership history. CharacterName={CharacterName}", character.Name);
+
+                // either no history (new char) or first load of multiplayer game (there is no access to UnitIds so we have to match characters by Name (usually it's PortraitName)
+                var existingOwnershipConfiguration = oldCharacters.FirstOrDefault(old => old.Name == character.Name || old.Name.Contains(character.Name));
                 if (existingOwnershipConfiguration?.Owner != null)
                 {
                     character.Owner = existingOwnershipConfiguration.Owner;
+                    UpdateCharacterOwnershipHistory(character);
                     Logger.LogInformation("Character ownership has been preserved. UnitId={UnitId}, CharacterName={CharacterName}, Owner={Owner}", character.UnitId, character.Name, character.Owner.Id);
                     continue;
                 }
 
                 character.Owner = defaultOwner;
+                UpdateCharacterOwnershipHistory(character);
                 Logger.LogInformation("Character ownership has been assigned to default player (host). UnitId={UnitId}, CharacterName={CharacterName}, Owner={Owner}", character.UnitId, character.Name, character.Owner.Id);
             }
         }
@@ -1451,6 +1462,17 @@ namespace WOTRMultiplayer.MP.Actors
 
                 OnPlayersChanged?.Invoke(Game.Players);
             }
+        }
+
+        protected void UpdateCharacterOwnershipHistory(NetworkCharacterOwnership ownership)
+        {
+            if (!Game.CharactersOwnershipHistory.TryGetValue(ownership.UnitId, out var playerId) || playerId == ownership.Owner.Id)
+            {
+                return;
+            }
+
+            Game.CharactersOwnershipHistory[ownership.UnitId] = ownership.Owner.Id;
+            Logger.LogInformation("Character ownership hisory has been updated. CharacterUnitId={CharacterUnitId}, PlayerId={PlayerId}", ownership.UnitId, ownership.Owner.Id);
         }
 
         protected virtual void SetupNetworkMessageHandlers()

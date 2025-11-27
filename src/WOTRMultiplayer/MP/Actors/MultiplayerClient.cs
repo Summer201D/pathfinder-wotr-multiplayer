@@ -15,7 +15,6 @@ using WOTRMultiplayer.Abstractions.MP.Actors;
 using WOTRMultiplayer.Abstractions.Random;
 using WOTRMultiplayer.Abstractions.Settings;
 using WOTRMultiplayer.GameInteraction.Contexts;
-using WOTRMultiplayer.Localization;
 using WOTRMultiplayer.MP.Entities;
 using WOTRMultiplayer.MP.Entities.Combat;
 using WOTRMultiplayer.MP.Entities.Dialogs;
@@ -954,8 +953,10 @@ namespace WOTRMultiplayer.MP.Actors
         private void OnNotifyGameCharactersChanged(long playerId, NotifyGameCharactersChanged changed)
         {
             Logger.LogInformation("Received {MessageType}. Portraits={Portraits}", nameof(NotifyGameCharactersChanged), string.Join(";", changed.Characters.Select(c => c.Portrait)));
+
+            var characters = Mapper.Map<List<NetworkCharacterOwnership>>(changed.Characters);
             Game.Characters.Clear();
-            Game.Characters.AddRange(changed.Characters.Select(c => new NetworkCharacterOwnership { Name = c.Name, Portrait = c.Portrait }));
+            Game.Characters.AddRange(characters);
             OnGameCharactersChanged?.Invoke(Game.Characters);
         }
 

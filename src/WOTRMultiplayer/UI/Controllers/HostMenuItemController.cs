@@ -20,7 +20,6 @@ using WOTRMultiplayer.Abstractions.UI.Controllers;
 using WOTRMultiplayer.Abstractions.UI.Controllers.Menu;
 using WOTRMultiplayer.Abstractions.Unity;
 using WOTRMultiplayer.Extensions;
-using WOTRMultiplayer.Localization;
 using WOTRMultiplayer.MP.Entities;
 using WOTRMultiplayer.UI.Menu;
 
@@ -216,7 +215,6 @@ namespace WOTRMultiplayer.UI.Controllers
 
         private void OnHostButtonClicked()
         {
-            _logger.LogInformation("OnHostButton");
             var selectedSave = _saveLoadViewModel.SelectedSaveSlot.Value;
             var gameName = selectedSave.SaveName.Value;
             var titleText = UIUtility.GetSaberBookFormat(gameName);
@@ -235,10 +233,12 @@ namespace WOTRMultiplayer.UI.Controllers
                 ReadyButton.Interactable = true;
                 _multiplayerHost.Create(savePath, selectedSave.GameId.Value, characters);
                 SetButtonLabel(HostButtonObject, new LocalizedString { Key = WellKnownKeys.MultiplayerWindow.HostMenu.HostButton.SelectSaveText.Key });
+                _logger.LogInformation("Hosted new game");
                 return;
             }
 
             _multiplayerHost.UpdateSaveGame(savePath, selectedSave.GameId.Value, characters);
+            _logger.LogInformation("Updated save file for hosted game");
         }
 
         private void OnReadyButtonClicked()

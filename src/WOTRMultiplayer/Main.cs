@@ -121,6 +121,9 @@ namespace WOTRMultiplayer
 
             var campingStateSubscriber = _serviceProvider.GetService<MultiplayerCampingStateSubscriber>();
             EventBus.Subscribe(campingStateSubscriber);
+
+            var combatSubscriber = _serviceProvider.GetService<MultiplayerCombatSubscriber>();
+            EventBus.Subscribe(combatSubscriber);
         }
 
         private static bool OnUnload(UnityModManager.ModEntry entry)

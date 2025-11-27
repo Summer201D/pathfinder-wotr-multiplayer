@@ -13,7 +13,6 @@ using WOTRMultiplayer.Abstractions.MP;
 using WOTRMultiplayer.Abstractions.MP.Actors;
 using WOTRMultiplayer.Abstractions.Random;
 using WOTRMultiplayer.Abstractions.Settings;
-using WOTRMultiplayer.Localization;
 using WOTRMultiplayer.MP.Entities;
 using WOTRMultiplayer.MP.Entities.Combat;
 using WOTRMultiplayer.MP.Entities.Dialogs;
@@ -108,7 +107,9 @@ namespace WOTRMultiplayer.MP.Actors
         }
 
         /// <summary>
-        /// Initial save file info has no character IDs loaded, so we are kinda forced do deal with indexes
+        /// Save file info (Persistence.SaveInfo) has no character IDs loaded, so we are kinda forced do deal with indexes
+        /// Although that info could be parsed manually (saveInfo.Reference.saver.ReadJson("player")), however, it causes a noticeable delay as it's quite a big data portion of the save file
+        /// Also, any party order manipulations (e.g. reordering characters through party list) don't cause any side-effects for these indexes, so, this should work fine
         /// </summary>
         /// <param name="characterIndex"></param>
         /// <param name="playerIndex"></param>
@@ -138,6 +139,13 @@ namespace WOTRMultiplayer.MP.Actors
 
                 character.Owner = player;
                 Logger.LogInformation("New character owner. CharacterName={CharacterName}, PlayerId={PlayerId}, PlayerName={PlayerName}", character.Name, player.Id, player.Name);
+
+                // UnitId is available once we are in the loaded game
+                // any further changes should be recorded so we can automatically assign ownership on adding or removing companions
+                if (!string.IsNullOrEmpty(character.UnitId))
+                {
+                    UpdateCharacterOwnershipHistory(character);
+                }
 
                 var charactersOwnerChanged = CreateNotifyCharactersOwnerChanged();
                 _networkServer.SendAll(charactersOwnerChanged);

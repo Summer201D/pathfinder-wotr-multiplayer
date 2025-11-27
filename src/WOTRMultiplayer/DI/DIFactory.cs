@@ -77,6 +77,7 @@ namespace WOTRMultiplayer.DI
             serviceCollection.AddSingleton<MultiplayerSubscriber>();
             serviceCollection.AddSingleton<MultiplayerUnitEquipmentSubscriber>();
             serviceCollection.AddSingleton<MultiplayerCampingStateSubscriber>();
+            serviceCollection.AddSingleton<MultiplayerCombatSubscriber>();
 
             serviceCollection.AddSingleton<IMultiplayerActorAccessor, MultiplayerActorAccessor>();
             serviceCollection.AddSingleton<IMultiplayerRollsProcessor, MultiplayerRollProcessor>();

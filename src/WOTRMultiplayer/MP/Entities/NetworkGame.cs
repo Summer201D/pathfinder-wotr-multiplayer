@@ -23,6 +23,8 @@ namespace WOTRMultiplayer.MP.Entities
 
         public List<NetworkPlayer> Players { get; set; } = [];
 
+        public Dictionary<string, long> CharactersOwnershipHistory { get; set; } = [];
+
         public List<NetworkCharacterOwnership> Characters { get; set; } = [];
 
         public NetworkCombat Combat { get; set; }
