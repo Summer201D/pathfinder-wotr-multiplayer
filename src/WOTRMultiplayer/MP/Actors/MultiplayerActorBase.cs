@@ -218,7 +218,7 @@ namespace WOTRMultiplayer.MP.Actors
         {
             Logger.LogInformation("Retrieving roll over network. RollId={RollId}, UnitId={UnitId}", networkDiceRollId, unitId);
 
-            var waitForRollTimeout = TimeSpan.FromSeconds(10);
+            var waitForRollTimeout = SettingsProvider.GetSettings().RemoteRollRetrievalTimeout;
             var request = new DiceRollValueRequest { RollId = networkDiceRollId, Timeout = waitForRollTimeout, UnitId = unitId };
             // it's important to block current thread since we cannot proceed without response
             // yeah most likely it will cause the game to freeze in case of bad network

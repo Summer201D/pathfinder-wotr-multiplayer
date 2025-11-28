@@ -88,8 +88,20 @@
                     "tooltip": "Default delay to lift forced pause once specific criteria is met.\nBasic format is 00:00:00 (but not limited to) which means Hours:Minutes:Seconds"
                 },
                 "restEncounterForcedPauseTimeout": {
-                    "title": "Rest Encounter 'Forced pause' timeout",
+                    "title": "Rest encounter 'Forced pause' timeout",
                     "tooltip": "Delay to lift forced pause once random rest encounter is synchronized for everyone.\nBasic format is 00:00:00 (but not limited to) which means Hours:Minutes:Seconds"
+                },
+                "remoteRollRetrievalTimeout": {
+                    "title": "Remote Roll retrieval timeout",
+                    "tooltip": "How long to wait for a roll from the remote source. The game stays frozen until it gets a response or hits the timeout. If it times out, we use the local roll = this leads to desync.\nMake sure this value is less than or equal 'Network Awaiter Timeout'"
+                },
+                "networkAwaiterTimeout": {
+                    "title": "Network Awaiter timeout",
+                    "tooltip": "Sometimes we need to make requests rather than passively listen for incoming messages. This is a generic timeout for such cases where those requests are considered failed"
+                },
+                "syncAITimeout": {
+                    "title": "AI synchronization timeout",
+                    "tooltip": "Used when AI sync is on. Sets how long we wait for the remote AI (Host) to make an action before going ahead with the one generated locally"
                 }
             }
         },

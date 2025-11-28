@@ -84,7 +84,7 @@ namespace WOTRMultiplayer.MP.Actors
 
             Game.Characters.AddRange(characters);
             var settings = SettingsProvider.GetSettings();
-            _networkServer.Start(settings.HostPortRangeStart, settings.HostPortRangeEnd);
+            _networkServer.Start(settings.HostPortRangeStart, settings.HostPortRangeEnd, settings.NetworkAwaiterTimeout);
 
             Logger.LogInformation("Host has been created. SavePath={SavePath}, Portraits={Portraits}", saveFilePath, string.Join(";", Game.Characters.Select(c => c.Portrait)));
         }

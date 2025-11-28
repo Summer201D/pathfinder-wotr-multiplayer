@@ -43,8 +43,8 @@ namespace WOTRMultiplayer.Settings
         [Description("combat")]
         public static class Combat
         {
-            [Description("sync-ai")]
-            public static WellKnownSettingKey<bool> SyncAI { get; } = new(true);
+            [Description("ai-sync")]
+            public static WellKnownSettingKey<bool> AISync { get; } = new(true);
         }
 
         [Description("networking")]
@@ -65,6 +65,15 @@ namespace WOTRMultiplayer.Settings
 
             [Description("rest-encounter-forced-pause-timeout")]
             public static WellKnownSettingKey<TimeSpan> RestEncounterForcedPauseTimeout { get; } = new(TimeSpan.FromSeconds(8));
+
+            [Description("remote-roll-retrieval-timeout")]
+            public static WellKnownSettingKey<TimeSpan> RemoteRollRetrievalTimeout { get; } = new(TimeSpan.FromSeconds(10));
+
+            [Description("network-awaiter-timeout")]
+            public static WellKnownSettingKey<TimeSpan> NetworkAwaiterTimeout { get; } = new(TimeSpan.FromMinutes(1));
+
+            [Description("ai-sync-timeout")]
+            public static WellKnownSettingKey<TimeSpan> AISyncTimeout { get; } = new(TimeSpan.FromSeconds(5));
         }
     }
 }

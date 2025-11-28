@@ -14,6 +14,12 @@ namespace WOTRMultiplayer.MP.Entities.Settings
 
         public TimeSpan ForcedPauseRandomEncounterTerminationDelay { get; set; }
 
+        public TimeSpan RemoteRollRetrievalTimeout { get; set; }
+
+        public TimeSpan NetworkAwaiterTimeout { get; set; }
+
+        public TimeSpan AISyncTimeout { get; set; }
+
         public bool SyncAICombatActions { get; set; }
     }
 }

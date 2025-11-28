@@ -11,12 +11,13 @@ namespace WOTRMultiplayer.Networking
 {
     public class NetworkClient : INetworkClient
     {
+        private TimeSpan _defaultAwaiterTimeout;
+
         private ITcpClient _client;
         private readonly ConcurrentDictionary<Type, Action<long, object>> _handlers = new();
         private readonly ConcurrentDictionary<string, TaskCompletionSource<object>> _awaiters = new(StringComparer.OrdinalIgnoreCase);
         private readonly ILogger<NetworkClient> _logger;
         private readonly ITcpClientFactory _tcpClientFactory;
-        private readonly TimeSpan _defaultAwaiterTimeout = TimeSpan.FromMinutes(1);
 
         public Action<Exception> OnError { get; set; }
 
@@ -34,8 +35,10 @@ namespace WOTRMultiplayer.Networking
             _tcpClientFactory = tcpClientFactory;
         }
 
-        public async Task ConnectAsync(string host, int port)
+        public async Task ConnectAsync(string host, int port, TimeSpan awaiterTimeout)
         {
+            _defaultAwaiterTimeout = awaiterTimeout;
+
             _client = _tcpClientFactory.Create(host, port);
 
             _client.ClientError = OnClientError;

@@ -537,7 +537,7 @@ namespace WOTRMultiplayer.UI
                 PlayerNameValidator.MaxLength);
 
             yield return new SettingsEntityHeaderVM(new LocalizedString { Key = WellKnownKeys.Settings.Combat.Title.Key });
-            yield return CreateBoolSetting(WellKnownKeys.Settings.Combat.SyncAI.Title.Key, WellKnownKeys.Settings.Combat.SyncAI.Tooltip.Key, WellKnownSettings.Combat.SyncAI);
+            yield return CreateBoolSetting(WellKnownKeys.Settings.Combat.SyncAI.Title.Key, WellKnownKeys.Settings.Combat.SyncAI.Tooltip.Key, WellKnownSettings.Combat.AISync);
 
             yield return new SettingsEntityHeaderVM(new LocalizedString { Key = WellKnownKeys.Settings.Networking.Title.Key });
             yield return CreateIntInputSetting(
@@ -559,13 +559,31 @@ namespace WOTRMultiplayer.UI
                 WellKnownKeys.Settings.DangerZone.DefaultForcedPauseTimeout.Tooltip.Key,
                 WellKnownSettings.DangerZone.DefaultForcedPauseTimeout,
                 new TimeSpanValidator(),
-                PlayerNameValidator.MaxLength);
+                TimeSpanValidator.MaxLength);
             yield return CreateStringInputSetting(
                 WellKnownKeys.Settings.DangerZone.RestEncounterForcedPauseTimeout.Title.Key,
                 WellKnownKeys.Settings.DangerZone.RestEncounterForcedPauseTimeout.Tooltip.Key,
                 WellKnownSettings.DangerZone.RestEncounterForcedPauseTimeout,
                 new TimeSpanValidator(),
-                PlayerNameValidator.MaxLength);
+                TimeSpanValidator.MaxLength);
+            yield return CreateStringInputSetting(
+                WellKnownKeys.Settings.DangerZone.RemoteRollRetrievalTimeout.Title.Key,
+                WellKnownKeys.Settings.DangerZone.RemoteRollRetrievalTimeout.Tooltip.Key,
+                WellKnownSettings.DangerZone.RemoteRollRetrievalTimeout,
+                new TimeSpanValidator(),
+                TimeSpanValidator.MaxLength);
+            yield return CreateStringInputSetting(
+                WellKnownKeys.Settings.DangerZone.NetworkAwaiterTimeout.Title.Key,
+                WellKnownKeys.Settings.DangerZone.NetworkAwaiterTimeout.Tooltip.Key,
+                WellKnownSettings.DangerZone.NetworkAwaiterTimeout,
+                new TimeSpanValidator(),
+                TimeSpanValidator.MaxLength);
+            yield return CreateStringInputSetting(
+                WellKnownKeys.Settings.DangerZone.SyncAITimeout.Title.Key,
+                WellKnownKeys.Settings.DangerZone.SyncAITimeout.Tooltip.Key,
+                WellKnownSettings.DangerZone.AISyncTimeout,
+                new TimeSpanValidator(),
+                TimeSpanValidator.MaxLength);
         }
 
         private SettingsEntityBoolVM CreateBoolSetting(string titleKey, string tooltipKey, WellKnownSettingKey<bool> settingKey)

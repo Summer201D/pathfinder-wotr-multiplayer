@@ -10,7 +10,7 @@ namespace WOTRMultiplayer.Networking.Abstractions
 
         bool IsConnecting { get; }
 
-        Task ConnectAsync(string host, int port);
+        Task ConnectAsync(string host, int port, TimeSpan awaiterTimeout);
 
         void Send(object message);
 

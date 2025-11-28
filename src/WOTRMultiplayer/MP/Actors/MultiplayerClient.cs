@@ -93,7 +93,8 @@ namespace WOTRMultiplayer.MP.Actors
 
             SetupNetworkMessageHandlers();
 
-            _networkClient.ConnectAsync(endpoint.Address.ToString(), endpoint.Port);
+            var settings = SettingsProvider.GetSettings();
+            _networkClient.ConnectAsync(endpoint.Address.ToString(), endpoint.Port, settings.NetworkAwaiterTimeout);
 
             return AddressParseResult.Ok();
         }
@@ -264,7 +265,8 @@ namespace WOTRMultiplayer.MP.Actors
         {
             try
             {
-                if (!SettingsProvider.GetSettings().SyncAICombatActions || string.IsNullOrEmpty(networkAIAction.ActionBlueprintId))
+                var settings = SettingsProvider.GetSettings();
+                if (!settings.SyncAICombatActions || string.IsNullOrEmpty(networkAIAction.ActionBlueprintId))
                 {
                     return null;
                 }
@@ -1029,14 +1031,14 @@ namespace WOTRMultiplayer.MP.Actors
             GameInteraction.ShowModalMessage(error, socketError);
         }
 
-        private void OnGameServerConnectionSucceeded(long playerId, GameServerConnectionSucceeded succeeded)
+        private void OnGameServerConnectionSucceeded(long playerId, GameServerConnectionSucceeded connectionSucceeded)
         {
-            Logger.LogInformation("Received {MessageType}. ClientPlayerId={ClientPlayerId}, RestBanterSeed={RestBanterSeed}", nameof(GameServerConnectionSucceeded), succeeded.ClientPlayerId, succeeded.RestBanterSeed);
+            Logger.LogInformation("Received {MessageType}. ClientPlayerId={ClientPlayerId}, RestBanterSeed={RestBanterSeed}", nameof(GameServerConnectionSucceeded), connectionSucceeded.ClientPlayerId, connectionSucceeded.RestBanterSeed);
 
-            Game.LocalPlayerId = succeeded.ClientPlayerId;
-            Game.RestBanterSeed = succeeded.RestBanterSeed;
+            Game.LocalPlayerId = connectionSucceeded.ClientPlayerId;
+            Game.RestBanterSeed = connectionSucceeded.RestBanterSeed;
 
-            var settings = Mapper.Map<NetworkGameSettings>(succeeded.GameSettings);
+            var settings = Mapper.Map<NetworkGameSettings>(connectionSucceeded.GameSettings);
             GameInteraction.ApplyGameSettings(settings);
 
             var message = new ClientGameServerConnectionConfirmed() { PlayerName = SettingsProvider.GetSettings().PlayerName };

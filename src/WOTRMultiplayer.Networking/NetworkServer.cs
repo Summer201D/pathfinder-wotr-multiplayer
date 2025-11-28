@@ -15,7 +15,7 @@ namespace WOTRMultiplayer.Networking
 {
     public class NetworkServer : INetworkServer
     {
-        private readonly TimeSpan _defaultAwaiterTimeout = TimeSpan.FromMinutes(1);
+        private TimeSpan _defaultAwaiterTimeout;
 
         private ServerBuilder<NetworkServerApp, NetworkConnectionToken, ProtobufPacket> _server;
         private ServerBuilder<NetworkServerApp, NetworkConnectionToken, ProtobufPacket> Server => _server ??= new ServerBuilder<NetworkServerApp, NetworkConnectionToken, ProtobufPacket>();
@@ -40,8 +40,10 @@ namespace WOTRMultiplayer.Networking
             return this;
         }
 
-        public void Start(int hostPortRangeStart, int hostPortRangeEnd)
+        public void Start(int hostPortRangeStart, int hostPortRangeEnd, TimeSpan awaiterTimeout)
         {
+            _defaultAwaiterTimeout = awaiterTimeout;
+
             Server.ServerOptions.DefaultListen.StartRegionPort = hostPortRangeStart;
             Server.ServerOptions.DefaultListen.EndRegionPort = hostPortRangeEnd;
             Server.OnMessageReceive(OnMissingMessageHandler);

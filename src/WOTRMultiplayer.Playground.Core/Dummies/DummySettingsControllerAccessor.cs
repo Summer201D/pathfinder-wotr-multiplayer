@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Reflection;
 using WOTRMultiplayer.Abstractions.Settings;
 using WOTRMultiplayer.Settings;
 
@@ -6,6 +8,11 @@ namespace WOTRMultiplayer.Playground.Core.Dummies
 {
     public class DummySettingsControllerAccessor : ISettingsControllerAccessor
     {
+        private readonly Dictionary<string, string> _defaultStringKeys = new()
+        {
+            { WellKnownSettings.General.PlayerName.Key, Assembly.GetEntryAssembly().GetName().Name }
+        };
+
         public void CreateDefaultValue<TValue>(WellKnownSettingKey<TValue> settingKey)
         {
         }
@@ -17,7 +24,12 @@ namespace WOTRMultiplayer.Playground.Core.Dummies
 
         public T GetValue<T>(WellKnownSettingKey<T> key)
         {
-            return key.DefaultValue;
+            if (!_defaultStringKeys.TryGetValue(key.Key, out var value))
+            {
+                return key.DefaultValue;
+            }
+
+            return (T)(object)value;
         }
     }
 }

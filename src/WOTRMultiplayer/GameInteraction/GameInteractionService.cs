@@ -84,7 +84,6 @@ using WOTRMultiplayer.Abstractions.UI;
 using WOTRMultiplayer.Abstractions.Unity;
 using WOTRMultiplayer.Extensions;
 using WOTRMultiplayer.GameInteraction.Contexts;
-using WOTRMultiplayer.Localization;
 using WOTRMultiplayer.MP.Entities;
 using WOTRMultiplayer.MP.Entities.ActionBar;
 using WOTRMultiplayer.MP.Entities.Combat;
@@ -1316,7 +1315,10 @@ namespace WOTRMultiplayer.GameInteraction
                 // mp settings
                 if (networkGameSettings.Multiplayer != null)
                 {
-                    SettingsController.GeneralSettingsProvider.SetValue(WellKnownSettings.Combat.SyncAI.Key, networkGameSettings.Multiplayer.SyncAICombatActions);
+                    SettingsController.GeneralSettingsProvider.SetValue(WellKnownSettings.Combat.AISync.Key, networkGameSettings.Multiplayer.SyncAICombatActions);
+                    SettingsController.GeneralSettingsProvider.SetValue(WellKnownSettings.DangerZone.RemoteRollRetrievalTimeout.Key, networkGameSettings.Multiplayer.RemoteRollRetrievalTimeout.ToString());
+                    SettingsController.GeneralSettingsProvider.SetValue(WellKnownSettings.DangerZone.NetworkAwaiterTimeout.Key, networkGameSettings.Multiplayer.NetworkAwaiterTimeout.ToString());
+                    SettingsController.GeneralSettingsProvider.SetValue(WellKnownSettings.DangerZone.AISyncTimeout.Key, networkGameSettings.Multiplayer.AISyncTimeout.ToString());
                 }
             });
         }
