@@ -68,17 +68,12 @@ namespace WOTRMultiplayer.PubSub
         {
             try
             {
-                if (ActorAccessor.Current == null)
+                if (ActorAccessor.Current == null || !ActorAccessor.Host.IsActive)
                 {
                     return;
                 }
 
-                if (!ActorAccessor.Host.IsActive)
-                {
-                    return;
-                }
-
-                var state = GetCampingState();
+                var state = _gameInteractionService.GetCampigState();
 
                 ActorAccessor.Host.OnCampingStateChanged(state);
             }
@@ -87,20 +82,6 @@ namespace WOTRMultiplayer.PubSub
                 Logger.LogError(ex, "Unable to handle camping state change");
                 throw;
             }
-        }
-
-        private NetworkCampingState GetCampingState()
-        {
-            var state = new NetworkCampingState
-            {
-                PotionBlueprintRecipeId = _gameInteractionService.CampingPotionBlueprintRecipeId,
-                CookingBlueprintRecipeId = _gameInteractionService.CampingCookingBlueprintRecipeId,
-                ScrollBlueprintRecipeId = _gameInteractionService.CampingScrollBlueprintRecipeId,
-                AutotuneIterationsStatus = _gameInteractionService.CampingAutotuneIterationsStatus,
-                IterationsCount = _gameInteractionService.CampingIterationsCount,
-            };
-
-            return state;
         }
 
         public void HandleUnitSetToRole(UnitReference unit, CampingRoleType type, bool isPrimary)

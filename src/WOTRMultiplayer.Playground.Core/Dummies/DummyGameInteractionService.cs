@@ -32,16 +32,6 @@ namespace WOTRMultiplayer.Playground.Core.Dummies
 
         public GameModeType CurrentGameMode => GameModeType.None;
 
-        public string CampingPotionBlueprintRecipeId => null;
-
-        public string CampingCookingBlueprintRecipeId => null;
-
-        public string CampingScrollBlueprintRecipeId => null;
-
-        public bool CampingAutotuneIterationsStatus => false;
-
-        public int CampingIterationsCount => -1;
-
         public void AddCombatText(string messageKey, params object[] args)
         {
         }
@@ -455,6 +445,11 @@ namespace WOTRMultiplayer.Playground.Core.Dummies
 
         public void RollGlobalMapEncounter(NetworkGlobalMapEncounter encounter)
         {
+        }
+
+        public NetworkCampingState GetCampigState()
+        {
+            return null;
         }
     }
 }

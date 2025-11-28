@@ -116,16 +116,6 @@ namespace WOTRMultiplayer.GameInteraction
 
         public GameModeType CurrentGameMode => Game.Instance.CurrentMode;
 
-        public string CampingPotionBlueprintRecipeId => Game.Instance.Player.Camping.SelectedPotion?.Item.AssetGuid.ToString();
-
-        public string CampingCookingBlueprintRecipeId => Game.Instance.Player.Camping.CookingRecipe?.AssetGuid.ToString();
-
-        public string CampingScrollBlueprintRecipeId => Game.Instance.Player.Camping.SelectedScroll?.Item.AssetGuid.ToString();
-
-        public bool CampingAutotuneIterationsStatus => Game.Instance.Player.Camping.AutotuneRestIterations;
-
-        public int CampingIterationsCount => Game.Instance.Player.Camping.RestIterationsCount;
-
         private InGamePCView InGamePCView => (Game.Instance.RootUiContext.m_UIView as InGamePCView);
         private GlobalMapPCView GlobalMapPCView => (Game.Instance.RootUiContext.m_UIView as GlobalMapPCView);
         private PartyPCView PartyPCView => InGamePCView?.m_StaticPartPCView?.m_PartyPCView ?? GlobalMapPCView?.m_PartyPCView;
@@ -148,6 +138,19 @@ namespace WOTRMultiplayer.GameInteraction
             _equipmentDefinitions = equipmentDefinitions;
         }
 
+        public NetworkCampingState GetCampigState()
+        {
+            var state = new NetworkCampingState
+            {
+                PotionBlueprintRecipeId = Game.Instance.Player.Camping.SelectedPotion?.Item.AssetGuid.ToString(),
+                CookingBlueprintRecipeId = Game.Instance.Player.Camping.CookingRecipe?.AssetGuid.ToString(),
+                ScrollBlueprintRecipeId = Game.Instance.Player.Camping.SelectedScroll?.Item.AssetGuid.ToString(),
+                AutotuneIterationsStatus = Game.Instance.Player.Camping.AutotuneRestIterations,
+                IterationsCount = Game.Instance.Player.Camping.RestIterationsCount
+            };
+
+            return state;
+        }
 
         public void InteractWithOvertip(NetworkOvertip networkOvertip)
         {
@@ -1346,11 +1349,6 @@ namespace WOTRMultiplayer.GameInteraction
                 restView.m_HealingToggle.isOn = isOn;
 
                 var campingState = Game.Instance.Player.Camping;
-                if (campingState == null)
-                {
-                    return;
-                }
-
                 campingState.UseSpells = isOn;
             });
         }
@@ -1390,11 +1388,6 @@ namespace WOTRMultiplayer.GameInteraction
             _mainThreadAccessor.Post(() =>
             {
                 var campingState = Game.Instance.Player.Camping;
-                if (campingState == null)
-                {
-                    return;
-                }
-
                 foreach (var role in networkCampingRoles)
                 {
                     campingState.CurrentCampingRoles[role.RoleType].PrimaryUnit = GetUnitEntity(role.PrimaryUnitId);
@@ -1414,7 +1407,7 @@ namespace WOTRMultiplayer.GameInteraction
                         return;
                     }
 
-                    _logger.LogInformation("Changing group manager view state. IsInteractable={IsInteractable}, ReadyPlayers={ReadyPlayers}, TotalPlayers={TotalPlayers}", isInteractable, readyPlayersCount, totalPlayersCount);
+                    _logger.LogInformation("Changing group changer view state. IsInteractable={IsInteractable}, ReadyPlayers={ReadyPlayers}, TotalPlayers={TotalPlayers}", isInteractable, readyPlayersCount, totalPlayersCount);
 
                     GroupChangerView.m_AcceptButton.Interactable = isInteractable;
                     GroupChangerView.m_CloseButton.Interactable = isInteractable;
@@ -1423,7 +1416,7 @@ namespace WOTRMultiplayer.GameInteraction
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "Unable to update group manager view state");
+                    _logger.LogError(ex, "Unable to update group changer view state");
                     throw;
                 }
             });
@@ -1443,11 +1436,11 @@ namespace WOTRMultiplayer.GameInteraction
                     var viewModel = GroupChangerView.ViewModel;
                     viewModel.InternalGo();
                     viewModel.m_ActionGo?.Invoke();
-                    _logger.LogInformation("Group manager party has been accepted");
+                    _logger.LogInformation("Group changer has been accepted");
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "Unable to accept group manager party");
+                    _logger.LogError(ex, "Unable to accept group changer");
                     throw;
                 }
             });
@@ -1494,13 +1487,13 @@ namespace WOTRMultiplayer.GameInteraction
                         return;
                     }
 
-                    _logger.LogInformation("Closing group manager view");
+                    _logger.LogInformation("Closing group changer view");
                     var viewModel = GroupChangerView.ViewModel;
                     viewModel?.m_ActionClose?.Invoke();
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "Unable to close group manager");
+                    _logger.LogError(ex, "Unable to close group changer");
                     throw;
                 }
             });
@@ -1546,11 +1539,11 @@ namespace WOTRMultiplayer.GameInteraction
                     }
 
                     SkipTimeView.m_CloseButton.OnLeftClick.Invoke();
-                    _logger.LogInformation("Skip time has been closed");
+                    _logger.LogInformation("Skip time UI has been closed");
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "Unable to close skip time ui");
+                    _logger.LogError(ex, "Unable to close Skip Time UI");
                     throw;
                 }
             });

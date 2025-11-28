@@ -29,16 +29,6 @@ namespace WOTRMultiplayer.Abstractions.GameInteraction
 
         GameModeType CurrentGameMode { get; }
 
-        string CampingPotionBlueprintRecipeId { get; }
-
-        string CampingCookingBlueprintRecipeId { get; }
-
-        string CampingScrollBlueprintRecipeId { get; }
-
-        bool CampingAutotuneIterationsStatus { get; }
-
-        int CampingIterationsCount { get; }
-
         void LeaveArea(string areaExitId);
 
         void MarkSuggestedDialogAnswers(List<NetworkDialogAnswerSuggestion> networkDialogAnswerSuggestions);
@@ -236,5 +226,7 @@ namespace WOTRMultiplayer.Abstractions.GameInteraction
         void AcceptGlobalMapEncounter();
 
         void RollGlobalMapEncounter(NetworkGlobalMapEncounter encounter);
+
+        NetworkCampingState GetCampigState();
     }
 }
