@@ -1466,7 +1466,7 @@ namespace WOTRMultiplayer.MP.Actors
 
         protected void UpdateCharacterOwnershipHistory(NetworkCharacterOwnership ownership)
         {
-            if (!Game.CharactersOwnershipHistory.TryGetValue(ownership.UnitId, out var playerId) || playerId == ownership.Owner.Id)
+            if (Game.CharactersOwnershipHistory.TryGetValue(ownership.UnitId, out var playerId) && playerId == ownership.Owner.Id)
             {
                 return;
             }
