@@ -226,5 +226,7 @@ namespace WOTRMultiplayer.Abstractions.MP
         void OnGlobalMapEncounterAvoided();
 
         void OnGlobalMapEncounterRolled(NetworkGlobalMapEncounter globalMapRandomEncounter);
+
+        bool CanNavigateOnGlobalMap();
     }
 }

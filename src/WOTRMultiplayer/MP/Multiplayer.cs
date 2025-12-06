@@ -1878,6 +1878,11 @@ namespace WOTRMultiplayer.MP
             }
         }
 
+        public bool CanNavigateOnGlobalMap()
+        {
+            return _multiplayerActorAccessor.Host.IsActive;
+        }
+
         private void ShowEscMenuMultiplayerLobby()
         {
             _logger.LogInformation("Show lobby window");

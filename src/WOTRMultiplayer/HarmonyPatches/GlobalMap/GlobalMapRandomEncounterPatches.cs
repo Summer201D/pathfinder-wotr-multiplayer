@@ -12,6 +12,7 @@ using Kingmaker.UI.Common;
 using Kingmaker.UI.MVVM._PCView.GlobalMap.Message;
 using Kingmaker.UI.MVVM._VM.GlobalMap.Message;
 using Microsoft.Extensions.Logging;
+using Owlcat.Runtime.UI.Controls.Button;
 using WOTRMultiplayer.MP.Entities;
 using WOTRMultiplayer.MP.Entities.GlobalMap;
 
@@ -180,6 +181,20 @@ namespace WOTRMultiplayer.HarmonyPatches.GlobalMap
             var location = GetNetworkGlobalMapLocation(locationView.Blueprint);
             var canSelectLocation = Main.Multiplayer.OnGlobalMapSelectLocation(location);
             __result = __result && canSelectLocation;
+        }
+
+        [HarmonyPatch(typeof(GlobalMapUI), nameof(GlobalMapUI.Awake))]
+        [HarmonyPrefix]
+        public static void GlobalMapUI_Awake_Prefix(GlobalMapUI __instance)
+        {
+            if (!Main.Multiplayer.IsActive)
+            {
+                return;
+            }
+
+            var canNavigate = Main.Multiplayer.CanNavigateOnGlobalMap();
+            __instance.m_BtnContinue.GetComponentInChildren<OwlcatButton>().Interactable = canNavigate;
+            __instance.m_BtnStop.GetComponentInChildren<OwlcatButton>().Interactable = canNavigate;
         }
 
         [HarmonyPatch(typeof(GlobalMapUI), nameof(GlobalMapUI.OnContinue))]

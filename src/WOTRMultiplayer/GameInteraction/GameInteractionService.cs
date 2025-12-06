@@ -2406,6 +2406,11 @@ namespace WOTRMultiplayer.GameInteraction
                     return;
                 }
 
+                var modalMessage = (Game.Instance.RootUiContext.m_CommonView as CommonPCView).m_MessageModalPCView;
+                modalMessage.ViewModel?.OnDeclinePressed();
+                var messageBoxView = GlobalMapPCView.m_GlobalMapEnterMessagePCView;
+                messageBoxView.ViewModel?.Close();
+
                 var traveler = Game.Instance.GlobalMapController.SelectedTraveler;
                 GlobalMapTravelData globalMapTravelData = GlobalMapView.Instance.State.PathManager.CalculateTravelerPathToLocation(traveler, point.Blueprint);
                 traveler.StartTravel(globalMapTravelData, true);
