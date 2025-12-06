@@ -18,7 +18,7 @@ namespace WOTRMultiplayer.HarmonyPatches.Roaming
                 return true;
             }
 
-            var uniqueId = __instance.UniqueId + nameof(RoamingWaypointData.SelectNextPoint);
+            var uniqueId = $"{__instance.UniqueId}:{nameof(RoamingWaypointData.SelectNextPoint)}";
             int nextWaypointIndex = Main.Multiplayer.ValueGenerator.Range(Random.SeedLifetime.Area, uniqueId, 0, __instance.WaypointView.NextWaypoints.Count);
             NextWaypointEntry nextWaypointEntry = __instance.WaypointView.NextWaypoints[nextWaypointIndex];
             __result = nextWaypointEntry?.Waypoint?.WaypointData;
@@ -36,7 +36,7 @@ namespace WOTRMultiplayer.HarmonyPatches.Roaming
                 return true;
             }
 
-            var uniqueId = __instance.UniqueId + nameof(RoamingWaypointData.SelectIdleTime);
+            var uniqueId = $"{__instance.UniqueId}:{nameof(RoamingWaypointData.SelectIdleTime)}";
             float idleTime = Main.Multiplayer.ValueGenerator.Range(Random.SeedLifetime.Area, uniqueId, __instance.WaypointView.MinIdleTime, __instance.WaypointView.MaxIdleTime);
             __result = idleTime.Seconds();
 

@@ -14,10 +14,12 @@ using Kingmaker.Items;
 using Kingmaker.UnitLogic;
 using Kingmaker.UnitLogic.Abilities;
 using Kingmaker.UnitLogic.Abilities.Blueprints;
+using Kingmaker.UnitLogic.Customization;
 using Kingmaker.UnitLogic.Mechanics;
 using Kingmaker.Utility;
 using Kingmaker.View;
 using Kingmaker.View.MapObjects;
+using Kingmaker.Visual.Sound;
 using Microsoft.Extensions.Logging;
 using WOTRMultiplayer.Random;
 
@@ -39,7 +41,6 @@ namespace WOTRMultiplayer.HarmonyPatches.RandomIdGeneration
 
             Main.GetLogger<RandomIdGenerationPatches>().LogError("Player.GetNewUniqueId should never be called, Result={Result}, StackTrace={StackTrace}", __result, Environment.StackTrace);
         }
-
 
         [HarmonyPatch(typeof(AbilityData), MethodType.Constructor, argumentTypes: [typeof(BlueprintAbility), typeof(UnitDescriptor), typeof(Ability), typeof(BlueprintSpellbook)])]
         [HarmonyTranspiler]
@@ -96,12 +97,18 @@ namespace WOTRMultiplayer.HarmonyPatches.RandomIdGeneration
                 new(OpCodes.Ldarg_1),
                 new(OpCodes.Call, replaceWith),
             };
+
             return PatchPlayerIdGeneration(target, instructions, newInstructions);
         }
 
+        /// <summary>
+        /// UniqueId only
+        /// </summary>
+        /// <param name="instructions"></param>
+        /// <returns></returns>
         [HarmonyPatch(typeof(EntityCreationController), nameof(EntityCreationController.SpawnUnit), [typeof(BlueprintUnit), typeof(UnitEntityView), typeof(UnityEngine.Vector3), typeof(UnityEngine.Quaternion), typeof(SceneEntitiesState), typeof(string)])]
         [HarmonyTranspiler]
-        public static IEnumerable<CodeInstruction> EntityCreationController_SpawnUnit_Transpiler(IEnumerable<CodeInstruction> instructions)
+        public static IEnumerable<CodeInstruction> EntityCreationController_SpawnUnit_Overload1_Transpiler(IEnumerable<CodeInstruction> instructions)
         {
             var target = PatchesUtils.GetTranspilerTarget(MethodBase.GetCurrentMethod());
             var replaceWith = AccessTools.Method(typeof(RandomIdGenerationPatches), nameof(RandomIdGenerationPatches.GetNewUnitUniqueId));
@@ -112,6 +119,85 @@ namespace WOTRMultiplayer.HarmonyPatches.RandomIdGeneration
                 new(OpCodes.Call, replaceWith),
             };
             return PatchPlayerIdGeneration(target, instructions, newInstructions);
+        }
+
+        /// <summary>
+        /// voice + isLeftHanded
+        /// </summary>
+        /// <param name="instructions"></param>
+        /// <returns></returns>
+        [HarmonyPatch(typeof(EntityCreationController), nameof(EntityCreationController.SpawnUnit), [typeof(BlueprintUnit), typeof(UnityEngine.Vector3), typeof(UnityEngine.Quaternion), typeof(SceneEntitiesState), typeof(string)])]
+        [HarmonyTranspiler]
+        public static IEnumerable<CodeInstruction> EntityCreationController_SpawnUnit_Overload2_Transpiler(IEnumerable<CodeInstruction> instructions)
+        {
+            var target = PatchesUtils.GetTranspilerTarget(MethodBase.GetCurrentMethod());
+            var voiceCall = AccessTools.Method(typeof(RandomIdGenerationPatches), nameof(RandomIdGenerationPatches.SelectUnitVoice));
+            var leftHandedCall = AccessTools.Method(typeof(RandomIdGenerationPatches), nameof(RandomIdGenerationPatches.SelectLeftHanded));
+            var lookFor = AccessTools.Method(typeof(UnitCustomizationPreset), nameof(UnitCustomizationPreset.SelectVoice));
+            var matcher = new CodeMatcher(instructions);
+            var match = matcher.SearchForward(x => x.Calls(lookFor));
+
+            if (match.IsInvalid)
+            {
+                Main.GetLogger<RandomIdGenerationPatches>().LogError("Invalid transpiler position. Target={Target}", target);
+                return matcher.Instructions();
+            }
+
+            match = match.Advance(-3)
+                .RemoveInstructions(1)
+                .Advance(2)
+                .RemoveInstruction();
+            var voiceInstructions = new List<CodeInstruction>()
+            {
+                new(OpCodes.Call, voiceCall),
+            };
+            match = match.Insert(voiceInstructions);
+
+            // lefthanded
+            match = match.Advance(3).RemoveInstructions(2);
+            var leftHandedInstructions = new List<CodeInstruction>()
+            {
+                new(OpCodes.Call, leftHandedCall),
+            };
+            match = match.Insert(leftHandedInstructions);
+            Main.GetLogger<RandomIdGenerationPatches>().LogInformation("Transpiler has been applied. Target={Target}", target);
+            return matcher.Instructions();
+        }
+
+        public static BlueprintUnitAsksList SelectUnitVoice(BlueprintUnit blueprintUnit, Gender gender)
+        {
+            if (!Main.Multiplayer.IsActive)
+            {
+                return blueprintUnit.CustomizationPreset.SelectVoice(gender);
+            }
+
+            var voices = gender == Gender.Male ? blueprintUnit.CustomizationPreset.MaleVoices : blueprintUnit.CustomizationPreset.FemaleVoices;
+            if (voices.Count == 0)
+            {
+                return null;
+            }
+
+            var uniqueId = blueprintUnit.name;
+            var voiceIndex = Main.Multiplayer.ValueGenerator.Range(Random.SeedLifetime.Area, uniqueId, 0, voices.Count);
+            var voiceReference = voices[voiceIndex];
+            var voice = voiceReference.Get();
+            Main.GetLogger<UnitCustomizationPresetPatches>().LogInformation("Unit voice has been selected. Id={Id}, Gender={Gender}, Voice={Voice}", uniqueId, gender, voice.name);
+
+            return voice;
+        }
+
+        public static bool SelectLeftHanded(BlueprintUnit blueprintUnit)
+        {
+            if (!Main.Multiplayer.IsActive)
+            {
+                return blueprintUnit.CustomizationPreset.SelectLeftHanded();
+            }
+
+            var uniqueId = blueprintUnit.name;
+            var leftHandedRoll = Main.Multiplayer.ValueGenerator.Range(Random.SeedLifetime.Area, uniqueId, 0f, 1f);
+            var isLeftHanded = leftHandedRoll <= blueprintUnit.CustomizationPreset.Distribution.LeftHandedChance;
+            Main.GetLogger<UnitCustomizationPresetPatches>().LogInformation("Unit handedness has been selected. Id={Id}, Roll={Roll}, IsLeftHanded={IsLeftHanded}", uniqueId, leftHandedRoll, isLeftHanded);
+            return isLeftHanded;
         }
 
         [HarmonyPatch(typeof(EntityCreationController), nameof(EntityCreationController.ChangeUnitBlueprint))]
@@ -128,7 +214,6 @@ namespace WOTRMultiplayer.HarmonyPatches.RandomIdGeneration
             };
             return PatchPlayerIdGeneration(target, instructions, newInstructions);
         }
-
 
         [HarmonyPatch(typeof(EntityFact), nameof(EntityFact.Attach))]
         [HarmonyTranspiler]
