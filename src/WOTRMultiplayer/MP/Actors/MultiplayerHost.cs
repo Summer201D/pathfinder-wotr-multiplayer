@@ -1353,6 +1353,9 @@ namespace WOTRMultiplayer.MP.Actors
                 UpdateStartRestButton();
                 UpdateStartRestButtonAfterResults(playerId);
                 TryEnableDialogContinueButton();
+
+                RemovePlayerFromTracker(Game.PlayersInSkipTime, removedPlayer.Id);
+                UpdateSkipTimeUIState();
             }
         }
 

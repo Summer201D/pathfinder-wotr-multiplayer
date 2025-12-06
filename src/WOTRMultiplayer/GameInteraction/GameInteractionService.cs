@@ -1507,7 +1507,7 @@ namespace WOTRMultiplayer.GameInteraction
             {
                 try
                 {
-                    if (SkipTimeView == null)
+                    if (SkipTimeView.ViewModel == null)
                     {
                         _logger.LogWarning("Unable to update skip time due to missing UI");
                         return;
@@ -1535,12 +1535,12 @@ namespace WOTRMultiplayer.GameInteraction
             {
                 try
                 {
-                    if (SkipTimeView == null)
+                    if (SkipTimeView.ViewModel == null)
                     {
                         return;
                     }
 
-                    SkipTimeView.m_CloseButton.OnLeftClick.Invoke();
+                    SkipTimeView.ViewModel.Close();
                     _logger.LogInformation("Skip time UI has been closed");
                 }
                 catch (Exception ex)
@@ -1555,7 +1555,7 @@ namespace WOTRMultiplayer.GameInteraction
         {
             _mainThreadAccessor.Post(() =>
             {
-                if (SkipTimeView != null)
+                if (SkipTimeView.ViewModel != null)
                 {
                     return;
                 }
@@ -1570,7 +1570,7 @@ namespace WOTRMultiplayer.GameInteraction
             {
                 try
                 {
-                    if (SkipTimeView == null)
+                    if (SkipTimeView.ViewModel == null)
                     {
                         _logger.LogWarning("Unable to update skip time hours due to missing UI");
                         return;
@@ -1593,7 +1593,7 @@ namespace WOTRMultiplayer.GameInteraction
             {
                 try
                 {
-                    if (SkipTimeView == null)
+                    if (SkipTimeView.ViewModel == null)
                     {
                         _logger.LogWarning("Unable to start skip time due to missing UI");
                         return;

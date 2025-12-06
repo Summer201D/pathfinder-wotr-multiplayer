@@ -18,11 +18,12 @@ namespace WOTRMultiplayer.HarmonyPatches.Roaming
                 return true;
             }
 
-            int nextWaypointIndex = Main.Multiplayer.ValueGenerator.Range(Random.SeedLifetime.Area, __instance.UniqueId, 0, __instance.WaypointView.NextWaypoints.Count);
+            var uniqueId = __instance.UniqueId + nameof(RoamingWaypointData.SelectNextPoint);
+            int nextWaypointIndex = Main.Multiplayer.ValueGenerator.Range(Random.SeedLifetime.Area, uniqueId, 0, __instance.WaypointView.NextWaypoints.Count);
             NextWaypointEntry nextWaypointEntry = __instance.WaypointView.NextWaypoints[nextWaypointIndex];
             __result = nextWaypointEntry?.Waypoint?.WaypointData;
 
-            Main.GetLogger<RoamingWaypointDataPatches>().LogInformation("Selected waypoint. Id={Id}, Position={Position}", __instance.UniqueId, __result?.Position);
+            Main.GetLogger<RoamingWaypointDataPatches>().LogInformation("Selected waypoint. Id={Id}, Position={Position}", uniqueId, __result?.Position);
             return false;
         }
 
@@ -39,7 +40,7 @@ namespace WOTRMultiplayer.HarmonyPatches.Roaming
             float idleTime = Main.Multiplayer.ValueGenerator.Range(Random.SeedLifetime.Area, uniqueId, __instance.WaypointView.MinIdleTime, __instance.WaypointView.MaxIdleTime);
             __result = idleTime.Seconds();
 
-            Main.GetLogger<RoamingWaypointDataPatches>().LogInformation("Selected idle time. Id={Id}, RawTime={RawTime}, Time={Time}", __instance.UniqueId, idleTime, __result);
+            Main.GetLogger<RoamingWaypointDataPatches>().LogInformation("Selected idle time. Id={Id}, RawTime={RawTime}, Time={Time}, MinTimeRange={MinTimeRange}, MaxTimeRange={MaxTimeRange}", uniqueId, idleTime, __result, __instance.WaypointView.MinIdleTime, __instance.WaypointView.MaxIdleTime);
             return false;
         }
     }
