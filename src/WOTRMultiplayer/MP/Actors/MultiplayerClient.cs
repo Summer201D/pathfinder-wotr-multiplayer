@@ -118,9 +118,8 @@ namespace WOTRMultiplayer.MP.Actors
             _networkClient?.Reset();
         }
 
-        public override void OnAreaScenesLoaded()
+        public void OnAreaLoadingComplete()
         {
-            base.OnAreaScenesLoaded();
             var message = new ClientAreaLoaded();
             Send(message);
         }
@@ -251,7 +250,7 @@ namespace WOTRMultiplayer.MP.Actors
                 if (context.PreRecorded.RandomUnitSeed.HasValue)
                 {
                     EnsureForcePaused(WellKnownKeys.GameNotifications.ForcedPause.RestRandomEncounterLoading.Key);
-                    GameInteraction.Pause(true);
+                    GameInteraction.SetPause(true);
                 }
             }
             catch (Exception ex)
@@ -356,7 +355,7 @@ namespace WOTRMultiplayer.MP.Actors
 
                 if (type == GameModeType.Rest && Game.ForcedPause != null)
                 {
-                    GameInteraction.Pause(true);
+                    GameInteraction.SetPause(true);
                 }
             }
 
@@ -629,7 +628,7 @@ namespace WOTRMultiplayer.MP.Actors
         {
             Logger.LogInformation("Received {MessageType}", nameof(NotifyGamePauseStarted));
             EnsureForcePaused(null);
-            GameInteraction.Pause(true);
+            GameInteraction.SetPause(true);
         }
 
         private void OnNotifyCharacterLevelingStarted(long playerId, NotifyCharacterLevelingStarted started)
@@ -885,7 +884,7 @@ namespace WOTRMultiplayer.MP.Actors
         {
             Logger.LogInformation("Received {MessageType}", nameof(NotifyGamePauseEnded));
             Game.ForcedPause = null;
-            GameInteraction.Pause(false);
+            GameInteraction.SetPause(false);
         }
 
         private void OnNotifyGameStarted(long playerId, NotifyGameStarted started)

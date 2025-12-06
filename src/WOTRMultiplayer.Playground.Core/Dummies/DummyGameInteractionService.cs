@@ -199,7 +199,7 @@ namespace WOTRMultiplayer.Playground.Core.Dummies
         {
         }
 
-        public void Pause(bool isPaused)
+        public void SetPause(bool isPaused)
         {
         }
 

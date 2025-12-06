@@ -10,5 +10,7 @@ namespace WOTRMultiplayer.MP.Entities
         public HashSet<long> ReadyPlayers { get; set; } = [];
 
         public TimeSpan? RemovalDelay { get; set; }
+
+        public bool IsLifting { get; set; }
     }
 }

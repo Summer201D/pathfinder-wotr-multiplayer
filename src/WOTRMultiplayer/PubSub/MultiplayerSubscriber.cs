@@ -71,6 +71,13 @@ namespace WOTRMultiplayer.PubSub
 
         public void OnAreaLoadingComplete()
         {
+            if (ActorAccessor.Current == null)
+            {
+                return;
+            }
+
+            Logger.LogInformation("OnAreaLoadingComplete");
+            ActorAccessor.Current.OnAreaLoadingComplete();
         }
 
         public void OnAreaScenesLoaded()

@@ -195,10 +195,8 @@ namespace WOTRMultiplayer.MP.Actors
             TryStartGame();
         }
 
-        public override void OnAreaScenesLoaded()
+        public void OnAreaLoadingComplete()
         {
-            base.OnAreaScenesLoaded();
-
             TryEndForcedPause();
         }
 
@@ -462,7 +460,7 @@ namespace WOTRMultiplayer.MP.Actors
                     var settings = SettingsService.GetSettings();
                     EnsureForcePaused(WellKnownKeys.GameNotifications.ForcedPause.RestRandomEncounterLoading.Key, settings.ForcedPauseRandomEncounterTerminationDelay);
                     GameInteraction.UpdateIsInCombatStatus();
-                    GameInteraction.Pause(true);
+                    GameInteraction.SetPause(true);
                 }
             }
             catch (Exception ex)
@@ -539,7 +537,8 @@ namespace WOTRMultiplayer.MP.Actors
                         return true;
                     }
 
-                    GameInteraction.ShowWarningNotification(Game.ForcedPause.Reason);
+                    var messageKey = Game.ForcedPause.IsLifting ? WellKnownKeys.GameNotifications.ForcedPause.IsLifting.Key : Game.ForcedPause.Reason;
+                    GameInteraction.ShowWarningNotification(messageKey);
                     return false;
                 }
 
@@ -570,7 +569,7 @@ namespace WOTRMultiplayer.MP.Actors
                 lock (ActionLock)
                 {
                     Game.ForcedPause.ReadyPlayers.Add(playerId);
-                    GameInteraction.Pause(true);
+                    GameInteraction.SetPause(true);
                     TryEndForcedPause();
                 }
             }
@@ -1499,9 +1498,9 @@ namespace WOTRMultiplayer.MP.Actors
         {
             try
             {
-                Logger.LogInformation("Checking if forced pause could be removed. PauseIsNull={PauseIsNull}", Game.ForcedPause == null);
+                Logger.LogInformation("Checking if forced pause could be removed. PauseIsNull={PauseIsNull}, IsLifting={IsLifting}", Game.ForcedPause == null, Game.ForcedPause?.IsLifting);
 
-                if (Game.ForcedPause == null)
+                if (Game.ForcedPause == null || Game.ForcedPause.IsLifting)
                 {
                     return false;
                 }
@@ -1517,14 +1516,15 @@ namespace WOTRMultiplayer.MP.Actors
 
                     var removalDelay = Game.ForcedPause.RemovalDelay;
                     var delay = removalDelay.HasValue ? Task.Delay(removalDelay.Value) : Task.CompletedTask;
-                    Game.ForcedPause = null;
-
+                    Game.ForcedPause.IsLifting = true;
                     Logger.LogInformation("Forced pause will be lifted soon. Delay={Delay}", removalDelay.GetValueOrDefault());
                     delay.ContinueWith(x =>
                     {
-                        GameInteraction.Pause(false);
+                        Game.ForcedPause = null;
+                        GameInteraction.SetPause(false);
                         var message = new NotifyGamePauseEnded();
                         _networkServer.SendAll(message);
+                        Logger.LogInformation("Forced pause has been lifted");
                     });
                     return true;
                 }

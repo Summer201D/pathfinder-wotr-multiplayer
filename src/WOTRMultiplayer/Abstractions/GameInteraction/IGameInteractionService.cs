@@ -37,7 +37,7 @@ namespace WOTRMultiplayer.Abstractions.GameInteraction
 
         void MoveNonCombatCharacter(NetworkCharacterMove networkCharacterMove);
 
-        void Pause(bool isPaused);
+        void SetPause(bool isPaused);
 
         void SelectDialogAnswer(string dialogName, string cueName, string answerName, string manualUnitSelectionId);
 

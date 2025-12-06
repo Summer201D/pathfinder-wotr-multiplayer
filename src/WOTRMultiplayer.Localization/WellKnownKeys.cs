@@ -575,6 +575,12 @@ public static class WellKnownKeys
             {
                 public static string Key { get; set; }
             }
+
+            [Description("isLifting")]
+            public static class IsLifting
+            {
+                public static string Key { get; set; }
+            }
         }
 
         [Description("combat")]

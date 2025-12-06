@@ -354,7 +354,7 @@ namespace WOTRMultiplayer.MP.Actors
             Send(message);
         }
 
-        public virtual void OnAreaScenesLoaded()
+        public void OnAreaScenesLoaded()
         {
             Logger.LogInformation("Area loaded");
 
@@ -369,7 +369,7 @@ namespace WOTRMultiplayer.MP.Actors
                 EnsureForcePaused(WellKnownKeys.GameNotifications.ForcedPause.AreaLoading.Key);
                 var localPlayerId = GetLocalPlayerId();
                 Game.ForcedPause.ReadyPlayers.Add(localPlayerId);
-                GameInteraction.Pause(true);
+                GameInteraction.SetPause(true);
             }
         }
 

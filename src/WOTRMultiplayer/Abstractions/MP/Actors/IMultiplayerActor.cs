@@ -107,6 +107,8 @@ namespace WOTRMultiplayer.Abstractions.MP.Actors
 
         void OnAreaScenesLoaded();
 
+        void OnAreaLoadingComplete();
+
         bool CanUnitJoinCombat(string unitId);
 
         string GetMultiplayerOwnerName(string unitId);

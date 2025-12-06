@@ -147,7 +147,8 @@
                 "areaLoading": "Please wait for other players to finish loading the area",
                 "restRandomEncounterLoading": "Please wait for other players to finish loading the random encounter",
                 "notSyncedPauseYet": "Can't unpause until everyone is paused",
-                "noTrapDetectedYet": "Waiting for everyone to detect trap"
+                "noTrapDetectedYet": "Waiting for everyone to detect trap",
+                "isLifting": "Pause is about to be lifted"
             },
             "combat": {
                 "clientTurnOrderDesync": "Turn order has been overriden by Host due to detected desync",

@@ -405,7 +405,7 @@ namespace WOTRMultiplayer.GameInteraction
             });
         }
 
-        public void Pause(bool isPaused)
+        public void SetPause(bool isPaused)
         {
             _logger.LogInformation("Pause game. IsPaused={IsPaused}", isPaused);
             if (isPaused)
@@ -1747,7 +1747,7 @@ namespace WOTRMultiplayer.GameInteraction
                 }
 
                 VendorViewVM.m_CloseAction?.Invoke();
-                Pause(false);
+                SetPause(false);
             });
         }
 
