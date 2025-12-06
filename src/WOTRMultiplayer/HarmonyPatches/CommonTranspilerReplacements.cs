@@ -92,7 +92,12 @@ namespace WOTRMultiplayer.HarmonyPatches
         {
             try
             {
-                return unit.IsDirectlyControllable || Main.Multiplayer.IsActive && Main.Multiplayer.IsControlledByPlayers(unit.UniqueId);
+                if (!Main.Multiplayer.IsActive)
+                {
+                    return unit.IsDirectlyControllable;
+                }
+
+                return unit.IsDirectlyControllable && Main.Multiplayer.IsControlledByPlayers(unit.UniqueId);
             }
             catch (System.Exception ex)
             {
@@ -105,7 +110,12 @@ namespace WOTRMultiplayer.HarmonyPatches
         {
             try
             {
-                return unit.IsDirectlyControllable && Main.Multiplayer.IsActive && Main.Multiplayer.IsControlledByLocalPlayer(unit.UniqueId);
+                if (!Main.Multiplayer.IsActive)
+                {
+                    return unit.IsDirectlyControllable;
+                }
+
+                return unit.IsDirectlyControllable && Main.Multiplayer.IsControlledByLocalPlayer(unit.UniqueId);
             }
             catch (System.Exception ex)
             {
