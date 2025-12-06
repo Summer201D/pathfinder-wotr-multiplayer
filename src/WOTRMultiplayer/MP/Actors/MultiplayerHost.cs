@@ -1043,12 +1043,17 @@ namespace WOTRMultiplayer.MP.Actors
             Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}, TypeId={TypeId}", nameof(ClientGameModeTypeEnded), playerId, ended.TypeId);
             var gameMode = GameModeType.All.FirstOrDefault(g => g.Index == ended.TypeId);
             UnregisterGameMode(gameMode, playerId);
-            if (gameMode == GameModeType.Rest && Game.ForcedPause != null)
+            if (gameMode == GameModeType.Rest)
             {
-                lock (ActionLock)
+                UpdateStartRestButton();
+
+                if (Game.ForcedPause != null)
                 {
-                    Game.ForcedPause.ReadyPlayers.Add(playerId);
-                    TryEndForcedPause();
+                    lock (ActionLock)
+                    {
+                        Game.ForcedPause.ReadyPlayers.Add(playerId);
+                        TryEndForcedPause();
+                    }
                 }
             }
         }
