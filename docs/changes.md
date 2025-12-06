@@ -1,6 +1,9 @@
 # Multiplayer changes
 
-#### Disclaimer: All of the changes below only kick in when you’re playing in Multiplayer (started or joined through the Multiplayer Window). Single-player isn't affected at all, so you can keep playing normally. But if you are curious about what the mod adds, you can always host a solo game to check it out.
+#### Disclaimer: All of the changes below only kick in when you are playing in Multiplayer (started or joined through the Multiplayer Window). Single-player isn't affected at all, so you can keep playing normally. But if you are curious about what the mod adds, you can always host a solo game to check it out.
+
+## TL/DR:
+Prologue and Act1 are mostly playable. Anything beyond that is not implemented
 
 ## Other Mods Compatibility
 Most of the syncing relies on the blueprint asset ID (or something similiar) to replicate action for other players, so in **THEORY** things should work fine as long as those IDs are the same for abilities, spells, etc. This also includes any extra rolls (e.g. Skill Check or Attack Roll) added by mods, but those roll types must be available within base game.
@@ -17,7 +20,7 @@ However, this might be revised later on once multiplayer is stable enough to sta
 - Checkbox to show the debug console (for anyone curious about the behind-the-scenes stuff).
 - Checkbox to display the unitId in the name tag above your character, e.g., 'Seelah' → 'Seelah [my-unit-id]'.
 
-Most players won't need to bother with these settings.
+Most players won't need to bother with these settings
 
 ## Networking
 There are two connection options planned, but only one works right now:
@@ -27,13 +30,14 @@ There are two connection options planned, but only one works right now:
 
 ## Interface
 
-The mod adds a new 'Multiplayer' button to the main menu—use it to host or join games.
-
-There's also a 'Multiplayer Lobby' option in the Esc menu, where you can swap around character control during a session.
+Added few elements to the game:
+- 'Multiplayer' main menu option - use it to host or join games
+- 'Multiplayer' configuration tab within Settings menu - contains bunch of settings like your name or which port to use for hosting
+- 'Multipalyer Lobby' menu within Esc menu - see who is playing / change character control
 
 A couple of notes:
 - Photo Mode is disabled for now since it pauses the game and doesn’t add much in multiplayer.
-- The Rest window now shows a counter so you can see how many players are ready to rest (or finish resting)."
+- Multiple interface buttons contain counters to see how many players are ready for the action
 
 ## Localization
 Custom-made localization that is fully integrated with native `LocalizationManager/LocalizedStrings`. Though `enGb` is the only option available by default.
@@ -191,9 +195,6 @@ You can either ignore it (if the outcome is more or less the same for everyone) 
 
 ## Not implemented
 
-### TL/DR
-Prologue and Act1 are mostly playable. Anything beyond that is not implemented, so your MP journey will end after reclaiming the Garrison
-
 ### Abilities
 Only basic usage of abilities is available. Any extra conditions like metamagic will not work properly as those modifications will not be applied for remote players
 
@@ -201,8 +202,7 @@ Only basic usage of abilities is available. Any extra conditions like metamagic 
 not ready yet, but it will work the same way as regular leveling
 
 ### Hiring Merc
-CharGen screen is synced for leveling only. You will need to create initial merc locally and then host multiplayer game. Further merc leveling will be available within MP session
-This might be available later, but it has very low priority
+CharGen screen is synced for leveling only. You will need to create initial merc locally and then host multiplayer game
 
 ## Long term plans
 
