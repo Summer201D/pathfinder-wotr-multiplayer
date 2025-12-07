@@ -11,7 +11,7 @@ namespace WOTRMultiplayer.MP.Entities
     {
         public string Id { get; set; }
 
-        public int RestBanterSeed { get; set; }
+        public int SessionSeed { get; set; }
 
         public long LocalPlayerId { get; set; }
 
@@ -77,7 +77,7 @@ namespace WOTRMultiplayer.MP.Entities
             Combat = null;
             ForcedPause = null;
             RandomEncounter = null;
-            RestBanterSeed = 0;
+            SessionSeed = 0;
             Leveling = null;
         }
     }

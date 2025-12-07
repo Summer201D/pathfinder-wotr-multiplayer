@@ -5,6 +5,8 @@ namespace WOTRMultiplayer.MP.Entities.Combat
 {
     public class NetworkCombat
     {
+        public int Seed { get; set; }
+
         public bool IsInitialized { get; set; }
 
         public int CombatPreparedFrames { get; set; }

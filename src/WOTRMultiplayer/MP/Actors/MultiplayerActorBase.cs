@@ -40,7 +40,9 @@ namespace WOTRMultiplayer.MP.Actors
 
         public bool IsInCombat => Game?.Combat != null;
 
-        public int RestBanterSeed => Game.RestBanterSeed;
+        public int SessionSeed => Game.SessionSeed;
+
+        public int? CombatSeed => Game.Combat?.Seed;
 
         public Action<List<NetworkPlayer>> OnPlayersChanged { get; set; }
 
@@ -432,7 +434,7 @@ namespace WOTRMultiplayer.MP.Actors
             Send(message);
         }
 
-        public void CombatStarted()
+        public virtual void CombatStarted()
         {
             Logger.LogInformation("Combat started");
             if (Game.Combat != null)
@@ -452,6 +454,7 @@ namespace WOTRMultiplayer.MP.Actors
             }
 
             Game.Combat = null;
+            _valueGenerator.ResetSeedGenerators(Random.SeedLifetime.Combat);
         }
         public void OnHandleDelayCombatTurn(string unitId, string targetUnitId)
         {
@@ -1463,6 +1466,12 @@ namespace WOTRMultiplayer.MP.Actors
 
             Game.CharactersOwnershipHistory[ownership.UnitId] = ownership.Owner.Id;
             Logger.LogInformation("Character ownership hisory has been updated. CharacterUnitId={CharacterUnitId}, PlayerId={PlayerId}", ownership.UnitId, ownership.Owner.Id);
+        }
+
+        protected int CreateRandomSeed()
+        {
+            var seed = new System.Random().Next(int.MinValue, int.MaxValue);
+            return seed;
         }
 
         protected virtual void SetupNetworkMessageHandlers()

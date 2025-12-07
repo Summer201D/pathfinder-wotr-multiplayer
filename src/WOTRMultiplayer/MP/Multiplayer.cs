@@ -963,7 +963,7 @@ namespace WOTRMultiplayer.MP
                     return null;
                 }
 
-                var banterSeed = _multiplayerActorAccessor.Current.RestBanterSeed;
+                var banterSeed = _multiplayerActorAccessor.Current.SessionSeed;
                 var nextBanter = ValueGenerator.Range(Random.SeedLifetime.Persistent, banterSeed, minInclusive, maxExclusive);
                 _logger.LogInformation("Next rest banter has been selected. Seed={Seed}, Index={Index}", banterSeed, nextBanter);
                 return nextBanter;
@@ -973,6 +973,22 @@ namespace WOTRMultiplayer.MP
                 _logger.LogError(ex, "Error while getting next rest banter");
                 throw;
             }
+        }
+
+        public int GetCombatSeed()
+        {
+            // SessionSeed is a fallback in case we rely on combat seed outside of the combat.
+            // there is only 1 known case as of now: attacking someone with MirrorImage buff when combat has not been started yet
+            // fallback will not provide true randomness as the same unit would lose the same amount of mirror images each time it's attacked outside of the combat
+            // but it's extremely rare to be in this situation anyway
+            var seed = _multiplayerActorAccessor.Current?.CombatSeed ?? _multiplayerActorAccessor.Current?.SessionSeed;
+            if (!seed.HasValue)
+            {
+                _logger.LogError("Neither CombatSeed nor SessionSeed is available. Those values should not be requested outside of the MP session");
+                return -1;
+            }
+
+            return seed.Value;
         }
 
         public void OnInterrupRestBanterBark(NetworkRestBanter networkRestBanter)

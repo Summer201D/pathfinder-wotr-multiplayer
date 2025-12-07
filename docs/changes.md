@@ -92,13 +92,13 @@ Everyone in the session has to see the dialog line before the host can pick an a
 Certain vendor actions are host-only, like finalizing a deal or closing the shop window. Everything else is fully synced and open to everyone - like moving items to buy/sell, bulk selling, or removing items in bulk.
 
 ## Group Changer
-##### Note: Group Changer data is stored within the UI itself, so for the sake of it must be opened for everyone before Host is allowed to make any changes (just for the sake of simplified sync implementation)
+##### Note: Group Changer data is stored within the UI itself, so it must be opened for everyone before Host is allowed to make any changes (just for the sake of simplified sync implementation)
 
 ### Leaving zone
 Client is only a watcher with no permissions to change anything. There is a counter within Accept button to see how many players are ready. Closing screen as a host will result in closing screen for everyone
 
 ### Mid Zone (aka recruiting companions)
-TBD
+The same rules apply
 
 ## Skip Time
 works the same way as Group Changer due to same data storage reasons
@@ -108,7 +108,16 @@ When someone triggers an area transition, the game tries to move the whole party
 
 If that happens, the players who already transitioned will be stuck in a forced pause until everyone else loads in. Easiest fix: anyone left behind should just click the transition again to catch up. While that's happening, avoid doing stuff that could cause desync (like using items, abilities, or picking up loot).
 
-Area Looting screen: TBD
+### Area Looting screen: 
+TBD
+
+## Global Map
+
+### Act1
+TBD
+
+### Act2+
+TBD
 
 ## Rolls
 Most rolls happen on the host, but combat works a little differently. Each turn has a `Turn Owner` - the player controlling the active character. That player's rolls are done locally so their turn feels smooth, and then everyone else gets the results over the network.
@@ -179,9 +188,6 @@ Some rules for the leveling screen:
 - Watchers can't close the leveling screen.
 - The character owner has to wait while the screen loads for everyone else. Switching phases (like from class selection to skill points) locks the owner until everyone has loaded the new phase.
 - Closing the leveling screen as the owner closes it for everyone.
-
-## Global Map
-TBD
 
 ## Entity ID Generation 
 The game originally used a single counter to generate new entity IDs (for characters, area effects, facts, map objects, etc.), however this approach didn't work well in network environment. Now it uses a "consistent" generator that considers the current game state (gameId, location, etc.), so IDs should match across all multiplayer players.

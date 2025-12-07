@@ -46,7 +46,9 @@ namespace WOTRMultiplayer.Abstractions.MP.Actors
 
         Action<List<NetworkPlayer>> OnPlayersChanged { get; set; }
 
-        int RestBanterSeed { get; }
+        int SessionSeed { get; }
+
+        int? CombatSeed { get; }
 
         bool IsControlledByLocalPlayer(string unitId);
 

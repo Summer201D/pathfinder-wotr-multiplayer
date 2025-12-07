@@ -2,9 +2,9 @@
 {
     public enum SeedLifetime
     {
-        // single MP session
+        // single MP session including any quick loads
         Persistent,
-        // removed on area switch
-        Area
+        Area,
+        Combat
     }
 }

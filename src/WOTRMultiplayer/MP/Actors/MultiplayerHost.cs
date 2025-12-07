@@ -79,7 +79,7 @@ namespace WOTRMultiplayer.MP.Actors
             {
                 LocalPlayerId = NetworkingConsts.HostPlayerId,
                 Id = gameId,
-                RestBanterSeed = new System.Random().Next(int.MinValue, int.MaxValue)
+                SessionSeed = CreateRandomSeed()
             };
 
             Game.Characters.AddRange(characters);
@@ -329,16 +329,27 @@ namespace WOTRMultiplayer.MP.Actors
                 var combatState = GameInteraction.GetCombatState();
                 var message = new NotifyCombatInitialized
                 {
-                    CombatState = Mapper.Map<Networking.Messages.Contracts.NetworkCombatState>(combatState)
+                    CombatState = Mapper.Map<Networking.Messages.Contracts.NetworkCombatState>(combatState),
+                    Seed = Game.Combat.Seed
                 };
+
                 _networkServer.SendAll(message);
                 Game.Combat.IsInitialized = true;
                 Game.Combat.PlayersCombatInitialization.TryAdd(Game.LocalPlayerId, true);
-                Logger.LogInformation("Sending {MessageType}. RoundNumber={RoundNumber}, HasSurprisingRound={HasSurprisingRound}, UnitsInCombat={UnitsInCombat}", nameof(NotifyCombatInitialized), message.CombatState.RoundNumber, message.CombatState.HasSurpriseRound, message.CombatState.Units.Count);
+                Logger.LogInformation("Sending {MessageType}. Seed={Seed}, RoundNumber={RoundNumber}, HasSurprisingRound={HasSurprisingRound}, UnitsInCombat={UnitsInCombat}", nameof(NotifyCombatInitialized), message.Seed, message.CombatState.RoundNumber, message.CombatState.HasSurpriseRound, message.CombatState.Units.Count);
             }
 
             var canContinue = Game.Combat.PlayersCombatInitialization.Count >= Game.Players.Count;
             return canContinue;
+        }
+
+        public override void CombatStarted()
+        {
+            base.CombatStarted();
+
+            var combatSeed = CreateRandomSeed();
+            Game.Combat.Seed = combatSeed;
+            Logger.LogInformation("Combat seed has been configured. Seed={Seed}", Game.Combat.Seed);
         }
 
         public bool IsDiceRollOwner()
@@ -1330,7 +1341,7 @@ namespace WOTRMultiplayer.MP.Actors
                 {
                     ClientPlayerId = playerId,
                     GameSettings = Mapper.Map<Networking.Messages.Contracts.NetworkGameSettings>(settings),
-                    RestBanterSeed = Game.RestBanterSeed
+                    SessionSeed = Game.SessionSeed
                 };
                 Logger.LogInformation("Sending {MessageType}. PlayerId={PlayerId}, Settings={Settings}", nameof(GameServerConnectionSucceeded), message.ClientPlayerId, message.GameSettings);
 

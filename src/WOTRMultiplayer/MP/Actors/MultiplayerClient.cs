@@ -769,7 +769,7 @@ namespace WOTRMultiplayer.MP.Actors
 
         private async void OnNotifyCombatInitialized(long playerId, NotifyCombatInitialized combatInitialized)
         {
-            Logger.LogInformation("Received {MessageType}. Units={Units}", nameof(NotifyCombatInitialized), combatInitialized.CombatState.Units.Count);
+            Logger.LogInformation("Received {MessageType}. Seed={Seed}, Units={Units}", nameof(NotifyCombatInitialized), combatInitialized.Seed, combatInitialized.CombatState.Units.Count);
 
             if (Game.Combat == null)
             {
@@ -779,6 +779,9 @@ namespace WOTRMultiplayer.MP.Actors
                     await Task.Delay(TimeSpan.FromMilliseconds(10));
                 }
             }
+
+            Game.Combat.Seed = combatInitialized.Seed;
+            Logger.LogInformation("Combat seed has been configured. Seed={Seed}", Game.Combat.Seed);
 
             var combatState = Mapper.Map<NetworkCombatState>(combatInitialized.CombatState);
             await GameInteraction.UpdateCombatStateAsync(combatState, true);
@@ -1032,10 +1035,10 @@ namespace WOTRMultiplayer.MP.Actors
 
         private void OnGameServerConnectionSucceeded(long playerId, GameServerConnectionSucceeded connectionSucceeded)
         {
-            Logger.LogInformation("Received {MessageType}. ClientPlayerId={ClientPlayerId}, RestBanterSeed={RestBanterSeed}", nameof(GameServerConnectionSucceeded), connectionSucceeded.ClientPlayerId, connectionSucceeded.RestBanterSeed);
+            Logger.LogInformation("Received {MessageType}. ClientPlayerId={ClientPlayerId}, SessionSeed={SessionSeed}", nameof(GameServerConnectionSucceeded), connectionSucceeded.ClientPlayerId, connectionSucceeded.SessionSeed);
 
             Game.LocalPlayerId = connectionSucceeded.ClientPlayerId;
-            Game.RestBanterSeed = connectionSucceeded.RestBanterSeed;
+            Game.SessionSeed = connectionSucceeded.SessionSeed;
 
             var settings = Mapper.Map<NetworkGameSettings>(connectionSucceeded.GameSettings);
             GameInteraction.ApplyGameSettings(settings);
