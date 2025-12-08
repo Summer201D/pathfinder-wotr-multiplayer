@@ -77,7 +77,8 @@ namespace WOTRMultiplayer.Random
             try
             {
                 var counter = _entityCounters.GetOrAdd(gameId ?? "main-menu", k => new UniqueIdCounters());
-                var hashed = _hashService.Murmur3(identifier).ToString();
+                var fullIdentifier = uniqueIdType + identifier;
+                var hashed = _hashService.Murmur3(fullIdentifier).ToString();
 
                 if (!counter.NameIdentifiers.TryGetValue(hashed, out uint nameCounter))
                 {
