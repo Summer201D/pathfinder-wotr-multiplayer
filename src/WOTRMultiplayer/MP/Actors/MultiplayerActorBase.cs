@@ -280,24 +280,25 @@ namespace WOTRMultiplayer.MP.Actors
             Send(message);
         }
 
-        public void OnLootContainer(NetworkLootContainer container)
+
+        public void OnTransferInventoryItem(NetworkItemsTransfer transferItem)
         {
-            Logger.LogInformation("Sending looted container info. ContainerId={ContainerId}, ContainerPosition={ContainerPosition}, ItemsCount={ItemsCount}, Items={Items}", container.Id, container.Position, container.Items.Count, container.Items.Select(i => i.UniqueId));
-            var message = new NotifyContainerLooted
+            var message = new NotifyInventoryItemTransferred
             {
-                Container = Mapper.Map<Networking.Messages.Contracts.NetworkLootContainer>(container)
+                TransferItem = Mapper.Map<Networking.Messages.Contracts.NetworkItemsTransfer>(transferItem)
             };
 
+            Logger.LogInformation("Sending {MessageType}. Items={Items}, Source={Source}, SourceType={SourceType}, Destination={Destination}, DestinationType={DestinationType}", nameof(NotifyInventoryItemTransferred), message.TransferItem.Items.Select(x => x.UniqueId), message.TransferItem.Source.Id, message.TransferItem.Source.Type, message.TransferItem.Destination?.Id, message.TransferItem.Destination?.Type);
             Send(message);
         }
 
-        public void OnSkinLootContainer(NetworkLootContainer container)
+        public void OnSkinLootContainer(NetworkLootableEntity networkLootableEntity)
         {
-            Logger.LogInformation("Sending skin container info. ContainerId={ContainerId}, ContainerPosition={ContainerPosition}", container.Id, container.Position);
-            var message = new NotifyContainerSkinned
+            var message = new NotifyLootableEntitySkinned
             {
-                Container = Mapper.Map<Networking.Messages.Contracts.NetworkLootContainer>(container)
+                Entity = Mapper.Map<Networking.Messages.Contracts.NetworkLootableEntity>(networkLootableEntity)
             };
+            Logger.LogInformation("Sending {MessageType}. Id={ContainerId}, Position={Position}, Type={Type}", networkLootableEntity.Id, networkLootableEntity.Position, networkLootableEntity.Type);
 
             Send(message);
         }
@@ -991,6 +992,50 @@ namespace WOTRMultiplayer.MP.Actors
             UpdateGlobalMapEncounterMessageUIState();
         }
 
+        public void OnZoneLootCollectorButtonsUpdated()
+        {
+            UpdateZoneLootUIState();
+        }
+
+        public void OnZoneLootShown()
+        {
+            var localPlayer = GetLocalPlayerId();
+            AddPlayerToTracker(Game.PlayersInZoneLoot, localPlayer);
+
+            var message = new NotifyZoneLootShown
+            {
+                PlayerId = localPlayer
+            };
+            Logger.LogInformation("Sending {MessageType}. PlayerId={PlayerId}", nameof(NotifyZoneLootShown), message.PlayerId);
+            Send(message);
+
+            UpdateZoneLootUIState();
+        }
+
+        public void OnZoneLootClosed()
+        {
+            var localPlayer = GetLocalPlayerId();
+            RemovePlayerFromTracker(Game.PlayersInZoneLoot, localPlayer);
+
+            var message = new NotifyZoneLootClosed
+            {
+                PlayerId = localPlayer
+            };
+            Logger.LogInformation("Sending {MessageType}. PlayerId={PlayerId}", nameof(NotifyZoneLootClosed), message.PlayerId);
+            Send(message);
+        }
+
+        public void OnZoneLootCompleted()
+        {
+            var localPlayer = GetLocalPlayerId();
+            var message = new NotifyZoneLootCompleted
+            {
+                PlayerId = localPlayer
+            };
+            Logger.LogInformation("Sending {MessageType}. PlayerId={PlayerId}", nameof(NotifyZoneLootCompleted), message.PlayerId);
+            Send(message);
+        }
+
         protected abstract bool OnStartGameModeInternal(GameModeType type);
 
         protected abstract DiceRollValueResponse RetrieveRoll(DiceRollValueRequest rollRequest);
@@ -1053,6 +1098,17 @@ namespace WOTRMultiplayer.MP.Actors
                 var totalPlayers = Game.Players.Count;
                 var canUse = HasControlOverUI && readyPlayers >= totalPlayers;
                 GameInteraction.UpdateGlobalMapEncounterMessageUI(canUse, readyPlayers, totalPlayers);
+            }
+        }
+
+        protected void UpdateZoneLootUIState()
+        {
+            lock (ActionLock)
+            {
+                var readyPlayers = Game.PlayersInZoneLoot.Count;
+                var totalPlayers = Game.Players.Count;
+                var canUse = HasControlOverUI && readyPlayers >= totalPlayers;
+                GameInteraction.UpdateZoneLootUI(canUse, readyPlayers, totalPlayers);
             }
         }
 
@@ -1512,11 +1568,13 @@ namespace WOTRMultiplayer.MP.Actors
                 .On<NotifyOvertipInteracted>(OnNotifyOvertipInteracted)
 
                 // items&inventory
-                .On<NotifyContainerLooted>(OnNotifyContainerLooted)
-                .On<NotifyContainerSkinned>(OnNotifyContainerSkinned)
+                .On<NotifyLootableEntitySkinned>(OnNotifyContainerSkinned)
                 .On<NotifyDropItem>(OnNotifyDropItem)
                 .On<NotifyEquipmentSlotChanged>(OnNotifyEquipmentSlotChanged)
                 .On<NotifyActiveHandEquipmentSetChanged>(OnNotifyActiveHandEquipmentSetChanged)
+                .On<NotifyZoneLootShown>(OnNotifyZoneLootShown)
+                .On<NotifyZoneLootClosed>(OnNotifyZoneLootClosed)
+                .On<NotifyInventoryItemTransferred>(OnNotifyInventoryItemTransferred)
 
                 // lockpick
                 .On<NotifyMapObjectLockpicked>(OnNotifyMapObjectLockpicked)
@@ -1553,6 +1611,36 @@ namespace WOTRMultiplayer.MP.Actors
                 // group management
                 .On<NotifyGroupChangerOpened>(OnNotifyGroupChangerOpened)
                 ;
+        }
+
+        private void OnNotifyInventoryItemTransferred(long playerId, NotifyInventoryItemTransferred itemTransferred)
+        {
+            Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}, Items={Items}, Source={Source}, Destination={Destination}", nameof(NotifyInventoryItemTransferred), playerId, itemTransferred.TransferItem.Items.Select(x => x.UniqueId), itemTransferred.TransferItem.Source.Id, itemTransferred.TransferItem.Destination?.Id);
+
+            var transferItem = Mapper.Map<NetworkItemsTransfer>(itemTransferred.TransferItem);
+            GameInteraction.TransferInventoryItems(transferItem);
+
+            OnAfterNetworkMessageHandled(playerId, itemTransferred);
+        }
+
+        private void OnNotifyZoneLootClosed(long playerId, NotifyZoneLootClosed zoneLootClosed)
+        {
+            Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}", nameof(NotifyZoneLootClosed), zoneLootClosed.PlayerId);
+
+            RemovePlayerFromTracker(Game.PlayersInZoneLoot, zoneLootClosed.PlayerId);
+            UpdateZoneLootUIState();
+
+            OnAfterNetworkMessageHandled(playerId, zoneLootClosed);
+        }
+
+        private void OnNotifyZoneLootShown(long playerId, NotifyZoneLootShown zoneLootShown)
+        {
+            Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}", nameof(NotifyZoneLootShown), zoneLootShown.PlayerId);
+
+            AddPlayerToTracker(Game.PlayersInZoneLoot, zoneLootShown.PlayerId);
+            UpdateZoneLootUIState();
+
+            OnAfterNetworkMessageHandled(playerId, zoneLootShown);
         }
 
         private void OnNotifyGlobalMapEncounterMessageShown(long playerId, NotifyGlobalMapEncounterMessageShown globalMapEncounterMessageShown)
@@ -1798,21 +1886,10 @@ namespace WOTRMultiplayer.MP.Actors
             OnAfterNetworkMessageHandled(playerId, item);
         }
 
-        private void OnNotifyContainerLooted(long playerId, NotifyContainerLooted containerLooted)
+        private void OnNotifyContainerSkinned(long playerId, NotifyLootableEntitySkinned notifyLootableEntitySkinned)
         {
-            Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}, ContainerId={ContainerId}, ContainerPosition={ContainerPosition}, ItemsCount={ItemsCount}, Items={Items}",
-               nameof(NotifyContainerLooted), playerId, containerLooted.Container.Id, containerLooted.Container.Position, containerLooted.Container.Items.Count, containerLooted.Container.Items.Select(i => i.UniqueId));
-
-            var container = Mapper.Map<NetworkLootContainer>(containerLooted.Container);
-            GameInteraction.CollectLootContainer(container);
-
-            OnAfterNetworkMessageHandled(playerId, containerLooted);
-        }
-
-        private void OnNotifyContainerSkinned(long playerId, NotifyContainerSkinned containerSkinned)
-        {
-            Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}, ContainerId={ContainerId}, ContainerPosition={ContainerPosition}", nameof(NotifyContainerSkinned), playerId, containerSkinned.Container.Id, containerSkinned.Container.Position);
-            var container = Mapper.Map<NetworkLootContainer>(containerSkinned.Container);
+            Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}, Id={Id}, Position={Position}, Type={Type}", nameof(NotifyLootableEntitySkinned), playerId, notifyLootableEntitySkinned.Entity.Id, notifyLootableEntitySkinned.Entity.Position, notifyLootableEntitySkinned.Entity.Type);
+            var container = Mapper.Map<NetworkLootableEntity>(notifyLootableEntitySkinned.Entity);
             GameInteraction.SkinLootContainer(container);
         }
 

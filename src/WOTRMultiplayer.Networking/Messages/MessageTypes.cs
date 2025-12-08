@@ -46,7 +46,6 @@
             NotifyCombatInitialized,
             NotifyCombatTurnStarted,
             NotifyCombatTurnSynchronizationRequired,
-            NotifyContainerLooted,
             NotifyDialogCueAnswerSelected,
             NotifyDialogCueAnswerSuggested,
             NotifyDialogStarted,
@@ -89,7 +88,7 @@
             NotifyActionBarSlotMoved,
             NotifyGamePauseStarted,
             ClientGameAutoPaused,
-            NotifyContainerSkinned,
+            NotifyLootableEntitySkinned,
             NotifyMapObjectLockpicked,
             NotifyUnitAttacked,
             NotifyCombatTurnDelayed,
@@ -116,6 +115,11 @@
             NotifyGlobalMapEncounterAccepted,
             NotifyGlobalMapEncounterAvoided,
             NotifyGlobalMapEncounterRolled,
+            NotifyZoneLootShown,
+            NotifyZoneLootClosed,
+            NotifyZoneLootCompleted,
+            NotifyZoneLootRemoveToggleChanged,
+            NotifyInventoryItemTransferred,
         }
 
         public enum Request

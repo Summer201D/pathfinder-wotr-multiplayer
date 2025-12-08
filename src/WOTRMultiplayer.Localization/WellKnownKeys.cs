@@ -598,5 +598,21 @@ public static class WellKnownKeys
                 public static string Key { get; set; }
             }
         }
+
+        [Description("looting")]
+        public static class Looting
+        {
+            [Description("disposedLootbagBugWarning")]
+            public static class DisposedLootbagBugWarning
+            {
+                public static string Key { get; set; }
+            }
+
+            [Description("itemsMismatch")]
+            public static class ItemsMismatch
+            {
+                public static string Key { get; set; }
+            }
+        }
     }
 }

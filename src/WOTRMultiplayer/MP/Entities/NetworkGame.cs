@@ -51,6 +51,8 @@ namespace WOTRMultiplayer.MP.Entities
 
         public HashSet<long> PlayersInGlobalMapEncounterMessage { get; set; } = [];
 
+        public HashSet<long> PlayersInZoneLoot { get; set; } = [];
+
         public NetworkGame(string saveFilePath)
         {
             SaveFilePath = saveFilePath;

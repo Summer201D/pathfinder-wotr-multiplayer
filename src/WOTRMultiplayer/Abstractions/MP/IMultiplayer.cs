@@ -41,8 +41,6 @@ namespace WOTRMultiplayer.Abstractions.MP
 
         bool CanLeaveArea();
 
-        bool CanLootUnit(string initiatorUnitId);
-
         void OnAfterCueShow(string dialogName, string cueName, bool hasSystemAnswer);
 
         bool OnBeforeSelectDialogAnswer(string dialogName, string cueName, string answerName, bool isExitAnswer, string manualUnitSelectionId);
@@ -85,9 +83,9 @@ namespace WOTRMultiplayer.Abstractions.MP
 
         NetworkActionsState GetActionsState();
 
-        void OnLootContainer(NetworkLootContainer networkLootContainer);
+        void OnTransferInventoryItems(NetworkItemsTransfer networkItemsTransfer);
 
-        void OnSkinLootContainer(NetworkLootContainer container);
+        void OnSkinLootContainer(NetworkLootableEntity networkLootableEntity);
 
         void OnDropItem(NetworkDropItem networkDropItem);
 
@@ -230,5 +228,15 @@ namespace WOTRMultiplayer.Abstractions.MP
         bool CanNavigateOnGlobalMap();
 
         int GetCombatSeed();
+
+        void OnZoneLootShown();
+
+        void OnZoneLootClosed();
+
+        void OnZoneLootRemoveToggleChanged(bool removeUncollectedLoot);
+
+        void OnZoneLootCompleted();
+
+        void OnZoneLootCollectorButtonsUpdated();
     }
 }

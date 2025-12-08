@@ -108,9 +108,6 @@ When someone triggers an area transition, the game tries to move the whole party
 
 If that happens, the players who already transitioned will be stuck in a forced pause until everyone else loads in. Easiest fix: anyone left behind should just click the transition again to catch up. While that's happening, avoid doing stuff that could cause desync (like using items, abilities, or picking up loot).
 
-### Area Looting screen: 
-TBD
-
 ## Global Map
 
 ### Act1
@@ -164,6 +161,14 @@ Inventory item positions are not synced, so you can sort or split items however 
 
 ## Loot
 Looting is synced for all multiplayer players, so everyone can grab items from the same container at the same time.
+
+### Area Looting screen: 
+Same as regular looting. However, 'Collect All' / 'Leave' / 'Destroy Uncollected Loot' buttons are disabled for host until everyone is ready to leave the area.
+
+### small bugfix
+The base game contains a bug where you could get your items destroyed by moving items into a disposed lootbag object. Lootbags are transient. They are deleted from the game once every item has been looted. "Zone Looting" screen allows you to loot items from lootbags, but it also enables you to put items back, even though that lootbag had been destroyed previously. As a result, every item you left in that disposed lootbag will be destroyed once you close the "Zone Looting" UI.
+
+Mod explicitly denies you from moving items into an already destroyed lootbag. You will see a notification message once this happens.
 
 ## Rest
 Only the host can set up camp, including managing roles and picking crafting recipes, but the Camp UI updates for everyone. Host can do changes even if UI is not opened for everyone since Rest configuration (roles/recipes/etc) is not tied to UI, so it can be updated in background

@@ -68,9 +68,9 @@ namespace WOTRMultiplayer.Playground.Core.Dummies
         {
         }
 
-        public void CollectLootContainer(NetworkLootContainer networkLootContainer)
-        {
-        }
+        //public void CollectLootContainer(NetworkLootContainer networkLootContainer)
+        //{
+        //}
 
         public bool CombatTurnHasBeenFinished()
         {
@@ -280,7 +280,7 @@ namespace WOTRMultiplayer.Playground.Core.Dummies
         {
         }
 
-        public void SkinLootContainer(NetworkLootContainer container)
+        public void SkinLootContainer(NetworkLootableEntity lootableEntity)
         {
         }
 
@@ -450,6 +450,22 @@ namespace WOTRMultiplayer.Playground.Core.Dummies
         public NetworkCampingState GetCampigState()
         {
             return null;
+        }
+
+        public void UpdateZoneLootUI(bool isInteractable, int readyPlayersCount, int totalPlayersCount)
+        {
+        }
+
+        public void UpdateZoneLootRemoveToggle(bool removeLoot)
+        {
+        }
+
+        public void CompleteZoneLoot()
+        {
+        }
+
+        public void TransferInventoryItems(NetworkItemsTransfer networkItemsTransfer)
+        {
         }
     }
 }

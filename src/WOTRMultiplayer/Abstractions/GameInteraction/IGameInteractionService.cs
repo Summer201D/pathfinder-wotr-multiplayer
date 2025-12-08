@@ -87,9 +87,9 @@ namespace WOTRMultiplayer.Abstractions.GameInteraction
 
         void ToggleActivatableAbility(NetworkActivatableAbility networkActivatableAbility);
 
-        void CollectLootContainer(NetworkLootContainer networkLootContainer);
+        void TransferInventoryItems(NetworkItemsTransfer networkItemsTransfer);
 
-        void SkinLootContainer(NetworkLootContainer container);
+        void SkinLootContainer(NetworkLootableEntity networkLootableEntity);
 
         void DropItem(NetworkDropItem networkDropItem);
 
@@ -221,6 +221,8 @@ namespace WOTRMultiplayer.Abstractions.GameInteraction
 
         void UpdateGlobalMapEncounterMessageUI(bool isInteractable, int readyPlayersCount, int totalPlayersCount);
 
+        void UpdateZoneLootUI(bool isInteractable, int readyPlayersCount, int totalPlayersCount);
+
         void AvoidGlobalMapEncounter();
 
         void AcceptGlobalMapEncounter();
@@ -228,5 +230,9 @@ namespace WOTRMultiplayer.Abstractions.GameInteraction
         void RollGlobalMapEncounter(NetworkGlobalMapEncounter encounter);
 
         NetworkCampingState GetCampigState();
+
+        void UpdateZoneLootRemoveToggle(bool removeLoot);
+
+        void CompleteZoneLoot();
     }
 }

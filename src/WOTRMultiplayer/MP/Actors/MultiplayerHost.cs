@@ -752,6 +752,16 @@ namespace WOTRMultiplayer.MP.Actors
             Send(message);
         }
 
+        public void OnZoneLootRemoveToggleChanged(bool removeUncollectedLoot)
+        {
+            var message = new NotifyZoneLootRemoveToggleChanged
+            {
+                RemoveLoot = removeUncollectedLoot
+            };
+            Logger.LogInformation("Sending {MessageType}. RemoveLoot={RemoveLoot}", nameof(NotifyZoneLootRemoveToggleChanged), message.RemoveLoot);
+            Send(message);
+        }
+
         protected override bool OnStartGameModeInternal(GameModeType type)
         {
             var playerId = GetLocalPlayerId();

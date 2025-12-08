@@ -498,7 +498,25 @@ namespace WOTRMultiplayer.MP.Actors
                .On<NotifyGlobalMapEncounterAccepted>(OnNotifyGlobalMapEncounterAccepted)
                .On<NotifyGlobalMapEncounterAvoided>(OnNotifyGlobalMapEncounterAvoided)
                .On<NotifyGlobalMapEncounterRolled>(OnNotifyGlobalMapEncounterRolled)
+
+               // zone loot
+               .On<NotifyZoneLootCompleted>(OnNotifyZoneLootCompleted)
+               .On<NotifyZoneLootRemoveToggleChanged>(OnNotifyZoneLootRemoveToggleChanged)
                ;
+        }
+
+        private void OnNotifyZoneLootRemoveToggleChanged(long playerId, NotifyZoneLootRemoveToggleChanged zoneLootRemoveToggleChanged)
+        {
+            Logger.LogInformation("Received {MessageType}. RemoveLoot={RemoveLoot}", nameof(NotifyZoneLootRemoveToggleChanged), zoneLootRemoveToggleChanged.RemoveLoot);
+
+            GameInteraction.UpdateZoneLootRemoveToggle(zoneLootRemoveToggleChanged.RemoveLoot);
+        }
+
+        private void OnNotifyZoneLootCompleted(long playerId, NotifyZoneLootCompleted zoneLootCompleted)
+        {
+            Logger.LogInformation("Received {MessageType}. RemoveLoot={RemoveLoot}", nameof(NotifyZoneLootCompleted));
+
+            GameInteraction.CompleteZoneLoot();
         }
 
         private void OnNotifyGlobalMapEncounterRolled(long playerId, NotifyGlobalMapEncounterRolled globalMapEncounterRolled)
@@ -916,7 +934,13 @@ namespace WOTRMultiplayer.MP.Actors
                         player = Game.Players.First();
                     }
 
-                    Game.Characters[owner.CharacterIndex].Owner = player;
+                    var character = Game.Characters[owner.CharacterIndex];
+                    character.Owner = player;
+                    if (!string.IsNullOrEmpty(character.UnitId))
+                    {
+                        UpdateCharacterOwnershipHistory(character);
+                    }
+
                     OnCharacterOwnerChanged?.Invoke(owner.CharacterIndex, Game.Players.IndexOf(player));
                 }
             }

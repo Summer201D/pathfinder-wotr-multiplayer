@@ -74,9 +74,6 @@ namespace WOTRMultiplayer.Config.Mapping
                 .ReverseMap()
                 .ForMember(m => m.Value, o => o.MapFrom(v => v.Result));
 
-            CreateMap<NetworkLootContainer, Networking.Messages.Contracts.NetworkLootContainer>()
-                .ReverseMap();
-
             CreateMap<NetworkItem, Networking.Messages.Contracts.NetworkItem>()
                 .ReverseMap();
 
@@ -186,6 +183,12 @@ namespace WOTRMultiplayer.Config.Mapping
                 .ReverseMap();
 
             CreateMap<NetworkGlobalMapEncounter, Networking.Messages.Contracts.NetworkGlobalMapEncounter>()
+                .ReverseMap();
+
+            CreateMap<NetworkItemsTransfer, Networking.Messages.Contracts.NetworkItemsTransfer>()
+                .ReverseMap();
+
+            CreateMap<NetworkLootableEntity, Networking.Messages.Contracts.NetworkLootableEntity>()
                 .ReverseMap();
         }
     }

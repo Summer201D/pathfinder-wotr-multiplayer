@@ -95,9 +95,9 @@ namespace WOTRMultiplayer.Abstractions.MP.Actors
 
         void OnToggleActivatableAbility(NetworkActivatableAbility activatableAbilityUse);
 
-        void OnLootContainer(NetworkLootContainer container);
+        void OnTransferInventoryItem(NetworkItemsTransfer transferItem);
 
-        void OnSkinLootContainer(NetworkLootContainer container);
+        void OnSkinLootContainer(NetworkLootableEntity networkLootableEntity);
 
         void OnDropItem(NetworkDropItem dropItem);
 
@@ -192,5 +192,13 @@ namespace WOTRMultiplayer.Abstractions.MP.Actors
         void OnGlobalMapEncounterMessageShown();
 
         bool OnSpawnCampPlace(NetworkVector3 position);
+
+        void OnZoneLootShown();
+
+        void OnZoneLootClosed();
+
+        void OnZoneLootCompleted();
+
+        void OnZoneLootCollectorButtonsUpdated();
     }
 }

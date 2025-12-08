@@ -57,6 +57,7 @@ using Kingmaker.UI.MVVM._PCView.Dialog.Interchapter;
 using Kingmaker.UI.MVVM._PCView.GlobalMap;
 using Kingmaker.UI.MVVM._PCView.GroupChanger;
 using Kingmaker.UI.MVVM._PCView.InGame;
+using Kingmaker.UI.MVVM._PCView.Loot;
 using Kingmaker.UI.MVVM._PCView.Party;
 using Kingmaker.UI.MVVM._PCView.Rest;
 using Kingmaker.UI.MVVM._VM.CharGen.Phases;
@@ -118,6 +119,8 @@ namespace WOTRMultiplayer.GameInteraction
 
         private InGamePCView InGamePCView => (Game.Instance.RootUiContext.m_UIView as InGamePCView);
         private GlobalMapPCView GlobalMapPCView => (Game.Instance.RootUiContext.m_UIView as GlobalMapPCView);
+        private LootPCView LootPCView => (Game.Instance.RootUiContext.m_UIView as InGamePCView)?.m_StaticPartPCView?.m_LootContextPCView?.m_LootPCView;
+        private LootCollectorPCView LootCollector => LootPCView?.m_Collector;
         private PartyPCView PartyPCView => InGamePCView?.m_StaticPartPCView?.m_PartyPCView ?? GlobalMapPCView?.m_PartyPCView;
         private SkipTimePCView SkipTimeView => InGamePCView?.m_StaticPartPCView?.m_SkipTimePCView ?? GlobalMapPCView?.m_SkipTimePCView;
         private RestPCView RestView => InGamePCView?.m_StaticPartPCView?.m_RestContextPCView?.m_RestPCView ?? GlobalMapPCView?.m_RestPCView;
@@ -858,29 +861,45 @@ namespace WOTRMultiplayer.GameInteraction
             };
         }
 
-        public void CollectLootContainer(NetworkLootContainer networkLootContainer)
+        public void TransferInventoryItems(NetworkItemsTransfer networkItemsTransfer)
         {
             _mainThreadAccessor.Post(() =>
             {
                 try
                 {
-                    var lookupTargets = GetLootContainers(networkLootContainer);
-                    foreach (var container in lookupTargets)
-                    {
-                        List<LootTransferPair> transferList = [.. container.Items
-                            .Select(item => new LootTransferPair { ItemEntity = item, NetworkItem = networkLootContainer.Items.FirstOrDefault(ni => IsSameItem(item, ni)) })
-                            .Where(x => x.NetworkItem != null)];
+                    var lookupTargets = GetLootableEntitiesInventory(networkItemsTransfer.Source);
 
-                        if (transferList.Count == networkLootContainer.Items.Count)
-                        {
-                            TransferItems(container, Game.Instance.Player.Inventory, transferList);
-                            RefreshLootUI();
-                            RefreshInventoryWindow();
-                            return;
-                        }
+                    Dictionary<NetworkItem, List<ItemEntity>> matchedItems = null;
+                    var sourceCollection = lookupTargets.FirstOrDefault(x => TryFindRequiredItemsInCollection(x, networkItemsTransfer.Items, out matchedItems));
+                    if (sourceCollection == null)
+                    {
+                        _logger.LogError("Unable to find valid ItemsCollection source with all required items. Id={Id}, Position={Position}, Type={Type}", networkItemsTransfer.Source.Id, networkItemsTransfer.Source.Position, networkItemsTransfer.Source.Type);
+                        ShowWarningNotification(WellKnownKeys.GameNotifications.Looting.ItemsMismatch.Key);
+                        return;
                     }
 
-                    _logger.LogError("Unable to find valid lootable unit / map object. ContainerId={ContainerId}, Position={Position}, IsUnit={IsUnit}", networkLootContainer.Id, networkLootContainer.Position, networkLootContainer.IsUnit);
+                    var destinationCollection = networkItemsTransfer.Destination == null ?
+                        Game.Instance.Player.Inventory
+                        : GetLootableEntitiesInventory(networkItemsTransfer.Destination).FirstOrDefault();
+
+                    if (destinationCollection == null)
+                    {
+                        _logger.LogError("Unable to find valid ItemsCollection destination. Id={Id}, Position={Position}, Type={Type}", networkItemsTransfer.Destination.Id, networkItemsTransfer.Destination.Position, networkItemsTransfer.Destination.Type);
+                        return;
+                    }
+
+                    foreach (var item in networkItemsTransfer.Items)
+                    {
+                        var containerItems = matchedItems.Get(item);
+                        MatchSameNumberOfItems(containerItems, item.Count, matchedItem =>
+                        {
+                            _logger.LogInformation("Transfering item. Name={Name}, Id={Id}, Count={Count}, Source={Source}, SourceIsStash={SourceIsStash}, Destination={Destination}, DestinationIsStash={DestinationIsStash}", matchedItem.Name, matchedItem.UniqueId, matchedItem.Count, sourceCollection.OwnerRef.Entity?.UniqueId, sourceCollection.IsSharedStash, destinationCollection.OwnerRef.Entity.UniqueId, destinationCollection.IsSharedStash);
+                            sourceCollection.Transfer(matchedItem, matchedItem.Count, destinationCollection);
+                        });
+                    }
+
+                    RefreshLootUI();
+                    RefreshInventoryWindow();
                 }
                 catch (Exception ex)
                 {
@@ -890,16 +909,37 @@ namespace WOTRMultiplayer.GameInteraction
             });
         }
 
-        public void SkinLootContainer(NetworkLootContainer networkLootContainer)
+        private bool TryFindRequiredItemsInCollection(ItemsCollection collection, List<NetworkItem> items, out Dictionary<NetworkItem, List<ItemEntity>> matchedItems)
+        {
+            matchedItems = [];
+            foreach (var item in items)
+            {
+                var existingItems = collection.Items.Where(x => IsSameUnholdedItem(x, item)).ToList();
+                var existingItemsCount = existingItems.Sum(x => x.Count);
+                if (existingItemsCount < item.Count)
+                {
+                    matchedItems = null;
+                    return false;
+                }
+
+                matchedItems.Add(item, existingItems);
+            }
+
+
+            return true;
+        }
+
+
+        public void SkinLootContainer(NetworkLootableEntity lootableEntity)
         {
             _mainThreadAccessor.Post(() =>
             {
                 try
                 {
-                    var unit = GetUnitEntity(networkLootContainer.Id);
+                    var unit = GetUnitEntity(lootableEntity.Id);
                     if (unit == null)
                     {
-                        _logger.LogError("Unable to find unit to skin. UnitId={UnitId}, Position={Position}", networkLootContainer.Id, networkLootContainer.Position);
+                        _logger.LogError("Unable to find unit to skin. UnitId={UnitId}, Position={Position}", lootableEntity.Id, lootableEntity.Position);
                         return;
                     }
 
@@ -911,30 +951,7 @@ namespace WOTRMultiplayer.GameInteraction
 
                     RefreshLootUI();
                     RefreshInventoryWindow();
-                    _logger.LogInformation("Loot container has been skinned. ContainerId={ContainerId}, Position={Position}", networkLootContainer.Id, networkLootContainer.Position);
-
-                    //var mapObject = GetMapObject(networkLootContainer.Id);
-                    //var lookupTargets = mapObject != null ? [mapObject]
-                    //    : GetNeareastLootableMapObjects(networkLootContainer.Position);
-
-                    //foreach (var container in lookupTargets)
-                    //{
-                    //    var interaction = (InteractionLootPart)container.Interactions.FirstOrDefault(i => i is InteractionLootPart);
-                    //    var itemsToSkin = interaction.Loot.Where((ItemEntity i) => i.NeedSkinningForCollect).ToList();
-                    //    foreach (var item in itemsToSkin)
-                    //    {
-                    //        item.UseSkinning();
-                    //    }
-
-                    //    if (itemsToSkin.Count > 0)
-                    //    {
-                    //        RefreshLootUI();
-                    //        RefreshInventoryWindow();
-                    //        _logger.LogInformation("Loot container has been skinned. ContainerId={ContainerId}, Position={Position}", networkLootContainer.Id, networkLootContainer.Position);
-                    //        return;
-                    //    }
-                    //}
-
+                    _logger.LogInformation("Loot container has been skinned. ContainerId={ContainerId}, Position={Position}", lootableEntity.Id, lootableEntity.Position);
                 }
                 catch (Exception ex)
                 {
@@ -980,11 +997,12 @@ namespace WOTRMultiplayer.GameInteraction
             });
         }
 
-        private void MatchSameNumberOfItems(List<ItemEntity> possibleItemsBag, int countToDrop, Action<ItemEntity> onMatched)
+        private void MatchSameNumberOfItems(List<ItemEntity> possibleItemsBag, int countToMatch, Action<ItemEntity> onMatched)
         {
+            var itemsLeft = countToMatch;
             foreach (var item in possibleItemsBag)
             {
-                var difference = countToDrop - item.Count;
+                var difference = itemsLeft - item.Count;
                 if (difference == 0)
                 {
                     onMatched(item);
@@ -992,14 +1010,14 @@ namespace WOTRMultiplayer.GameInteraction
                 }
                 else if (difference < 0)
                 {
-                    var itemToDrop = item.Split(countToDrop);
+                    var itemToDrop = item.Split(itemsLeft);
                     onMatched(itemToDrop);
                     break;
                 }
                 else
                 {
                     // less than needed
-                    countToDrop = difference;
+                    itemsLeft = difference;
                     onMatched(item);
                 }
             }
@@ -2517,6 +2535,61 @@ namespace WOTRMultiplayer.GameInteraction
             });
         }
 
+        public void UpdateZoneLootUI(bool isInteractable, int readyPlayersCount, int totalPlayersCount)
+        {
+            _mainThreadAccessor.Post(() =>
+            {
+                if (LootPCView?.ViewModel == null)
+                {
+                    _logger.LogWarning("Unable to update closed zone loot ui");
+                    return;
+                }
+
+                LootPCView.m_RemoveLootToggle.Interactable = isInteractable;
+                LootPCView.m_Button.Interactable = isInteractable; // Leave button
+                LootCollector.m_ButtonCollectAll.Interactable = isInteractable;
+
+                UpdateButtonTextCounter(LootCollector.m_ButtonCollectAllLabel, readyPlayersCount, totalPlayersCount);
+                UpdateButtonTextCounter(LootPCView.m_ButtonText, readyPlayersCount, totalPlayersCount);
+
+                _logger.LogInformation("ZoneLoot UI has been updated. IsInteractable={IsInteractable}, ReadyPlayers={ReadyPlayers}, TotalPlayers={TotalPlayers}", isInteractable, readyPlayersCount, totalPlayersCount);
+            });
+        }
+
+        public void UpdateZoneLootRemoveToggle(bool removeLoot)
+        {
+            _mainThreadAccessor.Post(() =>
+            {
+                if (LootPCView?.ViewModel == null)
+                {
+                    _logger.LogWarning("Unable to update closed zone loot ui");
+                    return;
+                }
+
+                LootPCView.ViewModel.RemoveUncollectedLoot.Value = removeLoot;
+
+                _logger.LogInformation("ZoneLoot Remove Uncollected loot toggle has been updated. RemoveLoot={RemoveLoot}", removeLoot);
+            });
+        }
+
+        public void CompleteZoneLoot()
+        {
+            _mainThreadAccessor.Post(() =>
+            {
+                if (LootPCView?.ViewModel == null)
+                {
+                    _logger.LogWarning("Unable to update closed zone loot ui");
+                    return;
+                }
+
+                // looks like we can just leave zone since item collection is synced anyway
+                // however, let's keep collect all just in case
+                LootPCView.ViewModel.CollectAll();
+
+                _logger.LogError("ZoneLoot has been completed");
+            });
+        }
+
         public void CollectGlobalMapIngredients(NetworkGlobalMapLocation globalMapLocation)
         {
             _mainThreadAccessor.Post(() =>
@@ -2861,26 +2934,41 @@ namespace WOTRMultiplayer.GameInteraction
             }
         }
 
-        private IEnumerable<ItemsCollection> GetLootContainers(NetworkLootContainer networkLootContainer)
+        private IEnumerable<ItemsCollection> GetLootableEntitiesInventory(NetworkLootableEntity lootableEntity)
         {
-            if (networkLootContainer.IsUnit)
+            if (lootableEntity == null)
             {
-                var unit = GetUnitEntity(networkLootContainer.Id);
-                if (unit == null)
-                {
-                    _logger.LogError("Unable to find unit to loot. UnitId={UnitId}", networkLootContainer.Id);
-                    return [];
-                }
-
-                return [unit.Inventory];
+                return [];
             }
 
-            var mapObject = GetMapObject(networkLootContainer.Id);
-            var lookupTargets = mapObject != null ? [mapObject]
-                : GetNeareastLootableMapObjects(networkLootContainer.Position);
+            switch (lootableEntity.Type)
+            {
+                case NetworkLootableEntityType.Unit:
+                    var unit = GetUnitEntity(lootableEntity.Id);
+                    if (unit == null)
+                    {
+                        _logger.LogError("Unable to find unit to loot. UnitId={UnitId}", lootableEntity.Id);
+                        return [];
+                    }
 
-            var mapObjectContainers = lookupTargets.Select(x => ((InteractionLootPart)x.Interactions.FindOrDefault(i => i is InteractionLootPart)).Loot);
-            return mapObjectContainers;
+                    return [unit.Inventory];
+                case NetworkLootableEntityType.Player:
+                    return [Game.Instance.Player.Inventory];
+                case NetworkLootableEntityType.MainStash:
+                    return [Game.Instance.Player.GetSharedStash(Player.SharedStashType.MAIN)];
+                case NetworkLootableEntityType.MemoriesStash:
+                    return [Game.Instance.Player.GetSharedStash(Player.SharedStashType.MEMORIES)];
+                case NetworkLootableEntityType.BesmaritesStash:
+                    return [Game.Instance.Player.GetSharedStash(Player.SharedStashType.BESMARITES)];
+                case NetworkLootableEntityType.MapObject:
+                default:
+                    var mapObject = GetMapObject(lootableEntity.Id);
+                    var lookupTargets = mapObject != null ? [mapObject]
+                        : GetNeareastLootableMapObjects(lootableEntity.Position);
+
+                    var mapObjectContainers = lookupTargets.Select(x => ((InteractionLootPart)x.Interactions.FindOrDefault(i => i is InteractionLootPart)).Loot);
+                    return mapObjectContainers;
+            }
         }
 
         private MechanicActionBarSlot LoadActionBarSlot(UnitEntityData unit, NetworkActionBarSlot networkActionBarSlot)
@@ -3193,6 +3281,12 @@ namespace WOTRMultiplayer.GameInteraction
             return lootbag;
         }
 
+        private bool IsSameUnholdedItem(ItemEntity itemEntity, NetworkItem networkLootItem)
+        {
+            // dead units retain it's holding state
+            return ((itemEntity.Owner?.State?.IsDead ?? true) || itemEntity.HoldingSlot == null) && IsSameItem(itemEntity, networkLootItem);
+        }
+
         private bool IsSameItem(ItemEntity itemEntity, NetworkItem networkLootItem)
         {
             var sameItemType = string.Equals(itemEntity.NameForAcronym, networkLootItem.Name, StringComparison.OrdinalIgnoreCase)
@@ -3217,22 +3311,8 @@ namespace WOTRMultiplayer.GameInteraction
                     lootObjectVM.UpdateCommand.Execute();
                 }
             }
-        }
 
-        private void TransferItems(ItemsCollection source, ItemsCollection target, List<LootTransferPair> transferList)
-        {
-            foreach (var transfer in transferList)
-            {
-                if (!string.Equals(transfer.ItemEntity.UniqueId, transfer.NetworkItem.UniqueId, StringComparison.OrdinalIgnoreCase))
-                {
-                    _logger.LogWarning("Updating mismatched transfer item id. ItemId={ItemId}, NetworkItemId={NetworkItemId}, ItemName={ItemName}, NetworkItemName={NetworkItemName}",
-                        transfer.ItemEntity.UniqueId, transfer.NetworkItem.UniqueId, transfer.ItemEntity.Name, transfer.NetworkItem.Name);
-
-                    transfer.ItemEntity.UniqueId = transfer.NetworkItem.UniqueId;
-                }
-
-                source.Transfer(transfer.ItemEntity, transfer.NetworkItem.Count, target);
-            }
+            LootPCView.ViewModel?.InventoryCollectionChanged();
         }
 
         private List<MapObjectEntityData> GetNeareastLootableMapObjects(NetworkVector3 position)

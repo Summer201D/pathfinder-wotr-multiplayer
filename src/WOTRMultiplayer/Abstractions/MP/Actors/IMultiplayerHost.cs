@@ -64,5 +64,7 @@ namespace WOTRMultiplayer.Abstractions.MP.Actors
         void OnGlobalMapEncounterAvoided();
 
         void OnGlobalMapRandomEncounterRolled(NetworkGlobalMapEncounter globalMapEncounter);
+
+        void OnZoneLootRemoveToggleChanged(bool removeUncollectedLoot);
     }
 }

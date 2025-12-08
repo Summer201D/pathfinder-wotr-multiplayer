@@ -507,26 +507,7 @@ namespace WOTRMultiplayer.MP
             }
         }
 
-        public bool CanLootUnit(string initiatorUnitId)
-        {
-            try
-            {
-                if (_multiplayerActorAccessor.Current == null)
-                {
-                    return true;
-                }
-
-                var isControlledByLocalPlayer = _multiplayerActorAccessor.Current.IsControlledByLocalPlayer(initiatorUnitId);
-                return isControlledByLocalPlayer;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error while checking if unit is allowed to be looted. InitiatorUnitId={InitiatorUnitId}", initiatorUnitId);
-                throw;
-            }
-        }
-
-        public void OnLootContainer(NetworkLootContainer networkLootContainer)
+        public void OnTransferInventoryItems(NetworkItemsTransfer networkItemsTransfer)
         {
             try
             {
@@ -535,17 +516,16 @@ namespace WOTRMultiplayer.MP
                     return;
                 }
 
-                _multiplayerActorAccessor.Current.OnLootContainer(networkLootContainer);
+                _multiplayerActorAccessor.Current.OnTransferInventoryItem(networkItemsTransfer);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error while looting container. ContainerId={ContainerId}", networkLootContainer?.Id);
+                _logger.LogError(ex, "Error while transfering inventory item. Source={Source}, Destination={Destination}", networkItemsTransfer.Source?.Id, networkItemsTransfer.Destination?.Id);
                 throw;
             }
         }
 
-
-        public void OnSkinLootContainer(NetworkLootContainer container)
+        public void OnSkinLootContainer(NetworkLootableEntity networkLootableEntity)
         {
             try
             {
@@ -554,11 +534,11 @@ namespace WOTRMultiplayer.MP
                     return;
                 }
 
-                _multiplayerActorAccessor.Current.OnSkinLootContainer(container);
+                _multiplayerActorAccessor.Current.OnSkinLootContainer(networkLootableEntity);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error while skinning loot container. ContainerId={ContainerId}", container?.Id);
+                _logger.LogError(ex, "Error while skinning lootable entity. ContainerId={ContainerId}", networkLootableEntity.Id);
                 throw;
             }
         }
@@ -1897,6 +1877,96 @@ namespace WOTRMultiplayer.MP
         public bool CanNavigateOnGlobalMap()
         {
             return _multiplayerActorAccessor.Host.IsActive;
+        }
+
+        public void OnZoneLootShown()
+        {
+            try
+            {
+                if (_multiplayerActorAccessor.Current == null)
+                {
+                    return;
+                }
+
+                _multiplayerActorAccessor.Current.OnZoneLootShown();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while showing zone loot");
+                throw;
+            }
+        }
+
+        public void OnZoneLootClosed()
+        {
+            try
+            {
+                if (_multiplayerActorAccessor.Current == null)
+                {
+                    return;
+                }
+
+                _multiplayerActorAccessor.Current.OnZoneLootClosed();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while closing zone loot");
+                throw;
+            }
+        }
+
+        public void OnZoneLootRemoveToggleChanged(bool removeUncollectedLoot)
+        {
+            try
+            {
+                if (_multiplayerActorAccessor.Current == null || _multiplayerActorAccessor.Client.IsActive)
+                {
+                    return;
+                }
+
+                _multiplayerActorAccessor.Host.OnZoneLootRemoveToggleChanged(removeUncollectedLoot);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while changing zone loot remove toggle");
+                throw;
+            }
+        }
+
+        public void OnZoneLootCompleted()
+        {
+            try
+            {
+                if (_multiplayerActorAccessor.Current == null)
+                {
+                    return;
+                }
+
+                _multiplayerActorAccessor.Current.OnZoneLootCompleted();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while completing zone loot");
+                throw;
+            }
+        }
+
+        public void OnZoneLootCollectorButtonsUpdated()
+        {
+            try
+            {
+                if (_multiplayerActorAccessor.Current == null)
+                {
+                    return;
+                }
+
+                _multiplayerActorAccessor.Current.OnZoneLootCollectorButtonsUpdated();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while updating zone loot collector buttons");
+                throw;
+            }
         }
 
         private void ShowEscMenuMultiplayerLobby()
