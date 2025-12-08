@@ -60,7 +60,6 @@ namespace WOTRMultiplayer.Networking
         {
             IsConnecting = false;
 
-            _logger.LogError(args.Error, "Network client error");
             OnError?.Invoke(args.Error);
         }
 
@@ -113,6 +112,7 @@ namespace WOTRMultiplayer.Networking
         {
             _logger.LogInformation("Resetting. IsActive={IsActive}", IsActive);
             IsConnecting = false;
+            _handlers.Clear();
             _client?.Dispose();
         }
 

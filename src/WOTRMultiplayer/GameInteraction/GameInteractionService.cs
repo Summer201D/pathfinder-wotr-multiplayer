@@ -1525,7 +1525,7 @@ namespace WOTRMultiplayer.GameInteraction
             {
                 try
                 {
-                    if (SkipTimeView.ViewModel == null)
+                    if (SkipTimeView?.ViewModel == null)
                     {
                         _logger.LogWarning("Unable to update skip time due to missing UI");
                         return;

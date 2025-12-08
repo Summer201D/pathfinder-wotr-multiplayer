@@ -13,7 +13,6 @@ using WOTRMultiplayer.Abstractions.UI.Controllers;
 using WOTRMultiplayer.Abstractions.UI.Controllers.Menu;
 using WOTRMultiplayer.Abstractions.Unity;
 using WOTRMultiplayer.Extensions;
-using WOTRMultiplayer.Localization;
 using WOTRMultiplayer.MP.Entities;
 using WOTRMultiplayer.UI.Menu;
 
@@ -253,6 +252,12 @@ namespace WOTRMultiplayer.UI.Controllers
         private void OnMultiplayerPlayersChanged(List<NetworkPlayer> players)
         {
             Lobby.UpdatePlayers(players);
+
+            MainThreadAccessor.Post(() =>
+            {
+                ReadyButtonObject.GetComponent<OwlcatButton>().Interactable = true;
+                LeaveButtonObject.GetComponent<OwlcatButton>().Interactable = true;
+            });
         }
 
         private void OnMultiplayerGameCharactersChanged(List<NetworkCharacterOwnership> characters)
@@ -275,6 +280,7 @@ namespace WOTRMultiplayer.UI.Controllers
 
         private void OnLeaveButtonClicked()
         {
+            _logger.LogInformation("Leave button clicked");
             ActivateJoinLobbyControls();
         }
 
@@ -287,6 +293,9 @@ namespace WOTRMultiplayer.UI.Controllers
                 JoinLobbyControlsObject.SetActive(false);
                 LobbyControls.SetActive(true);
                 LobbyWindow.SetActive(true);
+
+                ReadyButtonObject.GetComponent<OwlcatButton>().Interactable = false;
+                LeaveButtonObject.GetComponent<OwlcatButton>().Interactable = false;
             });
         }
 

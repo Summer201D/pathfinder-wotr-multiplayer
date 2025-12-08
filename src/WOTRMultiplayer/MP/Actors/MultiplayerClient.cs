@@ -1048,7 +1048,10 @@ namespace WOTRMultiplayer.MP.Actors
                     break;
             }
 
-            InvokeOnNetworkError(error, socketError);
+            if (!string.IsNullOrEmpty(error))
+            {
+                InvokeOnNetworkError(error, socketError);
+            }
         }
 
         private void InvokeOnNetworkError(string error, SocketError? socketError = null)
