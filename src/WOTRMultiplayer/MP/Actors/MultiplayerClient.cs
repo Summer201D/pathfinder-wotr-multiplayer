@@ -255,7 +255,7 @@ namespace WOTRMultiplayer.MP.Actors
             }
             catch (Exception ex)
             {
-                Logger.LogError(ex, "Unable to retreive random encounter context");
+                Logger.LogError(ex, "Unable to retrieve random encounter context");
                 throw;
             }
         }
@@ -277,13 +277,13 @@ namespace WOTRMultiplayer.MP.Actors
                     ActionIndex = Game.Combat.AIActions.Count
                 };
 
-                Logger.LogInformation("Retrieving AI action. UnitId={unitID}, ActionIndex={inadex}", networkAIAction.UnitId, message.ActionIndex);
+                Logger.LogInformation("Retrieving AI action. UnitId={UnitId}, ActionIndex={ActionIndex}", networkAIAction.UnitId, message.ActionIndex);
 
                 var response = _networkClient.SendAndWaitFor<AIActionResponse>(message);
 
                 if (response?.Action == null)
                 {
-                    Logger.LogWarning("Host has no next action for current unit. UnitId={unitId}", networkAIAction.UnitId);
+                    Logger.LogWarning("Host has no next action for current unit. UnitId={UnitId}", networkAIAction.UnitId);
                     return null;
                 }
 
@@ -292,7 +292,7 @@ namespace WOTRMultiplayer.MP.Actors
                 if (string.Equals(action.ActionBlueprintId, networkAIAction.ActionBlueprintId, StringComparison.OrdinalIgnoreCase)
                     && string.Equals(action.TargetId, networkAIAction.TargetId, StringComparison.OrdinalIgnoreCase))
                 {
-                    Logger.LogInformation("Host AI action is the same, nothing to do here. UnitId={unitID}, ActionBlueprintId={actionId}, TargetUnitId={targetId}", networkAIAction.UnitId, networkAIAction.ActionBlueprintId, networkAIAction.TargetId);
+                    Logger.LogInformation("Host AI action is the same, nothing to do here. UnitId={UnitId}, ActionBlueprintId={ActionBlueprintId}, TargetUnitId={TargetUnitId}", networkAIAction.UnitId, networkAIAction.ActionBlueprintId, networkAIAction.TargetId);
                     Game.Combat.AIActions.Add(networkAIAction);
                     return null;
                 }
@@ -302,7 +302,7 @@ namespace WOTRMultiplayer.MP.Actors
             }
             catch (Exception ex)
             {
-                Logger.LogError(ex, "Unable to retreive AI action. UnitId={unitId}", networkAIAction.UnitId);
+                Logger.LogError(ex, "Unable to retrieve AI action. UnitId={UnitId}", networkAIAction.UnitId);
                 throw;
             }
         }
@@ -318,7 +318,7 @@ namespace WOTRMultiplayer.MP.Actors
             {
                 UnitId = unitId
             };
-            Logger.LogInformation("Sending {MessageType}. UnitId={unitId}", nameof(ClientCharacterLevelingRequested), message.UnitId);
+            Logger.LogInformation("Sending {MessageType}. UnitId={UnitId}", nameof(ClientCharacterLevelingRequested), message.UnitId);
             Send(message);
             return false;
         }
@@ -429,7 +429,7 @@ namespace WOTRMultiplayer.MP.Actors
             base.SetupNetworkMessageHandlers();
 
             _networkClient
-               // this is kinda special because requester is blocking the thread (most likely game main loop) until <see cref="DiceRollValueResponse"/> is received
+               // this is kind of special because requester is blocking the thread (most likely game main loop) until <see cref="DiceRollValueResponse"/> is received
                .On<DiceRollValueRequest>(OnDiceRollValueRequest)
 
                // lobby
@@ -817,7 +817,7 @@ namespace WOTRMultiplayer.MP.Actors
 
             if (Game.Dialog != null && Game.Dialog.IsSelectingAnswer)
             {
-                Logger.LogWarning("Waiting until client finished processing previos answer");
+                Logger.LogWarning("Waiting until client finished processing previous answer");
                 while (Game.Dialog.IsSelectingAnswer)
                 {
                     await Task.Delay(TimeSpan.FromMilliseconds(10));
