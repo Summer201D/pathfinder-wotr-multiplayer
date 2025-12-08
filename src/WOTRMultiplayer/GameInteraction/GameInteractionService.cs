@@ -1288,7 +1288,7 @@ namespace WOTRMultiplayer.GameInteraction
 
             _mainThreadAccessor.Post(() =>
             {
-                _logger.LogInformation("Applying settings. Settings={Settings}", networkGameSettings);
+                _logger.LogInformation("Applying settings");
                 // turn based
                 SettingsRoot.Game.TurnBased.EnableTurnBasedMode.SetValueAndConfirm(networkGameSettings.TurnBased.IsTurnBasedModeEnabled);
                 SettingsRoot.Game.TurnBased.AutoEndTurn.SetValueAndConfirm(networkGameSettings.TurnBased.AutoEndTurn);

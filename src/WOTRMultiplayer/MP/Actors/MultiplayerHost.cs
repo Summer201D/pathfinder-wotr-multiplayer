@@ -155,17 +155,12 @@ namespace WOTRMultiplayer.MP.Actors
         public void Reset()
         {
             Logger.LogInformation("Resetting");
+            lock (ActionLock)
+            {
+                Game?.Reset();
+            }
 
-            Game?.Reset();
             _networkServer.Reset();
-        }
-
-        public bool ReadyChanged()
-        {
-            var player = Game.Players.First(p => p.Id == Game.LocalPlayerId); // host should be always present
-            var readyChanged = new PlayerReadyStatusChanged { PlayerId = player.Id, IsReady = !player.IsReady };
-            OnPlayerReadyStatusChanged(player.Id, readyChanged);
-            return readyChanged.IsReady;
         }
 
         public void Start()
@@ -179,7 +174,8 @@ namespace WOTRMultiplayer.MP.Actors
                 return;
             }
 
-            foreach (var player in Game.Players)
+            var players = GetPlayers();
+            foreach (var player in players)
             {
                 var status = player.Id == NetworkingConsts.HostPlayerId ? NetworkPlayerSaveGameSyncStatus.Succeed : NetworkPlayerSaveGameSyncStatus.None;
                 UpdatePlayerSaveGameSyncStatus(player, status);
@@ -339,7 +335,7 @@ namespace WOTRMultiplayer.MP.Actors
                 Logger.LogInformation("Sending {MessageType}. Seed={Seed}, RoundNumber={RoundNumber}, HasSurprisingRound={HasSurprisingRound}, UnitsInCombat={UnitsInCombat}", nameof(NotifyCombatInitialized), message.Seed, message.CombatState.RoundNumber, message.CombatState.HasSurpriseRound, message.CombatState.Units.Count);
             }
 
-            var canContinue = Game.Combat.PlayersCombatInitialization.Count >= Game.Players.Count;
+            var canContinue = Game.Combat.PlayersCombatInitialization.Count >= GetPlayersCount();
             return canContinue;
         }
 
@@ -1388,7 +1384,7 @@ namespace WOTRMultiplayer.MP.Actors
         {
             var playersChanged = new NotifyLobbyPlayersChanged
             {
-                Players = Mapper.Map<List<Networking.Messages.Contracts.NetworkPlayer>>(Game.Players)
+                Players = Mapper.Map<List<Networking.Messages.Contracts.NetworkPlayer>>(GetPlayers())
             };
             return playersChanged;
         }
@@ -1400,7 +1396,9 @@ namespace WOTRMultiplayer.MP.Actors
                 Name = SettingsService.GetSettings().PlayerName
             };
 
+            // no need to lock yet
             Game.Players.Add(hostPlayer);
+
             Game.Connectivity = new NetworkGameConnectivity
             {
                 Endpoint = endpoint
@@ -1415,7 +1413,7 @@ namespace WOTRMultiplayer.MP.Actors
             GameInteraction.ApplyGameSettings(settings);
 
             OnConnected?.Invoke(Game.Connectivity);
-            OnPlayersChanged?.Invoke(Game.Players);
+            OnPlayersChanged?.Invoke(GetPlayers());
         }
 
         private NetworkGameSettings GetEnforcedGameSettings()
@@ -1485,8 +1483,11 @@ namespace WOTRMultiplayer.MP.Actors
                 return [];
             }
 
-            var players = Game.Players.Where(p => !cueViews.Contains(p.Id)).ToList();
-            return players;
+            lock (ActionLock)
+            {
+                var players = Game.Players.Where(p => !cueViews.Contains(p.Id)).ToList();
+                return players;
+            }
         }
 
         private void TryEnableDialogContinueButton()
@@ -1615,7 +1616,7 @@ namespace WOTRMultiplayer.MP.Actors
 
         private void UpdateStartRestButton(int readyPlayersCount)
         {
-            var totalPlayersCount = Game.Players.Count;
+            var totalPlayersCount = GetPlayersCount();
             var isInteractable = readyPlayersCount >= totalPlayersCount;
             GameInteraction.UpdateStartRestButtonState(isInteractable, readyPlayersCount, totalPlayersCount);
         }

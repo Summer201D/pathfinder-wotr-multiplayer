@@ -188,7 +188,7 @@ namespace WOTRMultiplayer.UnitTests.Random
 
         private static IEnumerable<UniqueIdType> GetAllUniqueIdTypes()
         {
-            return Enum.GetValues(typeof(UniqueIdType)).Cast<UniqueIdType>();
+            return [.. Enum.GetValues(typeof(UniqueIdType)).Cast<UniqueIdType>()];
         }
     }
 }

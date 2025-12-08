@@ -99,16 +99,6 @@ namespace WOTRMultiplayer.MP.Actors
             return AddressParseResult.Ok();
         }
 
-        public bool ReadyChanged()
-        {
-            Logger.LogInformation("Toggling ready status changed");
-            var player = Game.Players.First(p => p.Id == Game.LocalPlayerId);
-            player.IsReady = !player.IsReady;
-            var readyChanged = new PlayerReadyStatusChanged { PlayerId = player.Id, IsReady = player.IsReady };
-            Send(readyChanged);
-            return readyChanged.IsReady;
-        }
-
         public void Reset()
         {
             Logger.LogInformation("Resetting");

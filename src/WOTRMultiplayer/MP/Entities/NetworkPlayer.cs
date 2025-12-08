@@ -1,4 +1,6 @@
-﻿namespace WOTRMultiplayer.MP.Entities
+﻿using WOTRMultiplayer.MP.Entities.Content;
+
+namespace WOTRMultiplayer.MP.Entities
 {
     public class NetworkPlayer
     {
@@ -8,15 +10,13 @@
 
         public bool IsReady { get; set; }
 
+        public NetworkContentState ContentState { get; set; }
+
         public NetworkPlayerSaveGameSyncStatus SaveGameSyncStatus { get; set; }
 
         public NetworkPlayer(long id)
         {
             Id = id;
-        }
-
-        public NetworkPlayer()
-        {
         }
     }
 }
