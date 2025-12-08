@@ -982,18 +982,22 @@ namespace WOTRMultiplayer.MP.Actors
         {
             Logger.LogInformation("Received {MessageType}. PlayersCount={PlayersCount}", nameof(NotifyLobbyPlayersChanged), changed.Players.Count);
 
-            foreach (var changedPlayer in changed.Players)
-            {
-                var existingPlayer = Game.Players.FirstOrDefault(p => p.Id == changedPlayer.Id);
-                if (existingPlayer == null)
-                {
-                    var newPlayer = Mapper.Map<NetworkPlayer>(changedPlayer);
-                    Game.Players.Add(newPlayer);
-                    continue;
-                }
+            // a lot of lame lookups below, but shouldn't really matter for a small collection size
+            var disconnectedPlayers = Game.Players.Where(x => !changed.Players.Any(c => c.Id == x.Id)).ToList();
+            var newPlayers = changed.Players.Where(x => !Game.Players.Any(c => c.Id == x.Id)).ToList();
+            // no need to handle updates here as any ready/loading/etc statuses are synced separately
 
-                CleanupPlayer(existingPlayer);
-                ShowPlayerDisconnectedMessage(existingPlayer);
+            foreach (var disconnectedPlayer in disconnectedPlayers)
+            {
+                CleanupPlayer(disconnectedPlayer);
+                ShowPlayerDisconnectedMessage(disconnectedPlayer);
+            }
+
+            foreach (var newPlayer in newPlayers)
+            {
+                var player = Mapper.Map<NetworkPlayer>(newPlayer);
+                Game.Players.Add(player);
+                ShowPlayerConnectedMessage(player);
             }
 
             OnPlayersChanged?.Invoke(Game.Players);

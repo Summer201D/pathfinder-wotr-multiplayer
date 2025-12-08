@@ -1313,10 +1313,7 @@ namespace WOTRMultiplayer.MP.Actors
                     Logger.LogInformation("Sending {MessageType} to new player. PlayerId={PlayerId}", nameof(NotifyCharactersOwnerChanged), playerId);
                     _networkServer.Send(playerId, charactersOwnerChanged);
 
-                    if (Game.Stage == NetworkGameStage.Playing)
-                    {
-                        GameInteraction.ShowWarningNotification(WellKnownKeys.GameNotifications.Session.PlayerJoined.Key, existingPlayer.Name);
-                    }
+                    ShowPlayerConnectedMessage(existingPlayer);
                 }
             }
             catch (Exception ex)
@@ -1377,6 +1374,14 @@ namespace WOTRMultiplayer.MP.Actors
 
                 RemovePlayerFromTracker(Game.PlayersInSkipTime, removedPlayer.Id);
                 UpdateSkipTimeUIState();
+
+                RemovePlayerFromTracker(Game.PlayersInGroupChanger, removedPlayer.Id);
+                UpdateGroupManagerUIState();
+
+                RemovePlayerFromTracker(Game.PlayersInZoneLoot, removedPlayer.Id);
+                UpdateZoneLootUIState();
+
+                TryEndForcedPause();
             }
         }
 

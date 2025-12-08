@@ -1211,6 +1211,15 @@ namespace WOTRMultiplayer.MP.Actors
             return false;
         }
 
+        protected void ShowPlayerConnectedMessage(NetworkPlayer networkPlayer)
+        {
+            if (Game.Stage != NetworkGameStage.Playing)
+            {
+                return;
+            }
+
+            GameInteraction.ShowWarningNotification(WellKnownKeys.GameNotifications.Session.PlayerJoined.Key, networkPlayer.Name);
+        }
 
         protected void ShowPlayerDisconnectedMessage(NetworkPlayer networkPlayer)
         {
@@ -1239,12 +1248,15 @@ namespace WOTRMultiplayer.MP.Actors
         {
             Game.Players.Remove(player);
 
+            var defaultOwner = GetPlayer(NetworkingConsts.HostPlayerId);
             foreach (var characterOwnership in Game.Characters)
             {
-                if (characterOwnership.Owner == player)
+                if (characterOwnership.Owner != player)
                 {
-                    characterOwnership.Owner = GetPlayer(NetworkingConsts.HostPlayerId);
+                    continue;
                 }
+
+                characterOwnership.Owner = defaultOwner;
             }
         }
 
