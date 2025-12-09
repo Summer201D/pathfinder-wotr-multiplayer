@@ -6,7 +6,7 @@ using Kingmaker.UnitLogic.ActivatableAbilities;
 using Microsoft.Extensions.Logging;
 using WOTRMultiplayer.MP.Entities.Combat;
 
-namespace WOTRMultiplayer.HarmonyPatches.Abilities
+namespace WOTRMultiplayer.HarmonyPatches.Combat
 {
     [HarmonyPatch]
     public class ActivatableAbilityPatches

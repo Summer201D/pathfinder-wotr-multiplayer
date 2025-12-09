@@ -1490,7 +1490,6 @@ namespace WOTRMultiplayer.MP.Actors
                 IsHost = true
             };
 
-            // no need to lock yet
             Game.Players.Add(hostPlayer);
 
             Game.Connectivity = new NetworkGameConnectivity
@@ -1508,6 +1507,7 @@ namespace WOTRMultiplayer.MP.Actors
 
             OnConnected?.Invoke(Game.Connectivity);
             OnPlayersChanged?.Invoke(GetPlayers());
+            Logger.LogInformation("Server has been started. DLCs={DLCs}, Mods={Mods}", hostPlayer.ContentState.DLCs.Count, hostPlayer.ContentState.Mods.Count);
         }
 
         private NetworkGameSettings GetEnforcedGameSettings()

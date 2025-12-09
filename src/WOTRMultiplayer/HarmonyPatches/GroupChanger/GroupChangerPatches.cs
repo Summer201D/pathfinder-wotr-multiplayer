@@ -2,14 +2,14 @@
 using Kingmaker.UI.MVVM._PCView.GroupChanger;
 using Kingmaker.UI.MVVM._VM.GroupChanger;
 
-namespace WOTRMultiplayer.HarmonyPatches.GroupManagment
+namespace WOTRMultiplayer.HarmonyPatches.GroupChanger
 {
     [HarmonyPatch]
     public class GroupChangerPatches
     {
         [HarmonyPatch(typeof(GroupChangerPCView), nameof(GroupChangerPCView.BindViewImplementation))]
         [HarmonyPostfix]
-        public static void GroupManager_BindViewImplementation_Postfix(GroupChangerPCView __instance)
+        public static void GroupManager_BindViewImplementation_Postfix()
         {
             if (!Main.Multiplayer.IsActive)
             {
@@ -47,7 +47,7 @@ namespace WOTRMultiplayer.HarmonyPatches.GroupManagment
 
         [HarmonyPatch(typeof(GroupChangerCommonVM), nameof(GroupChangerCommonVM.InternalGo))]
         [HarmonyPrefix]
-        public static void GroupChangerCommonVM_InternalGo_Prefix(GroupChangerCommonVM __instance)
+        public static void GroupChangerCommonVM_InternalGo_Prefix()
         {
             if (!Main.Multiplayer.IsActive)
             {
