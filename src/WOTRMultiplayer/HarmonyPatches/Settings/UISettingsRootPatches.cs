@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using HarmonyLib;
-using Kingmaker.Settings;
 using Kingmaker.UI.SettingsUI;
 
 namespace WOTRMultiplayer.HarmonyPatches.Settings
@@ -30,9 +29,26 @@ namespace WOTRMultiplayer.HarmonyPatches.Settings
                 return;
             }
 
+            UpdateGameSettings(__instance);
+            UpdateDifficultySettings(__instance);
+        }
+
+        private static void UpdateDifficultySettings(UISettingsManager uiSettingsManager)
+        {
+            foreach (var settingsGroup in uiSettingsManager.m_DifficultySettingsList)
+            {
+                foreach (var settingEntity in settingsGroup.SettingsList)
+                {
+                    DisableSetting(settingEntity);
+                }
+            }
+        }
+
+        private static void UpdateGameSettings(UISettingsManager uiSettingsManager)
+        {
             const string GameAutopauseSettingsGroup = "GameAutopauseSettingsGroup";
 
-            foreach (var settingsGroup in __instance.m_GameSettingsList)
+            foreach (var settingsGroup in uiSettingsManager.m_GameSettingsList)
             {
                 var settingsGroupName = settingsGroup.name;
                 foreach (var settingEntity in settingsGroup.SettingsList)
@@ -44,45 +60,15 @@ namespace WOTRMultiplayer.HarmonyPatches.Settings
                         continue;
                     }
 
-                    var floatValue = FindValueBase<float>(settingEntity.GetType(), settingEntity);
-                    if (floatValue != null)
-                    {
-                        floatValue.ManualModificationLock = true;
-                        continue;
-                    }
-                    var boolValue = FindValueBase<bool>(settingEntity.GetType(), settingEntity);
-                    if (boolValue != null)
-                    {
-                        boolValue.ManualModificationLock = true;
-                        continue;
-                    }
-                    var entityValue = FindValueBase<EntitiesType>(settingEntity.GetType(), settingEntity);
-                    if (entityValue != null)
-                    {
-                        entityValue.ManualModificationLock = true;
-                    }
+                    DisableSetting(settingEntity);
                 }
             }
         }
 
-        private static UISettingsEntityWithValueBase<T> FindValueBase<T>(Type type, object obj)
+        private static void DisableSetting(UISettingsEntityBase settingEntity)
         {
-            if (type == null)
-            {
-                return null;
-            }
-
-            if (type.GenericTypeArguments.Length == 0)
-            {
-                return FindValueBase<T>(type.BaseType, obj);
-            }
-
-            if (typeof(UISettingsEntityWithValueBase<T>).IsAssignableFrom(type))
-            {
-                return (UISettingsEntityWithValueBase<T>)obj;
-            }
-
-            return FindValueBase<T>(type.BaseType, obj);
+            var field = settingEntity.GetType().GetField(nameof(UISettingsEntityWithValueBase<object>.ManualModificationLock));
+            field?.SetValue(settingEntity, true);
         }
     }
 }
