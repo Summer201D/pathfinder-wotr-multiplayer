@@ -196,6 +196,9 @@ Some rules for the leveling screen:
 - The character owner has to wait while the screen loads for everyone else. Switching phases (like from class selection to skill points) locks the owner until everyone has loaded the new phase.
 - Closing the leveling screen as the owner closes it for everyone.
 
+### Mythic leveling
+same rules apply
+
 ## Entity ID Generation 
 The game originally used a single counter to generate new entity IDs (for characters, area effects, facts, map objects, etc.), however this approach didn't work well in network environment. Now it uses a "consistent" generator that considers the current game state (gameId, location, etc.), so IDs should match across all multiplayer players.
 
@@ -210,9 +213,6 @@ You can either ignore it (if the outcome is more or less the same for everyone) 
 
 ### Abilities
 Only basic usage of abilities is available. Any extra conditions like metamagic will not work properly as those modifications will not be applied for remote players
-
-### Mythic leveling
-not ready yet, but it will work the same way as regular leveling
 
 ### Hiring Merc
 CharGen screen is synced for leveling only. You will need to create initial merc locally and then host multiplayer game

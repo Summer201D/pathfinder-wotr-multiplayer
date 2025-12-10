@@ -133,7 +133,7 @@ namespace WOTRMultiplayer.Abstractions.MP
 
         void OnForgetSpell(NetworkSpellSlot networkSpellSlot);
 
-        bool RequestLevelingUI(string unitId);
+        bool RequestLevelingUI(string unitId, NetworkLevelingType levelingType);
 
         void OnLevelingClassArchetypeSelected(string archetypeId);
 

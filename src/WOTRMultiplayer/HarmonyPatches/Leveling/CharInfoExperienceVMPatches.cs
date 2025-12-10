@@ -15,7 +15,7 @@ namespace WOTRMultiplayer.HarmonyPatches.Leveling
                 return true;
             }
 
-            var canContinue = Main.Multiplayer.RequestLevelingUI(__instance.Unit.Value.Unit.UniqueId);
+            var canContinue = Main.Multiplayer.RequestLevelingUI(__instance.Unit.Value.Unit.UniqueId, MP.Entities.Leveling.NetworkLevelingType.Leveling);
             return canContinue;
         }
     }

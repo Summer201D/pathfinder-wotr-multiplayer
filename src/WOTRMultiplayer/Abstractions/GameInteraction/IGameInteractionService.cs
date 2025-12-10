@@ -144,7 +144,7 @@ namespace WOTRMultiplayer.Abstractions.GameInteraction
 
         void MemorizeSpell(NetworkSpellSlot networkSpellSlot);
 
-        void StartLeveling(string unitId);
+        void StartLeveling(string unitId, NetworkLevelingType levelingType);
 
         void SelectLevelingClassArchetype(string archetypeId);
 
@@ -235,6 +235,9 @@ namespace WOTRMultiplayer.Abstractions.GameInteraction
         void UpdateZoneLootRemoveToggle(bool removeLoot);
 
         void CompleteZoneLoot();
+
         NetworkContentState GetInstalledContent();
+
+        bool IsInCombat();
     }
 }

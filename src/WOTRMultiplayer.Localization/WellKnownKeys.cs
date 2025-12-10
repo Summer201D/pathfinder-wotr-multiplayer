@@ -564,6 +564,22 @@ public static class WellKnownKeys
         [Description("leveling")]
         public static class Leveling
         {
+            [Description("mythicLeveling")]
+            public static class MythicLeveling
+            {
+                [Description("completed")]
+                public static class Completed
+                {
+                    public static string Key { get; set; }
+                }
+
+                [Description("terminated")]
+                public static class Terminated
+                {
+                    public static string Key { get; set; }
+                }
+            }
+
             [Description("completed")]
             public static class Completed
             {

@@ -150,6 +150,10 @@
                 "noCampingPermission": "Camp can be placed by the host only"
             },
             "leveling": {
+                "mythicLeveling": {
+                    "completed": "{0}'s Mythic leveling has been completed",
+                    "terminated": "{0}'s Mythic leveling has been terminated"
+                },
                 "completed": "{0}'s leveling has been completed",
                 "terminated": "{0}'s leveling has been terminated",
                 "archetypeContentMismatch": "Unable to select archetype due to mismatched game content (DLCs/mods)"

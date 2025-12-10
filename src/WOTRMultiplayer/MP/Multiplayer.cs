@@ -1155,7 +1155,7 @@ namespace WOTRMultiplayer.MP
             }
         }
 
-        public bool RequestLevelingUI(string unitId)
+        public bool RequestLevelingUI(string unitId, NetworkLevelingType levelingType)
         {
             try
             {
@@ -1164,12 +1164,12 @@ namespace WOTRMultiplayer.MP
                     return true;
                 }
 
-                var canStartLeveling = _multiplayerActorAccessor.Current.OnRequestLevelingUI(unitId);
+                var canStartLeveling = _multiplayerActorAccessor.Current.OnRequestLevelingUI(unitId, levelingType);
                 return canStartLeveling;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error while requesting leveling UI. UnitId={UnitId}", unitId);
+                _logger.LogError(ex, "Error while requesting leveling UI. UnitId={UnitId}, Type={Type}", unitId, levelingType);
                 throw;
             }
         }

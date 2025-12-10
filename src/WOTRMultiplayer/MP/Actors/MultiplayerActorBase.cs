@@ -799,7 +799,12 @@ namespace WOTRMultiplayer.MP.Actors
             }
 
             var character = GetCharacterOwnership(Game.Leveling.UnitId);
-            GameInteraction.ShowWarningNotification(WellKnownKeys.GameNotifications.Leveling.Terminated.Key, character?.Name);
+            var messageKey = Game.Leveling.Type switch
+            {
+                NetworkLevelingType.MythicLeveling => WellKnownKeys.GameNotifications.Leveling.MythicLeveling.Terminated.Key,
+                NetworkLevelingType.Leveling or _ => WellKnownKeys.GameNotifications.Leveling.Terminated.Key
+            };
+            GameInteraction.ShowWarningNotification(messageKey, character?.Name);
             Game.Leveling = null;
         }
 
@@ -815,7 +820,12 @@ namespace WOTRMultiplayer.MP.Actors
             }
 
             var character = GetCharacterOwnership(Game.Leveling.UnitId);
-            GameInteraction.AddCombatText(WellKnownKeys.GameNotifications.Leveling.Completed.Key, character?.Name);
+            var messageKey = Game.Leveling.Type switch
+            {
+                NetworkLevelingType.MythicLeveling => WellKnownKeys.GameNotifications.Leveling.MythicLeveling.Completed.Key,
+                NetworkLevelingType.Leveling or _ => WellKnownKeys.GameNotifications.Leveling.Completed.Key
+            };
+            GameInteraction.AddCombatText(messageKey, character?.Name);
             Game.Leveling = null;
         }
 

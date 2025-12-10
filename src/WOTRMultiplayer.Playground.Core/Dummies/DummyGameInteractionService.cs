@@ -294,7 +294,7 @@ namespace WOTRMultiplayer.Playground.Core.Dummies
             return Task.FromResult(false);
         }
 
-        public void StartLeveling(string unitId)
+        public void StartLeveling(string unitId, NetworkLevelingType levelingType)
         {
         }
 
@@ -472,6 +472,11 @@ namespace WOTRMultiplayer.Playground.Core.Dummies
         public NetworkContentState GetInstalledContent()
         {
             return null;
+        }
+
+        public bool IsInCombat()
+        {
+            return false;
         }
     }
 }

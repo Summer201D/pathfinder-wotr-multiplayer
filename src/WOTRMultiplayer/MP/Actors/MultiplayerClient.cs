@@ -297,7 +297,7 @@ namespace WOTRMultiplayer.MP.Actors
             }
         }
 
-        public bool OnRequestLevelingUI(string unitId)
+        public bool OnRequestLevelingUI(string unitId, NetworkLevelingType networkCharGenScreenType)
         {
             if (Game.Leveling != null)
             {
@@ -306,9 +306,10 @@ namespace WOTRMultiplayer.MP.Actors
 
             var message = new ClientCharacterLevelingRequested
             {
-                UnitId = unitId
+                UnitId = unitId,
+                Type = networkCharGenScreenType.ToString()
             };
-            Logger.LogInformation("Sending {MessageType}. UnitId={UnitId}", nameof(ClientCharacterLevelingRequested), message.UnitId);
+            Logger.LogInformation("Sending {MessageType}. UnitId={UnitId}, CharGenScreenType={CharGenScreenType}", nameof(ClientCharacterLevelingRequested), message.UnitId, message.Type);
             Send(message);
             return false;
         }
@@ -639,11 +640,18 @@ namespace WOTRMultiplayer.MP.Actors
             GameInteraction.SetPause(true);
         }
 
-        private void OnNotifyCharacterLevelingStarted(long playerId, NotifyCharacterLevelingStarted started)
+        private void OnNotifyCharacterLevelingStarted(long playerId, NotifyCharacterLevelingStarted characterLevelingStarted)
         {
-            Logger.LogInformation("Received {MessageType}. UnitId={unitId}", nameof(NotifyCharacterLevelingStarted), started.UnitId);
-            Game.Leveling = new NetworkLeveling(started.UnitId);
-            GameInteraction.StartLeveling(started.UnitId);
+            Logger.LogInformation("Received {MessageType}. UnitId={unitId}, Type={Type}", nameof(NotifyCharacterLevelingStarted), characterLevelingStarted.UnitId, characterLevelingStarted.Type);
+
+            if (!Enum.TryParse<NetworkLevelingType>(characterLevelingStarted.Type, true, out var levelingType))
+            {
+                Logger.LogError("Invalid leveling type value. Value={Value}", characterLevelingStarted.Type);
+                return;
+            }
+
+            Game.Leveling = new NetworkLeveling(characterLevelingStarted.UnitId, levelingType);
+            GameInteraction.StartLeveling(Game.Leveling.UnitId, Game.Leveling.Type);
         }
 
         private void OnNotifyVendorWindowClosed(long playerId, NotifyVendorWindowClosed closed)

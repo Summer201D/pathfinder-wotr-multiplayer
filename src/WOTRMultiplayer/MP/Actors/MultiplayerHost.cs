@@ -516,21 +516,22 @@ namespace WOTRMultiplayer.MP.Actors
             Send(message);
         }
 
-        public bool OnRequestLevelingUI(string unitId)
+        public bool OnRequestLevelingUI(string unitId, NetworkLevelingType levelingType)
         {
             if (Game.Leveling != null)
             {
-                Logger.LogWarning("Previous character leveling has not been disposed correctly. UnitId={UnitId}", Game.Leveling.UnitId);
+                Logger.LogWarning("Previous character leveling has not been disposed correctly. UnitId={UnitId}, Type={Type}", Game.Leveling.UnitId, Game.Leveling.Type);
             }
 
             lock (ActionLock)
             {
-                Game.Leveling = new NetworkLeveling(unitId);
+                Game.Leveling = new NetworkLeveling(unitId, levelingType);
                 var message = new NotifyCharacterLevelingStarted
                 {
-                    UnitId = unitId
+                    UnitId = unitId,
+                    Type = levelingType.ToString()
                 };
-                Logger.LogInformation("Sending {MessageType}. UnitId={UnitId}", nameof(NotifyCharacterLevelingStarted), message.UnitId);
+                Logger.LogInformation("Sending {MessageType}. UnitId={UnitId}, Type={Type}", nameof(NotifyCharacterLevelingStarted), message.UnitId, message.Type);
                 Send(message);
             }
 
@@ -979,24 +980,31 @@ namespace WOTRMultiplayer.MP.Actors
             }
         }
 
-        private void OnClientCharacterLevelingRequested(long playerId, ClientCharacterLevelingRequested requested)
+        private void OnClientCharacterLevelingRequested(long playerId, ClientCharacterLevelingRequested characterLevelingRequested)
         {
-            Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}, UnitId={UnitId}", nameof(ClientCharacterLevelingRequested), playerId, requested.UnitId);
+            Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}, UnitId={UnitId}, Type={Type}", nameof(ClientCharacterLevelingRequested), playerId, characterLevelingRequested.UnitId, characterLevelingRequested.Type);
+
+            if (!Enum.TryParse<NetworkLevelingType>(characterLevelingRequested.Type, true, out var levelingType))
+            {
+                Logger.LogError("Invalid char gen screen type value. Value={Value}", characterLevelingRequested.Type);
+                return;
+            }
 
             lock (ActionLock)
             {
                 if (Game.Leveling != null)
                 {
-                    Logger.LogInformation("Leveling is already in progress. UnitId={UnitId}, RequestedUnitId={RequestedUnitId}", Game.Leveling.UnitId, requested.UnitId);
+                    Logger.LogWarning("Leveling is already in progress. UnitId={UnitId}, RequestedUnitId={RequestedUnitId}, Type={Type}", Game.Leveling.UnitId, characterLevelingRequested.UnitId, Game.Leveling.Type);
                     var message = new NotifyCharacterLevelingStarted
                     {
-                        UnitId = Game.Leveling.UnitId
+                        UnitId = Game.Leveling.UnitId,
+                        Type = Game.Leveling.Type.ToString()
                     };
                     Send(message);
                     return;
                 }
 
-                GameInteraction.StartLeveling(requested.UnitId);
+                GameInteraction.StartLeveling(characterLevelingRequested.UnitId, levelingType);
             }
         }
 

@@ -8,5 +8,8 @@ namespace WOTRMultiplayer.Networking.Messages.Game
     {
         [ProtoMember(1)]
         public string UnitId { get; set; }
+
+        [ProtoMember(2)]
+        public string Type { get; set; }
     }
 }

@@ -1845,7 +1845,7 @@ namespace WOTRMultiplayer.GameInteraction
             });
         }
 
-        public void StartLeveling(string unitId)
+        public void StartLeveling(string unitId, NetworkLevelingType levelingType)
         {
             _mainThreadAccessor.Post(() =>
             {
@@ -1854,12 +1854,25 @@ namespace WOTRMultiplayer.GameInteraction
                     var partyView = PartyPCView?.m_Characters?.FirstOrDefault(p => string.Equals(p.UnitEntityData.UniqueId, unitId, StringComparison.OrdinalIgnoreCase));
                     if (partyView?.ViewModel == null)
                     {
-                        _logger.LogError("Unable to start leveling due to missing party character vm. UnitId={UnitId}", unitId);
+                        _logger.LogError("Unable to start leveling due to missing party character vm. UnitId={UnitId}, Type={Type}", unitId, levelingType);
                         return;
                     }
 
-                    _logger.LogInformation("Starting leveling process. UnitId={UnitId}", unitId);
-                    partyView.ViewModel.LevelUp();
+                    switch (levelingType)
+                    {
+                        case NetworkLevelingType.Leveling:
+                            _logger.LogInformation("Starting leveling process. UnitId={UnitId}", unitId);
+                            partyView.ViewModel.LevelUp();
+                            break;
+                        case NetworkLevelingType.MythicLeveling:
+                            _logger.LogError("Starting mythic leveling. UnitId={UnitId}", unitId);
+                            partyView.ViewModel.MythicLevelUp();
+                            break;
+                        case NetworkLevelingType.Mercenary:
+                        default:
+                            _logger.LogError("Not supported leveling type. UnitId={UnitId}, Type={Type}", unitId, levelingType);
+                            break;
+                    }
                 }
                 catch (Exception ex)
                 {
@@ -2722,6 +2735,11 @@ namespace WOTRMultiplayer.GameInteraction
             };
 
             return state;
+        }
+
+        public bool IsInCombat()
+        {
+            return Game.Instance.Player.IsInCombat;
         }
 
         private List<NetworkDLC> GetInstalledDLCs()
