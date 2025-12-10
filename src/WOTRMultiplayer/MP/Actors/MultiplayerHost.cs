@@ -1640,7 +1640,6 @@ namespace WOTRMultiplayer.MP.Actors
                     var delay = removalDelay.HasValue ? Task.Delay(removalDelay.Value) : Task.CompletedTask;
                     Game.ForcedPause.IsLifting = true;
                     Logger.LogInformation("Forced pause will be lifted soon. Delay={Delay}", removalDelay.GetValueOrDefault());
-                    GameInteraction.AddCombatText(WellKnownKeys.GameNotifications.ForcedPause.AreaLoading.Key);
                     delay.ContinueWith(x =>
                     {
                         Game.ForcedPause = null;
