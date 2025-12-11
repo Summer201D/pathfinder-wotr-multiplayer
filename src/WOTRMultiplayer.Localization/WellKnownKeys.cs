@@ -199,6 +199,12 @@ public static class WellKnownKeys
             [Description("contentDiscrepancy")]
             public static class ContentDiscrepancy
             {
+                [Description("title")]
+                public static class Title
+                {
+                    public static string Key { get; set; }
+                }
+
                 [Description("DLCs")]
                 public static class DLCs
                 {

@@ -19,7 +19,7 @@ namespace WOTRMultiplayer.UI.Tooltips
 
         public override IEnumerable<ITooltipBrick> GetHeader(TooltipTemplateType type)
         {
-            yield return new TooltipBrickTitle(_player.Name);
+            yield return new TooltipBrickTitle(string.Format(new LocalizedString { Key = WellKnownKeys.LobbyWindow.Tooltips.ContentDiscrepancy.Title.Key }, _player.Name));
         }
 
         public override IEnumerable<ITooltipBrick> GetBody(TooltipTemplateType type)

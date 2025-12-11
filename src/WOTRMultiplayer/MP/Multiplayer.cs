@@ -636,24 +636,6 @@ namespace WOTRMultiplayer.MP
             }
         }
 
-        public void OnPerceptionCheck(NetworkPerceptionCheck networkPerceptionCheck)
-        {
-            try
-            {
-                if (!_multiplayerActorAccessor.Host.IsActive)
-                {
-                    return;
-                }
-
-                _multiplayerActorAccessor.Host.OnPerceptionCheck(networkPerceptionCheck);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error while processing perception check. UnitId={UnitId}", networkPerceptionCheck?.UnitId);
-                throw;
-            }
-        }
-
         public bool CanMakePerceptionCheck(string unitId, string mapObjectId)
         {
             try
@@ -679,6 +661,46 @@ namespace WOTRMultiplayer.MP
             }
         }
 
+        public bool CanMakeStealthPerceptionCheck()
+        {
+            return _multiplayerActorAccessor.Current != null && _multiplayerActorAccessor.Host.IsActive;
+        }
+
+        public void OnPerceptionCheck(NetworkPerceptionCheck networkPerceptionCheck)
+        {
+            try
+            {
+                if (!_multiplayerActorAccessor.Host.IsActive)
+                {
+                    return;
+                }
+
+                _multiplayerActorAccessor.Host.OnPerceptionCheck(networkPerceptionCheck);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while processing perception check. UnitId={UnitId}", networkPerceptionCheck.UnitId);
+                throw;
+            }
+        }
+
+        public void OnStealthPerceptionCheckRolled(NetworkStealthPerceptionCheck networkStealthPerceptionCheck)
+        {
+            try
+            {
+                if (!_multiplayerActorAccessor.Host.IsActive)
+                {
+                    return;
+                }
+
+                _multiplayerActorAccessor.Host.OnStealthPerceptionCheckRolled(networkStealthPerceptionCheck);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while processing stealth perception check. UnitId={UnitId}, Roll={Roll}", networkStealthPerceptionCheck.InitiatorId, networkStealthPerceptionCheck.Roll);
+                throw;
+            }
+        }
 
         public bool OnInspectionKnowledgeCheck(NetworkInspectionKnowledgeCheck networkInspectionKnowledgeCheck)
         {

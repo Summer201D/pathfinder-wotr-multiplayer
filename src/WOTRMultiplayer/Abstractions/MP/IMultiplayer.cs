@@ -93,9 +93,13 @@ namespace WOTRMultiplayer.Abstractions.MP
 
         bool CanMakePerceptionCheck(string unitId, string mapObjectId);
 
+        bool CanMakeStealthPerceptionCheck();
+
         bool OnInspectionKnowledgeCheck(NetworkInspectionKnowledgeCheck networkInspectionKnowledgeCheck);
 
         void OnPerceptionCheck(NetworkPerceptionCheck networkPerceptionCheck);
+
+        void OnStealthPerceptionCheckRolled(NetworkStealthPerceptionCheck networkStealthPerceptionCheck);
 
         bool OnSpawnCampPlace(NetworkVector3 position);
 

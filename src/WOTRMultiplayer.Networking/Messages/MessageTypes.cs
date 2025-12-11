@@ -119,6 +119,7 @@
             NotifyZoneLootCompleted,
             NotifyZoneLootRemoveToggleChanged,
             NotifyInventoryItemTransferred,
+            NotifyStealthPerceptionCheckRolled,
         }
 
         public enum Request

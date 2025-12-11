@@ -360,24 +360,34 @@ namespace WOTRMultiplayer.MP.Actors
 
         public void OnPerceptionCheck(NetworkPerceptionCheck check)
         {
-            Logger.LogInformation("Sending {MessageType}. UnitId={UnitId}, MapObjectId={MapObjectId}, Result={Result}", nameof(NotifyPerceptionCheckRolled), check.UnitId, check.MapObject.Id);
             var message = new NotifyPerceptionCheckRolled
             {
                 Check = Mapper.Map<Networking.Messages.Contracts.NetworkPerceptionCheck>(check)
             };
+            Logger.LogInformation("Sending {MessageType}. UnitId={UnitId}, MapObjectId={MapObjectId}, Result={Result}", nameof(NotifyPerceptionCheckRolled), message.Check.UnitId, message.Check.MapObject.Id);
 
             Send(message);
         }
 
         public void OnInspectionKnowledgeCheck(NetworkInspectionKnowledgeCheck check)
         {
-            Logger.LogInformation("Sending {MessageType}. TargetUnitId={TargetUnitId}, InitiatorUnitId={InitiatorUnitId}, StatType={StatType}, DC={DC}",
-                nameof(NotifyInspectionKnowledgeCheckRolled), check.TargetUnitId, check.InitiatorUnitId, check.StatType, check.DC);
-
             var message = new NotifyInspectionKnowledgeCheckRolled
             {
                 Check = Mapper.Map<Networking.Messages.Contracts.NetworkInspectionKnowledgeCheck>(check)
             };
+            Logger.LogInformation("Sending {MessageType}. TargetUnitId={TargetUnitId}, InitiatorUnitId={InitiatorUnitId}, StatType={StatType}, DC={DC}",
+                nameof(NotifyInspectionKnowledgeCheckRolled), message.Check.TargetUnitId, message.Check.InitiatorUnitId, message.Check.StatType, message.Check.DC);
+
+            Send(message);
+        }
+
+        public void OnStealthPerceptionCheckRolled(NetworkStealthPerceptionCheck check)
+        {
+            var message = new NotifyStealthPerceptionCheckRolled
+            {
+                Check = Mapper.Map<Networking.Messages.Contracts.NetworkStealthPerceptionCheck>(check)
+            };
+            Logger.LogInformation("Sending {MessageType}. InitiatorId={InitiatorId}, Roll={Roll}, StealthedUnitId={StealthedUnitId}, IsSuccess={IsSuccess}", nameof(NetworkStealthPerceptionCheck), message.Check.InitiatorId, message.Check.Roll, message.Check.StealthedUnitId, message.Check.IsSuccess);
 
             Send(message);
         }

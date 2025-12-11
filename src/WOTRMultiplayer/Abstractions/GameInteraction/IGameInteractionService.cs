@@ -110,6 +110,8 @@ namespace WOTRMultiplayer.Abstractions.GameInteraction
 
         void ApplyInspectionKnowledgeCheck(NetworkInspectionKnowledgeCheck networkInspectionKnowledgeCheck);
 
+        void ApplyStealthPerceptionCheck(NetworkStealthPerceptionCheck networkStealthPerceptionCheck);
+
         NetworkGameSettings GetGameSettings();
 
         void ApplyGameSettings(NetworkGameSettings networkGameSettings);

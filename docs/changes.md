@@ -132,6 +132,9 @@ Perception checks to reveal stuff don't auto-trigger on clients. Instead, they o
 ### Inspection Unit knowledge check rolls
 Works the same way as Perception checks - unit info only gets revealed once the host triggers it.
 
+### Stealth Unit perception checks
+Game spams this 'rule' every tick, but actually relies on cached perception check roll. Changed to work the same way as regular perception checks.
+
 ### Inspection Buff check rolls
 ##### Disclaimer: Always passed in Tactical combat by default
 Automatically passed on both host/client

@@ -787,6 +787,9 @@ namespace WOTRMultiplayer.MP
                     return _gameInteractionService.IsInCombat()
                             || _multiplayerActorAccessor.Current.IsControlledByPlayers(targetEvent.Initiator?.UniqueId)
                             || _multiplayerActorAccessor.Current.IsControlledByPlayers(targetEvent.Target?.UniqueId);
+                // this one is used to detect stealth units. It's always rolled on the host and sent to the client as separate info to prevent sync issues (similar to other perception/inspection checks)
+                case RuleCachedPerceptionCheck:
+                    return false;
             }
 
             return true;

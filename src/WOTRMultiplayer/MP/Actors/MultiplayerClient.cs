@@ -468,6 +468,7 @@ namespace WOTRMultiplayer.MP.Actors
                // inspection
                .On<NotifyPerceptionCheckRolled>(OnNotifyPerceptionCheckRolled)
                .On<NotifyInspectionKnowledgeCheckRolled>(OnNotifyInspectionKnowledgeCheckRolled)
+               .On<NotifyStealthPerceptionCheckRolled>(OnNotifyStealthPerceptionCheckRolled)
 
                // group management
                .On<NotifyGroupChangerClosed>(OnNotifyGroupChangerClosed)
@@ -724,6 +725,14 @@ namespace WOTRMultiplayer.MP.Actors
 
             var check = Mapper.Map<NetworkPerceptionCheck>(rolled.Check);
             GameInteraction.ApplyPerceptionCheck(check);
+        }
+
+        private void OnNotifyStealthPerceptionCheckRolled(long playerId, NotifyStealthPerceptionCheckRolled rolled)
+        {
+            Logger.LogInformation("Received {MessageType}. InitiatorId={InitiatorId}, Roll={Roll}, StealthedUnitId={StealthedUnitId}, IsSuccess={IsSuccess}", nameof(NotifyStealthPerceptionCheckRolled), rolled.Check.InitiatorId, rolled.Check.Roll, rolled.Check.StealthedUnitId, rolled.Check.IsSuccess);
+
+            var check = Mapper.Map<NetworkStealthPerceptionCheck>(rolled.Check);
+            GameInteraction.ApplyStealthPerceptionCheck(check);
         }
 
         private async void OnNotifyCombatTurnSynchronizationRequired(long playerId, NotifyCombatTurnSynchronizationRequired combatTurnSynchronization)

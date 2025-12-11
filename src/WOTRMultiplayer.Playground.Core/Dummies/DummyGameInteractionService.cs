@@ -478,5 +478,9 @@ namespace WOTRMultiplayer.Playground.Core.Dummies
         {
             return false;
         }
+
+        public void ApplyStealthPerceptionCheck(NetworkStealthPerceptionCheck networkStealthPerceptionCheck)
+        {
+        }
     }
 }

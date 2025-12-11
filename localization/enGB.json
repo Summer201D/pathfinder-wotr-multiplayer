@@ -55,6 +55,7 @@
             },
             "tooltips": {
                 "contentDiscrepancy": {
+                    "title": "Content difference - {0}",
                     "DLCs": {
                         "title": "Downloadable content",
                         "reasons": {

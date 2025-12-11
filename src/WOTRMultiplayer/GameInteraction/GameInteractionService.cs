@@ -14,6 +14,7 @@ using Kingmaker.Controllers.Clicks.Handlers;
 using Kingmaker.Controllers.MapObjects;
 using Kingmaker.Controllers.Rest;
 using Kingmaker.Controllers.Rest.State;
+using Kingmaker.Controllers.Units;
 using Kingmaker.Craft;
 using Kingmaker.Designers;
 using Kingmaker.DialogSystem.Blueprints;
@@ -35,6 +36,7 @@ using Kingmaker.Pathfinding;
 using Kingmaker.PubSubSystem;
 using Kingmaker.RandomEncounters;
 using Kingmaker.RandomEncounters.Settings;
+using Kingmaker.RuleSystem;
 using Kingmaker.RuleSystem.Rules;
 using Kingmaker.Settings;
 using Kingmaker.TurnBasedMode;
@@ -1226,6 +1228,54 @@ namespace WOTRMultiplayer.GameInteraction
 
                 info.SetCheck(ruleSkillCheck.RollResult);
                 EventBus.RaiseEvent<IKnowledgeHandler>(x => x.HandleKnowledgeUpdated(info), true);
+            });
+        }
+
+        public void ApplyStealthPerceptionCheck(NetworkStealthPerceptionCheck networkStealthPerceptionCheck)
+        {
+            _mainThreadAccessor.Post(() =>
+            {
+                var initiatorUnitId = GetUnitEntity(networkStealthPerceptionCheck.InitiatorId);
+                if (initiatorUnitId == null)
+                {
+                    _logger.LogError("Unable to apply stealth perception check due to missing initiator unit. InitiatorId={InitiatorId}", networkStealthPerceptionCheck.InitiatorId);
+                    return;
+                }
+
+                var stealhedUnitId = GetUnitEntity(networkStealthPerceptionCheck.StealthedUnitId);
+                if (initiatorUnitId == null)
+                {
+                    _logger.LogError("Unable to apply stealth perception check due to missing stealther unit. StealthedUnitId={StealthedUnitId}", networkStealthPerceptionCheck.StealthedUnitId);
+                    return;
+                }
+
+                initiatorUnitId.CachedPerceptionRoll = networkStealthPerceptionCheck.Roll;
+                var perceptionCheck = new RuleCachedPerceptionCheck(initiatorUnitId, networkStealthPerceptionCheck.DC)
+                {
+                    Silent = true,
+                    IsTargetInvisible = networkStealthPerceptionCheck.IsTargetInvisible,
+                    IgnoreDifficultyBonusToDC = networkStealthPerceptionCheck.IgnoreDifficultyBonusToDC
+                };
+                perceptionCheck = Rulebook.Trigger(perceptionCheck);
+
+                // using UnitStealthController.TickUnit as a reference
+                EventBus.RaiseEvent<IUnitInStealthSpottedHandler>(x => x.HandleUnitInStealthSpotted(stealhedUnitId, perceptionCheck), true);
+                if (stealhedUnitId.Stealth.AddSpottedBy(initiatorUnitId))
+                {
+                    EventBus.RaiseEvent<IUnitSpottedHandler>(x => x.HandleUnitSpotted(stealhedUnitId, initiatorUnitId), true);
+                }
+
+                if (UnitStealthController.SpotterBreaksStealth(stealhedUnitId, initiatorUnitId))
+                {
+                    stealhedUnitId.Descriptor.State.IsInStealth = false;
+                    stealhedUnitId.Stealth.Clear();
+                    if (stealhedUnitId.IsPlayerFaction)
+                    {
+                        stealhedUnitId.Stealth.WantEnterStealth = false;
+                    }
+                }
+
+                _logger.LogInformation("Stealth perception check has been applied. InitiatorId={InitiatorId}, StealthedUnitId={StealthedUnitId}", initiatorUnitId, stealhedUnitId);
             });
         }
 

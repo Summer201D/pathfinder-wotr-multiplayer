@@ -102,6 +102,9 @@ namespace WOTRMultiplayer.Config.Mapping
             CreateMap<NetworkInspectionKnowledgeCheck, Networking.Messages.Contracts.NetworkInspectionKnowledgeCheck>()
                 .ReverseMap();
 
+            CreateMap<NetworkStealthPerceptionCheck, Networking.Messages.Contracts.NetworkStealthPerceptionCheck>()
+                .ReverseMap();
+
             CreateMap<NetworkGameSettings, Networking.Messages.Contracts.NetworkGameSettings>()
                 .ReverseMap();
 

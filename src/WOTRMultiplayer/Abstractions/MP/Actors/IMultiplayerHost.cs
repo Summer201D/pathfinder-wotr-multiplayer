@@ -22,6 +22,7 @@ namespace WOTRMultiplayer.Abstractions.MP.Actors
 
         void OnPerceptionCheck(NetworkPerceptionCheck check);
         void OnInspectionKnowledgeCheck(NetworkInspectionKnowledgeCheck check);
+        void OnStealthPerceptionCheckRolled(NetworkStealthPerceptionCheck check);
 
         void OnCampingUseHealingSpellsChanged(bool isOn);
 
