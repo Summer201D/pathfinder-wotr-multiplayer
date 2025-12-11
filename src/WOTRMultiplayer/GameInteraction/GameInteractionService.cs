@@ -1243,7 +1243,7 @@ namespace WOTRMultiplayer.GameInteraction
                 }
 
                 var stealhedUnitId = GetUnitEntity(networkStealthPerceptionCheck.StealthedUnitId);
-                if (initiatorUnitId == null)
+                if (stealhedUnitId == null)
                 {
                     _logger.LogError("Unable to apply stealth perception check due to missing stealther unit. StealthedUnitId={StealthedUnitId}", networkStealthPerceptionCheck.StealthedUnitId);
                     return;
