@@ -111,12 +111,9 @@ When someone triggers an area transition, the game tries to move the whole party
 If that happens, the players who already transitioned will be stuck in a forced pause until everyone else loads in. Easiest fix: anyone left behind should just click the transition again to catch up. While that's happening, avoid doing stuff that could cause desync (like using items, abilities, or picking up loot).
 
 ## Global Map
+Global map movement is controlled by the host. Client retains the ability to click different locations to see pop-ups/descriptions, but can't actually trigger movement.
 
-### Act1
-TBD
-
-### Act2+
-TBD
+Random encounters are never rolled on the client side, but rather are sent by the host once they occur.
 
 ## Rolls
 Most rolls happen on the host, but combat works a little differently. Each turn has a `Turn Owner` - the player controlling the active character. That player's rolls are done locally so their turn feels smooth, and then everyone else gets the results over the network.
@@ -221,6 +218,9 @@ Only basic usage of abilities is available. Any extra conditions like metamagic 
 CharGen screen is synced for leveling only. You will need to create initial merc locally and then host multiplayer game
 
 ## Long term plans
+
+### Ping system
+Highlighting a point/unit/map object so others can draw attention to it
 
 ### Rolls
 Roll syncing will get an update once the rest of multiplayer is stable enough. The plan is to move to 'predictable rolls' where both the host and client use the same seed to roll random values, which should reduce stutters by not blocking the main loop as much, as there is no need for real-time network communication for each single roll
