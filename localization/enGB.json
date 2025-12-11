@@ -60,8 +60,7 @@
                         "title": "Downloadable content",
                         "reasons": {
                             "missing": "Missing",
-                            "extra": "Extra",
-                            "disabled": "Disabled"
+                            "extra": "Extra"
                         }
                     },
                     "mods": {

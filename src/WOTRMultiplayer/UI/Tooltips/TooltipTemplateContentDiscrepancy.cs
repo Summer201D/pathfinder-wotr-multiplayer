@@ -66,7 +66,6 @@ namespace WOTRMultiplayer.UI.Tooltips
             {
                 NetworkDiscrepancyReason.Missing => WellKnownKeys.LobbyWindow.Tooltips.ContentDiscrepancy.DLCs.Reasons.Missing.Key,
                 NetworkDiscrepancyReason.Extra => WellKnownKeys.LobbyWindow.Tooltips.ContentDiscrepancy.DLCs.Reasons.Extra.Key,
-                NetworkDiscrepancyReason.Disabled => WellKnownKeys.LobbyWindow.Tooltips.ContentDiscrepancy.DLCs.Reasons.Disabled.Key,
                 _ => null
             };
 

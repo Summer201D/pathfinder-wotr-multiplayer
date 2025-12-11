@@ -1359,13 +1359,9 @@ namespace WOTRMultiplayer.MP.Actors
             {
                 var clientDlc = clientDlcs.FirstOrDefault(d => string.Equals(d.Id, hostDlc.Id, StringComparison.OrdinalIgnoreCase));
                 NetworkDiscrepancyReason? reason = null;
-                if (clientDlc == null)
+                if (clientDlc == null || hostDlc.IsAvailable && !clientDlc.IsAvailable)
                 {
                     reason = NetworkDiscrepancyReason.Missing;
-                }
-                else if (hostDlc.IsAvailable && !clientDlc.IsAvailable)
-                {
-                    reason = NetworkDiscrepancyReason.Disabled;
                 }
                 else if (!hostDlc.IsAvailable && clientDlc.IsAvailable)
                 {

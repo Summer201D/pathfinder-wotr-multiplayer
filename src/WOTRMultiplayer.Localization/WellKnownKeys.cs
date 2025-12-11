@@ -228,12 +228,6 @@ public static class WellKnownKeys
                         {
                             public static string Key { get; set; }
                         }
-
-                        [Description("disabled")]
-                        public static class Disabled
-                        {
-                            public static string Key { get; set; }
-                        }
                     }
                 }
 
