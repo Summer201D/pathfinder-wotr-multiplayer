@@ -183,7 +183,6 @@ namespace WOTRMultiplayer.MP.Actors
         {
             // this one is only used in combat
             // regular Unit Click handler is used to initiate the combat
-
             if (Game.Combat == null)
             {
                 return;
