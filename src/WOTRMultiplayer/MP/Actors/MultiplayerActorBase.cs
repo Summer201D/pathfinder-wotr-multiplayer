@@ -196,11 +196,11 @@ namespace WOTRMultiplayer.MP.Actors
                 return;
             }
 
-            Logger.LogInformation("Sending Unit Attack use. ExecutorUnitId={ExecutorUnitId}, TargetUnitId={TargetUnitId}, IsFullAttack={IsFullAttack}", networkUnitAttack.ExecutorUnitId, networkUnitAttack.TargetUnitId, networkUnitAttack.IsFullAttack);
             var message = new NotifyUnitAttacked
             {
                 Attack = Mapper.Map<Networking.Messages.Contracts.NetworkUnitAttack>(networkUnitAttack)
             };
+            Logger.LogInformation("Sending {MessageType}. ExecutorUnitId={ExecutorUnitId}, TargetUnitId={TargetUnitId}, IsFullAttack={IsFullAttack}", nameof(NotifyUnitAttacked), message.Attack.ExecutorUnitId, message.Attack.TargetUnitId, message.Attack.IsFullAttack);
 
             Send(message);
         }
@@ -212,12 +212,11 @@ namespace WOTRMultiplayer.MP.Actors
                 return;
             }
 
-            Logger.LogInformation("Toggle activatable ability. CasterId={CasterId}, TargetId={TargetId}, AbilityId={AbilityId}, IsActive={IsActive}", activatableAbilityUse.CasterId, activatableAbilityUse.TargetId, activatableAbilityUse.Id, activatableAbilityUse.IsActive);
-
             var message = new NotifyToggleActivatableAbility
             {
                 Ability = Mapper.Map<Networking.Messages.Contracts.NetworkActivatableAbility>(activatableAbilityUse)
             };
+            Logger.LogInformation("Sending {MessageType}. CasterId={CasterId}, TargetId={TargetId}, AbilityId={AbilityId}, IsActive={IsActive}", nameof(NotifyToggleActivatableAbility), message.Ability.CasterId, message.Ability.TargetId, message.Ability.Id, message.Ability.IsActive);
 
             Send(message);
         }
