@@ -482,5 +482,13 @@ namespace WOTRMultiplayer.Playground.Core.Dummies
         public void ApplyStealthPerceptionCheck(NetworkStealthPerceptionCheck networkStealthPerceptionCheck)
         {
         }
+
+        public void UpdateDialogPopupUI(bool isInteractable, int readyPlayersCount, int totalPlayersCount)
+        {
+        }
+
+        public void CloseDialogPopup(NetworkDialogPopup networkDialogPopup)
+        {
+        }
     }
 }

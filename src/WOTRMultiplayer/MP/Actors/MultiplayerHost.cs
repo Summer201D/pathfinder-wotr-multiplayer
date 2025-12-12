@@ -619,6 +619,17 @@ namespace WOTRMultiplayer.MP.Actors
             Send(message);
         }
 
+        public void OnDialogPopupClosed(NetworkDialogPopup networkDialogPopup)
+        {
+            ResetPlayersTracker(Game.PlayersInDialogPopup);
+            var message = new NotifyDialogPopupClosed
+            {
+                Popup = Mapper.Map<Networking.Messages.Contracts.NetworkDialogPopup>(networkDialogPopup)
+            };
+            Logger.LogInformation("Sending {MessageType}, AreaName={AreaName}, DialogName={DialogName}, CueName={CueName}", nameof(NotifyDialogPopupClosed), message.Popup.AreaName, message.Popup.DialogName, message.Popup.CueName);
+            Send(message);
+        }
+
         public bool OnClickGroupChangerUnit(string unitId)
         {
             var everyoneIsReady = false;

@@ -18,6 +18,7 @@ using WOTRMultiplayer.MP.Entities;
 using WOTRMultiplayer.MP.Entities.ActionBar;
 using WOTRMultiplayer.MP.Entities.Combat;
 using WOTRMultiplayer.MP.Entities.Content;
+using WOTRMultiplayer.MP.Entities.Dialogs;
 using WOTRMultiplayer.MP.Entities.Equipment;
 using WOTRMultiplayer.MP.Entities.Leveling;
 using WOTRMultiplayer.MP.Entities.Loot;
@@ -963,6 +964,22 @@ namespace WOTRMultiplayer.MP.Actors
             UpdateSkipTimeUIState();
         }
 
+        public void OnDialogPopupShown(NetworkDialogPopup networkDialogPopup)
+        {
+            var localPlayer = GetLocalPlayerId();
+            AddPlayerToTracker(Game.PlayersInDialogPopup, localPlayer);
+
+            var message = new NotifyDialogPopupShown
+            {
+                PlayerId = localPlayer,
+                Popup = Mapper.Map<Networking.Messages.Contracts.NetworkDialogPopup>(networkDialogPopup)
+            };
+            Logger.LogInformation("Sending {MessageType}. PlayerId={PlayerId}, AreaName={AreaName}, DialogName={DialogName}, CueName={CueName}", nameof(NotifyDialogPopupShown), message.PlayerId, message.Popup.AreaName, message.Popup.DialogName, message.Popup.CueName);
+            Send(message);
+
+            UpdateDialogPopupState();
+        }
+
         public void OnGlobalMapIngredientCollectionShown()
         {
             var localPlayer = GetLocalPlayerId();
@@ -1086,6 +1103,17 @@ namespace WOTRMultiplayer.MP.Actors
                 var totalPlayers = GetPlayersCount();
                 var canUse = HasControlOverUI && readyPlayers >= totalPlayers;
                 GameInteraction.UpdateGroupChangerUI(canUse, readyPlayers, totalPlayers);
+            }
+        }
+
+        protected void UpdateDialogPopupState()
+        {
+            lock (ActionLock)
+            {
+                var readyPlayers = Game.PlayersInDialogPopup.Count;
+                var totalPlayers = GetPlayersCount();
+                var canUse = HasControlOverUI && readyPlayers >= totalPlayers;
+                GameInteraction.UpdateDialogPopupUI(canUse, readyPlayers, totalPlayers);
             }
         }
 
@@ -1674,7 +1702,18 @@ namespace WOTRMultiplayer.MP.Actors
 
                 // group management
                 .On<NotifyGroupChangerOpened>(OnNotifyGroupChangerOpened)
+
+                // dialogs
+                .On<NotifyDialogPopupShown>(OnNotifyDialogPopupShown)
                 ;
+        }
+
+        private void OnNotifyDialogPopupShown(long playerId, NotifyDialogPopupShown dialogPopupShown)
+        {
+            Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}, AreaName={AreaName}, DialogName={DialogName}, CueName={CueName}", nameof(NotifyDialogPopupShown), playerId, dialogPopupShown.Popup.AreaName, dialogPopupShown.Popup.DialogName, dialogPopupShown.Popup.CueName);
+            AddPlayerToTracker(Game.PlayersInDialogPopup, dialogPopupShown.PlayerId);
+
+            UpdateDialogPopupState();
         }
 
         private void OnNotifyInventoryItemTransferred(long playerId, NotifyInventoryItemTransferred itemTransferred)

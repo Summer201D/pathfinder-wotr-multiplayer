@@ -226,6 +226,10 @@ namespace WOTRMultiplayer.Abstractions.GameInteraction
 
         void UpdateZoneLootUI(bool isInteractable, int readyPlayersCount, int totalPlayersCount);
 
+        void UpdateDialogPopupUI(bool isInteractable, int readyPlayersCount, int totalPlayersCount);
+
+        void CloseDialogPopup(NetworkDialogPopup networkDialogPopup);
+
         void AvoidGlobalMapEncounter();
 
         void AcceptGlobalMapEncounter();

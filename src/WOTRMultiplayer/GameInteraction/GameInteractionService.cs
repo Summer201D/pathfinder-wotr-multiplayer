@@ -2565,15 +2565,14 @@ namespace WOTRMultiplayer.GameInteraction
         {
             _mainThreadAccessor.Post(() =>
             {
-                if (GlobalMapPCView == null)
+                if (GlobalMapPCView?.ViewModel == null)
                 {
                     return;
                 }
 
                 var modalMessage = (Game.Instance.RootUiContext.m_CommonView as CommonPCView).m_MessageModalPCView;
                 modalMessage.m_AcceptButton.Interactable = isInteractable;
-                var buttonText = modalMessage.m_AcceptButton.GetComponentInChildren<TextMeshProUGUI>();
-                UpdateButtonTextCounter(buttonText, readyPlayersCount, totalPlayersCount);
+                UpdateButtonTextCounter(modalMessage.m_AcceptText, readyPlayersCount, totalPlayersCount);
 
                 _logger.LogInformation("Global Map Ingredient Collection Accept button has been updated. IsInteractable={IsInteractable}, ReadyPlayers={ReadyPlayers}, TotalPlayers={TotalPlayers}", isInteractable, readyPlayersCount, totalPlayersCount);
             });
@@ -2583,7 +2582,7 @@ namespace WOTRMultiplayer.GameInteraction
         {
             _mainThreadAccessor.Post(() =>
             {
-                if (GlobalMapPCView == null)
+                if (GlobalMapPCView?.ViewModel == null)
                 {
                     return;
                 }
@@ -2619,6 +2618,40 @@ namespace WOTRMultiplayer.GameInteraction
                 UpdateButtonTextCounter(LootPCView.m_ButtonText, readyPlayersCount, totalPlayersCount);
 
                 _logger.LogInformation("ZoneLoot UI has been updated. IsInteractable={IsInteractable}, ReadyPlayers={ReadyPlayers}, TotalPlayers={TotalPlayers}", isInteractable, readyPlayersCount, totalPlayersCount);
+            });
+        }
+
+        public void UpdateDialogPopupUI(bool isInteractable, int readyPlayersCount, int totalPlayersCount)
+        {
+            _mainThreadAccessor.Post(() =>
+            {
+                var modalMessage = (Game.Instance.RootUiContext.m_CommonView as CommonPCView).m_MessageModalPCView;
+                if (modalMessage?.ViewModel == null)
+                {
+                    _logger.LogWarning("Unable to update missing dialog popup");
+                    return;
+                }
+
+                modalMessage.m_AcceptButton.Interactable = isInteractable;
+                UpdateButtonTextCounter(modalMessage.m_AcceptText, readyPlayersCount, totalPlayersCount);
+
+                _logger.LogInformation("Dialog popup UI has been updated. IsInteractable={IsInteractable}, ReadyPlayers={ReadyPlayers}, TotalPlayers={TotalPlayers}", isInteractable, readyPlayersCount, totalPlayersCount);
+            });
+        }
+
+        public void CloseDialogPopup(NetworkDialogPopup networkDialogPopup)
+        {
+            _mainThreadAccessor.Post(() =>
+            {
+                var modalMessage = (Game.Instance.RootUiContext.m_CommonView as CommonPCView).m_MessageModalPCView;
+                if (modalMessage?.ViewModel == null)
+                {
+                    _logger.LogWarning("Unable to close missing dialog popup. AreaName={AreaName}, DialogName={DialogName}, CueName={CueName}", networkDialogPopup.AreaName, networkDialogPopup.DialogName, networkDialogPopup.CueName);
+                    return;
+                }
+
+                modalMessage?.m_AcceptButton.m_OnLeftClick.Invoke();
+                _logger.LogInformation("Dialog popup has been closed. AreaName={AreaName}, DialogName={DialogName}, CueName={CueName}", networkDialogPopup.AreaName, networkDialogPopup.DialogName, networkDialogPopup.CueName);
             });
         }
 

@@ -14,6 +14,7 @@ using WOTRMultiplayer.GameInteraction.Contexts;
 using WOTRMultiplayer.MP.Entities;
 using WOTRMultiplayer.MP.Entities.ActionBar;
 using WOTRMultiplayer.MP.Entities.Combat;
+using WOTRMultiplayer.MP.Entities.Dialogs;
 using WOTRMultiplayer.MP.Entities.GlobalMap;
 using WOTRMultiplayer.MP.Entities.Inspect;
 using WOTRMultiplayer.MP.Entities.Leveling;
@@ -1990,6 +1991,43 @@ namespace WOTRMultiplayer.MP
                 throw;
             }
         }
+
+        public void OnDialogPopupShown(NetworkDialogPopup networkDialogPopup)
+        {
+            try
+            {
+                if (_multiplayerActorAccessor.Current == null)
+                {
+                    return;
+                }
+
+                _multiplayerActorAccessor.Current.OnDialogPopupShown(networkDialogPopup);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while showing dialog popup. AreaName={AreaName}, DialogName={DialogName}, CueName={CueName}", networkDialogPopup.AreaName, networkDialogPopup.DialogName, networkDialogPopup.CueName);
+                throw;
+            }
+        }
+
+        public void OnDialogPopupClosed(NetworkDialogPopup networkDialogPopup)
+        {
+            try
+            {
+                if (_multiplayerActorAccessor.Current == null || !_multiplayerActorAccessor.Host.IsActive)
+                {
+                    return;
+                }
+
+                _multiplayerActorAccessor.Host.OnDialogPopupClosed(networkDialogPopup);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while closing dialog popup. AreaName={AreaName}, DialogName={DialogName}, CueName={CueName}", networkDialogPopup.AreaName, networkDialogPopup.DialogName, networkDialogPopup.CueName);
+                throw;
+            }
+        }
+
 
         private void ShowEscMenuMultiplayerLobby()
         {

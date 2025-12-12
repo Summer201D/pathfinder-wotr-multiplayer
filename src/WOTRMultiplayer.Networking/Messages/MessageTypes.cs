@@ -120,6 +120,8 @@
             NotifyZoneLootRemoveToggleChanged,
             NotifyInventoryItemTransferred,
             NotifyStealthPerceptionCheckRolled,
+            NotifyDialogPopupShown,
+            NotifyDialogPopupClosed,
         }
 
         public enum Request

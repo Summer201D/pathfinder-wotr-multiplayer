@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using WOTRMultiplayer.MP.Entities;
+using WOTRMultiplayer.MP.Entities.Dialogs;
 using WOTRMultiplayer.MP.Entities.GlobalMap;
 using WOTRMultiplayer.MP.Entities.Inspect;
 using WOTRMultiplayer.MP.Entities.Rest;
@@ -67,5 +68,7 @@ namespace WOTRMultiplayer.Abstractions.MP.Actors
         void OnGlobalMapRandomEncounterRolled(NetworkGlobalMapEncounter globalMapEncounter);
 
         void OnZoneLootRemoveToggleChanged(bool removeUncollectedLoot);
+
+        void OnDialogPopupClosed(NetworkDialogPopup networkDialogPopup);
     }
 }

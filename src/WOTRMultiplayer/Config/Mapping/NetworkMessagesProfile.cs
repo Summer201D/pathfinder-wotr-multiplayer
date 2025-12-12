@@ -209,6 +209,9 @@ namespace WOTRMultiplayer.Config.Mapping
 
             CreateMap<NetworkDiscrepantDLC, Networking.Messages.Contracts.NetworkDiscrepantDLC>()
                 .ReverseMap();
+
+            CreateMap<NetworkDialogPopup, Networking.Messages.Contracts.NetworkDialogPopup>()
+                .ReverseMap();
         }
     }
 }

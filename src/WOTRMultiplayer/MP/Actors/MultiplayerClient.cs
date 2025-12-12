@@ -460,6 +460,7 @@ namespace WOTRMultiplayer.MP.Actors
                .On<NotifyDialogStarted>(OnNotifyDialogStarted)
                .On<NotifyDialogCueAnswerSuggested>(OnNotifyDialogCueAnswerSuggested)
                .On<NotifyDialogCueAnswerSelected>(OnNotifyDialogCueAnswerSelected)
+               .On<NotifyDialogPopupClosed>(OnNotifyDialogPopupClosed)
 
                // vendor interaction
                .On<NotifyVendorDealMade>(OnNotifyVendorDealMade)
@@ -842,6 +843,14 @@ namespace WOTRMultiplayer.MP.Actors
             {
                 Logger.LogWarning("Client dialog is already started. DialogName={DialogName}", started.DialogName);
             }
+        }
+
+        private void OnNotifyDialogPopupClosed(long playerId, NotifyDialogPopupClosed dialogPopupClosed)
+        {
+            Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}, AreaName={AreaName}, DialogName={DialogName}, CueName={CueName}", nameof(NotifyDialogPopupShown), playerId, dialogPopupClosed.Popup.AreaName, dialogPopupClosed.Popup.DialogName, dialogPopupClosed.Popup.CueName);
+            var popup = Mapper.Map<NetworkDialogPopup>(dialogPopupClosed.Popup);
+
+            GameInteraction.CloseDialogPopup(popup);
         }
 
         private void OnNotifyDialogCueAnswerSelected(long playerId, NotifyDialogCueAnswerSelected selected)

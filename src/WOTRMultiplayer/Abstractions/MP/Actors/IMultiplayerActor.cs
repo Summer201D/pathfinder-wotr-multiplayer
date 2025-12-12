@@ -5,6 +5,7 @@ using Kingmaker.GameModes;
 using WOTRMultiplayer.MP.Entities;
 using WOTRMultiplayer.MP.Entities.ActionBar;
 using WOTRMultiplayer.MP.Entities.Combat;
+using WOTRMultiplayer.MP.Entities.Dialogs;
 using WOTRMultiplayer.MP.Entities.Equipment;
 using WOTRMultiplayer.MP.Entities.GlobalMap;
 using WOTRMultiplayer.MP.Entities.Leveling;
@@ -200,5 +201,7 @@ namespace WOTRMultiplayer.Abstractions.MP.Actors
         void OnZoneLootCompleted();
 
         void OnZoneLootCollectorButtonsUpdated();
+
+        void OnDialogPopupShown(NetworkDialogPopup networkDialogPopup);
     }
 }
