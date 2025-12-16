@@ -807,10 +807,10 @@ namespace WOTRMultiplayer.GameInteraction
                 var target = GetUnitEntity(networkAbility.TargetId);
                 var point = new Vector3(networkAbility.TargetPoint.X, networkAbility.TargetPoint.Y, networkAbility.TargetPoint.Z);
                 var targetWrapper = new TargetWrapper(point, null, target);
+                Enum.TryParse<UnitCommand.CommandType>(networkAbility.CommandType, true, out var commandType);
 
                 _mainThreadAccessor.Post(() =>
                 {
-                    System.Enum.TryParse<UnitCommand.CommandType>(networkAbility.CommandType, true, out var commandType);
                     var command = UnitUseAbility.CreateCastCommand(abilityData, targetWrapper, commandType);
                     command.CreatedByPlayer = true;
                     if (networkAbility.VectorPath != null)
@@ -821,7 +821,7 @@ namespace WOTRMultiplayer.GameInteraction
                         PathVisualizer.Instance.m_CurrentPath.Claim(PathVisualizer.Instance);
                     }
 
-                    _logger.LogInformation("Running ability use command. Caster={Caster}, AbilityId={AbilityId}", caster.UniqueId, ((UnitUseAbility)command).Ability?.UniqueId);
+                    _logger.LogInformation("Running ability use command. Caster={Caster}, AbilityId={AbilityId}, AbilityName={AbilityName}, ForcedPath={ForcedPath}", caster.UniqueId, abilityData.UniqueId, abilityData.NameForAcronym, command.ForcedPath?.vectorPath?.Count);
                     caster.Commands.Run(command);
                 });
             }
