@@ -247,5 +247,7 @@ namespace WOTRMultiplayer.Abstractions.GameInteraction
         bool CanRiderGetUp();
 
         bool HasAnyRunningCombatCommands();
+
+        void UseInventoryItem(NetworkUseInventoryItem useInventoryItem);
     }
 }

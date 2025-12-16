@@ -495,5 +495,9 @@ namespace WOTRMultiplayer.Playground.Core.Dummies
         {
             return false;
         }
+
+        public void UseInventoryItem(NetworkUseInventoryItem useInventoryItem)
+        {
+        }
     }
 }

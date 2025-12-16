@@ -122,6 +122,7 @@
             NotifyStealthPerceptionCheckRolled,
             NotifyDialogPopupShown,
             NotifyDialogPopupClosed,
+            NotifyInventoryItemUsed,
         }
 
         public enum Request

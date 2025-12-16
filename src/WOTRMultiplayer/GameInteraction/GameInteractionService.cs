@@ -970,7 +970,7 @@ namespace WOTRMultiplayer.GameInteraction
 
             if (possibleItemsToDrop.Count == 0)
             {
-                _logger.LogWarning("Unable to find item to drop. EntityId={EntityId}, ItemId={ItemId}", networkDropItem.OwnerEntityId, networkDropItem.Item.UniqueId);
+                _logger.LogError("Unable to find item to drop. EntityId={EntityId}, ItemId={ItemId}", networkDropItem.OwnerEntityId, networkDropItem.Item.UniqueId);
                 return;
             }
 
@@ -988,6 +988,88 @@ namespace WOTRMultiplayer.GameInteraction
 
                 RefreshInventoryWindow();
             });
+        }
+
+        public void UseInventoryItem(NetworkUseInventoryItem useInventoryItem)
+        {
+            _mainThreadAccessor.Post(() =>
+            {
+                try
+                {
+                    var itemToUse = useInventoryItem.SlotPosition != null ? GetItemSlot(useInventoryItem.Item.HoldingSlotOwnerId, useInventoryItem.SlotPosition)?.Item
+                        : Game.Instance.Player.Inventory.Where(i => i.HoldingSlot == null && IsSameItem(i, useInventoryItem.Item)).FirstOrDefault();
+
+                    if (itemToUse == null)
+                    {
+                        _logger.LogError("Unable to find item to use. ItemId={ItemId}, ItemName={ItemName}, HoldingSlowOwnerId={HoldingSlowOwnerId}, SlotType={SlotType}, SlotIndex={SlotIndex}", useInventoryItem.Item.UniqueId, useInventoryItem.Item.Name, useInventoryItem.Item.HoldingSlotOwnerId, useInventoryItem.SlotPosition?.Type, useInventoryItem.SlotPosition?.Index);
+                        return;
+                    }
+
+                    var userEntity = GetUnitEntity(useInventoryItem.UserUnitId);
+                    if (userEntity == null)
+                    {
+                        _logger.LogError("Unable to find user to use item. UserUnitId={UserUnitId}, ItemId={ItemId}, ItemName={ItemName}", useInventoryItem.UserUnitId, useInventoryItem.Item.UniqueId, useInventoryItem.Item.Name);
+                        return;
+                    }
+
+                    using var context = _networkExecutionContext.Value = RemoteExecutionContext.CreateUseInventoryItem(itemToUse.UniqueId, userEntity.UniqueId);
+                    if (useInventoryItem.SlotPosition != null)
+                    {
+                        context.Equipment = new EquipmentContext { Position = useInventoryItem.SlotPosition };
+                    }
+
+                    var target = CreateTargetWrapper(useInventoryItem.Target);
+                    var isOk = itemToUse.TryUseFromInventory(userEntity, target);
+                    if (!isOk)
+                    {
+                        _logger.LogWarning("Item usage has been failed. UserUnitId={UserUnitId}, TargetEntityId={TargetEntityId}, ItemId={ItemId}, ItemName={ItemName}", userEntity.UniqueId, target?.Unit?.UniqueId, itemToUse.UniqueId, itemToUse.Name);
+                    }
+
+                    RefreshInventoryWindow();
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Unable to use inventory item. UserUnitId={UserUnitId}, ItemId={ItemId}, ItemName={ItemName}", useInventoryItem.UserUnitId, useInventoryItem.Item.UniqueId, useInventoryItem.Item.Name);
+                    throw;
+                }
+            });
+        }
+
+        private ItemSlot GetItemSlot(string unitId, NetworkEquipmentSlotPosition position)
+        {
+            var unit = GetUnitEntity(unitId);
+
+            if (unit == null)
+            {
+                return null;
+            }
+
+            var slotType = _equipmentDefinitions.GetSlotType(position.Type);
+
+            var slotsOfSameType = unit.Body.EquipmentSlots
+                    .Where(s => s.GetType() == slotType)
+                    .ToList();
+
+            if (slotsOfSameType.Count < position.Index)
+            {
+                return null;
+            }
+
+            var itemSlot = slotsOfSameType[position.Index];
+            return itemSlot;
+        }
+
+        private TargetWrapper CreateTargetWrapper(NetworkTargetWrapper networkTargetWrapper)
+        {
+            if (networkTargetWrapper == null)
+            {
+                return null;
+            }
+
+            var point = new Vector3(networkTargetWrapper.Point.X, networkTargetWrapper.Point.Y, networkTargetWrapper.Point.Z);
+            var unit = GetUnitEntity(networkTargetWrapper.UnitUniqueId);
+            var wrapper = new TargetWrapper(point, networkTargetWrapper.Orientation, unit);
+            return wrapper;
         }
 
         private void MatchSameNumberOfItems(List<ItemEntity> possibleItemsBag, int countToMatch, Action<ItemEntity> onMatched)
@@ -1064,26 +1146,15 @@ namespace WOTRMultiplayer.GameInteraction
                     return;
                 }
 
-                var slotType = _equipmentDefinitions.GetSlotType(networkEquipmentSlot.Position.Type);
-                if (slotType == null)
+                var slotToUpdate = GetItemSlot(networkEquipmentSlot.OwnerId, networkEquipmentSlot.Position);
+                if (slotToUpdate == null)
                 {
-                    _logger.LogError("Unable to update equipment slot with invalid slot type. UnitId={UnitId}, SlotType={SlotType}", networkEquipmentSlot.OwnerId, networkEquipmentSlot.Position.Type);
-                    return;
-                }
-
-                var slotsOfSameType = unit.Body.EquipmentSlots
-                    .Where(s => s.GetType() == slotType)
-                    .ToList();
-
-                if (slotsOfSameType.Count < networkEquipmentSlot.Position.Index)
-                {
-                    _logger.LogError("Unable to update equipment slot with invalid slot index. UnitId={UnitId}, SlotType={SlotType}, SlotIndex={SlotIndex}", networkEquipmentSlot.OwnerId, networkEquipmentSlot.Position.Type, networkEquipmentSlot.Position.Index);
+                    _logger.LogError("Unable to find item slot to update equipment. UnitId={UnitId}, SlotType={SlotType}, SlotIndex={SlotIndex}", networkEquipmentSlot.OwnerId, networkEquipmentSlot.Position.Type, networkEquipmentSlot.Position.Index);
                     return;
                 }
 
                 using var context = _networkExecutionContext.Value = RemoteExecutionContext.Create(networkEquipmentSlot.Position);
 
-                var slotToUpdate = slotsOfSameType[networkEquipmentSlot.Position.Index];
                 if (networkEquipmentSlot.Item == null)
                 {
                     slotToUpdate.RemoveItem();

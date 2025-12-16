@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using Kingmaker.EntitySystem.Entities;
 using WOTRMultiplayer.MP.Entities.Equipment;
 using WOTRMultiplayer.MP.Entities.Inspect;
-using WOTRMultiplayer.MP.Entities.MapObjects;
 
 namespace WOTRMultiplayer.GameInteraction.Contexts
 {
@@ -14,6 +13,8 @@ namespace WOTRMultiplayer.GameInteraction.Contexts
         public PerceptionCheckContext PerceptionCheck { get; set; }
 
         public DropItemContext DropItem { get; set; }
+
+        public UseInventoryItemContext UseInventoryItem { get; set; }
 
         public EquipmentContext Equipment { get; set; }
 
@@ -40,6 +41,7 @@ namespace WOTRMultiplayer.GameInteraction.Contexts
             Overtip = null;
             UnitsMovement = null;
             VendorItemTransfer = null;
+            UseInventoryItem = null;
         }
 
         public static RemoteExecutionContext CreateDropItem(string itemId, string unitId)
@@ -50,6 +52,18 @@ namespace WOTRMultiplayer.GameInteraction.Contexts
                 {
                     ItemId = itemId,
                     UnitId = unitId
+                }
+            };
+        }
+
+        public static RemoteExecutionContext CreateUseInventoryItem(string itemId, string userUnitId)
+        {
+            return new RemoteExecutionContext
+            {
+                UseInventoryItem = new UseInventoryItemContext
+                {
+                    ItemId = itemId,
+                    UserUnitId = userUnitId
                 }
             };
         }

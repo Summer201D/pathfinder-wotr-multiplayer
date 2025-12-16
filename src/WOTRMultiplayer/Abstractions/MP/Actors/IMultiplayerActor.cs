@@ -203,5 +203,7 @@ namespace WOTRMultiplayer.Abstractions.MP.Actors
         void OnZoneLootCollectorButtonsUpdated();
 
         void OnDialogPopupShown(NetworkDialogPopup networkDialogPopup);
+
+        void OnUseInventoryItem(NetworkUseInventoryItem useInventoryItem);
     }
 }

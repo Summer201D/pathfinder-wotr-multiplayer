@@ -310,11 +310,29 @@ namespace WOTRMultiplayer.MP.Actors
 
         public void OnDropItem(NetworkDropItem dropItem)
         {
-            Logger.LogInformation("Sending drop item. OwnerId={OwnerId}, ItemId={ItemId}, ItemName={ItemName}", dropItem.OwnerEntityId, dropItem.Item.UniqueId, dropItem.Item.Name);
             var message = new NotifyDropItem
             {
                 Drop = Mapper.Map<Networking.Messages.Contracts.NetworkDropItem>(dropItem)
             };
+            Logger.LogInformation("Sending {MessageType}. OwnerId={OwnerId}, ItemId={ItemId}, ItemName={ItemName}", nameof(NotifyDropItem), message.Drop.OwnerEntityId, message.Drop.Item.UniqueId, message.Drop.Item.Name);
+
+            Send(message);
+        }
+
+        public void OnUseInventoryItem(NetworkUseInventoryItem useInventoryItem)
+        {
+            // you can't use items from inventory in combat
+            // but using them from action bar is triggering this method as well
+            if (Game.Combat != null)
+            {
+                return;
+            }
+
+            var message = new NotifyInventoryItemUsed
+            {
+                UseItem = Mapper.Map<Networking.Messages.Contracts.NetworkUseInventoryItem>(useInventoryItem)
+            };
+            Logger.LogInformation("Sending {MessageType}. UserUnitId={UserUnitId}, TargetUnitId={TargetUnitId}, ItemId={ItemId}, ItemName={ItemName}", nameof(NetworkUseInventoryItem), message.UseItem.UserUnitId, message.UseItem.Target?.UnitUniqueId, message.UseItem.Item.UniqueId, message.UseItem.Item.Name);
 
             Send(message);
         }
@@ -342,7 +360,7 @@ namespace WOTRMultiplayer.MP.Actors
                 return;
             }
 
-            Logger.LogWarning("Sending changed equipment slot. SlotType={SlotType}, SlotIndex={SlotIndex}, ItemId={ItemId}, OwnerId={OwnerId}", equipmentSlot.Position.Type, equipmentSlot.Position.Index, equipmentSlot.Item?.UniqueId, equipmentSlot.OwnerId);
+            Logger.LogInformation("Sending changed equipment slot. SlotType={SlotType}, SlotIndex={SlotIndex}, ItemId={ItemId}, OwnerId={OwnerId}", equipmentSlot.Position.Type, equipmentSlot.Position.Index, equipmentSlot.Item?.UniqueId, equipmentSlot.OwnerId);
             var message = new NotifyEquipmentSlotChanged
             {
                 Slot = Mapper.Map<Networking.Messages.Contracts.NetworkEquipmentSlot>(equipmentSlot)
@@ -1689,6 +1707,7 @@ namespace WOTRMultiplayer.MP.Actors
                 .On<NotifyZoneLootShown>(OnNotifyZoneLootShown)
                 .On<NotifyZoneLootClosed>(OnNotifyZoneLootClosed)
                 .On<NotifyInventoryItemTransferred>(OnNotifyInventoryItemTransferred)
+                .On<NotifyInventoryItemUsed>(OnNotifyInventoryItemUsed)
 
                 // lockpick
                 .On<NotifyMapObjectLockpicked>(OnNotifyMapObjectLockpicked)
@@ -2021,6 +2040,16 @@ namespace WOTRMultiplayer.MP.Actors
             GameInteraction.DropItem(dropItem);
 
             OnAfterNetworkMessageHandled(playerId, item);
+        }
+
+        private void OnNotifyInventoryItemUsed(long playerId, NotifyInventoryItemUsed inventoryItemUsed)
+        {
+            Logger.LogInformation("Received {MessageType}. UserUnitId={UserUnitId}, TargetUnitId={TargetUnitId}, ItemId={ItemId}, ItemName={ItemName}", nameof(NetworkUseInventoryItem), inventoryItemUsed.UseItem.UserUnitId, inventoryItemUsed.UseItem.Target?.UnitUniqueId, inventoryItemUsed.UseItem.Item.UniqueId, inventoryItemUsed.UseItem.Item.Name);
+
+            var useItem = Mapper.Map<NetworkUseInventoryItem>(inventoryItemUsed.UseItem);
+            GameInteraction.UseInventoryItem(useItem);
+
+            OnAfterNetworkMessageHandled(playerId, inventoryItemUsed);
         }
 
         private void OnNotifyContainerSkinned(long playerId, NotifyLootableEntitySkinned notifyLootableEntitySkinned)

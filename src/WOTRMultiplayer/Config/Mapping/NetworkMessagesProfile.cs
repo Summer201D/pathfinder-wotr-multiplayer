@@ -27,6 +27,9 @@ namespace WOTRMultiplayer.Config.Mapping
             CreateMap<NetworkVector3, Networking.Messages.Contracts.NetworkVector3>()
                 .ReverseMap();
 
+            CreateMap<NetworkTargetWrapper, Networking.Messages.Contracts.NetworkTargetWrapper>()
+                .ReverseMap();
+
             CreateMap<NetworkPlayer, Networking.Messages.Contracts.NetworkPlayer>()
                 .ReverseMap();
 
@@ -76,6 +79,9 @@ namespace WOTRMultiplayer.Config.Mapping
                 .ReverseMap();
 
             CreateMap<NetworkDropItem, Networking.Messages.Contracts.NetworkDropItem>()
+                .ReverseMap();
+
+            CreateMap<NetworkUseInventoryItem, Networking.Messages.Contracts.NetworkUseInventoryItem>()
                 .ReverseMap();
 
             CreateMap<NetworkEquipmentSlot, Networking.Messages.Contracts.NetworkEquipmentSlot>()

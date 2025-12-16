@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using Kingmaker.EntitySystem.Persistence;
 using Kingmaker.GameModes;
+using Kingmaker.Items.Slots;
 using WOTRMultiplayer.Abstractions.Random;
 using WOTRMultiplayer.Abstractions.UI;
 using WOTRMultiplayer.GameInteraction.Contexts;
@@ -8,6 +9,7 @@ using WOTRMultiplayer.MP.Entities;
 using WOTRMultiplayer.MP.Entities.ActionBar;
 using WOTRMultiplayer.MP.Entities.Combat;
 using WOTRMultiplayer.MP.Entities.Dialogs;
+using WOTRMultiplayer.MP.Entities.Equipment;
 using WOTRMultiplayer.MP.Entities.GlobalMap;
 using WOTRMultiplayer.MP.Entities.Inspect;
 using WOTRMultiplayer.MP.Entities.Leveling;
@@ -245,5 +247,9 @@ namespace WOTRMultiplayer.Abstractions.MP
         void OnDialogPopupShown(NetworkDialogPopup networkDialogPopup);
 
         void OnDialogPopupClosed(NetworkDialogPopup networkDialogPopup);
+
+        void OnUseInventoryItem(NetworkUseInventoryItem useInventoryItem);
+
+        NetworkEquipmentSlotPosition GetEquipmentSlotPosition(ItemSlot holdingSlot);
     }
 }

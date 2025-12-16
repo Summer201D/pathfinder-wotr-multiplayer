@@ -1,15 +1,20 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
+using System.Reflection.Emit;
 using HarmonyLib;
 using Kingmaker.EntitySystem;
 using Kingmaker.EntitySystem.Entities;
 using Kingmaker.Items;
 using Kingmaker.Localization;
 using Kingmaker.PubSubSystem;
+using Kingmaker.RuleSystem.Rules.Abilities;
 using Kingmaker.UI.MVVM._PCView.Loot;
 using Kingmaker.UI.MVVM._VM.Loot;
 using Kingmaker.UI.MVVM._VM.Slots;
+using Kingmaker.UnitLogic.Abilities;
+using Kingmaker.Utility;
 using Kingmaker.View.MapObjects;
 using Microsoft.Extensions.Logging;
 using WOTRMultiplayer.MP.Entities;
@@ -194,6 +199,55 @@ namespace WOTRMultiplayer.HarmonyPatches.Loot
             };
 
             Main.Multiplayer.OnDropItem(dropItem);
+        }
+
+        [HarmonyPatch(typeof(ItemEntity), nameof(ItemEntity.TryUseFromInventory))]
+        [HarmonyTranspiler]
+        public static IEnumerable<CodeInstruction> ItemEntity_TryUseFromInventory_Transpiler(IEnumerable<CodeInstruction> instructions)
+        {
+            var target = PatchesUtils.GetTranspilerTarget(MethodBase.GetCurrentMethod());
+            var extraCall = AccessTools.Method(typeof(LootPatches), nameof(LootPatches.OnUseItemFromInventory));
+            var lookFor = AccessTools.Constructor(typeof(RuleCastSpell), [typeof(Ability), typeof(TargetWrapper)]);
+            var matcher = new CodeMatcher(instructions);
+            var match = matcher.SearchForward(x => x.Is(OpCodes.Newobj, lookFor));
+            if (match.IsInvalid)
+            {
+                Main.GetLogger<LootPatches>().LogError("Transpiler has not been applied. Target={Target}", target);
+                return instructions;
+            }
+
+            match = match.Advance(-2);
+            var labels = match.Instruction.ExtractLabels();
+
+            var newInstructions = new List<CodeInstruction>()
+            {
+                new CodeInstruction(OpCodes.Ldarg_0).WithLabels(labels),
+                new (OpCodes.Ldarg_1),
+                new (OpCodes.Ldarg_2),
+                new (OpCodes.Call, extraCall),
+            };
+
+            match = match.Insert(newInstructions);
+            Main.GetLogger<LootPatches>().LogInformation("Transpiler has been applied. Target={Target}", target);
+            return matcher.Instructions();
+        }
+
+        public static void OnUseItemFromInventory(ItemEntity item, UnitEntityData user, TargetWrapper target)
+        {
+            if (!Main.Multiplayer.IsActive)
+            {
+                return;
+            }
+
+            var useInventoryItem = new NetworkUseInventoryItem
+            {
+                UserUnitId = user.UniqueId,
+                SlotPosition = Main.Multiplayer.GetEquipmentSlotPosition(item.HoldingSlot),
+                Target = new NetworkTargetWrapper(new NetworkVector3(target.m_Point.x, target.m_Point.y, target.m_Point.z), target.m_Orientation, target.Unit?.UniqueId),
+                Item = NetworkItem.FromItemEntity(item)
+            };
+
+            Main.Multiplayer.OnUseInventoryItem(useInventoryItem);
         }
 
         private static NetworkItemsTransfer CreateItemsTransfer(ItemsCollection source, List<ItemEntity> items, ItemsCollection destination)

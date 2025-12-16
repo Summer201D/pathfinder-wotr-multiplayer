@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using Kingmaker.EntitySystem.Persistence;
 using Kingmaker.GameModes;
+using Kingmaker.Items.Slots;
 using Microsoft.Extensions.Logging;
 using WOTRMultiplayer.Abstractions.GameInteraction;
 using WOTRMultiplayer.Abstractions.MP;
@@ -15,6 +16,7 @@ using WOTRMultiplayer.MP.Entities;
 using WOTRMultiplayer.MP.Entities.ActionBar;
 using WOTRMultiplayer.MP.Entities.Combat;
 using WOTRMultiplayer.MP.Entities.Dialogs;
+using WOTRMultiplayer.MP.Entities.Equipment;
 using WOTRMultiplayer.MP.Entities.GlobalMap;
 using WOTRMultiplayer.MP.Entities.Inspect;
 using WOTRMultiplayer.MP.Entities.Leveling;
@@ -546,6 +548,32 @@ namespace WOTRMultiplayer.MP
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error while dropping item. ItemId={ItemId}", networkDropItem?.Item?.UniqueId);
+                throw;
+            }
+        }
+
+        public void OnUseInventoryItem(NetworkUseInventoryItem useInventoryItem)
+        {
+            try
+            {
+                if (_multiplayerActorAccessor.Current == null)
+                {
+                    return;
+                }
+
+                var context = _gameInteractionService.RemoteContext?.UseInventoryItem;
+                if (context != null
+                    && string.Equals(context.ItemId, useInventoryItem.Item.UniqueId, StringComparison.OrdinalIgnoreCase)
+                    && string.Equals(context.UserUnitId, useInventoryItem.UserUnitId, StringComparison.OrdinalIgnoreCase))
+                {
+                    return;
+                }
+
+                _multiplayerActorAccessor.Current.OnUseInventoryItem(useInventoryItem);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while using inventory item. ItemId={ItemId}", useInventoryItem.Item?.UniqueId);
                 throw;
             }
         }
@@ -2009,6 +2037,10 @@ namespace WOTRMultiplayer.MP
             }
         }
 
+        public NetworkEquipmentSlotPosition GetEquipmentSlotPosition(ItemSlot holdingSlot)
+        {
+            return _gameInteractionService.GetEquipmentSlotPosition(holdingSlot);
+        }
 
         private void ShowEscMenuMultiplayerLobby()
         {

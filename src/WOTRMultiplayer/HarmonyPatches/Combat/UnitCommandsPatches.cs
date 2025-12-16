@@ -111,7 +111,7 @@ namespace WOTRMultiplayer.HarmonyPatches.Combat
 
             if (__instance.Ability.StickyTouch != null)
             {
-                Main.GetLogger<UnitCommandsPatches>().LogWarning("Skipping ability use as it's a part of another usage. UnitId={UnitId}, AbilityName={AbilityName}, AbilityId={AbilityId}", __instance.Executor.UniqueId, __instance.Ability.Name, __instance.Ability.UniqueId);
+                Main.GetLogger<UnitCommandsPatches>().LogWarning("Skipping ability use as it's a part of sticky touch usage. UnitId={UnitId}, AbilityName={AbilityName}, AbilityId={AbilityId}", __instance.Executor.UniqueId, __instance.Ability.Name, __instance.Ability.UniqueId);
                 return;
             }
 
