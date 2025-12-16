@@ -797,14 +797,7 @@ namespace WOTRMultiplayer.MP.Actors
         {
             Logger.LogInformation("Received {MessageType}. Seed={Seed}, Units={Units}", nameof(NotifyCombatInitialized), combatInitialized.Seed, combatInitialized.CombatState.Units.Count);
 
-            if (Game.Combat == null)
-            {
-                Logger.LogWarning("Combat has not been started on client yet. Waiting until start");
-                while (Game.Combat == null)
-                {
-                    await Task.Delay(TimeSpan.FromMilliseconds(10));
-                }
-            }
+            await WaitWhileTrue(() => Game.Combat == null, "Combat has not been started on client yet. Waiting until start");
 
             Game.Combat.Seed = combatInitialized.Seed;
             Logger.LogInformation("Combat seed has been configured. Seed={Seed}", Game.Combat.Seed);

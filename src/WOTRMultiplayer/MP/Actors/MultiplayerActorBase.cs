@@ -238,7 +238,8 @@ namespace WOTRMultiplayer.MP.Actors
 
         public void OnClickUnit(NetworkClick click)
         {
-            if (!ShouldNotifyAboutUnitClick(click))
+            if (Game.Combat == null && !IsControlledByLocalPlayer(click.SelectedUnits)
+                || Game.Combat != null && (!(Game.Combat.Turn?.IsLocalPlayer ?? false) || GameInteraction.CombatTurnHasBeenFinished()))
             {
                 return;
             }
@@ -1630,6 +1631,19 @@ namespace WOTRMultiplayer.MP.Actors
             }
         }
 
+        protected async Task WaitWhileTrue(Func<bool> condition, string warningMessage)
+        {
+            var delay = TimeSpan.FromMilliseconds(10);
+            if (condition())
+            {
+                Logger.LogWarning(warningMessage);
+                while (condition())
+                {
+                    await Task.Delay(delay);
+                }
+            }
+        }
+
         protected virtual void SetupNetworkMessageHandlers()
         {
             _networkReceiver
@@ -1908,6 +1922,13 @@ namespace WOTRMultiplayer.MP.Actors
         {
             Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}, TargetUnitId={TargetUnitId}, SelectedUnits={SelectedUnits}", nameof(NotifyUnitClicked), playerId, clicked.Click.TargetUnitId, clicked.Click.SelectedUnits.Count);
 
+            var canGetUp = GameInteraction.CanRiderGetUp();
+            if (Game.Combat != null && !canGetUp)
+            {
+                Logger.LogInformation("Ignoring {MessageType} in combat", nameof(NotifyUnitClicked));
+                return;
+            }
+
             var click = Mapper.Map<NetworkClick>(clicked.Click);
             GameInteraction.ClickUnit(click);
 
@@ -1954,9 +1975,11 @@ namespace WOTRMultiplayer.MP.Actors
             OnAfterNetworkMessageHandled(playerId, unitAttacked);
         }
 
-        private void OnNotifyPlayerCombatTurnEnded(long playerId, NotifyPlayerCombatTurnEnded ended)
+        private async void OnNotifyPlayerCombatTurnEnded(long playerId, NotifyPlayerCombatTurnEnded ended)
         {
             Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}, UnitId={UnitId}", nameof(NotifyPlayerCombatTurnEnded), playerId, ended.UnitId);
+
+            await WaitWhileTrue(GameInteraction.HasAnyRunningCombatCommands, "Waiting for all combat commands to finish before ending turn");
 
             OnAfterNetworkMessageHandled(playerId, ended);
 
@@ -2229,22 +2252,6 @@ namespace WOTRMultiplayer.MP.Actors
                 unitId, Game.Combat.Turn.IsLocalPlayer, Game.Combat.Turn.IsAI, Game.Combat.Turn.IsActingInSurpriseRound, Game.Combat.Turn.IsInProgress);
 
             OnLocalPlayerTurnStart();
-        }
-
-        private bool ShouldNotifyAboutUnitClick(NetworkClick click)
-        {
-            if (Game.Combat == null)
-            {
-                return !IsControlledByLocalPlayer(click.SelectedUnits);
-            }
-
-            if ((Game.Combat.Turn?.IsLocalPlayer ?? false) && !GameInteraction.CombatTurnHasBeenFinished())
-            {
-                return true;
-            }
-
-            var canGetUp = GameInteraction.CanRiderGetUp();
-            return canGetUp;
         }
     }
 }

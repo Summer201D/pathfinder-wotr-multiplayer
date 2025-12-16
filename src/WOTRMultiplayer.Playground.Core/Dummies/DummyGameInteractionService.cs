@@ -490,5 +490,10 @@ namespace WOTRMultiplayer.Playground.Core.Dummies
         {
             return false;
         }
+
+        public bool HasAnyRunningCombatCommands()
+        {
+            return false;
+        }
     }
 }

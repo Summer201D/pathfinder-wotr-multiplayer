@@ -2833,6 +2833,12 @@ namespace WOTRMultiplayer.GameInteraction
             return canGetUp;
         }
 
+        public bool HasAnyRunningCombatCommands()
+        {
+            var hasAnyCommmands = Game.Instance.TurnBasedCombatController.CurrentTurn?.m_RunningCommands.Count > 0;
+            return hasAnyCommmands;
+        }
+
         private List<NetworkDLC> GetInstalledDLCs()
         {
             var dlcs = new List<NetworkDLC>();
