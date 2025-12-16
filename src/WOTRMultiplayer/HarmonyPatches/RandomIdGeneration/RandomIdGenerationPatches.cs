@@ -270,8 +270,7 @@ namespace WOTRMultiplayer.HarmonyPatches.RandomIdGeneration
                 return matcher.Instructions();
             }
 
-            match.RemoveInstructions(3);
-            match.Insert(newInstructions);
+            match = match.RemoveInstructions(3).Insert(newInstructions);
             Main.GetLogger<RandomIdGenerationPatches>().LogInformation("Transpiler has been applied. Target={Target}", target);
             return matcher.Instructions();
         }

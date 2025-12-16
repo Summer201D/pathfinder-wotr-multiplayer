@@ -1389,7 +1389,7 @@ namespace WOTRMultiplayer.MP.Actors
             Game.Combat = null;
             Game.Leveling = null;
             DiceRollStorage.Reset();
-            _valueGenerator.ResetSeedGenerators(Random.SeedLifetime.Area);
+            _valueGenerator.ResetSeedGenerators(Random.SeedLifetime.Area, Random.SeedLifetime.Combat);
         }
 
         protected string StoreSaveFile(byte[] content)
@@ -1899,6 +1899,13 @@ namespace WOTRMultiplayer.MP.Actors
         {
             Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}, TargetUnitId={TargetUnitId}, SelectedUnits={SelectedUnits}", nameof(NotifyUnitClicked), playerId, clicked.Click.TargetUnitId, clicked.Click.SelectedUnits.Count);
 
+            // Combat version of UnitAttack is handled separately
+            if (Game.Combat != null)
+            {
+                Logger.LogInformation("Ignoring {MessageType} in combat", nameof(NotifyUnitClicked));
+                return;
+            }
+
             var click = Mapper.Map<NetworkClick>(clicked.Click);
             GameInteraction.ClickUnit(click);
 
@@ -1927,7 +1934,7 @@ namespace WOTRMultiplayer.MP.Actors
 
         private void OnNotifyAbilityUsed(long playerId, NotifyAbilityUsed abilityUse)
         {
-            Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}, AbilityId={AbilityId}", nameof(NotifyAbilityUsed), playerId, abilityUse.Ability.Id);
+            Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}, CasterId={CasterId}, AbilityId={AbilityId}", nameof(NotifyAbilityUsed), playerId, abilityUse.Ability.CasterId, abilityUse.Ability.Id);
 
             var ability = Mapper.Map<NetworkAbility>(abilityUse.Ability);
             GameInteraction.UseAbility(ability);

@@ -72,7 +72,7 @@ namespace WOTRMultiplayer.HarmonyPatches.Clicks
                 var click = CreateClick(gameObject, button, worldPosition, muteEvents, IsTMBClick);
                 Main.Multiplayer.OnClickGround(click);
             }
-            catch (System.Exception ex)
+            catch (Exception ex)
             {
                 Main.GetLogger<ClicksPatches>().LogError(ex, "Unable to process ClickGround click");
                 throw;
@@ -93,7 +93,7 @@ namespace WOTRMultiplayer.HarmonyPatches.Clicks
                 var click = CreateClick(gameObject, button, worldPosition, muteEvents, IsTMBClick);
                 Main.Multiplayer.OnClickUnit(click);
             }
-            catch (System.Exception ex)
+            catch (Exception ex)
             {
                 Main.GetLogger<ClicksPatches>().LogError(ex, "Unable to process ClickUnit click");
                 throw;

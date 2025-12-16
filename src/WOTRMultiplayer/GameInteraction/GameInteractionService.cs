@@ -808,24 +808,19 @@ namespace WOTRMultiplayer.GameInteraction
                 var point = new Vector3(networkAbility.TargetPoint.X, networkAbility.TargetPoint.Y, networkAbility.TargetPoint.Z);
                 var targetWrapper = new TargetWrapper(point, null, target);
 
-                if (networkAbility.ActionsState != null)
-                {
-                    //UpdateActionsState(networkAbility.ActionsState);
-                }
-
-                System.Enum.TryParse<UnitCommand.CommandType>(networkAbility.CommandType, true, out var commandType);
-                var command = UnitUseAbility.CreateCastCommand(abilityData, targetWrapper, commandType);
-                command.CreatedByPlayer = true;
-                if (networkAbility.VectorPath != null)
-                {
-                    var movementPath = networkAbility.VectorPath.Select(v => new Vector3(v.X, v.Y, v.Z)).ToList();
-                    command.ForcedPath = new ForcedPath(movementPath);
-                    PathVisualizer.Instance.m_CurrentPath = command.ForcedPath;
-                    PathVisualizer.Instance.m_CurrentPath.Claim(PathVisualizer.Instance);
-                }
-
                 _mainThreadAccessor.Post(() =>
                 {
+                    System.Enum.TryParse<UnitCommand.CommandType>(networkAbility.CommandType, true, out var commandType);
+                    var command = UnitUseAbility.CreateCastCommand(abilityData, targetWrapper, commandType);
+                    command.CreatedByPlayer = true;
+                    if (networkAbility.VectorPath != null)
+                    {
+                        var movementPath = networkAbility.VectorPath.Select(v => new Vector3(v.X, v.Y, v.Z)).ToList();
+                        command.ForcedPath = new ForcedPath(movementPath);
+                        PathVisualizer.Instance.m_CurrentPath = command.ForcedPath;
+                        PathVisualizer.Instance.m_CurrentPath.Claim(PathVisualizer.Instance);
+                    }
+
                     _logger.LogInformation("Running ability use command. Caster={Caster}, AbilityId={AbilityId}", caster.UniqueId, ((UnitUseAbility)command).Ability?.UniqueId);
                     caster.Commands.Run(command);
                 });
@@ -2393,30 +2388,46 @@ namespace WOTRMultiplayer.GameInteraction
         {
             _mainThreadAccessor.Post(() =>
             {
-                var executor = GetUnitEntity(attack.ExecutorUnitId);
-                if (executor == null)
+                try
                 {
-                    _logger.LogError("Unable to find executor unit to perform unit attack command. ExecutorUnitId={ExecutorUnitId}", attack.ExecutorUnitId);
-                    return;
-                }
-                var target = GetUnitEntity(attack.TargetUnitId);
-                if (target == null)
-                {
-                    _logger.LogError("Unable to find target unit to perform unit attack command. TargetUnitId={TargetUnitId}", attack.TargetUnitId);
-                    return;
-                }
+                    var executor = GetUnitEntity(attack.ExecutorUnitId);
+                    if (executor == null)
+                    {
+                        _logger.LogError("Unable to find executor unit to perform unit attack command. ExecutorUnitId={ExecutorUnitId}", attack.ExecutorUnitId);
+                        return;
+                    }
+                    var target = GetUnitEntity(attack.TargetUnitId);
+                    if (target == null)
+                    {
+                        _logger.LogError("Unable to find target unit to perform unit attack command. TargetUnitId={TargetUnitId}", attack.TargetUnitId);
+                        return;
+                    }
 
-                var command = UnitAttack.CreateAttackCommand(executor, target) as UnitAttack;
-                if (attack.IsFullAttack)
-                {
-                    command.ForceFullAttack = true;
-                }
+                    var command = UnitAttack.CreateAttackCommand(executor, target) as UnitAttack;
+                    if (attack.IsFullAttack)
+                    {
+                        command.ForceFullAttack = true;
+                        var turn = Game.Instance.TurnBasedCombatController.CurrentTurn;
+                        if (turn != null)
+                        {
+                            turn.m_AttackMode = TurnBased.Controllers.TurnController.AttackMode.FullAttack;
+                        }
+                    }
 
-                var movementPath = attack.VectorPath.Select(v => new Vector3(v.X, v.Y, v.Z)).ToList();
-                command.ForcedPath = new ForcedPath(movementPath);
-                command.CreatedByPlayer = true;
-                _logger.LogInformation("Starting unit attack command. ExecutorUnitId={ExecutorUnitId}, TargetUnitId={TargetUnitId}, ForceFullAttack={ForceFullAttack}", attack.ExecutorUnitId, attack.TargetUnitId, attack.IsFullAttack);
-                executor.Commands.Run(command);
+                    var movementPath = attack.VectorPath.Select(v => new Vector3(v.X, v.Y, v.Z)).ToList();
+                    command.ForcedPath = new ForcedPath(movementPath);
+                    command.CreatedByPlayer = true;
+                    var cd = executor.CombatState.Cooldown;
+                    var combatState = Game.Instance.TurnBasedCombatController.CurrentTurn?.GetActionsStates(Game.Instance.TurnBasedCombatController.CurrentTurn.Rider);
+                    _logger.LogInformation("Starting unit attack command. ExecutorUnitId={ExecutorUnitId}, TargetUnitId={TargetUnitId}, ForceFullAttack={ForceFullAttack}, SelectedUnitId={SelectedUnitId}, StandardCD={StandardAction}, MoveCD={MoveAction}, SwiftCD={SwiftAction}, InitiativeCD={Initiative}",
+                        attack.ExecutorUnitId, attack.TargetUnitId, attack.IsFullAttack, Game.Instance.TurnBasedCombatController.CurrentTurn?.SelectedUnit?.UniqueId, cd.StandardAction, cd.MoveAction, cd.SwiftAction, cd.Initiative);
+                    executor.Commands.Run(command);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Unable to attack unit. ExecutorUnitId={ExecutorUnitId}, TargetUnitId={TargetUnitId}", attack.ExecutorUnitId, attack.TargetUnitId);
+                    throw;
+                }
             });
         }
 
