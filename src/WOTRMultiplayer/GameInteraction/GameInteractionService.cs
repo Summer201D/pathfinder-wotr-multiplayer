@@ -67,6 +67,7 @@ using Kingmaker.UI.MVVM._VM.CharGen.Phases.Class;
 using Kingmaker.UI.MVVM._VM.CharGen.Phases.FeatureSelector;
 using Kingmaker.UI.MVVM._VM.CharGen.Phases.Spells;
 using Kingmaker.UI.MVVM._VM.Lockpick;
+using Kingmaker.UI.MVVM._VM.ServiceWindows.Inventory;
 using Kingmaker.UI.MVVM._VM.ServiceWindows.Spellbook.MemorizingPanel;
 using Kingmaker.UI.MVVM._VM.Vendor;
 using Kingmaker.UI.UnitSettings;
@@ -132,6 +133,7 @@ namespace WOTRMultiplayer.GameInteraction
         private VendorVM VendorViewVM => InGamePCView?.m_StaticPartPCView?.m_VendorPCView?.ViewModel;
         private SpellbookMemorizingPanelVM SpellbookMemorizingVM => (InGamePCView?.m_StaticPartPCView?.m_ServiceWindowsPCView ?? GlobalMapPCView.m_ServiceWindowsPCView)?.m_SpellbookPCView?.m_MemorizingPanelView?.ViewModel;
         private CharGenPCView CharGenView => (InGamePCView?.m_StaticPartPCView?.m_CharGenContextPCView ?? GlobalMapPCView?.m_CharGenContextPCView)?.m_CharGenPCView;
+        private InventoryVM InventoryVM => (Game.Instance.RootUiContext?.InGameVM?.StaticPartVM?.ServiceWindowsVM ?? Game.Instance.RootUiContext?.GlobalMapVM?.ServiceWindowsVM)?.InventoryVM?.Value;
 
         public GameInteractionService(
             ILogger<GameInteractionService> logger,
@@ -3433,12 +3435,8 @@ namespace WOTRMultiplayer.GameInteraction
 
         private void RefreshInventoryWindow()
         {
-            var inventory = Game.Instance.RootUiContext?.InGameVM?.StaticPartVM?.ServiceWindowsVM?.InventoryVM?.Value;
-            if (inventory != null)
-            {
-                inventory.StashVM?.CollectionChanged();
-                inventory.DollVM?.RefreshData();
-            }
+            InventoryVM?.StashVM?.CollectionChanged();
+            InventoryVM?.DollVM?.RefreshData();
         }
 
         private MapObjectEntityData GetNeareastLootBagMapObject(NetworkVector3 position)
