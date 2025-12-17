@@ -116,7 +116,7 @@ namespace WOTRMultiplayer.UnitTests.MP
             var settings = new NetworkMultiplayerSettings() { HostPortRangeStart = 123, HostPortRangeEnd = 1234 };
             A.CallTo(() => _multiplayerSettingsProvider.GetSettings()).Returns(settings);
             _multiplayerHost.Create(savePath, gameId, []);
-            _multiplayerHost.Game = new WOTRMultiplayer.MP.Entities.NetworkGame(savePath);
+            _multiplayerHost.Game = new NetworkGame(savePath);
             var handler = FakeUtils.GetNetworkReceiverHandler<ClientRestEnded>(_networkServer);
             var message = new ClientRestEnded();
             var playerId = 123;
@@ -138,9 +138,9 @@ namespace WOTRMultiplayer.UnitTests.MP
             var settings = new NetworkMultiplayerSettings() { HostPortRangeStart = 123, HostPortRangeEnd = 1234 };
             A.CallTo(() => _multiplayerSettingsProvider.GetSettings()).Returns(settings);
             _multiplayerHost.Create(savePath, gameId, []);
-            _multiplayerHost.Game = new WOTRMultiplayer.MP.Entities.NetworkGame(savePath);
-            var hostPlayer = new WOTRMultiplayer.MP.Entities.NetworkPlayer { Id = NetworkingConsts.HostPlayerId, IsHost = true };
-            var player = new WOTRMultiplayer.MP.Entities.NetworkPlayer { Id = 123 };
+            _multiplayerHost.Game = new NetworkGame(savePath);
+            var hostPlayer = new NetworkPlayer { Id = NetworkingConsts.HostPlayerId, IsHost = true };
+            var player = new NetworkPlayer { Id = 123 };
             _multiplayerHost.Game.Players.AddRange([hostPlayer, player]);
             var handler = FakeUtils.GetNetworkReceiverHandler<ClientGameServerConnectionConfirmed>(_networkServer);
             var message = new ClientGameServerConnectionConfirmed
@@ -165,9 +165,9 @@ namespace WOTRMultiplayer.UnitTests.MP
             var settings = new NetworkMultiplayerSettings() { HostPortRangeStart = 123, HostPortRangeEnd = 1234 };
             A.CallTo(() => _multiplayerSettingsProvider.GetSettings()).Returns(settings);
             _multiplayerHost.Create(savePath, gameId, []);
-            _multiplayerHost.Game = new WOTRMultiplayer.MP.Entities.NetworkGame(savePath);
-            var hostPlayer = new WOTRMultiplayer.MP.Entities.NetworkPlayer { Id = NetworkingConsts.HostPlayerId, IsHost = true };
-            var player = new WOTRMultiplayer.MP.Entities.NetworkPlayer { Id = 123 };
+            _multiplayerHost.Game = new NetworkGame(savePath);
+            var hostPlayer = new NetworkPlayer { Id = NetworkingConsts.HostPlayerId, IsHost = true };
+            var player = new NetworkPlayer { Id = 123 };
             _multiplayerHost.Game.Players.AddRange([hostPlayer, player]);
             var handler = FakeUtils.GetNetworkReceiverHandler<ClientGameServerConnectionConfirmed>(_networkServer);
             var message = new ClientGameServerConnectionConfirmed
