@@ -182,88 +182,6 @@ namespace WOTRMultiplayer.UnitTests.MP
             Assert.That(player.ContentState.DiscrepantMods, Has.Count.EqualTo(0));
         }
 
-        [Test]
-        public void ClientGameServerConnectionConfirmed_ExtraEnabledPlayerContent_DiscrepantListsAreUpdated()
-        {
-            // Arrange
-            var savePath = Guid.NewGuid().ToString();
-            var gameId = Guid.NewGuid().ToString();
-            var settings = new NetworkMultiplayerSettings() { HostPortRangeStart = 123, HostPortRangeEnd = 1234 };
-            A.CallTo(() => _multiplayerSettingsProvider.GetSettings()).Returns(settings);
-            _multiplayerHost.Create(savePath, gameId, []);
-            _multiplayerHost.Game = new NetworkGame(savePath);
-            var hostPlayer = new NetworkPlayer
-            {
-                Id = NetworkingConsts.HostPlayerId,
-                IsHost = true,
-                ContentState = new NetworkContentState(),
-            };
-            var player = new NetworkPlayer { Id = 123 };
-            var discrepantDlc1 = new Networking.Messages.Contracts.NetworkDLC { Id = "dlc1", IsAvailable = true, Title = "whatever" };
-            var discrepantMod1 = new Networking.Messages.Contracts.NetworkMod { Id = "mod1", IsEnabled = true, Type = NetworkModType.UnityModManager.ToString(), Version = "1.1.1.1" };
-            _multiplayerHost.Game.Players.AddRange([hostPlayer, player]);
-            var handler = FakeUtils.GetNetworkReceiverHandler<ClientGameServerConnectionConfirmed>(_networkServer);
-            var message = new ClientGameServerConnectionConfirmed
-            {
-                PlayerName = Guid.NewGuid().ToString(),
-                ContentState = new Networking.Messages.Contracts.NetworkContentState
-                {
-                    DLCs = [discrepantDlc1],
-                    Mods = [discrepantMod1],
-                },
-            };
-
-            // Act
-            handler.Invoke(player.Id, message);
-
-            // Assert
-            Assert.That(player.ContentState.DiscrepantDLCs, Has.Count.EqualTo(1));
-            Assert.That(player.ContentState.DiscrepantDLCs[0].DLC.Id, Is.EqualTo(discrepantDlc1.Id));
-            Assert.That(player.ContentState.DiscrepantDLCs[0].Reason, Is.EqualTo(NetworkDiscrepancyReason.Extra));
-            Assert.That(player.ContentState.DiscrepantMods, Has.Count.EqualTo(1));
-            Assert.That(player.ContentState.DiscrepantMods[0].Mod.Id, Is.EqualTo(discrepantMod1.Id));
-            Assert.That(player.ContentState.DiscrepantMods[0].Reason, Is.EqualTo(NetworkDiscrepancyReason.Extra));
-        }
-
-        [Test]
-        public void ClientGameServerConnectionConfirmed_ExtraDisabledPlayerContent_DiscrepantListsAreEmpty()
-        {
-            // Arrange
-            var savePath = Guid.NewGuid().ToString();
-            var gameId = Guid.NewGuid().ToString();
-            var settings = new NetworkMultiplayerSettings() { HostPortRangeStart = 123, HostPortRangeEnd = 1234 };
-            A.CallTo(() => _multiplayerSettingsProvider.GetSettings()).Returns(settings);
-            _multiplayerHost.Create(savePath, gameId, []);
-            _multiplayerHost.Game = new NetworkGame(savePath);
-            var hostPlayer = new NetworkPlayer
-            {
-                Id = NetworkingConsts.HostPlayerId,
-                IsHost = true,
-                ContentState = new NetworkContentState(),
-            };
-            var player = new NetworkPlayer { Id = 123 };
-            var discrepantDlc1 = new Networking.Messages.Contracts.NetworkDLC { Id = "dlc1", IsAvailable = false, Title = "whatever" };
-            var discrepantMod1 = new Networking.Messages.Contracts.NetworkMod { Id = "mod1", IsEnabled = false, Type = NetworkModType.UnityModManager.ToString(), Version = "1.1.1.1" };
-            _multiplayerHost.Game.Players.AddRange([hostPlayer, player]);
-            var handler = FakeUtils.GetNetworkReceiverHandler<ClientGameServerConnectionConfirmed>(_networkServer);
-            var message = new ClientGameServerConnectionConfirmed
-            {
-                PlayerName = Guid.NewGuid().ToString(),
-                ContentState = new Networking.Messages.Contracts.NetworkContentState
-                {
-                    DLCs = [discrepantDlc1],
-                    Mods = [discrepantMod1],
-                },
-            };
-
-            // Act
-            handler.Invoke(player.Id, message);
-
-            // Assert
-            Assert.That(player.ContentState.DiscrepantDLCs, Has.Count.EqualTo(0));
-            Assert.That(player.ContentState.DiscrepantMods, Has.Count.EqualTo(0));
-        }
-
         [TestCaseSource(nameof(DlcDifferencesTestCases))]
         public void ClientGameServerConnectionConfirmed_DlcContentStateIsDifferent_DiscrepantListContainsCorrectReasonAndNumberOfDLCs(ContentStateTestCase testCase)
         {
@@ -375,6 +293,13 @@ namespace WOTRMultiplayer.UnitTests.MP
                 PlayerDLCs = [new Networking.Messages.Contracts.NetworkDLC { Id = dlcId1, IsAvailable = false }],
                 ExpectedDiscrepantDLCs = []
             };
+
+            yield return new ContentStateTestCase("dlc is available for both")
+            {
+                HostDLCs = [new NetworkDLC { Id = dlcId1, IsAvailable = true }],
+                PlayerDLCs = [new Networking.Messages.Contracts.NetworkDLC { Id = dlcId1, IsAvailable = true }],
+                ExpectedDiscrepantDLCs = []
+            };
         }
 
         private static IEnumerable<ContentStateTestCase> ModDifferencesTestCases()
@@ -419,6 +344,13 @@ namespace WOTRMultiplayer.UnitTests.MP
             {
                 HostMods = [new NetworkMod { Id = modId1, IsEnabled = false }],
                 PlayerMods = [],
+                ExpectedDiscrepantMods = []
+            };
+
+            yield return new ContentStateTestCase("mod is installed and enabled for both")
+            {
+                HostMods = [new NetworkMod { Id = modId1, IsEnabled = true }],
+                PlayerMods = [new Networking.Messages.Contracts.NetworkMod { Id = modId1, IsEnabled = true }],
                 ExpectedDiscrepantMods = []
             };
 
