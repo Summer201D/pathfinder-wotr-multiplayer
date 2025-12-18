@@ -702,7 +702,18 @@ namespace WOTRMultiplayer.MP.Actors
 
         public bool CanMakeLevelingDecisions()
         {
-            return Game.Leveling != null && IsControlledByLocalPlayer(Game.Leveling.UnitId) && Game.Leveling.PlayerReadiness.Count >= GetPlayersCount();
+            if (Game.Leveling == null)
+            {
+                return false;
+            }
+
+            var characterControl = Game.Leveling.Type switch
+            {
+                NetworkLevelingType.Mercenary => HasControlOverUI,
+                _ => IsControlledByLocalPlayer(Game.Leveling.UnitId),
+            };
+
+            return characterControl && Game.Leveling.PlayerReadiness.Count >= GetPlayersCount();
         }
 
         public void OnLevelingWitnessPhase(NetworkLevelingPhase phase)

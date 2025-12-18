@@ -216,8 +216,16 @@ You can either ignore it (if the outcome is more or less the same for everyone) 
 ### Abilities
 Only basic usage of abilities is available. Any extra conditions like metamagic will not work properly as those modifications will not be applied for remote players
 
-### Hiring Merc
-CharGen screen is synced for leveling only. You will need to create initial merc locally and then host multiplayer game
+### Hiring Mercenary
+Character Generation screen is synced for leveling only. You will need to create initial merc locally and then host multiplayer game.
+
+The following CharGen phases are not synced:
+- Portrait
+- Race
+- Alignment
+- Appearence
+- Voice
+- Name
 
 ## Long term plans
 

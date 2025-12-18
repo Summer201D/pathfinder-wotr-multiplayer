@@ -24,5 +24,10 @@ namespace WOTRMultiplayer.HarmonyPatches
         {
             Main.GetLogger<PatchesUtils>().LogWarning(Environment.NewLine + string.Join(Environment.NewLine, codeInstructions));
         }
+
+        public static void Dump(CodeMatcher matcher)
+        {
+            Dump(matcher.Instructions());
+        }
     }
 }

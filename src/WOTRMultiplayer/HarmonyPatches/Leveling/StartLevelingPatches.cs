@@ -1,8 +1,14 @@
-﻿using HarmonyLib;
+﻿using System.Collections.Generic;
+using System.Reflection;
+using System.Reflection.Emit;
+using HarmonyLib;
 using Kingmaker;
 using Kingmaker.Designers.EventConditionActionSystem.Actions;
+using Kingmaker.EntitySystem.Entities;
 using Kingmaker.UI.MVVM._VM.Party;
 using Kingmaker.UI.MVVM._VM.ServiceWindows.CharacterInfo.Sections.LevelClassScores.Experience;
+using Kingmaker.UnitLogic.Class.LevelUp;
+using Microsoft.Extensions.Logging;
 using WOTRMultiplayer.MP.Entities.Leveling;
 
 namespace WOTRMultiplayer.HarmonyPatches.Leveling
@@ -60,6 +66,49 @@ namespace WOTRMultiplayer.HarmonyPatches.Leveling
 
             var unitId = Game.Instance.Player.MainCharacter.Value.UniqueId;
             Main.Multiplayer.ForceLevelingUI(unitId, NetworkLevelingType.MythicLeveling);
+        }
+
+        [HarmonyPatch(typeof(Player), nameof(Player.CreateCustomCompanion))]
+        [HarmonyTranspiler]
+        public static IEnumerable<CodeInstruction> Player_CreateCustomCompanion_Transpiler(IEnumerable<CodeInstruction> codeInstructions)
+        {
+            var target = PatchesUtils.GetTranspilerTarget(MethodBase.GetCurrentMethod());
+            var extraCall = AccessTools.Method(typeof(StartLevelingPatches), nameof(StartLevelingPatches.OnCreateCompanion));
+            var lookFor = AccessTools.Method(typeof(LevelUpConfig), nameof(LevelUpConfig.Create));
+            var matcher = new CodeMatcher(codeInstructions);
+            var match = matcher.SearchForward(x => x.Calls(lookFor));
+            if (match.IsInvalid)
+            {
+                Main.GetLogger<StartLevelingPatches>().LogError("Transpiler has not been applied. Target={Target}", target);
+                matcher.Instructions();
+            }
+
+            match = matcher.Advance(-3);
+            var labels = matcher.Instruction.ExtractLabels();
+            var loadField = match.InstructionAt(1);
+            var newInstructions = new List<CodeInstruction>()
+            {
+                new CodeInstruction(OpCodes.Ldloc_0).WithLabels(labels),
+                loadField,
+                new(OpCodes.Call, extraCall),
+                new(OpCodes.Ldloc_0),
+                loadField,
+            };
+
+            match = matcher.RemoveInstructions(2).Insert(newInstructions);
+
+            Main.GetLogger<StartLevelingPatches>().LogInformation("Transpiler has been applied. Target={Target}", target);
+            return matcher.Instructions();
+        }
+
+        public static void OnCreateCompanion(UnitEntityData unitEntityData)
+        {
+            if (!Main.Multiplayer.IsActive)
+            {
+                return;
+            }
+
+            Main.Multiplayer.ForceLevelingUI(unitEntityData.UniqueId, NetworkLevelingType.Mercenary);
         }
     }
 }
