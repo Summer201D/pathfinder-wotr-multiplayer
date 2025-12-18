@@ -127,6 +127,7 @@
             NotifyLevelingPortraitSelected,
             NotifyLevelingRaceSelected,
             NotifyLevelingGenderSelected,
+            NotifyLevelingRacialAbilityScoreBonusChanged,
         }
 
         public enum Request

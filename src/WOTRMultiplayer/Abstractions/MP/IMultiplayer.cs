@@ -176,6 +176,8 @@ namespace WOTRMultiplayer.Abstractions.MP
 
         void OnLevelingGenderSelected(NetworkLevelingGender levelingGender);
 
+        void OnLevelingRacialAbilityScoreBonusChanged(NetworkLevelingSequenceDirection direction);
+
         void OnMoveActionBarSlot(NetworkActionBarSlot sourceActionBarSlot, NetworkActionBarSlot targetActionBarSlot);
 
         void OnClearActionBarSlot(NetworkActionBarSlot actionBarSlot);

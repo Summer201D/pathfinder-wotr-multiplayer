@@ -515,5 +515,9 @@ namespace WOTRMultiplayer.Playground.Core.Dummies
         public void SelectLevelingRace(string raceId)
         {
         }
+
+        public void ChangeLevelingRacialAbilityScoreBonus(NetworkLevelingSequenceDirection direction)
+        {
+        }
     }
 }

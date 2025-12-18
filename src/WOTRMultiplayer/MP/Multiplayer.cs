@@ -1425,6 +1425,25 @@ namespace WOTRMultiplayer.MP
             }
         }
 
+
+        public void OnLevelingRacialAbilityScoreBonusChanged(NetworkLevelingSequenceDirection direction)
+        {
+            try
+            {
+                if (_multiplayerActorAccessor.Current == null)
+                {
+                    return;
+                }
+
+                _multiplayerActorAccessor.Current.OnLevelingRacialAbilityScoreBonusChanged(direction);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while changing racial bonus. Direction={Direction}", direction);
+                throw;
+            }
+        }
+
         public void OnLevelingFeatureSelected(NetworkLevelingFeature networkLevelingFeature)
         {
             try

@@ -2460,6 +2460,45 @@ namespace WOTRMultiplayer.GameInteraction
             });
         }
 
+        public void ChangeLevelingRacialAbilityScoreBonus(NetworkLevelingSequenceDirection direction)
+        {
+            _mainThreadAccessor.Post(() =>
+            {
+                try
+                {
+                    if (CharGenView?.ViewModel == null)
+                    {
+                        _logger.LogError("Unable to get leveling ability score vm due too missing CharGenView");
+                        return;
+                    }
+
+                    var view = CharGenView.SelectedDetailView as CharGenAbilityScoresDetailedPCView;
+                    if (view == null)
+                    {
+                        _logger.LogError("Can't change leveling racial bonus due to missing ability score phase view");
+                        return;
+                    }
+
+                    switch (direction)
+                    {
+                        case NetworkLevelingSequenceDirection.Left:
+                            view.RaceBonusSelectorPc.ViewModel.OnLeft();
+                            break;
+                        case NetworkLevelingSequenceDirection.Right:
+                            view.RaceBonusSelectorPc.ViewModel.OnRight();
+                            break;
+                    }
+
+                    _logger.LogInformation("Leveling racial ability score bonus has been changed. StatType={StatType}, Direction={Direction}", view.ViewModel.SelectedRaceBonus.Value, direction);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error while changing leveling racial ability score bonus. Direction={Direction}", direction);
+                    throw;
+                }
+            });
+        }
+
         public void IncreaseLevelingAbilityScore(NetworkLevelingAbilityScore networkLevelingAbilityScore)
         {
             _mainThreadAccessor.Post(() =>
@@ -2469,11 +2508,11 @@ namespace WOTRMultiplayer.GameInteraction
                     var abilityScoreView = GetLevelingAbilityScoreAllocatorView(networkLevelingAbilityScore.StatType);
                     if (abilityScoreView == null)
                     {
+                        _logger.LogError("Unable to find ability score allocator view. StatType={StatType}", networkLevelingAbilityScore.StatType);
                         return;
                     }
 
-                    abilityScoreView.ViewModel.m_LevelUpController.SpendSkillPoint(abilityScoreView.ViewModel.StatType);
-                    abilityScoreView.OnChangedValue();
+                    abilityScoreView.ViewModel.TryIncreaseValue();
                     _logger.LogInformation("Leveling ability score has been increased. StatType={StatType}", networkLevelingAbilityScore.StatType);
                 }
                 catch (Exception ex)
@@ -2493,10 +2532,11 @@ namespace WOTRMultiplayer.GameInteraction
                     var abilityScoreView = GetLevelingAbilityScoreAllocatorView(networkLevelingAbilityScore.StatType);
                     if (abilityScoreView == null)
                     {
+                        _logger.LogError("Unable to find ability score allocator view. StatType={StatType}", networkLevelingAbilityScore.StatType);
                         return;
                     }
-                    abilityScoreView.ViewModel.m_LevelUpController.UnspendSkillPoint(abilityScoreView.ViewModel.StatType);
-                    abilityScoreView.OnChangedValue();
+
+                    abilityScoreView.ViewModel.TryDecreaseValue();
                     _logger.LogInformation("Leveling ability score has been decreased. StatType={StatType}", networkLevelingAbilityScore.StatType);
                 }
                 catch (Exception ex)
@@ -3471,7 +3511,7 @@ namespace WOTRMultiplayer.GameInteraction
 
         private CharGenAbilityScoreAllocatorPCView GetLevelingAbilityScoreAllocatorView(StatType statType)
         {
-            if (CharGenView == null)
+            if (CharGenView?.ViewModel == null)
             {
                 _logger.LogError("Unable to get leveling ability score vm due too missing CharGenView");
                 return null;

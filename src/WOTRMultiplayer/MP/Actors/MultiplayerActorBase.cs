@@ -846,6 +846,21 @@ namespace WOTRMultiplayer.MP.Actors
             Send(message);
         }
 
+        public void OnLevelingRacialAbilityScoreBonusChanged(NetworkLevelingSequenceDirection direction)
+        {
+            if (!CanMakeLevelingDecisions())
+            {
+                return;
+            }
+
+            var message = new NotifyLevelingRacialAbilityScoreBonusChanged
+            {
+                Direction = direction.ToString()
+            };
+            Logger.LogInformation("Sending {MessageType}. Direction={Direction}", nameof(NotifyLevelingRacialAbilityScoreBonusChanged), message.Direction);
+            Send(message);
+        }
+
         public void OnLevelingFeatureSelected(NetworkLevelingFeature feature)
         {
             if (!CanMakeLevelingDecisions())
@@ -1774,6 +1789,7 @@ namespace WOTRMultiplayer.MP.Actors
                 .On<NotifyLevelingPortraitSelected>(OnNotifyLevelingPortraitSelected)
                 .On<NotifyLevelingRaceSelected>(OnNotifyLevelingRaceSelected)
                 .On<NotifyLevelingGenderSelected>(OnNotifyLevelingGenderSelected)
+                .On<NotifyLevelingRacialAbilityScoreBonusChanged>(OnNotifyLevelingRacialAbilityScoreBonusChanged)
                 .On<NotifyLevelingFeatureSelected>(OnNotifyLevelingFeatureSelected)
                 .On<NotifyLevelingSpellChosen>(OnNotifyLevelingSpellChosen)
                 .On<NotifyLevelingSpellRemoved>(OnNotifyLevelingSpellRemoved)
@@ -2221,7 +2237,7 @@ namespace WOTRMultiplayer.MP.Actors
 
         private void OnNotifyLevelingPortraitSelected(long playerId, NotifyLevelingPortraitSelected levelingPortraitSelected)
         {
-            Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}, Name={Name}, CustomId={CustomId}, Category={Category}", playerId, nameof(NotifyLevelingPortraitSelected), levelingPortraitSelected.Portrait.Name, levelingPortraitSelected.Portrait.CustomId, levelingPortraitSelected.Portrait.Category);
+            Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}, Name={Name}, CustomId={CustomId}, Category={Category}", nameof(NotifyLevelingPortraitSelected), playerId, levelingPortraitSelected.Portrait.Name, levelingPortraitSelected.Portrait.CustomId, levelingPortraitSelected.Portrait.Category);
 
             var levelingPortrait = Mapper.Map<NetworkLevelingPortrait>(levelingPortraitSelected.Portrait);
             GameInteraction.SelectLevelingPortrait(levelingPortrait);
@@ -2231,7 +2247,7 @@ namespace WOTRMultiplayer.MP.Actors
 
         private void OnNotifyLevelingGenderSelected(long playerId, NotifyLevelingGenderSelected levelingGenderSelected)
         {
-            Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}, GenderId={GenderId}", playerId, nameof(NotifyLevelingGenderSelected), levelingGenderSelected.GenderId);
+            Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}, GenderId={GenderId}", nameof(NotifyLevelingGenderSelected), playerId, levelingGenderSelected.GenderId);
 
             GameInteraction.SelectLevelingGender(levelingGenderSelected.GenderId);
 
@@ -2240,11 +2256,22 @@ namespace WOTRMultiplayer.MP.Actors
 
         private void OnNotifyLevelingRaceSelected(long playerId, NotifyLevelingRaceSelected levelingRaceSelected)
         {
-            Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}, RaceId={RaceId}", playerId, nameof(NotifyLevelingRaceSelected), levelingRaceSelected.RaceId);
+            Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}, RaceId={RaceId}", nameof(NotifyLevelingRaceSelected), playerId, levelingRaceSelected.RaceId);
 
             GameInteraction.SelectLevelingRace(levelingRaceSelected.RaceId);
 
             OnAfterNetworkMessageHandled(playerId, levelingRaceSelected);
+        }
+
+        private void OnNotifyLevelingRacialAbilityScoreBonusChanged(long playerId, NotifyLevelingRacialAbilityScoreBonusChanged racialAbilityScoreBonusChanged)
+        {
+            Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}, Direction={Direction}", nameof(NotifyLevelingRaceSelected), playerId, racialAbilityScoreBonusChanged.Direction);
+
+            var direction = Mapper.Map<NetworkLevelingSequenceDirection>(racialAbilityScoreBonusChanged.Direction);
+
+            GameInteraction.ChangeLevelingRacialAbilityScoreBonus(direction);
+
+            OnAfterNetworkMessageHandled(playerId, racialAbilityScoreBonusChanged);
         }
 
         private void OnNotifyLevelingAbilityScoreDecreased(long playerId, NotifyLevelingAbilityScoreDecreased levelingAbilityScoreDecreased)
