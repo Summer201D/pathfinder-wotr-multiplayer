@@ -15,7 +15,7 @@ namespace WOTRMultiplayer.HarmonyPatches.Leveling
         [HarmonyPrefix]
         public static bool CharGenMythicSelectorItemPCView_OnClick_Prefix(SelectionGroupEntityView<SelectionGroupEntityVM> __instance)
         {
-            if (!Main.Multiplayer.IsActive || __instance.GetType() != typeof(CharGenMythicSelectorItemPCView))
+            if (!Main.Multiplayer.IsActive)
             {
                 return true;
             }
@@ -34,7 +34,7 @@ namespace WOTRMultiplayer.HarmonyPatches.Leveling
         [HarmonyPostfix]
         public static void SelectionGroupEntityView_BindViewImplementation_Postfix(SelectionGroupEntityView<SelectionGroupEntityVM> __instance)
         {
-            if (!Main.Multiplayer.IsActive || __instance.GetType() != typeof(CharGenMythicSelectorItemPCView))
+            if (!Main.Multiplayer.IsActive)
             {
                 return;
             }
