@@ -312,7 +312,7 @@ namespace WOTRMultiplayer.HarmonyPatches.RandomIdGeneration
             {
                 var rawIdentifier = $"{GetCommonIdPart()}:{prefab.name}:{unit?.CharacterName}";
                 var id = Main.Multiplayer.ValueGenerator.GenerateUniqueId(UniqueIdType.Unit, Game.Instance.Player.GameId, rawIdentifier);
-                Main.GetLogger<RandomIdGenerationPatches>().LogInformation("UnitId has been generated. GameId={GameId}, RawIdentifier={RawIdentifier}, Id={Id}", Game.Instance.Player.GameId, rawIdentifier, id);
+                Main.GetLogger<RandomIdGenerationPatches>().LogDebug("UnitId has been generated. GameId={GameId}, RawIdentifier={RawIdentifier}, Id={Id}", Game.Instance.Player.GameId, rawIdentifier, id);
                 return id;
             }
             catch (Exception ex)

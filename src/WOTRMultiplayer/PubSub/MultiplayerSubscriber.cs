@@ -54,7 +54,7 @@ namespace WOTRMultiplayer.PubSub
 
         public void HandlePartyLeaveArea(BlueprintArea currentArea, BlueprintAreaEnterPoint targetArea, AreaTransitionPart areaTransition)
         {
-            if (!ActorAccessor.Host.IsActive)
+            if (ActorAccessor.Current == null || !ActorAccessor.Host.IsActive)
             {
                 return;
             }
