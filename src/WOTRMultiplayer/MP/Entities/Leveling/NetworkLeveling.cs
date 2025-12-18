@@ -12,10 +12,10 @@ namespace WOTRMultiplayer.MP.Entities.Leveling
 
         public int PhaseIndex { get; set; }
 
-        public NetworkLeveling(string unitId, NetworkLevelingType charGenScreenType)
+        public NetworkLeveling(string unitId, NetworkLevelingType levelingType)
         {
             UnitId = unitId;
-            Type = charGenScreenType;
+            Type = levelingType;
         }
     }
 }

@@ -641,6 +641,35 @@ namespace WOTRMultiplayer.MP.Actors
             Send(message);
         }
 
+        /// <summary>
+        /// Unlike OnRequestLevelingUI, this method is used when game is enforcing opening leveling ui
+        /// State should be the same across players since it's not a result of their action
+        /// Also, we shouldn't deny opening it as it contains few 'OnStop' actions
+        /// E.g. dialog -> mythic path selection at the end of act 2 -> dialog
+        /// </summary>
+        /// <param name="unitId"></param>
+        /// <param name="networkLevelingType"></param>
+        public void OnForceLevelingUI(string unitId, NetworkLevelingType networkLevelingType)
+        {
+            InitiateLeveling(unitId, networkLevelingType);
+            Logger.LogInformation("Leveling UI has been forced by the game. UnitId={UnitId}, Type={Type}", Game.Leveling.UnitId, Game.Leveling.Type);
+        }
+
+        public void OnLevelingMythicClassSelected(string mythicClassId)
+        {
+            if (!CanMakeLevelingDecisions())
+            {
+                return;
+            }
+
+            var message = new NotifyLevelingMythicClassSelected
+            {
+                MythicClassId = mythicClassId
+            };
+            Logger.LogInformation("Sending {MessageType}. MythicClassId={MythicClassId}", nameof(NotifyLevelingMythicClassSelected), mythicClassId);
+            Send(message);
+        }
+
         public void OnLevelingClassSelected(string classId)
         {
             if (!CanMakeLevelingDecisions())
@@ -1110,6 +1139,16 @@ namespace WOTRMultiplayer.MP.Actors
         protected abstract void Send(object message);
 
         protected abstract void Send(long playerId, object message);
+
+        protected void InitiateLeveling(string unitId, NetworkLevelingType levelingType)
+        {
+            if (Game.Leveling != null)
+            {
+                Logger.LogWarning("Previous leveling has not been finished. UnitId={UnitId}, Type={Type}", Game.Leveling.UnitId, Game.Leveling.Type);
+            }
+
+            Game.Leveling = new NetworkLeveling(unitId, levelingType);
+        }
 
         protected void UpdateGroupManagerUIState()
         {
@@ -1667,6 +1706,7 @@ namespace WOTRMultiplayer.MP.Actors
             _networkReceiver
                 // leveling
                 .On<NotifyLevelingClassArchetypeSelected>(OnNotifyLevelingClassArchetypeSelected)
+                .On<NotifyLevelingMythicClassSelected>(OnNotifyLevelingMythicClassSelected)
                 .On<NotifyLevelingClassSelected>(OnNotifyLevelingClassSelected)
                 .On<NotifyLevelingPhaseWitnessed>(OnNotifyLevelingPhaseWitnessed)
                 .On<NotifyLevelingPhaseChanged>(OnNotifyLevelingPhaseChanged)
@@ -2209,28 +2249,42 @@ namespace WOTRMultiplayer.MP.Actors
             OnAfterNetworkMessageHandled(playerId, changed);
         }
 
-        private void OnNotifyLevelingPhaseWitnessed(long playerId, NotifyLevelingPhaseWitnessed witnessed)
+        private async void OnNotifyLevelingPhaseWitnessed(long playerId, NotifyLevelingPhaseWitnessed witnessed)
         {
             Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}", nameof(NotifyLevelingPhaseWitnessed), playerId);
+
+            // leveling is always created at the host first and later on on clients as a part of leveling confirmation
+            // but not in case when game is forcing leveling ui to open for everyone at the same time => means there is some racing there
+            await WaitWhileTrue(() => Game.Leveling == null, "Received leveling witness notification, but leveling has not been startet yet.");
+
             WitnessLevelingPhase(playerId);
 
             OnAfterNetworkMessageHandled(playerId, witnessed);
         }
 
-        private void OnNotifyLevelingClassArchetypeSelected(long playerId, NotifyLevelingClassArchetypeSelected selected)
+        private void OnNotifyLevelingClassArchetypeSelected(long playerId, NotifyLevelingClassArchetypeSelected classArchetypeSelected)
         {
-            Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}, ArchetypeId={ArchetypeId}", nameof(NotifyLevelingClassArchetypeSelected), playerId, selected.ArchetypeId);
-            GameInteraction.SelectLevelingClassArchetype(selected.ArchetypeId);
+            Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}, ArchetypeId={ArchetypeId}", nameof(NotifyLevelingClassArchetypeSelected), playerId, classArchetypeSelected.ArchetypeId);
+            GameInteraction.SelectLevelingClassArchetype(classArchetypeSelected.ArchetypeId);
 
-            OnAfterNetworkMessageHandled(playerId, selected);
+            OnAfterNetworkMessageHandled(playerId, classArchetypeSelected);
         }
 
-        private void OnNotifyLevelingClassSelected(long playerId, NotifyLevelingClassSelected selected)
-        {
-            Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}, ClassId={ClassId}", nameof(NotifyCharacterLevelingStarted), playerId, selected.ClassId);
-            GameInteraction.SelectLevelingClass(selected.ClassId);
 
-            OnAfterNetworkMessageHandled(playerId, selected);
+        private void OnNotifyLevelingMythicClassSelected(long playerId, NotifyLevelingMythicClassSelected mythicClassSelected)
+        {
+            Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}, MythicClassId={MythicClassId}", nameof(NotifyLevelingMythicClassSelected), playerId, mythicClassSelected.MythicClassId);
+            GameInteraction.SelectMythicLevelingClass(mythicClassSelected.MythicClassId);
+
+            OnAfterNetworkMessageHandled(playerId, mythicClassSelected);
+        }
+
+        private void OnNotifyLevelingClassSelected(long playerId, NotifyLevelingClassSelected classSelected)
+        {
+            Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}, ClassId={ClassId}", nameof(NotifyCharacterLevelingStarted), playerId, classSelected.ClassId);
+            GameInteraction.SelectLevelingClass(classSelected.ClassId);
+
+            OnAfterNetworkMessageHandled(playerId, classSelected);
         }
 
         private bool IsControlledByLocalPlayer(List<string> units)

@@ -132,6 +132,8 @@ namespace WOTRMultiplayer.Abstractions.MP.Actors
 
         void OnForgetSpell(NetworkSpellSlot slot);
 
+        void OnLevelingMythicClassSelected(string mythicClassId);
+
         void OnLevelingClassSelected(string classId);
 
         void OnLevelingClassArchetypeSelected(string archetypeId);
@@ -168,7 +170,9 @@ namespace WOTRMultiplayer.Abstractions.MP.Actors
 
         void OnLockpickInteraction(NetworkLockpickInteraction lockpickInteraction);
 
-        bool OnRequestLevelingUI(string unitId, NetworkLevelingType networkCharGenScreenType);
+        bool OnRequestLevelingUI(string unitId, NetworkLevelingType networkLevelingType);
+
+        void OnForceLevelingUI(string unitId, NetworkLevelingType networkLevelingType);
 
         void OnHandleDelayCombatTurn(string unitId, string targetUnitId);
 

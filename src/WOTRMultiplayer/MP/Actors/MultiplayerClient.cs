@@ -652,7 +652,7 @@ namespace WOTRMultiplayer.MP.Actors
                 return;
             }
 
-            Game.Leveling = new NetworkLeveling(characterLevelingStarted.UnitId, levelingType);
+            InitiateLeveling(characterLevelingStarted.UnitId, levelingType);
             GameInteraction.StartLeveling(Game.Leveling.UnitId, Game.Leveling.Type);
         }
 

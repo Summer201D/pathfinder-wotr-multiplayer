@@ -123,6 +123,7 @@
             NotifyDialogPopupShown,
             NotifyDialogPopupClosed,
             NotifyInventoryItemUsed,
+            NotifyLevelingMythicClassSelected,
         }
 
         public enum Request

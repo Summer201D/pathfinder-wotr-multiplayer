@@ -1187,6 +1187,24 @@ namespace WOTRMultiplayer.MP
             }
         }
 
+        public void OnLevelingMythicClassSelected(string mythicClassId)
+        {
+            try
+            {
+                if (_multiplayerActorAccessor.Current == null)
+                {
+                    return;
+                }
+
+                _multiplayerActorAccessor.Current.OnLevelingMythicClassSelected(mythicClassId);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while processing leveling mythic class selection. MythicClassId={MythicClassId}", mythicClassId);
+                throw;
+            }
+        }
+
         public bool RequestLevelingUI(string unitId, NetworkLevelingType levelingType)
         {
             try
@@ -1202,6 +1220,24 @@ namespace WOTRMultiplayer.MP
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error while requesting leveling UI. UnitId={UnitId}, Type={Type}", unitId, levelingType);
+                throw;
+            }
+        }
+
+        public void ForceLevelingUI(string unitId, NetworkLevelingType levelingType)
+        {
+            try
+            {
+                if (_multiplayerActorAccessor.Current == null)
+                {
+                    return;
+                }
+
+                _multiplayerActorAccessor.Current.OnForceLevelingUI(unitId, levelingType);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while forcing leveling UI. UnitId={UnitId}, Type={Type}", unitId, levelingType);
                 throw;
             }
         }

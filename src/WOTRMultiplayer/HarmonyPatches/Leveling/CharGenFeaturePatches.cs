@@ -13,7 +13,7 @@ namespace WOTRMultiplayer.HarmonyPatches.Leveling
         {
             if (!Main.Multiplayer.IsActive)
             {
-                return false;
+                return true;
             }
 
             var canContinue = Main.Multiplayer.CanMakeLevelingDecisions();

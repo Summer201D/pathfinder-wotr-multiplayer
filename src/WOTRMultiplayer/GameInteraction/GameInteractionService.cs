@@ -49,6 +49,7 @@ using Kingmaker.UI.MVVM._PCView.CharGen.Phases;
 using Kingmaker.UI.MVVM._PCView.CharGen.Phases.AbilityScores;
 using Kingmaker.UI.MVVM._PCView.CharGen.Phases.Class;
 using Kingmaker.UI.MVVM._PCView.CharGen.Phases.FeatureSelector;
+using Kingmaker.UI.MVVM._PCView.CharGen.Phases.Mythic;
 using Kingmaker.UI.MVVM._PCView.CharGen.Phases.Skills;
 using Kingmaker.UI.MVVM._PCView.CharGen.Phases.Spells;
 using Kingmaker.UI.MVVM._PCView.Common;
@@ -2045,22 +2046,52 @@ namespace WOTRMultiplayer.GameInteraction
             });
         }
 
+        public void SelectMythicLevelingClass(string mythicClassId)
+        {
+            _mainThreadAccessor.Post(() =>
+            {
+                try
+                {
+                    if (CharGenView?.ViewModel == null)
+                    {
+                        _logger.LogWarning("Can't select mythic class due to missing CharGenView");
+                        return;
+                    }
+
+                    var viewModel = (CharGenView?.SelectedDetailView as CharGenMythicPhaseDetailedPCView)?.ViewModel;
+                    if (viewModel == null)
+                    {
+                        _logger.LogError("Can't select mythic class due to missing mythic leveling phase viewmodel");
+                        return;
+                    }
+
+                    var selectedMythicClass = viewModel.m_MythicVMs.FirstOrDefault(c => string.Equals(c.Class.AssetGuid.ToString(), mythicClassId, StringComparison.OrdinalIgnoreCase));
+                    viewModel.SelectedMythicVM.Value = selectedMythicClass;
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error while selecting mythic leveling class. ClassId={ClassId}", mythicClassId);
+                    throw;
+                }
+            });
+        }
+
         public void SelectLevelingClass(string classId)
         {
             _mainThreadAccessor.Post(() =>
             {
                 try
                 {
-                    if (CharGenView == null)
+                    if (CharGenView?.ViewModel == null)
                     {
-                        _logger.LogWarning("Can't select class archetype due to missing CharGenView");
+                        _logger.LogWarning("Can't select class due to missing CharGenView");
                         return;
                     }
 
                     var viewModel = GetLevelingPhaseViewModel();
                     if (viewModel == null)
                     {
-                        _logger.LogError("Unable to get leveling phase viewmodel");
+                        _logger.LogError("Can't select class due to missing due to missing leveling phase viewmodel");
                         return;
                     }
 
@@ -2081,7 +2112,7 @@ namespace WOTRMultiplayer.GameInteraction
             {
                 try
                 {
-                    if (CharGenView == null)
+                    if (CharGenView?.ViewModel == null)
                     {
                         _logger.LogWarning("Can't select feature due to missing CharGenView");
                         return;

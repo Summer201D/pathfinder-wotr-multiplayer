@@ -466,7 +466,7 @@ namespace WOTRMultiplayer.Playground.Core.Dummies
 
         public NetworkContentState GetInstalledContent()
         {
-            return null;
+            return new NetworkContentState();
         }
 
         public bool IsInCombat()
@@ -497,6 +497,10 @@ namespace WOTRMultiplayer.Playground.Core.Dummies
         }
 
         public void UseInventoryItem(NetworkUseInventoryItem useInventoryItem)
+        {
+        }
+
+        public void SelectMythicLevelingClass(string mythicClassId)
         {
         }
     }

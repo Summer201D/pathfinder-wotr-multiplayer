@@ -47,7 +47,7 @@ namespace WOTRMultiplayer.HarmonyPatches.Combat
                 }
 
                 var cd = __instance.Executor.CombatState.Cooldown;
-                Main.GetLogger<UnitCommandsPatches>().LogInformation("Starting unit attack command. ExecutorUnitId={ExecutorUnitId}, TargetUnitId={TargetUnitId}, IsFullAttack={IsFullAttack}, StandardCD={StandardAction}, MoveCD={MoveAction}, SwiftCD={SwiftAction}, InitiativeCD={Initiative}",
+                Main.GetLogger<UnitCommandsPatches>().LogDebug("Starting unit attack command. ExecutorUnitId={ExecutorUnitId}, TargetUnitId={TargetUnitId}, IsFullAttack={IsFullAttack}, StandardCD={StandardAction}, MoveCD={MoveAction}, SwiftCD={SwiftAction}, InitiativeCD={Initiative}",
                     __instance.Executor.UniqueId, __instance.Target.UniqueId, __instance.IsFullAttack(), cd.StandardAction, cd.MoveAction, cd.SwiftAction, cd.Initiative);
 
                 OnUnitAttack(__instance, forceMount: false);

@@ -140,9 +140,13 @@ namespace WOTRMultiplayer.Abstractions.MP
 
         bool RequestLevelingUI(string unitId, NetworkLevelingType levelingType);
 
+        void ForceLevelingUI(string unitId, NetworkLevelingType levelingType);
+
         void OnLevelingClassArchetypeSelected(string archetypeId);
 
         void OnLevelingClassSelected(string classId);
+
+        void OnLevelingMythicClassSelected(string mythicClassId);
 
         void OnLevelingTerminated();
 

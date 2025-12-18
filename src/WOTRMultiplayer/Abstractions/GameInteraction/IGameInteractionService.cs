@@ -150,6 +150,8 @@ namespace WOTRMultiplayer.Abstractions.GameInteraction
 
         void SelectLevelingClass(string classId);
 
+        void SelectMythicLevelingClass(string mythicClassId);
+
         void UpdateLevelingPhaseControls(bool isEnabled);
 
         void SwitchLevelingPhase(NetworkLevelingPhase networkLevelingPhase);

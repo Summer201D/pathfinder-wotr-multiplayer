@@ -528,14 +528,9 @@ namespace WOTRMultiplayer.MP.Actors
 
         public bool OnRequestLevelingUI(string unitId, NetworkLevelingType levelingType)
         {
-            if (Game.Leveling != null)
-            {
-                Logger.LogWarning("Previous character leveling has not been disposed correctly. UnitId={UnitId}, Type={Type}", Game.Leveling.UnitId, Game.Leveling.Type);
-            }
-
             lock (ActionLock)
             {
-                Game.Leveling = new NetworkLeveling(unitId, levelingType);
+                InitiateLeveling(unitId, levelingType);
                 var message = new NotifyCharacterLevelingStarted
                 {
                     UnitId = unitId,

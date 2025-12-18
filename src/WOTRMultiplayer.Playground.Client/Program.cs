@@ -7,7 +7,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using WOTRMultiplayer.Abstractions.IO;
 using WOTRMultiplayer.Abstractions.Random;
-using WOTRMultiplayer.Abstractions.Settings;
 using WOTRMultiplayer.Localization;
 using WOTRMultiplayer.MP.Actors;
 using WOTRMultiplayer.MP.Entities.Dialogs;
@@ -133,6 +132,11 @@ namespace WOTRMultiplayer.Playground.Client
                         serviceProvider.GetService<IFileSystemService>(),
                         new DummyLocalizationManagerAccessor());
                     localization.UpdateLocale("dummy1");
+                    break;
+                case CommandVerbs.LevelingWitnessCommandVerb levelingWitness:
+                    var phase = new MP.Entities.Leveling.NetworkLevelingPhase { Index = levelingWitness.Index };
+                    client.Game.Leveling = new MP.Entities.Leveling.NetworkLeveling("whatever", MP.Entities.Leveling.NetworkLevelingType.Leveling);
+                    client.OnLevelingWitnessPhase(phase);
                     break;
                 default:
                     break;

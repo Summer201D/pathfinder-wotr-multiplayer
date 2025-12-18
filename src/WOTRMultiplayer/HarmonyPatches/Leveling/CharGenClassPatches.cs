@@ -14,7 +14,7 @@ namespace WOTRMultiplayer.HarmonyPatches.Leveling
         {
             if (!Main.Multiplayer.IsActive)
             {
-                return false;
+                return true;
             }
 
             var canContinue = Main.Multiplayer.CanMakeLevelingDecisions();
@@ -43,7 +43,7 @@ namespace WOTRMultiplayer.HarmonyPatches.Leveling
                 return;
             }
 
-            var classId = selectedClass?.AssetGuid.ToString();
+            var classId = selectedClass.AssetGuid.ToString();
             Main.Multiplayer.OnLevelingClassSelected(classId);
         }
     }

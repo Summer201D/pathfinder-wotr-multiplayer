@@ -155,6 +155,13 @@ namespace WOTRMultiplayer.Playground.Client
             public string UnitId { get; set; }
         }
 
+        [Verb("leveling-witness", HelpText = "send equipment update")]
+        public class LevelingWitnessCommandVerb
+        {
+            [Option('i', "index", Required = true, HelpText = "Screen index of leveling")]
+            public int Index { get; set; }
+        }
+
         [Verb("dump-locale", HelpText = "print test locale")]
         public class DumpLocaleCommandVerb
         {
