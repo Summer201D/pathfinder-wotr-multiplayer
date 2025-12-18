@@ -172,6 +172,10 @@ namespace WOTRMultiplayer.Abstractions.MP
 
         void OnLevelingPortraitSelected(NetworkLevelingPortrait portrait);
 
+        void OnLevelingRaceSelected(NetworkLevelingRace levelingRace);
+
+        void OnLevelingGenderSelected(NetworkLevelingGender levelingGender);
+
         void OnMoveActionBarSlot(NetworkActionBarSlot sourceActionBarSlot, NetworkActionBarSlot targetActionBarSlot);
 
         void OnClearActionBarSlot(NetworkActionBarSlot actionBarSlot);

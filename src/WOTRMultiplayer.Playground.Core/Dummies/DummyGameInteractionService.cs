@@ -507,5 +507,13 @@ namespace WOTRMultiplayer.Playground.Core.Dummies
         public void SelectLevelingPortrait(NetworkLevelingPortrait levelingPortrait)
         {
         }
+
+        public void SelectLevelingGender(string genderId)
+        {
+        }
+
+        public void SelectLevelingRace(string raceId)
+        {
+        }
     }
 }

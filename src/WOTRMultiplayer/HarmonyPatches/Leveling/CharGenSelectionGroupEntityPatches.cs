@@ -7,7 +7,6 @@ using Kingmaker.UI.MVVM._PCView.CharGen.Phases.Race;
 using Kingmaker.UI.MVVM._VM.CharGen.Phases.Mythic;
 using Kingmaker.UI.MVVM._VM.CharGen.Phases.Portrait;
 using Kingmaker.UI.MVVM._VM.CharGen.Phases.Race;
-using Microsoft.Extensions.Logging;
 using Owlcat.Runtime.UI.SelectionGroup;
 using Owlcat.Runtime.UI.SelectionGroup.View;
 using UniRx;
@@ -23,6 +22,7 @@ namespace WOTRMultiplayer.HarmonyPatches.Leveling
             { typeof(CharGenMythicSelectorItemPCView),  x => LevelingMythicClassSelected((CharGenMythicSelectorItemVM)x.ViewModel) },
             { typeof(CharGenPortraitSelectorItemPCView),  x => LevelingPortraitSelected((CharGenPortraitSelectorItemVM)x.ViewModel) },
             { typeof(CharGenRaceSelectorItemPCView),  x => LevelingRaceSelected((CharGenRaceSelectorItemVM)x.ViewModel) },
+            { typeof(CharGenGenderSelectorItemPCView),  x => LevelingGenderSelected((CharGenGenderItemVM)x.ViewModel) },
         };
 
         [HarmonyPatch(typeof(SelectionGroupEntityView<CharGenMythicSelectorItemVM>), nameof(SelectionGroupEntityView<CharGenMythicSelectorItemVM>.OnClick))]
@@ -35,7 +35,21 @@ namespace WOTRMultiplayer.HarmonyPatches.Leveling
             }
 
             var type = __instance.GetType();
-            return !_phases.ContainsKey(type) || Main.Multiplayer.CanMakeLevelingDecisions();
+            var canContinue = !_phases.ContainsKey(type) || Main.Multiplayer.CanMakeLevelingDecisions();
+            return canContinue;
+        }
+
+        [HarmonyPatch(typeof(CharGenRaceSelectorItemPCView), nameof(CharGenRaceSelectorItemPCView.OnClick))]
+        [HarmonyPrefix]
+        public static bool CharGenRaceSelectorItemPCView_OnClick_Prefix(SelectionGroupEntityView<SelectionGroupEntityVM> __instance)
+        {
+            if (!Main.Multiplayer.IsActive)
+            {
+                return true;
+            }
+
+            var canContinue = Main.Multiplayer.CanMakeLevelingDecisions();
+            return canContinue;
         }
 
         [HarmonyPatch(typeof(SelectionGroupEntityView<SelectionGroupEntityVM>), nameof(SelectionGroupEntityView<SelectionGroupEntityVM>.BindViewImplementation))]
@@ -50,7 +64,7 @@ namespace WOTRMultiplayer.HarmonyPatches.Leveling
             var type = __instance.GetType();
             if (_phases.TryGetValue(type, out var handler))
             {
-                handler(__instance);
+                __instance.AddDisposable(handler(__instance));
             }
         }
 
@@ -97,8 +111,30 @@ namespace WOTRMultiplayer.HarmonyPatches.Leveling
                     return;
                 }
 
-                var raceId = viewModel.Race.AssetGuid.ToString();
-                Main.GetLogger<CharGenSelectionGroupEntityPatches>().LogWarning("Selected race. Id={Id}", raceId);
+                var levelingRace = new NetworkLevelingRace
+                {
+                    Id = viewModel.Race.AssetGuid.ToString()
+                };
+
+                Main.Multiplayer.OnLevelingRaceSelected(levelingRace);
+            });
+        }
+
+        private static IDisposable LevelingGenderSelected(CharGenGenderItemVM viewModel)
+        {
+            return viewModel.IsSelected.Subscribe<bool>(isSelected =>
+            {
+                if (!isSelected)
+                {
+                    return;
+                }
+
+                var levelingGender = new NetworkLevelingGender
+                {
+                    Id = viewModel.Gender.ToString(),
+                };
+
+                Main.Multiplayer.OnLevelingGenderSelected(levelingGender);
             });
         }
     }

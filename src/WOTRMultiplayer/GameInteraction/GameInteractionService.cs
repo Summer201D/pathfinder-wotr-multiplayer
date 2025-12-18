@@ -51,6 +51,7 @@ using Kingmaker.UI.MVVM._PCView.CharGen.Phases.Class;
 using Kingmaker.UI.MVVM._PCView.CharGen.Phases.FeatureSelector;
 using Kingmaker.UI.MVVM._PCView.CharGen.Phases.Mythic;
 using Kingmaker.UI.MVVM._PCView.CharGen.Phases.Portrait;
+using Kingmaker.UI.MVVM._PCView.CharGen.Phases.Race;
 using Kingmaker.UI.MVVM._PCView.CharGen.Phases.Skills;
 using Kingmaker.UI.MVVM._PCView.CharGen.Phases.Spells;
 using Kingmaker.UI.MVVM._PCView.Common;
@@ -2141,6 +2142,80 @@ namespace WOTRMultiplayer.GameInteraction
                 catch (Exception ex)
                 {
                     _logger.LogError(ex, "Error while selecting leveling portrait. Name={Name}, CustomId={CustomId}, Category={Category}", levelingPortrait.Name, levelingPortrait.CustomId, levelingPortrait.Category);
+                    throw;
+                }
+            });
+        }
+
+        public void SelectLevelingGender(string genderId)
+        {
+            _mainThreadAccessor.Post(() =>
+            {
+                try
+                {
+                    if (CharGenView?.ViewModel == null)
+                    {
+                        _logger.LogWarning("Can't select leveling gender due to missing CharGenView");
+                        return;
+                    }
+
+                    var viewModel = (CharGenView.SelectedDetailView as CharGenRacePhaseDetailedPCView)?.ViewModel;
+                    if (viewModel == null)
+                    {
+                        _logger.LogError("Can't select leveling gender due to missing race phase viewmodel");
+                        return;
+                    }
+
+                    var gender = viewModel.m_Genders.FirstOrDefault(g => string.Equals(g.Gender.ToString(), genderId, StringComparison.OrdinalIgnoreCase));
+                    if (gender == null)
+                    {
+                        _logger.LogError("Unable to find leveling gender. GenderId={GenderId}", genderId);
+                        return;
+                    }
+
+                    viewModel.SelectedGenderVM.Value = gender;
+                    _logger.LogInformation("Leveling gender has been selected. Gender={Gender}", viewModel.SelectedGenderVM.Value.Gender);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error while selecting leveling gender. GenderId={GenderId}", genderId);
+                    throw;
+                }
+            });
+        }
+
+        public void SelectLevelingRace(string raceId)
+        {
+            _mainThreadAccessor.Post(() =>
+            {
+                try
+                {
+                    if (CharGenView?.ViewModel == null)
+                    {
+                        _logger.LogWarning("Can't select leveling race due to missing CharGenView");
+                        return;
+                    }
+
+                    var viewModel = (CharGenView.SelectedDetailView as CharGenRacePhaseDetailedPCView)?.ViewModel;
+                    if (viewModel == null)
+                    {
+                        _logger.LogError("Can't select leveling race due to missing race phase viewmodel");
+                        return;
+                    }
+
+                    var race = viewModel.m_RacesVMs.FirstOrDefault(r => string.Equals(r.Race.AssetGuid.ToString(), raceId, StringComparison.OrdinalIgnoreCase));
+                    if (race == null)
+                    {
+                        _logger.LogError("Unable to find leveling race. RaceId={RaceId}", raceId);
+                        return;
+                    }
+
+                    viewModel.SelectedRaceVM.Value = race;
+                    _logger.LogInformation("Leveling race has been selected. Race={Race}, RaceId={RaceId}", viewModel.SelectedRaceVM.Value.Race.name, viewModel.SelectedRaceVM.Value.Race.AssetGuid.ToString());
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error while selecting leveling race. RaceId={RaceId}", raceId);
                     throw;
                 }
             });

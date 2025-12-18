@@ -125,6 +125,8 @@
             NotifyInventoryItemUsed,
             NotifyLevelingMythicClassSelected,
             NotifyLevelingPortraitSelected,
+            NotifyLevelingRaceSelected,
+            NotifyLevelingGenderSelected,
         }
 
         public enum Request

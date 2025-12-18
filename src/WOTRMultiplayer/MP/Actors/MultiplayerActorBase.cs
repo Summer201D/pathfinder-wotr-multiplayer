@@ -816,6 +816,36 @@ namespace WOTRMultiplayer.MP.Actors
             Send(message);
         }
 
+        public void OnLevelingRaceSelected(NetworkLevelingRace levelingRace)
+        {
+            if (!CanMakeLevelingDecisions())
+            {
+                return;
+            }
+
+            var message = new NotifyLevelingRaceSelected
+            {
+                RaceId = levelingRace.Id
+            };
+            Logger.LogInformation("Sending {MessageType}. RaceId={RaceId}", nameof(NotifyLevelingRaceSelected), message.RaceId);
+            Send(message);
+        }
+
+        public void OnLevelingGenderSelected(NetworkLevelingGender levelingGender)
+        {
+            if (!CanMakeLevelingDecisions())
+            {
+                return;
+            }
+
+            var message = new NotifyLevelingGenderSelected
+            {
+                GenderId = levelingGender.Id
+            };
+            Logger.LogInformation("Sending {MessageType}. GenderId={GenderId}", nameof(NotifyLevelingGenderSelected), message.GenderId);
+            Send(message);
+        }
+
         public void OnLevelingFeatureSelected(NetworkLevelingFeature feature)
         {
             if (!CanMakeLevelingDecisions())
@@ -1742,6 +1772,8 @@ namespace WOTRMultiplayer.MP.Actors
                 .On<NotifyLevelingAbilityScoreIncreased>(OnNotifyLevelingAbilityScoreIncreased)
                 .On<NotifyLevelingAbilityScoreDecreased>(OnNotifyLevelingAbilityScoreDecreased)
                 .On<NotifyLevelingPortraitSelected>(OnNotifyLevelingPortraitSelected)
+                .On<NotifyLevelingRaceSelected>(OnNotifyLevelingRaceSelected)
+                .On<NotifyLevelingGenderSelected>(OnNotifyLevelingGenderSelected)
                 .On<NotifyLevelingFeatureSelected>(OnNotifyLevelingFeatureSelected)
                 .On<NotifyLevelingSpellChosen>(OnNotifyLevelingSpellChosen)
                 .On<NotifyLevelingSpellRemoved>(OnNotifyLevelingSpellRemoved)
@@ -2195,6 +2227,24 @@ namespace WOTRMultiplayer.MP.Actors
             GameInteraction.SelectLevelingPortrait(levelingPortrait);
 
             OnAfterNetworkMessageHandled(playerId, levelingPortraitSelected);
+        }
+
+        private void OnNotifyLevelingGenderSelected(long playerId, NotifyLevelingGenderSelected levelingGenderSelected)
+        {
+            Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}, GenderId={GenderId}", playerId, nameof(NotifyLevelingGenderSelected), levelingGenderSelected.GenderId);
+
+            GameInteraction.SelectLevelingGender(levelingGenderSelected.GenderId);
+
+            OnAfterNetworkMessageHandled(playerId, levelingGenderSelected);
+        }
+
+        private void OnNotifyLevelingRaceSelected(long playerId, NotifyLevelingRaceSelected levelingRaceSelected)
+        {
+            Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}, RaceId={RaceId}", playerId, nameof(NotifyLevelingRaceSelected), levelingRaceSelected.RaceId);
+
+            GameInteraction.SelectLevelingRace(levelingRaceSelected.RaceId);
+
+            OnAfterNetworkMessageHandled(playerId, levelingRaceSelected);
         }
 
         private void OnNotifyLevelingAbilityScoreDecreased(long playerId, NotifyLevelingAbilityScoreDecreased levelingAbilityScoreDecreased)

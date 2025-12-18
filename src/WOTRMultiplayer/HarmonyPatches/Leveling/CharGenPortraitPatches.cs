@@ -8,7 +8,7 @@ namespace WOTRMultiplayer.HarmonyPatches.Leveling
     {
         [HarmonyPatch(typeof(CharGenPortraitSelectorItemVM), nameof(CharGenPortraitSelectorItemVM.OnCustomPortraitCreate))]
         [HarmonyPrefix]
-        public static bool CharGenPortraitSelectorItemVM_OnCustomPortraitCreate_Prefix(CharGenPortraitSelectorItemVM __instance)
+        public static bool CharGenPortraitSelectorItemVM_OnCustomPortraitCreate_Prefix()
         {
             if (!Main.Multiplayer.IsActive)
             {

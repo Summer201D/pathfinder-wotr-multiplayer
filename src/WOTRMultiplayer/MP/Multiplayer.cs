@@ -1389,6 +1389,42 @@ namespace WOTRMultiplayer.MP
             }
         }
 
+        public void OnLevelingRaceSelected(NetworkLevelingRace levelingRace)
+        {
+            try
+            {
+                if (_multiplayerActorAccessor.Current == null)
+                {
+                    return;
+                }
+
+                _multiplayerActorAccessor.Current.OnLevelingRaceSelected(levelingRace);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while selecting leveling race. RaceId={RaceId}", levelingRace.Id);
+                throw;
+            }
+        }
+
+        public void OnLevelingGenderSelected(NetworkLevelingGender levelingGender)
+        {
+            try
+            {
+                if (_multiplayerActorAccessor.Current == null)
+                {
+                    return;
+                }
+
+                _multiplayerActorAccessor.Current.OnLevelingGenderSelected(levelingGender);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while selecting leveling gender. GenderId={GenderId}", levelingGender.Id);
+                throw;
+            }
+        }
+
         public void OnLevelingFeatureSelected(NetworkLevelingFeature networkLevelingFeature)
         {
             try

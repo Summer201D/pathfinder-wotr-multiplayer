@@ -7,7 +7,7 @@ using WOTRMultiplayer.MP.Entities.Leveling;
 namespace WOTRMultiplayer.HarmonyPatches.Leveling
 {
     [HarmonyPatch]
-    public class CharGenAbilityPatches
+    public class CharGenAbilityScorePatches
     {
         [HarmonyPatch(typeof(CharGenAbilityScoreAllocatorCommonView), nameof(CharGenSkillAllocatorCommonView.OnUpButton))]
         [HarmonyPrefix]
