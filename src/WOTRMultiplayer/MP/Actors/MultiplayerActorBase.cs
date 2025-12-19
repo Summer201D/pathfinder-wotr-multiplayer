@@ -816,7 +816,7 @@ namespace WOTRMultiplayer.MP.Actors
             Send(message);
         }
 
-        public void OnLevelingRaceSelected(NetworkLevelingRace levelingRace)
+        public void OnLevelingRaceSelected(string raceId)
         {
             if (!CanMakeLevelingDecisions())
             {
@@ -825,13 +825,13 @@ namespace WOTRMultiplayer.MP.Actors
 
             var message = new NotifyLevelingRaceSelected
             {
-                RaceId = levelingRace.Id
+                RaceId = raceId
             };
             Logger.LogInformation("Sending {MessageType}. RaceId={RaceId}", nameof(NotifyLevelingRaceSelected), message.RaceId);
             Send(message);
         }
 
-        public void OnLevelingGenderSelected(NetworkLevelingGender levelingGender)
+        public void OnLevelingGenderSelected(string genderId)
         {
             if (!CanMakeLevelingDecisions())
             {
@@ -840,9 +840,24 @@ namespace WOTRMultiplayer.MP.Actors
 
             var message = new NotifyLevelingGenderSelected
             {
-                GenderId = levelingGender.Id
+                GenderId = genderId
             };
             Logger.LogInformation("Sending {MessageType}. GenderId={GenderId}", nameof(NotifyLevelingGenderSelected), message.GenderId);
+            Send(message);
+        }
+
+        public void OnLevelingAlignmentSelected(string alignmentId)
+        {
+            if (!CanMakeLevelingDecisions())
+            {
+                return;
+            }
+
+            var message = new NotifyLevelingAlignmentSelected
+            {
+                AlignmentId = alignmentId
+            };
+            Logger.LogInformation("Sending {MessageType}. AlignmentId={AlignmentId}", nameof(NotifyLevelingAlignmentSelected), message.AlignmentId);
             Send(message);
         }
 
@@ -1789,6 +1804,7 @@ namespace WOTRMultiplayer.MP.Actors
                 .On<NotifyLevelingPortraitSelected>(OnNotifyLevelingPortraitSelected)
                 .On<NotifyLevelingRaceSelected>(OnNotifyLevelingRaceSelected)
                 .On<NotifyLevelingGenderSelected>(OnNotifyLevelingGenderSelected)
+                .On<NotifyLevelingAlignmentSelected>(OnNotifyLevelingAlignmentSelected)
                 .On<NotifyLevelingRacialAbilityScoreBonusChanged>(OnNotifyLevelingRacialAbilityScoreBonusChanged)
                 .On<NotifyLevelingFeatureSelected>(OnNotifyLevelingFeatureSelected)
                 .On<NotifyLevelingSpellChosen>(OnNotifyLevelingSpellChosen)
@@ -2243,6 +2259,15 @@ namespace WOTRMultiplayer.MP.Actors
             GameInteraction.SelectLevelingPortrait(levelingPortrait);
 
             OnAfterNetworkMessageHandled(playerId, levelingPortraitSelected);
+        }
+
+        private void OnNotifyLevelingAlignmentSelected(long playerId, NotifyLevelingAlignmentSelected levelingAlignmentSelected)
+        {
+            Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}, AlignmentId={AlignmentId}", nameof(NotifyLevelingGenderSelected), playerId, levelingAlignmentSelected.AlignmentId);
+
+            GameInteraction.SelectLevelingAlignment(levelingAlignmentSelected.AlignmentId);
+
+            OnAfterNetworkMessageHandled(playerId, levelingAlignmentSelected);
         }
 
         private void OnNotifyLevelingGenderSelected(long playerId, NotifyLevelingGenderSelected levelingGenderSelected)

@@ -47,6 +47,7 @@ using Kingmaker.UI.Models.Log.Events;
 using Kingmaker.UI.MVVM._PCView.CharGen;
 using Kingmaker.UI.MVVM._PCView.CharGen.Phases;
 using Kingmaker.UI.MVVM._PCView.CharGen.Phases.AbilityScores;
+using Kingmaker.UI.MVVM._PCView.CharGen.Phases.Alignment;
 using Kingmaker.UI.MVVM._PCView.CharGen.Phases.Class;
 using Kingmaker.UI.MVVM._PCView.CharGen.Phases.FeatureSelector;
 using Kingmaker.UI.MVVM._PCView.CharGen.Phases.Mythic;
@@ -2216,6 +2217,43 @@ namespace WOTRMultiplayer.GameInteraction
                 catch (Exception ex)
                 {
                     _logger.LogError(ex, "Error while selecting leveling race. RaceId={RaceId}", raceId);
+                    throw;
+                }
+            });
+        }
+
+        public void SelectLevelingAlignment(string alignmentId)
+        {
+            _mainThreadAccessor.Post(() =>
+            {
+                try
+                {
+                    if (CharGenView?.ViewModel == null)
+                    {
+                        _logger.LogWarning("Can't select leveling alignment due to missing CharGenView");
+                        return;
+                    }
+
+                    var viewModel = (CharGenView.SelectedDetailView as CharGenAlignmentPhaseDetailedPCView)?.ViewModel;
+                    if (viewModel == null)
+                    {
+                        _logger.LogError("Can't select leveling alignment due to missing alignment phase viewmodel");
+                        return;
+                    }
+
+                    var alignment = viewModel.AlignmentSectorViewModels.FirstOrDefault(a => string.Equals(a.Alignment.ToString(), alignmentId, StringComparison.OrdinalIgnoreCase));
+                    if (alignment == null)
+                    {
+                        _logger.LogError("Unable to find leveling alignment. AlignmentId={AlignmentId}", alignmentId);
+                        return;
+                    }
+
+                    viewModel.SelectedAlignmentVM.Value = alignment;
+                    _logger.LogInformation("Leveling alignment has been selected. AlignmentId={AlignmentId}", viewModel.SelectedAlignmentVM.Value);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error while selecting leveling alignment. AlignmentId={AlignmentId}", alignmentId);
                     throw;
                 }
             });

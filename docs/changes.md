@@ -220,7 +220,6 @@ Only basic usage of abilities is available. Any extra conditions like metamagic 
 Character Generation screen is synced for leveling only. You will need to create initial merc locally and then host multiplayer game.
 
 The following CharGen phases/items are not synced:
-- Alignment
 - Appearance
 - Voice
 - Name

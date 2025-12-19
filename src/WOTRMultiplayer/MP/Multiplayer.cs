@@ -1389,7 +1389,7 @@ namespace WOTRMultiplayer.MP
             }
         }
 
-        public void OnLevelingRaceSelected(NetworkLevelingRace levelingRace)
+        public void OnLevelingRaceSelected(string raceId)
         {
             try
             {
@@ -1398,16 +1398,16 @@ namespace WOTRMultiplayer.MP
                     return;
                 }
 
-                _multiplayerActorAccessor.Current.OnLevelingRaceSelected(levelingRace);
+                _multiplayerActorAccessor.Current.OnLevelingRaceSelected(raceId);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error while selecting leveling race. RaceId={RaceId}", levelingRace.Id);
+                _logger.LogError(ex, "Error while selecting leveling race. RaceId={RaceId}", raceId);
                 throw;
             }
         }
 
-        public void OnLevelingGenderSelected(NetworkLevelingGender levelingGender)
+        public void OnLevelingGenderSelected(string genderId)
         {
             try
             {
@@ -1416,15 +1416,32 @@ namespace WOTRMultiplayer.MP
                     return;
                 }
 
-                _multiplayerActorAccessor.Current.OnLevelingGenderSelected(levelingGender);
+                _multiplayerActorAccessor.Current.OnLevelingGenderSelected(genderId);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error while selecting leveling gender. GenderId={GenderId}", levelingGender.Id);
+                _logger.LogError(ex, "Error while selecting leveling gender. GenderId={GenderId}", genderId);
                 throw;
             }
         }
 
+        public void OnLevelingAlignmentSelected(string alignmentId)
+        {
+            try
+            {
+                if (_multiplayerActorAccessor.Current == null)
+                {
+                    return;
+                }
+
+                _multiplayerActorAccessor.Current.OnLevelingAlignmentSelected(alignmentId);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while selecting leveling alignment. AlignmentId={AlignmentId}", alignmentId);
+                throw;
+            }
+        }
 
         public void OnLevelingRacialAbilityScoreBonusChanged(NetworkLevelingSequenceDirection direction)
         {

@@ -172,9 +172,11 @@ namespace WOTRMultiplayer.Abstractions.MP
 
         void OnLevelingPortraitSelected(NetworkLevelingPortrait portrait);
 
-        void OnLevelingRaceSelected(NetworkLevelingRace levelingRace);
+        void OnLevelingRaceSelected(string raceId);
 
-        void OnLevelingGenderSelected(NetworkLevelingGender levelingGender);
+        void OnLevelingGenderSelected(string genderId);
+
+        void OnLevelingAlignmentSelected(string alignmentId);
 
         void OnLevelingRacialAbilityScoreBonusChanged(NetworkLevelingSequenceDirection direction);
 
