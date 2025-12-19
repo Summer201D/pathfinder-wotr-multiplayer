@@ -188,6 +188,36 @@ namespace WOTRMultiplayer.Abstractions.GameInteraction
 
         void RemoveLevelingSpell(NetworkLevelingSpell networkLevelingSpell);
 
+        void SelectLevelingWarpaintColorAppearance(NetworkLevelingWarpaint levelingWarpaint);
+
+        void SelectLevelingWarpaintAppearance(NetworkLevelingWarpaint levelingWarpaint);
+
+        void SelectLevelingTattooColorAppearance(NetworkLevelingTattoo levelingTattoo);
+
+        void SelectLevelingTattooAppearance(NetworkLevelingTattoo levelingTattoo);
+
+        void SelectLevelingScarAppearance(int index);
+
+        void SelectLevelingBodyTypeAppearance(int index);
+
+        void SelectLevelingSecondaryOutfitColorAppearance(string textureName);
+
+        void SelectLevelingPrimaryOutfitColorAppearance(string textureName);
+
+        void SelectLevelingHornsColorAppearance(string textureName);
+
+        void SelectLevelingHornsAppearance(int index);
+
+        void SelectLevelingHairStyleAppearance(int index);
+
+        void SelectLevelingHairColorAppearance(string textureName);
+
+        void SelectLevelingFaceAppearance(int index);
+
+        void SelectLevelingEyesColorAppearance(string textureName);
+
+        void SelectLevelingBodyColorAppearance(string textureName);
+
         void CompleteLeveling();
 
         void TerminateLeveling();

@@ -48,6 +48,7 @@ using Kingmaker.UI.MVVM._PCView.CharGen;
 using Kingmaker.UI.MVVM._PCView.CharGen.Phases;
 using Kingmaker.UI.MVVM._PCView.CharGen.Phases.AbilityScores;
 using Kingmaker.UI.MVVM._PCView.CharGen.Phases.Alignment;
+using Kingmaker.UI.MVVM._PCView.CharGen.Phases.Appearance;
 using Kingmaker.UI.MVVM._PCView.CharGen.Phases.Class;
 using Kingmaker.UI.MVVM._PCView.CharGen.Phases.FeatureSelector;
 using Kingmaker.UI.MVVM._PCView.CharGen.Phases.Mythic;
@@ -70,6 +71,7 @@ using Kingmaker.UI.MVVM._PCView.Party;
 using Kingmaker.UI.MVVM._PCView.Rest;
 using Kingmaker.UI.MVVM._VM.CharGen.Phases;
 using Kingmaker.UI.MVVM._VM.CharGen.Phases.Class;
+using Kingmaker.UI.MVVM._VM.CharGen.Phases.Common;
 using Kingmaker.UI.MVVM._VM.CharGen.Phases.FeatureSelector;
 using Kingmaker.UI.MVVM._VM.CharGen.Phases.Portrait;
 using Kingmaker.UI.MVVM._VM.CharGen.Phases.Spells;
@@ -87,6 +89,7 @@ using Kingmaker.Utility;
 using Kingmaker.View.MapObjects;
 using Microsoft.Extensions.Logging;
 using Owlcat.Runtime.UI.Controls.Button;
+using Owlcat.Runtime.UI.SelectionGroup;
 using TMPro;
 using UniRx;
 using UnityEngine;
@@ -2265,6 +2268,257 @@ namespace WOTRMultiplayer.GameInteraction
             });
         }
 
+        private void SelectAppearanceTexture(SelectionGroupRadioVM<TextureSelectorItemVM> selector, string selectorName, string textureName)
+        {
+            var texture = selector.EntitiesCollection.FirstOrDefault(x => string.Equals(x.Texture.Value.name, textureName, StringComparison.OrdinalIgnoreCase));
+            if (texture == null)
+            {
+                _logger.LogError("Unable to find texture. Selector={Selector}, TextureName={TextureName}", selectorName, textureName);
+                return;
+            }
+
+            selector.SelectedEntity.Value = texture;
+            _logger.LogInformation("Leveling appearance texture has been selected. Selector={Selector}, TextureName={TextureName}", selectorName, textureName);
+        }
+
+        private void SelectAppearanceSlider(StringSequentialSelectorVM selector, int index)
+        {
+            selector.m_CurrentIndex.Value = index;
+        }
+
+        private CharGenAppearancePhaseDetailedPCView GetCharGenAppearancePhaseView()
+        {
+            return CharGenView?.SelectedDetailView as CharGenAppearancePhaseDetailedPCView;
+        }
+
+        public void SelectLevelingWarpaintColorAppearance(NetworkLevelingWarpaint levelingWarpaint)
+        {
+            _mainThreadAccessor.Post(() =>
+            {
+                var view = GetCharGenAppearancePhaseView();
+                if (view == null)
+                {
+                    return;
+                }
+
+                var warpaint = view.ViewModel.WarpaintsColorSelectorVMList[levelingWarpaint.PageNumber];
+                SelectAppearanceTexture(warpaint, "warpaint-color", levelingWarpaint.TextureName);
+                view.m_WarpaintPaginator.OnClickPage(levelingWarpaint.PageNumber);
+                view.ViewModel.RefreshView.Execute();
+            });
+        }
+
+        public void SelectLevelingWarpaintAppearance(NetworkLevelingWarpaint levelingWarpaint)
+        {
+            _mainThreadAccessor.Post(() =>
+            {
+                var view = GetCharGenAppearancePhaseView();
+                if (view == null)
+                {
+                    return;
+                }
+
+                var warpaint = view.ViewModel.WarpaintsSelectorVMList[levelingWarpaint.PageNumber];
+                SelectAppearanceSlider(warpaint, levelingWarpaint.Index);
+                view.m_WarpaintPaginator.OnClickPage(levelingWarpaint.PageNumber);
+                view.ViewModel.RefreshView.Execute();
+            });
+        }
+
+        public void SelectLevelingTattooColorAppearance(NetworkLevelingTattoo levelingTattoo)
+        {
+            _mainThreadAccessor.Post(() =>
+            {
+                var view = GetCharGenAppearancePhaseView();
+                if (view == null)
+                {
+                    return;
+                }
+
+                var tattoo = view.ViewModel.TattoosColorSelectorVMList[levelingTattoo.PageNumber];
+                SelectAppearanceTexture(tattoo, "tattoo-color", levelingTattoo.TextureName);
+                view.m_TatooPaginator.OnClickPage(levelingTattoo.PageNumber);
+                view.ViewModel.RefreshView.Execute();
+            });
+        }
+
+        public void SelectLevelingTattooAppearance(NetworkLevelingTattoo levelingTattoo)
+        {
+            _mainThreadAccessor.Post(() =>
+            {
+                var view = GetCharGenAppearancePhaseView();
+                if (view == null)
+                {
+                    return;
+                }
+
+                var tattoo = view.ViewModel.TattoosSelectorVMList[levelingTattoo.PageNumber];
+                SelectAppearanceSlider(tattoo, levelingTattoo.Index);
+                view.m_TatooPaginator.OnClickPage(levelingTattoo.PageNumber);
+                view.ViewModel.RefreshView.Execute();
+            });
+        }
+
+        public void SelectLevelingScarAppearance(int index)
+        {
+            _mainThreadAccessor.Post(() =>
+            {
+                var view = GetCharGenAppearancePhaseView();
+                if (view == null)
+                {
+                    return;
+                }
+
+                SelectAppearanceSlider(view.m_ScarSelectorPcView.ViewModel, index);
+            });
+        }
+
+        public void SelectLevelingSecondaryOutfitColorAppearance(string textureName)
+        {
+            _mainThreadAccessor.Post(() =>
+            {
+                var view = GetCharGenAppearancePhaseView();
+                if (view == null)
+                {
+                    return;
+                }
+
+                SelectAppearanceTexture(view.m_SecondaryOutfitColorSelectorView.ViewModel, "secondary-outfit-color", textureName);
+                view.ViewModel.RefreshView.Execute();
+            });
+        }
+
+        public void SelectLevelingPrimaryOutfitColorAppearance(string textureName)
+        {
+            _mainThreadAccessor.Post(() =>
+            {
+                var view = GetCharGenAppearancePhaseView();
+                if (view == null)
+                {
+                    return;
+                }
+
+                SelectAppearanceTexture(view.m_PrimaryOutfitColorSelectorView.ViewModel, "primary-outfit-color", textureName);
+                view.ViewModel.RefreshView.Execute();
+            });
+        }
+
+        public void SelectLevelingHornsColorAppearance(string textureName)
+        {
+            _mainThreadAccessor.Post(() =>
+            {
+                var view = GetCharGenAppearancePhaseView();
+                if (view == null)
+                {
+                    return;
+                }
+
+                SelectAppearanceTexture(view.m_HornColorSelectorView.ViewModel, "horn-color", textureName);
+                view.ViewModel.RefreshView.Execute();
+            });
+        }
+
+        public void SelectLevelingHornsAppearance(int index)
+        {
+            _mainThreadAccessor.Post(() =>
+            {
+                var view = GetCharGenAppearancePhaseView();
+                if (view == null)
+                {
+                    return;
+                }
+
+                SelectAppearanceSlider(view.m_HornSelectorPcView.ViewModel, index);
+            });
+        }
+
+        public void SelectLevelingHairStyleAppearance(int index)
+        {
+            _mainThreadAccessor.Post(() =>
+            {
+                var view = GetCharGenAppearancePhaseView();
+                if (view == null)
+                {
+                    return;
+                }
+
+                SelectAppearanceSlider(view.m_HairSelectorPcView.ViewModel, index);
+            });
+        }
+
+        public void SelectLevelingHairColorAppearance(string textureName)
+        {
+            _mainThreadAccessor.Post(() =>
+            {
+                var view = GetCharGenAppearancePhaseView();
+                if (view == null)
+                {
+                    return;
+                }
+
+                SelectAppearanceTexture(view.m_HairColorSelectorView.ViewModel, "hair-color", textureName);
+                view.ViewModel.RefreshView.Execute();
+            });
+        }
+
+        public void SelectLevelingFaceAppearance(int index)
+        {
+            _mainThreadAccessor.Post(() =>
+            {
+                var view = GetCharGenAppearancePhaseView();
+                if (view == null)
+                {
+                    return;
+                }
+
+                SelectAppearanceSlider(view.m_FaceSelectorPcView.ViewModel, index);
+            });
+        }
+
+        public void SelectLevelingBodyTypeAppearance(int index)
+        {
+            _mainThreadAccessor.Post(() =>
+            {
+                var view = GetCharGenAppearancePhaseView();
+                if (view == null)
+                {
+                    return;
+                }
+
+                SelectAppearanceSlider(view.m_BodySelectorPcView.ViewModel, index);
+            });
+        }
+
+        public void SelectLevelingEyesColorAppearance(string textureName)
+        {
+            _mainThreadAccessor.Post(() =>
+            {
+                var view = GetCharGenAppearancePhaseView();
+                if (view == null)
+                {
+                    return;
+                }
+
+                SelectAppearanceTexture(view.m_EyesColorSelectorView.ViewModel, "eyes-color", textureName);
+                view.ViewModel.RefreshView.Execute();
+            });
+        }
+
+        public void SelectLevelingBodyColorAppearance(string textureName)
+        {
+            _mainThreadAccessor.Post(() =>
+            {
+                var view = GetCharGenAppearancePhaseView();
+                if (view == null)
+                {
+                    return;
+                }
+
+                SelectAppearanceTexture(view.m_BodyColorSelectorView.ViewModel, "body-color", textureName);
+                view.ViewModel.RefreshView.Execute();
+            });
+        }
+
         public void SelectLevelingAlignment(string alignmentId)
         {
             _mainThreadAccessor.Post(() =>
@@ -2410,6 +2664,15 @@ namespace WOTRMultiplayer.GameInteraction
                     {
                         case CharGenNamePhaseDetailedPCView namePhase:
                             namePhase.m_NameInputField.readOnly = !isEnabled;
+                            break;
+                        case CharGenAppearancePhaseDetailedPCView appearancePhase:
+                            appearancePhase.m_BodySelectorPcView.m_Slider.enabled = isEnabled;
+                            appearancePhase.m_FaceSelectorPcView.m_Slider.enabled = isEnabled;
+                            appearancePhase.m_ScarSelectorPcView.m_Slider.enabled = isEnabled;
+                            appearancePhase.m_HairSelectorPcView.m_Slider.enabled = isEnabled;
+                            appearancePhase.m_HornSelectorPcView.m_Slider.enabled = isEnabled;
+                            appearancePhase.m_WarpaintSelectorPcView.m_Slider.enabled = isEnabled;
+                            appearancePhase.m_TatooSelectorPcView.m_Slider.enabled = isEnabled;
                             break;
                     }
                 }

@@ -273,5 +273,35 @@ namespace WOTRMultiplayer.Abstractions.MP
         void OnUseInventoryItem(NetworkUseInventoryItem useInventoryItem);
 
         NetworkEquipmentSlotPosition GetEquipmentSlotPosition(ItemSlot holdingSlot);
+
+        void OnLevelingBodyTypeAppearanceChanged(int index);
+
+        void OnLevelingFaceAppearanceChanged(int index);
+
+        void OnLevelingScarAppearanceChanged(int index);
+
+        void OnLevelingHairStyleAppearanceChanged(int index);
+
+        void OnLevelingHornsAppearanceChanged(int index);
+
+        void OnLevelingWarpaintAppearanceChanged(NetworkLevelingWarpaint warpaint);
+
+        void OnLevelingTattooAppearanceChanged(NetworkLevelingTattoo tattoo);
+
+        void OnLevelingBodyColorAppearanceChanged(string textureName);
+
+        void OnLevelingEyesColorAppearanceChanged(string textureName);
+
+        void OnLevelingHairColorAppearanceChanged(string textureName);
+
+        void OnLevelingHornsColorAppearanceChanged(string textureName);
+
+        void OnLevelingWarpaintColorAppearanceChanged(NetworkLevelingWarpaint warpaint);
+
+        void OnLevelingTattooColorAppearanceChanged(NetworkLevelingTattoo tattoo);
+
+        void OnLevelingPrimaryOutfitColorAppearanceChanged(string textureName);
+
+        void OnLevelingSecondaryOutfitColorAppearanceChanged(string textureName);
     }
 }

@@ -539,5 +539,65 @@ namespace WOTRMultiplayer.Playground.Core.Dummies
         public void SelectLevelingVoice(NetworkLevelingVoice levelingVoice)
         {
         }
+
+        public void SelectLevelingWarpaintColorAppearance(NetworkLevelingWarpaint levelingWarpaint)
+        {
+        }
+
+        public void SelectLevelingWarpaintAppearance(NetworkLevelingWarpaint levelingWarpaint)
+        {
+        }
+
+        public void SelectLevelingTattooColorAppearance(NetworkLevelingTattoo levelingTattoo)
+        {
+        }
+
+        public void SelectLevelingTattooAppearance(NetworkLevelingTattoo levelingTattoo)
+        {
+        }
+
+        public void SelectLevelingScarAppearance(int index)
+        {
+        }
+
+        public void SelectLevelingSecondaryOutfitColorAppearance(string textureName)
+        {
+        }
+
+        public void SelectLevelingPrimaryOutfitColorAppearance(string textureName)
+        {
+        }
+
+        public void SelectLevelingHornsColorAppearance(string textureName)
+        {
+        }
+
+        public void SelectLevelingHornsAppearance(int index)
+        {
+        }
+
+        public void SelectLevelingHairStyleAppearance(int index)
+        {
+        }
+
+        public void SelectLevelingHairColorAppearance(string textureName)
+        {
+        }
+
+        public void SelectLevelingFaceAppearance(int index)
+        {
+        }
+
+        public void SelectLevelingEyesColorAppearance(string textureName)
+        {
+        }
+
+        public void SelectLevelingBodyColorAppearance(string textureName)
+        {
+        }
+
+        public void SelectLevelingBodyTypeAppearance(int index)
+        {
+        }
     }
 }

@@ -227,5 +227,35 @@ namespace WOTRMultiplayer.Abstractions.MP.Actors
         void OnDialogPopupShown(NetworkDialogPopup networkDialogPopup);
 
         void OnUseInventoryItem(NetworkUseInventoryItem useInventoryItem);
+
+        void OnLevelingBodyTypeAppearanceChanged(int index);
+
+        void OnLevelingFaceAppearanceChanged(int index);
+
+        void OnLevelingScarAppearanceChanged(int index);
+
+        void OnLevelingHairStyleAppearanceChanged(int index);
+
+        void OnLevelingHornsAppearanceChanged(int index);
+
+        void OnLevelingWarpaintAppearanceChanged(NetworkLevelingWarpaint levelingWarpaint);
+
+        void OnLevelingTattooAppearanceChanged(NetworkLevelingTattoo levelingTattoo);
+
+        void OnLevelingBodyColorAppearanceChanged(string textureName);
+
+        void OnLevelingEyesColorAppearanceChanged(string textureName);
+
+        void OnLevelingHairColorAppearanceChanged(string textureName);
+
+        void OnLevelingHornsColorAppearanceChanged(string textureName);
+
+        void OnLevelingWarpaintColorAppearanceChanged(NetworkLevelingWarpaint levelingWarpaint);
+
+        void OnLevelingTattooColorAppearanceChanged(NetworkLevelingTattoo levelingTattoo);
+
+        void OnLevelingPrimaryOutfitColorAppearanceChanged(string textureName);
+
+        void OnLevelingSecondaryOutfitColorAppearanceChanged(string textureName);
     }
 }

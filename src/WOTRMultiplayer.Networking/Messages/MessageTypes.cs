@@ -133,6 +133,21 @@
             NotifyLevelingBirthMonthChanged,
             NotifyLevelingNameChanged,
             NotifyLevelingVoiceSelected,
+            NotifyLevelingBodyTypeAppearanceChanged,
+            NotifyLevelingFaceAppearanceChanged,
+            NotifyLevelingScarAppearanceChanged,
+            NotifyLevelingHairStyleAppearanceChanged,
+            NotifyLevelingHornsAppearanceChanged,
+            NotifyLevelingBodyColorAppearanceChanged,
+            NotifyLevelingEyesColorAppearanceChanged,
+            NotifyLevelingHairColorAppearanceChanged,
+            NotifyLevelingHornsColorAppearanceChanged,
+            NotifyLevelingWarpaintColorAppearanceChanged,
+            NotifyLevelingPrimaryOutfitColorAppearanceChanged,
+            NotifyLevelingSecondaryOutfitColorAppearanceChanged,
+            NotifyLevelingTattooColorAppearanceChanged,
+            NotifyLevelingWarpaintAppearanceChanged,
+            NotifyLevelingTattooAppearanceChanged,
         }
 
         public enum Request

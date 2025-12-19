@@ -936,6 +936,231 @@ namespace WOTRMultiplayer.MP.Actors
             Send(message);
         }
 
+        public void OnLevelingBodyTypeAppearanceChanged(int index)
+        {
+            if (!CanMakeLevelingDecisions())
+            {
+                return;
+            }
+
+            var message = new NotifyLevelingBodyTypeAppearanceChanged
+            {
+                Index = index
+            };
+            Logger.LogInformation("Sending {MessageType}. Index={Index}", nameof(NotifyLevelingBodyTypeAppearanceChanged), message.Index);
+            Send(message);
+        }
+
+        public void OnLevelingFaceAppearanceChanged(int index)
+        {
+            if (!CanMakeLevelingDecisions())
+            {
+                return;
+            }
+
+            var message = new NotifyLevelingFaceAppearanceChanged
+            {
+                Index = index
+            };
+            Logger.LogInformation("Sending {MessageType}. Index={Index}", nameof(NotifyLevelingFaceAppearanceChanged), message.Index);
+            Send(message);
+        }
+
+        public void OnLevelingScarAppearanceChanged(int index)
+        {
+            if (!CanMakeLevelingDecisions())
+            {
+                return;
+            }
+
+            var message = new NotifyLevelingScarAppearanceChanged
+            {
+                Index = index
+            };
+            Logger.LogInformation("Sending {MessageType}. Index={Index}", nameof(NotifyLevelingScarAppearanceChanged), message.Index);
+            Send(message);
+        }
+
+        public void OnLevelingHairStyleAppearanceChanged(int index)
+        {
+            if (!CanMakeLevelingDecisions())
+            {
+                return;
+            }
+
+            var message = new NotifyLevelingHairStyleAppearanceChanged
+            {
+                Index = index
+            };
+            Logger.LogInformation("Sending {MessageType}. Index={Index}", nameof(NotifyLevelingHairStyleAppearanceChanged), message.Index);
+            Send(message);
+        }
+
+        public void OnLevelingHornsAppearanceChanged(int index)
+        {
+            if (!CanMakeLevelingDecisions())
+            {
+                return;
+            }
+
+            var message = new NotifyLevelingHornsAppearanceChanged
+            {
+                Index = index
+            };
+            Logger.LogInformation("Sending {MessageType}. Index={Index}", nameof(NotifyLevelingHornsAppearanceChanged), message.Index);
+            Send(message);
+        }
+
+        public void OnLevelingWarpaintAppearanceChanged(NetworkLevelingWarpaint levelingWarpaint)
+        {
+            if (!CanMakeLevelingDecisions())
+            {
+                return;
+            }
+
+            var message = new NotifyLevelingWarpaintAppearanceChanged
+            {
+                Warpaint = Mapper.Map<Networking.Messages.Contracts.NetworkLevelingWarpaint>(levelingWarpaint)
+            };
+            Logger.LogInformation("Sending {MessageType}. Index={Index}, PageNumber={PageNumber}", nameof(NotifyLevelingWarpaintAppearanceChanged), message.Warpaint.Index, message.Warpaint.PageNumber);
+            Send(message);
+        }
+
+        public void OnLevelingTattooAppearanceChanged(NetworkLevelingTattoo levelingTattoo)
+        {
+            if (!CanMakeLevelingDecisions())
+            {
+                return;
+            }
+
+            var message = new NotifyLevelingTattooAppearanceChanged
+            {
+                Tattoo = Mapper.Map<Networking.Messages.Contracts.NetworkLevelingTattoo>(levelingTattoo)
+            };
+            Logger.LogInformation("Sending {MessageType}. Index={Index}, PageNumber={PageNumber}", nameof(NotifyLevelingTattooAppearanceChanged), message.Tattoo.Index, message.Tattoo.PageNumber);
+            Send(message);
+        }
+
+        public void OnLevelingBodyColorAppearanceChanged(string textureName)
+        {
+            if (!CanMakeLevelingDecisions())
+            {
+                return;
+            }
+
+            var message = new NotifyLevelingBodyColorAppearanceChanged
+            {
+                TextureName = textureName
+            };
+            Logger.LogInformation("Sending {MessageType}. TextureName={TextureName}", nameof(NotifyLevelingBodyColorAppearanceChanged), message.TextureName);
+            Send(message);
+        }
+
+        public void OnLevelingEyesColorAppearanceChanged(string textureName)
+        {
+            if (!CanMakeLevelingDecisions())
+            {
+                return;
+            }
+
+            var message = new NotifyLevelingEyesColorAppearanceChanged
+            {
+                TextureName = textureName
+            };
+            Logger.LogInformation("Sending {MessageType}. TextureName={TextureName}", nameof(NotifyLevelingEyesColorAppearanceChanged), message.TextureName);
+            Send(message);
+        }
+
+        public void OnLevelingHairColorAppearanceChanged(string textureName)
+        {
+            if (!CanMakeLevelingDecisions())
+            {
+                return;
+            }
+
+            var message = new NotifyLevelingHairColorAppearanceChanged
+            {
+                TextureName = textureName
+            };
+            Logger.LogInformation("Sending {MessageType}. TextureName={TextureName}", nameof(NotifyLevelingHairColorAppearanceChanged), message.TextureName);
+            Send(message);
+        }
+
+        public void OnLevelingHornsColorAppearanceChanged(string textureName)
+        {
+            if (!CanMakeLevelingDecisions())
+            {
+                return;
+            }
+
+            var message = new NotifyLevelingHornsColorAppearanceChanged
+            {
+                TextureName = textureName
+            };
+            Logger.LogInformation("Sending {MessageType}. TextureName={TextureName}", nameof(NotifyLevelingHornsColorAppearanceChanged), message.TextureName);
+            Send(message);
+        }
+
+        public void OnLevelingWarpaintColorAppearanceChanged(NetworkLevelingWarpaint levelingWarpaint)
+        {
+            if (!CanMakeLevelingDecisions())
+            {
+                return;
+            }
+
+            var message = new NotifyLevelingWarpaintColorAppearanceChanged
+            {
+                Warpaint = Mapper.Map<Networking.Messages.Contracts.NetworkLevelingWarpaint>(levelingWarpaint)
+            };
+            Logger.LogInformation("Sending {MessageType}. TextureName={TextureName}, PageNumber={PageNumber}", nameof(NotifyLevelingWarpaintColorAppearanceChanged), message.Warpaint.TextureName, message.Warpaint.PageNumber);
+            Send(message);
+        }
+
+        public void OnLevelingTattooColorAppearanceChanged(NetworkLevelingTattoo levelingTattoo)
+        {
+            if (!CanMakeLevelingDecisions())
+            {
+                return;
+            }
+
+            var message = new NotifyLevelingTattooColorAppearanceChanged
+            {
+                Tattoo = Mapper.Map<Networking.Messages.Contracts.NetworkLevelingTattoo>(levelingTattoo)
+            };
+            Logger.LogInformation("Sending {MessageType}. TextureName={TextureName}, PageNumber={PageNumber}", nameof(NotifyLevelingTattooColorAppearanceChanged), message.Tattoo.TextureName, message.Tattoo.PageNumber);
+            Send(message);
+        }
+
+        public void OnLevelingPrimaryOutfitColorAppearanceChanged(string textureName)
+        {
+            if (!CanMakeLevelingDecisions())
+            {
+                return;
+            }
+
+            var message = new NotifyLevelingPrimaryOutfitColorAppearanceChanged
+            {
+                TextureName = textureName
+            };
+            Logger.LogInformation("Sending {MessageType}. TextureName={TextureName}", nameof(NotifyLevelingPrimaryOutfitColorAppearanceChanged), message.TextureName);
+            Send(message);
+        }
+
+        public void OnLevelingSecondaryOutfitColorAppearanceChanged(string textureName)
+        {
+            if (!CanMakeLevelingDecisions())
+            {
+                return;
+            }
+
+            var message = new NotifyLevelingSecondaryOutfitColorAppearanceChanged
+            {
+                TextureName = textureName
+            };
+            Logger.LogInformation("Sending {MessageType}. TextureName={TextureName}", nameof(NotifyLevelingSecondaryOutfitColorAppearanceChanged), message.TextureName);
+            Send(message);
+        }
+
         public void OnLevelingFeatureSelected(NetworkLevelingFeature feature)
         {
             if (!CanMakeLevelingDecisions())
@@ -1867,6 +2092,21 @@ namespace WOTRMultiplayer.MP.Actors
                 .On<NotifyLevelingGenderSelected>(OnNotifyLevelingGenderSelected)
                 .On<NotifyLevelingAlignmentSelected>(OnNotifyLevelingAlignmentSelected)
                 .On<NotifyLevelingNameChanged>(OnNotifyLevelingNameChanged)
+                .On<NotifyLevelingBodyTypeAppearanceChanged>(OnNotifyLevelingBodyTypeAppearanceChanged)
+                .On<NotifyLevelingBodyColorAppearanceChanged>(OnNotifyLevelingBodyColorAppearanceChanged)
+                .On<NotifyLevelingEyesColorAppearanceChanged>(OnNotifyLevelingEyesColorAppearanceChanged)
+                .On<NotifyLevelingFaceAppearanceChanged>(OnNotifyLevelingFaceAppearanceChanged)
+                .On<NotifyLevelingHairColorAppearanceChanged>(OnNotifyLevelingHairColorAppearanceChanged)
+                .On<NotifyLevelingHairStyleAppearanceChanged>(OnNotifyLevelingHairStyleAppearanceChanged)
+                .On<NotifyLevelingHornsAppearanceChanged>(OnNotifyLevelingHornsAppearanceChanged)
+                .On<NotifyLevelingHornsColorAppearanceChanged>(OnNotifyLevelingHornsColorAppearanceChanged)
+                .On<NotifyLevelingPrimaryOutfitColorAppearanceChanged>(OnNotifyLevelingPrimaryOutfitColorAppearanceChanged)
+                .On<NotifyLevelingSecondaryOutfitColorAppearanceChanged>(OnNotifyLevelingSecondaryOutfitColorAppearanceChanged)
+                .On<NotifyLevelingScarAppearanceChanged>(OnNotifyLevelingScarAppearanceChanged)
+                .On<NotifyLevelingTattooAppearanceChanged>(OnNotifyLevelingTattooAppearanceChanged)
+                .On<NotifyLevelingTattooColorAppearanceChanged>(OnNotifyLevelingTattooColorAppearanceChanged)
+                .On<NotifyLevelingWarpaintAppearanceChanged>(OnNotifyLevelingWarpaintAppearanceChanged)
+                .On<NotifyLevelingWarpaintColorAppearanceChanged>(OnNotifyLevelingWarpaintColorAppearanceChanged)
                 .On<NotifyLevelingRacialAbilityScoreBonusChanged>(OnNotifyLevelingRacialAbilityScoreBonusChanged)
                 .On<NotifyLevelingBirthMonthChanged>(OnNotifyLevelingBirthMonthChanged)
                 .On<NotifyLevelingBirthDayChanged>(OnNotifyLevelingBirthDayChanged)
@@ -1943,6 +2183,145 @@ namespace WOTRMultiplayer.MP.Actors
                 // dialogs
                 .On<NotifyDialogPopupShown>(OnNotifyDialogPopupShown)
                 ;
+        }
+
+        private void OnNotifyLevelingWarpaintColorAppearanceChanged(long playerId, NotifyLevelingWarpaintColorAppearanceChanged levelingWarpaintColorAppearanceChanged)
+        {
+            Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}, TextureName={TextureName}, PageNumber={PageNumber}", nameof(NotifyLevelingWarpaintColorAppearanceChanged), playerId, levelingWarpaintColorAppearanceChanged.Warpaint.TextureName, levelingWarpaintColorAppearanceChanged.Warpaint.PageNumber);
+
+            var levelingWarpaint = Mapper.Map<NetworkLevelingWarpaint>(levelingWarpaintColorAppearanceChanged.Warpaint);
+            GameInteraction.SelectLevelingWarpaintColorAppearance(levelingWarpaint);
+
+            OnAfterNetworkMessageHandled(playerId, levelingWarpaintColorAppearanceChanged);
+        }
+
+        private void OnNotifyLevelingWarpaintAppearanceChanged(long playerId, NotifyLevelingWarpaintAppearanceChanged levelingWarpaintAppearanceChanged)
+        {
+            Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}, Index={Index}, PageNumber={PageNumber}", nameof(NotifyLevelingWarpaintAppearanceChanged), playerId, levelingWarpaintAppearanceChanged.Warpaint.Index, levelingWarpaintAppearanceChanged.Warpaint.PageNumber);
+
+            var levelingWarpaint = Mapper.Map<NetworkLevelingWarpaint>(levelingWarpaintAppearanceChanged.Warpaint);
+            GameInteraction.SelectLevelingWarpaintAppearance(levelingWarpaint);
+
+            OnAfterNetworkMessageHandled(playerId, levelingWarpaintAppearanceChanged);
+        }
+
+        private void OnNotifyLevelingTattooColorAppearanceChanged(long playerId, NotifyLevelingTattooColorAppearanceChanged levelingTattooColorAppearanceChanged)
+        {
+            Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}, TextureName={Index}, PageNumber={PageNumber}", nameof(NotifyLevelingTattooColorAppearanceChanged), playerId, levelingTattooColorAppearanceChanged.Tattoo.TextureName, levelingTattooColorAppearanceChanged.Tattoo.PageNumber);
+
+            var levelingTattoo = Mapper.Map<NetworkLevelingTattoo>(levelingTattooColorAppearanceChanged.Tattoo);
+            GameInteraction.SelectLevelingTattooColorAppearance(levelingTattoo);
+
+            OnAfterNetworkMessageHandled(playerId, levelingTattooColorAppearanceChanged);
+        }
+
+        private void OnNotifyLevelingTattooAppearanceChanged(long playerId, NotifyLevelingTattooAppearanceChanged levelingTattooAppearanceChanged)
+        {
+            Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}, Index={Index}, PageNumber={PageNumber}", nameof(NotifyLevelingTattooAppearanceChanged), playerId, levelingTattooAppearanceChanged.Tattoo.Index, levelingTattooAppearanceChanged.Tattoo.PageNumber);
+
+            var levelingTattoo = Mapper.Map<NetworkLevelingTattoo>(levelingTattooAppearanceChanged.Tattoo);
+            GameInteraction.SelectLevelingTattooAppearance(levelingTattoo);
+
+            OnAfterNetworkMessageHandled(playerId, levelingTattooAppearanceChanged);
+        }
+
+        private void OnNotifyLevelingScarAppearanceChanged(long playerId, NotifyLevelingScarAppearanceChanged levelingScarAppearanceChanged)
+        {
+            Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}, Index={Index}", nameof(NotifyLevelingScarAppearanceChanged), playerId, levelingScarAppearanceChanged.Index);
+
+            GameInteraction.SelectLevelingScarAppearance(levelingScarAppearanceChanged.Index);
+
+            OnAfterNetworkMessageHandled(playerId, levelingScarAppearanceChanged);
+        }
+
+        private void OnNotifyLevelingSecondaryOutfitColorAppearanceChanged(long playerId, NotifyLevelingSecondaryOutfitColorAppearanceChanged levelingSecondaryOutfitColorAppearanceChanged)
+        {
+            Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}, TextureName={TextureName}", nameof(NotifyLevelingSecondaryOutfitColorAppearanceChanged), playerId, levelingSecondaryOutfitColorAppearanceChanged.TextureName);
+
+            GameInteraction.SelectLevelingSecondaryOutfitColorAppearance(levelingSecondaryOutfitColorAppearanceChanged.TextureName);
+
+            OnAfterNetworkMessageHandled(playerId, levelingSecondaryOutfitColorAppearanceChanged);
+        }
+
+        private void OnNotifyLevelingPrimaryOutfitColorAppearanceChanged(long playerId, NotifyLevelingPrimaryOutfitColorAppearanceChanged levelingPrimaryOutfitColorAppearanceChanged)
+        {
+            Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}, TextureName={TextureName}", nameof(NotifyLevelingPrimaryOutfitColorAppearanceChanged), playerId, levelingPrimaryOutfitColorAppearanceChanged.TextureName);
+
+            GameInteraction.SelectLevelingPrimaryOutfitColorAppearance(levelingPrimaryOutfitColorAppearanceChanged.TextureName);
+
+            OnAfterNetworkMessageHandled(playerId, levelingPrimaryOutfitColorAppearanceChanged);
+        }
+
+        private void OnNotifyLevelingHornsColorAppearanceChanged(long playerId, NotifyLevelingHornsColorAppearanceChanged levelingHornsColorAppearanceChanged)
+        {
+            Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}, TextureName={TextureName}", nameof(NotifyLevelingHornsColorAppearanceChanged), playerId, levelingHornsColorAppearanceChanged.TextureName);
+
+            GameInteraction.SelectLevelingHornsColorAppearance(levelingHornsColorAppearanceChanged.TextureName);
+
+            OnAfterNetworkMessageHandled(playerId, levelingHornsColorAppearanceChanged);
+        }
+
+        private void OnNotifyLevelingHornsAppearanceChanged(long playerId, NotifyLevelingHornsAppearanceChanged levelingHornsAppearanceChanged)
+        {
+            Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}, Index={Index}", nameof(NotifyLevelingHornsAppearanceChanged), playerId, levelingHornsAppearanceChanged.Index);
+
+            GameInteraction.SelectLevelingHornsAppearance(levelingHornsAppearanceChanged.Index);
+
+            OnAfterNetworkMessageHandled(playerId, levelingHornsAppearanceChanged);
+        }
+
+        private void OnNotifyLevelingHairStyleAppearanceChanged(long playerId, NotifyLevelingHairStyleAppearanceChanged levelingHairStyleAppearanceChanged)
+        {
+            Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}, Index={Index}", nameof(NotifyLevelingHairStyleAppearanceChanged), playerId, levelingHairStyleAppearanceChanged.Index);
+
+            GameInteraction.SelectLevelingHairStyleAppearance(levelingHairStyleAppearanceChanged.Index);
+
+            OnAfterNetworkMessageHandled(playerId, levelingHairStyleAppearanceChanged);
+        }
+
+        private void OnNotifyLevelingHairColorAppearanceChanged(long playerId, NotifyLevelingHairColorAppearanceChanged levelingHairColorAppearanceChanged)
+        {
+            Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}, TextureName={TextureName}", nameof(NotifyLevelingHairColorAppearanceChanged), playerId, levelingHairColorAppearanceChanged.TextureName);
+
+            GameInteraction.SelectLevelingHairColorAppearance(levelingHairColorAppearanceChanged.TextureName);
+
+            OnAfterNetworkMessageHandled(playerId, levelingHairColorAppearanceChanged);
+        }
+
+        private void OnNotifyLevelingFaceAppearanceChanged(long playerId, NotifyLevelingFaceAppearanceChanged levelingFaceAppearanceChanged)
+        {
+            Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}, Index={Index}", nameof(NotifyLevelingFaceAppearanceChanged), playerId, levelingFaceAppearanceChanged.Index);
+
+            GameInteraction.SelectLevelingFaceAppearance(levelingFaceAppearanceChanged.Index);
+
+            OnAfterNetworkMessageHandled(playerId, levelingFaceAppearanceChanged);
+        }
+
+        private void OnNotifyLevelingEyesColorAppearanceChanged(long playerId, NotifyLevelingEyesColorAppearanceChanged levelingEyesColorAppearanceChanged)
+        {
+            Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}, TextureName={TextureName}", nameof(NotifyLevelingEyesColorAppearanceChanged), playerId, levelingEyesColorAppearanceChanged.TextureName);
+
+            GameInteraction.SelectLevelingEyesColorAppearance(levelingEyesColorAppearanceChanged.TextureName);
+
+            OnAfterNetworkMessageHandled(playerId, levelingEyesColorAppearanceChanged);
+        }
+
+        private void OnNotifyLevelingBodyColorAppearanceChanged(long playerId, NotifyLevelingBodyColorAppearanceChanged levelingBodyColorAppearanceChanged)
+        {
+            Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}, TextureName={TextureName}", nameof(NotifyLevelingBodyColorAppearanceChanged), playerId, levelingBodyColorAppearanceChanged.TextureName);
+
+            GameInteraction.SelectLevelingBodyColorAppearance(levelingBodyColorAppearanceChanged.TextureName);
+
+            OnAfterNetworkMessageHandled(playerId, levelingBodyColorAppearanceChanged);
+        }
+
+        private void OnNotifyLevelingBodyTypeAppearanceChanged(long playerId, NotifyLevelingBodyTypeAppearanceChanged levelingBodyTypeAppearanceChanged)
+        {
+            Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}, Index={Index}", nameof(NotifyLevelingBodyTypeAppearanceChanged), playerId, levelingBodyTypeAppearanceChanged.Index);
+
+            GameInteraction.SelectLevelingBodyTypeAppearance(levelingBodyTypeAppearanceChanged.Index);
+
+            OnAfterNetworkMessageHandled(playerId, levelingBodyTypeAppearanceChanged);
         }
 
         private void OnNotifyDialogPopupShown(long playerId, NotifyDialogPopupShown dialogPopupShown)
