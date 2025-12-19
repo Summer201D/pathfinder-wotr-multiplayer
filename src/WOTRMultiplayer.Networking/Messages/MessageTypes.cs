@@ -132,6 +132,7 @@
             NotifyLevelingBirthDayChanged,
             NotifyLevelingBirthMonthChanged,
             NotifyLevelingNameChanged,
+            NotifyLevelingVoiceSelected,
         }
 
         public enum Request

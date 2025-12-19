@@ -816,6 +816,21 @@ namespace WOTRMultiplayer.MP.Actors
             Send(message);
         }
 
+        public void OnLevelingVoiceSelected(NetworkLevelingVoice levelingVoice)
+        {
+            if (!CanMakeLevelingDecisions())
+            {
+                return;
+            }
+
+            var message = new NotifyLevelingVoiceSelected
+            {
+                Voice = Mapper.Map<Networking.Messages.Contracts.NetworkLevelingVoice>(levelingVoice)
+            };
+            Logger.LogInformation("Sending {MessageType}. Id={Id}, GenderId={GenderId}", nameof(NotifyLevelingVoiceSelected), message.Voice.Id, message.Voice.GenderId);
+            Send(message);
+        }
+
         public void OnLevelingRaceSelected(string raceId)
         {
             if (!CanMakeLevelingDecisions())
@@ -1847,6 +1862,7 @@ namespace WOTRMultiplayer.MP.Actors
                 .On<NotifyLevelingAbilityScoreIncreased>(OnNotifyLevelingAbilityScoreIncreased)
                 .On<NotifyLevelingAbilityScoreDecreased>(OnNotifyLevelingAbilityScoreDecreased)
                 .On<NotifyLevelingPortraitSelected>(OnNotifyLevelingPortraitSelected)
+                .On<NotifyLevelingVoiceSelected>(OnNotifyLevelingVoiceSelected)
                 .On<NotifyLevelingRaceSelected>(OnNotifyLevelingRaceSelected)
                 .On<NotifyLevelingGenderSelected>(OnNotifyLevelingGenderSelected)
                 .On<NotifyLevelingAlignmentSelected>(OnNotifyLevelingAlignmentSelected)
@@ -2307,6 +2323,16 @@ namespace WOTRMultiplayer.MP.Actors
             GameInteraction.SelectLevelingPortrait(levelingPortrait);
 
             OnAfterNetworkMessageHandled(playerId, levelingPortraitSelected);
+        }
+
+        private void OnNotifyLevelingVoiceSelected(long playerId, NotifyLevelingVoiceSelected levelingVoiceSelected)
+        {
+            Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}, Id={Id}, GenderId={GenderId}", nameof(NotifyLevelingVoiceSelected), playerId, levelingVoiceSelected.Voice.Id, levelingVoiceSelected.Voice.GenderId);
+
+            var levelingVoice = Mapper.Map<NetworkLevelingVoice>(levelingVoiceSelected.Voice);
+            GameInteraction.SelectLevelingVoice(levelingVoice);
+
+            OnAfterNetworkMessageHandled(playerId, levelingVoiceSelected);
         }
 
         private void OnNotifyLevelingAlignmentSelected(long playerId, NotifyLevelingAlignmentSelected levelingAlignmentSelected)

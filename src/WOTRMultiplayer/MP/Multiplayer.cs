@@ -1389,6 +1389,24 @@ namespace WOTRMultiplayer.MP
             }
         }
 
+        public void OnLevelingVoiceSelected(NetworkLevelingVoice levelingVoice)
+        {
+            try
+            {
+                if (_multiplayerActorAccessor.Current == null)
+                {
+                    return;
+                }
+
+                _multiplayerActorAccessor.Current.OnLevelingVoiceSelected(levelingVoice);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while selecting leveling voice. Id={Id}, GenderId={GenderId}", levelingVoice.Id, levelingVoice.GenderId);
+                throw;
+            }
+        }
+
         public void OnLevelingRaceSelected(string raceId)
         {
             try

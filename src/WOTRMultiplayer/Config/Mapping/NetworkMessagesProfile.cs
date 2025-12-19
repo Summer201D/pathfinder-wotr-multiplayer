@@ -162,6 +162,9 @@ namespace WOTRMultiplayer.Config.Mapping
             CreateMap<NetworkLevelingPortrait, Networking.Messages.Contracts.NetworkLevelingPortrait>()
                 .ReverseMap();
 
+            CreateMap<NetworkLevelingVoice, Networking.Messages.Contracts.NetworkLevelingVoice>()
+                .ReverseMap();
+
             CreateMap<NetworkActionBarSlot, Networking.Messages.Contracts.NetworkActionBarSlot>()
                 .ReverseMap();
 

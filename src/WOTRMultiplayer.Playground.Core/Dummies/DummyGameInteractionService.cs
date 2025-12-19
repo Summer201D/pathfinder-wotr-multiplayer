@@ -535,5 +535,9 @@ namespace WOTRMultiplayer.Playground.Core.Dummies
         public void ChangeLevelingBirthMonth(NetworkLevelingSequenceDirection direction)
         {
         }
+
+        public void SelectLevelingVoice(NetworkLevelingVoice levelingVoice)
+        {
+        }
     }
 }

@@ -170,7 +170,9 @@ namespace WOTRMultiplayer.Abstractions.MP
 
         void OnLevelingDecreaseAbilityScore(NetworkLevelingAbilityScore networkLevelingAbilityScore);
 
-        void OnLevelingPortraitSelected(NetworkLevelingPortrait portrait);
+        void OnLevelingPortraitSelected(NetworkLevelingPortrait levelingPortrait);
+
+        void OnLevelingVoiceSelected(NetworkLevelingVoice levelingVoice);
 
         void OnLevelingRaceSelected(string raceId);
 

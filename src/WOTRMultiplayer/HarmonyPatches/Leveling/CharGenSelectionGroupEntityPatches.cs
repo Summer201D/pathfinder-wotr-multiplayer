@@ -5,10 +5,12 @@ using Kingmaker.UI.MVVM._PCView.CharGen.Phases.Alignment;
 using Kingmaker.UI.MVVM._PCView.CharGen.Phases.Mythic;
 using Kingmaker.UI.MVVM._PCView.CharGen.Phases.Portrait;
 using Kingmaker.UI.MVVM._PCView.CharGen.Phases.Race;
+using Kingmaker.UI.MVVM._PCView.CharGen.Phases.Voice;
 using Kingmaker.UI.MVVM._VM.CharGen.Phases.Alignment;
 using Kingmaker.UI.MVVM._VM.CharGen.Phases.Mythic;
 using Kingmaker.UI.MVVM._VM.CharGen.Phases.Portrait;
 using Kingmaker.UI.MVVM._VM.CharGen.Phases.Race;
+using Kingmaker.UI.MVVM._VM.CharGen.Phases.Voice;
 using Owlcat.Runtime.UI.SelectionGroup;
 using Owlcat.Runtime.UI.SelectionGroup.View;
 using UniRx;
@@ -26,6 +28,7 @@ namespace WOTRMultiplayer.HarmonyPatches.Leveling
             { typeof(CharGenRaceSelectorItemPCView),  x => LevelingRaceSelected((CharGenRaceSelectorItemVM)x.ViewModel) },
             { typeof(CharGenGenderSelectorItemPCView),  x => LevelingGenderSelected((CharGenGenderItemVM)x.ViewModel) },
             { typeof(CharGenAlignmentSectorPCView),  x => LevelingAlignmentSelected((CharGenAlignmentSectorVM)x.ViewModel) },
+            { typeof(CharGenVoiceItemPCView),  x => LevelingVoiceSelected((CharGenVoiceItemVM)x.ViewModel) },
         };
 
         [HarmonyPatch(typeof(SelectionGroupEntityView<SelectionGroupEntityVM>), nameof(SelectionGroupEntityView<SelectionGroupEntityVM>.OnClick))]
@@ -55,6 +58,19 @@ namespace WOTRMultiplayer.HarmonyPatches.Leveling
             return canContinue;
         }
 
+        [HarmonyPatch(typeof(CharGenVoiceItemPCView), nameof(CharGenVoiceItemPCView.OnClick))]
+        [HarmonyPrefix]
+        public static bool CharGenVoiceItemPCView_OnClick_Prefix()
+        {
+            if (!Main.Multiplayer.IsActive)
+            {
+                return true;
+            }
+
+            var canContinue = Main.Multiplayer.CanMakeLevelingDecisions();
+            return canContinue;
+        }
+
         [HarmonyPatch(typeof(SelectionGroupEntityView<SelectionGroupEntityVM>), nameof(SelectionGroupEntityView<SelectionGroupEntityVM>.BindViewImplementation))]
         [HarmonyPostfix]
         public static void SelectionGroupEntityView_BindViewImplementation_Postfix(SelectionGroupEntityView<SelectionGroupEntityVM> __instance)
@@ -69,6 +85,25 @@ namespace WOTRMultiplayer.HarmonyPatches.Leveling
             {
                 __instance.AddDisposable(handler(__instance));
             }
+        }
+
+        private static IDisposable LevelingVoiceSelected(CharGenVoiceItemVM viewModel)
+        {
+            return viewModel.IsSelected.Subscribe<bool>(isSelected =>
+            {
+                if (!isSelected)
+                {
+                    return;
+                }
+
+                var levelingVoice = new NetworkLevelingVoice
+                {
+                    Id = viewModel.Voice.AssetGuid.ToString(),
+                    GenderId = viewModel.Gender.ToString()
+                };
+
+                Main.Multiplayer.OnLevelingVoiceSelected(levelingVoice);
+            });
         }
 
         private static IDisposable LevelingMythicClassSelected(CharGenMythicSelectorItemVM viewModel)

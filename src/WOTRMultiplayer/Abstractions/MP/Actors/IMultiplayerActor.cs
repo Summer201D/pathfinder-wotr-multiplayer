@@ -162,6 +162,8 @@ namespace WOTRMultiplayer.Abstractions.MP.Actors
 
         void OnLevelingPortraitSelected(NetworkLevelingPortrait levelingPortrait);
 
+        void OnLevelingVoiceSelected(NetworkLevelingVoice levelingVoice);
+
         void OnLevelingRaceSelected(string raceId);
 
         void OnLevelingGenderSelected(string genderId);

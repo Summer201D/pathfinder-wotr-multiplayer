@@ -56,6 +56,7 @@ using Kingmaker.UI.MVVM._PCView.CharGen.Phases.Portrait;
 using Kingmaker.UI.MVVM._PCView.CharGen.Phases.Race;
 using Kingmaker.UI.MVVM._PCView.CharGen.Phases.Skills;
 using Kingmaker.UI.MVVM._PCView.CharGen.Phases.Spells;
+using Kingmaker.UI.MVVM._PCView.CharGen.Phases.Voice;
 using Kingmaker.UI.MVVM._PCView.Common;
 using Kingmaker.UI.MVVM._PCView.Common.MessageModal;
 using Kingmaker.UI.MVVM._PCView.Dialog.BookEvent;
@@ -2099,7 +2100,7 @@ namespace WOTRMultiplayer.GameInteraction
                         return;
                     }
 
-                    System.Enum.TryParse<Kingmaker.Enums.PortraitCategory>(levelingPortrait.Category, true, out var category);
+                    Enum.TryParse<Kingmaker.Enums.PortraitCategory>(levelingPortrait.Category, true, out var category);
                     if (string.IsNullOrEmpty(levelingPortrait.CustomId))
                     {
                         if (!viewModel.PortraitGroupVms.TryGetValue(category, out var group))
@@ -2144,6 +2145,47 @@ namespace WOTRMultiplayer.GameInteraction
                 catch (Exception ex)
                 {
                     _logger.LogError(ex, "Error while selecting leveling portrait. Name={Name}, CustomId={CustomId}, Category={Category}", levelingPortrait.Name, levelingPortrait.CustomId, levelingPortrait.Category);
+                    throw;
+                }
+            });
+        }
+
+        public void SelectLevelingVoice(NetworkLevelingVoice levelingVoice)
+        {
+            _mainThreadAccessor.Post(() =>
+            {
+                try
+                {
+                    if (CharGenView?.ViewModel == null)
+                    {
+                        _logger.LogWarning("Can't select leveling voice due to missing CharGenView");
+                        return;
+                    }
+
+                    var view = CharGenView.SelectedDetailView as CharGenVoicePhaseDetailedPCView;
+                    if (view == null)
+                    {
+                        _logger.LogError("Can't select leveling voice due to missing voice phase view");
+                        return;
+                    }
+
+                    var voice = view.ViewModel.VoiceSelector.EntitiesCollection
+                        .FirstOrDefault(e => string.Equals(e.Gender.ToString(), levelingVoice.GenderId, StringComparison.OrdinalIgnoreCase) && string.Equals(e.Voice.AssetGuid.ToString(), levelingVoice.Id, StringComparison.OrdinalIgnoreCase));
+
+                    if (voice == null)
+                    {
+                        _logger.LogError("Unable to find leveling voice. Id={Id}, GenderId={GenderId}", levelingVoice.Id, levelingVoice.GenderId);
+                        return;
+                    }
+
+                    view.ViewModel.SelectedVoiceVM.Value = voice;
+                    view.VoiceSelectorPc.Gender.Value = view.ViewModel.SelectedVoiceVM.Value.Gender;
+                    view.PlayVoicePreview(view.ViewModel.Barks.Value);
+                    _logger.LogInformation("Leveling voice has been selected. Id={Id}, Gender={Gender}", view.ViewModel.SelectedVoiceVM.Value.Voice.AssetGuid.ToString(), view.ViewModel.SelectedVoiceVM.Value.Gender);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error while selecting leveling voice. Id={Id}, GenderId={GenderId}", levelingVoice.Id, levelingVoice.GenderId);
                     throw;
                 }
             });

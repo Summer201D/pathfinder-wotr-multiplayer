@@ -154,6 +154,8 @@ namespace WOTRMultiplayer.Abstractions.GameInteraction
 
         void SelectLevelingPortrait(NetworkLevelingPortrait levelingPortrait);
 
+        void SelectLevelingVoice(NetworkLevelingVoice levelingVoice);
+
         void SelectLevelingGender(string genderId);
 
         void SelectLevelingRace(string raceId);
