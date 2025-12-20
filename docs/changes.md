@@ -201,8 +201,10 @@ Some rules for the leveling screen:
 ### Mythic leveling
 same rules apply
 
-### Respec (Retrain)
-TBD
+### Respec
+Base game: TBD
+
+Modded (e.g. Toybox => Party => Respec): TBD
 
 ### Hiring(Creating) Mercenary
 same rules apply, but it's always controlled by the host

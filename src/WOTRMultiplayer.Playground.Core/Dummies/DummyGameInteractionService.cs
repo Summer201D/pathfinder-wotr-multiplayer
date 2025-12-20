@@ -599,5 +599,10 @@ namespace WOTRMultiplayer.Playground.Core.Dummies
         public void SelectLevelingBodyTypeAppearance(int index)
         {
         }
+
+        public string GetUnitCharacterName(string unitId)
+        {
+            return null;
+        }
     }
 }

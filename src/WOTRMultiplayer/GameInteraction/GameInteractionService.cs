@@ -2992,6 +2992,12 @@ namespace WOTRMultiplayer.GameInteraction
             });
         }
 
+        public string GetUnitCharacterName(string unitId)
+        {
+            var unit = GetUnitEntity(unitId);
+            return unit?.CharacterName;
+        }
+
         public void StartGlobalMapTravel(NetworkGlobalMapLocation destination)
         {
             _mainThreadAccessor.Post(() =>

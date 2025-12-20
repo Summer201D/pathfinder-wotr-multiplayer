@@ -158,6 +158,10 @@
                     "completed": "Mercenary has been hired",
                     "terminated": "Mercenary hiring has been terminated"
                 },
+                "respec": {
+                    "completed": "{0} has been retrained",
+                    "terminated": "{0}'s retraining has been terminated"
+                },
                 "completed": "{0}'s leveling has been completed",
                 "terminated": "{0}'s leveling has been terminated",
                 "archetypeContentMismatch": "Unable to select archetype due to mismatched game content (DLCs/mods)"

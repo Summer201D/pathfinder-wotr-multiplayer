@@ -299,5 +299,7 @@ namespace WOTRMultiplayer.Abstractions.GameInteraction
         bool HasAnyRunningCombatCommands();
 
         void UseInventoryItem(NetworkUseInventoryItem useInventoryItem);
+
+        string GetUnitCharacterName(string unitId);
     }
 }

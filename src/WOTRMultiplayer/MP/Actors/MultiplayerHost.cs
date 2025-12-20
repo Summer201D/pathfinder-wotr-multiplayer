@@ -802,7 +802,7 @@ namespace WOTRMultiplayer.MP.Actors
         protected override DiceRollValueResponse RetrieveRoll(DiceRollValueRequest rollRequest)
         {
             // the only case when host is retrieving rolls - he is not the turn owner + it's not AI turn
-            var character = GetCharacterOwnership(Game.Combat.Turn.UnitId);
+            var character = GetPartyCharacter(Game.Combat.Turn.UnitId);
             if (character?.Owner == null)
             {
                 Logger.LogError("Unable to retrieve roll due to missing character ownership. UnitId={UnitId}");
@@ -1259,7 +1259,7 @@ namespace WOTRMultiplayer.MP.Actors
         {
             Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}, RollId={RollId}, UnitId={UnitId}", nameof(DiceRollValueRequest), playerId, request.RollId, request.UnitId);
 
-            var character = GetCharacterOwnership(request.UnitId);
+            var character = GetPartyCharacter(request.UnitId);
             var isAI = GameInteraction.IsUnitAI(request.UnitId);
             // so basically in combat we need to ask another player for rolls in case he is the owner of the turn
             if (Game.Combat != null

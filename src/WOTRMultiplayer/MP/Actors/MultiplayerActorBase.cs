@@ -124,7 +124,7 @@ namespace WOTRMultiplayer.MP.Actors
         {
             try
             {
-                var character = GetCharacterOwnership(unitId);
+                var character = GetPartyCharacter(unitId);
 
                 return character?.Owner != null && character.Owner.Id == Game.LocalPlayerId;
             }
@@ -139,7 +139,7 @@ namespace WOTRMultiplayer.MP.Actors
         {
             try
             {
-                var character = GetCharacterOwnership(unitId);
+                var character = GetPartyCharacter(unitId);
 
                 return character?.Owner != null;
             }
@@ -582,7 +582,7 @@ namespace WOTRMultiplayer.MP.Actors
 
         public string GetMultiplayerOwnerName(string unitId)
         {
-            var owner = GetCharacterOwnership(unitId);
+            var owner = GetPartyCharacter(unitId);
             return owner?.Owner?.Name;
         }
 
@@ -710,6 +710,8 @@ namespace WOTRMultiplayer.MP.Actors
             var characterControl = Game.Leveling.Type switch
             {
                 NetworkLevelingType.Mercenary => HasControlOverUI,
+                // either this character has been controlled by someone previously (and that player is still in lobby) or fallback to default
+                NetworkLevelingType.Respec => Game.CharactersOwnershipHistory.TryGetValue(Game.Leveling.UnitId, out var playerId) ? Game.Players.Any(p => p.Id == playerId) && playerId == GetLocalPlayerId() : HasControlOverUI,
                 _ => IsControlledByLocalPlayer(Game.Leveling.UnitId),
             };
 
@@ -1217,14 +1219,16 @@ namespace WOTRMultiplayer.MP.Actors
                 Send(message);
             }
 
-            var character = GetCharacterOwnership(Game.Leveling.UnitId);
+            var characterName = GameInteraction.GetUnitCharacterName(Game.Leveling.UnitId);
             var messageKey = Game.Leveling.Type switch
             {
                 NetworkLevelingType.MythicLeveling => WellKnownKeys.GameNotifications.Leveling.MythicLeveling.Terminated.Key,
                 NetworkLevelingType.Mercenary => WellKnownKeys.GameNotifications.Leveling.Mercenary.Terminated.Key,
+                NetworkLevelingType.Respec => WellKnownKeys.GameNotifications.Leveling.Respec.Terminated.Key,
                 NetworkLevelingType.Leveling or _ => WellKnownKeys.GameNotifications.Leveling.Terminated.Key
             };
-            GameInteraction.ShowWarningNotification(messageKey, character?.Name);
+
+            GameInteraction.ShowWarningNotification(messageKey, characterName);
             Game.Leveling = null;
         }
 
@@ -1239,14 +1243,16 @@ namespace WOTRMultiplayer.MP.Actors
                 Send(message);
             }
 
-            var character = GetCharacterOwnership(Game.Leveling.UnitId);
+            var characterName = GameInteraction.GetUnitCharacterName(Game.Leveling.UnitId);
             var messageKey = Game.Leveling.Type switch
             {
                 NetworkLevelingType.MythicLeveling => WellKnownKeys.GameNotifications.Leveling.MythicLeveling.Completed.Key,
                 NetworkLevelingType.Mercenary => WellKnownKeys.GameNotifications.Leveling.Mercenary.Completed.Key,
+                NetworkLevelingType.Respec => WellKnownKeys.GameNotifications.Leveling.Respec.Completed.Key,
                 NetworkLevelingType.Leveling or _ => WellKnownKeys.GameNotifications.Leveling.Completed.Key,
             };
-            GameInteraction.AddCombatText(messageKey, character?.Name);
+
+            GameInteraction.AddCombatText(messageKey, characterName);
             Game.Leveling = null;
         }
 
@@ -1950,7 +1956,7 @@ namespace WOTRMultiplayer.MP.Actors
             return !missingPlayers.Any(p => p.Id == playerId);
         }
 
-        protected NetworkCharacter GetCharacterOwnership(string unitId)
+        protected NetworkCharacter GetPartyCharacter(string unitId)
         {
             if (string.IsNullOrEmpty(unitId))
             {

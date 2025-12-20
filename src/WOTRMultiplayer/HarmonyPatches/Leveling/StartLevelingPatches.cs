@@ -1,10 +1,12 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Reflection;
 using System.Reflection.Emit;
 using HarmonyLib;
 using Kingmaker;
 using Kingmaker.Designers.EventConditionActionSystem.Actions;
 using Kingmaker.EntitySystem.Entities;
+using Kingmaker.UI.MVVM._VM.CharGen;
 using Kingmaker.UI.MVVM._VM.Party;
 using Kingmaker.UI.MVVM._VM.ServiceWindows.CharacterInfo.Sections.LevelClassScores.Experience;
 using Kingmaker.UnitLogic.Class.LevelUp;
@@ -66,6 +68,19 @@ namespace WOTRMultiplayer.HarmonyPatches.Leveling
 
             var unitId = Game.Instance.Player.MainCharacter.Value.UniqueId;
             Main.Multiplayer.ForceLevelingUI(unitId, NetworkLevelingType.MythicLeveling);
+        }
+
+        [HarmonyPatch(typeof(RespecWindowVM), nameof(RespecWindowVM.InitiateNextLevelup))]
+        [HarmonyPrefix]
+        public static void RespecCompanion_InitiateNextLevelup_Prefix(RespecWindowVM __instance)
+        {
+            if (!Main.Multiplayer.IsActive)
+            {
+                return;
+            }
+
+            var unitId = __instance.CurrentUnit.Value.UniqueId;
+            Main.Multiplayer.ForceLevelingUI(unitId, NetworkLevelingType.Respec);
         }
 
         [HarmonyPatch(typeof(Player), nameof(Player.CreateCustomCompanion))]
