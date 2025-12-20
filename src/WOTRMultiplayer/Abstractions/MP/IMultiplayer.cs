@@ -254,7 +254,9 @@ namespace WOTRMultiplayer.Abstractions.MP
 
         bool CanNavigateOnGlobalMap();
 
-        int GetCombatSeed();
+        int? GetCombatSeed();
+
+        int? GetSessionSeed();
 
         void OnZoneLootShown();
 

@@ -987,20 +987,24 @@ namespace WOTRMultiplayer.MP
             }
         }
 
-        public int GetCombatSeed()
+        public int? GetCombatSeed()
         {
             // SessionSeed is a fallback in case we rely on combat seed outside of the combat.
             // there is only 1 known case as of now: attacking someone with MirrorImage buff when combat has not been started yet
             // fallback will not provide true randomness as the same unit would lose the same amount of mirror images each time it's attacked outside of the combat
             // but it's extremely rare to be in this situation anyway
-            var seed = _multiplayerActorAccessor.Current?.CombatSeed ?? _multiplayerActorAccessor.Current?.SessionSeed;
+            var seed = _multiplayerActorAccessor.Current?.CombatSeed ?? GetSessionSeed();
             if (!seed.HasValue)
             {
                 _logger.LogError("Neither CombatSeed nor SessionSeed is available. Those values should not be requested outside of the MP session");
-                return -1;
             }
 
-            return seed.Value;
+            return seed;
+        }
+
+        public int? GetSessionSeed()
+        {
+            return _multiplayerActorAccessor.Current?.SessionSeed;
         }
 
         public void OnInterrupRestBanterBark(NetworkRestBanter networkRestBanter)

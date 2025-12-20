@@ -201,6 +201,12 @@ Some rules for the leveling screen:
 ### Mythic leveling
 same rules apply
 
+### Respec (Retrain)
+TBD
+
+### Hiring(Creating) Mercenary
+same rules apply, but it's always controlled by the host
+
 ## Entity ID Generation 
 The game originally used a single counter to generate new entity IDs (for characters, area effects, facts, map objects, etc.), however this approach didn't work well in network environment. Now it uses a "consistent" generator that considers the current game state (gameId, location, etc.), so IDs should match across all multiplayer players.
 
@@ -210,18 +216,6 @@ The tricky part is `Item.UniqueId` generation - stacking or splitting items crea
 If a roll doesn't come through for some reason, you will get a stutter and a popup warning. In that case, the roll will be rolled locally, which might lead to different results.
 
 You can either ignore it (if the outcome is more or less the same for everyone) or do a quicksave/quickload to resync all players.
-
-## Not implemented
-
-### Abilities
-Only basic usage of abilities is available. Any extra conditions like metamagic will not work properly as those modifications will not be applied for remote players
-
-### Hiring Mercenary
-Character Generation screen is synced for leveling only. You will need to create initial merc locally and then host multiplayer game.
-
-The following CharGen phases/items are not synced:
-- Appearance
-- Voice
 
 ## Long term plans
 

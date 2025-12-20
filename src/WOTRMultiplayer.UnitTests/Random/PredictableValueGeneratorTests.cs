@@ -164,6 +164,7 @@ namespace WOTRMultiplayer.UnitTests.Random
 
         [TestCase(UniqueIdType.Unit, UniqueIdType.EntityView)]
         [TestCase(UniqueIdType.AreaEffect, UniqueIdType.ItemEntity)]
+        [TestCase(UniqueIdType.CustomCompanionUnit, UniqueIdType.Unit)]
         public void GenerateUniqueId_MultipleCallsForSameIdentifierButDifferentIdType_IdCounterIsNotShared(UniqueIdType idTypeOne, UniqueIdType idTypeTwo)
         {
             // Arrange

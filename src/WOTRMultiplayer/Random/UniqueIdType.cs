@@ -26,6 +26,9 @@ namespace WOTRMultiplayer.Random
         AreaEffect,
 
         [Description("AD")]
-        AbilityData
+        AbilityData,
+
+        [Description("CCU")]
+        CustomCompanionUnit
     }
 }

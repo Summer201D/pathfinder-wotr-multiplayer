@@ -30,6 +30,33 @@ namespace WOTRMultiplayer.HarmonyPatches.RandomIdGeneration
     {
         public readonly static MethodInfo _lookUpMethod = AccessTools.Method(typeof(Player), nameof(Player.GetNewUniqueId));
 
+        [HarmonyPatch(typeof(Player), nameof(Player.CreateCustomCompanion))]
+        [HarmonyTranspiler]
+        public static IEnumerable<CodeInstruction> Player_CreateCustomCompanion_Transpiler(IEnumerable<CodeInstruction> instructions)
+        {
+            var target = PatchesUtils.GetTranspilerTarget(MethodBase.GetCurrentMethod());
+            var lookFor = AccessTools.Method(typeof(Game), nameof(Game.CreateUnitVacuum));
+            var replaceWith = AccessTools.Method(typeof(RandomIdGenerationPatches), nameof(RandomIdGenerationPatches.CreateCompanionUnit));
+            var matcher = new CodeMatcher(instructions);
+            var match = matcher.SearchForward(x => x.Calls(lookFor));
+            if (match.IsInvalid)
+            {
+                Main.GetLogger<RandomIdGenerationPatches>().LogError("Unable to find CreateUnitVacuum call. Target={Target}", target);
+                return matcher.Instructions();
+            }
+
+            var newInstructions = new List<CodeInstruction>
+            {
+                new(OpCodes.Ldloc_3),
+                new(OpCodes.Call, replaceWith),
+            };
+            match = match.Advance(-2).RemoveInstructions(3).Insert(newInstructions);
+
+            Main.GetLogger<RandomIdGenerationPatches>().LogInformation("Transpiler has been applied. Target={Target}", target);
+            PatchesUtils.Dump(matcher);
+            return matcher.Instructions();
+        }
+
         [HarmonyPatch(typeof(Player), nameof(Player.GetNewUniqueId))]
         [HarmonyPostfix]
         public static void Player_GetNewUniqueId_Postfix(ref string __result)
@@ -178,7 +205,7 @@ namespace WOTRMultiplayer.HarmonyPatches.RandomIdGeneration
             }
 
             var uniqueId = blueprintUnit.name;
-            var voiceIndex = Main.Multiplayer.ValueGenerator.Range(Random.SeedLifetime.Area, uniqueId, 0, voices.Count);
+            var voiceIndex = Main.Multiplayer.ValueGenerator.Range(SeedLifetime.Area, uniqueId, 0, voices.Count);
             var voiceReference = voices[voiceIndex];
             var voice = voiceReference.Get();
             Main.GetLogger<UnitCustomizationPresetPatches>().LogInformation("Unit voice has been selected. Id={Id}, Gender={Gender}, Voice={Voice}", uniqueId, gender, voice.name);
@@ -194,7 +221,7 @@ namespace WOTRMultiplayer.HarmonyPatches.RandomIdGeneration
             }
 
             var uniqueId = blueprintUnit.name;
-            var leftHandedRoll = Main.Multiplayer.ValueGenerator.Range(Random.SeedLifetime.Area, uniqueId, 0f, 1f);
+            var leftHandedRoll = Main.Multiplayer.ValueGenerator.Range(SeedLifetime.Area, uniqueId, 0f, 1f);
             var isLeftHanded = leftHandedRoll <= blueprintUnit.CustomizationPreset.Distribution.LeftHandedChance;
             Main.GetLogger<UnitCustomizationPresetPatches>().LogInformation("Unit handedness has been selected. Id={Id}, Roll={Roll}, IsLeftHanded={IsLeftHanded}", uniqueId, leftHandedRoll, isLeftHanded);
             return isLeftHanded;
@@ -275,6 +302,33 @@ namespace WOTRMultiplayer.HarmonyPatches.RandomIdGeneration
             return matcher.Instructions();
         }
 
+        public static UnitEntityData CreateCompanionUnit(BlueprintUnit blueprintUnit)
+        {
+            if (!Main.Multiplayer.IsActive)
+            {
+                return Game.Instance.CreateUnitVacuum(blueprintUnit);
+            }
+
+            try
+            {
+                var sessionSeed = Main.Multiplayer.GetSessionSeed();
+                if (sessionSeed == null)
+                {
+                    Main.GetLogger<RandomIdGenerationPatches>().LogError("Session seed is unavailable");
+                    return Game.Instance.CreateUnitVacuum(blueprintUnit);
+                }
+
+                var identifier = $"{GetCommonIdPart()}:{nameof(Game.CreateUnitVacuum)}:{blueprintUnit.name}:{blueprintUnit.AssetGuid}";
+                var id = Main.Multiplayer.ValueGenerator.GenerateUniqueId(UniqueIdType.CustomCompanionUnit, Game.Instance.Player.GameId, identifier);
+                var unit = new UnitEntityData(id, isInGame: true, blueprintUnit);
+                return unit;
+            }
+            catch (Exception ex)
+            {
+                Main.GetLogger<RandomIdGenerationPatches>().LogError(ex, "Error while generating custom companion unit Id. Type={Type}", UniqueIdType.CustomCompanionUnit);
+                throw;
+            }
+        }
 
         public static string GetNewAreaEffectUniqueId(AreaEffectView areaEffectView)
         {

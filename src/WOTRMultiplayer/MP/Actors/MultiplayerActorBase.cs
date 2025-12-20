@@ -1221,6 +1221,7 @@ namespace WOTRMultiplayer.MP.Actors
             var messageKey = Game.Leveling.Type switch
             {
                 NetworkLevelingType.MythicLeveling => WellKnownKeys.GameNotifications.Leveling.MythicLeveling.Terminated.Key,
+                NetworkLevelingType.Mercenary => WellKnownKeys.GameNotifications.Leveling.Mercenary.Terminated.Key,
                 NetworkLevelingType.Leveling or _ => WellKnownKeys.GameNotifications.Leveling.Terminated.Key
             };
             GameInteraction.ShowWarningNotification(messageKey, character?.Name);
@@ -1242,7 +1243,8 @@ namespace WOTRMultiplayer.MP.Actors
             var messageKey = Game.Leveling.Type switch
             {
                 NetworkLevelingType.MythicLeveling => WellKnownKeys.GameNotifications.Leveling.MythicLeveling.Completed.Key,
-                NetworkLevelingType.Leveling or _ => WellKnownKeys.GameNotifications.Leveling.Completed.Key
+                NetworkLevelingType.Mercenary => WellKnownKeys.GameNotifications.Leveling.Mercenary.Completed.Key,
+                NetworkLevelingType.Leveling or _ => WellKnownKeys.GameNotifications.Leveling.Completed.Key,
             };
             GameInteraction.AddCombatText(messageKey, character?.Name);
             Game.Leveling = null;

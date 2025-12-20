@@ -580,6 +580,22 @@ public static class WellKnownKeys
                 }
             }
 
+            [Description("mercenary")]
+            public static class Mercenary
+            {
+                [Description("completed")]
+                public static class Completed
+                {
+                    public static string Key { get; set; }
+                }
+
+                [Description("terminated")]
+                public static class Terminated
+                {
+                    public static string Key { get; set; }
+                }
+            }
+
             [Description("completed")]
             public static class Completed
             {
