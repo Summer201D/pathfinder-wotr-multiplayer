@@ -151,18 +151,14 @@
             },
             "leveling": {
                 "mythicLeveling": {
-                    "completed": "{0}'s Mythic leveling has been completed",
+                    "completed": "{0}'s Mythic level has been increased",
                     "terminated": "{0}'s Mythic leveling has been terminated"
                 },
                 "mercenary": {
                     "completed": "Mercenary has been hired",
                     "terminated": "Mercenary hiring has been terminated"
                 },
-                "respec": {
-                    "completed": "{0} has been retrained",
-                    "terminated": "{0}'s retraining has been terminated"
-                },
-                "completed": "{0}'s leveling has been completed",
+                "completed": "{0}'s level has been increased",
                 "terminated": "{0}'s leveling has been terminated",
                 "archetypeContentMismatch": "Unable to select archetype due to mismatched game content (DLCs/mods)"
             },

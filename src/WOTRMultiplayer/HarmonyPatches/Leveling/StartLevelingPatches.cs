@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Reflection;
 using System.Reflection.Emit;
 using HarmonyLib;
@@ -80,7 +79,20 @@ namespace WOTRMultiplayer.HarmonyPatches.Leveling
             }
 
             var unitId = __instance.CurrentUnit.Value.UniqueId;
-            Main.Multiplayer.ForceLevelingUI(unitId, NetworkLevelingType.Respec);
+            Main.Multiplayer.ForceLevelingUI(unitId, NetworkLevelingType.Leveling);
+        }
+
+        [HarmonyPatch(typeof(RespecWindowVM), nameof(RespecWindowVM.InitiateNextMythic))]
+        [HarmonyPrefix]
+        public static void RespecCompanion_InitiateNextMythic_Prefix(RespecWindowVM __instance)
+        {
+            if (!Main.Multiplayer.IsActive)
+            {
+                return;
+            }
+
+            var unitId = __instance.CurrentUnit.Value.UniqueId;
+            Main.Multiplayer.ForceLevelingUI(unitId, NetworkLevelingType.MythicLeveling);
         }
 
         [HarmonyPatch(typeof(Player), nameof(Player.CreateCustomCompanion))]

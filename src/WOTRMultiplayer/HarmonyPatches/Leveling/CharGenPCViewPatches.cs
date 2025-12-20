@@ -31,6 +31,19 @@ namespace WOTRMultiplayer.HarmonyPatches.Leveling
             Main.Multiplayer.OnLevelingCompleted();
         }
 
+        [HarmonyPatch(typeof(CharGenView), nameof(CharGenView.CloseCharGen))]
+        [HarmonyPrefix]
+        public static bool CharGenView_CloseCharGen_Prefix()
+        {
+            if (!Main.Multiplayer.IsActive)
+            {
+                return true;
+            }
+
+            var canMakeLevelingDecisions = Main.Multiplayer.CanMakeLevelingDecisions();
+            return canMakeLevelingDecisions;
+        }
+
         [HarmonyPatch(typeof(CharGenPCView), nameof(CharGenPCView.SetActiveNextPhaseButton))]
         [HarmonyPostfix]
         public static void CharGenPCView_SetActiveNextPhaseButton_Postfix(CharGenPCView __instance)

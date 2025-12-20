@@ -4,7 +4,6 @@
     {
         Leveling,
         MythicLeveling,
-        Mercenary,
-        Respec
+        Mercenary
     }
 }

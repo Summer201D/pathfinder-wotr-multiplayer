@@ -596,22 +596,6 @@ public static class WellKnownKeys
                 }
             }
 
-            [Description("respec")]
-            public static class Respec
-            {
-                [Description("completed")]
-                public static class Completed
-                {
-                    public static string Key { get; set; }
-                }
-
-                [Description("terminated")]
-                public static class Terminated
-                {
-                    public static string Key { get; set; }
-                }
-            }
-
             [Description("completed")]
             public static class Completed
             {

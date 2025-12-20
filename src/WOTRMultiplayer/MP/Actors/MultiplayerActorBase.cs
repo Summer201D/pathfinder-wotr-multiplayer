@@ -711,8 +711,7 @@ namespace WOTRMultiplayer.MP.Actors
             {
                 NetworkLevelingType.Mercenary => HasControlOverUI,
                 // either this character has been controlled by someone previously (and that player is still in lobby) or fallback to default
-                NetworkLevelingType.Respec => Game.CharactersOwnershipHistory.TryGetValue(Game.Leveling.UnitId, out var playerId) ? Game.Players.Any(p => p.Id == playerId) && playerId == GetLocalPlayerId() : HasControlOverUI,
-                _ => IsControlledByLocalPlayer(Game.Leveling.UnitId),
+                _ => Game.CharactersOwnershipHistory.TryGetValue(Game.Leveling.UnitId, out var playerId) ? Game.Players.Any(p => p.Id == playerId) && playerId == GetLocalPlayerId() : HasControlOverUI,
             };
 
             return characterControl && Game.Leveling.PlayerReadiness.Count >= GetPlayersCount();
@@ -1210,7 +1209,7 @@ namespace WOTRMultiplayer.MP.Actors
 
         public void OnLevelingTerminated()
         {
-            Logger.LogInformation("Leveling has been terminated. UnitId={unitId}", Game.Leveling.UnitId);
+            Logger.LogInformation("Leveling has been terminated. UnitId={unitId}, Type={Type}", Game.Leveling.UnitId, Game.Leveling.Type);
 
             if (CanMakeLevelingDecisions())
             {
@@ -1224,7 +1223,6 @@ namespace WOTRMultiplayer.MP.Actors
             {
                 NetworkLevelingType.MythicLeveling => WellKnownKeys.GameNotifications.Leveling.MythicLeveling.Terminated.Key,
                 NetworkLevelingType.Mercenary => WellKnownKeys.GameNotifications.Leveling.Mercenary.Terminated.Key,
-                NetworkLevelingType.Respec => WellKnownKeys.GameNotifications.Leveling.Respec.Terminated.Key,
                 NetworkLevelingType.Leveling or _ => WellKnownKeys.GameNotifications.Leveling.Terminated.Key
             };
 
@@ -1234,7 +1232,7 @@ namespace WOTRMultiplayer.MP.Actors
 
         public void OnLevelingCompleted()
         {
-            Logger.LogInformation("Leveling has been completed. UnitId={UnitId}", Game.Leveling.UnitId);
+            Logger.LogInformation("Leveling has been completed. UnitId={UnitId}, Type={Type}", Game.Leveling.UnitId, Game.Leveling.Type);
 
             if (CanMakeLevelingDecisions())
             {
@@ -1248,7 +1246,6 @@ namespace WOTRMultiplayer.MP.Actors
             {
                 NetworkLevelingType.MythicLeveling => WellKnownKeys.GameNotifications.Leveling.MythicLeveling.Completed.Key,
                 NetworkLevelingType.Mercenary => WellKnownKeys.GameNotifications.Leveling.Mercenary.Completed.Key,
-                NetworkLevelingType.Respec => WellKnownKeys.GameNotifications.Leveling.Respec.Completed.Key,
                 NetworkLevelingType.Leveling or _ => WellKnownKeys.GameNotifications.Leveling.Completed.Key,
             };
 
