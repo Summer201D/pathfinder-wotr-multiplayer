@@ -42,6 +42,7 @@ using Kingmaker.Settings;
 using Kingmaker.TurnBasedMode;
 using Kingmaker.UI;
 using Kingmaker.UI._ConsoleUI.Overtips;
+using Kingmaker.UI.CharSelect;
 using Kingmaker.UI.Common;
 using Kingmaker.UI.Models.Log.Events;
 using Kingmaker.UI.MVVM._PCView.CharGen;
@@ -3227,6 +3228,87 @@ namespace WOTRMultiplayer.GameInteraction
                 UpdateButtonTextCounter(modalMessage.m_AcceptText, readyPlayersCount, totalPlayersCount);
 
                 _logger.LogInformation("Dialog popup UI has been updated. IsInteractable={IsInteractable}, ReadyPlayers={ReadyPlayers}, TotalPlayers={TotalPlayers}", isInteractable, readyPlayersCount, totalPlayersCount);
+            });
+        }
+
+        public void UpdateCharacterSelectionUI(bool isInteractable, int readyPlayersCount, int totalPlayersCount)
+        {
+            _mainThreadAccessor.Post(() =>
+            {
+                var window = UnityEngine.Object.FindObjectOfType<CharSelectWindow>();
+                if (window == null)
+                {
+                    _logger.LogWarning("Character selection window is missing");
+                    return;
+                }
+
+                foreach (var item in window.m_SelectorItems)
+                {
+                    item.Toggle.interactable = isInteractable;
+                }
+
+                window.m_OkButton.Interactable = window.CurrentCharacter != null && isInteractable;
+                var closeButton = window.transform.Find("Window/CloseButton").GetComponent<OwlcatButton>();
+                closeButton.Interactable = isInteractable;
+
+                var okButtonText = window.m_OkButton.GetComponentInChildren<TextMeshProUGUI>();
+                UpdateButtonTextCounter(okButtonText, readyPlayersCount, totalPlayersCount);
+
+                _logger.LogInformation("Character selection UI has been updated. IsInteractable={IsInteractable}, ReadyPlayers={ReadyPlayers}, TotalPlayers={TotalPlayers}", isInteractable, readyPlayersCount, totalPlayersCount);
+            });
+        }
+
+        public void CloseCharacterSelectionWindow()
+        {
+            _mainThreadAccessor.Post(() =>
+            {
+                var window = UnityEngine.Object.FindObjectOfType<CharSelectWindow>();
+                if (window == null)
+                {
+                    _logger.LogWarning("Character selection window is missing");
+                    return;
+                }
+
+                window.CloseWindow();
+                _logger.LogInformation("Character selection UI has been closed");
+            });
+        }
+
+        public void AcceptCharacterSelectionWindow()
+        {
+            _mainThreadAccessor.Post(() =>
+            {
+                var window = UnityEngine.Object.FindObjectOfType<CharSelectWindow>();
+                if (window == null)
+                {
+                    _logger.LogWarning("Character selection window is missing");
+                    return;
+                }
+
+                window.OnButtonOk();
+                _logger.LogInformation("Character selection UI has been accepted");
+            });
+        }
+
+        public void ToggleCharacterSelectionWindow(string unitId)
+        {
+            _mainThreadAccessor.Post(() =>
+            {
+                var window = UnityEngine.Object.FindObjectOfType<CharSelectWindow>();
+                if (window == null)
+                {
+                    _logger.LogWarning("Character selection window is missing");
+                    return;
+                }
+
+                for (int i = 0; i < window.m_SelectCharacters.Count; i++)
+                {
+                    var character = window.m_SelectCharacters[i];
+                    var heroPortrait = window.m_SelectorItems[i];
+                    heroPortrait.Toggle.SetIsOnWithoutNotify(string.Equals(character.UniqueId, unitId, StringComparison.OrdinalIgnoreCase));
+                }
+
+                _logger.LogInformation("Character selection UI has been toggled. CurrentCharacterId={CurrentCharacterId}", window.CurrentCharacter?.UniqueId);
             });
         }
 

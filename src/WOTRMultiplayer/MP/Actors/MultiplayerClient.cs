@@ -442,6 +442,11 @@ namespace WOTRMultiplayer.MP.Actors
                // leveling
                .On<NotifyCharacterLevelingStarted>(OnNotifyCharacterLevelingStarted)
 
+               // character selection window
+               .On<NotifyCharacterSelectionToggleChanged>(OnNotifyCharacterSelectionToggleChanged)
+               .On<NotifyCharacterSelectionWindowAccepted>(OnNotifyCharacterSelectionWindowAccepted)
+               .On<NotifyCharacterSelectionWindowClosed>(OnNotifyCharacterSelectionWindowClosed)
+
                // rest
                .On<NotifyRestStarted>(OnNotifyRestStarted)
                .On<NotifySpawnCampPlace>(OnNotifySpawnCampPlace)
@@ -495,6 +500,27 @@ namespace WOTRMultiplayer.MP.Actors
                .On<NotifyZoneLootCompleted>(OnNotifyZoneLootCompleted)
                .On<NotifyZoneLootRemoveToggleChanged>(OnNotifyZoneLootRemoveToggleChanged)
                ;
+        }
+
+        private void OnNotifyCharacterSelectionWindowClosed(long playerId, NotifyCharacterSelectionWindowClosed characterSelectionWindowClosed)
+        {
+            Logger.LogInformation("Received {MessageType}", nameof(NotifyCharacterSelectionWindowClosed));
+
+            GameInteraction.CloseCharacterSelectionWindow();
+        }
+
+        private void OnNotifyCharacterSelectionWindowAccepted(long playerId, NotifyCharacterSelectionWindowAccepted characterSelectionWindowAccepted)
+        {
+            Logger.LogInformation("Received {MessageType}", nameof(NotifyCharacterSelectionWindowAccepted));
+
+            GameInteraction.AcceptCharacterSelectionWindow();
+        }
+
+        private void OnNotifyCharacterSelectionToggleChanged(long playerId, NotifyCharacterSelectionToggleChanged characterSelectionToggleChanged)
+        {
+            Logger.LogInformation("Received {MessageType}", nameof(NotifyCharacterSelectionToggleChanged));
+
+            GameInteraction.ToggleCharacterSelectionWindow(characterSelectionToggleChanged.UnitId);
         }
 
         private void OnNotifyZoneLootRemoveToggleChanged(long playerId, NotifyZoneLootRemoveToggleChanged zoneLootRemoveToggleChanged)

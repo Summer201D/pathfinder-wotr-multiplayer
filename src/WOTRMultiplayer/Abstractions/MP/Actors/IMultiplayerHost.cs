@@ -22,7 +22,9 @@ namespace WOTRMultiplayer.Abstractions.MP.Actors
         void SendSelectedAnswer();
 
         void OnPerceptionCheck(NetworkPerceptionCheck check);
+
         void OnInspectionKnowledgeCheck(NetworkInspectionKnowledgeCheck check);
+
         void OnStealthPerceptionCheckRolled(NetworkStealthPerceptionCheck check);
 
         void OnCampingUseHealingSpellsChanged(bool isOn);
@@ -70,5 +72,11 @@ namespace WOTRMultiplayer.Abstractions.MP.Actors
         void OnZoneLootRemoveToggleChanged(bool removeUncollectedLoot);
 
         void OnDialogPopupClosed(NetworkDialogPopup networkDialogPopup);
+
+        void OnCharacterSelectionWindowAccepted();
+
+        void OnCharacterSelectionWindowClosed();
+
+        void OnCharacterSelectionToggleChanged(string unitId);
     }
 }

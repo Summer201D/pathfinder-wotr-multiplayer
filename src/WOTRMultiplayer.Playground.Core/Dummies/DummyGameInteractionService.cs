@@ -625,5 +625,21 @@ namespace WOTRMultiplayer.Playground.Core.Dummies
         public void InitiateLevelingRespecMythicLevelUp()
         {
         }
+
+        public void UpdateCharacterSelectionUI(bool isInteractable, int readyPlayersCount, int totalPlayersCount)
+        {
+        }
+
+        public void CloseCharacterSelectionWindow()
+        {
+        }
+
+        public void AcceptCharacterSelectionWindow()
+        {
+        }
+
+        public void ToggleCharacterSelectionWindow(string unitId)
+        {
+        }
     }
 }

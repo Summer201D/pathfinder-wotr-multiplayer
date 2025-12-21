@@ -152,6 +152,10 @@
             NotifyLevelingRespecWindowShown,
             NotifyLevelingRespecLevelUp,
             NotifyLevelingRespecMythicLevelUp,
+            NotifyCharacterSelectionWindowShown,
+            NotifyCharacterSelectionToggleChanged,
+            NotifyCharacterSelectionWindowClosed,
+            NotifyCharacterSelectionWindowAccepted,
         }
 
         public enum Request

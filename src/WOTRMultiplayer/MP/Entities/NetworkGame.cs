@@ -55,7 +55,7 @@ namespace WOTRMultiplayer.MP.Entities
 
         public HashSet<long> PlayersInDialogPopup { get; set; } = [];
 
-        public HashSet<long> PlayersInRespecSelectorWindow { get; set; } = [];
+        public HashSet<long> PlayersInCharacterSelectionWindow { get; set; } = [];
 
         public HashSet<long> PlayersInRespecWindow { get; set; } = [];
 

@@ -2586,6 +2586,83 @@ namespace WOTRMultiplayer.MP
             return _gameInteractionService.GetEquipmentSlotPosition(holdingSlot);
         }
 
+        public bool CanControlCharacterSelectionWindow()
+        {
+            return _multiplayerActorAccessor.Current != null && _multiplayerActorAccessor.Host.IsActive;
+        }
+
+        public void OnCharacterSelectionWindowShown()
+        {
+            try
+            {
+                if (_multiplayerActorAccessor.Current == null)
+                {
+                    return;
+                }
+
+                _multiplayerActorAccessor.Current.OnCharacterSelectionWindowShown();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while showing character selection window");
+                throw;
+            }
+        }
+
+        public void OnCharacterSelectionWindowAccepted()
+        {
+            try
+            {
+                if (_multiplayerActorAccessor.Current == null || _multiplayerActorAccessor.Client.IsActive)
+                {
+                    return;
+                }
+
+                _multiplayerActorAccessor.Host.OnCharacterSelectionWindowAccepted();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while accepting character selection window");
+                throw;
+            }
+        }
+
+        public void OnCharacterSelectionWindowClosed()
+        {
+            try
+            {
+                if (_multiplayerActorAccessor.Current == null || _multiplayerActorAccessor.Client.IsActive)
+                {
+                    return;
+                }
+
+                _multiplayerActorAccessor.Host.OnCharacterSelectionWindowClosed();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while closing character selection window");
+                throw;
+            }
+        }
+
+        public void OnCharacterSelectionToggleChanged(string unitId)
+        {
+            try
+            {
+                if (_multiplayerActorAccessor.Current == null || _multiplayerActorAccessor.Client.IsActive)
+                {
+                    return;
+                }
+
+                _multiplayerActorAccessor.Host.OnCharacterSelectionToggleChanged(unitId);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while toggling character selection. UnitId={UnitId}", unitId);
+                throw;
+            }
+        }
+
         private void ShowEscMenuMultiplayerLobby()
         {
             _logger.LogInformation("Show lobby window");

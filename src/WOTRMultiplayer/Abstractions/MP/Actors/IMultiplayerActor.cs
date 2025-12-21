@@ -265,5 +265,7 @@ namespace WOTRMultiplayer.Abstractions.MP.Actors
         void OnLevelingRespecLevelUp();
 
         void OnLevelingRespecMythicLevelUp();
+
+        void OnCharacterSelectionWindowShown();
     }
 }

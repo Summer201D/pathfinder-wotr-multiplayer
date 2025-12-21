@@ -786,6 +786,34 @@ namespace WOTRMultiplayer.MP.Actors
             Send(message);
         }
 
+        public void OnCharacterSelectionWindowAccepted()
+        {
+            ResetPlayersTracker(Game.PlayersInCharacterSelectionWindow);
+
+            var message = new NotifyCharacterSelectionWindowAccepted();
+            Logger.LogInformation("Sending {MessageType}", nameof(NotifyCharacterSelectionWindowAccepted));
+            Send(message);
+        }
+
+        public void OnCharacterSelectionWindowClosed()
+        {
+            ResetPlayersTracker(Game.PlayersInCharacterSelectionWindow);
+
+            var message = new NotifyCharacterSelectionWindowClosed();
+            Logger.LogInformation("Sending {MessageType}", nameof(NotifyCharacterSelectionWindowClosed));
+            Send(message);
+        }
+
+        public void OnCharacterSelectionToggleChanged(string unitId)
+        {
+            var message = new NotifyCharacterSelectionToggleChanged
+            {
+                UnitId = unitId
+            };
+            Logger.LogInformation("Sending {MessageType}. UnitId={UnitId}", nameof(NotifyCharacterSelectionToggleChanged), unitId);
+            Send(message);
+        }
+
         protected override bool OnStartGameModeInternal(GameModeType type)
         {
             var playerId = GetLocalPlayerId();
@@ -1495,6 +1523,8 @@ namespace WOTRMultiplayer.MP.Actors
                 UpdateZoneLootUIState();
 
                 UpdateRespecWindowStateOnPlayerLeave(removedPlayer.Id);
+
+                UpdateCharacterSelectionUIState();
 
                 TryEndForcedPause();
             }

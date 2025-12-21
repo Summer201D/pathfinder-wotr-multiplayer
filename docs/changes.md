@@ -202,9 +202,15 @@ Some rules for the leveling screen:
 same rules apply
 
 ### Respec
-Base game: TBD
+Character selection for respec is always controlled by host, but respec/leveling windows themselves follow the default leveling rules
 
-Modded (e.g. Toybox => Party => Respec): TBD
+#### Toybox (Party => Respec)
+Synchronization will start working at the moment of opening respec window, but everyone still needs to press that button to start respec process as there is no automated respec startup in this case.
+
+Same leveling/respec rules apply
+
+#### Other mods
+Never tried, never checked. Should work if it opens the default respec window too.
 
 ### Hiring(Creating) Mercenary
 same rules apply, but it's always controlled by the host

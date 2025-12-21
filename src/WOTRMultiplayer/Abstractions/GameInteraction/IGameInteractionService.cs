@@ -311,5 +311,13 @@ namespace WOTRMultiplayer.Abstractions.GameInteraction
         void InitiateLevelingRespecLevelUp();
 
         void InitiateLevelingRespecMythicLevelUp();
+
+        void UpdateCharacterSelectionUI(bool isInteractable, int readyPlayersCount, int totalPlayersCount);
+
+        void CloseCharacterSelectionWindow();
+
+        void AcceptCharacterSelectionWindow();
+
+        void ToggleCharacterSelectionWindow(string unitId);
     }
 }

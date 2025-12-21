@@ -1304,6 +1304,22 @@ namespace WOTRMultiplayer.MP.Actors
             Game.Leveling = null;
         }
 
+        public void OnCharacterSelectionWindowShown()
+        {
+            var localPlayer = GetLocalPlayerId();
+            AddPlayerToTracker(Game.PlayersInCharacterSelectionWindow, localPlayer);
+
+            UpdateCharacterSelectionUIState();
+
+            var message = new NotifyCharacterSelectionWindowShown
+            {
+                PlayerId = localPlayer
+            };
+
+            Logger.LogInformation("Sending {MessageType}. PlayerId={PlayerId}", nameof(NotifyCharacterSelectionWindowShown), message.PlayerId);
+            Send(message);
+        }
+
         public void MoveNonCombatCharacter(NetworkCharacterMove move)
         {
             if (Game.Combat != null)
@@ -1663,6 +1679,17 @@ namespace WOTRMultiplayer.MP.Actors
                 var totalPlayers = GetPlayersCount();
                 var canUse = WasControlledByCurrentPlayer(unitId) && readyPlayers >= totalPlayers;
                 GameInteraction.UpdateLevelingRespecUI(canUse, readyPlayers, totalPlayers);
+            }
+        }
+
+        protected void UpdateCharacterSelectionUIState()
+        {
+            lock (ActionLock)
+            {
+                var readyPlayers = Game.PlayersInCharacterSelectionWindow.Count;
+                var totalPlayers = GetPlayersCount();
+                var canUse = HasControlOverUI && readyPlayers >= totalPlayers;
+                GameInteraction.UpdateCharacterSelectionUI(canUse, readyPlayers, totalPlayers);
             }
         }
 
@@ -2196,6 +2223,9 @@ namespace WOTRMultiplayer.MP.Actors
                 .On<NotifyLevelingRespecLevelUp>(OnNotifyLevelingRespecLevelUp)
                 .On<NotifyLevelingRespecMythicLevelUp>(OnNotifyLevelingRespecMythicLevelUp)
 
+                // character selection window
+                .On<NotifyCharacterSelectionWindowShown>(OnNotifyCharacterSelectionWindowShown)
+
                 // spellbook management
                 .On<NotifySpellMemorized>(OnNotifySpellMemorized)
                 .On<NotifySpellForgotten>(OnNotifySpellForgotten)
@@ -2265,6 +2295,15 @@ namespace WOTRMultiplayer.MP.Actors
                 ;
         }
 
+        private void OnNotifyCharacterSelectionWindowShown(long receivedFrom, NotifyCharacterSelectionWindowShown characterSelectionWindowShown)
+        {
+            Logger.LogInformation("Received {MessageType}. ReceivedFrom={ReceivedFrom}, PlayerId={PlayerId}", nameof(NotifyCharacterSelectionWindowShown), receivedFrom, characterSelectionWindowShown.PlayerId);
+            AddPlayerToTracker(Game.PlayersInCharacterSelectionWindow, characterSelectionWindowShown.PlayerId);
+
+            UpdateCharacterSelectionUIState();
+
+            OnAfterNetworkMessageHandled(receivedFrom, characterSelectionWindowShown);
+        }
 
         private void OnNotifyLevelingRespecMythicLevelUp(long receivedFrom, NotifyLevelingRespecMythicLevelUp levelingRespecMythicLevelUp)
         {
@@ -3089,7 +3128,7 @@ namespace WOTRMultiplayer.MP.Actors
 
         private bool WasControlledByCurrentPlayer(string unitId)
         {
-            if (!Game.CharactersOwnershipHistory.TryGetValue(unitId, out var playerId) || GetPlayer(playerId) == null)
+            if (string.IsNullOrEmpty(unitId) || !Game.CharactersOwnershipHistory.TryGetValue(unitId, out var playerId) || GetPlayer(playerId) == null)
             {
                 return HasControlOverUI;
             }

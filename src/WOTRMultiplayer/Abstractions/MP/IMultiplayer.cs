@@ -313,5 +313,15 @@ namespace WOTRMultiplayer.Abstractions.MP
         void OnLevelingPrimaryOutfitColorAppearanceChanged(string textureName);
 
         void OnLevelingSecondaryOutfitColorAppearanceChanged(string textureName);
+
+        bool CanControlCharacterSelectionWindow();
+
+        void OnCharacterSelectionWindowShown();
+
+        void OnCharacterSelectionWindowAccepted();
+
+        void OnCharacterSelectionWindowClosed();
+
+        void OnCharacterSelectionToggleChanged(string unitId);
     }
 }
