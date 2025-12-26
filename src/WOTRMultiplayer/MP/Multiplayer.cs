@@ -23,6 +23,7 @@ using WOTRMultiplayer.MP.Entities.Leveling;
 using WOTRMultiplayer.MP.Entities.Loot;
 using WOTRMultiplayer.MP.Entities.MapObjects;
 using WOTRMultiplayer.MP.Entities.Movement;
+using WOTRMultiplayer.MP.Entities.NewGame;
 using WOTRMultiplayer.MP.Entities.Rest;
 using WOTRMultiplayer.MP.Entities.Spells;
 using WOTRMultiplayer.MP.Entities.Vendor;
@@ -2659,6 +2660,53 @@ namespace WOTRMultiplayer.MP
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error while toggling character selection. UnitId={UnitId}", unitId);
+                throw;
+            }
+        }
+
+        public bool CanMakeNewGameSequenceDecisions()
+        {
+            if (_multiplayerActorAccessor.Current == null)
+            {
+                return false;
+            }
+
+            var canMakeDecisions = _multiplayerActorAccessor.Current.CanMakeNewGameSequenceDecisions();
+            return canMakeDecisions;
+        }
+
+        public void OnNewGameSequenceWitnessPhase(NetworkNewGameSequencePhase phase)
+        {
+            try
+            {
+                if (_multiplayerActorAccessor.Current == null)
+                {
+                    return;
+                }
+
+                _multiplayerActorAccessor.Current.OnNewGameSequenceWitnessPhase(phase);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while witnessing new game sequence phase. Type={Type}", phase.Type);
+                throw;
+            }
+        }
+
+        public void OnNewGameDifficultyChanged(string difficulty)
+        {
+            try
+            {
+                if (_multiplayerActorAccessor.Current == null || _multiplayerActorAccessor.Client.IsActive)
+                {
+                    return;
+                }
+
+                _multiplayerActorAccessor.Host.OnNewGameDifficultyChanged(difficulty);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while changing new game difficulty. Difficulty={Difficulty}", difficulty);
                 throw;
             }
         }

@@ -207,7 +207,7 @@ namespace WOTRMultiplayer.HarmonyPatches.RandomIdGeneration
             var voiceIndex = Main.Multiplayer.ValueGenerator.Range(SeedLifetime.Area, uniqueId, 0, voices.Count);
             var voiceReference = voices[voiceIndex];
             var voice = voiceReference.Get();
-            Main.GetLogger<UnitCustomizationPresetPatches>().LogInformation("Unit voice has been selected. Id={Id}, Gender={Gender}, Voice={Voice}", uniqueId, gender, voice.name);
+            Main.GetLogger<RandomIdGenerationPatches>().LogDebug("Unit voice has been selected. Id={Id}, Gender={Gender}, Voice={Voice}", uniqueId, gender, voice.name);
 
             return voice;
         }
@@ -222,7 +222,7 @@ namespace WOTRMultiplayer.HarmonyPatches.RandomIdGeneration
             var uniqueId = blueprintUnit.name;
             var leftHandedRoll = Main.Multiplayer.ValueGenerator.Range(SeedLifetime.Area, uniqueId, 0f, 1f);
             var isLeftHanded = leftHandedRoll <= blueprintUnit.CustomizationPreset.Distribution.LeftHandedChance;
-            Main.GetLogger<UnitCustomizationPresetPatches>().LogInformation("Unit handedness has been selected. Id={Id}, Roll={Roll}, IsLeftHanded={IsLeftHanded}", uniqueId, leftHandedRoll, isLeftHanded);
+            Main.GetLogger<RandomIdGenerationPatches>().LogDebug("Unit handedness has been selected. Id={Id}, Roll={Roll}, IsLeftHanded={IsLeftHanded}", uniqueId, leftHandedRoll, isLeftHanded);
             return isLeftHanded;
         }
 

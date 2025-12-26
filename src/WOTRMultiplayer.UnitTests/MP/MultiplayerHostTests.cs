@@ -72,13 +72,13 @@ namespace WOTRMultiplayer.UnitTests.MP
         public void Create_NonEmptySavePathAndGameId_CallsNetworkServerStart()
         {
             // Arrange
-            var savePath = Guid.NewGuid().ToString();
+            var startUp = new NetworkGameStartUp(Guid.NewGuid().ToString());
             var gameId = Guid.NewGuid().ToString();
             var settings = new NetworkMultiplayerSettings { HostPortRangeStart = 123, HostPortRangeEnd = 1234, NetworkAwaiterTimeout = TimeSpan.FromMinutes(1) };
             A.CallTo(() => _multiplayerSettingsProvider.GetSettings()).Returns(settings);
 
             // Act
-            _multiplayerHost.Create(savePath, gameId, []);
+            _multiplayerHost.Create(gameId, startUp);
 
             // Assert
             A.CallTo(() => _networkServer.Start(settings.HostPortRangeStart, settings.HostPortRangeEnd, settings.NetworkAwaiterTimeout)).MustHaveHappenedOnceExactly();
@@ -88,11 +88,11 @@ namespace WOTRMultiplayer.UnitTests.MP
         public void OnNotifyDropItem__CallsGameInteractionAndResendsMessage()
         {
             // Arrange
-            var savePath = Guid.NewGuid().ToString();
+            var startUp = new NetworkGameStartUp(Guid.NewGuid().ToString());
             var gameId = Guid.NewGuid().ToString();
             var settings = new NetworkMultiplayerSettings() { HostPortRangeStart = 123, HostPortRangeEnd = 1234 };
             A.CallTo(() => _multiplayerSettingsProvider.GetSettings()).Returns(settings);
-            _multiplayerHost.Create(savePath, gameId, []);
+            _multiplayerHost.Create(gameId, startUp);
             var handler = FakeUtils.GetNetworkReceiverHandler<NotifyDropItem>(_networkServer);
             var request = new NotifyDropItem { Drop = new Networking.Messages.Contracts.NetworkDropItem { Item = new Networking.Messages.Contracts.NetworkItem() } };
             var playerId = 123;
@@ -109,12 +109,11 @@ namespace WOTRMultiplayer.UnitTests.MP
         public void OnClientRestEnded__AddsToReadyListAndCallsGameInteractionService()
         {
             // Arrange
-            var savePath = Guid.NewGuid().ToString();
+            var startUp = new NetworkGameStartUp(Guid.NewGuid().ToString());
             var gameId = Guid.NewGuid().ToString();
             var settings = new NetworkMultiplayerSettings() { HostPortRangeStart = 123, HostPortRangeEnd = 1234 };
             A.CallTo(() => _multiplayerSettingsProvider.GetSettings()).Returns(settings);
-            _multiplayerHost.Create(savePath, gameId, []);
-            _multiplayerHost.Game = new NetworkGame(savePath);
+            _multiplayerHost.Create(gameId, startUp);
             var handler = FakeUtils.GetNetworkReceiverHandler<ClientRestEnded>(_networkServer);
             var message = new ClientRestEnded();
             var playerId = 123;
@@ -131,12 +130,11 @@ namespace WOTRMultiplayer.UnitTests.MP
         public void ClientGameServerConnectionConfirmed_PlayerNameExists_PlayerNameIsUpdated()
         {
             // Arrange
-            var savePath = Guid.NewGuid().ToString();
+            var startUp = new NetworkGameStartUp(Guid.NewGuid().ToString());
             var gameId = Guid.NewGuid().ToString();
             var settings = new NetworkMultiplayerSettings() { HostPortRangeStart = 123, HostPortRangeEnd = 1234 };
             A.CallTo(() => _multiplayerSettingsProvider.GetSettings()).Returns(settings);
-            _multiplayerHost.Create(savePath, gameId, []);
-            _multiplayerHost.Game = new NetworkGame(savePath);
+            _multiplayerHost.Create(gameId, startUp);
             var hostPlayer = new NetworkPlayer { Id = NetworkingConsts.HostPlayerId, IsHost = true };
             var player = new NetworkPlayer { Id = 123 };
             _multiplayerHost.Game.Players.AddRange([hostPlayer, player]);
@@ -158,12 +156,11 @@ namespace WOTRMultiplayer.UnitTests.MP
         public void ClientGameServerConnectionConfirmed_BothHaveEmptyContentState_PlayerStateRemainsUnchanged()
         {
             // Arrange
-            var savePath = Guid.NewGuid().ToString();
+            var startUp = new NetworkGameStartUp(Guid.NewGuid().ToString());
             var gameId = Guid.NewGuid().ToString();
             var settings = new NetworkMultiplayerSettings() { HostPortRangeStart = 123, HostPortRangeEnd = 1234 };
             A.CallTo(() => _multiplayerSettingsProvider.GetSettings()).Returns(settings);
-            _multiplayerHost.Create(savePath, gameId, []);
-            _multiplayerHost.Game = new NetworkGame(savePath);
+            _multiplayerHost.Create(gameId, startUp);
             var hostPlayer = new NetworkPlayer { Id = NetworkingConsts.HostPlayerId, IsHost = true };
             var player = new NetworkPlayer { Id = 123 };
             _multiplayerHost.Game.Players.AddRange([hostPlayer, player]);
@@ -186,12 +183,11 @@ namespace WOTRMultiplayer.UnitTests.MP
         public void ClientGameServerConnectionConfirmed_DlcContentStateIsDifferent_DiscrepantListContainsCorrectReasonAndNumberOfDLCs(ContentStateTestCase testCase)
         {
             // Arrange
-            var savePath = Guid.NewGuid().ToString();
+            var startUp = new NetworkGameStartUp(Guid.NewGuid().ToString());
             var gameId = Guid.NewGuid().ToString();
             var settings = new NetworkMultiplayerSettings() { HostPortRangeStart = 123, HostPortRangeEnd = 1234 };
             A.CallTo(() => _multiplayerSettingsProvider.GetSettings()).Returns(settings);
-            _multiplayerHost.Create(savePath, gameId, []);
-            _multiplayerHost.Game = new NetworkGame(savePath);
+            _multiplayerHost.Create(gameId, startUp);
             var hostPlayer = new NetworkPlayer
             {
                 Id = NetworkingConsts.HostPlayerId,
@@ -230,12 +226,11 @@ namespace WOTRMultiplayer.UnitTests.MP
         public void ClientGameServerConnectionConfirmed_ModContentStateIsDifferent_DiscrepantListContainsCorrectReasonAndNumberOfDLCs(ContentStateTestCase testCase)
         {
             // Arrange
-            var savePath = Guid.NewGuid().ToString();
+            var startUp = new NetworkGameStartUp(Guid.NewGuid().ToString());
             var gameId = Guid.NewGuid().ToString();
             var settings = new NetworkMultiplayerSettings() { HostPortRangeStart = 123, HostPortRangeEnd = 1234 };
             A.CallTo(() => _multiplayerSettingsProvider.GetSettings()).Returns(settings);
-            _multiplayerHost.Create(savePath, gameId, []);
-            _multiplayerHost.Game = new NetworkGame(savePath);
+            _multiplayerHost.Create(gameId, startUp);
             var hostPlayer = new NetworkPlayer
             {
                 Id = NetworkingConsts.HostPlayerId,

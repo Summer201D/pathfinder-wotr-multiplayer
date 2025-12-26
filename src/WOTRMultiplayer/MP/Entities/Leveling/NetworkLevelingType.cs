@@ -4,6 +4,7 @@
     {
         Leveling,
         MythicLeveling,
-        Mercenary
+        Mercenary,
+        NewGameSequence
     }
 }

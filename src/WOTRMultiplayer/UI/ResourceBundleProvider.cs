@@ -14,6 +14,7 @@ namespace WOTRMultiplayer.UI
 
         private readonly ILogger _logger;
         private ConcurrentDictionary<string, ConcurrentDictionary<string, UnityEngine.Sprite>> _sprites;
+        private ConcurrentDictionary<string, ConcurrentDictionary<string, UnityEngine.Texture2D>> _textures;
 
         public ResourceBundleProvider(
             ILogger<ResourceBundleProvider> logger)
@@ -21,27 +22,27 @@ namespace WOTRMultiplayer.UI
             _logger = logger;
         }
 
-        public UnityEngine.Sprite GetPortrait(string name)
+        public UnityEngine.Sprite GetSprite(string bundleName, string spriteName)
         {
-            _sprites.TryGetValue(PortraitsBundleName, out var portraits);
-            if (!portraits.TryGetValue(name, out var sprite))
+            _sprites.TryGetValue(bundleName, out var spriteBundle);
+            UnityEngine.Sprite sprite = null;
+            if (spriteBundle == null || !spriteBundle.TryGetValue(spriteName, out sprite))
             {
-                _logger.LogWarning("Unable to find requested portrait. PortraitName={PortraitName}", name);
-                portraits.TryGetValue(PlaceholderPortrait, out sprite);
+                _logger.LogWarning("Unable to find requested sprite. BundleName={BundleName}, SpriteName={SpriteName}", bundleName, spriteName);
             }
 
             return sprite;
         }
-
-        public UnityEngine.Sprite GetUISprite(string name)
+        public UnityEngine.Texture2D GetTexture2D(string bundleName, string textureName)
         {
-            _sprites.TryGetValue(UIBundleName, out var uiSprites);
-            if (!uiSprites.TryGetValue(name, out var sprite))
+            _textures.TryGetValue(bundleName, out var textureBundle);
+            UnityEngine.Texture2D texture = null;
+            if (textureBundle == null || !textureBundle.TryGetValue(textureName, out texture))
             {
-                _logger.LogWarning("Unable to find requested sprite. SpriteName={SpriteName}", name);
+                _logger.LogWarning("Unable to find requested texture. TextureName={TextureName}, BundleName={BundleName}", bundleName, textureName);
             }
 
-            return sprite;
+            return texture;
         }
 
         public void Initialize()
@@ -49,23 +50,30 @@ namespace WOTRMultiplayer.UI
             if (_sprites == null)
             {
                 _sprites = new ConcurrentDictionary<string, ConcurrentDictionary<string, UnityEngine.Sprite>>();
-                _sprites.TryAdd(PortraitsBundleName, LoadSprites(PortraitsBundleName));
-                _sprites.TryAdd(UIBundleName, LoadSprites(UIBundleName));
+                _sprites.TryAdd(PortraitsBundleName, LoadBundle<UnityEngine.Sprite>(PortraitsBundleName));
+                _sprites.TryAdd(UIBundleName, LoadBundle<UnityEngine.Sprite>(UIBundleName));
+            }
+
+            if (_textures == null)
+            {
+                _textures = new ConcurrentDictionary<string, ConcurrentDictionary<string, UnityEngine.Texture2D>>();
+                _textures.TryAdd(UIBundleName, LoadBundle<UnityEngine.Texture2D>(UIBundleName));
             }
         }
 
-        private ConcurrentDictionary<string, UnityEngine.Sprite> LoadSprites(string bundleName)
+        private ConcurrentDictionary<string, T> LoadBundle<T>(string bundleName)
+            where T : UnityEngine.Object
         {
             var bundle = BundlesLoadService.Instance.RequestBundle(bundleName);
             // had no success to limit loading
             // note: you can't delete (Object->Destroy or DestroyImmediate) redundant sprites as it causes texture errors later on
-            var allSprites = bundle.LoadAllAssets<UnityEngine.Sprite>();
-            var keyValuePairs = new ConcurrentDictionary<string, UnityEngine.Sprite>(StringComparer.OrdinalIgnoreCase);
+            var allSprites = bundle.LoadAllAssets<T>();
+            var keyValuePairs = new ConcurrentDictionary<string, T>(StringComparer.OrdinalIgnoreCase);
             for (int i = 0; i < allSprites.Length; i++)
             {
                 var portrait = allSprites[i];
 
-                keyValuePairs.TryAdd(portrait.name, portrait);
+                keyValuePairs.TryAdd(portrait.name, portrait as T);
             }
 
             return keyValuePairs;

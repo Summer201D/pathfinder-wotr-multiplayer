@@ -15,7 +15,7 @@ namespace WOTRMultiplayer.MP.Entities
 
         public long LocalPlayerId { get; set; }
 
-        public string SaveFilePath { get; set; }
+        public NetworkGameStartUp StartUp { get; set; }
 
         public NetworkGameConnectivity Connectivity { get; set; }
 
@@ -59,9 +59,9 @@ namespace WOTRMultiplayer.MP.Entities
 
         public HashSet<long> PlayersInRespecWindow { get; set; } = [];
 
-        public NetworkGame(string saveFilePath)
+        public NetworkGame(NetworkGameStartUp gameStartup)
         {
-            SaveFilePath = saveFilePath;
+            StartUp = gameStartup;
             Stage = NetworkGameStage.Lobby;
         }
 
@@ -77,7 +77,7 @@ namespace WOTRMultiplayer.MP.Entities
             PlayersInGlobalMapLocationMessage.Clear();
             PlayersInGlobalMapIngredientCollection.Clear();
             PlayersInGlobalMapEncounterMessage.Clear();
-            SaveFilePath = null;
+            StartUp = null;
             Connectivity = null;
             Stage = NetworkGameStage.None;
             Dialog = null;

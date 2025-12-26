@@ -4,7 +4,7 @@
     {
         None,
         Lobby,
-        SyncingSaveGame,
+        SyncingStartUpData,
         Playing
     }
 }

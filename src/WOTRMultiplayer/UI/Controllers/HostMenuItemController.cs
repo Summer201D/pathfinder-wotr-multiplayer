@@ -10,12 +10,14 @@ using Kingmaker.UI.MVVM._VM.SaveLoad;
 using Kingmaker.UI.MVVM._VM.ServiceWindows.CharacterInfo.Sections.Abilities;
 using Microsoft.Extensions.Logging;
 using Owlcat.Runtime.UI.Controls.Button;
+using Owlcat.Runtime.UI.SelectionGroup;
 using Owlcat.Runtime.UI.VirtualListSystem;
 using TMPro;
 using UniRx;
 using UnityEngine;
 using UnityEngine.Events;
 using WOTRMultiplayer.Abstractions.MP.Actors;
+using WOTRMultiplayer.Abstractions.UI;
 using WOTRMultiplayer.Abstractions.UI.Controllers;
 using WOTRMultiplayer.Abstractions.UI.Controllers.Menu;
 using WOTRMultiplayer.Abstractions.Unity;
@@ -25,8 +27,10 @@ using WOTRMultiplayer.UI.Menu;
 
 namespace WOTRMultiplayer.UI.Controllers
 {
-    public class HostMenuItemController : MenuItemControllerBase, IHostMenuItemController, IObserver<SaveSlotVM>
+    public class HostMenuItemController : MenuItemControllerBase, IHostMenuItemController
     {
+        public const string NewGameSequenceId = "###WOTR_MP_NEW_GAME###";
+
         public const string HostMenuItemContentObjectName = "HostMenuItemContent";
         public const string SaveLoadView = "SaveLoadView";
         public const string SaveLoadScreen = "SaveLoadScreen";
@@ -48,7 +52,10 @@ namespace WOTRMultiplayer.UI.Controllers
         private SaveLoadPCView _saveLoadView;
 
         protected override GameObject MenuContent => _menuContent;
+
         protected override LobbyWindowOwner Owner => LobbyWindowOwner.HostMenu;
+
+        protected override GameObject ReadyButtonObject => Buttons.Find(ReadyButtonObjectName)?.gameObject;
 
         private TextMeshProUGUI Title => _menuContent
             .transform
@@ -70,7 +77,6 @@ namespace WOTRMultiplayer.UI.Controllers
         private GameObject HostButtonObject => Buttons.Find(HostButtonObjectName)?.gameObject;
         private OwlcatButton HostButton => HostButtonObject.GetComponent<OwlcatButton>();
 
-        private GameObject ReadyButtonObject => Buttons.Find(ReadyButtonObjectName)?.gameObject;
         private OwlcatButton ReadyButton => ReadyButtonObject.GetComponent<OwlcatButton>();
 
         private GameObject StartButtonObject => Buttons.Find(StartButtonObjectName)?.gameObject;
@@ -80,8 +86,9 @@ namespace WOTRMultiplayer.UI.Controllers
             ILogger<HostMenuItemController> logger,
             IMultiplayerHost multiplayerHost,
             IMainThreadAccessor mainThreadAccessor,
-            ILobbyWindowController lobbyWindowController)
-            : base(logger, lobbyWindowController, mainThreadAccessor)
+            ILobbyWindowController lobbyWindowController,
+            IResourceProvider resourceProvider)
+            : base(logger, lobbyWindowController, mainThreadAccessor, resourceProvider, multiplayerHost)
         {
             _logger = logger;
             _multiplayerHost = multiplayerHost;
@@ -101,6 +108,8 @@ namespace WOTRMultiplayer.UI.Controllers
             var saveLoadView = _menuContent.transform.GetChild(0).GetComponent<SaveLoadPCView>();
             _saveLoadViewModel = new SaveLoadVM(SaveLoadMode.Load, true, DisposeSaveLoadVM, RootUIContext.Instance.CommonVM);
 
+            AddNewGameSaveSlot(_saveLoadViewModel);
+
             if (SetupLayout)
             {
                 SetupLayout = false;
@@ -110,12 +119,10 @@ namespace WOTRMultiplayer.UI.Controllers
                 var virtualView = collectionView.GetComponent<SaveSlotCollectionVirtualView>();
                 var prefab = virtualView.m_SaveSlotPrefab as SaveSlotPCView;
                 var copyPrefabObj = UnityEngine.Object.Instantiate(prefab.gameObject, prefab.transform.parent);
-                var newPrefab = copyPrefabObj.GetComponent<SaveSlotPCView>();
-                virtualView.m_VirtualList.Initialize(new VirtualListElementTemplate<ExpandableTitleVM>(virtualView.m_ExpandableTitleView), new VirtualListElementTemplate<SaveSlotVM>(newPrefab));
-                UnityEngine.Object.DestroyImmediate(newPrefab.m_SaveLoadButton.gameObject);
-                UnityEngine.Object.DestroyImmediate(newPrefab.m_DeleteButton.gameObject);
-                ///
-
+                var newPrefabView = copyPrefabObj.GetComponent<SaveSlotPCView>();
+                virtualView.m_VirtualList.Initialize(new VirtualListElementTemplate<ExpandableTitleVM>(virtualView.m_ExpandableTitleView), new VirtualListElementTemplate<SaveSlotVM>(newPrefabView));
+                UnityEngine.Object.DestroyImmediate(newPrefabView.m_SaveLoadButton.gameObject);
+                UnityEngine.Object.DestroyImmediate(newPrefabView.m_DeleteButton.gameObject);
             }
 
             SetupButtons();
@@ -123,7 +130,10 @@ namespace WOTRMultiplayer.UI.Controllers
             SetupHandlers(true);
 
             saveLoadView.Bind(_saveLoadViewModel);
-            _saveLoadViewModel.SelectedSaveSlot.Subscribe(this);
+            saveLoadView.AddDisposable(_saveLoadViewModel.SelectedSaveSlot.Subscribe(slot =>
+            {
+                HostButton.Interactable = slot != null;
+            }));
             Game.Instance.UI.EscManager.Unsubscribe(_saveLoadViewModel.OnClose);
 
             saveLoadView.Show();
@@ -152,19 +162,6 @@ namespace WOTRMultiplayer.UI.Controllers
             base.Deactivate();
         }
 
-        public void OnNext(SaveSlotVM value)
-        {
-            HostButton.Interactable = value != null;
-        }
-
-        public void OnError(Exception error)
-        {
-        }
-
-        public void OnCompleted()
-        {
-        }
-
         protected override void InitializeInternal(GameObject baseLayout)
         {
             var label = MenuItem.GetComponentInChildren<TextMeshProUGUI>();
@@ -185,6 +182,7 @@ namespace WOTRMultiplayer.UI.Controllers
         {
             _multiplayerHost.OnConnected = enable ? OnMultiplayerConnected : null;
             _multiplayerHost.OnPlayersChanged = enable ? OnMultiplayerPlayersChanged : null;
+            _multiplayerHost.OnNewGameSequenceStarted = enable ? OnMultiplayerNewGameSequenceStarted : null;
 
             Lobby.OnCharacterOwnerChanged = enable ? OnLobbyCharacterOwnerChanged : null;
         }
@@ -196,13 +194,42 @@ namespace WOTRMultiplayer.UI.Controllers
             base.DisposeInternal();
         }
 
+        private void AddNewGameSaveSlot(SaveLoadVM saveLoadVM)
+        {
+            // fake save so it can be selected to start a new game
+            var saveInfo = new Kingmaker.EntitySystem.Persistence.SaveInfo
+            {
+                Name = new LocalizedString { Key = WellKnownKeys.MultiplayerWindow.HostMenu.NewGame.SaveSlotTitle.Key },
+                PlayerCharacterName = new LocalizedString { Key = WellKnownKeys.MultiplayerWindow.HostMenu.NewGame.SaveSlotGroupName.Key },
+                GameTotalTime = TimeSpan.FromMilliseconds(1),
+                GameId = NewGameSequenceId,
+                PartyPortraits = [],
+                Screenshot = ResourceProvider.GetTexture2D(ResourceBundleProvider.UIBundleName, "UI_PFWOTR_NewGameMainStory")
+            };
+            var saveSlot = new SaveSlotVM(saveInfo, saveLoadVM.Mode, null, null);
+            saveSlot.SaveTime.Value = string.Empty;
+            saveLoadVM.AddDisposable(saveSlot);
+            var saveSlotGroup = new SaveSlotGroupVM(saveSlot);
+            saveSlotGroup.IsExpanded.Value = true;
+            saveSlotGroup.IsFirst = true;
+            saveLoadVM.SaveSlotCollectionVm.AddDisposable(saveSlotGroup);
+            saveSlotGroup.HandleNewSave(saveSlot);
+            saveLoadVM.SaveSlotCollectionVm.AllTitlesAndSlots.Insert(0, saveSlotGroup.ExpandableTitleVM);
+            saveLoadVM.SaveSlotCollectionVm.AllTitlesAndSlots.Insert(1, saveSlot);
+
+            saveLoadVM.m_SaveSlotVMs.Add(saveSlot);
+
+            saveLoadVM.m_SelectionGroup.Dispose();
+            saveLoadVM.AddDisposable(_saveLoadViewModel.m_SelectionGroup = new SelectionGroupRadioVM<SaveSlotVM>(saveLoadVM.m_SaveSlotVMs, saveLoadVM.SelectedSaveSlot, false));
+        }
+
         private void SetupButtons()
         {
             SetButtonLabel(HostButtonObject, new LocalizedString { Key = WellKnownKeys.MultiplayerWindow.HostMenu.HostButton.HostText.Key });
             SetupButtonClick(HostButton, OnHostButtonClicked);
             HostButton.Interactable = false;
 
-            SetButtonLabel(ReadyButtonObject, new LocalizedString { Key = WellKnownKeys.MultiplayerWindow.HostMenu.ReadyButton.NotReadyText.Key });
+            SetButtonLabel(ReadyButtonObject, new LocalizedString { Key = WellKnownKeys.MultiplayerWindow.ReadyButton.NotReadyText.Key });
             SetupButtonClick(ReadyButton, OnReadyButtonClicked);
             ReadyButtonObject.SetActive(false);
             ReadyButton.Interactable = false;
@@ -220,41 +247,61 @@ namespace WOTRMultiplayer.UI.Controllers
             var titleText = UIUtility.GetSaberBookFormat(gameName);
             Title.SetText(titleText);
 
-            var portraits = selectedSave.PartyPortraits.Value.Select(p => p.Portrait.name).ToList();
-            var savePath = selectedSave.Reference.FolderName;
-            var characters = portraits.Select(x => new NetworkCharacter { Name = x, Portrait = x, Owner = null }).ToList();
-            characters.First().Name = selectedSave.CharacterName.Value;
-            Lobby.UpdateCharacters(characters, true);
+            var startup = CreateGameStartUp(selectedSave);
+            Lobby.UpdateCharacters(startup.Characters, true);
 
             if (!_multiplayerHost.IsActive)
             {
                 StartButtonObject.SetActive(true);
                 ReadyButtonObject.SetActive(true);
                 ReadyButton.Interactable = true;
-                _multiplayerHost.Create(savePath, selectedSave.GameId.Value, characters);
+                _multiplayerHost.Create(selectedSave.GameId.Value, startup);
                 SetButtonLabel(HostButtonObject, new LocalizedString { Key = WellKnownKeys.MultiplayerWindow.HostMenu.HostButton.SelectSaveText.Key });
                 _logger.LogInformation("Hosted new game");
                 return;
             }
 
-            _multiplayerHost.UpdateSaveGame(savePath, selectedSave.GameId.Value, characters);
-            _logger.LogInformation("Updated save file for hosted game");
+            _multiplayerHost.UpdateSaveGame(selectedSave.GameId.Value, startup);
+            _logger.LogInformation("Updated hosted game");
         }
 
-        private void OnReadyButtonClicked()
+        private NetworkGameStartUp CreateGameStartUp(SaveSlotVM saveSlot)
         {
-            _logger.LogInformation("OnReadyButton");
-            var isReady = _multiplayerHost.ReadyChanged();
-            var label = isReady ? new LocalizedString { Key = WellKnownKeys.MultiplayerWindow.HostMenu.ReadyButton.ReadyText.Key }
-                : new LocalizedString { Key = WellKnownKeys.MultiplayerWindow.HostMenu.ReadyButton.NotReadyText.Key };
-            SetButtonLabel(ReadyButtonObject, label);
+            if (string.Equals(saveSlot.GameId.Value, NewGameSequenceId, StringComparison.OrdinalIgnoreCase))
+            {
+                var mainCharacterId = Guid.NewGuid().ToString();
+                var newGameSequence = new NetworkGameStartUp(null)
+                {
+                    // empty character that can be used to assign control for leveling (chargen) screen
+                    Characters = [new NetworkCharacter { Portrait = "b7aa1433ab20e3745a4a169ee34ca738_MaskGolem", UnitId = mainCharacterId }],
+                };
+
+                _logger.LogInformation("Fake new campaign startup has been generated. MainCharacterId={MainCharacterId}", mainCharacterId);
+                return newGameSequence;
+            }
+
+            var portraits = saveSlot.PartyPortraits.Value.Select(p => p.Portrait.name).ToList();
+            var characters = portraits.Select(x => new NetworkCharacter { Name = x, Portrait = x, Owner = null }).ToList();
+            var savePath = saveSlot.Reference.FolderName;
+            var saveGame = new NetworkGameStartUp(savePath)
+            {
+                Characters = characters
+            };
+
+            var mainCharacter = characters.FirstOrDefault();
+            if (mainCharacter != null)
+            {
+                mainCharacter.Name = saveSlot.CharacterName.Value;
+            }
+
+            return saveGame;
         }
 
         private void OnStartButtonClicked()
         {
             _logger.LogInformation("OnStartButton");
-            StartButton.Interactable = false;
-            _multiplayerHost.Start();
+            var hasStarted = _multiplayerHost.Start();
+            StartButton.Interactable = !hasStarted;
         }
 
         private void SetButtonLabel(GameObject buttonObject, string text)

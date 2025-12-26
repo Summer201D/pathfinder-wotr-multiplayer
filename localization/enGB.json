@@ -11,28 +11,28 @@
             }
         },
         "multiplayerWindow": {
+            "readyButton": {
+                "readyText": "Ready",
+                "notReadyText": "Not Ready"
+            },
             "hostMenu": {
                 "title": "Host",
                 "hostButton": {
                     "hostText": "Host",
                     "selectSaveText": "Select Save"
                 },
-                "readyButton": {
-                    "readyText": "Ready",
-                    "notReadyText": "Not Ready"
-                },
                 "startButton": "Start",
                 "deactivation": {
                     "hosting": "You are about to end the multiplayer session. Are you sure?"
+                },
+                "newGame": {
+                    "saveSlotGroupName": "New Campaign",
+                    "saveSlotTitle": "Start a new campaign"
                 }
             },
             "joinMenu": {
                 "title": "Join",
                 "joinButton": "Join",
-                "readyButton": {
-                    "readyText": "Ready",
-                    "notReadyText": "Not Ready"
-                },
                 "leaveButton": "Leave",
                 "serverAddress": {
                     "placeholder": "Enter ip:port"

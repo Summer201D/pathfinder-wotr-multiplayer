@@ -10,5 +10,8 @@ namespace WOTRMultiplayer.Networking.Messages.Contracts
 
         [ProtoMember(2)]
         public string Portrait { get; set; }
+
+        [ProtoMember(3)]
+        public string UnitId { get; set; }
     }
 }

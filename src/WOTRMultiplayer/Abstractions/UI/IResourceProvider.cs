@@ -4,9 +4,9 @@ namespace WOTRMultiplayer.Abstractions.UI
 {
     public interface IResourceProvider
     {
-        Sprite GetPortrait(string name);
+        Sprite GetSprite(string bundleName, string spriteName);
 
-        Sprite GetUISprite(string name);
+        Texture2D GetTexture2D(string bundleName, string textureName);
 
         void Initialize();
     }

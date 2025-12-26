@@ -11,6 +11,7 @@ using WOTRMultiplayer.MP.Entities.Leveling;
 using WOTRMultiplayer.MP.Entities.Loot;
 using WOTRMultiplayer.MP.Entities.MapObjects;
 using WOTRMultiplayer.MP.Entities.Movement;
+using WOTRMultiplayer.MP.Entities.NewGame;
 using WOTRMultiplayer.MP.Entities.Rest;
 using WOTRMultiplayer.MP.Entities.Rolls.Claiming.Values;
 using WOTRMultiplayer.MP.Entities.Settings;
@@ -226,6 +227,9 @@ namespace WOTRMultiplayer.Config.Mapping
                 .ReverseMap();
 
             CreateMap<NetworkDialogPopup, Networking.Messages.Contracts.NetworkDialogPopup>()
+                .ReverseMap();
+
+            CreateMap<NetworkNewGameSequencePhase, Networking.Messages.Contracts.NetworkNewGameSequencePhase>()
                 .ReverseMap();
         }
     }

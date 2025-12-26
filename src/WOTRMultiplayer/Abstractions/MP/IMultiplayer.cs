@@ -16,6 +16,7 @@ using WOTRMultiplayer.MP.Entities.Leveling;
 using WOTRMultiplayer.MP.Entities.Loot;
 using WOTRMultiplayer.MP.Entities.MapObjects;
 using WOTRMultiplayer.MP.Entities.Movement;
+using WOTRMultiplayer.MP.Entities.NewGame;
 using WOTRMultiplayer.MP.Entities.Rest;
 using WOTRMultiplayer.MP.Entities.Spells;
 using WOTRMultiplayer.MP.Entities.Vendor;
@@ -323,5 +324,11 @@ namespace WOTRMultiplayer.Abstractions.MP
         void OnCharacterSelectionWindowClosed();
 
         void OnCharacterSelectionToggleChanged(string unitId);
+
+        void OnNewGameDifficultyChanged(string difficulty);
+
+        bool CanMakeNewGameSequenceDecisions();
+
+        void OnNewGameSequenceWitnessPhase(NetworkNewGameSequencePhase phase);
     }
 }

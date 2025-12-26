@@ -55,7 +55,8 @@ namespace WOTRMultiplayer.Playground.Host
             // Manual_34_FIRST_COMBAT - first combat in first cave
             var saveGamePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
                 "AppData\\LocalLow\\Owlcat Games\\Pathfinder Wrath Of The Righteous\\Saved Games\\Manual_34_FIRST_COMBAT.zks");
-            host.Create(saveGamePath, "1", characters);
+            var startUp = new NetworkGameStartUp(saveGamePath) { Characters = characters };
+            host.Create("1", startUp);
             var input = string.Empty;
 
             Console.Write(@$"

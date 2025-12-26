@@ -24,6 +24,7 @@ using WOTRMultiplayer.MP.Entities.Leveling;
 using WOTRMultiplayer.MP.Entities.Loot;
 using WOTRMultiplayer.MP.Entities.MapObjects;
 using WOTRMultiplayer.MP.Entities.Movement;
+using WOTRMultiplayer.MP.Entities.NewGame;
 using WOTRMultiplayer.MP.Entities.Rest;
 using WOTRMultiplayer.MP.Entities.Rolls.Claiming.Values;
 using WOTRMultiplayer.MP.Entities.Spells;
@@ -46,6 +47,8 @@ namespace WOTRMultiplayer.MP.Actors
         public int? CombatSeed => Game.Combat?.Seed;
 
         public Action<List<NetworkPlayer>> OnPlayersChanged { get; set; }
+
+        public Action<bool> OnNewGameSequenceStarted { get; set; }
 
         internal NetworkGame Game { get; set; }
 
@@ -406,42 +409,51 @@ namespace WOTRMultiplayer.MP.Actors
         {
             Logger.LogInformation("Updating current characters & merging ownership");
 
-            // could be synced from host, but state is the same anyway
-            var partyCharacters = GameInteraction.GetPartyPlayers();
-            if (partyCharacters.Count == 0)
+            try
             {
-                return;
-            }
-
-            List<NetworkCharacter> oldCharacters = [.. Game.Characters];
-            Game.Characters = [.. partyCharacters];
-            var defaultOwner = GetHost();
-            foreach (var character in Game.Characters)
-            {
-                NetworkPlayer historicOwner = null;
-                if (Game.CharactersOwnershipHistory.TryGetValue(character.UnitId, out var playerId))
+                // could be synced from host, but state is the same anyway
+                var partyCharacters = GameInteraction.GetPartyPlayers();
+                if (partyCharacters.Count == 0)
                 {
-                    historicOwner = GetPlayer(playerId);
+                    Logger.LogWarning("Can't update ownership due to empty party characters list");
+                    return;
                 }
 
-                var owner = historicOwner
-                    ?? oldCharacters.FirstOrDefault(old => old.Name == character.Name || old.Name.Contains(character.Name))?.Owner // this one is possible only on initial multiplayer game load when we don't have history yet due to missing UnitIds
-                    ?? defaultOwner;
+                List<NetworkCharacter> oldCharacters = [.. Game.Characters];
+                Game.Characters = [.. partyCharacters];
+                var defaultOwner = GetHost();
+                foreach (var character in Game.Characters)
+                {
+                    NetworkPlayer historicOwner = null;
+                    if (Game.CharactersOwnershipHistory.TryGetValue(character.UnitId, out var playerId))
+                    {
+                        historicOwner = GetPlayer(playerId);
+                    }
 
-                character.Owner = owner;
-                UpdateCharacterOwnershipHistory(character);
-                Logger.LogInformation("Character owner has been assigned. UnitId={UnitId}, CharacterName={CharacterName}, Owner={Owner}", character.UnitId, character.Name, character.Owner.Id);
+                    var owner = historicOwner
+                        ?? oldCharacters.FirstOrDefault(old => old.Name == character.Name || old.Name.Contains(character.Name))?.Owner // this one is possible only on initial multiplayer game load when we don't have history yet due to missing UnitIds
+                        ?? defaultOwner;
+
+                    character.Owner = owner;
+                    UpdateCharacterOwnershipHistory(character);
+                    Logger.LogInformation("Character owner has been assigned. UnitId={UnitId}, CharacterName={CharacterName}, Owner={Owner}", character.UnitId, character.Name, character.Owner.Id);
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, "Unable to update characters ownership");
+                throw;
             }
         }
 
         public void ForceLoadGame(string savePath, string gameId)
         {
-            if (!string.IsNullOrEmpty(Game.SaveFilePath))
+            if (!string.IsNullOrEmpty(Game.StartUp?.SavePath))
             {
                 return;
             }
 
-            Game.SaveFilePath = savePath;
+            Game.StartUp = new NetworkGameStartUp(savePath);
             Game.Id = gameId;
 
             Game.ForcedPause = null;
@@ -709,12 +721,19 @@ namespace WOTRMultiplayer.MP.Actors
 
             var characterControl = Game.Leveling.Type switch
             {
+                // we don't have character id yet, so we rely on 'fake' character
+                NetworkLevelingType.NewGameSequence => Game.Characters.FirstOrDefault()?.Owner?.Id == GetLocalPlayerId(),
                 NetworkLevelingType.Mercenary => HasControlOverUI,
                 // either this character has been controlled by someone previously (and that player is still in lobby) or fallback to default
                 _ => WasControlledByCurrentPlayer(Game.Leveling.UnitId),
             };
 
             return characterControl && Game.Leveling.PlayerReadiness.Count >= GetPlayersCount();
+        }
+
+        public bool CanMakeNewGameSequenceDecisions()
+        {
+            return HasControlOverUI;
         }
 
         public void OnLevelingWitnessPhase(NetworkLevelingPhase phase)
@@ -727,7 +746,7 @@ namespace WOTRMultiplayer.MP.Actors
                 };
                 Send(phaseChangedMessage);
                 Game.Leveling.PhaseIndex = phase.Index;
-                Game.Leveling.PlayerReadiness.Clear();
+                ResetPlayersTracker(Game.Leveling.PlayerReadiness);
                 Logger.LogInformation("Sending {MessageType}. Index={Index}", nameof(NotifyLevelingPhaseChanged), phaseChangedMessage.Phase.Index);
             }
 
@@ -739,6 +758,31 @@ namespace WOTRMultiplayer.MP.Actors
                 Phase = Mapper.Map<Networking.Messages.Contracts.NetworkLevelingPhase>(phase)
             };
             Logger.LogInformation("Sending {MessageType}. PlayerId={PlayerId}, Index={Index}", nameof(NotifyLevelingPhaseWitnessed), message.PlayerId, message.Phase.Index);
+            Send(message);
+        }
+
+        public void OnNewGameSequenceWitnessPhase(NetworkNewGameSequencePhase phase)
+        {
+            if (Game.StartUp.PhaseType != phase.Type && CanMakeNewGameSequenceDecisions())
+            {
+                var phaseChangedMessage = new NotifyNewGameSequencePhaseChanged
+                {
+                    Phase = Mapper.Map<Networking.Messages.Contracts.NetworkNewGameSequencePhase>(phase)
+                };
+                Send(phaseChangedMessage);
+                Game.StartUp.PhaseType = phase.Type;
+                ResetPlayersTracker(Game.StartUp.PlayerReadiness);
+                Logger.LogInformation("Sending {MessageType}. Type={Type}", nameof(NotifyNewGameSequencePhaseChanged), phaseChangedMessage.Phase.Type);
+            }
+
+            var localPlayer = GetLocalPlayerId();
+            WitnessNewGameSequencePhase(localPlayer, phase.Type);
+            var message = new NotifyNewGameSequenceWitnessed
+            {
+                PlayerId = localPlayer,
+                Phase = Mapper.Map<Networking.Messages.Contracts.NetworkNewGameSequencePhase>(phase)
+            };
+            Logger.LogInformation("Sending {MessageType}. PlayerId={PlayerId}, Type={Type}", nameof(NotifyNewGameSequenceWitnessed), message.PlayerId, message.Phase.Type);
             Send(message);
         }
 
@@ -1269,15 +1313,25 @@ namespace WOTRMultiplayer.MP.Actors
                 Send(message);
             }
 
+            if (Game.Leveling.Type == NetworkLevelingType.NewGameSequence)
+            {
+                ResetPlayersTracker(Game.StartUp.PlayerReadiness);
+            }
+
             var characterName = GameInteraction.GetUnitCharacterName(Game.Leveling.UnitId);
             var messageKey = Game.Leveling.Type switch
             {
                 NetworkLevelingType.MythicLeveling => WellKnownKeys.GameNotifications.Leveling.MythicLeveling.Terminated.Key,
                 NetworkLevelingType.Mercenary => WellKnownKeys.GameNotifications.Leveling.Mercenary.Terminated.Key,
+                NetworkLevelingType.NewGameSequence => null,
                 NetworkLevelingType.Leveling or _ => WellKnownKeys.GameNotifications.Leveling.Terminated.Key
             };
 
-            GameInteraction.ShowWarningNotification(messageKey, characterName);
+            if (!string.IsNullOrEmpty(messageKey))
+            {
+                GameInteraction.ShowWarningNotification(messageKey, characterName);
+            }
+
             Game.Leveling = null;
         }
 
@@ -1297,10 +1351,15 @@ namespace WOTRMultiplayer.MP.Actors
             {
                 NetworkLevelingType.MythicLeveling => WellKnownKeys.GameNotifications.Leveling.MythicLeveling.Completed.Key,
                 NetworkLevelingType.Mercenary => WellKnownKeys.GameNotifications.Leveling.Mercenary.Completed.Key,
+                NetworkLevelingType.NewGameSequence => null,
                 NetworkLevelingType.Leveling or _ => WellKnownKeys.GameNotifications.Leveling.Completed.Key,
             };
 
-            GameInteraction.AddCombatText(messageKey, characterName);
+            if (!string.IsNullOrEmpty(messageKey))
+            {
+                GameInteraction.AddCombatText(messageKey, characterName);
+            }
+
             Game.Leveling = null;
         }
 
@@ -1746,6 +1805,17 @@ namespace WOTRMultiplayer.MP.Actors
             }
         }
 
+        protected void WitnessNewGameSequencePhase(long playerId, NetworkNewGameSequencePhaseType newGameSequencePhaseType)
+        {
+            lock (ActionLock)
+            {
+                Game.StartUp.PlayerReadiness.Add(playerId);
+
+                var isEnabled = HasControlOverUI && Game.StartUp.PlayerReadiness.Count >= Game.Players.Count;
+                GameInteraction.UpdateNewGameSequencePhaseControls(isEnabled, newGameSequencePhaseType);
+            }
+        }
+
         protected bool RegisterGameMode(GameModeType type, long playerId)
         {
             var isNew = true;
@@ -1873,7 +1943,7 @@ namespace WOTRMultiplayer.MP.Actors
             UnitJoinedMidCombat
         }
 
-        protected void LoadSaveGame()
+        protected void LoadSavedGame()
         {
             ResetGameIdGenerator();
             Game.ForcedPause = null;
@@ -1883,11 +1953,11 @@ namespace WOTRMultiplayer.MP.Actors
             // I assume game just need to load more resources or whatever if you are not in the game already
             if (Game.Stage == NetworkGameStage.Playing)
             {
-                Game.Id = GameInteraction.QuickLoadGame(Game.SaveFilePath);
+                Game.Id = GameInteraction.QuickLoadGame(Game.StartUp.SavePath);
             }
             else
             {
-                Game.Id = GameInteraction.LoadGameFromMainMenu(Game.SaveFilePath);
+                Game.Id = GameInteraction.LoadGameFromMainMenu(Game.StartUp.SavePath);
             }
         }
 
@@ -1901,9 +1971,9 @@ namespace WOTRMultiplayer.MP.Actors
 
         protected void ForceLoadGame()
         {
-            Logger.LogInformation("Force loading save game. Stage={Stage}, SavePath={SavePath}", Game.Stage, Game.SaveFilePath);
+            Logger.LogInformation("Force loading save game. Stage={Stage}, SavePath={SavePath}", Game.Stage, Game.StartUp.SavePath);
 
-            LoadSaveGame();
+            LoadSavedGame();
         }
 
         protected void ResetGameIdGenerator()
@@ -1915,14 +1985,14 @@ namespace WOTRMultiplayer.MP.Actors
         protected void SoftReset()
         {
             Logger.LogInformation("Doing soft reset");
-            Game.SaveFilePath = null;
+            Game.StartUp = null;
             Game.Combat = null;
             Game.Leveling = null;
             DiceRollStorage.Reset();
             _valueGenerator.ResetSeedGenerators(Random.SeedLifetime.Area, Random.SeedLifetime.Combat);
         }
 
-        protected string StoreSaveFile(byte[] content)
+        protected string StoreSaveGameContent(byte[] content)
         {
             var baseUnityPath = GameInteraction.GetSaveGamePath();
             var multiplayerPath = Regex.Replace(baseUnityPath, "(((\\\\|\\/)+)(Saved Games)((\\\\|\\/)+))$", "/Saved Multiplayer Games/");
@@ -2085,21 +2155,21 @@ namespace WOTRMultiplayer.MP.Actors
         {
         }
 
-        protected void UpdatePlayerSaveGameSyncStatus(long playerId, NetworkPlayerSaveGameSyncStatus status)
+        protected void UpdatePlayerGameStartUpSyncStatus(long playerId, NetworkGameStartUpSyncStatus status)
         {
             var player = GetPlayer(playerId);
             if (player == null)
             {
-                Logger.LogWarning("Unable to update save game sync status for missing player. PlayerId={PlayerId}", playerId);
+                Logger.LogWarning("Unable to update player game startup sync status for missing player. PlayerId={PlayerId}", playerId);
                 return;
             }
 
-            UpdatePlayerSaveGameSyncStatus(player, status);
+            UpdatePlayerGameStartUpSyncStatus(player, status);
         }
 
-        protected void UpdatePlayerSaveGameSyncStatus(NetworkPlayer player, NetworkPlayerSaveGameSyncStatus status)
+        protected void UpdatePlayerGameStartUpSyncStatus(NetworkPlayer player, NetworkGameStartUpSyncStatus status)
         {
-            player.SaveGameSyncStatus = status;
+            player.StartUpSyncStatus = status;
             OnPlayersChanged?.Invoke(GetPlayers());
         }
 
@@ -2175,6 +2245,55 @@ namespace WOTRMultiplayer.MP.Actors
             }
         }
 
+        protected void StartNewGameSequence()
+        {
+            Logger.LogInformation("Starting new game sequence");
+            OnNewGameSequenceStarted?.Invoke(true);
+            var mainCharacterId = Game.Characters.First().UnitId;
+            GameInteraction.StartNewGameSequence(
+                mainCharacterId,
+                onBack: () =>
+                {
+                    Logger.LogInformation("New game sequence has been cancelled");
+                    Game.Stage = NetworkGameStage.Lobby;
+                    foreach (var player in Game.Players)
+                    {
+                        player.IsReady = false;
+                        UpdatePlayerGameStartUpSyncStatus(player, NetworkGameStartUpSyncStatus.None);
+                    }
+
+                    if (CanMakeNewGameSequenceDecisions())
+                    {
+                        var message = new NotifyNewGameSequenceTerminated();
+                        Logger.LogInformation("Sending {MessageType}", nameof(NotifyNewGameSequenceTerminated));
+                        Send(message);
+                    }
+
+                    ResetPlayersTracker(Game.StartUp.PlayerReadiness);
+                    OnNewGameSequenceStarted?.Invoke(false);
+                },
+                onStart: () =>
+                {
+                    ResetPlayersTracker(Game.StartUp.PlayerReadiness);
+
+                    OnForceLevelingUI(mainCharacterId, NetworkLevelingType.NewGameSequence);
+                    Logger.LogInformation("New game sequence has been finished");
+
+                    if (CanMakeNewGameSequenceDecisions())
+                    {
+                        var message = new NotifyNewGameSequenceLevelingStarted();
+                        Logger.LogInformation("Sending {MessageType}", nameof(NotifyNewGameSequenceLevelingStarted));
+                        Send(message);
+                    }
+                },
+                onCharacterCreated: (character) =>
+                {
+                    var fakeCharacter = Game.Characters.First();
+                    fakeCharacter.Name = character.Name;
+                    fakeCharacter.Portrait = character.Portrait;
+                });
+        }
+
         protected virtual void SetupNetworkMessageHandlers()
         {
             _networkReceiver
@@ -2222,6 +2341,9 @@ namespace WOTRMultiplayer.MP.Actors
                 .On<NotifyLevelingRespecWindowShown>(OnNotifyLevelingRespecWindowShown)
                 .On<NotifyLevelingRespecLevelUp>(OnNotifyLevelingRespecLevelUp)
                 .On<NotifyLevelingRespecMythicLevelUp>(OnNotifyLevelingRespecMythicLevelUp)
+
+                // new game sequence
+                .On<NotifyNewGameSequenceWitnessed>(OnNotifyNewGameSequenceWitnessed)
 
                 // character selection window
                 .On<NotifyCharacterSelectionWindowShown>(OnNotifyCharacterSelectionWindowShown)
@@ -2293,6 +2415,16 @@ namespace WOTRMultiplayer.MP.Actors
                 // dialogs
                 .On<NotifyDialogPopupShown>(OnNotifyDialogPopupShown)
                 ;
+        }
+
+        private void OnNotifyNewGameSequenceWitnessed(long receivedFrom, NotifyNewGameSequenceWitnessed newGameSequenceWitnessed)
+        {
+            Logger.LogInformation("Received {MessageType}. ReceivedFrom={ReceivedFrom}, PlayerId={PlayerId}", nameof(NotifyNewGameSequenceWitnessed), newGameSequenceWitnessed.PlayerId, newGameSequenceWitnessed.Phase.Type);
+
+            var phase = Mapper.Map<NetworkNewGameSequencePhase>(newGameSequenceWitnessed.Phase);
+            WitnessNewGameSequencePhase(newGameSequenceWitnessed.PlayerId, phase.Type);
+
+            OnAfterNetworkMessageHandled(receivedFrom, newGameSequenceWitnessed);
         }
 
         private void OnNotifyCharacterSelectionWindowShown(long receivedFrom, NotifyCharacterSelectionWindowShown characterSelectionWindowShown)
@@ -3029,7 +3161,7 @@ namespace WOTRMultiplayer.MP.Actors
         {
             Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}, Index={Index}", nameof(NotifyLevelingPhaseChanged), playerId, changed.Phase.Index);
             var phase = Mapper.Map<NetworkLevelingPhase>(changed.Phase);
-            Game.Leveling.PlayerReadiness.Clear();
+            ResetPlayersTracker(Game.Leveling.PlayerReadiness);
             GameInteraction.SwitchLevelingPhase(phase);
 
             OnAfterNetworkMessageHandled(playerId, changed);
@@ -3041,7 +3173,7 @@ namespace WOTRMultiplayer.MP.Actors
 
             // leveling is always created at the host first and later on on clients as a part of leveling confirmation
             // but not in case when game is forcing leveling ui to open for everyone at the same time => means there is some racing there
-            await WaitWhileTrue(() => Game.Leveling == null, "Received leveling witness notification, but leveling has not been startet yet.");
+            await WaitWhileTrue(() => Game.Leveling == null, "Received leveling witness notification, but leveling has not been started yet.");
 
             WitnessLevelingPhase(playerId);
 

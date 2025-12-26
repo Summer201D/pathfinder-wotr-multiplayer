@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Kingmaker.EntitySystem;
 using Kingmaker.GameModes;
@@ -17,6 +18,7 @@ using WOTRMultiplayer.MP.Entities.Leveling;
 using WOTRMultiplayer.MP.Entities.Loot;
 using WOTRMultiplayer.MP.Entities.MapObjects;
 using WOTRMultiplayer.MP.Entities.Movement;
+using WOTRMultiplayer.MP.Entities.NewGame;
 using WOTRMultiplayer.MP.Entities.Rest;
 using WOTRMultiplayer.MP.Entities.Settings;
 using WOTRMultiplayer.MP.Entities.Spells;
@@ -319,5 +321,17 @@ namespace WOTRMultiplayer.Abstractions.GameInteraction
         void AcceptCharacterSelectionWindow();
 
         void ToggleCharacterSelectionWindow(string unitId);
+
+        void StartNewGameSequence(string mainCharacterId, Action onBack, Action onStart, Action<NetworkCharacter> onCharacterCreated);
+
+        void SelectNewGameDifficulty(string difficulty);
+
+        void SelectNewGameSequencePhase(NetworkNewGameSequencePhase phase);
+
+        void UpdateNewGameSequencePhaseControls(bool isEnabled, NetworkNewGameSequencePhaseType newGameSequencePhaseType);
+
+        void StartNewGameSequenceLeveling();
+
+        void TerminateNewGameSequence();
     }
 }

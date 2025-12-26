@@ -1,9 +1,6 @@
 ﻿using HarmonyLib;
-using Kingmaker;
 using Kingmaker.UI.MVVM._CommonView.CharGen.Phases.Skills;
 using Kingmaker.UI.MVVM._PCView.CharGen.Phases;
-using Kingmaker.UI.MVVM._PCView.GlobalMap;
-using Kingmaker.UI.MVVM._PCView.InGame;
 using Kingmaker.UI.MVVM._VM.CharGen.Phases;
 using Kingmaker.UI.MVVM._VM.CharGen.Phases.Skills;
 using Microsoft.Extensions.Logging;
@@ -24,14 +21,7 @@ namespace WOTRMultiplayer.HarmonyPatches.Leveling
                 return;
             }
 
-            var charGenContext = Game.Instance.RootUiContext.m_UIView switch
-            {
-                InGamePCView inGamePCView => inGamePCView.m_StaticPartPCView.m_CharGenContextPCView,
-                GlobalMapPCView globalMapPCView => globalMapPCView.m_CharGenContextPCView,
-                _ => null
-            };
-
-            var charGenView = charGenContext?.m_CharGenPCView;
+            var charGenView = CharGenViewAccessor.GetCharGenContextView()?.m_CharGenPCView;
             if (charGenView == null)
             {
                 Main.GetLogger<CharGenPhaseDetailedBaseViewPatches>().LogError("Unable to find char gen pc view");

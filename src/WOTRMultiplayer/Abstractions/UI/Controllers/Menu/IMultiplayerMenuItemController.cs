@@ -17,5 +17,7 @@ namespace WOTRMultiplayer.Abstractions.UI.Controllers.Menu
         bool IsActive { get; }
 
         Action<object, EventArgs> OnClicked { get; set; }
+
+        Action<bool> OnChangeWindowVisibility { get; set; }
     }
 }

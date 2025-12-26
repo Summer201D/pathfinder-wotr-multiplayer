@@ -37,6 +37,22 @@ public static class WellKnownKeys
     [Description("multiplayerWindow")]
     public static class MultiplayerWindow
     {
+        [Description("readyButton")]
+        public static class ReadyButton
+        {
+            [Description("readyText")]
+            public static class ReadyText
+            {
+                public static string Key { get; set; }
+            }
+
+            [Description("notReadyText")]
+            public static class NotReadyText
+            {
+                public static string Key { get; set; }
+            }
+        }
+
         [Description("hostMenu")]
         public static class HostMenu
         {
@@ -62,22 +78,6 @@ public static class WellKnownKeys
                 }
             }
 
-            [Description("readyButton")]
-            public static class ReadyButton
-            {
-                [Description("readyText")]
-                public static class ReadyText
-                {
-                    public static string Key { get; set; }
-                }
-
-                [Description("notReadyText")]
-                public static class NotReadyText
-                {
-                    public static string Key { get; set; }
-                }
-            }
-
             [Description("startButton")]
             public static class StartButton
             {
@@ -89,6 +89,22 @@ public static class WellKnownKeys
             {
                 [Description("hosting")]
                 public static class Hosting
+                {
+                    public static string Key { get; set; }
+                }
+            }
+
+            [Description("newGame")]
+            public static class NewGame
+            {
+                [Description("saveSlotGroupName")]
+                public static class SaveSlotGroupName
+                {
+                    public static string Key { get; set; }
+                }
+
+                [Description("saveSlotTitle")]
+                public static class SaveSlotTitle
                 {
                     public static string Key { get; set; }
                 }
@@ -108,22 +124,6 @@ public static class WellKnownKeys
             public static class JoinButton
             {
                 public static string Key { get; set; }
-            }
-
-            [Description("readyButton")]
-            public static class ReadyButton
-            {
-                [Description("readyText")]
-                public static class ReadyText
-                {
-                    public static string Key { get; set; }
-                }
-
-                [Description("notReadyText")]
-                public static class NotReadyText
-                {
-                    public static string Key { get; set; }
-                }
             }
 
             [Description("leaveButton")]

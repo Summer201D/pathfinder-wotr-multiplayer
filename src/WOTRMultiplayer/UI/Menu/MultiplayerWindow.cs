@@ -137,6 +137,14 @@ namespace WOTRMultiplayer.UI.Menu
 
             _hostMenuController.OnClicked = OnHostMenuItemClicked;
             _joinMenuController.OnClicked = OnJoinMenuItemClicked;
+
+            _hostMenuController.OnChangeWindowVisibility = OnChangeWindowVisibility;
+            _joinMenuController.OnChangeWindowVisibility = OnChangeWindowVisibility;
+        }
+
+        private void OnChangeWindowVisibility(bool visibility)
+        {
+            base.gameObject.SetActive(visibility);
         }
 
         private GameObject CreateMenuItem(float positionX, GameObject objToCopy, Transform parent)

@@ -1,8 +1,11 @@
 ﻿using System;
+using Kingmaker.Localization;
 using Microsoft.Extensions.Logging;
 using Owlcat.Runtime.UI.Controls.Button;
+using TMPro;
 using UnityEngine;
-using WOTRMultiplayer.Abstractions.GameInteraction;
+using WOTRMultiplayer.Abstractions.MP.Actors;
+using WOTRMultiplayer.Abstractions.UI;
 using WOTRMultiplayer.Abstractions.UI.Controllers;
 using WOTRMultiplayer.Abstractions.UI.Controllers.Menu;
 using WOTRMultiplayer.Abstractions.Unity;
@@ -18,35 +21,47 @@ namespace WOTRMultiplayer.UI.Controllers
         private bool _isInitialized = false;
         private OwlcatButton Button => MenuItem.gameObject.GetComponent<OwlcatButton>();
         private GameObject _hoverImage;
+        private readonly IMultiplayerActor _multiplayerActor;
 
         protected ILobbyWindowController Lobby { get; private set; }
 
         protected IMainThreadAccessor MainThreadAccessor { get; private set; }
 
-        protected IGameInteractionService GameInteraction { get; private set; }
+        protected IResourceProvider ResourceProvider { get; private set; }
+
 
         protected bool SetupLayout { get; set; } = true;
+
         protected GameObject ActiveImage { get; private set; }
 
         protected GameObject MenuItem { get; private set; }
+
         protected abstract GameObject MenuContent { get; }
 
         protected abstract LobbyWindowOwner Owner { get; }
 
+        protected abstract GameObject ReadyButtonObject { get; }
+
         public bool IsActive => ActiveImage.activeSelf;
 
         public Action<object, EventArgs> OnClicked { get; set; }
+
+        public Action<bool> OnChangeWindowVisibility { get; set; }
 
         public Action OnGameStarted { get; set; }
 
         protected MenuItemControllerBase(
             Microsoft.Extensions.Logging.ILogger logger,
             ILobbyWindowController lobbyWindowController,
-            IMainThreadAccessor mainThreadAccessor)
+            IMainThreadAccessor mainThreadAccessor,
+            IResourceProvider resourceProvider,
+            IMultiplayerActor multiplayerActor)
         {
             _logger = logger;
             Lobby = lobbyWindowController;
             MainThreadAccessor = mainThreadAccessor;
+            ResourceProvider = resourceProvider;
+            _multiplayerActor = multiplayerActor;
         }
 
         public void Dispose()
@@ -77,6 +92,32 @@ namespace WOTRMultiplayer.UI.Controllers
             ActiveImage = MenuItem.transform.Find(SelectedGameObjectName).gameObject;
             _hoverImage = MenuItem.transform.Find(HoverGameObjectName).gameObject;
             ActiveImage.SetActive(false);
+        }
+
+        protected void OnMultiplayerNewGameSequenceStarted(bool isCancelled)
+        {
+            MainThreadAccessor.Post(() =>
+            {
+                if (isCancelled)
+                {
+                    ToggleReadyButton(false);
+                }
+
+                OnChangeWindowVisibility?.Invoke(!isCancelled);
+            });
+        }
+
+        protected void OnReadyButtonClicked()
+        {
+            var isReady = _multiplayerActor.ReadyChanged();
+            ToggleReadyButton(isReady);
+        }
+
+        protected void ToggleReadyButton(bool isReady)
+        {
+            var label = isReady ? new LocalizedString { Key = WellKnownKeys.MultiplayerWindow.ReadyButton.ReadyText.Key }
+                : new LocalizedString { Key = WellKnownKeys.MultiplayerWindow.ReadyButton.NotReadyText.Key };
+            ReadyButtonObject.GetComponentInChildren<TextMeshProUGUI>().SetText(label);
         }
 
         protected virtual void DisposeInternal()

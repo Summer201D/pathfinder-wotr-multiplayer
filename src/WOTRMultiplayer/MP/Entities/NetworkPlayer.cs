@@ -14,7 +14,7 @@ namespace WOTRMultiplayer.MP.Entities
 
         public NetworkContentState ContentState { get; set; } = new();
 
-        public NetworkPlayerSaveGameSyncStatus SaveGameSyncStatus { get; set; }
+        public NetworkGameStartUpSyncStatus StartUpSyncStatus { get; set; }
 
         public NetworkPlayer(long id)
         {

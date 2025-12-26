@@ -184,7 +184,7 @@ namespace WOTRMultiplayer.UnitTests.MP
             _multiplayerClient.Connect(address);
             var handler = FakeUtils.GetNetworkReceiverHandler<NotifyUnitClicked>(_networkClient);
             var request = new NotifyUnitClicked { Click = new Networking.Messages.Contracts.NetworkClick { } };
-            _multiplayerClient.Game = new NetworkGame("hehe") { Combat = new NetworkCombat() };
+            _multiplayerClient.Game = new NetworkGame(new NetworkGameStartUp("hehe")) { Combat = new NetworkCombat() };
             A.CallTo(() => _gameInteractionService.CanRiderGetUp()).Returns(false);
 
             // Act
@@ -207,7 +207,7 @@ namespace WOTRMultiplayer.UnitTests.MP
             _multiplayerClient.Connect(address);
             var handler = FakeUtils.GetNetworkReceiverHandler<NotifyUnitClicked>(_networkClient);
             var request = new NotifyUnitClicked { Click = new Networking.Messages.Contracts.NetworkClick { } };
-            _multiplayerClient.Game = new NetworkGame("hehe") { Combat = new NetworkCombat() };
+            _multiplayerClient.Game = new NetworkGame(new NetworkGameStartUp("hehe")) { Combat = new NetworkCombat() };
             A.CallTo(() => _gameInteractionService.CanRiderGetUp()).Returns(true);
 
             // Act
@@ -230,7 +230,7 @@ namespace WOTRMultiplayer.UnitTests.MP
             _multiplayerClient.Connect(address);
             var handler = FakeUtils.GetNetworkReceiverHandler<NotifyUnitClicked>(_networkClient);
             var request = new NotifyUnitClicked { Click = new Networking.Messages.Contracts.NetworkClick { } };
-            _multiplayerClient.Game = new NetworkGame("hehe") { Combat = null };
+            _multiplayerClient.Game = new NetworkGame(new NetworkGameStartUp("hehe")) { Combat = null };
 
             // Act
             handler.Invoke(1, request);
@@ -250,7 +250,7 @@ namespace WOTRMultiplayer.UnitTests.MP
             var address = Guid.NewGuid().ToString();
             A.CallTo(() => _endpointParser.Parse(address)).Returns(endpoint);
             _multiplayerClient.Connect(address);
-            _multiplayerClient.Game = new NetworkGame("whatever");
+            _multiplayerClient.Game = new NetworkGame(new NetworkGameStartUp("whatever"));
             var handler = FakeUtils.GetNetworkReceiverHandler<NotifyLobbySaveGameChanged>(_networkClient);
             var request = new NotifyLobbySaveGameChanged { Content = [], GameId = Guid.NewGuid().ToString(), IsForceLoad = false };
 
@@ -259,7 +259,7 @@ namespace WOTRMultiplayer.UnitTests.MP
 
             // Assert
             A.CallTo(() => _fileSystemService.WriteFile(A<string>.Ignored, request.Content)).MustHaveHappened();
-            A.CallTo(() => _networkClient.Send(A<NotifyPlayerSaveGameSyncStatusChanged>.Ignored)).MustHaveHappened();
+            A.CallTo(() => _networkClient.Send(A<NotifyPlayerGameStartUpSyncStatusChanged>.Ignored)).MustHaveHappened();
         }
 
         [Test]
@@ -273,7 +273,7 @@ namespace WOTRMultiplayer.UnitTests.MP
             var address = Guid.NewGuid().ToString();
             A.CallTo(() => _endpointParser.Parse(address)).Returns(endpoint);
             _multiplayerClient.Connect(address);
-            _multiplayerClient.Game = new NetworkGame("whatever")
+            _multiplayerClient.Game = new NetworkGame(new NetworkGameStartUp("whatever"))
             {
                 Stage = NetworkGameStage.Playing
             };
@@ -286,7 +286,7 @@ namespace WOTRMultiplayer.UnitTests.MP
             // Assert
             A.CallTo(() => _fileSystemService.WriteFile(A<string>.Ignored, request.Content)).MustHaveHappened();
             A.CallTo(() => _gameInteractionService.QuickLoadGame(A<string>.Ignored)).MustHaveHappened();
-            A.CallTo(() => _networkClient.Send(A<NotifyPlayerSaveGameSyncStatusChanged>.Ignored)).MustNotHaveHappened();
+            A.CallTo(() => _networkClient.Send(A<NotifyPlayerGameStartUpSyncStatusChanged>.Ignored)).MustNotHaveHappened();
         }
 
         [Test]
@@ -300,7 +300,7 @@ namespace WOTRMultiplayer.UnitTests.MP
             var address = Guid.NewGuid().ToString();
             A.CallTo(() => _endpointParser.Parse(address)).Returns(endpoint);
             _multiplayerClient.Connect(address);
-            _multiplayerClient.Game = new NetworkGame("whatever")
+            _multiplayerClient.Game = new NetworkGame(new NetworkGameStartUp("whatever"))
             {
                 Stage = NetworkGameStage.Lobby
             };
@@ -313,7 +313,7 @@ namespace WOTRMultiplayer.UnitTests.MP
             // Assert
             A.CallTo(() => _fileSystemService.WriteFile(A<string>.Ignored, request.Content)).MustHaveHappened();
             A.CallTo(() => _gameInteractionService.LoadGameFromMainMenu(A<string>.Ignored)).MustHaveHappened();
-            A.CallTo(() => _networkClient.Send(A<NotifyPlayerSaveGameSyncStatusChanged>.Ignored)).MustNotHaveHappened();
+            A.CallTo(() => _networkClient.Send(A<NotifyPlayerGameStartUpSyncStatusChanged>.Ignored)).MustNotHaveHappened();
         }
     }
 }

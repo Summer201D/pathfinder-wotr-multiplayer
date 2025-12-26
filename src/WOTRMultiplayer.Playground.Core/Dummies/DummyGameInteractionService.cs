@@ -20,6 +20,7 @@ using WOTRMultiplayer.MP.Entities.Leveling;
 using WOTRMultiplayer.MP.Entities.Loot;
 using WOTRMultiplayer.MP.Entities.MapObjects;
 using WOTRMultiplayer.MP.Entities.Movement;
+using WOTRMultiplayer.MP.Entities.NewGame;
 using WOTRMultiplayer.MP.Entities.Rest;
 using WOTRMultiplayer.MP.Entities.Settings;
 using WOTRMultiplayer.MP.Entities.Spells;
@@ -639,6 +640,30 @@ namespace WOTRMultiplayer.Playground.Core.Dummies
         }
 
         public void ToggleCharacterSelectionWindow(string unitId)
+        {
+        }
+
+        public void StartNewGameSequence(string mainCharacterId, Action onBack, Action onStart, Action<NetworkCharacter> onCharacterCreated)
+        {
+        }
+
+        public void SelectNewGameDifficulty(string difficulty)
+        {
+        }
+
+        public void UpdateNewGameSequencePhaseControls(bool isEnabled, NetworkNewGameSequencePhaseType newGameSequencePhaseType)
+        {
+        }
+
+        public void SelectNewGameSequencePhase(NetworkNewGameSequencePhase phase)
+        {
+        }
+
+        public void StartNewGameSequenceLeveling()
+        {
+        }
+
+        public void TerminateNewGameSequence()
         {
         }
     }

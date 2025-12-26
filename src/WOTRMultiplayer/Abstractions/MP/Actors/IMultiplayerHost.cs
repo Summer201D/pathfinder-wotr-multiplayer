@@ -9,11 +9,11 @@ namespace WOTRMultiplayer.Abstractions.MP.Actors
 {
     public interface IMultiplayerHost : IMultiplayerActor
     {
-        void Create(string saveFilePath, string gameId, List<NetworkCharacter> characters);
+        void Create(string gameId, NetworkGameStartUp gameStartUp);
 
-        void UpdateSaveGame(string saveFilePath, string gameId, List<NetworkCharacter> characters);
+        void UpdateSaveGame(string gameId, NetworkGameStartUp gameStartUp);
 
-        void Start();
+        bool Start();
 
         void ChangeCharacterOwner(int characterIndex, int playerIndex);
 
@@ -78,5 +78,7 @@ namespace WOTRMultiplayer.Abstractions.MP.Actors
         void OnCharacterSelectionWindowClosed();
 
         void OnCharacterSelectionToggleChanged(string unitId);
+
+        void OnNewGameDifficultyChanged(string difficulty);
     }
 }

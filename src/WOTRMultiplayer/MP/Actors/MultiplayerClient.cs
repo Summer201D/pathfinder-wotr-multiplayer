@@ -21,6 +21,7 @@ using WOTRMultiplayer.MP.Entities.Dialogs;
 using WOTRMultiplayer.MP.Entities.GlobalMap;
 using WOTRMultiplayer.MP.Entities.Inspect;
 using WOTRMultiplayer.MP.Entities.Leveling;
+using WOTRMultiplayer.MP.Entities.NewGame;
 using WOTRMultiplayer.MP.Entities.Rest;
 using WOTRMultiplayer.MP.Entities.Settings;
 using WOTRMultiplayer.Networking;
@@ -430,7 +431,13 @@ namespace WOTRMultiplayer.MP.Actors
                .On<NotifyCharactersChanged>(OnNotifyGameCharactersChanged)
                .On<NotifyCharactersOwnerChanged>(OnNotifyCharactersOwnerChanged)
                .On<NotifyGameStarted>(OnNotifyGameStarted)
-               .On<NotifyPlayerSaveGameSyncStatusChanged>(OnNotifyPlayerSaveGameSyncStatusChanged)
+               .On<NotifyPlayerGameStartUpSyncStatusChanged>(OnNotifyPlayerSaveGameSyncStatusChanged)
+               .On<NotifyNewGameDifficultyChanged>(OnNotifyNewGameDifficultyChanged)
+
+               // new game sequence
+               .On<NotifyNewGameSequencePhaseChanged>(OnNotifyNewGameSequencePhaseChanged)
+               .On<NotifyNewGameSequenceLevelingStarted>(OnNotifyNewGameSequenceLevelingStarted)
+               .On<NotifyNewGameSequenceTerminated>(OnNotifyNewGameSequenceTerminated)
 
                // pausing
                .On<NotifyGamePauseStarted>(OnNotifyGamePauseStarted)
@@ -500,6 +507,36 @@ namespace WOTRMultiplayer.MP.Actors
                .On<NotifyZoneLootCompleted>(OnNotifyZoneLootCompleted)
                .On<NotifyZoneLootRemoveToggleChanged>(OnNotifyZoneLootRemoveToggleChanged)
                ;
+        }
+
+        private void OnNotifyNewGameSequenceTerminated(long playerId, NotifyNewGameSequenceTerminated newGameSequenceTerminated)
+        {
+            Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}", nameof(NotifyNewGameSequenceTerminated));
+
+            GameInteraction.TerminateNewGameSequence();
+        }
+
+        private void OnNotifyNewGameSequenceLevelingStarted(long playerId, NotifyNewGameSequenceLevelingStarted newGameSequenceLevelingStarted)
+        {
+            Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}", nameof(NotifyNewGameSequenceLevelingStarted), playerId);
+
+            GameInteraction.StartNewGameSequenceLeveling();
+        }
+
+        private void OnNotifyNewGameSequencePhaseChanged(long playerId, NotifyNewGameSequencePhaseChanged newGameSequencePhaseChanged)
+        {
+            Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}, PhaseType={PhaseType}", nameof(NotifyNewGameSequencePhaseChanged), newGameSequencePhaseChanged.Phase.Type);
+
+            var phase = Mapper.Map<NetworkNewGameSequencePhase>(newGameSequencePhaseChanged.Phase);
+
+            GameInteraction.SelectNewGameSequencePhase(phase);
+        }
+
+        private void OnNotifyNewGameDifficultyChanged(long playerId, NotifyNewGameDifficultyChanged newGameDifficultyChanged)
+        {
+            Logger.LogInformation("Received {MessageType}. Difficulty={Difficulty}", nameof(NotifyNewGameDifficultyChanged), newGameDifficultyChanged);
+
+            GameInteraction.SelectNewGameDifficulty(newGameDifficultyChanged.Difficulty);
         }
 
         private void OnNotifyCharacterSelectionWindowClosed(long playerId, NotifyCharacterSelectionWindowClosed characterSelectionWindowClosed)
@@ -652,12 +689,12 @@ namespace WOTRMultiplayer.MP.Actors
             ResetPlayersTracker(Game.PlayersInGroupChanger);
         }
 
-        private void OnNotifyPlayerSaveGameSyncStatusChanged(long playerId, NotifyPlayerSaveGameSyncStatusChanged playerSaveGameSyncStatus)
+        private void OnNotifyPlayerSaveGameSyncStatusChanged(long playerId, NotifyPlayerGameStartUpSyncStatusChanged playerGameStartUpSyncStatusChanged)
         {
-            Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}, Status={Status}", nameof(NotifyGamePauseStarted), playerSaveGameSyncStatus.PlayerId, playerSaveGameSyncStatus.Status);
+            Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}, Status={Status}", nameof(NotifyGamePauseStarted), playerGameStartUpSyncStatusChanged.PlayerId, playerGameStartUpSyncStatusChanged.Status);
 
-            var status = Mapper.Map<NetworkPlayerSaveGameSyncStatus>(playerSaveGameSyncStatus.Status);
-            UpdatePlayerSaveGameSyncStatus(playerSaveGameSyncStatus.PlayerId, status);
+            var status = Mapper.Map<NetworkGameStartUpSyncStatus>(playerGameStartUpSyncStatusChanged.Status);
+            UpdatePlayerGameStartUpSyncStatus(playerGameStartUpSyncStatusChanged.PlayerId, status);
         }
 
         private void OnNotifyGamePauseStarted(long playerId, NotifyGamePauseStarted pauseStarted)
@@ -945,13 +982,20 @@ namespace WOTRMultiplayer.MP.Actors
         private void OnNotifyGameStarted(long playerId, NotifyGameStarted started)
         {
             Logger.LogInformation("Received {MessageType}", nameof(NotifyGameStarted));
-            if (string.IsNullOrEmpty(Game.SaveFilePath))
+
+            if (Game.StartUp.IsNewGameSequence)
+            {
+                StartNewGameSequence();
+                return;
+            }
+
+            if (string.IsNullOrEmpty(Game.StartUp?.SavePath))
             {
                 Logger.LogCritical("Trying to start a game with missing save file path");
                 return;
             }
 
-            LoadSaveGame();
+            LoadSavedGame();
         }
 
         private void OnNotifyCharactersOwnerChanged(long playerId, NotifyCharactersOwnerChanged changed)
@@ -987,9 +1031,10 @@ namespace WOTRMultiplayer.MP.Actors
 
         private void OnNotifyLobbySaveGameChanged(long playerId, NotifyLobbySaveGameChanged notifyLobbySaveGameChanged)
         {
-            Logger.LogInformation("Received {MessageType}. GameStatus={GameStatus}, Size={Size}, IsForceLoad={IsForceLoad}", nameof(NotifyLobbySaveGameChanged), Game.Stage, notifyLobbySaveGameChanged.Content.Length, notifyLobbySaveGameChanged.IsForceLoad);
+            Logger.LogInformation("Received {MessageType}. GameStatus={GameStatus}, Size={Size}, IsForceLoad={IsForceLoad}, IsNewGameSequence={IsNewGameSequence}", nameof(NotifyLobbySaveGameChanged), Game.Stage, notifyLobbySaveGameChanged.Content?.Length, notifyLobbySaveGameChanged.IsForceLoad, notifyLobbySaveGameChanged.IsNewGameSequence);
 
-            Game.SaveFilePath = StoreSaveFile(notifyLobbySaveGameChanged.Content);
+            var savePath = notifyLobbySaveGameChanged.IsNewGameSequence ? null : StoreSaveGameContent(notifyLobbySaveGameChanged.Content);
+            Game.StartUp = new NetworkGameStartUp(savePath);
             Game.Id = notifyLobbySaveGameChanged.GameId;
 
             if (notifyLobbySaveGameChanged.IsForceLoad)
@@ -998,8 +1043,8 @@ namespace WOTRMultiplayer.MP.Actors
                 return;
             }
 
-            Logger.LogInformation("Game is ready to be started. SavePath={SavePath}", Game.SaveFilePath);
-            var confirmationMessage = new NotifyPlayerSaveGameSyncStatusChanged { PlayerId = Game.LocalPlayerId, Status = NetworkPlayerSaveGameSyncStatus.Succeed.ToString() };
+            Logger.LogInformation("Game is ready to be started. SavePath={SavePath}", Game.StartUp.SavePath);
+            var confirmationMessage = new NotifyPlayerGameStartUpSyncStatusChanged { PlayerId = Game.LocalPlayerId, Status = NetworkGameStartUpSyncStatus.Succeed.ToString() };
             Send(confirmationMessage);
         }
 

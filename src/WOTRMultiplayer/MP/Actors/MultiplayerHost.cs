@@ -66,7 +66,7 @@ namespace WOTRMultiplayer.MP.Actors
             _networkServer = networkServer;
         }
 
-        public void Create(string saveFilePath, string gameId, List<NetworkCharacter> characters)
+        public void Create(string gameId, NetworkGameStartUp gameStartUp)
         {
             if (_networkServer.IsActive)
             {
@@ -77,28 +77,28 @@ namespace WOTRMultiplayer.MP.Actors
 
             Game?.Reset();
 
-            Game = new NetworkGame(saveFilePath)
+            Game = new NetworkGame(gameStartUp)
             {
                 LocalPlayerId = NetworkingConsts.HostPlayerId,
                 Id = gameId,
                 SessionSeed = CreateRandomSeed()
             };
 
-            Game.Characters.AddRange(characters);
+            Game.Characters.AddRange(gameStartUp.Characters);
             var settings = SettingsService.GetSettings();
             _networkServer.Start(settings.HostPortRangeStart, settings.HostPortRangeEnd, settings.NetworkAwaiterTimeout);
 
-            Logger.LogInformation("Host has been created. SavePath={SavePath}, Portraits={Portraits}", saveFilePath, string.Join(";", Game.Characters.Select(c => c.Portrait)));
+            Logger.LogInformation("Host has been created. IsNewGameSequence={IsNewGameSequence}, SavePath={SavePath}, Portraits={Portraits}", gameStartUp.IsNewGameSequence, gameStartUp.SavePath, string.Join(";", Game.Characters.Select(c => c.Portrait)));
         }
 
-        public void UpdateSaveGame(string saveFilePath, string gameId, List<NetworkCharacter> characters)
+        public void UpdateSaveGame(string gameId, NetworkGameStartUp gameStartUp)
         {
             Game.Id = gameId;
-            Game.SaveFilePath = saveFilePath;
+            Game.StartUp = gameStartUp;
             Game.Characters.Clear();
-            Game.Characters.AddRange(characters);
+            Game.Characters.AddRange(gameStartUp.Characters);
             var host = GetHost();
-            foreach (var character in characters)
+            foreach (var character in Game.Characters)
             {
                 character.Owner = host;
             }
@@ -106,6 +106,8 @@ namespace WOTRMultiplayer.MP.Actors
             Logger.LogInformation("Notifying game characters changed. Portraits={Portraits}", string.Join(";", Game.Characters.Select(c => c.Portrait)));
             var message = CreateNotifyGameCharactersChanged();
             _networkServer.SendAll(message);
+
+            Logger.LogInformation("Game starting point has been updated. IsNewGameSequence={IsNewGameSequence}, SavePath={SavePath}, Portraits={Portraits}", Game.StartUp.IsNewGameSequence, Game.StartUp.SavePath, string.Join(";", Game.Characters.Select(c => c.Portrait)));
         }
 
         /// <summary>
@@ -165,35 +167,39 @@ namespace WOTRMultiplayer.MP.Actors
             _networkServer.Reset();
         }
 
-        public void Start()
+        public bool Start()
         {
-            Logger.LogInformation("Starting game...");
-            // it should be fine to block current thread
-            var content = FileSystem.GetRawFileContent(Game.SaveFilePath);
-            if (content == null)
+            Logger.LogInformation("Starting hosted game...");
+            if (!TryGetSaveGameContent(out var content))
             {
-                Logger.LogError("Unable to start a game due to missing save file. Path={Path}", Game.SaveFilePath);
-                return;
+                Logger.LogError("Unable to start a game due to missing save file. Path={Path}, IsNewGameSequence={IsNewGameSequence}", Game.StartUp.SavePath, Game.StartUp.IsNewGameSequence);
+                return false;
             }
 
             var host = GetHost();
-            UpdatePlayerSaveGameSyncStatus(host, NetworkPlayerSaveGameSyncStatus.Succeed);
+            UpdatePlayerGameStartUpSyncStatus(host, NetworkGameStartUpSyncStatus.Succeed);
 
-            var saveSyncStatusChanged = new NotifyPlayerSaveGameSyncStatusChanged
+            var saveSyncStatusChanged = new NotifyPlayerGameStartUpSyncStatusChanged
             {
-                Status = host.SaveGameSyncStatus.ToString(),
+                Status = host.StartUpSyncStatus.ToString(),
                 PlayerId = host.Id,
             };
             _networkServer.SendAll(saveSyncStatusChanged);
+            Game.Stage = NetworkGameStage.SyncingStartUpData;
 
-            Game.Stage = NetworkGameStage.SyncingSaveGame;
+            var saveGameChanged = new NotifyLobbySaveGameChanged
+            {
+                GameId = Game.Id,
+                Content = content,
+                IsForceLoad = false,
+                IsNewGameSequence = Game.StartUp.IsNewGameSequence
+            };
 
-            var saveGameChanged = new NotifyLobbySaveGameChanged { GameId = Game.Id, Content = content, IsForceLoad = false };
-            Logger.LogInformation("Sending save game file content to all players. Size={Size}", saveGameChanged.Content.Length);
+            Logger.LogInformation("Sending {MessageType}. GameId={GameId}, IsForceLoad={IsForceLoad}, IsNewGameSequence={IsNewGameSequence}, ContentSize={ContentSize}", nameof(NotifyLobbySaveGameChanged), saveGameChanged.GameId, saveGameChanged.IsForceLoad, saveGameChanged.IsNewGameSequence, saveGameChanged.Content?.Length);
             _networkServer.SendAll(saveGameChanged);
-            Logger.LogInformation("Waiting for players to confirm save game sync. GameStatus={GameStatus}", Game.Stage);
 
-            TryStartGame();
+            TryStartSavedGame();
+            return true;
         }
 
         public void OnAreaLoadingComplete()
@@ -814,6 +820,17 @@ namespace WOTRMultiplayer.MP.Actors
             Send(message);
         }
 
+        public void OnNewGameDifficultyChanged(string difficulty)
+        {
+            var message = new NotifyNewGameDifficultyChanged
+            {
+                Difficulty = difficulty
+            };
+            Logger.LogInformation("Sending {MessageType}. Difficulty={Difficulty}", nameof(NotifyNewGameDifficultyChanged), message.Difficulty);
+
+            Send(message);
+        }
+
         protected override bool OnStartGameModeInternal(GameModeType type)
         {
             var playerId = GetLocalPlayerId();
@@ -979,7 +996,7 @@ namespace WOTRMultiplayer.MP.Actors
                .On<AIActionRequest>(OnAIActionRequest)
 
                // lobby
-               .On<NotifyPlayerSaveGameSyncStatusChanged>(OnNotifyPlayerSaveGameSyncStatusChanged)
+               .On<NotifyPlayerGameStartUpSyncStatusChanged>(OnNotifyPlayerSaveGameSyncStatusChanged)
                .On<PlayerReadyStatusChanged>(OnPlayerReadyStatusChanged)
                .On<ClientGameServerConnectionConfirmed>(OnClientGameServerConnectionConfirmed)
                // quick load by another player
@@ -1176,7 +1193,8 @@ namespace WOTRMultiplayer.MP.Actors
 
             OnAfterNetworkMessageHandled(playerId, notifyLobbySaveGameChanged);
 
-            Game.SaveFilePath = StoreSaveFile(notifyLobbySaveGameChanged.Content);
+            var savePath = StoreSaveGameContent(notifyLobbySaveGameChanged.Content);
+            Game.StartUp = new NetworkGameStartUp(savePath);
 
             if (!notifyLobbySaveGameChanged.IsForceLoad)
             {
@@ -1313,22 +1331,23 @@ namespace WOTRMultiplayer.MP.Actors
             await SendLocalRollAsync(playerId, request);
         }
 
-        private void OnNotifyPlayerSaveGameSyncStatusChanged(long playerId, NotifyPlayerSaveGameSyncStatusChanged playerSaveGameSyncStatusChanged)
+        private void OnNotifyPlayerSaveGameSyncStatusChanged(long playerId, NotifyPlayerGameStartUpSyncStatusChanged playerSaveGameSyncStatusChanged)
         {
-            Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}, Status={Status}", nameof(NotifyPlayerSaveGameSyncStatusChanged), playerId, playerSaveGameSyncStatusChanged.Status);
+            Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}, Status={Status}", nameof(NotifyPlayerGameStartUpSyncStatusChanged), playerId, playerSaveGameSyncStatusChanged.Status);
 
-            var status = Mapper.Map<NetworkPlayerSaveGameSyncStatus>(playerSaveGameSyncStatusChanged.Status);
-            UpdatePlayerSaveGameSyncStatus(playerId, status);
+            var status = Mapper.Map<NetworkGameStartUpSyncStatus>(playerSaveGameSyncStatusChanged.Status);
+            UpdatePlayerGameStartUpSyncStatus(playerId, status);
 
             OnAfterNetworkMessageHandled(playerId, playerSaveGameSyncStatusChanged);
 
-            TryStartGame();
+            TryStartSavedGame();
         }
 
         private void OnPlayerReadyStatusChanged(long playerId, PlayerReadyStatusChanged readyStatusChanged)
         {
             Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}, IsReady={IsReady}", nameof(PlayerReadyStatusChanged), playerId, readyStatusChanged.IsReady);
             UpdatePlayerReadyStatus(playerId, readyStatusChanged.IsReady);
+
             // including original client so his UI can be properly updated as well
             _networkServer.SendAll(readyStatusChanged);
         }
@@ -1722,20 +1741,27 @@ namespace WOTRMultiplayer.MP.Actors
             TryEndForcedPause();
         }
 
-        private void TryStartGame()
+        private void TryStartSavedGame()
         {
             var canStart = false;
 
             lock (ActionLock)
             {
-                canStart = Game.Players.All(p => p.SaveGameSyncStatus == NetworkPlayerSaveGameSyncStatus.Succeed);
+                canStart = Game.Players.All(p => p.StartUpSyncStatus == NetworkGameStartUpSyncStatus.Succeed);
             }
 
             if (canStart)
             {
-                Logger.LogInformation("Starting game");
+                Logger.LogInformation("Starting game. IsNewGameSequence={IsNewGameSequence}", Game.StartUp.IsNewGameSequence);
                 _networkServer.SendAll(new NotifyGameStarted());
-                LoadSaveGame();
+
+                if (Game.StartUp.IsNewGameSequence)
+                {
+                    StartNewGameSequence();
+                    return;
+                }
+
+                LoadSavedGame();
             }
         }
 
@@ -1783,6 +1809,18 @@ namespace WOTRMultiplayer.MP.Actors
 
             var messageKey = pause.IsLifting ? WellKnownKeys.GameNotifications.ForcedPause.IsLifting.Key : pause.Reason;
             GameInteraction.ShowWarningNotification(messageKey);
+        }
+
+        private bool TryGetSaveGameContent(out byte[] content)
+        {
+            if (Game.StartUp.IsNewGameSequence)
+            {
+                content = null;
+                return true;
+            }
+
+            content = FileSystem.GetRawFileContent(Game.StartUp.SavePath);
+            return content != null;
         }
     }
 }

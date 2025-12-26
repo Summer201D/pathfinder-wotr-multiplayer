@@ -3,9 +3,11 @@
 #### Disclaimer: All of the changes below only kick in when you are playing in Multiplayer (started or joined through the Multiplayer Window). Single-player isn't affected at all, so you can keep playing normally. But if you are curious about what the mod adds, you can always host a solo game to check it out.
 
 ## TL/DR:
-- Prologue and Act1 are mostly playable. Anything beyond that is not implemented
+- Prologue and Act1 are mostly playable. Anything beyond that (including any DLCs) does not work
 
-- You can see a brief comparison of each player's DLCs/Mods after they connect to the host, but it's still on you to make sure everyone has the same game content. That includes any extra items or classes - if something does not match, the game will desync.
+- DLC/Mods/Content should match across players. 
+
+  You can see a quick rundown of each player’s DLCs/mods once they connect to the host, but it's just for a reference and does not do anything beyond that. **The mod does not lock or unlock discrepant content for you**. The most obvious case is extra preorder/DLC items sitting in your stash. If someone doesn't own that DLC or bonus, those items are hidden for them, so anything you try to do with them (equip, drop, etc.) will just fail. One simple workaround is to get rid of them by dropping the items on the global map in single-player.
 
 ## Other Mods Compatibility
 Most of the syncing relies on the blueprint asset ID (or something similiar) to replicate action for other players, so in **THEORY** things should work fine as long as those IDs are the same for abilities, spells, etc. This also includes any extra rolls (e.g. Skill Check or Attack Roll) added by mods, but those roll types must be available within base game.
@@ -52,15 +54,30 @@ Multiplayer needs some settings to be locked in and synced across players. When 
 Some options can't be changed mid-game - you will see those grayed out in the settings menu.
 
 ## Basics
+Multiplayer window loads all available saves. You can use any save to host a multiplayer game.
 
-- You will need an existing save file to host a multiplayer game. If you are starting fresh, someone will have to kick things off in single-player first, which means you will miss a few opening dialogs and cutscenes - kinda annoying, but it is what it is.
-- The most recent multiplayer save is stored at `%APP_DATA%\LocalLow\Owlcat Games\Pathfinder Wrath Of The Righteous\Saved Multiplayer Games`
-- Mod logs are located in `Mods/WOTRMultiplayer/logs` folder
-- Once the game actually starts, a save copy is also stored in your normal save folder.
-- If you load or quickload during a session, it forces everyone in the lobby to load the same save (transferred over the network).
-- A stable 60+ FPS is strongly recommended. If you drop below that, you'll probably run into various desync issues (like AI picking different targets, units not attacking after moving, etc.).
-- There's no hard player limit. Extra players can even join as spectators with 0 units, though the player list UI might look a bit weird. That said, most testing was done with 2 players (sometimes 3), so the more people you add, the more likely things are to break.
-- It's possible to join when the game has already started (host IP address or game code can be found in the Multiplayer Lobby window), you need to ask host to load save game and it will load for you as well
+There is a special `New Campaign` save slot that can be used to start fresh campaign. It will start regular new game sequence, but for everyone in multiplayer session. Player assigned to control main character will be in control of leveling (Character generation) screen. 
+
+Worth noting, such way to start game is very limited as of now:
+- no save import
+- no pregen characters
+- no custom difficulty
+
+However, you can create a save game in single-player using those features and then host the game from that save.
+
+The most recent multiplayer save is stored at `%APP_DATA%\LocalLow\Owlcat Games\Pathfinder Wrath Of The Righteous\Saved Multiplayer Games\latest save.zks`, but base game still saves a copy of that save in a regular save folder.
+
+Load/Quickload is available during multiplayer game. It will force everyone in the lobby to load the same saved game (which is transferred over the network)
+
+A stable 60+ FPS is strongly recommended. If you drop below that, you will probably run into various desync issues (like AI picking different targets, units not attacking after moving, etc.)
+
+There is no hard player limit. Extra players can even join as spectators with 0 units, though the player list UI might look a bit weird. That said, most testing was done with 2 players (sometimes 3), so the more people you add, the more likely things are to break.
+
+It is possible to join when the game has already started (host IP address or game code can be found in the Multiplayer Lobby window), you need to ask host to load save game and it will load for you as well
+
+## Logs
+- Mod writes logs to `Mods/WOTRMultiplayer/logs` folder.
+- Log files are never cleaned by the mod itself
 
 ## Pausing
 

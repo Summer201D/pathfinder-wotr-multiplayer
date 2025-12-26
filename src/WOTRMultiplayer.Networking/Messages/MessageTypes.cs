@@ -17,7 +17,8 @@
             NotifyLobbyPlayersChanged,
             NotifyLobbySaveGameChanged,
             PlayerReadyStatusChanged,
-            NotifyPlayerStartFailed
+            NotifyPlayerGameStartUpSyncStatusChanged,
+            NotifyNewGameDifficultyChanged
         }
 
         public enum Game
@@ -156,6 +157,10 @@
             NotifyCharacterSelectionToggleChanged,
             NotifyCharacterSelectionWindowClosed,
             NotifyCharacterSelectionWindowAccepted,
+            NotifyNewGameSequencePhaseChanged,
+            NotifyNewGameSequenceWitnessed,
+            NotifyNewGameSequenceLevelingStarted,
+            NotifyNewGameSequenceTerminated
         }
 
         public enum Request

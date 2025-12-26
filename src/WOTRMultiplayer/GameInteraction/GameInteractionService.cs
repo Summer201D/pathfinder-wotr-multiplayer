@@ -68,8 +68,12 @@ using Kingmaker.UI.MVVM._PCView.GlobalMap;
 using Kingmaker.UI.MVVM._PCView.GroupChanger;
 using Kingmaker.UI.MVVM._PCView.InGame;
 using Kingmaker.UI.MVVM._PCView.Loot;
+using Kingmaker.UI.MVVM._PCView.MainMenu;
+using Kingmaker.UI.MVVM._PCView.NewGame;
+using Kingmaker.UI.MVVM._PCView.NewGame.Story;
 using Kingmaker.UI.MVVM._PCView.Party;
 using Kingmaker.UI.MVVM._PCView.Rest;
+using Kingmaker.UI.MVVM._PCView.Settings.Entities.Difficulty;
 using Kingmaker.UI.MVVM._VM.CharGen.Phases;
 using Kingmaker.UI.MVVM._VM.CharGen.Phases.Class;
 using Kingmaker.UI.MVVM._VM.CharGen.Phases.Common;
@@ -77,9 +81,12 @@ using Kingmaker.UI.MVVM._VM.CharGen.Phases.FeatureSelector;
 using Kingmaker.UI.MVVM._VM.CharGen.Phases.Portrait;
 using Kingmaker.UI.MVVM._VM.CharGen.Phases.Spells;
 using Kingmaker.UI.MVVM._VM.Lockpick;
+using Kingmaker.UI.MVVM._VM.NewGame;
 using Kingmaker.UI.MVVM._VM.ServiceWindows.Inventory;
 using Kingmaker.UI.MVVM._VM.ServiceWindows.Spellbook.MemorizingPanel;
+using Kingmaker.UI.MVVM._VM.Settings.Entities;
 using Kingmaker.UI.MVVM._VM.Vendor;
+using Kingmaker.UI.SettingsUI;
 using Kingmaker.UI.UnitSettings;
 using Kingmaker.UnitLogic;
 using Kingmaker.UnitLogic.Abilities;
@@ -112,12 +119,14 @@ using WOTRMultiplayer.MP.Entities.Leveling;
 using WOTRMultiplayer.MP.Entities.Loot;
 using WOTRMultiplayer.MP.Entities.MapObjects;
 using WOTRMultiplayer.MP.Entities.Movement;
+using WOTRMultiplayer.MP.Entities.NewGame;
 using WOTRMultiplayer.MP.Entities.Rest;
 using WOTRMultiplayer.MP.Entities.Settings;
 using WOTRMultiplayer.MP.Entities.Spells;
 using WOTRMultiplayer.MP.Entities.Units;
 using WOTRMultiplayer.MP.Entities.Vendor;
 using WOTRMultiplayer.Settings;
+using WOTRMultiplayer.UI;
 
 namespace WOTRMultiplayer.GameInteraction
 {
@@ -135,6 +144,8 @@ namespace WOTRMultiplayer.GameInteraction
 
         private InGamePCView InGamePCView => (Game.Instance.RootUiContext.m_UIView as InGamePCView);
         private GlobalMapPCView GlobalMapPCView => (Game.Instance.RootUiContext.m_UIView as GlobalMapPCView);
+        private MainMenuPCView MainMenuPCView => (Game.Instance.RootUiContext.m_UIView as MainMenuPCView);
+        private NewGamePCView NewGamePCView => MainMenuPCView?.NewGamePCView;
         private LootPCView LootPCView => (Game.Instance.RootUiContext.m_UIView as InGamePCView)?.m_StaticPartPCView?.m_LootContextPCView?.m_LootPCView;
         private LootCollectorPCView LootCollector => LootPCView?.m_Collector;
         private PartyPCView PartyPCView => InGamePCView?.m_StaticPartPCView?.m_PartyPCView ?? GlobalMapPCView?.m_PartyPCView;
@@ -143,7 +154,7 @@ namespace WOTRMultiplayer.GameInteraction
         private GroupChangerPCView GroupChangerView => (InGamePCView?.m_StaticPartPCView?.m_GroupChangerContextPCView ?? GlobalMapPCView?.m_GroupChangerContextPCView)?.m_GroupChangerPCView;
         private VendorVM VendorViewVM => InGamePCView?.m_StaticPartPCView?.m_VendorPCView?.ViewModel;
         private SpellbookMemorizingPanelVM SpellbookMemorizingVM => (InGamePCView?.m_StaticPartPCView?.m_ServiceWindowsPCView ?? GlobalMapPCView.m_ServiceWindowsPCView)?.m_SpellbookPCView?.m_MemorizingPanelView?.ViewModel;
-        private CharGenPCView CharGenView => (InGamePCView?.m_StaticPartPCView?.m_CharGenContextPCView ?? GlobalMapPCView?.m_CharGenContextPCView)?.m_CharGenPCView;
+        private CharGenPCView CharGenView => (InGamePCView?.m_StaticPartPCView?.m_CharGenContextPCView ?? GlobalMapPCView?.m_CharGenContextPCView ?? MainMenuPCView?.m_CharGenContextPCView)?.m_CharGenPCView;
         private RespecWindowPCView RespecView => (InGamePCView?.m_StaticPartPCView?.m_CharGenContextPCView ?? GlobalMapPCView?.m_CharGenContextPCView)?.m_RespecWindowPCView;
         private InventoryVM InventoryVM => (Game.Instance.RootUiContext?.InGameVM?.StaticPartVM?.ServiceWindowsVM ?? Game.Instance.RootUiContext?.GlobalMapVM?.ServiceWindowsVM)?.InventoryVM?.Value;
 
@@ -540,10 +551,107 @@ namespace WOTRMultiplayer.GameInteraction
             return save.GameId;
         }
 
+        public void StartNewGameSequence(string mainCharacterId, Action onBack, Action onStart, Action<NetworkCharacter> onCharacterCreated)
+        {
+            _mainThreadAccessor.Post(() =>
+            {
+                var mainMenuVM = Game.Instance.RootUiContext.MainMenuVM;
+                void PreviousStep()
+                {
+                    mainMenuVM.DisposeNewGame();
+                    mainMenuVM.UpdateSoundState();
+
+                    onBack?.Invoke();
+                }
+
+                void OnCharacterCreated()
+                {
+                    var character = new NetworkCharacter
+                    {
+                        Name = mainMenuVM.m_ChargenUnit.CharacterName,
+                        UnitId = mainMenuVM.m_ChargenUnit.UniqueId
+                    };
+                    onCharacterCreated?.Invoke(character);
+                    mainMenuVM.EnterNewGame();
+                }
+
+                void NextStep()
+                {
+                    onStart?.Invoke();
+
+                    mainMenuVM.NewGameVM.SetCommonVisible(value: false);
+                    if (Game.ImportSave != null)
+                    {
+                        mainMenuVM.EnterNewGame();
+                    }
+                    else
+                    {
+                        if (mainMenuVM.m_ChargenUnit == null || mainMenuVM.m_Campaign != Game.NewGamePreset.Campaign)
+                        {
+                            mainMenuVM.m_Campaign = Game.NewGamePreset.Campaign;
+                            mainMenuVM.m_ChargenUnit?.Dispose();
+                            using (Kingmaker.ElementsSystem.ContextData<UnitEntityData.ChargenUnit>.Request())
+                            {
+                                var unit = new UnitEntityData(mainCharacterId, true, Game.NewGamePreset.PlayerCharacter);
+                                mainMenuVM.m_ChargenUnit = unit;
+                                mainMenuVM.m_ChargenUnit.AttachToViewOnLoad(null);
+                            }
+                        }
+
+                        Kingmaker.UnitLogic.Class.LevelUp.LevelUpConfig.Create(mainMenuVM.m_ChargenUnit, Kingmaker.UnitLogic.Class.LevelUp.LevelUpState.CharBuildMode.CharGen)
+                            .SetEnterNewGameAction(OnCharacterCreated)
+                            .OpenUI();
+
+                        mainMenuVM.m_OpenCharGenCommand.Execute();
+                    }
+                }
+
+                mainMenuVM.NewGameVM = new NewGameVM(PreviousStep, NextStep);
+                mainMenuVM.m_OpenNewGameCommand.Execute();
+                mainMenuVM.UpdateSoundState();
+            });
+        }
+
+        public void SelectNewGameDifficulty(string difficulty)
+        {
+            _mainThreadAccessor.Post(() =>
+            {
+                var newGameVM = Game.Instance.RootUiContext?.MainMenuVM?.NewGameVM;
+                if (newGameVM == null)
+                {
+                    _logger.LogWarning("Unable to select new game difficulty due to missing NewGameVM. Difficulty={Difficulty}", difficulty);
+                    return;
+                }
+
+                if (!(newGameVM.DifficultyVM?.IsVisible.Value ?? false))
+                {
+                    _logger.LogWarning("Unable to select new game difficulty due to not visible DifficultyVM. Difficulty={Difficulty}", difficulty);
+                    return;
+                }
+
+                var difficultySetting = newGameVM.DifficultyVM.m_SettingEntities.FirstOrDefault(s => s is SettingsEntityWithValueVM valueSetting && valueSetting.m_UISettingsEntity?.SettingsEntity == SettingsRoot.Difficulty.GameDifficulty);
+                if (difficultySetting == null)
+                {
+                    _logger.LogError("Unable to select new game difficulty due to missing GameDifficulty setting entity. Difficulty={Difficulty}", difficulty);
+                    return;
+                }
+
+                var difficultyEntity = (UISettingsEntityGameDifficulty)((SettingsEntityWithValueVM)difficultySetting).m_UISettingsEntity;
+                if (!Enum.TryParse<GameDifficultyOption>(difficulty, true, out var gameDifficultyOption))
+                {
+                    _logger.LogError("Unable to select new game difficulty due to invalid difficulty value. Difficulty={Difficulty}", difficulty);
+                    return;
+                }
+
+                difficultyEntity.SetTempValue(gameDifficultyOption);
+
+                _logger.LogInformation("New Game difficulty has been selected. Difficulty={Difficulty}", difficultyEntity.GetTempValue());
+            });
+        }
+
         public string GetPetOwnerId(string unitId)
         {
             var unit = Game.Instance.State.Units.FirstOrDefault(u => string.Equals(u.UniqueId, unitId));
-
             if (unit == null)
             {
                 return null;
@@ -2388,6 +2496,147 @@ namespace WOTRMultiplayer.GameInteraction
             });
         }
 
+        public void SelectNewGameSequencePhase(NetworkNewGameSequencePhase newGameSequencePhase)
+        {
+            _mainThreadAccessor.Post(() =>
+            {
+                try
+                {
+                    if (NewGamePCView?.ViewModel == null)
+                    {
+                        _logger.LogWarning("Unable to select new game sequence phase due to missing NewGamePCView. PhaseType={PhaseType}", newGameSequencePhase.Type);
+                        return;
+                    }
+
+                    switch (newGameSequencePhase.Type)
+                    {
+                        case NetworkNewGameSequencePhaseType.Story:
+                            NewGamePCView.ViewModel.MenuSelectionGroup.SelectedEntity.Value = NewGamePCView.ViewModel.m_MenuEntitiesList.FirstOrDefault(m => m.NewGamePhaseVM == NewGamePCView.ViewModel.StoryVM);
+                            //NewGamePCView.ViewModel.OnStoryMenuSelect();
+                            break;
+                        case NetworkNewGameSequencePhaseType.Difficulty:
+                            NewGamePCView.ViewModel.MenuSelectionGroup.SelectedEntity.Value = NewGamePCView.ViewModel.m_MenuEntitiesList.FirstOrDefault(m => m.NewGamePhaseVM == NewGamePCView.ViewModel.DifficultyVM);
+                            //NewGamePCView.ViewModel.OnDifficultyMenuSelect();
+                            break;
+                        case NetworkNewGameSequencePhaseType.SaveInjector:
+                            NewGamePCView.ViewModel.MenuSelectionGroup.SelectedEntity.Value = NewGamePCView.ViewModel.m_MenuEntitiesList.FirstOrDefault(m => m.NewGamePhaseVM == NewGamePCView.ViewModel.SaveInjectorVM);
+                            //NewGamePCView.ViewModel.OnSaveInjectionMenuSelect();
+                            break;
+                    }
+
+                    _logger.LogInformation("New game sequence phase has been selected. PhaseType={PhaseType}", newGameSequencePhase.Type);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Unable to select new game sequence phase. PhaseType={PhaseType}", newGameSequencePhase.Type);
+                    throw;
+                }
+            });
+        }
+
+        public void TerminateNewGameSequence()
+        {
+            _mainThreadAccessor.Post(() =>
+            {
+                try
+                {
+                    if (NewGamePCView?.ViewModel == null)
+                    {
+                        _logger.LogWarning("Unable to terminate new game sequence due to missing NewGamePCView");
+                        return;
+                    }
+
+                    NewGamePCView.ViewModel.OnClose();
+                    _logger.LogError("New game sequence has been terminted");
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Unable to terminate new game sequence");
+                    throw;
+                }
+            });
+        }
+
+        public void StartNewGameSequenceLeveling()
+        {
+            _mainThreadAccessor.Post(() =>
+            {
+                try
+                {
+                    if (NewGamePCView?.ViewModel == null)
+                    {
+                        _logger.LogWarning("Unable to start new game sequence leveling due to missing NewGamePCView");
+                        return;
+                    }
+
+                    NewGamePCView.ViewModel.MenuSelectionGroup.SelectedEntity.Value.OnNext();
+                    _logger.LogError("New game sequence leveling has been selected");
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Unable to start new game sequence leveling");
+                    throw;
+                }
+            });
+        }
+
+        public void UpdateNewGameSequencePhaseControls(bool isEnabled, NetworkNewGameSequencePhaseType newGameSequencePhaseType)
+        {
+            _mainThreadAccessor.Post(() =>
+            {
+                try
+                {
+                    if (NewGamePCView?.ViewModel == null)
+                    {
+                        _logger.LogWarning("Unable to update new game sequence phase controls due to missing NewGamePCView. IsEnabled={IsEnabled}, PhaseType={PhaseType}", isEnabled, newGameSequencePhaseType);
+                        return;
+                    }
+
+                    NewGamePCView.m_BackButton.Interactable = isEnabled;
+                    NewGamePCView.m_NextButton.Interactable = isEnabled;
+                    NewGamePCView.m_CloseButton.Interactable = isEnabled;
+                    foreach (var menu in NewGamePCView.m_MenuSelectorView.m_MenuEntities)
+                    {
+                        menu.m_Button.Interactable = isEnabled;
+                    }
+
+                    switch (newGameSequencePhaseType)
+                    {
+                        case NetworkNewGameSequencePhaseType.Story:
+                            foreach (var widgetEntry in NewGamePCView.m_StoryPCView.m_SelectorPCView.m_WidgetList.Entries)
+                            {
+                                if (widgetEntry is NewGamePhaseStoryScenarioEntityPCView story)
+                                {
+                                    story.m_Button.Interactable = isEnabled && string.Equals(story.ViewModel.m_StoryCampaign.name, "MainCampaign", StringComparison.OrdinalIgnoreCase);
+                                }
+                            }
+                            break;
+                        case NetworkNewGameSequencePhaseType.Difficulty:
+                            foreach (var entry in NewGamePCView.m_DifficultyPCView.m_VirtualList.Elements)
+                            {
+                                switch (entry.View)
+                                {
+                                    case SettingsEntityDropdownGameDifficultyPCView difficultyPCView:
+                                        foreach (var difficultyItem in difficultyPCView.m_ItemViews)
+                                        {
+                                            difficultyItem.m_Button.Interactable = isEnabled;
+                                        }
+                                        break;
+                                }
+                            }
+                            break;
+                    }
+
+                    _logger.LogInformation("New game sequence phase controls have been updated. IsEnabled={IsEnabled}, PhaseType={PhaseType}", isEnabled, newGameSequencePhaseType);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Unable to update new game sequence phase controls. IsEnabled={IsEnabled}, PhaseType={PhaseType}", isEnabled, newGameSequencePhaseType);
+                    throw;
+                }
+            });
+        }
+
         public void UpdateLevelingPhaseControls(bool isEnabled)
         {
             _mainThreadAccessor.Post(() =>
@@ -3598,7 +3847,7 @@ namespace WOTRMultiplayer.GameInteraction
                     continue;
                 }
 
-                var portrait = _resourceProvider.GetUISprite("UI_Inventory_IconHeart");
+                var portrait = _resourceProvider.GetSprite(ResourceBundleProvider.UIBundleName, "UI_Inventory_IconHeart");
                 var maxIcons = Math.Min(3, suggestedAnswer.Players.Count);
                 for (int i = maxIcons; i > 0; i--)
                 {

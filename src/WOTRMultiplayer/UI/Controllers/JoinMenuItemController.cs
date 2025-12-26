@@ -63,7 +63,7 @@ namespace WOTRMultiplayer.UI.Controllers
             .Find(LobbyWindowObjectName)
             .gameObject;
 
-        protected GameObject ReadyButtonObject => LobbyControls.transform
+        protected override GameObject ReadyButtonObject => LobbyControls.transform
             .Find(LobbyControlsMenuReadyButtonObjectName)
             .gameObject;
 
@@ -76,8 +76,9 @@ namespace WOTRMultiplayer.UI.Controllers
             IMainThreadAccessor mainThreadAccessor,
             ILobbyWindowController lobbyWindowController,
             IMultiplayerClient multiplayerClient,
+            IResourceProvider resourceProvider,
             IUIFactory uIFactory)
-            : base(logger, lobbyWindowController, mainThreadAccessor)
+            : base(logger, lobbyWindowController, mainThreadAccessor, resourceProvider, multiplayerClient)
         {
             _logger = logger;
             _uIFactory = uIFactory;
@@ -234,6 +235,7 @@ namespace WOTRMultiplayer.UI.Controllers
             _multiplayerClient.OnPlayersChanged = enable ? OnMultiplayerPlayersChanged : null;
             _multiplayerClient.OnGameCharactersChanged = enable ? OnMultiplayerGameCharactersChanged : null;
             _multiplayerClient.OnCharacterOwnerChanged = enable ? OnMultiplayerCharacterOwnerChanged : null;
+            _multiplayerClient.OnNewGameSequenceStarted = enable ? OnMultiplayerNewGameSequenceStarted : null;
         }
 
         protected override void DisposeInternal()
@@ -270,14 +272,6 @@ namespace WOTRMultiplayer.UI.Controllers
             ActivateJoinLobbyControls();
         }
 
-        private void OnReadyButtonClicked()
-        {
-            var isReady = _multiplayerClient.ReadyChanged();
-            var label = isReady ? new LocalizedString { Key = WellKnownKeys.MultiplayerWindow.JoinMenu.ReadyButton.ReadyText.Key }
-                : new LocalizedString { Key = WellKnownKeys.MultiplayerWindow.JoinMenu.ReadyButton.NotReadyText.Key };
-            ReadyButtonObject.GetComponentInChildren<TextMeshProUGUI>().SetText(label);
-        }
-
         private void OnLeaveButtonClicked()
         {
             _logger.LogInformation("Leave button clicked");
@@ -288,7 +282,7 @@ namespace WOTRMultiplayer.UI.Controllers
         {
             MainThreadAccessor.Post(() =>
             {
-                ReadyButtonObject.GetComponentInChildren<TextMeshProUGUI>().SetText(new LocalizedString { Key = WellKnownKeys.MultiplayerWindow.JoinMenu.ReadyButton.NotReadyText.Key });
+                ToggleReadyButton(false);
 
                 JoinLobbyControlsObject.SetActive(false);
                 LobbyControls.SetActive(true);

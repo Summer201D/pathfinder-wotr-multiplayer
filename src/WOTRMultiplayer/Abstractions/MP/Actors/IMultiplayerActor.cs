@@ -12,6 +12,7 @@ using WOTRMultiplayer.MP.Entities.Leveling;
 using WOTRMultiplayer.MP.Entities.Loot;
 using WOTRMultiplayer.MP.Entities.MapObjects;
 using WOTRMultiplayer.MP.Entities.Movement;
+using WOTRMultiplayer.MP.Entities.NewGame;
 using WOTRMultiplayer.MP.Entities.Rest;
 using WOTRMultiplayer.MP.Entities.Rolls.Claiming.Values;
 using WOTRMultiplayer.MP.Entities.Spells;
@@ -46,6 +47,8 @@ namespace WOTRMultiplayer.Abstractions.MP.Actors
         Action<NetworkGameConnectivity> OnConnected { get; set; }
 
         Action<List<NetworkPlayer>> OnPlayersChanged { get; set; }
+
+        Action<bool> OnNewGameSequenceStarted { get; set; }
 
         int SessionSeed { get; }
 
@@ -267,5 +270,9 @@ namespace WOTRMultiplayer.Abstractions.MP.Actors
         void OnLevelingRespecMythicLevelUp();
 
         void OnCharacterSelectionWindowShown();
+
+        void OnNewGameSequenceWitnessPhase(NetworkNewGameSequencePhase newGameSequencePhase);
+
+        bool CanMakeNewGameSequenceDecisions();
     }
 }

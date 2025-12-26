@@ -97,12 +97,7 @@ namespace WOTRMultiplayer.HarmonyPatches.Loot
             }
 
             var showLootingWindow = containerType == LootContainerType.PlayerChest || Main.Multiplayer.IsControlledByLocalPlayer(unit.UniqueId);
-            if (showLootingWindow)
-            {
-                return true;
-            }
-
-            return false;
+            return showLootingWindow;
         }
 
         [HarmonyPatch(typeof(LootObjectVM), nameof(LootObjectVM.UseSkinning))]
