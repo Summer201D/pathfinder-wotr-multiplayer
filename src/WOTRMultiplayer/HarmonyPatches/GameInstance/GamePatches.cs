@@ -69,8 +69,8 @@ namespace WOTRMultiplayer.HarmonyPatches.GameInstance
         }
 
         /// <summary>
-        /// EscMode and FullScreenUi are never actually started. We block them to prevent the game from 'fake' pausing (reducing timeScale to 0, stopping moving units, etc.) in multiplayer — the game should keep running when a player opens Esc menu, settings, inventory, etc.
-        /// This causes some ugly side effects though. For example, the inventory can overlap with the combat log. Even though the combat log is not visible, it still captures all pointer inputs, so you can't use some inventory slots or interact with Finnean.
+        /// EscMode and FullScreenUi game modes are never actually started. We block them to prevent the game from 'fake' pausing (reducing timeScale to 0, stopping moving units, etc.) in multiplayer - the game should keep running when a player opens Esc menu, settings, inventory, etc.
+        /// This, however, causes some undesirable side effects. For example, opened inventory (fullscreenui) overlaps with the combat log. Even though the combat log is not visible, it still captures all mouse inputs, so you can't use some inventory slots or interact with Finnean.
         /// An alternative to blocking these modes would be to stop controllers from being deactivated (starting FullScreenUi mode stops Default mode, which calls Deactivate on every controller),
         /// but that looks like a rabbit hole with an unclear amount of work to fix every controller that needs to stay active.
         /// For now, fixing the side effects feels like the safer and more reasonable approach
