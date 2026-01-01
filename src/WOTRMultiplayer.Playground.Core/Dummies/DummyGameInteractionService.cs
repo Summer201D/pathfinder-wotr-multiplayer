@@ -15,8 +15,8 @@ using WOTRMultiplayer.Entities.Dialogs;
 using WOTRMultiplayer.Entities.Equipment;
 using WOTRMultiplayer.Entities.GlobalMap;
 using WOTRMultiplayer.Entities.Inspect;
+using WOTRMultiplayer.Entities.Items;
 using WOTRMultiplayer.Entities.Leveling;
-using WOTRMultiplayer.Entities.Loot;
 using WOTRMultiplayer.Entities.MapObjects;
 using WOTRMultiplayer.Entities.Movement;
 using WOTRMultiplayer.Entities.NewGame;
@@ -669,12 +669,16 @@ namespace WOTRMultiplayer.Playground.Core.Dummies
 
         public int GetCurrentChapter()
         {
-            throw new NotImplementedException();
+            return int.MaxValue;
         }
 
         public string GetCurrentAreaName()
         {
-            throw new NotImplementedException();
+            return null;
+        }
+
+        public void CreateAndEquipPolymorphicItem(NetworkPolymorphicItem polymorphicItem, bool createContext)
+        {
         }
     }
 }

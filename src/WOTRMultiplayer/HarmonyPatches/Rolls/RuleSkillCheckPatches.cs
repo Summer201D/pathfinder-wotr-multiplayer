@@ -91,7 +91,8 @@ namespace WOTRMultiplayer.HarmonyPatches.Rolls
                     return ruleSkillCheck.D20;
                 }
 
-                return originalFunc();
+                var d20 = originalFunc();
+                return d20;
             }
             catch (Exception ex)
             {

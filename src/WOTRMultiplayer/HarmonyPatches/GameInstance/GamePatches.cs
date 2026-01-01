@@ -10,7 +10,7 @@ using Microsoft.Extensions.Logging;
 namespace WOTRMultiplayer.HarmonyPatches.GameInstance
 {
     [HarmonyPatch]
-    public class GameInstancePatches
+    public class GamePatches
     {
         [HarmonyPatch(typeof(Game), nameof(Game.LoadGame))]
         [HarmonyPrefix]
@@ -23,7 +23,7 @@ namespace WOTRMultiplayer.HarmonyPatches.GameInstance
 
             if (Game.Instance.Player.MainCharacter == null)
             {
-                Main.GetLogger<GameInstancePatches>().LogInformation("Force load hook is skipped since player is not in the game");
+                Main.GetLogger<GamePatches>().LogInformation("Force load hook is skipped since player is not in the game");
                 return;
             }
 
@@ -61,13 +61,13 @@ namespace WOTRMultiplayer.HarmonyPatches.GameInstance
         public static IEnumerable<CodeInstruction> Game_PauseBind_Transpiler(IEnumerable<CodeInstruction> instructions)
         {
             var target = PatchesUtils.GetTranspilerTarget(MethodBase.GetCurrentMethod());
-            var replaceWith = AccessTools.Method(typeof(GameInstancePatches), nameof(GameInstancePatches.TogglePause));
+            var replaceWith = AccessTools.Method(typeof(GamePatches), nameof(GamePatches.TogglePause));
             var lookFor = AccessTools.PropertyGetter(typeof(Game), nameof(Game.IsPaused));
             var matcher = new CodeMatcher(instructions);
             var match = matcher.SearchForward(x => x.Calls(lookFor));
             if (match.IsInvalid)
             {
-                Main.GetLogger<GameInstancePatches>().LogError("Transpiler has not been applied. Target={Target}", target);
+                Main.GetLogger<GamePatches>().LogError("Transpiler has not been applied. Target={Target}", target);
                 return instructions;
             }
 
@@ -78,7 +78,7 @@ namespace WOTRMultiplayer.HarmonyPatches.GameInstance
                 new (OpCodes.Call, replaceWith),
             };
             match.Insert(newInstructions);
-            Main.GetLogger<GameInstancePatches>().LogInformation("Transpiler has been applied. Target={Target}", target);
+            Main.GetLogger<GamePatches>().LogInformation("Transpiler has been applied. Target={Target}", target);
             return matcher.Instructions();
         }
 

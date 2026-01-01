@@ -1,7 +1,6 @@
-﻿using WOTRMultiplayer.Entities;
-using WOTRMultiplayer.Entities.Equipment;
+﻿using WOTRMultiplayer.Entities.Equipment;
 
-namespace WOTRMultiplayer.Entities.Loot
+namespace WOTRMultiplayer.Entities.Items
 {
     public class NetworkUseInventoryItem
     {

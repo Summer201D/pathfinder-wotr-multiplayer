@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Kingmaker.EntitySystem.Entities;
 using WOTRMultiplayer.Entities.Equipment;
 using WOTRMultiplayer.Entities.Inspect;
+using WOTRMultiplayer.Entities.Items;
 
 namespace WOTRMultiplayer.Services.GameInteraction.Contexts
 {
@@ -28,20 +29,24 @@ namespace WOTRMultiplayer.Services.GameInteraction.Contexts
 
         public VendorItemTransferContext VendorItemTransfer { get; set; }
 
-        public MapObjectLockpickContext LockpickContext { get; set; }
+        public MapObjectLockpickContext Lockpick { get; set; }
+
+        public PolymorphicItemContext PolymorphicItem { get; set; }
 
         public void Dispose()
         {
             SelectedUnits = null;
             PerceptionCheck = null;
             DropItem = null;
+            UseInventoryItem = null;
             Equipment = null;
             HandEquipment = null;
             RandomEncounter = null;
             Overtip = null;
             UnitsMovement = null;
             VendorItemTransfer = null;
-            UseInventoryItem = null;
+            Lockpick = null;
+            PolymorphicItem = null;
         }
 
         public static RemoteExecutionContext CreateDropItem(string itemId, string unitId)
@@ -122,6 +127,14 @@ namespace WOTRMultiplayer.Services.GameInteraction.Contexts
                 {
                     ItemId = itemId
                 }
+            };
+        }
+
+        public static RemoteExecutionContext Create(NetworkPolymorphicItem polymorphicItem)
+        {
+            return new RemoteExecutionContext
+            {
+                PolymorphicItem = new PolymorphicItemContext(polymorphicItem.UnitId, polymorphicItem.Item.Name)
             };
         }
     }

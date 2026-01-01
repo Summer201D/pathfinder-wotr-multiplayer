@@ -18,8 +18,8 @@ using WOTRMultiplayer.Entities.Dialogs;
 using WOTRMultiplayer.Entities.Equipment;
 using WOTRMultiplayer.Entities.GlobalMap;
 using WOTRMultiplayer.Entities.Inspect;
+using WOTRMultiplayer.Entities.Items;
 using WOTRMultiplayer.Entities.Leveling;
-using WOTRMultiplayer.Entities.Loot;
 using WOTRMultiplayer.Entities.MapObjects;
 using WOTRMultiplayer.Entities.Movement;
 using WOTRMultiplayer.Entities.NewGame;
@@ -2035,7 +2035,7 @@ namespace WOTRMultiplayer.Services
                     return;
                 }
 
-                var lockpickContext = _gameInteractionService.RemoteContext?.LockpickContext;
+                var lockpickContext = _gameInteractionService.RemoteContext?.Lockpick;
                 if (lockpickContext != null && string.Equals(lockpickContext.MapObjectId, lockpickInteraction.MapObject.Id, StringComparison.OrdinalIgnoreCase))
                 {
                     return;
@@ -2708,6 +2708,31 @@ namespace WOTRMultiplayer.Services
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error while changing new game difficulty. Difficulty={Difficulty}", difficulty);
+                throw;
+            }
+        }
+        public bool OnCreateAndEquipPolymorphInSlot(NetworkPolymorphicItem polymorphicItem)
+        {
+            try
+            {
+                if (_multiplayerActorAccessor.Current == null)
+                {
+                    return true;
+                }
+
+                var context = _gameInteractionService.RemoteContext?.PolymorphicItem;
+                if (context != null && string.Equals(context.UnitId, polymorphicItem.UnitId, StringComparison.OrdinalIgnoreCase)
+                    && string.Equals(context.ItemName, polymorphicItem.Item.Name, StringComparison.OrdinalIgnoreCase))
+                {
+                    return true;
+                }
+
+                var shouldContinue = _multiplayerActorAccessor.Current.OnCreateAndEquipPolymorphInSlot(polymorphicItem);
+                return shouldContinue;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while creating and equiping polymorphic item. UnitId={UnitId}", polymorphicItem.UnitId);
                 throw;
             }
         }

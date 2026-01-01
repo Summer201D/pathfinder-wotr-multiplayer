@@ -6,6 +6,8 @@ using System.Threading.Tasks;
 using Kingmaker;
 using Kingmaker.Assets.Controllers.GlobalMap;
 using Kingmaker.Blueprints;
+using Kingmaker.Blueprints.Items;
+using Kingmaker.Blueprints.Items.Components;
 using Kingmaker.Blueprints.Items.Equipment;
 using Kingmaker.Blueprints.Root;
 using Kingmaker.Cheats;
@@ -113,8 +115,8 @@ using WOTRMultiplayer.Entities.Dialogs;
 using WOTRMultiplayer.Entities.Equipment;
 using WOTRMultiplayer.Entities.GlobalMap;
 using WOTRMultiplayer.Entities.Inspect;
+using WOTRMultiplayer.Entities.Items;
 using WOTRMultiplayer.Entities.Leveling;
-using WOTRMultiplayer.Entities.Loot;
 using WOTRMultiplayer.Entities.MapObjects;
 using WOTRMultiplayer.Entities.Movement;
 using WOTRMultiplayer.Entities.NewGame;
@@ -3129,7 +3131,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
                 using var context = _networkExecutionContext.Value = new RemoteExecutionContext
                 {
                     SelectedUnits = units,
-                    LockpickContext = new MapObjectLockpickContext { MapObjectId = lockpickInteraction.MapObject.Id }
+                    Lockpick = new MapObjectLockpickContext { MapObjectId = lockpickInteraction.MapObject.Id }
                 };
                 lockpickVM.OnInteraction(lockpickInteraction.LockpickType);
             });
@@ -3771,6 +3773,90 @@ namespace WOTRMultiplayer.Services.GameInteraction
             return areaName;
         }
 
+        public void CreateAndEquipPolymorphicItem(NetworkPolymorphicItem polymorphicItem, bool createContext)
+        {
+            _mainThreadAccessor.Post(() =>
+            {
+                var unit = GetUnitEntity(polymorphicItem.UnitId);
+                if (unit == null)
+                {
+                    _logger.LogError("Unable to create and equip polymorphic item due to missing unit. UnitId={UnitId}", polymorphicItem.UnitId);
+                    return;
+                }
+
+                // InventoryStashVM.GetSmartItem
+                var smartItem = unit.Inventory.Items.FirstOrDefault(i => i.Blueprint is BlueprintHiddenItem);
+                if (smartItem == null)
+                {
+                    _logger.LogError("Unable to create and equip polymorphic item due to missing smart item. UnitId={UnitId}", polymorphicItem.UnitId);
+                    return;
+                }
+
+                var polymorpItems = GetPolymorphItems(smartItem);
+                var targetItem = polymorpItems.FirstOrDefault(i => string.Equals(i.NameForAcronym, polymorphicItem.Item.Name));
+                if (targetItem == null)
+                {
+                    _logger.LogError("Unable to create and equip polymorphic item due to missing smart item variation. UnitId={UnitId}, ItemName={ItemName}", polymorphicItem.UnitId, polymorphicItem.Item.Name);
+                    return;
+                }
+
+                var itemSlot = GetItemSlot(polymorphicItem.UnitId, polymorphicItem.Position);
+                if (itemSlot == null)
+                {
+                    _logger.LogError("Unable to create and equip polymorphic item due to invalid item slot position. UnitId={UnitId}, SlotIndex={SlotIndex}, SlotType={SlotType}", polymorphicItem.UnitId, polymorphicItem.Position.Index, polymorphicItem.Position.Type);
+                    return;
+                }
+
+                using var context = createContext ? _networkExecutionContext.Value = RemoteExecutionContext.Create(polymorphicItem) : null;
+
+                var itemPolymorphPart = smartItem.Parts.Get<ItemPolymorph.ItemPolymorphPart>();
+                itemPolymorphPart.CreateAndEquipPolymorphInSlot(targetItem, unit, itemSlot);
+                _logger.LogInformation("Polymorphic item has been created and equipped. UnitId={UnitId}, ItemName={ItemName}, SlotType={SlotType}", unit.UniqueId, targetItem.NameForAcronym, itemSlot.GetType().Name);
+            });
+        }
+
+        /// <summary>
+        /// raw decompiled code of InventorySmartItemVM.GetPolymorphItems
+        /// </summary>
+        /// <param name="smartItemEntity"></param>
+        /// <returns></returns>
+        private List<ItemEntity> GetPolymorphItems(ItemEntity smartItemEntity)
+        {
+            var list = new List<ItemEntity>();
+            ItemPolymorph.ItemPolymorphPart itemPolymorphPart = smartItemEntity.Parts.Get<ItemPolymorph.ItemPolymorphPart>();
+            if (itemPolymorphPart == null)
+            {
+                return list;
+            }
+            HashSet<BlueprintItemReference> polymorphItems = itemPolymorphPart.PolymorphItems;
+            IEnumerable<BlueprintItem> enumerable;
+            if (polymorphItems == null)
+            {
+                enumerable = null;
+            }
+            else
+            {
+                enumerable = from i in polymorphItems
+                             select i.Get() into i
+                             where i != null
+                             select i;
+            }
+            IEnumerable<BlueprintItem> enumerable2 = enumerable;
+            if (enumerable2 == null)
+            {
+                return list;
+            }
+            list.AddRange(from i in enumerable2
+                          select i.CreateEntity() into i
+                          where UIUtilityItem.GetEquipPossibility(i)[0]
+                          select i);
+            foreach (ItemEntity itemEntity in list)
+            {
+                itemEntity.Identify();
+            }
+            return list;
+        }
+
         private void ImmediatlyMarkSuggestedDialogAnswers(List<NetworkDialogAnswerSuggestion> suggestions)
         {
             _logger.LogInformation("Marking dialog answer suggestions. Count={Count}", suggestions.Count);
@@ -3944,6 +4030,11 @@ namespace WOTRMultiplayer.Services.GameInteraction
         {
             var unit = GetUnitEntity(unitId);
 
+            return GetItemSlot(unit, position);
+        }
+
+        private ItemSlot GetItemSlot(UnitEntityData unit, NetworkEquipmentSlotPosition position)
+        {
             if (unit == null)
             {
                 return null;

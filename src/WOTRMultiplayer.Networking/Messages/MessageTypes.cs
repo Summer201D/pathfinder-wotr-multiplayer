@@ -160,7 +160,9 @@
             NotifyNewGameSequencePhaseChanged,
             NotifyNewGameSequenceWitnessed,
             NotifyNewGameSequenceLevelingStarted,
-            NotifyNewGameSequenceTerminated
+            NotifyNewGameSequenceTerminated,
+            NotifyPolymorphicItemCreated,
+            NotifyPolymorphicItemCreationRequested
         }
 
         public enum Request

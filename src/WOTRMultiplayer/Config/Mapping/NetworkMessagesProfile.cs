@@ -7,8 +7,8 @@ using WOTRMultiplayer.Entities.Dialogs;
 using WOTRMultiplayer.Entities.Equipment;
 using WOTRMultiplayer.Entities.GlobalMap;
 using WOTRMultiplayer.Entities.Inspect;
+using WOTRMultiplayer.Entities.Items;
 using WOTRMultiplayer.Entities.Leveling;
-using WOTRMultiplayer.Entities.Loot;
 using WOTRMultiplayer.Entities.MapObjects;
 using WOTRMultiplayer.Entities.Movement;
 using WOTRMultiplayer.Entities.NewGame;
@@ -230,6 +230,9 @@ namespace WOTRMultiplayer.Config.Mapping
                 .ReverseMap();
 
             CreateMap<NetworkNewGameSequencePhase, Networking.Messages.Contracts.NetworkNewGameSequencePhase>()
+                .ReverseMap();
+
+            CreateMap<NetworkPolymorphicItem, Networking.Messages.Contracts.NetworkPolymorphicItem>()
                 .ReverseMap();
         }
     }

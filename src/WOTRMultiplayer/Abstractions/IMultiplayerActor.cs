@@ -8,8 +8,8 @@ using WOTRMultiplayer.Entities.Combat;
 using WOTRMultiplayer.Entities.Dialogs;
 using WOTRMultiplayer.Entities.Equipment;
 using WOTRMultiplayer.Entities.GlobalMap;
+using WOTRMultiplayer.Entities.Items;
 using WOTRMultiplayer.Entities.Leveling;
-using WOTRMultiplayer.Entities.Loot;
 using WOTRMultiplayer.Entities.MapObjects;
 using WOTRMultiplayer.Entities.Movement;
 using WOTRMultiplayer.Entities.NewGame;
@@ -274,5 +274,7 @@ namespace WOTRMultiplayer.Abstractions
         void OnNewGameSequenceWitnessPhase(NetworkNewGameSequencePhase newGameSequencePhase);
 
         bool CanMakeNewGameSequenceDecisions();
+
+        bool OnCreateAndEquipPolymorphInSlot(NetworkPolymorphicItem polymorphicItem);
     }
 }

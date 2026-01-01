@@ -13,7 +13,7 @@ using WOTRMultiplayer.Abstractions.Settings;
 using WOTRMultiplayer.Config.Mapping;
 using WOTRMultiplayer.Entities;
 using WOTRMultiplayer.Entities.Content;
-using WOTRMultiplayer.Entities.Loot;
+using WOTRMultiplayer.Entities.Items;
 using WOTRMultiplayer.Entities.Settings;
 using WOTRMultiplayer.Networking;
 using WOTRMultiplayer.Networking.Abstractions;

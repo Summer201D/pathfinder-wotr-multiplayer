@@ -18,6 +18,7 @@ using WOTRMultiplayer.Entities.Combat;
 using WOTRMultiplayer.Entities.Dialogs;
 using WOTRMultiplayer.Entities.GlobalMap;
 using WOTRMultiplayer.Entities.Inspect;
+using WOTRMultiplayer.Entities.Items;
 using WOTRMultiplayer.Entities.Leveling;
 using WOTRMultiplayer.Entities.NewGame;
 using WOTRMultiplayer.Entities.Rest;
@@ -370,6 +371,24 @@ namespace WOTRMultiplayer.Services
             return false;
         }
 
+        public bool OnCreateAndEquipPolymorphInSlot(NetworkPolymorphicItem polymorphicItem)
+        {
+            var isInParty = IsControlledByPlayers(polymorphicItem.UnitId);
+            if (!isInParty)
+            {
+                return true;
+            }
+
+            var message = new NotifyPolymorphicItemCreationRequested
+            {
+                PolymorphicItem = Mapper.Map<Networking.Messages.Contracts.NetworkPolymorphicItem>(polymorphicItem)
+            };
+            Logger.LogInformation("Sending {MessageType}. UnitId={UnitId}, ItemName={ItemName}, SlotType={SlotType}", nameof(NotifyPolymorphicItemCreationRequested), message.PolymorphicItem.UnitId, message.PolymorphicItem.Item.Name, message.PolymorphicItem.Position.Type);
+            Send(message);
+
+            return false;
+        }
+
         protected override bool OnStartGameModeInternal(GameModeType type)
         {
             var playerId = GetLocalPlayerId();
@@ -505,7 +524,18 @@ namespace WOTRMultiplayer.Services
                // zone loot
                .On<NotifyZoneLootCompleted>(OnNotifyZoneLootCompleted)
                .On<NotifyZoneLootRemoveToggleChanged>(OnNotifyZoneLootRemoveToggleChanged)
+
+               // inventory
+               .On<NotifyPolymorphicItemCreated>(OnNotifyPolymorphicItemCreated)
                ;
+        }
+
+        private void OnNotifyPolymorphicItemCreated(long playerId, NotifyPolymorphicItemCreated polymorphicItemCreated)
+        {
+            Logger.LogInformation("Received {MessageType}. UnitId={UnitId}, ItemName={ItemName}, SlotType={SlotType}", nameof(NotifyPolymorphicItemCreated), polymorphicItemCreated.PolymorphicItem.UnitId, polymorphicItemCreated.PolymorphicItem.Item.Name, polymorphicItemCreated.PolymorphicItem.Position.Type);
+
+            var polymorphicItem = Mapper.Map<NetworkPolymorphicItem>(polymorphicItemCreated.PolymorphicItem);
+            GameInteraction.CreateAndEquipPolymorphicItem(polymorphicItem, createContext: true);
         }
 
         private void OnNotifyNewGameSequenceTerminated(long playerId, NotifyNewGameSequenceTerminated newGameSequenceTerminated)

@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using WOTRMultiplayer.Entities.Equipment;
 
-namespace WOTRMultiplayer.Entities.Loot
+namespace WOTRMultiplayer.Entities.Items
 {
     public class NetworkItemsTransfer
     {

@@ -88,18 +88,6 @@ namespace WOTRMultiplayer.HarmonyPatches.Combat
             }
         }
 
-        [HarmonyPatch(typeof(UnitAttack), nameof(UnitAttack.InitAttacks))]
-        [HarmonyPostfix]
-        public static void UnitAttack_InitAttacks_Postfix(UnitAttack __instance)
-        {
-            if (!Main.Multiplayer.IsActive || !__instance.CreatedByPlayer)
-            {
-                return;
-            }
-
-            Main.GetLogger<UnitCommandsPatches>().LogInformation("Attacks have been initialized. AttackIndex={AttackIndex}, AttackCount={AttackCount}", __instance.m_AttackIndex, __instance.m_AllAttacks.Count);
-        }
-
         [HarmonyPatch(typeof(UnitUseAbility), nameof(UnitUseAbility.OnStart))]
         [HarmonyPostfix]
         public static void UnitUseAbility_OnStart_Postfix(UnitUseAbility __instance)
@@ -109,19 +97,27 @@ namespace WOTRMultiplayer.HarmonyPatches.Combat
                 return;
             }
 
-            if (__instance.Ability.StickyTouch != null)
+            try
             {
-                Main.GetLogger<UnitCommandsPatches>().LogWarning("Skipping ability use as it's a part of sticky touch usage. UnitId={UnitId}, AbilityName={AbilityName}, AbilityId={AbilityId}", __instance.Executor.UniqueId, __instance.Ability.Name, __instance.Ability.UniqueId);
-                return;
-            }
+                if (__instance.Ability.StickyTouch != null)
+                {
+                    Main.GetLogger<UnitCommandsPatches>().LogWarning("Skipping ability use as it's a part of sticky touch usage. UnitId={UnitId}, AbilityName={AbilityName}, AbilityId={AbilityId}", __instance.Executor.UniqueId, __instance.Ability.Name, __instance.Ability.UniqueId);
+                    return;
+                }
 
-            if (DoesMountMakeSameAction(__instance.Executor))
+                if (DoesMountMakeSameAction(__instance.Executor))
+                {
+                    Main.GetLogger<UnitCommandsPatches>().LogWarning("Skipping ability use as it's a part of mounted combat unit command. UnitId={UnitId}, AbilityName={AbilityName}, AbilityId={AbilityId}", __instance.Executor.UniqueId, __instance.Ability.Name, __instance.Ability.UniqueId);
+                    return;
+                }
+
+                OnAbilityUse(__instance);
+            }
+            catch (Exception ex)
             {
-                Main.GetLogger<UnitCommandsPatches>().LogWarning("Skipping ability use as it's a part of mounted combat unit command. UnitId={UnitId}, AbilityName={AbilityName}, AbilityId={AbilityId}", __instance.Executor.UniqueId, __instance.Ability.Name, __instance.Ability.UniqueId);
-                return;
+                Main.GetLogger<UnitCommandsPatches>().LogError(ex, "Unable to handle unit ability use command");
+                throw;
             }
-
-            OnAbilityUse(__instance);
         }
 
         private static void OnAbilityUse(UnitUseAbility command)
