@@ -354,15 +354,15 @@ namespace WOTRMultiplayer.UI.Controllers
             Lobby.UpdateServerInfo(connectivity);
         }
 
-        private void OnMultiplayerPlayersChanged(List<NetworkPlayer> players)
+        private void OnMultiplayerPlayersChanged(NetworkGameStage gameStage, List<NetworkPlayer> players)
         {
             Lobby.UpdatePlayers(players);
-            var canStart = players.All(p => p.IsReady);
+            var canStart = gameStage == NetworkGameStage.Lobby && players.All(p => p.IsReady);
             MainThreadAccessor.Post(() =>
             {
                 StartButton.Interactable = canStart;
             });
-            _logger.LogInformation("Players changed. CanStart={CanStart}", canStart);
+            _logger.LogInformation("Players changed. GameStage={GameStage}, CanStart={CanStart}", gameStage, canStart);
         }
 
         private void SetupLoadSaveGamesLayout()

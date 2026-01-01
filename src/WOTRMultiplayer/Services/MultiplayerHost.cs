@@ -1423,7 +1423,7 @@ namespace WOTRMultiplayer.Services
                     Logger.LogInformation("Sending {MessageType} to new player. PlayerId={PlayerId}", nameof(NotifyCharactersOwnerChanged), playerId);
                     _networkServer.Send(playerId, charactersOwnerChanged);
 
-                    OnPlayersChanged?.Invoke(Game.Players);
+                    InvokeOnPlayersChanged();
 
                     ShowPlayerConnectedMessage(existingPlayer);
                 }
@@ -1553,7 +1553,7 @@ namespace WOTRMultiplayer.Services
                     return;
                 }
 
-                OnPlayersChanged?.Invoke(Game.Players);
+                InvokeOnPlayersChanged();
                 var playersChanged = CreateNotifyLobbyPlayersChanged();
                 Logger.LogInformation("Sending {MessageType}", nameof(NotifyLobbyPlayersChanged));
                 _networkServer.SendAllExcept(playerId, playersChanged);
@@ -1614,7 +1614,7 @@ namespace WOTRMultiplayer.Services
             GameInteraction.ApplyGameSettings(enforcedSettings);
 
             OnConnected?.Invoke(Game.Connectivity);
-            OnPlayersChanged?.Invoke(GetPlayers());
+            InvokeOnPlayersChanged();
             Logger.LogInformation("Server has been started. DLCs={DLCs}, Mods={Mods}", hostPlayer.ContentState.DLCs.Count, hostPlayer.ContentState.Mods.Count);
         }
 

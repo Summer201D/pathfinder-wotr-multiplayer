@@ -251,7 +251,7 @@ namespace WOTRMultiplayer.UI.Controllers
             ActivateLobbyControls();
         }
 
-        private void OnMultiplayerPlayersChanged(List<NetworkPlayer> players)
+        private void OnMultiplayerPlayersChanged(NetworkGameStage gameStage, List<NetworkPlayer> players)
         {
             Lobby.UpdatePlayers(players);
 

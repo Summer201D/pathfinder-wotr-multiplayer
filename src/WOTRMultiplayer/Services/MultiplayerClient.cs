@@ -1118,7 +1118,7 @@ namespace WOTRMultiplayer.Services
                 ShowPlayerConnectedMessage(player);
             }
 
-            OnPlayersChanged?.Invoke(Game.Players);
+            InvokeOnPlayersChanged();
         }
 
         private void OnNetworkClientConnected(EndPoint endpoint)

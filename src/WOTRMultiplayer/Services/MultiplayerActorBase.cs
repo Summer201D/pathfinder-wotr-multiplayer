@@ -47,7 +47,7 @@ namespace WOTRMultiplayer.Services
 
         public int? CombatSeed => Game.Combat?.Seed;
 
-        public Action<List<NetworkPlayer>> OnPlayersChanged { get; set; }
+        public Action<NetworkGameStage, List<NetworkPlayer>> OnPlayersChanged { get; set; }
 
         public Action<bool> OnNewGameSequenceStarted { get; set; }
 
@@ -1632,7 +1632,7 @@ namespace WOTRMultiplayer.Services
                 var player = Game.Players.First(p => p.Id == Game.LocalPlayerId);
                 player.IsReady = !player.IsReady;
 
-                OnPlayersChanged?.Invoke(Game.Players);
+                InvokeOnPlayersChanged();
 
                 var readyChanged = new PlayerReadyStatusChanged { PlayerId = player.Id, IsReady = player.IsReady };
                 Send(readyChanged);
@@ -2178,7 +2178,7 @@ namespace WOTRMultiplayer.Services
         protected void UpdatePlayerGameStartUpSyncStatus(NetworkPlayer player, NetworkGameStartUpSyncStatus status)
         {
             player.StartUpSyncStatus = status;
-            OnPlayersChanged?.Invoke(GetPlayers());
+            InvokeOnPlayersChanged();
         }
 
         protected void UpdatePlayerReadyStatus(long playerId, bool isReady)
@@ -2194,8 +2194,14 @@ namespace WOTRMultiplayer.Services
 
                 existingPlayer.IsReady = isReady;
 
-                OnPlayersChanged?.Invoke(GetPlayers());
+                InvokeOnPlayersChanged();
             }
+        }
+
+        protected void InvokeOnPlayersChanged()
+        {
+            var players = GetPlayers();
+            OnPlayersChanged?.Invoke(Game.Stage, players);
         }
 
         protected void UpdateCharacterOwnershipHistory(NetworkCharacter ownership)
