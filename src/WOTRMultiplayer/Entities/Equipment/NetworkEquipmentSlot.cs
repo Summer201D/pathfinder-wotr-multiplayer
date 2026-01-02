@@ -7,5 +7,7 @@
         public NetworkItem Item { get; set; }
 
         public string OwnerId { get; set; }
+
+        public NetworkEquipmentSwapContext SwapContext { get; set; }
     }
 }

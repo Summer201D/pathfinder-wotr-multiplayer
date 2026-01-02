@@ -1,4 +1,5 @@
 ﻿using System;
+using Kingmaker.ElementsSystem;
 using Kingmaker.Items;
 using Kingmaker.Items.Slots;
 using Kingmaker.PubSubSystem;
@@ -40,9 +41,17 @@ namespace WOTRMultiplayer.PubSub
                 return;
             }
 
+            var swapContext = ContextData<ItemsCollection.SwapItems>.Current;
+            var equipmentSwapContext = swapContext == null ? null : new NetworkEquipmentSwapContext
+            {
+                From = _gameInteractionService.GetEquipmentSlotPosition(swapContext.From),
+                To = _gameInteractionService.GetEquipmentSlotPosition(swapContext.To)
+            };
+
             var networkSlot = new NetworkEquipmentSlot
             {
                 Item = slot.HasItem ? NetworkItem.FromItemEntity(slot.Item) : null,
+                SwapContext = equipmentSwapContext,
                 OwnerId = slot.Owner.Unit.UniqueId,
                 Position = position
             };

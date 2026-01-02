@@ -234,6 +234,9 @@ namespace WOTRMultiplayer.Config.Mapping
 
             CreateMap<NetworkPolymorphicItem, Networking.Messages.Contracts.NetworkPolymorphicItem>()
                 .ReverseMap();
+
+            CreateMap<NetworkEquipmentSwapContext, Networking.Messages.Contracts.NetworkEquipmentSwapContext>()
+                .ReverseMap();
         }
     }
 }

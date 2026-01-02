@@ -21,6 +21,7 @@ using Kingmaker.Craft;
 using Kingmaker.Designers;
 using Kingmaker.DialogSystem.Blueprints;
 using Kingmaker.DLC;
+using Kingmaker.ElementsSystem;
 using Kingmaker.EntitySystem;
 using Kingmaker.EntitySystem.Entities;
 using Kingmaker.EntitySystem.Persistence;
@@ -1062,6 +1063,9 @@ namespace WOTRMultiplayer.Services.GameInteraction
 
                 if (networkEquipmentSlot.Item == null)
                 {
+                    // Polymorphic items (Finnean) rely on this context to not delete item during slot change
+                    using var swapContext = CreateSwapContext(unit, networkEquipmentSlot.SwapContext);
+
                     slotToUpdate.RemoveItem();
                     RefreshInventoryWindow();
                     _logger.LogInformation("Item has been unequipped. UnitId={UnitId}, SlotType={SlotType}, SlotIndex={SlotIndex}", networkEquipmentSlot.OwnerId, networkEquipmentSlot.Position.Type, networkEquipmentSlot.Position.Index);
@@ -4035,7 +4039,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
 
         private ItemSlot GetItemSlot(UnitEntityData unit, NetworkEquipmentSlotPosition position)
         {
-            if (unit == null)
+            if (unit == null || position == null)
             {
                 return null;
             }
@@ -4066,6 +4070,20 @@ namespace WOTRMultiplayer.Services.GameInteraction
             var unit = GetUnitEntity(networkTargetWrapper.UnitUniqueId);
             var wrapper = new TargetWrapper(point, networkTargetWrapper.Orientation, unit);
             return wrapper;
+        }
+
+        private ContextData<ItemsCollection.SwapItems> CreateSwapContext(UnitEntityData unit, NetworkEquipmentSwapContext swapContext)
+        {
+            if (swapContext == null)
+            {
+                return null;
+            }
+
+            var from = GetItemSlot(unit, swapContext.From);
+            var to = GetItemSlot(unit, swapContext.To);
+
+            var context = ContextData<ItemsCollection.SwapItems>.Request().Setup(from, to);
+            return context;
         }
 
         private void MatchSameNumberOfItems(List<ItemEntity> possibleItemsBag, int countToMatch, Action<ItemEntity> onMatched)

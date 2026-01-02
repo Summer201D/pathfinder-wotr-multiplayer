@@ -13,5 +13,8 @@ namespace WOTRMultiplayer.Networking.Messages.Contracts
 
         [ProtoMember(3)]
         public string OwnerId { get; set; }
+
+        [ProtoMember(4)]
+        public NetworkEquipmentSwapContext SwapContext { get; set; }
     }
 }
