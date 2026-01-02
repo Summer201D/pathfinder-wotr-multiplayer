@@ -176,6 +176,7 @@ namespace WOTRMultiplayer.Services
                 return false;
             }
 
+            Game.Stage = NetworkGameStage.SyncingStartUpData;
             var host = GetHost();
             UpdatePlayerGameStartUpSyncStatus(host, NetworkGameStartUpSyncStatus.Succeed);
 
@@ -185,7 +186,6 @@ namespace WOTRMultiplayer.Services
                 PlayerId = host.Id,
             };
             _networkServer.SendAll(saveSyncStatusChanged);
-            Game.Stage = NetworkGameStage.SyncingStartUpData;
 
             var saveGameChanged = new NotifyLobbySaveGameChanged
             {
