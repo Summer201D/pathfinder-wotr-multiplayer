@@ -65,9 +65,9 @@ Worth noting, such way to start game is very limited as of now:
 
 However, you can create a save game in single-player using those features and then host the game from that save.
 
-The most recent multiplayer save is stored at `%APP_DATA%\LocalLow\Owlcat Games\Pathfinder Wrath Of The Righteous\Saved Multiplayer Games\latest save.zks`, but base game still saves a copy of that save in a regular save folder.
+Clients store the most recently joined and started multiplayer save game at `%LOCALAPPDATA%low\Owlcat Games\Pathfinder Wrath Of The Righteous\Saved Multiplayer Games\latest save.zks`.
 
-Load/Quickload is available during multiplayer game. It will force everyone in the lobby to load the same saved game (which is transferred over the network)
+Load/Quickload is available for **everyone** during multiplayer game. It will force other players in the lobby to load the same saved game. However, it skips all synchronization checks, so the game will load even if someone failed to receive or store the save file.
 
 A stable 60+ FPS is strongly recommended. If you drop below that, you will probably run into various desync issues (like AI picking different targets, units not attacking after moving, etc.)
 

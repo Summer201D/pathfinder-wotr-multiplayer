@@ -61,7 +61,7 @@ namespace WOTRMultiplayer.Abstractions
 
         bool OnBeforeEndTurn(string unitId);
 
-        void ForceLoadGame(SaveInfo saveInfo);
+        void ForceLoadGame(string gameId, string savePath);
 
         bool IsControlledByPlayers(string unitId);
 

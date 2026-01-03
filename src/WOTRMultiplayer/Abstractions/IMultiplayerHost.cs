@@ -11,7 +11,7 @@ namespace WOTRMultiplayer.Abstractions
     {
         void Create(string gameId, NetworkGameStartUp gameStartUp);
 
-        void UpdateSaveGame(string gameId, NetworkGameStartUp gameStartUp);
+        void ChangeHostedStartingPoint(string gameId, NetworkGameStartUp gameStartUp);
 
         bool Start();
 

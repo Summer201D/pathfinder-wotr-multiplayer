@@ -261,7 +261,7 @@ namespace WOTRMultiplayer.UI.Controllers
                 return;
             }
 
-            _multiplayerHost.UpdateSaveGame(selectedSave.GameId.Value, startup);
+            _multiplayerHost.ChangeHostedStartingPoint(selectedSave.GameId.Value, startup);
             _logger.LogInformation("Updated hosted game");
         }
 
@@ -362,7 +362,6 @@ namespace WOTRMultiplayer.UI.Controllers
             {
                 StartButton.Interactable = canStart;
             });
-            _logger.LogInformation("Players changed. GameStage={GameStage}, CanStart={CanStart}", gameStage, canStart);
         }
 
         private void SetupLoadSaveGamesLayout()

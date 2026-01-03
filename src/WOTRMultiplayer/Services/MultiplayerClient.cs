@@ -103,7 +103,7 @@ namespace WOTRMultiplayer.Services
         {
             Logger.LogInformation("Resetting");
 
-            Game?.Reset();
+            Game = null;
 
             _networkClient?.Reset();
         }
@@ -444,7 +444,7 @@ namespace WOTRMultiplayer.Services
                // lobby
                .On<NotifyLobbySaveGameChanged>(OnNotifyLobbySaveGameChanged)
                .On<GameServerConnectionSucceeded>(OnGameServerConnectionSucceeded)
-               .On<PlayerReadyStatusChanged>(OnPlayerReadyStatusChanged)
+               .On<NotifyPlayerReadyStatusChanged>(OnPlayerReadyStatusChanged)
                .On<NotifyLobbyPlayersChanged>(OnNotifyLobbyPlayersChanged)
                .On<NotifyCharactersChanged>(OnNotifyGameCharactersChanged)
                .On<NotifyCharactersOwnerChanged>(OnNotifyCharactersOwnerChanged)
@@ -720,7 +720,7 @@ namespace WOTRMultiplayer.Services
 
         private void OnNotifyPlayerSaveGameSyncStatusChanged(long playerId, NotifyPlayerGameStartUpSyncStatusChanged playerGameStartUpSyncStatusChanged)
         {
-            Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}, Status={Status}", nameof(NotifyGamePauseStarted), playerGameStartUpSyncStatusChanged.PlayerId, playerGameStartUpSyncStatusChanged.Status);
+            Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}, Status={Status}", nameof(NotifyPlayerGameStartUpSyncStatusChanged), playerGameStartUpSyncStatusChanged.PlayerId, playerGameStartUpSyncStatusChanged.Status);
 
             var status = Mapper.Map<NetworkGameStartUpSyncStatus>(playerGameStartUpSyncStatusChanged.Status);
             UpdatePlayerGameStartUpSyncStatus(playerGameStartUpSyncStatusChanged.PlayerId, status);
@@ -1060,26 +1060,18 @@ namespace WOTRMultiplayer.Services
 
         private void OnNotifyLobbySaveGameChanged(long playerId, NotifyLobbySaveGameChanged notifyLobbySaveGameChanged)
         {
-            Logger.LogInformation("Received {MessageType}. GameStatus={GameStatus}, Size={Size}, IsForceLoad={IsForceLoad}, IsNewGameSequence={IsNewGameSequence}", nameof(NotifyLobbySaveGameChanged), Game.Stage, notifyLobbySaveGameChanged.Content?.Length, notifyLobbySaveGameChanged.IsForceLoad, notifyLobbySaveGameChanged.IsNewGameSequence);
+            Logger.LogInformation("Received {MessageType}. GameStatus={GameStatus}, Size={Size}", nameof(NotifyLobbySaveGameChanged), Game.Stage, notifyLobbySaveGameChanged.Content?.Length);
 
-            var savePath = notifyLobbySaveGameChanged.IsNewGameSequence ? null : StoreSaveGameContent(notifyLobbySaveGameChanged.Content);
-            Game.StartUp = new NetworkGameStartUp(savePath);
-            Game.Id = notifyLobbySaveGameChanged.GameId;
-
-            if (notifyLobbySaveGameChanged.IsForceLoad)
-            {
-                ForceLoadGame();
-                return;
-            }
+            UpdateSaveInfo(notifyLobbySaveGameChanged.GameId, notifyLobbySaveGameChanged.Content);
 
             Logger.LogInformation("Game is ready to be started. SavePath={SavePath}", Game.StartUp.SavePath);
             var confirmationMessage = new NotifyPlayerGameStartUpSyncStatusChanged { PlayerId = Game.LocalPlayerId, Status = NetworkGameStartUpSyncStatus.Succeed.ToString() };
             Send(confirmationMessage);
         }
 
-        private void OnPlayerReadyStatusChanged(long playerId, PlayerReadyStatusChanged readyStatusChanged)
+        private void OnPlayerReadyStatusChanged(long playerId, NotifyPlayerReadyStatusChanged readyStatusChanged)
         {
-            Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}, IsReady={IsReady}", nameof(PlayerReadyStatusChanged), readyStatusChanged.PlayerId, readyStatusChanged.IsReady);
+            Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}, IsReady={IsReady}", nameof(NotifyPlayerReadyStatusChanged), readyStatusChanged.PlayerId, readyStatusChanged.IsReady);
 
             UpdatePlayerReadyStatus(readyStatusChanged.PlayerId, readyStatusChanged.IsReady);
         }

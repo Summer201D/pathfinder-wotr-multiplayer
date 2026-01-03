@@ -16,9 +16,10 @@
             NotifyGameStarted,
             NotifyLobbyPlayersChanged,
             NotifyLobbySaveGameChanged,
-            PlayerReadyStatusChanged,
+            NotifyPlayerReadyStatusChanged,
             NotifyPlayerGameStartUpSyncStatusChanged,
-            NotifyNewGameDifficultyChanged
+            NotifyNewGameDifficultyChanged,
+            NotifyGameForceLoaded
         }
 
         public enum Game

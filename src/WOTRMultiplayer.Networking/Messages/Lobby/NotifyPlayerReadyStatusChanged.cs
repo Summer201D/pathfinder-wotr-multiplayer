@@ -3,8 +3,8 @@
 namespace WOTRMultiplayer.Networking.Messages.Lobby
 {
     [ProtoContract]
-    [BeetleX.Packets.MessageType((int)MessageTypes.Lobby.PlayerReadyStatusChanged)]
-    public class PlayerReadyStatusChanged
+    [BeetleX.Packets.MessageType((int)MessageTypes.Lobby.NotifyPlayerReadyStatusChanged)]
+    public class NotifyPlayerReadyStatusChanged
     {
         [ProtoMember(1)]
         public long PlayerId { get; set; }

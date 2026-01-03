@@ -4,7 +4,9 @@
     {
         None,
         Lobby,
-        SyncingStartUpData,
+        PreparingToStart,
+        NewGameSequence,
+        Loading,
         Playing
     }
 }

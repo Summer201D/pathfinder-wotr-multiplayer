@@ -9,16 +9,7 @@ namespace WOTRMultiplayer.Networking.Messages.Lobby
         [ProtoMember(1)]
         public byte[] Content { get; set; }
 
-        /// <summary>
-        /// means game should be loaded instantly aka quick load
-        /// </summary>
         [ProtoMember(2)]
-        public bool IsForceLoad { get; set; }
-
-        [ProtoMember(3)]
         public string GameId { get; set; }
-
-        [ProtoMember(4)]
-        public bool IsNewGameSequence { get; set; }
     }
 }

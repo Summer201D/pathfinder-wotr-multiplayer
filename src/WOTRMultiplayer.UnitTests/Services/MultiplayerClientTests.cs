@@ -240,7 +240,7 @@ namespace WOTRMultiplayer.UnitTests.Services
         }
 
         [Test]
-        public void OnNotifyLobbySaveGameChanged_NonForceLoad_StoresSaveFileAndSendsConfirmation()
+        public void OnNotifyLobbySaveGameChanged_StoresSaveFileAndSendsConfirmation()
         {
             // Arrange
             var parsedHost = "192.168.1.1";
@@ -252,7 +252,7 @@ namespace WOTRMultiplayer.UnitTests.Services
             _multiplayerClient.Connect(address);
             _multiplayerClient.Game = new NetworkGame(new NetworkGameStartUp("whatever"));
             var handler = FakeUtils.GetNetworkReceiverHandler<NotifyLobbySaveGameChanged>(_networkClient);
-            var request = new NotifyLobbySaveGameChanged { Content = [], GameId = Guid.NewGuid().ToString(), IsForceLoad = false };
+            var request = new NotifyLobbySaveGameChanged { Content = [], GameId = Guid.NewGuid().ToString() };
 
             // Act
             handler.Invoke(1, request);
@@ -263,7 +263,7 @@ namespace WOTRMultiplayer.UnitTests.Services
         }
 
         [Test]
-        public void OnNotifyLobbySaveGameChanged_ForceLoadAndPlaying_StoresSaveFileAnCallsQuickLoad()
+        public void OnGameForceLoaded_PlayerIsInGame_StoresSaveFileAnCallsQuickLoad()
         {
             // Arrange
             var parsedHost = "192.168.1.1";
@@ -277,8 +277,8 @@ namespace WOTRMultiplayer.UnitTests.Services
             {
                 Stage = NetworkGameStage.Playing
             };
-            var handler = FakeUtils.GetNetworkReceiverHandler<NotifyLobbySaveGameChanged>(_networkClient);
-            var request = new NotifyLobbySaveGameChanged { Content = [], GameId = Guid.NewGuid().ToString(), IsForceLoad = true };
+            var handler = FakeUtils.GetNetworkReceiverHandler<NotifyGameForceLoaded>(_networkClient);
+            var request = new NotifyGameForceLoaded { Content = [], GameId = Guid.NewGuid().ToString() };
 
             // Act
             handler.Invoke(1, request);
@@ -290,30 +290,36 @@ namespace WOTRMultiplayer.UnitTests.Services
         }
 
         [Test]
-        public void OnNotifyLobbySaveGameChanged_ForceLoadAndMidJoinedPlayer_StoresSaveFileAnCallsLoadFromMainMenu()
+        public void OnGameForceLoaded_PlayerJoinedMidGame_MakesPlayerReadyAndCallsLoadFromMainMenu()
         {
             // Arrange
             var parsedHost = "192.168.1.1";
             var parsedPort = 555;
+            var localPlayerId = 1231231;
             IPAddress.TryParse(parsedHost, out var parsedAddress);
             var endpoint = new IPEndPoint(parsedAddress, parsedPort);
             var address = Guid.NewGuid().ToString();
             A.CallTo(() => _endpointParser.Parse(address)).Returns(endpoint);
+            A.CallTo(() => _gameInteractionService.GetSaveGamePath()).Returns("asdasdas");
+            A.CallTo(() => _fileSystemService.WriteFile(A<string>.Ignored, A<byte[]>.Ignored)).Returns(true);
             _multiplayerClient.Connect(address);
             _multiplayerClient.Game = new NetworkGame(new NetworkGameStartUp("whatever"))
             {
-                Stage = NetworkGameStage.Lobby
+                LocalPlayerId = localPlayerId,
+                Stage = NetworkGameStage.Lobby,
+                Players = [new NetworkPlayer { Id = localPlayerId }]
             };
-            var handler = FakeUtils.GetNetworkReceiverHandler<NotifyLobbySaveGameChanged>(_networkClient);
-            var request = new NotifyLobbySaveGameChanged { Content = [], GameId = Guid.NewGuid().ToString(), IsForceLoad = true };
+            var handler = FakeUtils.GetNetworkReceiverHandler<NotifyGameForceLoaded>(_networkClient);
+            var request = new NotifyGameForceLoaded { Content = [], GameId = Guid.NewGuid().ToString() };
 
             // Act
             handler.Invoke(1, request);
 
             // Assert
             A.CallTo(() => _fileSystemService.WriteFile(A<string>.Ignored, request.Content)).MustHaveHappened();
-            A.CallTo(() => _gameInteractionService.LoadGameFromMainMenu(A<string>.Ignored)).MustHaveHappened();
-            A.CallTo(() => _networkClient.Send(A<NotifyPlayerGameStartUpSyncStatusChanged>.Ignored)).MustNotHaveHappened();
+            A.CallTo(() => _gameInteractionService.LoadGameFromMainMenu(A<string>.That.Not.IsNullOrEmpty())).MustHaveHappened();
+            A.CallTo(() => _networkClient.Send(A<NotifyPlayerReadyStatusChanged>.Ignored)).MustHaveHappened();
+            A.CallTo(() => _networkClient.Send(A<NotifyPlayerGameStartUpSyncStatusChanged>.Ignored)).MustHaveHappened();
         }
     }
 }

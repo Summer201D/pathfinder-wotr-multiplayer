@@ -64,29 +64,5 @@ namespace WOTRMultiplayer.Entities
             StartUp = gameStartup;
             Stage = NetworkGameStage.Lobby;
         }
-
-        public void Reset()
-        {
-            LocalPlayerId = default; // -1 host << 0 default << 1+ clients
-            Players.Clear();
-            Characters.Clear();
-            PlayersInGameMode.Clear();
-            PlayersFinishedRest.Clear();
-            PlayersInGroupChanger.Clear();
-            PlayersInSkipTime.Clear();
-            PlayersInGlobalMapLocationMessage.Clear();
-            PlayersInGlobalMapIngredientCollection.Clear();
-            PlayersInGlobalMapEncounterMessage.Clear();
-            StartUp = null;
-            Connectivity = null;
-            Stage = NetworkGameStage.None;
-            Dialog = null;
-            Id = null;
-            Combat = null;
-            ForcedPause = null;
-            RandomEncounter = null;
-            SessionSeed = 0;
-            Leveling = null;
-        }
     }
 }

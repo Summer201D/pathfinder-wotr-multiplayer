@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Reflection;
-using Kingmaker.EntitySystem.Persistence;
 using Kingmaker.GameModes;
 using Kingmaker.Items.Slots;
 using Microsoft.Extensions.Logging;
@@ -363,7 +362,7 @@ namespace WOTRMultiplayer.Services
             }
         }
 
-        public void ForceLoadGame(SaveInfo saveInfo)
+        public void ForceLoadGame(string gameId, string savePath)
         {
             try
             {
@@ -372,10 +371,7 @@ namespace WOTRMultiplayer.Services
                     return;
                 }
 
-                // extra validation is not required since everything is already validated by the game
-                var savePath = saveInfo.FolderName;
-                _logger.LogInformation("Force load game. SaveLocation={SaveLocation}, GameId={GameId}", savePath, saveInfo.GameId);
-                _multiplayerActorAccessor.Current.ForceLoadGame(savePath, saveInfo.GameId);
+                _multiplayerActorAccessor.Current.ForceLoadGame(gameId, savePath);
             }
             catch (Exception ex)
             {

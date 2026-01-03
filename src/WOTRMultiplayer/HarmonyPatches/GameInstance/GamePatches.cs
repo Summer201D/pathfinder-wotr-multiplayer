@@ -18,18 +18,12 @@ namespace WOTRMultiplayer.HarmonyPatches.GameInstance
         [HarmonyPrefix]
         public static void Game_LoadGame_Prefix(SaveInfo saveInfo)
         {
-            if (!Main.Multiplayer.IsActive)
+            if (!Main.Multiplayer.IsActive || !Game.Instance.Player.IsInGame)
             {
                 return;
             }
 
-            if (Game.Instance.Player.MainCharacter == null)
-            {
-                Main.GetLogger<GamePatches>().LogInformation("Force load hook is skipped since player is not in the game");
-                return;
-            }
-
-            Main.Multiplayer.ForceLoadGame(saveInfo);
+            Main.Multiplayer.ForceLoadGame(saveInfo.GameId, saveInfo.FolderName);
         }
 
         [HarmonyPatch(typeof(Game), nameof(Game.StartMode))]

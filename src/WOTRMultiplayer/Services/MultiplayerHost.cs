@@ -75,8 +75,6 @@ namespace WOTRMultiplayer.Services
 
             SetupNetworkMessageHandlers();
 
-            Game?.Reset();
-
             Game = new NetworkGame(gameStartUp)
             {
                 LocalPlayerId = NetworkingConsts.HostPlayerId,
@@ -91,7 +89,7 @@ namespace WOTRMultiplayer.Services
             Logger.LogInformation("Host has been created. IsNewGameSequence={IsNewGameSequence}, SavePath={SavePath}, Portraits={Portraits}", gameStartUp.IsNewGameSequence, gameStartUp.SavePath, string.Join(";", Game.Characters.Select(c => c.Portrait)));
         }
 
-        public void UpdateSaveGame(string gameId, NetworkGameStartUp gameStartUp)
+        public void ChangeHostedStartingPoint(string gameId, NetworkGameStartUp gameStartUp)
         {
             Game.Id = gameId;
             Game.StartUp = gameStartUp;
@@ -121,9 +119,10 @@ namespace WOTRMultiplayer.Services
         {
             lock (ActionLock)
             {
-                if (Game.Players.Count <= playerIndex)
+                var playersCount = Game.Players.Count;
+                if (playersCount <= playerIndex)
                 {
-                    Logger.LogError("Unable to change character owner as playerIndex is out of range. PlayersCount={PlayersCount}, PlayerIndex={PlayerIndex}", Game.Players.Count, playerIndex);
+                    Logger.LogError("Unable to change character owner as playerIndex is out of range. PlayersCount={PlayersCount}, PlayerIndex={PlayerIndex}", playersCount, playerIndex);
                     return;
                 }
 
@@ -159,10 +158,7 @@ namespace WOTRMultiplayer.Services
         public void Reset()
         {
             Logger.LogInformation("Resetting");
-            lock (ActionLock)
-            {
-                Game?.Reset();
-            }
+            Game = null;
 
             _networkServer.Reset();
         }
@@ -176,7 +172,7 @@ namespace WOTRMultiplayer.Services
                 return false;
             }
 
-            Game.Stage = NetworkGameStage.SyncingStartUpData;
+            SetGameStage(NetworkGameStage.PreparingToStart);
             var host = GetHost();
             UpdatePlayerGameStartUpSyncStatus(host, NetworkGameStartUpSyncStatus.Succeed);
 
@@ -191,11 +187,9 @@ namespace WOTRMultiplayer.Services
             {
                 GameId = Game.Id,
                 Content = content,
-                IsForceLoad = false,
-                IsNewGameSequence = Game.StartUp.IsNewGameSequence
             };
 
-            Logger.LogInformation("Sending {MessageType}. GameId={GameId}, IsForceLoad={IsForceLoad}, IsNewGameSequence={IsNewGameSequence}, ContentSize={ContentSize}", nameof(NotifyLobbySaveGameChanged), saveGameChanged.GameId, saveGameChanged.IsForceLoad, saveGameChanged.IsNewGameSequence, saveGameChanged.Content?.Length);
+            Logger.LogInformation("Sending {MessageType}. GameId={GameId}, ContentSize={ContentSize}", nameof(NotifyLobbySaveGameChanged), saveGameChanged.GameId, saveGameChanged.Content?.Length);
             _networkServer.SendAll(saveGameChanged);
 
             TryStartSavedGame();
@@ -346,7 +340,7 @@ namespace WOTRMultiplayer.Services
                 Logger.LogInformation("Sending {MessageType}. Seed={Seed}, RoundNumber={RoundNumber}, HasSurprisingRound={HasSurprisingRound}, UnitsInCombat={UnitsInCombat}", nameof(NotifyCombatInitialized), message.Seed, message.CombatState.RoundNumber, message.CombatState.HasSurpriseRound, message.CombatState.Units.Count);
             }
 
-            var canContinue = Game.Combat.PlayersCombatInitialization.Count >= GetPlayersCount();
+            var canContinue = Game.Combat.PlayersCombatInitialization.Count >= GetSyncedPlayersCount();
             return canContinue;
         }
 
@@ -636,7 +630,7 @@ namespace WOTRMultiplayer.Services
             var everyoneIsReady = false;
             lock (ActionLock)
             {
-                everyoneIsReady = Game.PlayersInGroupChanger.Count >= Game.Players.Count;
+                everyoneIsReady = Game.PlayersInGroupChanger.Count >= GetSyncedPlayersCount();
             }
 
             if (!everyoneIsReady)
@@ -1015,10 +1009,8 @@ namespace WOTRMultiplayer.Services
 
                // lobby
                .On<NotifyPlayerGameStartUpSyncStatusChanged>(OnNotifyPlayerSaveGameSyncStatusChanged)
-               .On<PlayerReadyStatusChanged>(OnPlayerReadyStatusChanged)
+               .On<NotifyPlayerReadyStatusChanged>(OnPlayerReadyStatusChanged)
                .On<ClientGameServerConnectionConfirmed>(OnClientGameServerConnectionConfirmed)
-               // quick load by another player
-               .On<NotifyLobbySaveGameChanged>(OnNotifyLobbySaveGameChanged)
 
                // area transitioning
                .On<ClientAreaLoaded>(OnClientAreaLoaded)
@@ -1218,23 +1210,6 @@ namespace WOTRMultiplayer.Services
             TryStartTurn();
         }
 
-        private void OnNotifyLobbySaveGameChanged(long playerId, NotifyLobbySaveGameChanged notifyLobbySaveGameChanged)
-        {
-            Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}, IsForceLoad={IsForceLoad}, SaveGameSize={SaveGameSize}", nameof(NotifyLobbySaveGameChanged), playerId, notifyLobbySaveGameChanged.IsForceLoad, notifyLobbySaveGameChanged.Content.Length);
-
-            OnAfterNetworkMessageHandled(playerId, notifyLobbySaveGameChanged);
-
-            var savePath = StoreSaveGameContent(notifyLobbySaveGameChanged.Content);
-            Game.StartUp = new NetworkGameStartUp(savePath);
-
-            if (!notifyLobbySaveGameChanged.IsForceLoad)
-            {
-                Logger.LogWarning("Host received save game changed without force load flag");
-            }
-
-            ForceLoadGame();
-        }
-
         private void OnClientCombatInitialized(long playerId, ClientCombatInitialized initialized)
         {
             Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}", nameof(ClientCombatInitialized), playerId);
@@ -1369,14 +1344,14 @@ namespace WOTRMultiplayer.Services
             var status = Mapper.Map<NetworkGameStartUpSyncStatus>(playerSaveGameSyncStatusChanged.Status);
             UpdatePlayerGameStartUpSyncStatus(playerId, status);
 
-            OnAfterNetworkMessageHandled(playerId, playerSaveGameSyncStatusChanged);
-
             TryStartSavedGame();
+
+            OnAfterNetworkMessageHandled(playerId, playerSaveGameSyncStatusChanged);
         }
 
-        private void OnPlayerReadyStatusChanged(long playerId, PlayerReadyStatusChanged readyStatusChanged)
+        private void OnPlayerReadyStatusChanged(long playerId, NotifyPlayerReadyStatusChanged readyStatusChanged)
         {
-            Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}, IsReady={IsReady}", nameof(PlayerReadyStatusChanged), playerId, readyStatusChanged.IsReady);
+            Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}, IsReady={IsReady}", nameof(NotifyPlayerReadyStatusChanged), playerId, readyStatusChanged.IsReady);
             UpdatePlayerReadyStatus(playerId, readyStatusChanged.IsReady);
 
             // including original client so his UI can be properly updated as well
@@ -1731,7 +1706,7 @@ namespace WOTRMultiplayer.Services
 
                 lock (ActionLock)
                 {
-                    var allReady = Game.ForcedPause.ReadyPlayers.Count >= Game.Players.Count;
+                    var allReady = Game.ForcedPause.ReadyPlayers.Count >= GetSyncedPlayersCount();
                     if (!allReady)
                     {
                         Logger.LogInformation("Not everyone is ready, forced pause will remain. ReadyPlayers={ReadyPlayers}", Game.ForcedPause.ReadyPlayers);
@@ -1774,25 +1749,23 @@ namespace WOTRMultiplayer.Services
 
         private void TryStartSavedGame()
         {
-            var canStart = false;
-
             lock (ActionLock)
             {
-                canStart = Game.Players.All(p => p.StartUpSyncStatus == NetworkGameStartUpSyncStatus.Succeed);
-            }
+                var canStart = Game.Stage == NetworkGameStage.PreparingToStart && Game.Players.All(p => p.StartUpSyncStatus == NetworkGameStartUpSyncStatus.Succeed);
 
-            if (canStart)
-            {
-                Logger.LogInformation("Starting game. IsNewGameSequence={IsNewGameSequence}", Game.StartUp.IsNewGameSequence);
-                _networkServer.SendAll(new NotifyGameStarted());
-
-                if (Game.StartUp.IsNewGameSequence)
+                if (canStart)
                 {
-                    StartNewGameSequence();
-                    return;
-                }
+                    Logger.LogInformation("Everyone is synced, game can be started. Stage={Stage}, IsNewGameSequence={IsNewGameSequence}", Game.Stage, Game.StartUp.IsNewGameSequence);
+                    _networkServer.SendAll(new NotifyGameStarted());
 
-                LoadSavedGame();
+                    if (Game.StartUp.IsNewGameSequence)
+                    {
+                        StartNewGameSequence();
+                        return;
+                    }
+
+                    LoadSavedGame();
+                }
             }
         }
 
@@ -1825,7 +1798,7 @@ namespace WOTRMultiplayer.Services
 
         private void UpdateStartRestButton(int readyPlayersCount)
         {
-            var totalPlayersCount = GetPlayersCount();
+            var totalPlayersCount = GetSyncedPlayersCount();
             var isInteractable = readyPlayersCount >= totalPlayersCount;
             GameInteraction.UpdateStartRestButtonState(isInteractable, readyPlayersCount, totalPlayersCount);
         }

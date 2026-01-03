@@ -1574,7 +1574,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
             {
                 try
                 {
-                    if (SkipTimeView.ViewModel == null)
+                    if (SkipTimeView?.ViewModel == null)
                     {
                         _logger.LogWarning("Skip time UI is already closed");
                         return;
@@ -1595,7 +1595,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
         {
             _mainThreadAccessor.Post(() =>
             {
-                if (SkipTimeView.ViewModel != null)
+                if (SkipTimeView?.ViewModel != null)
                 {
                     _logger.LogWarning("Skip time UI is already opened");
                     return;
@@ -1611,7 +1611,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
             {
                 try
                 {
-                    if (SkipTimeView.ViewModel == null)
+                    if (SkipTimeView?.ViewModel == null)
                     {
                         _logger.LogWarning("Unable to update skip time hours due to missing UI");
                         return;
@@ -1942,8 +1942,9 @@ namespace WOTRMultiplayer.Services.GameInteraction
 
                     archetype.IsSelected.Value = true;
                     viewModel.SelectedClassVM.Value.SelectedArchetype.Value = archetype;
-                    viewModel.OnSelectorArchetypeChanged(archetype.Archetype);
+                    viewModel.SelectedArchetypeVM.Value = archetype;
                     viewModel.LastSelectedArchetypeVM = archetype;
+                    viewModel.OnSelectorArchetypeChanged(archetype.Archetype);
                     _logger.LogInformation("Leveling archetype has been set. ClassName={ClassName}, ArchetypeId={ArchetypeId}", viewModel.SelectedClassVM.Value.Class.NameForAcronym, viewModel.SelectedClassVM.Value.SelectedArchetype.Value?.Archetype?.NameForAcronym);
                 }
                 catch (Exception ex)
@@ -2576,7 +2577,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
                     }
 
                     NewGamePCView.ViewModel.MenuSelectionGroup.SelectedEntity.Value.OnNext();
-                    _logger.LogError("New game sequence leveling has been selected");
+                    _logger.LogInformation("New game sequence leveling has been selected");
                 }
                 catch (Exception ex)
                 {
