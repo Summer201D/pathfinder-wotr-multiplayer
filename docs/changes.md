@@ -248,10 +248,10 @@ You can either ignore it (if the outcome is more or less the same for everyone) 
 Highlighting a point/unit/map object for everyone in the multiplayer
 
 ### Rolls
-Current roll syncing has a pretty obvious issue: the game freezes while it waits for rolls to come back. That happens because the network request is done right when the game wants to roll the dice. We don't really have a clean way around this - the game expects the roll result immediately, so the mod hijacks the roll and fetches it over the network instead. Making the game "wait" for rolls properly is extremely hard to justify from a reverse-engineering standpoint.
+Current roll syncing has a fairly obvious issue: the game freezes while it waits for rolls to return. That happens because the network request is done right when the game wants to roll the dice. We don't really have a clean way around this - the game expects the roll result immediately, so the mod hijacks the roll and fetches it over the network instead. Making the game "wait" for rolls properly is extremely hard to justify from a reverse-engineering standpoint.
 
 The plan is to switch to predictable rolls. Both host and clients would use the same RNG seed, so they all generate the same "random" results locally. That removes the need for extra network calls during rolls. These seeds can be shared at safe points that don't block the game, like combat start, round start, area load, or with an attack/ability usage request.
 
 The downside is that if the roll order ever gets out of sync, the sequence breaks until the next seed update (for example, the next round or the next attack command). That said, the current syncing work helped to understand and isolate the dice-rolling logic, so upgrading to this approach should be fairly straightforward in the near future.
 
-Anyway, this will be updated per roll type. For example, reworking attack and damage rolls alone should almost completely eliminate combat stutters, since most other rolls are pretty rare.
+Anyway, this will be updated according to the roll type. For example, reworking attack and damage rolls alone should almost eliminate combat stutters, since most other rolls are pretty rare.
