@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using AutoMapper;
 using FakeItEasy;
+using Kingmaker.GameModes;
 using Microsoft.Extensions.Logging;
 using NUnit.Framework;
 using WOTRMultiplayer.Abstractions;
@@ -272,6 +273,53 @@ namespace WOTRMultiplayer.UnitTests.Services
                 Assert.That(actualDiscrepantMod, Is.Not.Null);
                 Assert.That(actualDiscrepantMod.Reason, Is.EqualTo(expectedDiscrepantMod.Reason));
             }
+        }
+
+        [TestCase(GameModeType.Enum.None)]
+        [TestCase(GameModeType.Enum.Default)]
+        [TestCase(GameModeType.Enum.Cutscene)]
+        [TestCase(GameModeType.Enum.CutsceneGlobalMap)]
+        [TestCase(GameModeType.Enum.GameOver)]
+        [TestCase(GameModeType.Enum.Dialog)]
+        [TestCase(GameModeType.Enum.Rest)]
+        public void OnStartGameMode_ModeIsRegistered(GameModeType.Enum mode)
+        {
+            // Arrange
+            var gameMode = GameModeType.All.First(x => x.Index == (int)mode);
+            _multiplayerHost.Game = new NetworkGame(new NetworkGameStartUp(string.Empty))
+            {
+                LocalPlayerId = 12312313
+            };
+
+            // Act
+            _multiplayerHost.OnStartGameMode(gameMode);
+
+            // Assert
+            _multiplayerHost.Game.PlayersInGameMode.TryGetValue(gameMode, out var players);
+            Assert.That(players, Is.Not.Empty);
+            Assert.That(players, Does.Contain(_multiplayerHost.Game.LocalPlayerId));
+        }
+
+        [Test]
+        public void OnStartGameMode_RestMode_RestUIIsUpdated()
+        {
+            // Arrange
+            var gameMode = GameModeType.All.First(x => x.Index == (int)GameModeType.Enum.Rest);
+            _multiplayerHost.Game = new NetworkGame(new NetworkGameStartUp(string.Empty))
+            {
+                LocalPlayerId = NetworkingConsts.HostPlayerId,
+                Players = [
+                    new NetworkPlayer { Id = NetworkingConsts.HostPlayerId, StartUpSyncStatus = NetworkGameStartUpSyncStatus.Succeed },
+                    new NetworkPlayer { Id = 123123, StartUpSyncStatus = NetworkGameStartUpSyncStatus.Succeed },
+                    ]
+            };
+
+            // Act
+            _multiplayerHost.OnStartGameMode(gameMode);
+
+            // Assert
+            _multiplayerHost.Game.PlayersInGameMode.TryGetValue(gameMode, out var players);
+            A.CallTo(() => _gameInteractionService.UpdateStartRestButtonState(false, players.Count, _multiplayerHost.Game.Players.Count)).MustHaveHappened();
         }
 
         private static IEnumerable<ContentStateTestCase> DlcDifferencesTestCases()
