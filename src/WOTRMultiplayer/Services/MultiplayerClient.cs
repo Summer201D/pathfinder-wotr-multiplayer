@@ -175,7 +175,6 @@ namespace WOTRMultiplayer.Services
                 return true;
             }
 
-            Logger.LogInformation("Sending dialog request to host. DialogueName={DialogueName}", dialogName);
             var message = new ClientDialogStartRequested
             {
                 DialogName = dialogName,
@@ -184,6 +183,7 @@ namespace WOTRMultiplayer.Services
                 MapObjectId = mapObjectId,
                 SpeakerKey = speakerKey
             };
+            Logger.LogInformation("Sending {MessageType}. DialogName={DialogName}, TargetUnitId={TargetUnitId}, InitiatorUnitId={InitiatorUnitId}, MapObjectId={MapObjectId}, SpeakerKey={SpeakerKey}", nameof(ClientDialogStartRequested), message.DialogName, message.TargetUnitId, message.InitiatorUnitId, message.MapObjectId, message.SpeakerKey);
             Send(message);
 
             return false;
