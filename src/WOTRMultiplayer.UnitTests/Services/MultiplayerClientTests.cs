@@ -144,39 +144,14 @@ namespace WOTRMultiplayer.UnitTests.Services
             var handler = FakeUtils.GetNetworkReceiverHandler<DiceRollValueRequest>(_networkClient);
             var request = new DiceRollValueRequest { RollId = 1, Timeout = TimeSpan.FromDays(1), UnitId = Guid.NewGuid().ToString(), PlayerId = 1 };
             var getRollTask = Task.FromResult<RollValueBase>(new NetworkIntRollValue());
-            A.CallTo(() => _diceRollStorage.GetAsync<RollValueBase>(request.RollId, request.PlayerId.Value, request.Timeout)).Returns(getRollTask);
+            A.CallTo(() => _diceRollStorage.GetAsync<RollValueBase>(request.RollId, request.PlayerId, request.Timeout)).Returns(getRollTask);
 
             // Act
             handler.Invoke(1, request);
             await getRollTask;
 
             // Assert
-            A.CallTo(() => _diceRollStorage.GetAsync<RollValueBase>(request.RollId, request.PlayerId.Value, request.Timeout)).MustHaveHappened();
-            A.CallTo(() => _networkClient.Send(A<DiceRollValueResponse>.Ignored)).MustHaveHappened();
-        }
-
-        [Test]
-        public async Task OnDiceRollValueRequest_PlayerIdIsNotSet_CallsDiceRollStorageForHostIdAndSendsResult()
-        {
-            // Arrange
-            var parsedHost = "192.168.1.1";
-            var parsedPort = 555;
-            IPAddress.TryParse(parsedHost, out var parsedAddress);
-            var endpoint = new IPEndPoint(parsedAddress, parsedPort);
-            var address = Guid.NewGuid().ToString();
-            A.CallTo(() => _endpointParser.Parse(address)).Returns(endpoint);
-            _multiplayerClient.Connect(address);
-            var handler = FakeUtils.GetNetworkReceiverHandler<DiceRollValueRequest>(_networkClient);
-            var request = new DiceRollValueRequest { RollId = 1, Timeout = TimeSpan.FromDays(1), UnitId = Guid.NewGuid().ToString(), PlayerId = null };
-            var getRollTask = Task.FromResult<RollValueBase>(new NetworkIntRollValue());
-            A.CallTo(() => _diceRollStorage.GetAsync<RollValueBase>(request.RollId, NetworkingConsts.HostPlayerId, request.Timeout)).Returns(getRollTask);
-
-            // Act
-            handler.Invoke(1, request);
-            await getRollTask;
-
-            // Assert
-            A.CallTo(() => _diceRollStorage.GetAsync<RollValueBase>(request.RollId, NetworkingConsts.HostPlayerId, request.Timeout)).MustHaveHappened();
+            A.CallTo(() => _diceRollStorage.GetAsync<RollValueBase>(request.RollId, request.PlayerId, request.Timeout)).MustHaveHappened();
             A.CallTo(() => _networkClient.Send(A<DiceRollValueResponse>.Ignored)).MustHaveHappened();
         }
 

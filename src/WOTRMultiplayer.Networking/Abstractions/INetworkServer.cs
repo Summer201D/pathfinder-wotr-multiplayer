@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Net;
+using WOTRMultiplayer.Networking.Awaiters;
 
 namespace WOTRMultiplayer.Networking.Abstractions
 {
@@ -15,8 +16,8 @@ namespace WOTRMultiplayer.Networking.Abstractions
 
         void Send(long clientId, object message);
 
-        T SendAndWaitFor<T>(long clientId, object message)
-            where T : class;
+        T SendAndWaitFor<T>(long clientId, IAwaitableRequest message)
+            where T : class, IAwaitableResponse;
 
         void SendAll(object message);
 

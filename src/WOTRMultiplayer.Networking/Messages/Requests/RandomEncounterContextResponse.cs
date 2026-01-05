@@ -6,7 +6,7 @@ namespace WOTRMultiplayer.Networking.Messages.Requests
 {
     [ProtoContract]
     [BeetleX.Packets.MessageType((int)MessageTypes.Request.RandomEncounterContextResponse)]
-    public class RandomEncounterContextResponse : IAwaitableMessage
+    public class RandomEncounterContextResponse : IAwaitableResponse
     {
         [ProtoMember(1)]
         public NetworkRandomEncounter Encounter { get; set; }

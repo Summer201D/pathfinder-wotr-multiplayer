@@ -6,7 +6,7 @@ namespace WOTRMultiplayer.Networking.Messages.Requests
 {
     [ProtoContract]
     [BeetleX.Packets.MessageType((int)MessageTypes.Request.AIActionRequest)]
-    public class AIActionRequest : IAwaitableMessage
+    public class AIActionRequest : IAwaitableRequest
     {
         [ProtoMember(1)]
         public string UnitId { get; set; }

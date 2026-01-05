@@ -21,7 +21,6 @@ using WOTRMultiplayer.Entities.Leveling;
 using WOTRMultiplayer.Entities.NewGame;
 using WOTRMultiplayer.Entities.Rest;
 using WOTRMultiplayer.Entities.Settings;
-using WOTRMultiplayer.Networking;
 using WOTRMultiplayer.Networking.Abstractions;
 using WOTRMultiplayer.Networking.Messages.Game;
 using WOTRMultiplayer.Networking.Messages.Lobby;
@@ -816,9 +815,8 @@ namespace WOTRMultiplayer.Services
 
         private async void OnDiceRollValueRequest(long playerId, DiceRollValueRequest request)
         {
-            Logger.LogInformation("Received {MessageType}. RollId={RollId}", nameof(DiceRollValueRequest), request.RollId);
-            // either proxied request for another player or host
-            await SendLocalRollAsync(request.PlayerId ?? NetworkingConsts.HostPlayerId, request);
+            Logger.LogInformation("Received {MessageType}. RollId={RollId}, PlayerId={PlayerId}", nameof(DiceRollValueRequest), request.RollId, request.PlayerId);
+            await SendLocalRollAsync(request.PlayerId, request);
         }
 
         private void OnNotifyCombatTurnStarted(long playerId, NotifyCombatTurnStarted started)

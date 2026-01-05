@@ -6,7 +6,7 @@ namespace WOTRMultiplayer.Networking.Messages.Requests
 {
     [ProtoContract]
     [BeetleX.Packets.MessageType((int)MessageTypes.Request.RandomEncounterContextRequest)]
-    public class RandomEncounterContextRequest : IAwaitableMessage
+    public class RandomEncounterContextRequest : IAwaitableRequest
     {
         [ProtoMember(1)]
         public TimeSpan Timeout { get; set; }

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Net;
 using System.Threading.Tasks;
+using WOTRMultiplayer.Networking.Awaiters;
 
 namespace WOTRMultiplayer.Networking.Abstractions
 {
@@ -14,8 +15,8 @@ namespace WOTRMultiplayer.Networking.Abstractions
 
         void Send(object message);
 
-        T SendAndWaitFor<T>(object message)
-            where T : class;
+        T SendAndWaitFor<T>(IAwaitableRequest message)
+            where T : class, IAwaitableResponse;
 
         Action<Exception> OnError { get; set; }
 

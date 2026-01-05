@@ -1243,27 +1243,37 @@ namespace WOTRMultiplayer.Services
         private async void OnDiceRollValueRequest(long playerId, DiceRollValueRequest request)
         {
             Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}, RollId={RollId}, UnitId={UnitId}", nameof(DiceRollValueRequest), playerId, request.RollId, request.UnitId);
-
-            var character = GetPartyCharacter(request.UnitId);
-            var isAI = GameInteraction.IsUnitAI(request.UnitId);
             // so basically in combat we need to ask another player for rolls in case he is the owner of the turn
             if (Game.Combat != null
-                && !isAI
-                && character?.Owner != null
-                && !character.Owner.IsHost
-                && character.Owner.Id != playerId)
+                && Game.Combat.IsInitialized
+                && Game.Combat.Turn != null
+                && !Game.Combat.Turn.IsLocalPlayer
+                && !Game.Combat.Turn.IsAI)
             {
-                Logger.LogInformation("Asking another client for a roll. PlayerId={PlayerId}, RollId={RollId}, UnitId={UnitId}", character.Owner.Id, request.RollId, request.UnitId);
-                var message = new DiceRollValueRequest
+                var characterTurn = GetPartyCharacter(Game.Combat.Turn.UnitId);
+                if (characterTurn == null || characterTurn.Owner.Id == playerId)
                 {
-                    RollId = request.RollId,
-                    UnitId = request.UnitId,
-                    Timeout = request.Timeout,
-                    PlayerId = playerId
-                };
+                    Logger.LogError("TurnOwner is another player, but either Turn.UnitId is not under players control or Player requested self-owned rolls. PlayerId={PlayerId}, UnitId={UnitId}", playerId, Game.Combat.Turn.UnitId);
+                    return;
+                }
 
-                var rollFromAnotherClient = _networkServer.SendAndWaitFor<DiceRollValueResponse>(playerId, message);
-                Send(playerId, rollFromAnotherClient);
+                await Task.Factory.StartNew(() =>
+                {
+                    var message = new DiceRollValueRequest
+                    {
+                        RollId = request.RollId,
+                        UnitId = request.UnitId,
+                        Timeout = request.Timeout,
+                        PlayerId = playerId
+                    };
+
+                    var playerToAsk = characterTurn.Owner.Id;
+                    Logger.LogInformation("Asking another client for a roll. PlayerToAsk={PlayerToAsk}, PlayerId={PlayerId}, RollId={RollId}, UnitId={UnitId}, Timeout={Timeout}", playerToAsk, message.PlayerId, message.RollId, message.UnitId, message.Timeout);
+
+                    var rollFromAnotherClient = _networkServer.SendAndWaitFor<DiceRollValueResponse>(playerToAsk, message);
+                    Logger.LogInformation("Sending roll to a client. PlayerId={PlayerId}, RollId={RollId}", playerId, rollFromAnotherClient.RollId);
+                    Send(playerId, rollFromAnotherClient);
+                });
                 return;
             }
 
@@ -1645,10 +1655,11 @@ namespace WOTRMultiplayer.Services
 
                 lock (ActionLock)
                 {
-                    var allReady = Game.ForcedPause.ReadyPlayers.Count >= GetSyncedPlayersCount();
+                    var syncedPlayersCount = GetSyncedPlayersCount();
+                    var allReady = Game.ForcedPause.ReadyPlayers.Count >= syncedPlayersCount;
                     if (!allReady)
                     {
-                        Logger.LogInformation("Not everyone is ready, forced pause will remain. ReadyPlayers={ReadyPlayers}", Game.ForcedPause.ReadyPlayers);
+                        Logger.LogInformation("Not everyone is ready, forced pause will remain. SyncedPlayersCount={SyncedPlayersCount}, ReadyPlayers={ReadyPlayers}", syncedPlayersCount, Game.ForcedPause.ReadyPlayers);
                         return false;
                     }
 

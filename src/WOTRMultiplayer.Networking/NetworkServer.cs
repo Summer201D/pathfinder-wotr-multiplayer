@@ -70,17 +70,12 @@ namespace WOTRMultiplayer.Networking
             Server.AppServer.Send(message, session);
         }
 
-        public T SendAndWaitFor<T>(long clientId, object message)
-            where T : class
+        public T SendAndWaitFor<T>(long clientId, IAwaitableRequest message)
+            where T : class, IAwaitableResponse
         {
-            if (message is not IAwaitableMessage awaitableMessage || !typeof(IAwaitableMessage).IsAssignableFrom(typeof(T)))
-            {
-                throw new InvalidOperationException("Both message/response should implement IAwaitableMessage");
-            }
-
             var taskCompletion = new TaskCompletionSource<object>();
             var timeoutTask = Task.Delay(_defaultAwaiterTimeout);
-            var awaiterKey = awaitableMessage.GetKey();
+            var awaiterKey = message.GetKey();
 
             AddAwaiter(clientId, awaiterKey, taskCompletion);
             Send(clientId, message);
@@ -139,11 +134,16 @@ namespace WOTRMultiplayer.Networking
         private void OnHandleMessage<TMessage>(EventMessageReceiveArgs<NetworkServerApp, NetworkConnectionToken, TMessage> args, Action<long, TMessage> handler)
         {
             var clientId = args.NetSession.ID;
-            if (args.Message is IAwaitableMessage awaitable
-                && _awaiters.TryGetValue(clientId, out var clientAwaiters)
-                && clientAwaiters.TryRemove(awaitable.GetKey(), out var awaiter))
+            if (args.Message is IAwaitableResponse awaitable)
             {
-                _logger.LogDebug("Awaiter has been found, other handlers will be skipped. ClientId={ClientId}, AwaiterKey={AwaiterKey}", clientId, awaitable.GetKey());
+                var awaiterKey = awaitable.GetKey();
+                if (!_awaiters.TryGetValue(clientId, out var clientAwaiters) || !clientAwaiters.TryRemove(awaiterKey, out var awaiter))
+                {
+                    _logger.LogError("Received AwaitableResponse, but awaiter is not configured. ClientId={ClientId}, AwaiterKey={AwaiterKey}", clientId, awaiterKey);
+                    return;
+                }
+
+                _logger.LogDebug("Awaiter has been found, other handlers will be skipped. ClientId={ClientId}, AwaiterKey={AwaiterKey}", clientId, awaiterKey);
                 awaiter.SetResult(args.Message);
                 return;
             }

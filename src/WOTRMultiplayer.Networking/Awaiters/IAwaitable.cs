@@ -1,6 +1,6 @@
 ﻿namespace WOTRMultiplayer.Networking.Awaiters
 {
-    public interface IAwaitableMessage
+    public interface IAwaitable
     {
         string GetKey();
     }

@@ -244,7 +244,7 @@ namespace WOTRMultiplayer.Services
             Logger.LogInformation("Retrieving roll over network. RollId={RollId}, UnitId={UnitId}", networkDiceRollId, unitId);
 
             var waitForRollTimeout = SettingsService.GetSettings().RemoteRollRetrievalTimeout;
-            var request = new DiceRollValueRequest { RollId = networkDiceRollId, Timeout = waitForRollTimeout, UnitId = unitId };
+            var request = new DiceRollValueRequest { RollId = networkDiceRollId, Timeout = waitForRollTimeout, UnitId = unitId, PlayerId = Game.LocalPlayerId };
             // it's important to block current thread since we cannot proceed without response
             // yeah most likely it will cause the game to freeze in case of bad network
             var response = RetrieveRoll(request);
@@ -1729,7 +1729,7 @@ namespace WOTRMultiplayer.Services
             UpdateRestUIState();
         }
 
-        protected virtual void OnRemoteRestGameModeStarted(long playerId)
+        protected virtual void OnRemoteRestGameModeStarted()
         {
             UpdateRestUIState();
         }
@@ -1859,10 +1859,11 @@ namespace WOTRMultiplayer.Services
         {
             lock (ActionLock)
             {
-                Game.PlayersInGameMode.TryGetValue(GameModeType.Rest, out var readyPlayers);
+                Game.PlayersInGameMode.TryGetValue(GameModeType.Rest, out var restReadyPlayers);
+                var readyPlayersCount = (restReadyPlayers ?? []).Count;
                 var totalPlayers = GetSyncedPlayersCount();
-                var canUse = HasControlOverUI && readyPlayers.Count >= totalPlayers;
-                GameInteraction.UpdateStartRestButtonState(canUse, readyPlayers.Count, totalPlayers);
+                var canUse = HasControlOverUI && readyPlayersCount >= totalPlayers;
+                GameInteraction.UpdateStartRestButtonState(canUse, readyPlayersCount, totalPlayers);
             }
         }
 
@@ -2197,16 +2198,17 @@ namespace WOTRMultiplayer.Services
         {
             try
             {
-                var roll = await DiceRollStorage.GetAsync<RollValueBase>(request.RollId, playerId, request.Timeout);
+                var roll = await DiceRollStorage.GetAsync<RollValueBase>(request.RollId, request.PlayerId, request.Timeout);
                 var response = new DiceRollValueResponse
                 {
                     RollId = request.RollId,
                     UnitId = request.UnitId,
-                    RollValue = Mapper.Map<Networking.Messages.Contracts.NetworkRollValue>(roll)
+                    RollValue = Mapper.Map<Networking.Messages.Contracts.NetworkRollValue>(roll),
+                    PlayerId = request.PlayerId
                 };
 
-                Logger.LogInformation("Sending roll value response. RollId={RollId}, RollType={RollType}, Result={Result}, DamageValuesCount={DamageValuesCount}, RollHistoryCount={RollHistoryCount}",
-                    response.RollId, roll?.GetType().Name, response.RollValue?.Result, response.RollValue?.DamageValues.Count, response.RollValue?.RollHistory.Count);
+                Logger.LogInformation("Sending roll value response. RollId={RollId}, RollType={RollType}, Result={Result}, DamageValuesCount={DamageValuesCount}, RollHistoryCount={RollHistoryCount}, PlayerId={PlayerId}",
+                    response.RollId, roll?.GetType().Name, response.RollValue?.Result, response.RollValue?.DamageValues.Count, response.RollValue?.RollHistory.Count, response.PlayerId);
 
                 Send(playerId, response);
             }
@@ -2611,17 +2613,17 @@ namespace WOTRMultiplayer.Services
 
         private void OnNotifyGameModeTypeStarted(long receivedFrom, NotifyGameModeTypeStarted gameModeTypeStarted)
         {
-            Logger.LogInformation("Received {MessageType}. ReceivedFrom={ReceivedFrom}, PlayerId={PlayerId}, Name={Name}", nameof(NotifyGameModeTypeStarted), receivedFrom, gameModeTypeStarted.PlayerId, gameModeTypeStarted.Type);
+            Logger.LogInformation("Received {MessageType}. ReceivedFrom={ReceivedFrom}, PlayerId={PlayerId}, Type={Type}", nameof(NotifyGameModeTypeStarted), receivedFrom, gameModeTypeStarted.PlayerId, gameModeTypeStarted.Type);
             var gameMode = GameModeType.All.FirstOrDefault(g => string.Equals(g.Name, gameModeTypeStarted.Type, StringComparison.OrdinalIgnoreCase));
-            RegisterGameMode(gameMode, receivedFrom);
+            RegisterGameMode(gameMode, gameModeTypeStarted.PlayerId);
 
             if (gameMode == GameModeType.Rest)
             {
-                OnRemoteRestGameModeStarted(receivedFrom);
+                OnRemoteRestGameModeStarted();
             }
             else if (gameMode == GameModeType.Pause)
             {
-                OnRemotePauseGameModeStarted(receivedFrom);
+                OnRemotePauseGameModeStarted(gameModeTypeStarted.PlayerId);
             }
 
             OnAfterNetworkMessageHandled(receivedFrom, gameModeTypeStarted);
@@ -3473,7 +3475,7 @@ namespace WOTRMultiplayer.Services
                 };
             }
 
-            Logger.LogWarning("OnTurnStart. UnitId={UnitId}, IsLocalPlayer={IsLocalPlayer}, IsAI={IsAI}, IsActingInSurpriseRound={IsActingInSurpriseRound}, IsInProgress={IsInProgress}",
+            Logger.LogInformation("OnTurnStart. UnitId={UnitId}, IsLocalPlayer={IsLocalPlayer}, IsAI={IsAI}, IsActingInSurpriseRound={IsActingInSurpriseRound}, IsInProgress={IsInProgress}",
                 unitId, Game.Combat.Turn.IsLocalPlayer, Game.Combat.Turn.IsAI, Game.Combat.Turn.IsActingInSurpriseRound, Game.Combat.Turn.IsInProgress);
 
             OnLocalPlayerTurnStart();

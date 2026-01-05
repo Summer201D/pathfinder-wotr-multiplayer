@@ -6,7 +6,7 @@ namespace WOTRMultiplayer.Networking.Messages.Requests
 {
     [ProtoContract]
     [BeetleX.Packets.MessageType((int)MessageTypes.Request.DiceRollValueResponse)]
-    public class DiceRollValueResponse : IAwaitableMessage
+    public class DiceRollValueResponse : IAwaitableResponse
     {
         [ProtoMember(1)]
         public int RollId { get; set; }
@@ -17,9 +17,12 @@ namespace WOTRMultiplayer.Networking.Messages.Requests
         [ProtoMember(3)]
         public string UnitId { get; set; }
 
+        [ProtoMember(4)]
+        public long PlayerId { get; set; }
+
         public string GetKey()
         {
-            return string.Join(":", UnitId, RollId.ToString());
+            return string.Join(":", PlayerId, UnitId, RollId.ToString());
         }
     }
 }

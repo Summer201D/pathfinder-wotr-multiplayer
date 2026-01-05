@@ -81,18 +81,13 @@ namespace WOTRMultiplayer.Networking
             _client.Send(message).Wait();
         }
 
-        public T SendAndWaitFor<T>(object message)
-            where T : class
+        public T SendAndWaitFor<T>(IAwaitableRequest message)
+            where T : class, IAwaitableResponse
         {
-            if (message is not IAwaitableMessage awaitableMessage || !typeof(IAwaitableMessage).IsAssignableFrom(typeof(T)))
-            {
-                throw new InvalidOperationException("Both message/response should implement IAwaitableMessage");
-            }
-
             var taskCompletion = new TaskCompletionSource<object>();
             var timeoutTask = Task.Delay(_defaultAwaiterTimeout);
 
-            var awaiterKey = awaitableMessage.GetKey();
+            var awaiterKey = message.GetKey();
             _awaiters.TryAdd(awaiterKey, taskCompletion);
             _client.Send(message).Wait();
 
@@ -102,7 +97,7 @@ namespace WOTRMultiplayer.Networking
             {
                 _awaiters.TryRemove(awaiterKey, out _);
                 _logger.LogWarning("Awaiter has been failed due to timeout. AwaiterKey={AwaiterKey}, Timeout={Timeout}", awaiterKey, _defaultAwaiterTimeout);
-                return null;
+                return default;
             }
 
             return taskCompletion.Task.Result as T;
@@ -119,9 +114,16 @@ namespace WOTRMultiplayer.Networking
         private void OnPackedReceived(IClient client, object message)
         {
             var messageType = message.GetType();
-            if (message is IAwaitableMessage awaitableMessage && _awaiters.TryRemove(awaitableMessage.GetKey(), out var taskCompletion))
+            if (message is IAwaitableResponse awaitableMessage)
             {
-                _logger.LogDebug("Awaiter has been found, other handlers will be skipped. AwaiterKey={AwaiterKey}", awaitableMessage.GetKey());
+                var awaiterKey = awaitableMessage.GetKey();
+                if (!_awaiters.TryRemove(awaiterKey, out var taskCompletion))
+                {
+                    _logger.LogError("Received AwaitableResponse, but awaiter is not configured. AwaiterKey={AwaiterKey}, Awaiters={Awaiters}", awaiterKey, _awaiters.Keys);
+                    return;
+                }
+
+                _logger.LogDebug("Awaiter has been found, other handlers will be skipped. AwaiterKey={AwaiterKey}", awaiterKey);
                 taskCompletion.SetResult(message);
                 return;
             }
