@@ -30,11 +30,12 @@ namespace WOTRMultiplayer.Playground.Client
             WellKnownSettings.Initialize();
 
             var serviceProvider = DIFactory.Create(new UnityModManagerSettings { UseDebugConsole = false });
-            var gameInteractionService = new DummyGameInteractionService();
-            Console.WriteLine("Default save game dir=" + gameInteractionService.GetSaveGamePath());
             var client = new MultiplayerClient(
                 serviceProvider.GetService<ILogger<MultiplayerClient>>(),
-                gameInteractionService,
+                new DummyGameInteractionService(),
+                new DummyLevelingInteractionService(),
+                new DummyPlayerNotificationService(),
+                new DummyDialogInteractionService(),
                 serviceProvider.GetService<IIPEndPointParser>(),
                 new MultiplayerSettingsProvider(new DummySettingsControllerAccessor()),
                 serviceProvider.GetService<IFileSystemService>(),

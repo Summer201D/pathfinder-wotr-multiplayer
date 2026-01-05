@@ -36,7 +36,7 @@ namespace WOTRMultiplayer
 
         public static ILogger<T> GetLogger<T>()
         {
-            return _serviceProvider.GetRequiredService<ILogger<T>>();
+            return _serviceProvider.GetService<ILogger<T>>();
         }
 
         public static bool AddUnitIdToOvertip => _settings.AddUnitIdToOvertip;
@@ -45,11 +45,14 @@ namespace WOTRMultiplayer
         {
             try
             {
-                _logger = _serviceProvider.GetRequiredService<ILogger<Main>>();
+                _settings = UnityModManager.ModSettings.Load<UnityModManagerSettings>(entry);
+                _serviceProvider = DIFactory.Create(_settings);
+
+                _logger = _serviceProvider.GetService<ILogger<Main>>();
             }
             catch (Exception ex)
             {
-                entry.Logger.Error($"Unable to initialize logger. Error={ex}");
+                entry.Logger.Error($"Failed to initialize. Error={ex}");
                 throw;
             }
 
@@ -57,9 +60,6 @@ namespace WOTRMultiplayer
 
             try
             {
-                _settings = UnityModManager.ModSettings.Load<UnityModManagerSettings>(entry);
-                _serviceProvider = DIFactory.Create(_settings);
-
                 Subscribe();
 
                 WellKnownKeysInitializer.Run();

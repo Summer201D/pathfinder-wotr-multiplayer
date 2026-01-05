@@ -48,6 +48,9 @@ namespace WOTRMultiplayer.Services
         public MultiplayerHost(
             ILogger<MultiplayerHost> logger,
             IGameInteractionService gameInteractionService,
+            ILevelingInteractionService levelingInteractionService,
+            IPlayerNotificationService playerNotificationService,
+            IDialogInteractionService dialogInteractionService,
             IMultiplayerSettingsService multiplayerSettingsProvider,
             IFileSystemService fileSystemService,
             INetworkServer networkServer,
@@ -58,6 +61,9 @@ namespace WOTRMultiplayer.Services
                   mapper,
                   multiplayerSettingsProvider,
                   gameInteractionService,
+                  levelingInteractionService,
+                  playerNotificationService,
+                  dialogInteractionService,
                   diceRollStorage,
                   fileSystemService,
                   valueGenerator,
@@ -213,7 +219,7 @@ namespace WOTRMultiplayer.Services
             Logger.LogInformation("Showing dialog Cue. DialogName={DialogName}, CueName={CueName}, HasSystemAnswer={HasSystemAnswer}", dialogName, cueName, hasSystemAnswer);
             if (hasSystemAnswer)
             {
-                GameInteraction.SetDialogContinueButtonState(false);
+                DialogInteraction.SetDialogContinueButtonState(false);
             }
 
             Game.Dialog.CurrentCueName = cueName;
@@ -233,7 +239,7 @@ namespace WOTRMultiplayer.Services
                 return false;
             }
 
-            GameInteraction.ResetSuggestedDialogAnswers();
+            DialogInteraction.ResetSuggestedDialogAnswers();
             Game.Dialog.AnswerSuggestions.Clear();
 
             Game.Dialog.Answer = new NetworkDialogAnswer
@@ -923,7 +929,7 @@ namespace WOTRMultiplayer.Services
                         foreach (var playerId in players)
                         {
                             var player = GetPlayer(playerId);
-                            GameInteraction.AddCombatText(WellKnownKeys.GameNotifications.Combat.HostTurnOrderDesync.Key, player?.Name);
+                            PlayerNotification.AddCombatText(WellKnownKeys.GameNotifications.Combat.HostTurnOrderDesync.Key, player?.Name);
 
                             var desyncedTurnStartMessage = new NotifyInvalidCombatTurnStarted
                             {
@@ -1088,7 +1094,7 @@ namespace WOTRMultiplayer.Services
                     return;
                 }
 
-                GameInteraction.StartLeveling(characterLevelingRequested.UnitId, levelingType);
+                LevelingInteraction.StartLeveling(characterLevelingRequested.UnitId, levelingType);
             }
         }
 
@@ -1230,7 +1236,7 @@ namespace WOTRMultiplayer.Services
             Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}, DialogName={DialogName}, TargetUnitId={TargetUnitId}, InitiatorUnitId={InitiatorUnitId}, MapObjectId={MapObjectId}, SpeakerKey={SpeakerKey}",
                 nameof(ClientDialogStartRequested), playerId, requested.DialogName, requested.TargetUnitId, requested.InitiatorUnitId, requested.MapObjectId, requested.SpeakerKey);
 
-            var hasBeenStarted = await GameInteraction.StartDialogAsync(requested.DialogName, requested.TargetUnitId, requested.InitiatorUnitId, requested.MapObjectId, requested.SpeakerKey);
+            var hasBeenStarted = await DialogInteraction.StartDialogAsync(requested.DialogName, requested.TargetUnitId, requested.InitiatorUnitId, requested.MapObjectId, requested.SpeakerKey);
             if (hasBeenStarted)
             {
                 return;
@@ -1277,7 +1283,7 @@ namespace WOTRMultiplayer.Services
             });
 
             List<NetworkDialogAnswerSuggestion> suggestions = [.. Game.Dialog.AnswerSuggestions.GroupBy(x => x.Value, x => x.Key).Select(x => new NetworkDialogAnswerSuggestion { AnswerName = x.Key, Players = [.. x] })];
-            GameInteraction.MarkSuggestedDialogAnswers(suggestions);
+            DialogInteraction.MarkSuggestedDialogAnswers(suggestions);
 
             var notifyMessage = new NotifyDialogCueAnswerSuggested
             {
@@ -1690,7 +1696,7 @@ namespace WOTRMultiplayer.Services
             }
 
             Logger.LogInformation("All players have witnessed current cue. CueName={CueName}", currentCue);
-            GameInteraction.SetDialogContinueButtonState(true);
+            DialogInteraction.SetDialogContinueButtonState(true);
         }
 
         private bool TryEndForcedPause()
@@ -1812,7 +1818,7 @@ namespace WOTRMultiplayer.Services
             }
 
             var messageKey = pause.IsLifting ? WellKnownKeys.GameNotifications.ForcedPause.IsLifting.Key : pause.Reason;
-            GameInteraction.ShowWarningNotification(messageKey);
+            PlayerNotification.ShowWarningNotification(messageKey);
         }
 
         private bool TryGetSaveGameContent(out byte[] content)

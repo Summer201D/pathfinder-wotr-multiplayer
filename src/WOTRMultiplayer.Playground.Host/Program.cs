@@ -29,10 +29,12 @@ namespace WOTRMultiplayer.Playground.Host
             Console.ReadLine();
 
             var serviceProvider = DIFactory.Create(new UnityModManagerSettings { UseDebugConsole = false });
-            var gameInteractionService = new DummyGameInteractionService();
             var host = new MultiplayerHost(
                 serviceProvider.GetService<ILogger<MultiplayerHost>>(),
-                gameInteractionService,
+                new DummyGameInteractionService(),
+                new DummyLevelingInteractionService(),
+                new DummyPlayerNotificationService(),
+                new DummyDialogInteractionService(),
                 new MultiplayerSettingsProvider(new DummySettingsControllerAccessor()),
                 serviceProvider.GetService<IFileSystemService>(),
                 serviceProvider.GetService<INetworkServer>(),

@@ -59,6 +59,12 @@ namespace WOTRMultiplayer.Services
 
         protected IGameInteractionService GameInteraction { get; private set; }
 
+        protected ILevelingInteractionService LevelingInteraction { get; private set; }
+
+        protected IPlayerNotificationService PlayerNotification { get; private set; }
+
+        protected IDialogInteractionService DialogInteraction { get; private set; }
+
         protected IDiceRollStorage DiceRollStorage { get; private set; }
 
         protected IFileSystemService FileSystem { get; private set; }
@@ -78,6 +84,9 @@ namespace WOTRMultiplayer.Services
             IMapper mapper,
             IMultiplayerSettingsService multiplayerSettingsService,
             IGameInteractionService gameInteractionService,
+            ILevelingInteractionService levelingInteractionService,
+            IPlayerNotificationService playerNotificationService,
+            IDialogInteractionService dialogInteractionService,
             IDiceRollStorage diceRollStorage,
             IFileSystemService fileSystemService,
             IValueGenerator valueGenerator,
@@ -86,6 +95,9 @@ namespace WOTRMultiplayer.Services
             Logger = logger;
             Mapper = mapper;
             GameInteraction = gameInteractionService;
+            LevelingInteraction = levelingInteractionService;
+            PlayerNotification = playerNotificationService;
+            DialogInteraction = dialogInteractionService;
             DiceRollStorage = diceRollStorage;
             FileSystem = fileSystemService;
             SettingsService = multiplayerSettingsService;
@@ -406,7 +418,7 @@ namespace WOTRMultiplayer.Services
 
             if (IsOutOfSupportedArea(currentChapter, currentArea))
             {
-                GameInteraction.ShowModalMessage(WellKnownKeys.SysMessages.OutOfSupportedAreas.Key);
+                PlayerNotification.ShowModalMessage(WellKnownKeys.SysMessages.OutOfSupportedAreas.Key);
             }
         }
 
@@ -1336,7 +1348,7 @@ namespace WOTRMultiplayer.Services
 
             if (!string.IsNullOrEmpty(messageKey))
             {
-                GameInteraction.ShowWarningNotification(messageKey, characterName);
+                PlayerNotification.ShowWarningNotification(messageKey, characterName);
             }
 
             Game.Leveling = null;
@@ -1364,7 +1376,7 @@ namespace WOTRMultiplayer.Services
 
             if (!string.IsNullOrEmpty(messageKey))
             {
-                GameInteraction.AddCombatText(messageKey, characterName);
+                PlayerNotification.AddCombatText(messageKey, characterName);
             }
 
             Game.Leveling = null;
@@ -1668,7 +1680,7 @@ namespace WOTRMultiplayer.Services
                 var readyPlayers = Game.PlayersInDialogPopup.Count;
                 var totalPlayers = GetSyncedPlayersCount();
                 var canUse = HasControlOverUI && readyPlayers >= totalPlayers;
-                GameInteraction.UpdateDialogPopupUI(canUse, readyPlayers, totalPlayers);
+                DialogInteraction.UpdateDialogPopupUI(canUse, readyPlayers, totalPlayers);
             }
         }
 
@@ -1734,7 +1746,7 @@ namespace WOTRMultiplayer.Services
                 var readyPlayers = Game.PlayersInRespecWindow.Count;
                 var totalPlayers = GetSyncedPlayersCount();
                 var canUse = WasControlledByCurrentPlayer(unitId) && readyPlayers >= totalPlayers;
-                GameInteraction.UpdateLevelingRespecUI(canUse, readyPlayers, totalPlayers);
+                LevelingInteraction.UpdateLevelingRespecUI(canUse, readyPlayers, totalPlayers);
             }
         }
 
@@ -1804,7 +1816,7 @@ namespace WOTRMultiplayer.Services
                 Game.Leveling.PlayerReadiness.Add(playerId);
 
                 var isEnabled = CanMakeLevelingDecisions();
-                GameInteraction.UpdateLevelingPhaseControls(isEnabled);
+                LevelingInteraction.UpdateLevelingPhaseControls(isEnabled);
             }
         }
 
@@ -1851,7 +1863,7 @@ namespace WOTRMultiplayer.Services
                 return;
             }
 
-            GameInteraction.ShowWarningNotification(WellKnownKeys.GameNotifications.Session.PlayerJoined.Key, networkPlayer.Name);
+            PlayerNotification.ShowWarningNotification(WellKnownKeys.GameNotifications.Session.PlayerJoined.Key, networkPlayer.Name);
         }
 
         protected void ShowPlayerDisconnectedMessage(NetworkPlayer networkPlayer)
@@ -1861,7 +1873,7 @@ namespace WOTRMultiplayer.Services
                 return;
             }
 
-            GameInteraction.ShowModalMessage(WellKnownKeys.GameNotifications.Session.PlayerLeft.Key, networkPlayer.Name);
+            PlayerNotification.ShowModalMessage(WellKnownKeys.GameNotifications.Session.PlayerLeft.Key, networkPlayer.Name);
         }
 
         protected NetworkPlayer CleanupPlayer(long playerId)
@@ -1897,7 +1909,7 @@ namespace WOTRMultiplayer.Services
         {
             RemovePlayerFromTracker(Game.PlayersInRespecWindow, playerId);
 
-            var respecUnitId = GameInteraction.GetCurrentRespecWindowUnitId();
+            var respecUnitId = LevelingInteraction.GetCurrentRespecWindowUnitId();
             UpdateLevelingRespecUIState(respecUnitId);
         }
 
@@ -2010,7 +2022,7 @@ namespace WOTRMultiplayer.Services
             var savePath = Path.Combine(multiplayerPath, "latest joined game.zks");
             if (!FileSystem.WriteFile(savePath, content))
             {
-                GameInteraction.ShowModalMessage(WellKnownKeys.SysMessages.FailedToStoreSave.Key);
+                PlayerNotification.ShowModalMessage(WellKnownKeys.SysMessages.FailedToStoreSave.Key);
                 return null;
             }
 
@@ -2489,7 +2501,7 @@ namespace WOTRMultiplayer.Services
             Logger.LogInformation("Received {MessageType}. ReceivedFrom={ReceivedFrom}, PlayerId={PlayerId}", nameof(NotifyLevelingRespecMythicLevelUp), receivedFrom, levelingRespecMythicLevelUp.PlayerId);
 
             RemovePlayerFromTracker(Game.PlayersInRespecWindow, levelingRespecMythicLevelUp.PlayerId);
-            GameInteraction.InitiateLevelingRespecMythicLevelUp();
+            LevelingInteraction.InitiateLevelingRespecMythicLevelUp();
 
             OnAfterNetworkMessageHandled(receivedFrom, levelingRespecMythicLevelUp);
         }
@@ -2499,7 +2511,7 @@ namespace WOTRMultiplayer.Services
             Logger.LogInformation("Received {MessageType}. ReceivedFrom={ReceivedFrom}, PlayerId={PlayerId}", nameof(NotifyLevelingRespecLevelUp), receivedFrom, levelingRespecLevelUp.PlayerId);
 
             RemovePlayerFromTracker(Game.PlayersInRespecWindow, levelingRespecLevelUp.PlayerId);
-            GameInteraction.InitiateLevelingRespecLevelUp();
+            LevelingInteraction.InitiateLevelingRespecLevelUp();
 
             OnAfterNetworkMessageHandled(receivedFrom, levelingRespecLevelUp);
         }
@@ -2521,7 +2533,7 @@ namespace WOTRMultiplayer.Services
 
             ResetPlayersTracker(Game.PlayersInRespecWindow);
 
-            GameInteraction.CompleteLevelingRespec();
+            LevelingInteraction.CompleteLevelingRespec();
 
             OnAfterNetworkMessageHandled(playerId, levelingRespecCompleted);
         }
@@ -2531,7 +2543,7 @@ namespace WOTRMultiplayer.Services
             Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}, TextureName={TextureName}, PageNumber={PageNumber}", nameof(NotifyLevelingWarpaintColorAppearanceChanged), playerId, levelingWarpaintColorAppearanceChanged.Warpaint.TextureName, levelingWarpaintColorAppearanceChanged.Warpaint.PageNumber);
 
             var levelingWarpaint = Mapper.Map<NetworkLevelingWarpaint>(levelingWarpaintColorAppearanceChanged.Warpaint);
-            GameInteraction.SelectLevelingWarpaintColorAppearance(levelingWarpaint);
+            LevelingInteraction.SelectLevelingWarpaintColorAppearance(levelingWarpaint);
 
             OnAfterNetworkMessageHandled(playerId, levelingWarpaintColorAppearanceChanged);
         }
@@ -2541,7 +2553,7 @@ namespace WOTRMultiplayer.Services
             Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}, Index={Index}, PageNumber={PageNumber}", nameof(NotifyLevelingWarpaintAppearanceChanged), playerId, levelingWarpaintAppearanceChanged.Warpaint.Index, levelingWarpaintAppearanceChanged.Warpaint.PageNumber);
 
             var levelingWarpaint = Mapper.Map<NetworkLevelingWarpaint>(levelingWarpaintAppearanceChanged.Warpaint);
-            GameInteraction.SelectLevelingWarpaintAppearance(levelingWarpaint);
+            LevelingInteraction.SelectLevelingWarpaintAppearance(levelingWarpaint);
 
             OnAfterNetworkMessageHandled(playerId, levelingWarpaintAppearanceChanged);
         }
@@ -2551,7 +2563,7 @@ namespace WOTRMultiplayer.Services
             Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}, TextureName={Index}, PageNumber={PageNumber}", nameof(NotifyLevelingTattooColorAppearanceChanged), playerId, levelingTattooColorAppearanceChanged.Tattoo.TextureName, levelingTattooColorAppearanceChanged.Tattoo.PageNumber);
 
             var levelingTattoo = Mapper.Map<NetworkLevelingTattoo>(levelingTattooColorAppearanceChanged.Tattoo);
-            GameInteraction.SelectLevelingTattooColorAppearance(levelingTattoo);
+            LevelingInteraction.SelectLevelingTattooColorAppearance(levelingTattoo);
 
             OnAfterNetworkMessageHandled(playerId, levelingTattooColorAppearanceChanged);
         }
@@ -2561,7 +2573,7 @@ namespace WOTRMultiplayer.Services
             Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}, Index={Index}, PageNumber={PageNumber}", nameof(NotifyLevelingTattooAppearanceChanged), playerId, levelingTattooAppearanceChanged.Tattoo.Index, levelingTattooAppearanceChanged.Tattoo.PageNumber);
 
             var levelingTattoo = Mapper.Map<NetworkLevelingTattoo>(levelingTattooAppearanceChanged.Tattoo);
-            GameInteraction.SelectLevelingTattooAppearance(levelingTattoo);
+            LevelingInteraction.SelectLevelingTattooAppearance(levelingTattoo);
 
             OnAfterNetworkMessageHandled(playerId, levelingTattooAppearanceChanged);
         }
@@ -2570,7 +2582,7 @@ namespace WOTRMultiplayer.Services
         {
             Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}, Index={Index}", nameof(NotifyLevelingScarAppearanceChanged), playerId, levelingScarAppearanceChanged.Index);
 
-            GameInteraction.SelectLevelingScarAppearance(levelingScarAppearanceChanged.Index);
+            LevelingInteraction.SelectLevelingScarAppearance(levelingScarAppearanceChanged.Index);
 
             OnAfterNetworkMessageHandled(playerId, levelingScarAppearanceChanged);
         }
@@ -2579,7 +2591,7 @@ namespace WOTRMultiplayer.Services
         {
             Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}, TextureName={TextureName}", nameof(NotifyLevelingSecondaryOutfitColorAppearanceChanged), playerId, levelingSecondaryOutfitColorAppearanceChanged.TextureName);
 
-            GameInteraction.SelectLevelingSecondaryOutfitColorAppearance(levelingSecondaryOutfitColorAppearanceChanged.TextureName);
+            LevelingInteraction.SelectLevelingSecondaryOutfitColorAppearance(levelingSecondaryOutfitColorAppearanceChanged.TextureName);
 
             OnAfterNetworkMessageHandled(playerId, levelingSecondaryOutfitColorAppearanceChanged);
         }
@@ -2588,7 +2600,7 @@ namespace WOTRMultiplayer.Services
         {
             Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}, TextureName={TextureName}", nameof(NotifyLevelingPrimaryOutfitColorAppearanceChanged), playerId, levelingPrimaryOutfitColorAppearanceChanged.TextureName);
 
-            GameInteraction.SelectLevelingPrimaryOutfitColorAppearance(levelingPrimaryOutfitColorAppearanceChanged.TextureName);
+            LevelingInteraction.SelectLevelingPrimaryOutfitColorAppearance(levelingPrimaryOutfitColorAppearanceChanged.TextureName);
 
             OnAfterNetworkMessageHandled(playerId, levelingPrimaryOutfitColorAppearanceChanged);
         }
@@ -2597,7 +2609,7 @@ namespace WOTRMultiplayer.Services
         {
             Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}, TextureName={TextureName}", nameof(NotifyLevelingHornsColorAppearanceChanged), playerId, levelingHornsColorAppearanceChanged.TextureName);
 
-            GameInteraction.SelectLevelingHornsColorAppearance(levelingHornsColorAppearanceChanged.TextureName);
+            LevelingInteraction.SelectLevelingHornsColorAppearance(levelingHornsColorAppearanceChanged.TextureName);
 
             OnAfterNetworkMessageHandled(playerId, levelingHornsColorAppearanceChanged);
         }
@@ -2606,7 +2618,7 @@ namespace WOTRMultiplayer.Services
         {
             Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}, Index={Index}", nameof(NotifyLevelingHornsAppearanceChanged), playerId, levelingHornsAppearanceChanged.Index);
 
-            GameInteraction.SelectLevelingHornsAppearance(levelingHornsAppearanceChanged.Index);
+            LevelingInteraction.SelectLevelingHornsAppearance(levelingHornsAppearanceChanged.Index);
 
             OnAfterNetworkMessageHandled(playerId, levelingHornsAppearanceChanged);
         }
@@ -2615,7 +2627,7 @@ namespace WOTRMultiplayer.Services
         {
             Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}, Index={Index}", nameof(NotifyLevelingHairStyleAppearanceChanged), playerId, levelingHairStyleAppearanceChanged.Index);
 
-            GameInteraction.SelectLevelingHairStyleAppearance(levelingHairStyleAppearanceChanged.Index);
+            LevelingInteraction.SelectLevelingHairStyleAppearance(levelingHairStyleAppearanceChanged.Index);
 
             OnAfterNetworkMessageHandled(playerId, levelingHairStyleAppearanceChanged);
         }
@@ -2624,7 +2636,7 @@ namespace WOTRMultiplayer.Services
         {
             Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}, TextureName={TextureName}", nameof(NotifyLevelingHairColorAppearanceChanged), playerId, levelingHairColorAppearanceChanged.TextureName);
 
-            GameInteraction.SelectLevelingHairColorAppearance(levelingHairColorAppearanceChanged.TextureName);
+            LevelingInteraction.SelectLevelingHairColorAppearance(levelingHairColorAppearanceChanged.TextureName);
 
             OnAfterNetworkMessageHandled(playerId, levelingHairColorAppearanceChanged);
         }
@@ -2633,7 +2645,7 @@ namespace WOTRMultiplayer.Services
         {
             Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}, Index={Index}", nameof(NotifyLevelingFaceAppearanceChanged), playerId, levelingFaceAppearanceChanged.Index);
 
-            GameInteraction.SelectLevelingFaceAppearance(levelingFaceAppearanceChanged.Index);
+            LevelingInteraction.SelectLevelingFaceAppearance(levelingFaceAppearanceChanged.Index);
 
             OnAfterNetworkMessageHandled(playerId, levelingFaceAppearanceChanged);
         }
@@ -2642,7 +2654,7 @@ namespace WOTRMultiplayer.Services
         {
             Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}, TextureName={TextureName}", nameof(NotifyLevelingEyesColorAppearanceChanged), playerId, levelingEyesColorAppearanceChanged.TextureName);
 
-            GameInteraction.SelectLevelingEyesColorAppearance(levelingEyesColorAppearanceChanged.TextureName);
+            LevelingInteraction.SelectLevelingEyesColorAppearance(levelingEyesColorAppearanceChanged.TextureName);
 
             OnAfterNetworkMessageHandled(playerId, levelingEyesColorAppearanceChanged);
         }
@@ -2651,7 +2663,7 @@ namespace WOTRMultiplayer.Services
         {
             Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}, TextureName={TextureName}", nameof(NotifyLevelingBodyColorAppearanceChanged), playerId, levelingBodyColorAppearanceChanged.TextureName);
 
-            GameInteraction.SelectLevelingBodyColorAppearance(levelingBodyColorAppearanceChanged.TextureName);
+            LevelingInteraction.SelectLevelingBodyColorAppearance(levelingBodyColorAppearanceChanged.TextureName);
 
             OnAfterNetworkMessageHandled(playerId, levelingBodyColorAppearanceChanged);
         }
@@ -2660,7 +2672,7 @@ namespace WOTRMultiplayer.Services
         {
             Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}, Index={Index}", nameof(NotifyLevelingBodyTypeAppearanceChanged), playerId, levelingBodyTypeAppearanceChanged.Index);
 
-            GameInteraction.SelectLevelingBodyTypeAppearance(levelingBodyTypeAppearanceChanged.Index);
+            LevelingInteraction.SelectLevelingBodyTypeAppearance(levelingBodyTypeAppearanceChanged.Index);
 
             OnAfterNetworkMessageHandled(playerId, levelingBodyTypeAppearanceChanged);
         }
@@ -3040,7 +3052,7 @@ namespace WOTRMultiplayer.Services
             Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}, Name={Name}, CustomId={CustomId}, Category={Category}", nameof(NotifyLevelingPortraitSelected), playerId, levelingPortraitSelected.Portrait.Name, levelingPortraitSelected.Portrait.CustomId, levelingPortraitSelected.Portrait.Category);
 
             var levelingPortrait = Mapper.Map<NetworkLevelingPortrait>(levelingPortraitSelected.Portrait);
-            GameInteraction.SelectLevelingPortrait(levelingPortrait);
+            LevelingInteraction.SelectLevelingPortrait(levelingPortrait);
 
             OnAfterNetworkMessageHandled(playerId, levelingPortraitSelected);
         }
@@ -3050,7 +3062,7 @@ namespace WOTRMultiplayer.Services
             Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}, Id={Id}, GenderId={GenderId}", nameof(NotifyLevelingVoiceSelected), playerId, levelingVoiceSelected.Voice.Id, levelingVoiceSelected.Voice.GenderId);
 
             var levelingVoice = Mapper.Map<NetworkLevelingVoice>(levelingVoiceSelected.Voice);
-            GameInteraction.SelectLevelingVoice(levelingVoice);
+            LevelingInteraction.SelectLevelingVoice(levelingVoice);
 
             OnAfterNetworkMessageHandled(playerId, levelingVoiceSelected);
         }
@@ -3059,7 +3071,7 @@ namespace WOTRMultiplayer.Services
         {
             Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}, AlignmentId={AlignmentId}", nameof(NotifyLevelingGenderSelected), playerId, levelingAlignmentSelected.AlignmentId);
 
-            GameInteraction.SelectLevelingAlignment(levelingAlignmentSelected.AlignmentId);
+            LevelingInteraction.SelectLevelingAlignment(levelingAlignmentSelected.AlignmentId);
 
             OnAfterNetworkMessageHandled(playerId, levelingAlignmentSelected);
         }
@@ -3068,7 +3080,7 @@ namespace WOTRMultiplayer.Services
         {
             Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}, Name={Name}", nameof(NotifyLevelingGenderSelected), playerId, levelingNameChanged.Name);
 
-            GameInteraction.SetLevelingName(levelingNameChanged.Name);
+            LevelingInteraction.SetLevelingName(levelingNameChanged.Name);
 
             OnAfterNetworkMessageHandled(playerId, levelingNameChanged);
         }
@@ -3077,7 +3089,7 @@ namespace WOTRMultiplayer.Services
         {
             Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}, GenderId={GenderId}", nameof(NotifyLevelingGenderSelected), playerId, levelingGenderSelected.GenderId);
 
-            GameInteraction.SelectLevelingGender(levelingGenderSelected.GenderId);
+            LevelingInteraction.SelectLevelingGender(levelingGenderSelected.GenderId);
 
             OnAfterNetworkMessageHandled(playerId, levelingGenderSelected);
         }
@@ -3086,7 +3098,7 @@ namespace WOTRMultiplayer.Services
         {
             Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}, RaceId={RaceId}", nameof(NotifyLevelingRaceSelected), playerId, levelingRaceSelected.RaceId);
 
-            GameInteraction.SelectLevelingRace(levelingRaceSelected.RaceId);
+            LevelingInteraction.SelectLevelingRace(levelingRaceSelected.RaceId);
 
             OnAfterNetworkMessageHandled(playerId, levelingRaceSelected);
         }
@@ -3097,7 +3109,7 @@ namespace WOTRMultiplayer.Services
 
             var direction = Mapper.Map<NetworkLevelingSequenceDirection>(racialAbilityScoreBonusChanged.Direction);
 
-            GameInteraction.ChangeLevelingRacialAbilityScoreBonus(direction);
+            LevelingInteraction.ChangeLevelingRacialAbilityScoreBonus(direction);
 
             OnAfterNetworkMessageHandled(playerId, racialAbilityScoreBonusChanged);
         }
@@ -3108,7 +3120,7 @@ namespace WOTRMultiplayer.Services
 
             var direction = Mapper.Map<NetworkLevelingSequenceDirection>(levelingBirthDayChanged.Direction);
 
-            GameInteraction.ChangeLevelingBirthDay(direction);
+            LevelingInteraction.ChangeLevelingBirthDay(direction);
 
             OnAfterNetworkMessageHandled(playerId, levelingBirthDayChanged);
         }
@@ -3119,7 +3131,7 @@ namespace WOTRMultiplayer.Services
 
             var direction = Mapper.Map<NetworkLevelingSequenceDirection>(levelingBirthMonthChanged.Direction);
 
-            GameInteraction.ChangeLevelingBirthMonth(direction);
+            LevelingInteraction.ChangeLevelingBirthMonth(direction);
 
             OnAfterNetworkMessageHandled(playerId, levelingBirthMonthChanged);
         }
@@ -3129,7 +3141,7 @@ namespace WOTRMultiplayer.Services
             Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}, StatType={StatType}", nameof(NotifyLevelingAbilityScoreDecreased), playerId, levelingAbilityScoreDecreased.AbilityScore.StatType);
 
             var abilityScore = Mapper.Map<NetworkLevelingAbilityScore>(levelingAbilityScoreDecreased.AbilityScore);
-            GameInteraction.DecreaseLevelingAbilityScore(abilityScore);
+            LevelingInteraction.DecreaseLevelingAbilityScore(abilityScore);
 
             OnAfterNetworkMessageHandled(playerId, levelingAbilityScoreDecreased);
         }
@@ -3139,7 +3151,7 @@ namespace WOTRMultiplayer.Services
             Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}, StatType={StatType}", nameof(NotifyLevelingAbilityScoreIncreased), playerId, levelingAbilityScoreIncreased.AbilityScore.StatType);
 
             var abilityScore = Mapper.Map<NetworkLevelingAbilityScore>(levelingAbilityScoreIncreased.AbilityScore);
-            GameInteraction.IncreaseLevelingAbilityScore(abilityScore);
+            LevelingInteraction.IncreaseLevelingAbilityScore(abilityScore);
 
             OnAfterNetworkMessageHandled(playerId, levelingAbilityScoreIncreased);
         }
@@ -3147,7 +3159,7 @@ namespace WOTRMultiplayer.Services
         private void OnNotifyLevelingCompleted(long playerId, NotifyLevelingCompleted completed)
         {
             Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}", nameof(NotifyLevelingCompleted), playerId);
-            GameInteraction.CompleteLeveling();
+            LevelingInteraction.CompleteLeveling();
 
             OnAfterNetworkMessageHandled(playerId, completed);
         }
@@ -3155,7 +3167,7 @@ namespace WOTRMultiplayer.Services
         private void OnNotifyLevelingTerminated(long playerId, NotifyLevelingTerminated terminated)
         {
             Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}", nameof(NotifyLevelingTerminated), playerId);
-            GameInteraction.TerminateLeveling();
+            LevelingInteraction.TerminateLeveling();
 
             OnAfterNetworkMessageHandled(playerId, terminated);
         }
@@ -3164,7 +3176,7 @@ namespace WOTRMultiplayer.Services
         {
             Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}, SpellName={SpellName}, SpellId={SpellId}", nameof(NotifyLevelingSpellRemoved), playerId, removed.Spell.Name, removed.Spell.Id);
             var spell = Mapper.Map<NetworkLevelingSpell>(removed.Spell);
-            GameInteraction.RemoveLevelingSpell(spell);
+            LevelingInteraction.RemoveLevelingSpell(spell);
 
             OnAfterNetworkMessageHandled(playerId, removed);
         }
@@ -3173,7 +3185,7 @@ namespace WOTRMultiplayer.Services
         {
             Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}, SpellName={SpellName}, SpellId={SpellId}", nameof(NotifyLevelingSpellChosen), playerId, chosen.Spell.Name, chosen.Spell.Id);
             var spell = Mapper.Map<NetworkLevelingSpell>(chosen.Spell);
-            GameInteraction.SelectLevelingSpell(spell);
+            LevelingInteraction.SelectLevelingSpell(spell);
 
             OnAfterNetworkMessageHandled(playerId, chosen);
         }
@@ -3182,7 +3194,7 @@ namespace WOTRMultiplayer.Services
         {
             Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}, FeatureName={FeatureName}, FeatureId={FeatureId}", nameof(NotifyLevelingFeatureSelected), playerId, selected.Feature.Name, selected.Feature.Id);
             var feature = Mapper.Map<NetworkLevelingFeature>(selected.Feature);
-            GameInteraction.SelectLevelingFeature(feature);
+            LevelingInteraction.SelectLevelingFeature(feature);
 
             OnAfterNetworkMessageHandled(playerId, selected);
         }
@@ -3191,7 +3203,7 @@ namespace WOTRMultiplayer.Services
         {
             Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}, StatType={StatType}", nameof(NotifyLevelingSkillPointDecreased), playerId, decreased.Skill.StatType);
             var skillPoint = Mapper.Map<NetworkLevelingSkillPoint>(decreased.Skill);
-            GameInteraction.DecreaseLevelingSkillPoint(skillPoint);
+            LevelingInteraction.DecreaseLevelingSkillPoint(skillPoint);
             OnAfterNetworkMessageHandled(playerId, decreased);
         }
 
@@ -3199,7 +3211,7 @@ namespace WOTRMultiplayer.Services
         {
             Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}, StatType={StatType}", nameof(NotifyLevelingSkillPointIncreased), playerId, increased.Skill.StatType);
             var skillPoint = Mapper.Map<NetworkLevelingSkillPoint>(increased.Skill);
-            GameInteraction.IncreaseLevelingSkillPoint(skillPoint);
+            LevelingInteraction.IncreaseLevelingSkillPoint(skillPoint);
 
             OnAfterNetworkMessageHandled(playerId, increased);
         }
@@ -3209,7 +3221,7 @@ namespace WOTRMultiplayer.Services
             Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}, Index={Index}", nameof(NotifyLevelingPhaseChanged), playerId, changed.Phase.Index);
             var phase = Mapper.Map<NetworkLevelingPhase>(changed.Phase);
             ResetPlayersTracker(Game.Leveling.PlayerReadiness);
-            GameInteraction.SwitchLevelingPhase(phase);
+            LevelingInteraction.SwitchLevelingPhase(phase);
 
             OnAfterNetworkMessageHandled(playerId, changed);
         }
@@ -3230,7 +3242,7 @@ namespace WOTRMultiplayer.Services
         private void OnNotifyLevelingClassArchetypeSelected(long playerId, NotifyLevelingClassArchetypeSelected classArchetypeSelected)
         {
             Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}, ArchetypeId={ArchetypeId}", nameof(NotifyLevelingClassArchetypeSelected), playerId, classArchetypeSelected.ArchetypeId);
-            GameInteraction.SelectLevelingClassArchetype(classArchetypeSelected.ArchetypeId);
+            LevelingInteraction.SelectLevelingClassArchetype(classArchetypeSelected.ArchetypeId);
 
             OnAfterNetworkMessageHandled(playerId, classArchetypeSelected);
         }
@@ -3239,7 +3251,7 @@ namespace WOTRMultiplayer.Services
         private void OnNotifyLevelingMythicClassSelected(long playerId, NotifyLevelingMythicClassSelected mythicClassSelected)
         {
             Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}, MythicClassId={MythicClassId}", nameof(NotifyLevelingMythicClassSelected), playerId, mythicClassSelected.MythicClassId);
-            GameInteraction.SelectMythicLevelingClass(mythicClassSelected.MythicClassId);
+            LevelingInteraction.SelectMythicLevelingClass(mythicClassSelected.MythicClassId);
 
             OnAfterNetworkMessageHandled(playerId, mythicClassSelected);
         }
@@ -3247,7 +3259,7 @@ namespace WOTRMultiplayer.Services
         private void OnNotifyLevelingClassSelected(long playerId, NotifyLevelingClassSelected classSelected)
         {
             Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}, ClassId={ClassId}", nameof(NotifyCharacterLevelingStarted), playerId, classSelected.ClassId);
-            GameInteraction.SelectLevelingClass(classSelected.ClassId);
+            LevelingInteraction.SelectLevelingClass(classSelected.ClassId);
 
             OnAfterNetworkMessageHandled(playerId, classSelected);
         }

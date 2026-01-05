@@ -1,4 +1,5 @@
 ﻿using Kingmaker.UI.MVVM._PCView.CharGen;
+using Kingmaker.UI.MVVM._PCView.Common;
 using Kingmaker.UI.MVVM._PCView.Common.MessageModal;
 using Kingmaker.UI.MVVM._PCView.EscMenu;
 using Kingmaker.UI.MVVM._PCView.GlobalMap;
@@ -18,6 +19,8 @@ namespace WOTRMultiplayer.Abstractions.GameInteraction
         EscMenuPCView EscMenu { get; }
 
         GlobalMapPCView GlobalMapPCView { get; }
+
+        CommonPCView CommonPCView { get; }
 
         NewGamePCView NewGamePCView { get; }
 

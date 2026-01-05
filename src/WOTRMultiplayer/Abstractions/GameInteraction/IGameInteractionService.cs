@@ -4,17 +4,14 @@ using System.Threading.Tasks;
 using Kingmaker.EntitySystem;
 using Kingmaker.GameModes;
 using Kingmaker.Items.Slots;
-using Kingmaker.UI;
 using WOTRMultiplayer.Entities;
 using WOTRMultiplayer.Entities.ActionBar;
 using WOTRMultiplayer.Entities.Combat;
 using WOTRMultiplayer.Entities.Content;
-using WOTRMultiplayer.Entities.Dialogs;
 using WOTRMultiplayer.Entities.Equipment;
 using WOTRMultiplayer.Entities.GlobalMap;
 using WOTRMultiplayer.Entities.Inspect;
 using WOTRMultiplayer.Entities.Items;
-using WOTRMultiplayer.Entities.Leveling;
 using WOTRMultiplayer.Entities.MapObjects;
 using WOTRMultiplayer.Entities.Movement;
 using WOTRMultiplayer.Entities.NewGame;
@@ -34,29 +31,11 @@ namespace WOTRMultiplayer.Abstractions.GameInteraction
 
         void LeaveArea(string areaExitId);
 
-        void MarkSuggestedDialogAnswers(List<NetworkDialogAnswerSuggestion> networkDialogAnswerSuggestions);
-
-        void ResetSuggestedDialogAnswers();
-
         void MoveNonCombatCharacter(NetworkCharacterMove networkCharacterMove);
 
         void SetPause(bool isPaused);
 
-        void SelectDialogAnswer(string dialogName, string cueName, string answerName, string manualUnitSelectionId);
-
-        void SetDialogContinueButtonState(bool isEnabled);
-
-        void PlaySound(UISoundType type);
-
-        Task<bool> StartDialogAsync(string dialogName, string targetUnitId, string initiatorUnitId, string mapObjectId, string speakerKey);
-
         List<NetworkCharacter> GetPartyPlayers();
-
-        void ShowModalMessage(string messageKey, params object[] args);
-
-        void ShowWarningNotification(string messageKey, params object[] args);
-
-        void AddCombatText(string messageKey, params object[] args);
 
         bool IsUnitAI(string unitId);
 
@@ -146,84 +125,6 @@ namespace WOTRMultiplayer.Abstractions.GameInteraction
 
         void MemorizeSpell(NetworkSpellSlot networkSpellSlot);
 
-        void StartLeveling(string unitId, NetworkLevelingType levelingType);
-
-        void SelectLevelingClassArchetype(string archetypeId);
-
-        void SelectLevelingClass(string classId);
-
-        void SelectMythicLevelingClass(string mythicClassId);
-
-        void SelectLevelingPortrait(NetworkLevelingPortrait levelingPortrait);
-
-        void SelectLevelingVoice(NetworkLevelingVoice levelingVoice);
-
-        void SelectLevelingGender(string genderId);
-
-        void SelectLevelingRace(string raceId);
-
-        void UpdateLevelingPhaseControls(bool isEnabled);
-
-        void SwitchLevelingPhase(NetworkLevelingPhase networkLevelingPhase);
-
-        void DecreaseLevelingSkillPoint(NetworkLevelingSkillPoint networkLevelingSkillPoint);
-
-        void IncreaseLevelingSkillPoint(NetworkLevelingSkillPoint networkLevelingSkillPoint);
-
-        void DecreaseLevelingAbilityScore(NetworkLevelingAbilityScore networkLevelingAbilityScore);
-
-        void IncreaseLevelingAbilityScore(NetworkLevelingAbilityScore networkLevelingAbilityScore);
-
-        void SelectLevelingAlignment(string alignmentId);
-
-        void SetLevelingName(string name);
-
-        void ChangeLevelingRacialAbilityScoreBonus(NetworkLevelingSequenceDirection direction);
-
-        void ChangeLevelingBirthDay(NetworkLevelingSequenceDirection direction);
-
-        void ChangeLevelingBirthMonth(NetworkLevelingSequenceDirection direction);
-
-        void SelectLevelingFeature(NetworkLevelingFeature networkLevelingFeature);
-
-        void SelectLevelingSpell(NetworkLevelingSpell networkLevelingSpell);
-
-        void RemoveLevelingSpell(NetworkLevelingSpell networkLevelingSpell);
-
-        void SelectLevelingWarpaintColorAppearance(NetworkLevelingWarpaint levelingWarpaint);
-
-        void SelectLevelingWarpaintAppearance(NetworkLevelingWarpaint levelingWarpaint);
-
-        void SelectLevelingTattooColorAppearance(NetworkLevelingTattoo levelingTattoo);
-
-        void SelectLevelingTattooAppearance(NetworkLevelingTattoo levelingTattoo);
-
-        void SelectLevelingScarAppearance(int index);
-
-        void SelectLevelingBodyTypeAppearance(int index);
-
-        void SelectLevelingSecondaryOutfitColorAppearance(string textureName);
-
-        void SelectLevelingPrimaryOutfitColorAppearance(string textureName);
-
-        void SelectLevelingHornsColorAppearance(string textureName);
-
-        void SelectLevelingHornsAppearance(int index);
-
-        void SelectLevelingHairStyleAppearance(int index);
-
-        void SelectLevelingHairColorAppearance(string textureName);
-
-        void SelectLevelingFaceAppearance(int index);
-
-        void SelectLevelingEyesColorAppearance(string textureName);
-
-        void SelectLevelingBodyColorAppearance(string textureName);
-
-        void CompleteLeveling();
-
-        void TerminateLeveling();
-
         void MoveActionBarSlots(NetworkActionBarSlot sourceActionBarSlot, NetworkActionBarSlot targetActionBarSlot);
 
         void ClearActionBarSlot(NetworkActionBarSlot actionBarSlot);
@@ -276,12 +177,6 @@ namespace WOTRMultiplayer.Abstractions.GameInteraction
 
         void UpdateZoneLootUI(bool isInteractable, int readyPlayersCount, int totalPlayersCount);
 
-        void UpdateLevelingRespecUI(bool isInteractable, int readyPlayersCount, int totalPlayersCount);
-
-        void UpdateDialogPopupUI(bool isInteractable, int readyPlayersCount, int totalPlayersCount);
-
-        void CloseDialogPopup(NetworkDialogPopup networkDialogPopup);
-
         void AvoidGlobalMapEncounter();
 
         void AcceptGlobalMapEncounter();
@@ -305,14 +200,6 @@ namespace WOTRMultiplayer.Abstractions.GameInteraction
         void UseInventoryItem(NetworkUseInventoryItem useInventoryItem);
 
         string GetUnitCharacterName(string unitId);
-
-        void CompleteLevelingRespec();
-
-        string GetCurrentRespecWindowUnitId();
-
-        void InitiateLevelingRespecLevelUp();
-
-        void InitiateLevelingRespecMythicLevelUp();
 
         void UpdateCharacterSelectionUI(bool isInteractable, int readyPlayersCount, int totalPlayersCount);
 

@@ -58,6 +58,9 @@ namespace WOTRMultiplayer.Services
         public MultiplayerClient(
             ILogger<MultiplayerClient> logger,
             IGameInteractionService gameInteractionService,
+            ILevelingInteractionService levelingInteractionService,
+            IPlayerNotificationService playerNotificationService,
+            IDialogInteractionService dialogInteractionService,
             IIPEndPointParser ipEndPointParser,
             IMultiplayerSettingsService multiplayerSettingsProvider,
             IFileSystemService fileSystemService,
@@ -69,6 +72,9 @@ namespace WOTRMultiplayer.Services
                   mapper,
                   multiplayerSettingsProvider,
                   gameInteractionService,
+                  levelingInteractionService,
+                  playerNotificationService,
+                  dialogInteractionService,
                   diceRollStorage,
                   fileSystemService,
                   valueGenerator,
@@ -119,7 +125,7 @@ namespace WOTRMultiplayer.Services
             Logger.LogInformation("Showing dialog Cue. DialogName={DialogName}, CueName={CueName}, HasSystemAnswer={HasSystemAnswer}", dialogName, cueName, hasSystemAnswer);
             if (hasSystemAnswer)
             {
-                GameInteraction.SetDialogContinueButtonState(false);
+                DialogInteraction.SetDialogContinueButtonState(false);
             }
 
             Game.Dialog.CurrentCueName = cueName;
@@ -319,7 +325,7 @@ namespace WOTRMultiplayer.Services
             if (Game.ForcedPause != null && isPaused)
             {
                 var warningText = string.IsNullOrEmpty(Game.ForcedPause.Reason) ? WellKnownKeys.GameNotifications.ForcedPause.NoPermission.Key : Game.ForcedPause.Reason;
-                GameInteraction.ShowWarningNotification(warningText);
+                PlayerNotification.ShowWarningNotification(warningText);
             }
 
             // client has no control over manual pausing at all
@@ -367,7 +373,7 @@ namespace WOTRMultiplayer.Services
 
         public bool OnSpawnCampPlace(NetworkVector3 position)
         {
-            GameInteraction.ShowWarningNotification(WellKnownKeys.GameNotifications.Rest.NoCampingPermission.Key);
+            PlayerNotification.ShowWarningNotification(WellKnownKeys.GameNotifications.Rest.NoCampingPermission.Key);
             return false;
         }
 
@@ -744,7 +750,7 @@ namespace WOTRMultiplayer.Services
             }
 
             InitiateLeveling(characterLevelingStarted.UnitId, levelingType);
-            GameInteraction.StartLeveling(Game.Leveling.UnitId, Game.Leveling.Type);
+            LevelingInteraction.StartLeveling(Game.Leveling.UnitId, Game.Leveling.Type);
         }
 
         private void OnNotifyVendorWindowClosed(long playerId, NotifyVendorWindowClosed closed)
@@ -762,7 +768,7 @@ namespace WOTRMultiplayer.Services
         private void OnNotifyInvalidCombatTurnStarted(long playerId, NotifyInvalidCombatTurnStarted started)
         {
             Logger.LogInformation("Received {MessageType}. UnitId={UnitId}", nameof(NotifyInvalidCombatTurnStarted), started.UnitId);
-            GameInteraction.AddCombatText(WellKnownKeys.GameNotifications.Combat.ClientTurnOrderDesync.Key);
+            PlayerNotification.AddCombatText(WellKnownKeys.GameNotifications.Combat.ClientTurnOrderDesync.Key);
             ResetCombatTurn();
             GameInteraction.StartTurnBasedCombatTurn(started.UnitId);
         }
@@ -922,7 +928,7 @@ namespace WOTRMultiplayer.Services
                 Game.Dialog = new NetworkDialog(started.DialogName);
             }
 
-            var hasStartedDialog = await GameInteraction.StartDialogAsync(started.DialogName, started.TargetUnitId, started.InitiatorUnitId, started.MapObjectId, started.SpeakerKey);
+            var hasStartedDialog = await DialogInteraction.StartDialogAsync(started.DialogName, started.TargetUnitId, started.InitiatorUnitId, started.MapObjectId, started.SpeakerKey);
             if (!hasStartedDialog)
             {
                 Logger.LogWarning("Client dialog is already started. DialogName={DialogName}", started.DialogName);
@@ -934,7 +940,7 @@ namespace WOTRMultiplayer.Services
             Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}, AreaName={AreaName}, DialogName={DialogName}, CueName={CueName}", nameof(NotifyDialogPopupShown), playerId, dialogPopupClosed.Popup.AreaName, dialogPopupClosed.Popup.DialogName, dialogPopupClosed.Popup.CueName);
             var popup = Mapper.Map<NetworkDialogPopup>(dialogPopupClosed.Popup);
 
-            GameInteraction.CloseDialogPopup(popup);
+            DialogInteraction.CloseDialogPopup(popup);
         }
 
         private void OnNotifyDialogCueAnswerSelected(long playerId, NotifyDialogCueAnswerSelected selected)
@@ -966,7 +972,7 @@ namespace WOTRMultiplayer.Services
             };
 
             Game.Dialog.AnswerSuggestions.Clear();
-            GameInteraction.SelectDialogAnswer(selected.DialogName, selected.CueName, selected.AnswerName, selected.ManualUnitSelectionId);
+            DialogInteraction.SelectDialogAnswer(selected.DialogName, selected.CueName, selected.AnswerName, selected.ManualUnitSelectionId);
         }
 
         private void OnNotifyDialogCueAnswerSuggested(long playerId, NotifyDialogCueAnswerSuggested suggested)
@@ -992,7 +998,7 @@ namespace WOTRMultiplayer.Services
             }
 
             var suggestions = Mapper.Map<List<NetworkDialogAnswerSuggestion>>(suggested.Suggestions);
-            GameInteraction.MarkSuggestedDialogAnswers(suggestions);
+            DialogInteraction.MarkSuggestedDialogAnswers(suggestions);
         }
 
         private void OnNotifyPartyLeaveArea(long playerId, NotifyPartyLeaveArea area)
@@ -1184,7 +1190,7 @@ namespace WOTRMultiplayer.Services
         private void InvokeOnNetworkError(string error, SocketError? socketError = null)
         {
             OnNetworkError?.Invoke();
-            GameInteraction.ShowModalMessage(error, socketError);
+            PlayerNotification.ShowModalMessage(error, socketError);
         }
     }
 }

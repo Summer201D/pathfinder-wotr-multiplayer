@@ -31,6 +31,9 @@ namespace WOTRMultiplayer.UnitTests.Services
 
         private ILogger<MultiplayerHost> _logger;
         private IGameInteractionService _gameInteractionService;
+        private ILevelingInteractionService _levelingInteractionService;
+        private IPlayerNotificationService _playerNotificationService;
+        private IDialogInteractionService _dialogInteractionService;
         private IMultiplayerSettingsService _multiplayerSettingsProvider;
         private IFileSystemService _fileSystemService;
         private INetworkServer _networkServer;
@@ -48,6 +51,9 @@ namespace WOTRMultiplayer.UnitTests.Services
 
             _logger = A.Fake<ILogger<MultiplayerHost>>();
             _gameInteractionService = A.Fake<IGameInteractionService>();
+            _levelingInteractionService = A.Fake<ILevelingInteractionService>();
+            _playerNotificationService = A.Fake<IPlayerNotificationService>();
+            _dialogInteractionService = A.Fake<IDialogInteractionService>();
             _multiplayerSettingsProvider = A.Fake<IMultiplayerSettingsService>();
             _fileSystemService = A.Fake<IFileSystemService>();
 
@@ -60,6 +66,9 @@ namespace WOTRMultiplayer.UnitTests.Services
             _multiplayerHost = new MultiplayerHost(
                 _logger,
                 _gameInteractionService,
+                _levelingInteractionService,
+                _playerNotificationService,
+                _dialogInteractionService,
                 _multiplayerSettingsProvider,
                 _fileSystemService,
                 _networkServer,

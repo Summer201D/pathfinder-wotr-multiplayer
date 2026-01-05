@@ -23,7 +23,9 @@ namespace WOTRMultiplayer.Services.GameInteraction
         private InGamePCView InGamePCView => Game.Instance.RootUiContext.m_UIView as InGamePCView;
         private MainMenuPCView MainMenuPCView => Game.Instance.RootUiContext.m_UIView as MainMenuPCView;
 
-        public EscMenuPCView EscMenu => (Game.Instance.RootUiContext.m_CommonView as CommonPCView)?.m_EscMenuContextPCView?.m_EscMenuPCView;
+        public CommonPCView CommonPCView => (Game.Instance.RootUiContext.m_CommonView as CommonPCView);
+
+        public EscMenuPCView EscMenu => CommonPCView?.m_EscMenuContextPCView?.m_EscMenuPCView;
 
         public GlobalMapPCView GlobalMapPCView => Game.Instance.RootUiContext.m_UIView as GlobalMapPCView;
 
@@ -50,6 +52,5 @@ namespace WOTRMultiplayer.Services.GameInteraction
         public RespecWindowPCView RespecView => (InGamePCView?.m_StaticPartPCView?.m_CharGenContextPCView ?? GlobalMapPCView?.m_CharGenContextPCView)?.m_RespecWindowPCView;
 
         public InventoryVM InventoryVM => (Game.Instance.RootUiContext?.InGameVM?.StaticPartVM?.ServiceWindowsVM ?? Game.Instance.RootUiContext?.GlobalMapVM?.ServiceWindowsVM)?.InventoryVM?.Value;
-
     }
 }

@@ -66,8 +66,14 @@ namespace WOTRMultiplayer.Config.DI
             serviceCollection.AddSingleton<IJoinMenuItemController, JoinMenuItemController>();
 
             serviceCollection.AddSingleton<IUIAccessor, UIAccessor>();
+            serviceCollection.AddSingleton<IUISyncCountersService, UISyncCountersService>();
+            serviceCollection.AddSingleton<IGameStateLookupService, GameStateLookupService>();
+            serviceCollection.AddSingleton<IUISyncCountersService, UISyncCountersService>();
             serviceCollection.AddSingleton<IGameInteractionService, GameInteractionService>();
+            serviceCollection.AddSingleton<ILevelingInteractionService, LevelingInteractionService>();
+            serviceCollection.AddSingleton<IPlayerNotificationService, PlayerNotificationService>();
             serviceCollection.AddSingleton<IEquipmentDefinitions, EquipmentDefinitions>();
+            serviceCollection.AddSingleton<IDialogInteractionService, DialogInteractionService>();
 
             serviceCollection.AddSingleton<MultiplayerSubscriber>();
             serviceCollection.AddSingleton<MultiplayerUnitEquipmentSubscriber>();
