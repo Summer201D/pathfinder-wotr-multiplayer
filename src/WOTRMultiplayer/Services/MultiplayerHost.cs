@@ -288,7 +288,7 @@ namespace WOTRMultiplayer.Services
                 ManualUnitSelectionId = Game.Dialog.Answer.ManualUnitSelectionId
             };
 
-            _networkServer.SendAll(message);
+            Send(message);
             Game.Dialog.Answer = null;
         }
 
@@ -1564,6 +1564,8 @@ namespace WOTRMultiplayer.Services
                     PauseOnSpellcastStarted = Kingmaker.Settings.EntitiesType.None,
                     // everything else is false for autopause
                 },
+                // tutorial is disabled because most of tutorial popups pause the game
+                Tutorial = new NetworkTutorialSettings()
             };
 
             return settings;

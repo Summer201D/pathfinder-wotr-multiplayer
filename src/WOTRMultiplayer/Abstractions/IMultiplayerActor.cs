@@ -280,5 +280,7 @@ namespace WOTRMultiplayer.Abstractions
         void OnStartRest();
 
         void OnStartRestSleepPhase();
+
+        void OnGameLoaded();
     }
 }

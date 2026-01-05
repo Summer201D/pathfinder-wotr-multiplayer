@@ -808,7 +808,7 @@ namespace WOTRMultiplayer.Services
             }
             catch (Exception ex)
             {
-                Logger.LogError(ex, "Unable to sync units");
+                Logger.LogError(ex, "Unable to sync combat turn");
                 throw;
             }
         }

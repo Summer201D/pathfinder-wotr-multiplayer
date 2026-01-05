@@ -28,6 +28,7 @@ using WOTRMultiplayer.Entities.Movement;
 using WOTRMultiplayer.Entities.NewGame;
 using WOTRMultiplayer.Entities.Rest;
 using WOTRMultiplayer.Entities.Rolls.Claiming.Values;
+using WOTRMultiplayer.Entities.Settings;
 using WOTRMultiplayer.Entities.Spells;
 using WOTRMultiplayer.Entities.Vendor;
 using WOTRMultiplayer.Networking.Abstractions;
@@ -465,6 +466,14 @@ namespace WOTRMultiplayer.Services
                 Logger.LogError(ex, "Unable to update characters ownership");
                 throw;
             }
+        }
+
+        public void OnGameLoaded()
+        {
+            Logger.LogInformation("OnGameLoaded");
+            // Tutorial settings are save dependant, so it must be overriden if save was created without a mod
+            var settings = new NetworkGameSettings { Tutorial = new NetworkTutorialSettings() };
+            GameInteraction.ApplyGameSettings(settings);
         }
 
         public void ForceLoadGame(string gameId, string savePath)

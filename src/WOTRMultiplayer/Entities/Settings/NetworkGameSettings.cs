@@ -9,5 +9,7 @@
         public NetworkAutopauseSettings Autopause { get; set; }
 
         public NetworkMultiplayerSettings Multiplayer { get; set; }
+
+        public NetworkTutorialSettings Tutorial { get; set; }
     }
 }

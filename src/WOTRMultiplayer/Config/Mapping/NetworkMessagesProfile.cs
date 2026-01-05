@@ -121,6 +121,9 @@ namespace WOTRMultiplayer.Config.Mapping
             CreateMap<NetworkAutopauseSettings, Networking.Messages.Contracts.NetworkAutopauseSettings>()
                 .ReverseMap();
 
+            CreateMap<NetworkTutorialSettings, Networking.Messages.Contracts.NetworkTutorialSettings>()
+                .ReverseMap();
+
             CreateMap<NetworkMultiplayerSettings, Networking.Messages.Contracts.NetworkMultiplayerSettings>()
                 .ReverseMap();
 

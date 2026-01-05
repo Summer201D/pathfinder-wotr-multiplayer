@@ -38,12 +38,12 @@ namespace WOTRMultiplayer.HarmonyPatches.MenuPatches
             }
 
             UpdateGameSettings(__instance);
-            UpdateDifficultySettings(__instance);
+            DisableSettingGroups(__instance.m_DifficultySettingsList);
         }
 
-        private static void UpdateDifficultySettings(UISettingsManager uiSettingsManager)
+        private static void DisableSettingGroups(List<UISettingsGroup> groups)
         {
-            foreach (var settingsGroup in uiSettingsManager.m_DifficultySettingsList)
+            foreach (var settingsGroup in groups)
             {
                 foreach (var settingEntity in settingsGroup.SettingsList)
                 {
@@ -55,6 +55,7 @@ namespace WOTRMultiplayer.HarmonyPatches.MenuPatches
         private static void UpdateGameSettings(UISettingsManager uiSettingsManager)
         {
             const string GameAutopauseSettingsGroup = "GameAutopauseSettingsGroup";
+            const string GameTutorialSettingsGroup = "Tutorial";
 
             foreach (var settingsGroup in uiSettingsManager.m_GameSettingsList)
             {
@@ -63,7 +64,7 @@ namespace WOTRMultiplayer.HarmonyPatches.MenuPatches
                 {
                     var settingName = settingEntity.name;
                     var fullSettingName = $"{settingsGroupName}.{settingName}";
-                    if (settingsGroupName != GameAutopauseSettingsGroup && !UnmodifiableValues.Contains(fullSettingName))
+                    if (settingsGroupName != GameAutopauseSettingsGroup && settingsGroupName != GameTutorialSettingsGroup && !UnmodifiableValues.Contains(fullSettingName))
                     {
                         continue;
                     }

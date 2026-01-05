@@ -1,6 +1,7 @@
 ﻿using Kingmaker.Blueprints.Area;
 using Kingmaker.EntitySystem.Entities;
 using Kingmaker.PubSubSystem;
+using Kingmaker.UI;
 using Kingmaker.View.MapObjects;
 using Microsoft.Extensions.Logging;
 using WOTRMultiplayer.Abstractions;
@@ -13,7 +14,8 @@ namespace WOTRMultiplayer.PubSub
         IPartyLeaveAreaHandler,
         IPartyChangedUIHandler,
         IPartyHandler,
-        IAreaLoadingStagesHandler
+        IAreaLoadingStagesHandler,
+        IWarningNotificationUIHandler
     {
         public MultiplayerSubscriber(
             ILogger<MultiplayerSubscriber> logger,
@@ -67,6 +69,20 @@ namespace WOTRMultiplayer.PubSub
             }
 
             ActorAccessor.Host.LeaveArea(areaExitId);
+        }
+
+        public void HandleWarning(WarningNotificationType warningType, bool addToLog = true)
+        {
+            if (ActorAccessor.Current == null || warningType != WarningNotificationType.GameLoaded)
+            {
+                return;
+            }
+
+            ActorAccessor.Current.OnGameLoaded();
+        }
+
+        public void HandleWarning(string text, bool addToLog = true)
+        {
         }
 
         public void OnAreaLoadingComplete()
