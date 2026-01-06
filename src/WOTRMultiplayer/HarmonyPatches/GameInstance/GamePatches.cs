@@ -1,8 +1,10 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Reflection;
 using System.Reflection.Emit;
 using HarmonyLib;
 using Kingmaker;
+using Kingmaker.Blueprints.Area;
 using Kingmaker.EntitySystem.Persistence;
 using Kingmaker.GameModes;
 using Kingmaker.UI.MVVM._PCView.GlobalMap;
@@ -72,31 +74,6 @@ namespace WOTRMultiplayer.HarmonyPatches.GameInstance
             return true;
         }
 
-        /// <summary>
-        /// EscMode and FullScreenUi game modes are never actually started. We block them to prevent the game from 'fake' pausing (reducing timeScale to 0, stopping moving units, etc.) in multiplayer - the game should keep running when a player opens Esc menu, settings, inventory, etc.
-        /// This, however, causes some undesirable side effects. For example, opened inventory (fullscreenui) overlaps with the combat log. Even though the combat log is not visible, it still captures all mouse inputs, so you can't use some inventory slots or interact with Finnean.
-        /// An alternative to blocking these modes would be to stop controllers from being deactivated (starting FullScreenUi mode stops Default mode, which calls Deactivate on every controller),
-        /// but that looks like a rabbit hole with an unclear amount of work to fix every controller that needs to stay active.
-        /// For now, fixing the side effects feels like the safer and more reasonable approach
-        /// <param name="isStart"></param>
-        private static void FixFullScreenUiToggle(bool isStart)
-        {
-            var combatLogView = (Game.Instance.RootUiContext.m_UIView as InGamePCView)?.m_StaticPartPCView?.m_CombatLogPCView ?? (Game.Instance.RootUiContext.m_UIView as GlobalMapPCView)?.m_CombatLogPCView;
-            if (combatLogView == null)
-            {
-                Main.GetLogger<GamePatches>().LogError("Unable to fix full screen game mode sideeffects due to missing combat log view");
-                return;
-            }
-
-            if (isStart)
-            {
-                combatLogView.OnGameModeStart(GameModeType.FullScreenUi);
-                return;
-            }
-
-            combatLogView.OnGameModeStop(GameModeType.FullScreenUi);
-        }
-
         [HarmonyPatch(typeof(Game), nameof(Game.PauseBind))]
         [HarmonyTranspiler]
         public static IEnumerable<CodeInstruction> Game_PauseBind_Transpiler(IEnumerable<CodeInstruction> instructions)
@@ -123,6 +100,43 @@ namespace WOTRMultiplayer.HarmonyPatches.GameInstance
             return matcher.Instructions();
         }
 
+        [HarmonyPatch(typeof(Game), nameof(Game.LoadNewGame), [typeof(BlueprintAreaPreset), typeof(SaveInfo)])]
+        [HarmonyTranspiler]
+        public static IEnumerable<CodeInstruction> Game_LoadNewGame_Transpiler(IEnumerable<CodeInstruction> instructions)
+        {
+            var target = PatchesUtils.GetTranspilerTarget(MethodBase.GetCurrentMethod());
+            var replaceWith = AccessTools.Method(typeof(GamePatches), nameof(GamePatches.GetGameId));
+            var lookFor = AccessTools.PropertySetter(typeof(Player), nameof(Player.GameId));
+            var matcher = new CodeMatcher(instructions);
+            var match = matcher.SearchForward(x => x.Calls(lookFor));
+            if (match.IsInvalid)
+            {
+                Main.GetLogger<GamePatches>().LogError("Transpiler has not been applied. Target={Target}", target);
+                return instructions;
+            }
+
+            match = match.Advance(-5).RemoveInstructions(5);
+            var newInstructions = new List<CodeInstruction>()
+            {
+                new (OpCodes.Call, replaceWith),
+            };
+            match.Insert(newInstructions);
+            Main.GetLogger<GamePatches>().LogInformation("Transpiler has been applied. Target={Target}", target);
+            return matcher.Instructions();
+        }
+
+        private static string GetGameId()
+        {
+            if (!Main.Multiplayer.IsActive)
+            {
+                return Guid.NewGuid().ToString("N");
+            }
+
+            var gameId = Main.Multiplayer.GetNewGameSequenceId();
+            Main.GetLogger<GamePatches>().LogInformation("Starting new game with predefined Id. GameId={GameId}", gameId);
+            return gameId;
+        }
+
         private static void TogglePause(Game game)
         {
             var isPaused = game.IsPaused;
@@ -131,6 +145,31 @@ namespace WOTRMultiplayer.HarmonyPatches.GameInstance
             {
                 game.IsPaused = !game.IsPaused;
             }
+        }
+
+        /// <summary>
+        /// EscMode and FullScreenUi game modes are never actually started. We block them to prevent the game from 'fake' pausing (reducing timeScale to 0, stopping moving units, etc.) in multiplayer - the game should keep running when a player opens Esc menu, settings, inventory, etc.
+        /// This, however, causes some undesirable side effects. For example, opened inventory (fullscreenui) overlaps with the combat log. Even though the combat log is not visible, it still captures all mouse inputs, so you can't use some inventory slots or interact with Finnean.
+        /// An alternative to blocking these modes would be to stop controllers from being deactivated (starting FullScreenUi mode stops Default mode, which calls Deactivate on every controller),
+        /// but that looks like a rabbit hole with an unclear amount of work to fix every controller that needs to stay active.
+        /// For now, fixing the side effects feels like the safer and more reasonable approach
+        /// <param name="isStart"></param>
+        private static void FixFullScreenUiToggle(bool isStart)
+        {
+            var combatLogView = (Game.Instance.RootUiContext.m_UIView as InGamePCView)?.m_StaticPartPCView?.m_CombatLogPCView ?? (Game.Instance.RootUiContext.m_UIView as GlobalMapPCView)?.m_CombatLogPCView;
+            if (combatLogView == null)
+            {
+                Main.GetLogger<GamePatches>().LogError("Unable to fix full screen game mode sideeffects due to missing combat log view");
+                return;
+            }
+
+            if (isStart)
+            {
+                combatLogView.OnGameModeStart(GameModeType.FullScreenUi);
+                return;
+            }
+
+            combatLogView.OnGameModeStop(GameModeType.FullScreenUi);
         }
     }
 }

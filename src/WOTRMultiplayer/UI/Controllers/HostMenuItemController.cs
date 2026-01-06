@@ -247,7 +247,7 @@ namespace WOTRMultiplayer.UI.Controllers
             var titleText = UIUtility.GetSaberBookFormat(gameName);
             Title.SetText(titleText);
 
-            var startup = CreateGameStartUp(selectedSave);
+            var (gameId, startup) = CreateGameStartUp(selectedSave);
             Lobby.UpdateCharacters(startup.Characters, true);
 
             if (!_multiplayerHost.IsActive)
@@ -255,17 +255,17 @@ namespace WOTRMultiplayer.UI.Controllers
                 StartButtonObject.SetActive(true);
                 ReadyButtonObject.SetActive(true);
                 ReadyButton.Interactable = true;
-                _multiplayerHost.Create(selectedSave.GameId.Value, startup);
+                _multiplayerHost.Create(gameId, startup);
                 SetButtonLabel(HostButtonObject, new LocalizedString { Key = WellKnownKeys.MultiplayerWindow.HostMenu.HostButton.SelectSaveText.Key });
                 _logger.LogInformation("Hosted new game");
                 return;
             }
 
-            _multiplayerHost.ChangeHostedStartingPoint(selectedSave.GameId.Value, startup);
+            _multiplayerHost.ChangeHostedStartingPoint(gameId, startup);
             _logger.LogInformation("Updated hosted game");
         }
 
-        private NetworkGameStartUp CreateGameStartUp(SaveSlotVM saveSlot)
+        private (string, NetworkGameStartUp) CreateGameStartUp(SaveSlotVM saveSlot)
         {
             if (string.Equals(saveSlot.GameId.Value, NewGameSequenceId, StringComparison.OrdinalIgnoreCase))
             {
@@ -276,8 +276,9 @@ namespace WOTRMultiplayer.UI.Controllers
                     Characters = [new NetworkCharacter { Portrait = "b7aa1433ab20e3745a4a169ee34ca738_MaskGolem", UnitId = mainCharacterId }],
                 };
 
-                _logger.LogInformation("Fake new campaign startup has been generated. MainCharacterId={MainCharacterId}", mainCharacterId);
-                return newGameSequence;
+                var gameId = Guid.NewGuid().ToString("N");
+                _logger.LogInformation("Fake new campaign startup has been generated. GameId={GameId}, MainCharacterId={MainCharacterId}", gameId, mainCharacterId);
+                return (gameId, newGameSequence);
             }
 
             var portraits = saveSlot.PartyPortraits.Value.Select(p => p.Portrait.name).ToList();
@@ -294,7 +295,7 @@ namespace WOTRMultiplayer.UI.Controllers
                 mainCharacter.Name = saveSlot.CharacterName.Value;
             }
 
-            return saveGame;
+            return (saveSlot.GameId.Value, saveGame);
         }
 
         private void OnStartButtonClicked()

@@ -1018,7 +1018,7 @@ namespace WOTRMultiplayer.Services
 
         private void OnNotifyLobbySaveGameChanged(long playerId, NotifyLobbySaveGameChanged notifyLobbySaveGameChanged)
         {
-            Logger.LogInformation("Received {MessageType}. GameStatus={GameStatus}, Size={Size}", nameof(NotifyLobbySaveGameChanged), Game.Stage, notifyLobbySaveGameChanged.Content?.Length);
+            Logger.LogInformation("Received {MessageType}. GameId={GameId}, Size={Size}", nameof(NotifyLobbySaveGameChanged), notifyLobbySaveGameChanged.GameId, notifyLobbySaveGameChanged.Content?.Length);
 
             UpdateSaveInfo(notifyLobbySaveGameChanged.GameId, notifyLobbySaveGameChanged.Content);
 

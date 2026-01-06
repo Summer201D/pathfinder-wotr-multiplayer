@@ -2683,6 +2683,17 @@ namespace WOTRMultiplayer.Services
             return canMakeDecisions;
         }
 
+        public string GetNewGameSequenceId()
+        {
+            if (_multiplayerActorAccessor.Current == null)
+            {
+                return null;
+            }
+
+            var gameId = _multiplayerActorAccessor.Current.GetNewGameSequenceId();
+            return gameId;
+        }
+
         public void OnNewGameSequenceWitnessPhase(NetworkNewGameSequencePhase phase)
         {
             try

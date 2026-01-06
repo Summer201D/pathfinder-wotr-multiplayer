@@ -90,7 +90,7 @@ namespace WOTRMultiplayer.Services
             var settings = SettingsService.GetSettings();
             _networkServer.Start(settings.HostPortRangeStart, settings.HostPortRangeEnd, settings.NetworkAwaiterTimeout);
 
-            Logger.LogInformation("Host has been created. IsNewGameSequence={IsNewGameSequence}, SavePath={SavePath}, Portraits={Portraits}", gameStartUp.IsNewGameSequence, gameStartUp.SavePath, string.Join(";", Game.Characters.Select(c => c.Portrait)));
+            Logger.LogInformation("Host has been created. GameId={GameId}, IsNewGameSequence={IsNewGameSequence}, SavePath={SavePath}, Portraits={Portraits}", Game.Id, gameStartUp.IsNewGameSequence, gameStartUp.SavePath, string.Join(";", Game.Characters.Select(c => c.Portrait)));
         }
 
         public void ChangeHostedStartingPoint(string gameId, NetworkGameStartUp gameStartUp)
@@ -107,9 +107,9 @@ namespace WOTRMultiplayer.Services
 
             Logger.LogInformation("Notifying game characters changed. Portraits={Portraits}", string.Join(";", Game.Characters.Select(c => c.Portrait)));
             var message = CreateNotifyGameCharactersChanged();
-            _networkServer.SendAll(message);
+            Send(message);
 
-            Logger.LogInformation("Game starting point has been updated. IsNewGameSequence={IsNewGameSequence}, SavePath={SavePath}, Portraits={Portraits}", Game.StartUp.IsNewGameSequence, Game.StartUp.SavePath, string.Join(";", Game.Characters.Select(c => c.Portrait)));
+            Logger.LogInformation("Game starting point has been updated. GameId={GameId}, IsNewGameSequence={IsNewGameSequence}, SavePath={SavePath}, Portraits={Portraits}", Game.Id, Game.StartUp.IsNewGameSequence, Game.StartUp.SavePath, string.Join(";", Game.Characters.Select(c => c.Portrait)));
         }
 
         /// <summary>

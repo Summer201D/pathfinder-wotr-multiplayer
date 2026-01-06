@@ -855,6 +855,11 @@ namespace WOTRMultiplayer.Services
             Send(message);
         }
 
+        public string GetNewGameSequenceId()
+        {
+            return Game.Id;
+        }
+
         public void OnNewGameSequenceWitnessPhase(NetworkNewGameSequencePhase phase)
         {
             if (Game.StartUp.PhaseType != phase.Type && CanMakeNewGameSequenceDecisions())

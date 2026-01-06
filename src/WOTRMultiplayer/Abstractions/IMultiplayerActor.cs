@@ -273,6 +273,8 @@ namespace WOTRMultiplayer.Abstractions
 
         void OnNewGameSequenceWitnessPhase(NetworkNewGameSequencePhase newGameSequencePhase);
 
+        string GetNewGameSequenceId();
+
         bool CanMakeNewGameSequenceDecisions();
 
         bool OnCreateAndEquipPolymorphInSlot(NetworkPolymorphicItem polymorphicItem);
