@@ -66,7 +66,7 @@ namespace WOTRMultiplayer.Abstractions
 
         bool IsControlledByLocalPlayer(string unitId);
 
-        string GetMultiplayerOwnerName(string unitId);
+        string GetCharacterOwnerName(string unitId);
 
         void OnClickUnit(NetworkClick networkClick);
 

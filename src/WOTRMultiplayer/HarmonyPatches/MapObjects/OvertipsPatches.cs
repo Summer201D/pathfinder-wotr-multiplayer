@@ -46,13 +46,13 @@ namespace WOTRMultiplayer.HarmonyPatches.MapObjects
 
             var text = string.IsNullOrEmpty(viewModel.CustomName.Value) ? viewModel.Name.Value : viewModel.CustomName.Value;
 
-            var mpOwnerName = Main.Multiplayer.GetMultiplayerOwnerName(viewModel.Unit.UniqueId);
+            var mpOwnerName = Main.Multiplayer.GetCharacterOwnerName(viewModel.Unit.UniqueId);
             if (!string.IsNullOrEmpty(mpOwnerName))
             {
                 text += $" ({mpOwnerName})";
             }
 
-            if (Main.AddUnitIdToOvertip)
+            if (Main.ModManagerSettings.AddUnitIdToOvertip)
             {
                 text += $" [{viewModel.Unit.UniqueId}]";
             }

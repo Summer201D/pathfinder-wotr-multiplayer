@@ -22,9 +22,10 @@ namespace WOTRMultiplayer
 {
     public class Main
     {
-        private static UnityModManagerSettings _settings;
         private static IServiceProvider _serviceProvider;
         private static ILogger<Main> _logger;
+
+        public static UnityModManagerSettings ModManagerSettings { get; private set; }
 
         public static IMultiplayer Multiplayer { get; private set; }
 
@@ -39,14 +40,12 @@ namespace WOTRMultiplayer
             return _serviceProvider.GetService<ILogger<T>>();
         }
 
-        public static bool AddUnitIdToOvertip => _settings.AddUnitIdToOvertip;
-
         public static bool Load(UnityModManager.ModEntry entry)
         {
             try
             {
-                _settings = UnityModManager.ModSettings.Load<UnityModManagerSettings>(entry);
-                _serviceProvider = DIFactory.Create(_settings);
+                ModManagerSettings = UnityModManager.ModSettings.Load<UnityModManagerSettings>(entry);
+                _serviceProvider = DIFactory.Create(ModManagerSettings);
 
                 _logger = _serviceProvider.GetService<ILogger<Main>>();
             }
@@ -140,7 +139,7 @@ namespace WOTRMultiplayer
 
         private static void OnSaveGui(UnityModManager.ModEntry entry)
         {
-            _settings.Save(entry);
+            ModManagerSettings.Save(entry);
         }
 
         private static void OnGui(UnityModManager.ModEntry entry)
@@ -149,28 +148,28 @@ namespace WOTRMultiplayer
             GUILayout.Label("---Debug Console settings (requires game client restart)");
             GUILayout.EndHorizontal();
             GUILayout.BeginHorizontal();
-            _settings.UseDebugConsole = GUILayout.Toggle(_settings.UseDebugConsole, $"Enable Debug Console", GUILayout.ExpandWidth(false));
+            ModManagerSettings.UseDebugConsole = GUILayout.Toggle(ModManagerSettings.UseDebugConsole, $"Enable Debug Console", GUILayout.ExpandWidth(false));
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
             GUILayout.Label("Minimum Console Log Level (Information is recommended, Debug - if you are mad)");
             GUILayout.EndHorizontal();
             GUILayout.BeginHorizontal();
-            _settings.ConsoleMinimumLogLevel = GUILayout.Toolbar(_settings.ConsoleMinimumLogLevel, Enum.GetNames(typeof(LogEventLevel)));
+            ModManagerSettings.ConsoleMinimumLogLevel = GUILayout.Toolbar(ModManagerSettings.ConsoleMinimumLogLevel, Enum.GetNames(typeof(LogEventLevel)));
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
             GUILayout.Label("Minimum File Log Level (Debug is recommended for maximum info)");
             GUILayout.EndHorizontal();
             GUILayout.BeginHorizontal();
-            _settings.FileMinimumLogLevel = GUILayout.Toolbar(_settings.FileMinimumLogLevel, Enum.GetNames(typeof(LogEventLevel)));
+            ModManagerSettings.FileMinimumLogLevel = GUILayout.Toolbar(ModManagerSettings.FileMinimumLogLevel, Enum.GetNames(typeof(LogEventLevel)));
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
             GUILayout.Label("---Utils");
             GUILayout.EndHorizontal();
             GUILayout.BeginHorizontal();
-            _settings.AddUnitIdToOvertip = GUILayout.Toggle(_settings.AddUnitIdToOvertip, $"Add UnitId to overtip (requires area reload)", GUILayout.ExpandWidth(false));
+            ModManagerSettings.AddUnitIdToOvertip = GUILayout.Toggle(ModManagerSettings.AddUnitIdToOvertip, $"Add UnitId to overtip (requires area reload)", GUILayout.ExpandWidth(false));
             GUILayout.EndHorizontal();
         }
     }

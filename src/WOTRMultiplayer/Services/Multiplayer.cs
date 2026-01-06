@@ -95,7 +95,6 @@ namespace WOTRMultiplayer.Services
             _lobbyWindowController.OnCharacterOwnerChanged = null;
             _logger.LogInformation("Disposing Esc menu window game objects");
             Factory.DestroyLobbyWindow(_lobbyWindow);
-            _logger.LogInformation("Disposing stored rolls");
         }
 
         public void InitializeEscMenuLobbyWindow()
@@ -132,12 +131,12 @@ namespace WOTRMultiplayer.Services
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "{methodName}", MethodBase.GetCurrentMethod().Name);
+                _logger.LogError(ex, "Error while moving character outside of combat. UnitId={UnitId}", networkCharacterMove.UnitId);
                 throw;
             }
         }
 
-        public string GetMultiplayerOwnerName(string unitId)
+        public string GetCharacterOwnerName(string unitId)
         {
             try
             {
@@ -146,11 +145,11 @@ namespace WOTRMultiplayer.Services
                     return null;
                 }
 
-                return _multiplayerActorAccessor.Current.GetMultiplayerOwnerName(unitId);
+                return _multiplayerActorAccessor.Current.GetCharacterOwnerName(unitId);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "{methodName}", MethodBase.GetCurrentMethod().Name);
+                _logger.LogError(ex, "Error while getting character owner name. UnitId={UnitId}", unitId);
                 throw;
             }
         }
@@ -227,7 +226,7 @@ namespace WOTRMultiplayer.Services
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error after cue show");
+                _logger.LogError(ex, "Error after cue show. DialogName={DialogName}, CueName={CueName}, HasSystemAnswer={HasSystemAnswer}", dialogName, cueName, hasSystemAnswer);
                 throw;
             }
         }
@@ -246,7 +245,7 @@ namespace WOTRMultiplayer.Services
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error before selecting dialog answer");
+                _logger.LogError(ex, "Error before selecting dialog answer. DialogName={DialogName}, CueName={CueName}", dialogName, cueName);
                 throw;
             }
         }

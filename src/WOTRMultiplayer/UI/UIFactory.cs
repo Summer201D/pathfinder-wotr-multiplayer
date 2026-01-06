@@ -24,6 +24,7 @@ using Owlcat.Runtime.UI.VirtualListSystem;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using WOTRMultiplayer.Abstractions;
 using WOTRMultiplayer.Abstractions.GameInteraction;
 using WOTRMultiplayer.Abstractions.UI;
 using WOTRMultiplayer.Abstractions.UI.Controllers;
@@ -64,15 +65,22 @@ namespace WOTRMultiplayer.UI
         private readonly ILogger<UIFactory> _logger;
         private readonly IServiceProvider _serviceProvider;
         private readonly IUIAccessor _uiAccessor;
+        private readonly IMultiplayerActorAccessor _multiplayerActorAccessor;
+
+        private readonly HashSet<string> _editableMultiplayerSettingsInGame = new([
+            WellKnownSettings.Miscellaneous.HideServerAddress.Key
+            ], StringComparer.OrdinalIgnoreCase);
 
         public UIFactory(
             ILogger<UIFactory> logger,
             IServiceProvider serviceProvider,
+            IMultiplayerActorAccessor multiplayerActorAccessor,
             IUIAccessor uiAccessor)
         {
             _logger = logger;
             _serviceProvider = serviceProvider;
             _uiAccessor = uiAccessor;
+            _multiplayerActorAccessor = multiplayerActorAccessor;
         }
 
         public void StoreDropdownPrefab(SettingsEntityDropdownPCView view)
@@ -626,6 +634,7 @@ namespace WOTRMultiplayer.UI
             ConfigureSetting(boolSetting, titleKey, tooltipKey);
             var setting = new SettingsEntityBool(settingKey.Key, settingKey.DefaultValue);
             boolSetting.LinkSetting(setting);
+            ConfigureSettingModification(boolSetting);
 
             var viewModel = new SettingsEntityBoolVM(boolSetting);
             return viewModel;
@@ -643,6 +652,7 @@ namespace WOTRMultiplayer.UI
             ConfigureValidation(inputSetting, validator, characterLimit);
             var setting = new SettingsEntityString(settingKey.Key, settingKey.DefaultValue);
             inputSetting.LinkSetting(setting);
+            ConfigureSettingModification(inputSetting);
 
             var viewModel = new SettingsEntityStringInputVM(inputSetting);
             return viewModel;
@@ -660,9 +670,17 @@ namespace WOTRMultiplayer.UI
             ConfigureValidation(inputSetting, validator, characterLimit);
             var setting = new SettingsEntityInt(settingKey.Key, settingKey.DefaultValue);
             inputSetting.LinkSetting(setting);
+            ConfigureSettingModification(inputSetting);
 
             var viewModel = new SettingsEntityIntInputVM(inputSetting);
             return viewModel;
+        }
+
+        private void ConfigureSettingModification<TValue>(UISettingsEntityWithValueBase<TValue> uiSettingsEntityBase)
+        {
+            var canModify = _multiplayerActorAccessor.Current == null || _editableMultiplayerSettingsInGame.Contains(uiSettingsEntityBase.Setting.Key);
+            uiSettingsEntityBase.ManualModificationLock = !canModify;
+            uiSettingsEntityBase.ModificationAllowedCheck = () => true;
         }
 
         private void ConfigureValidation<TValue>(UIValidatableSettingsEntityBase<TValue> uiValidatableSettingsEntityBase, AbstractValidator<TValue> validator, int characterLimit)
@@ -675,11 +693,6 @@ namespace WOTRMultiplayer.UI
         {
             uiSettingsEntityBase.m_Description = new LocalizedString { Key = titleKey };
             uiSettingsEntityBase.m_TooltipDescription = new LocalizedString { Key = tooltipKey };
-
-            // should be replaced by _multiplayerAccessor.Current == null
-            // but static call is fine as this entire class is untestable anyway due to direct dependency on Unity types
-            uiSettingsEntityBase.ManualModificationLock = Main.Multiplayer.IsActive;
-            uiSettingsEntityBase.ModificationAllowedCheck = () => true;
         }
 
         public void CreateMultiplayerSettingsMenu(SettingsVM settingsVM)

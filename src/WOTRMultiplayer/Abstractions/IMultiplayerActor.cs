@@ -117,7 +117,7 @@ namespace WOTRMultiplayer.Abstractions
 
         bool CanUnitJoinCombat(string unitId);
 
-        string GetMultiplayerOwnerName(string unitId);
+        string GetCharacterOwnerName(string unitId);
 
         void OnStartGameMode(GameModeType type);
 

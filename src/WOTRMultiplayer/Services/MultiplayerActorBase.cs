@@ -621,10 +621,10 @@ namespace WOTRMultiplayer.Services
             }
         }
 
-        public string GetMultiplayerOwnerName(string unitId)
+        public string GetCharacterOwnerName(string unitId)
         {
-            var owner = GetPartyCharacter(unitId);
-            return owner?.Owner?.Name;
+            var character = GetPartyCharacter(unitId);
+            return character?.Owner?.Name;
         }
 
         public void OnStartGameMode(GameModeType type)
