@@ -206,6 +206,8 @@ namespace WOTRMultiplayer.Abstractions.GameInteraction
         /// <param name="createContext">means this operation should be ignored and never sent to other players</param>
         void CreateAndEquipPolymorphicItem(NetworkPolymorphicItem polymorphicItem, bool createContext);
 
-        NetworkPing GetPingedTarget();
+        NetworkPing GetPing();
+
+        void CreatePing(string playerName, NetworkPing ping);
     }
 }

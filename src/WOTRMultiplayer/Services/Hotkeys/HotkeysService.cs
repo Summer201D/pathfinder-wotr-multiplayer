@@ -83,7 +83,7 @@ namespace WOTRMultiplayer.Services.Hotkeys
 
         private void OnPingHotkey()
         {
-            var ping = _gameInteractionService.GetPingedTarget();
+            var ping = _gameInteractionService.GetPing();
             if (ping == null)
             {
                 return;

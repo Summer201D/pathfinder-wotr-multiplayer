@@ -35,11 +35,11 @@ using WOTRMultiplayer.Extensions;
 using WOTRMultiplayer.HarmonyPatches.MenuPatches;
 using WOTRMultiplayer.Services.Settings;
 using WOTRMultiplayer.Services.Settings.Validators;
-using WOTRMultiplayer.UI.Behaviours;
 using WOTRMultiplayer.UI.Controllers;
 using WOTRMultiplayer.UI.Menu;
 using WOTRMultiplayer.UI.Settings;
 using WOTRMultiplayer.UI.Settings.Entities;
+using WOTRMultiplayer.UnityBehaviours;
 
 namespace WOTRMultiplayer.UI
 {
@@ -496,7 +496,7 @@ namespace WOTRMultiplayer.UI
 
                 var dropdownContainerObject = Main.Multiplayer.Factory.CreateDropdown(preferedWidth, characterObject.transform);
                 dropdownContainerObject.name = LobbyWindowController.CharacterOwnerObjectName;
-                var characterIndexComponent = dropdownContainerObject.AddComponent<CharacterIndexMonoBehaviour>();
+                var characterIndexComponent = dropdownContainerObject.AddComponent<CharacterIndexBehaviour>();
                 characterIndexComponent.CharacterIndex = characterIndex;
             }
         }

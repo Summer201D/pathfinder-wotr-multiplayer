@@ -162,7 +162,8 @@
             NotifyNewGameSequenceLevelingStarted,
             NotifyNewGameSequenceTerminated,
             NotifyPolymorphicItemCreated,
-            NotifyPolymorphicItemCreationRequested
+            NotifyPolymorphicItemCreationRequested,
+            NotifyPingedByPlayer
         }
 
         public enum Request

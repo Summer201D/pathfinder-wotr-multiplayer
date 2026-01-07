@@ -483,7 +483,16 @@ namespace WOTRMultiplayer.Services
 
         public void OnPing(NetworkPing ping)
         {
-            Logger.LogWarning("Ping. Type={Type}, WorldPosition={WorldPosition}, TargetUnitId={TargetUnitId}, MapObjectId={MapObjectId}, MapObjectPosition={MapObjectPosition}", ping.Type, ping.WorldPosition, ping.UnitId, ping.MapObject?.Id, ping.MapObject?.Position);
+            var message = new NotifyPingedByPlayer
+            {
+                PlayerId = Game.LocalPlayerId,
+                Ping = Mapper.Map<Networking.Messages.Contracts.NetworkPing>(ping)
+            };
+            Logger.LogInformation("Sending {MessageType}. Type={Type}, WorldPosition={WorldPosition}, TargetUnitId={TargetUnitId}, MapObjectId={MapObjectId}, MapObjectPosition={MapObjectPosition}", nameof(NotifyPingedByPlayer), ping.Type, ping.WorldPosition, ping.UnitId, ping.MapObject?.Id, ping.MapObject?.Position);
+            Send(message);
+
+            var localPlayer = GetPlayer(Game.LocalPlayerId);
+            GameInteraction.CreatePing(localPlayer.Name, ping);
         }
 
         public void ForceLoadGame(string gameId, string savePath)
@@ -2609,7 +2618,28 @@ namespace WOTRMultiplayer.Services
                 // game modes
                 .On<NotifyGameModeTypeStarted>(OnNotifyGameModeTypeStarted)
                 .On<NotifyGameModeTypeEnded>(OnNotifyGameModeTypeEnded)
+
+                // ping
+                .On<NotifyPingedByPlayer>(OnNotifyPingedAt)
                 ;
+        }
+
+        private void OnNotifyPingedAt(long receivedFrom, NotifyPingedByPlayer pingedAt)
+        {
+            Logger.LogInformation("Received {MessageType}. ReceivedFrom={ReceivedFrom}, PlayerId={PlayerId}, Type={Type}, WorldPosition={WorldPosition}, TargetUnitId={TargetUnitId}, MapObjectId={MapObjectId}, MapObjectPosition={MapObjectPosition}",
+                nameof(NotifyPingedByPlayer), receivedFrom, pingedAt.PlayerId, pingedAt.Ping.Type, pingedAt.Ping.WorldPosition, pingedAt.Ping.UnitId, pingedAt.Ping.MapObject?.Id, pingedAt.Ping.MapObject?.Position);
+
+            var ping = Mapper.Map<NetworkPing>(pingedAt.Ping);
+
+            var player = GetPlayer(pingedAt.PlayerId);
+            if (player == null)
+            {
+                return;
+            }
+
+            GameInteraction.CreatePing(player.Name, ping);
+
+            OnAfterNetworkMessageHandled(receivedFrom, pingedAt);
         }
 
         private void OnNotifyRestEnded(long receivedFrom, NotifyRestEnded restEnded)

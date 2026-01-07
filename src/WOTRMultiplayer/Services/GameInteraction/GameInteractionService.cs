@@ -33,6 +33,7 @@ using Kingmaker.RuleSystem;
 using Kingmaker.RuleSystem.Rules;
 using Kingmaker.Settings;
 using Kingmaker.TurnBasedMode;
+using Kingmaker.UI;
 using Kingmaker.UI._ConsoleUI.Overtips;
 using Kingmaker.UI.CharSelect;
 using Kingmaker.UI.Common;
@@ -78,6 +79,7 @@ using WOTRMultiplayer.Entities.Units;
 using WOTRMultiplayer.Entities.Vendor;
 using WOTRMultiplayer.Services.GameInteraction.Contexts;
 using WOTRMultiplayer.Services.Settings;
+using WOTRMultiplayer.UnityBehaviours;
 
 namespace WOTRMultiplayer.Services.GameInteraction
 {
@@ -2222,7 +2224,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
             });
         }
 
-        public NetworkPing GetPingedTarget()
+        public NetworkPing GetPing()
         {
             if (PointerController.InGui)
             {
@@ -2262,6 +2264,27 @@ namespace WOTRMultiplayer.Services.GameInteraction
             }
 
             return ping;
+        }
+
+        public void CreatePing(string playerName, NetworkPing ping)
+        {
+            _mainThreadAccessor.Post(() =>
+            {
+                // TODO: expand supported pings + replace pointer prefab with something actually GOOD
+                if (ping.Type != NetworkPingType.WorldPosition)
+                {
+                    return;
+                }
+
+                var position = new Vector3(ping.WorldPosition.X, ping.WorldPosition.Y, ping.WorldPosition.Z);
+                var pingObject = UnityEngine.Object.Instantiate(ClickPointerManager.Instance.PointerPrefab.gameObject);
+                var clickPointer = pingObject.GetComponent<ClickPointerPrefab>();
+                clickPointer.transform.SetParent(ClickPointerManager.Instance.transform);
+                clickPointer.transform.localPosition = position;
+                var decayingBehaviour = pingObject.AddComponent<DecayingBehaviour>();
+                decayingBehaviour.Initialize(TimeSpan.FromSeconds(2), UnityEngine.Object.DestroyImmediate);
+                UISoundController.Instance.Play(UISoundType.GlobalMapLocationsSelect);
+            });
         }
 
         private NetworkPing GetPingedGuiElement()

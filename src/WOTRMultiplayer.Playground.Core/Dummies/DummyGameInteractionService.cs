@@ -125,6 +125,10 @@ namespace WOTRMultiplayer.Playground.Core.Dummies
         {
         }
 
+        public void CreatePing(string playerName, NetworkPing ping)
+        {
+        }
+
         public void DelayCombatTurn(string unitId, string targetUnitId)
         {
         }
@@ -191,7 +195,7 @@ namespace WOTRMultiplayer.Playground.Core.Dummies
             return string.Empty;
         }
 
-        public NetworkPing GetPingedTarget()
+        public NetworkPing GetPing()
         {
             return null;
         }

@@ -16,9 +16,9 @@ using WOTRMultiplayer.Abstractions.UI.Controllers;
 using WOTRMultiplayer.Abstractions.Unity;
 using WOTRMultiplayer.Entities;
 using WOTRMultiplayer.Extensions;
-using WOTRMultiplayer.UI.Behaviours;
 using WOTRMultiplayer.UI.Menu;
 using WOTRMultiplayer.UI.Tooltips;
+using WOTRMultiplayer.UnityBehaviours;
 
 namespace WOTRMultiplayer.UI.Controllers
 {
@@ -358,11 +358,11 @@ namespace WOTRMultiplayer.UI.Controllers
                 return;
             }
 
-            var characterIndexComponent = dropdown.transform.parent?.GetComponent<CharacterIndexMonoBehaviour>();
+            var characterIndexComponent = dropdown.transform.parent?.GetComponent<CharacterIndexBehaviour>();
 
             if (characterIndexComponent == null)
             {
-                _logger.LogWarning($"Can't find ${nameof(CharacterIndexMonoBehaviour)} to assign character control");
+                _logger.LogWarning($"Can't find ${nameof(CharacterIndexBehaviour)} to assign character control");
                 return;
             }
 

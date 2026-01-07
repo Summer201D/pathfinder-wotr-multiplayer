@@ -237,15 +237,16 @@ The game originally used a single counter to generate new entity IDs (for charac
 
 The tricky part is `Item.UniqueId` generation - stacking or splitting items creates new IDs locally. Fully syncing that (plus inventory positions) would be a lot of work for almost no benefit. Instead, any network item action (like dropping an item or looting a container) just falls back to matching the item by everything except its `UniqueId`. In short, the mod just looks for 'the exact same item' and applies the action to it.
 
+## Ping system
+There is a configurable hotkey you can use to send pings (alerts) to other players. For now, support is pretty limited — you can only ping specific locations.
+More options are planned later, like pinging units, map objects, and different UI elements.
+
 ## How to deal with desync
 If a roll doesn't come through for some reason, you will get a stutter and a popup warning. In that case, the roll will be rolled locally, which might lead to different results.
 
 You can either ignore it (if the outcome is more or less the same for everyone) or do a quicksave/quickload to resync all players.
 
 ## Long term plans
-
-### Ping system
-Highlighting a point/unit/map object for everyone in the multiplayer
 
 ### Rolls
 Current roll syncing has a fairly obvious issue: the game freezes while it waits for rolls to return. That happens because the network request is done right when the game wants to roll the dice. We don't really have a clean way around this - the game expects the roll result immediately, so the mod hijacks the roll and fetches it over the network instead. Making the game "wait" for rolls properly is extremely hard to justify from a reverse-engineering standpoint.
