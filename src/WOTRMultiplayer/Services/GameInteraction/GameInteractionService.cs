@@ -2281,19 +2281,13 @@ namespace WOTRMultiplayer.Services.GameInteraction
                 var position = new Vector3(ping.WorldPosition.X, ping.WorldPosition.Y, ping.WorldPosition.Z);
                 var pingObject = UnityEngine.Object.Instantiate(ClickPointerManager.Instance.PointerPrefab.gameObject);
                 var meshRenderers = pingObject.transform.Children().SelectMany(x => x.Children()).Select(x => x.GetComponent<MeshRenderer>()).ToList();
-                for (int i = 0; i < pingObject.transform.childCount; i++)
+                for (int i = 0; i < meshRenderers.Count; i++)
                 {
-                    var sector = pingObject.transform.GetChild(i);
                     var color = i % 2 == 0 ? Color.blue : Color.magenta;
-                    foreach (var decal in sector.Children())
-                    {
-                        var mesh = decal.GetComponent<MeshRenderer>();
-                        if (mesh != null)
-                        {
-                            mesh.material.color = color;
-                        }
-                    }
+                    var renderer = meshRenderers[i];
+                    renderer.material.color = color;
                 }
+
                 var clickPointer = pingObject.GetComponent<ClickPointerPrefab>();
                 clickPointer.transform.SetParent(ClickPointerManager.Instance.transform);
                 clickPointer.transform.localPosition = position;
