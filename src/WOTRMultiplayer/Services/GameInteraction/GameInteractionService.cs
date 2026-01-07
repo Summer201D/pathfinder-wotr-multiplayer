@@ -54,6 +54,7 @@ using Kingmaker.Utility;
 using Kingmaker.View;
 using Kingmaker.View.MapObjects;
 using Microsoft.Extensions.Logging;
+using Owlcat.Runtime.Core.Utils;
 using Owlcat.Runtime.UI.Controls.Button;
 using TMPro;
 using UniRx;
@@ -2270,19 +2271,35 @@ namespace WOTRMultiplayer.Services.GameInteraction
         {
             _mainThreadAccessor.Post(() =>
             {
-                // TODO: expand supported pings + replace pointer prefab with something actually GOOD
+                // TODO: expand supported pings
                 if (ping.Type != NetworkPingType.WorldPosition)
                 {
                     return;
                 }
 
+                // this is a placeholder that needs to be replaced with something good
                 var position = new Vector3(ping.WorldPosition.X, ping.WorldPosition.Y, ping.WorldPosition.Z);
                 var pingObject = UnityEngine.Object.Instantiate(ClickPointerManager.Instance.PointerPrefab.gameObject);
+                var meshRenderers = pingObject.transform.Children().SelectMany(x => x.Children()).Select(x => x.GetComponent<MeshRenderer>()).ToList();
+                for (int i = 0; i < pingObject.transform.childCount; i++)
+                {
+                    var sector = pingObject.transform.GetChild(i);
+                    var color = i % 2 == 0 ? Color.blue : Color.magenta;
+                    foreach (var decal in sector.Children())
+                    {
+                        var mesh = decal.GetComponent<MeshRenderer>();
+                        if (mesh != null)
+                        {
+                            mesh.material.color = color;
+                        }
+                    }
+                }
                 var clickPointer = pingObject.GetComponent<ClickPointerPrefab>();
                 clickPointer.transform.SetParent(ClickPointerManager.Instance.transform);
                 clickPointer.transform.localPosition = position;
-                var decayingBehaviour = pingObject.AddComponent<DecayingBehaviour>();
-                decayingBehaviour.Initialize(TimeSpan.FromSeconds(2), UnityEngine.Object.DestroyImmediate);
+
+                var decayingBehaviour = pingObject.AddComponent<DecayingMeshRenderersBehaviour>();
+                decayingBehaviour.Initialize(TimeSpan.FromSeconds(2), UnityEngine.Object.DestroyImmediate, meshRenderers);
                 UISoundController.Instance.Play(UISoundType.GlobalMapLocationsSelect, pingObject);
             });
         }

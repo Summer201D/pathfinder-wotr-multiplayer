@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace WOTRMultiplayer.UnityBehaviours
 {
-    public class DecayingBehaviour : MonoBehaviour
+    public abstract class DecayingBehaviour : MonoBehaviour
     {
         private TimeSpan? _expiration;
         private Action<GameObject> _onExpired;
@@ -17,10 +17,7 @@ namespace WOTRMultiplayer.UnityBehaviours
             base.gameObject.SetActive(true);
         }
 
-        protected virtual void OnPartialDecay(float decayState)
-        {
-
-        }
+        protected abstract void OnPartialDecay(float decayState);
 
         private void Update()
         {
