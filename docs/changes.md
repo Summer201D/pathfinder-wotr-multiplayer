@@ -135,12 +135,23 @@ Random encounters are never rolled on the client side, but rather are sent by th
 Although the base game has no support for pausing while you are in the global map, we still need to sync loading times. As a result of this, host simply can't trigger movement until everyone is loaded.
 
 ## Rolls
-Most rolls happen on the host, but combat works a little differently. Each turn has a `Turn Owner` - the player controlling the active character. That player's rolls are done locally so their turn feels smooth, and then everyone else gets the results over the network.
-Worth noting - In cases with 3+ players (1 host/2+ clients), the host acts as a relay to transfer rolls between clients, resulting in slightly more stutters for one client.
+Network communication to retrieve rolls requires blocking the main game loop. Basically, it means that a slow network would cause noticeable stutters. More about this in the [`Long Terms Plans`](#long-term-plans) section
 
-Those results come in through the main game loop, which means if the thread gets blocked, your game will freeze until the roll comes through. (If you ever hit the timeout, that means the game is out of sync and needs a reload.)
+### Non-Combat (World)
+Every roll happens on the host.
 
-During cutscenes, all rolls happen locally since they don't really matter (at least, that's the assumption). In dialogs, only skill checks and saving throws are rolled by the host - everything else just rolls locally for the same "doesn't really matter" reason
+### Cutscenes
+Rolls are not synced because it doesn't really matter. There is no difference when you hit an enemy for 50 or 80 damage if it is still scripted to die.
+
+### Dialogs
+Host rolls `Skill checks` / `Saving throws`, everything else is ignored for the same "doesn't really matter" reason.
+
+### Combat
+There is a concept of `Turn Owner` - the player who controls the active character.
+
+`Turn Owner` rolls everything locally to make his turn silky smooth. Everyone else (including the host) is getting rolls from the current `Turn Owner`. This makes roll storage dynamic in combat.
+
+Worth noting: in lobbies with 3+ players (1 host and 2+ clients), the host works as a middleman for passing rolls between clients. Because there is no direct client-to-client connection in the current setup, a client who isn't the Turn Owner may notice slightly longer delays.
 
 ### Perception check rolls (map objects)
 Perception checks to reveal stuff don't auto-trigger on clients. Instead, they only go off once the host triggers them. This is to prevent desyncs, like different characters trying to run the same check because of movement lag or other hiccups.
@@ -156,18 +167,14 @@ Game spams this 'rule' every tick, but actually relies on cached perception chec
 Automatically passed on both host/client
 
 ## Combat
-Turn-Based only. You can't even enable Tactical Combat within MP session
 
-Switching character control after a turn has already started isn't supported. Some calculations break when you do that, and re-running them isn't really in scope right now.
+Turn-Based only. Tactical Combat is completly disabled.
+
+The only caveat is that you can't change character control once combat has started. Although technically you can do that, as the lobby window is not blocked/disabled during combat, some important calculations only run on the host before starting the turn. Supporting this feature would require re-running/re-syncing info after character ownership change, but this is surely out of scope as of now.
 
 ### Players
 
-Combat start is synced for all players. Every unit's position gets synced at the start of each turn, and turn order comes from the host - so no one can start a turn out of order.
-
-Combat flow:
-- Client starts combat: waits for the host to confirm Combat Start, then rolls initiatives once confirmed → sends Unit Turn Start request to host → waits for host confirmation → syncs unit positions → turn actually starts.
-
-- Host starts combat: sets up combat (rolls initiatives, etc.) → sends Combat Start confirmation to clients → waits for all clients’ Unit Turn Start requests → syncs unit positions → turn actually starts.
+The source of truth is the host. Position of units in combat is synchronized with host on every combat start/turn start event. Next turn will be started only once host synchronizes info with the clients. Host is also able to detect when clients want to start different character turn (e.g. due to desync issues), but there is an automatic recovery for this situation where host forces clients to start correct turn.
 
 ### AI
 AI actions don't have any randomness, so their turns play out the same for everyone in multiplayer. AI rolls are handled by the host when out of combat, or by the `Turn Owner` during combat.
@@ -207,22 +214,20 @@ You can only change spells for characters you control. Trying to change someone 
 The Spellbook UI updates in real time, so you can see when other players are updating spell. This makes it easier to chat about which spells to pick. Plus, a combat text notification pops up whenever someone changes their spells.
 
 ## Leveling
-Leveling is synced for all multiplayer players. The host has to confirm opening the leveling screen before everyone else sees it (same system as dialogs for consistency).
+Leveling is synced via UI interactions. Host has to confirm opening the leveling screen before everyone else sees it (same system as dialogs for consistency).
 
-Some rules for the leveling screen:
-- Only the character owner can make changes (class, skills, abilities, etc.). Everyone else just watches.
-- Watchers can't close the leveling screen.
-- The character owner has to wait while the screen loads for everyone else. Switching phases (like from class selection to skill points) locks the owner until everyone has loaded the new phase.
-- Closing the leveling screen as the owner closes it for everyone.
+Leveling UI is controlled by the character owner. Everyone else is just a watcher who can't neither interact with UI nor close it.
+
+While simultaneous (background sync) leveling is a nice feature that allows for leveling multiple characters at the same time, it's not planned for the near future. However, this might be implemented once the entire campaign is playable in multiplayer.
 
 ### Mythic leveling
-same rules apply
+same rules apply for everything (including path selection).
 
 ### Respec
 Character selection for respec is always controlled by host, but respec/leveling windows themselves follow the default leveling rules
 
 #### Toybox (Party => Respec)
-Synchronization will start working at the moment of opening respec window, but everyone still needs to press that button to start respec process as there is no automated respec startup in this case.
+Synchronization will start working at the moment of opening respec window, but everyone still needs to press that button to start respec process as there is no automated respec startup in this case. As an alternative, you can always respec character in single player mode/
 
 Same leveling/respec rules apply
 
@@ -230,7 +235,7 @@ Same leveling/respec rules apply
 Never tried, never checked. Should work if it opens the default respec window too.
 
 ### Hiring(Creating) Mercenary
-same rules apply, but it's always controlled by the host
+same rules apply, but host always controls the leveling (CharGen) screen
 
 ## Entity ID Generation 
 The game originally used a single counter to generate new entity IDs (for characters, area effects, facts, map objects, etc.), however this approach didn't work well in network environment. Now it uses a "consistent" generator that considers the current game state (gameId, location, etc.), so IDs should match across all multiplayer players.
@@ -238,8 +243,8 @@ The game originally used a single counter to generate new entity IDs (for charac
 The tricky part is `Item.UniqueId` generation - stacking or splitting items creates new IDs locally. Fully syncing that (plus inventory positions) would be a lot of work for almost no benefit. Instead, any network item action (like dropping an item or looting a container) just falls back to matching the item by everything except its `UniqueId`. In short, the mod just looks for 'the exact same item' and applies the action to it.
 
 ## Ping system
-There is a configurable hotkey you can use to send pings (alerts) to other players. For now, support is pretty limited — you can only ping specific locations.
-More options are planned later, like pinging units, map objects, and different UI elements.
+There is a configurable hotkey you can use to send pings (alerts) to other players. For now, support is pretty limited — you can only ping world position.
+More options are planned later, like pinging units, map objects, and different UI elements (should be useful during leveling).
 
 ## How to deal with desync
 If a roll doesn't come through for some reason, you will get a stutter and a popup warning. In that case, the roll will be rolled locally, which might lead to different results.
@@ -256,3 +261,8 @@ The plan is to switch to predictable rolls. Both host and clients would use the 
 The downside is that if the roll order ever gets out of sync, the sequence breaks until the next seed update (for example, the next round or the next attack command). That said, the current syncing work helped to understand and isolate the dice-rolling logic, so upgrading to this approach should be fairly straightforward in the near future.
 
 Anyway, this will be updated according to the roll type. For example, reworking attack and damage rolls alone should almost eliminate combat stutters, since most other rolls are pretty rare.
+
+### UI Control
+Every UI window/element that is not tied to a specific character is controlled by the host, but there are no restrictions on changing this behavior. The only reason for this is the simplicity of implementation compared to dynamic configuration. 
+
+Anyway, Lobby window would serve as a place to configure who controls dialogs/vendor/global map/etc
