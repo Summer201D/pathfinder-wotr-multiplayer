@@ -2283,7 +2283,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
                 clickPointer.transform.localPosition = position;
                 var decayingBehaviour = pingObject.AddComponent<DecayingBehaviour>();
                 decayingBehaviour.Initialize(TimeSpan.FromSeconds(2), UnityEngine.Object.DestroyImmediate);
-                UISoundController.Instance.Play(UISoundType.GlobalMapLocationsSelect);
+                UISoundController.Instance.Play(UISoundType.GlobalMapLocationsSelect, pingObject);
             });
         }
 
