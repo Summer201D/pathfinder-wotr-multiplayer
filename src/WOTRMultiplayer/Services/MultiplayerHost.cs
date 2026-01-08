@@ -387,8 +387,8 @@ namespace WOTRMultiplayer.Services
             {
                 Check = Mapper.Map<Networking.Messages.Contracts.NetworkInspectionKnowledgeCheck>(check)
             };
-            Logger.LogInformation("Sending {MessageType}. TargetUnitId={TargetUnitId}, InitiatorUnitId={InitiatorUnitId}, StatType={StatType}, DC={DC}",
-                nameof(NotifyInspectionKnowledgeCheckRolled), message.Check.TargetUnitId, message.Check.InitiatorUnitId, message.Check.StatType, message.Check.DC);
+            Logger.LogInformation("Sending {MessageType}. TargetUnitId={TargetUnitId}, InitiatorUnitId={InitiatorUnitId}, StatType={StatType}, DC={DC}, RollResult={RollResult}",
+                nameof(NotifyInspectionKnowledgeCheckRolled), message.Check.TargetUnitId, message.Check.InitiatorUnitId, message.Check.StatType, message.Check.DC, message.Check.RollResult);
 
             Send(message);
         }
@@ -1244,42 +1244,51 @@ namespace WOTRMultiplayer.Services
 
         private async void OnDiceRollValueRequest(long playerId, DiceRollValueRequest request)
         {
-            Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}, RollId={RollId}, UnitId={UnitId}", nameof(DiceRollValueRequest), playerId, request.RollId, request.UnitId);
-            // so basically in combat we need to ask another player for rolls in case he is the owner of the turn
-            if (Game.Combat != null
-                && Game.Combat.IsInitialized
-                && Game.Combat.Turn != null
-                && !Game.Combat.Turn.IsLocalPlayer
-                && !Game.Combat.Turn.IsAI)
+            try
             {
-                var characterTurn = GetPartyCharacter(Game.Combat.Turn.UnitId);
-                if (characterTurn == null || characterTurn.Owner.Id == playerId)
+                Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}, RollId={RollId}, UnitId={UnitId}, RuleName={RuleName}, IsCombatRoll={IsCombatRoll}", nameof(DiceRollValueRequest), playerId, request.RollId, request.UnitId, request.RuleName, request.IsCombatRoll);
+                // so basically in combat we need to ask another player for rolls in case he is the owner of the turn
+                var (shouldBeProxied, playerToAsk) = ShouldRollBeProxied(playerId, request);
+                if (!shouldBeProxied)
                 {
-                    Logger.LogError("TurnOwner is another player, but either Turn.UnitId is not under players control or Player requested self-owned rolls. PlayerId={PlayerId}, UnitId={UnitId}", playerId, Game.Combat.Turn.UnitId);
+                    await SendLocalRollAsync(playerId, request);
                     return;
                 }
 
+                var message = new DiceRollValueRequest
+                {
+                    RollId = request.RollId,
+                    UnitId = request.UnitId,
+                    Timeout = request.Timeout,
+                    PlayerId = playerId
+                };
+                Logger.LogInformation("Asking another client for a roll. PlayerToAsk={PlayerToAsk}, PlayerId={PlayerId}, RollId={RollId}, UnitId={UnitId}, Timeout={Timeout}", playerToAsk, message.PlayerId, message.RollId, message.UnitId, message.Timeout);
                 await Task.Factory.StartNew(() =>
                 {
-                    var message = new DiceRollValueRequest
-                    {
-                        RollId = request.RollId,
-                        UnitId = request.UnitId,
-                        Timeout = request.Timeout,
-                        PlayerId = playerId
-                    };
-
-                    var playerToAsk = characterTurn.Owner.Id;
-                    Logger.LogInformation("Asking another client for a roll. PlayerToAsk={PlayerToAsk}, PlayerId={PlayerId}, RollId={RollId}, UnitId={UnitId}, Timeout={Timeout}", playerToAsk, message.PlayerId, message.RollId, message.UnitId, message.Timeout);
-
-                    var rollFromAnotherClient = _networkServer.SendAndWaitFor<DiceRollValueResponse>(playerToAsk, message);
+                    var rollFromAnotherClient = _networkServer.SendAndWaitFor<DiceRollValueResponse>(playerToAsk.Value, message);
                     Logger.LogInformation("Sending roll to a client. PlayerId={PlayerId}, RollId={RollId}", playerId, rollFromAnotherClient.RollId);
                     Send(playerId, rollFromAnotherClient);
                 });
-                return;
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, "Unable to process dice roll value request. PlayerId={PlayerId}, RollId={RollId}, UnitId={UnitId}", playerId, request.RollId, request.UnitId);
+                throw;
+            }
+        }
+
+        private (bool, long?) ShouldRollBeProxied(long playerId, DiceRollValueRequest request)
+        {
+            // either combat has already ended on the client (last turn action) or it's a mid combat unit join which rolls initiative
+            if (!request.IsCombatRoll || string.Equals(request.RuleName, "RuleInitiativeRoll", StringComparison.OrdinalIgnoreCase))
+            {
+                return (false, null);
             }
 
-            await SendLocalRollAsync(playerId, request);
+            var turn = Game.Combat?.Turn ?? Game.LastCombatTurn;
+            var characterTurn = GetPartyCharacter(turn?.UnitId);
+            var shouldRollBeProxied = (Game.Combat == null || Game.Combat.IsInitialized) && turn != null && !turn.IsLocalPlayer && !turn.IsAI && characterTurn != null && characterTurn.Owner.Id != playerId && characterTurn.Owner.Id != Game.LocalPlayerId;
+            return (shouldRollBeProxied, characterTurn?.Owner?.Id);
         }
 
         private void OnNotifyPlayerSaveGameSyncStatusChanged(long playerId, NotifyPlayerGameStartUpSyncStatusChanged playerSaveGameSyncStatusChanged)

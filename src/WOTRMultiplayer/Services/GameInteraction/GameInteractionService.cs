@@ -16,7 +16,6 @@ using Kingmaker.Controllers.Rest;
 using Kingmaker.Controllers.Rest.State;
 using Kingmaker.Controllers.Units;
 using Kingmaker.Craft;
-using Kingmaker.Designers;
 using Kingmaker.DLC;
 using Kingmaker.ElementsSystem;
 using Kingmaker.EntitySystem;
@@ -37,6 +36,7 @@ using Kingmaker.UI;
 using Kingmaker.UI._ConsoleUI.Overtips;
 using Kingmaker.UI.CharSelect;
 using Kingmaker.UI.Common;
+using Kingmaker.UI.Models.Log;
 using Kingmaker.UI.MVVM._PCView.NewGame.Story;
 using Kingmaker.UI.MVVM._PCView.Rest;
 using Kingmaker.UI.MVVM._PCView.Settings.Entities.Difficulty;
@@ -983,27 +983,39 @@ namespace WOTRMultiplayer.Services.GameInteraction
 
             _mainThreadAccessor.Post(() =>
             {
-                _logger.LogInformation("Applying inspection knowledge check. InitiatorUnitId={InitiatorUnitId}, TargetUnitId={TargetUnitId}, StatType={StatType}", networkInspectionKnowledgeCheck.InitiatorUnitId, networkInspectionKnowledgeCheck.TargetUnitId, networkInspectionKnowledgeCheck.StatType);
-                var blueprintForInspection = targetUnit.Descriptor.BlueprintForInspection;
-                InspectUnitsManager.UnitInfo info = Game.Instance.Player.InspectUnitsManager.GetInfo(blueprintForInspection);
-                if (info == null)
+                try
+
                 {
-                    info = new InspectUnitsManager.UnitInfo(blueprintForInspection);
-                    Game.Instance.Player.InspectUnitsManager.m_UnitInfos.Add(info);
+                    var blueprintForInspection = targetUnit.Descriptor.BlueprintForInspection;
+                    InspectUnitsManager.UnitInfo info = Game.Instance.Player.InspectUnitsManager.GetInfo(blueprintForInspection);
+                    if (info == null)
+                    {
+                        info = new InspectUnitsManager.UnitInfo(blueprintForInspection);
+                        Game.Instance.Player.InspectUnitsManager.m_UnitInfos.Add(info);
+                    }
+
+                    if (info.IsAllPartsUnlocked)
+                    {
+                        return;
+                    }
+
+                    var rule = new RuleSkillCheck(initiatorUnit, networkInspectionKnowledgeCheck.StatType, networkInspectionKnowledgeCheck.DC)
+                    {
+                        IgnoreDifficultyBonusToDC = true,
+                        D20 = RuleRollD20.FromInt(initiatorUnit, networkInspectionKnowledgeCheck.RollResult)
+                    };
+                    rule.m_Success = rule.IsSuccessRoll(rule.D20, rule.RequiresSuccessBonus ? rule.SuccessBonus : 0);
+
+                    info.SetCheck(rule.RollResult);
+
+                    _playerNotificationService.AddCombatText(rule);
+                    _logger.LogInformation("Inspection knowledge check has been applied. InitiatorUnitId={InitiatorUnitId}, TargetUnitId={TargetUnitId}, StatType={StatType}, RollResult={RollResult}", networkInspectionKnowledgeCheck.InitiatorUnitId, networkInspectionKnowledgeCheck.TargetUnitId, networkInspectionKnowledgeCheck.StatType, networkInspectionKnowledgeCheck.RollResult);
                 }
-
-                if (info.IsAllPartsUnlocked)
+                catch (Exception ex)
                 {
-                    return;
+                    _logger.LogError(ex, "Error while applying inspection check. InitiatorUnitId={InitiatorUnitId}, TargetUnitId={TargetUnitId}, StatType={StatType}, RollResult={RollResult}", networkInspectionKnowledgeCheck.InitiatorUnitId, networkInspectionKnowledgeCheck.TargetUnitId, networkInspectionKnowledgeCheck.StatType, networkInspectionKnowledgeCheck.RollResult);
+                    throw;
                 }
-
-                var ruleSkillCheck = GameHelper.TriggerSkillCheck(new RuleSkillCheck(initiatorUnit, networkInspectionKnowledgeCheck.StatType, networkInspectionKnowledgeCheck.DC)
-                {
-                    IgnoreDifficultyBonusToDC = true
-                }, null, true);
-
-                info.SetCheck(ruleSkillCheck.RollResult);
-                EventBus.RaiseEvent<IKnowledgeHandler>(x => x.HandleKnowledgeUpdated(info), true);
             });
         }
 

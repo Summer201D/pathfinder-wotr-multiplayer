@@ -244,13 +244,13 @@ namespace WOTRMultiplayer.Services
             Send(message);
         }
 
-        public TRollValue RetrieveRoll<TRollValue>(int networkDiceRollId, string unitId)
+        public TRollValue RetrieveRoll<TRollValue>(int networkDiceRollId, string ruleName, string unitId)
             where TRollValue : RollValueBase
         {
-            Logger.LogInformation("Retrieving roll over network. RollId={RollId}, UnitId={UnitId}", networkDiceRollId, unitId);
+            Logger.LogInformation("Retrieving roll over network. RollId={RollId}, UnitId={UnitId}, RuleName={RuleName}", networkDiceRollId, unitId, ruleName);
 
             var waitForRollTimeout = SettingsService.GetSettings().RemoteRollRetrievalTimeout;
-            var request = new DiceRollValueRequest { RollId = networkDiceRollId, Timeout = waitForRollTimeout, UnitId = unitId, PlayerId = Game.LocalPlayerId };
+            var request = new DiceRollValueRequest { RollId = networkDiceRollId, Timeout = waitForRollTimeout, UnitId = unitId, PlayerId = Game.LocalPlayerId, RuleName = ruleName, IsCombatRoll = Game.Combat != null };
             // it's important to block current thread since we cannot proceed without response
             // yeah most likely it will cause the game to freeze in case of bad network
             var response = RetrieveRoll(request);
@@ -527,6 +527,7 @@ namespace WOTRMultiplayer.Services
             }
 
             Game.Combat = new NetworkCombat();
+            Game.LastCombatTurn = null;
         }
 
         public void CombatEnded()
@@ -536,6 +537,8 @@ namespace WOTRMultiplayer.Services
             {
                 Logger.LogWarning("Combat has not been started correctly");
             }
+
+            SaveLastCombatTurn();
 
             Game.Combat = null;
             _valueGenerator.ResetSeedGenerators(SeedLifetime.Combat);
@@ -2155,6 +2158,7 @@ namespace WOTRMultiplayer.Services
             Logger.LogInformation("Doing soft reset");
             Game.StartUp = null;
             Game.Combat = null;
+            Game.LastCombatTurn = null;
             Game.Leveling = null;
             DiceRollStorage.Reset();
             _valueGenerator.ResetSeedGenerators(SeedLifetime.Area, SeedLifetime.Combat);
@@ -2405,6 +2409,7 @@ namespace WOTRMultiplayer.Services
         {
             lock (ActionLock)
             {
+                SaveLastCombatTurn();
                 if (Game.Combat != null)
                 {
                     Game.Combat.Turn = null;
@@ -3570,6 +3575,14 @@ namespace WOTRMultiplayer.Services
                 Send(readyChanged);
 
                 return networkPlayer.IsReady;
+            }
+        }
+
+        private void SaveLastCombatTurn()
+        {
+            if (Game.Combat?.Turn != null)
+            {
+                Game.LastCombatTurn = Game.Combat.Turn;
             }
         }
     }

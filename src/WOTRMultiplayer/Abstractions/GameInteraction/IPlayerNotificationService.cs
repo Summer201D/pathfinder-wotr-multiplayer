@@ -1,4 +1,6 @@
-﻿namespace WOTRMultiplayer.Abstractions.GameInteraction
+﻿using Kingmaker.RuleSystem;
+
+namespace WOTRMultiplayer.Abstractions.GameInteraction
 {
     public interface IPlayerNotificationService
     {
@@ -7,5 +9,7 @@
         void ShowWarningNotification(string messageKey, params object[] args);
 
         void AddCombatText(string messageKey, params object[] args);
+
+        void AddCombatText(RulebookEvent rulebookEvent);
     }
 }

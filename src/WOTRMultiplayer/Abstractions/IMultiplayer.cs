@@ -96,7 +96,9 @@ namespace WOTRMultiplayer.Abstractions
 
         bool CanMakeStealthPerceptionCheck();
 
-        bool OnInspectionKnowledgeCheck(NetworkInspectionKnowledgeCheck networkInspectionKnowledgeCheck);
+        bool CanMakeInspectionKnowledgeCheck();
+
+        void OnInspectionKnowledgeCheck(NetworkInspectionKnowledgeCheck networkInspectionKnowledgeCheck);
 
         void OnPerceptionCheck(NetworkPerceptionCheck networkPerceptionCheck);
 

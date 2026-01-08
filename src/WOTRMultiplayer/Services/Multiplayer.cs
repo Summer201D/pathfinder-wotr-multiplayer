@@ -707,22 +707,27 @@ namespace WOTRMultiplayer.Services
             }
         }
 
-        public bool OnInspectionKnowledgeCheck(NetworkInspectionKnowledgeCheck networkInspectionKnowledgeCheck)
+        public bool CanMakeInspectionKnowledgeCheck()
+        {
+            if (_multiplayerActorAccessor.Current == null)
+            {
+                return true;
+            }
+
+            var canContinue = !_multiplayerActorAccessor.Client.IsActive;
+            return canContinue;
+        }
+
+        public void OnInspectionKnowledgeCheck(NetworkInspectionKnowledgeCheck networkInspectionKnowledgeCheck)
         {
             try
             {
-                if (_multiplayerActorAccessor.Current == null)
+                if (_multiplayerActorAccessor.Current == null || _multiplayerActorAccessor.Client.IsActive)
                 {
-                    return true;
-                }
-
-                if (_multiplayerActorAccessor.Client.IsActive)
-                {
-                    return false;
+                    return;
                 }
 
                 _multiplayerActorAccessor.Host.OnInspectionKnowledgeCheck(networkInspectionKnowledgeCheck);
-                return true;
             }
             catch (Exception ex)
             {

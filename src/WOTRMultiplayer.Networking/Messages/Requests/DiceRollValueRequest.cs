@@ -20,6 +20,12 @@ namespace WOTRMultiplayer.Networking.Messages.Requests
         [ProtoMember(4)]
         public long PlayerId { get; set; }
 
+        [ProtoMember(5)]
+        public bool IsCombatRoll { get; set; }
+
+        [ProtoMember(6)]
+        public string RuleName { get; set; }
+
         public string GetKey()
         {
             return string.Join(":", PlayerId, UnitId, RollId.ToString());

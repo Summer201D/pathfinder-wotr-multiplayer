@@ -85,7 +85,7 @@ namespace WOTRMultiplayer.Abstractions
 
         bool IsDiceRollOwner();
 
-        TRollValue RetrieveRoll<TRollValue>(int networkDiceRollId, string unitId)
+        TRollValue RetrieveRoll<TRollValue>(int networkDiceRollId, string ruleName, string unitId)
             where TRollValue : RollValueBase;
 
         void OnClickUnit(NetworkClick click);

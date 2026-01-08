@@ -1,7 +1,9 @@
 ﻿using Kingmaker;
 using Kingmaker.Localization;
 using Kingmaker.PubSubSystem;
+using Kingmaker.RuleSystem;
 using Kingmaker.UI;
+using Kingmaker.UI.Models.Log;
 using Kingmaker.UI.Models.Log.Events;
 using Microsoft.Extensions.Logging;
 using WOTRMultiplayer.Abstractions.GameInteraction;
@@ -47,6 +49,22 @@ namespace WOTRMultiplayer.Services.GameInteraction
                 var message = GetLocalizedText(messageKey, args);
                 Game.Instance.GameLogController.AddReadyEvent(new GameLogEventWarningNotification(message));
             });
+        }
+
+        public void AddCombatText(RulebookEvent rulebookEvent)
+        {
+            _mainThreadAccessor.Post(() =>
+            {
+                var logEvent = GameLogEventsFactory.Create(rulebookEvent);
+                if (logEvent == null)
+                {
+                    _logger.LogWarning("Unable to create combat log event for specified rule. RuleType={RuleType}", rulebookEvent?.GetType().Name);
+                    return;
+                }
+
+                Game.Instance.GameLogController.AddReadyEvent(logEvent);
+            });
+
         }
 
         private string GetLocalizedText(string messageKey, params object[] args)

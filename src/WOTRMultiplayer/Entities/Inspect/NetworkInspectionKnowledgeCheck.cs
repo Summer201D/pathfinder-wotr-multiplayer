@@ -13,5 +13,7 @@ namespace WOTRMultiplayer.Entities.Inspect
         public int DC { get; set; }
 
         public string InspectionBlueprintId { get; set; }
+
+        public int RollResult { get; set; }
     }
 }

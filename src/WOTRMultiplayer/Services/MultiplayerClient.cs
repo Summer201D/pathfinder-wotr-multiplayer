@@ -767,7 +767,7 @@ namespace WOTRMultiplayer.Services
 
         private void OnNotifyInspectionKnowledgeCheckRolled(long playerId, NotifyInspectionKnowledgeCheckRolled rolled)
         {
-            Logger.LogInformation("Received {MessageType}. TargetUnitId={TargetUnitId}, InitiatorUnitId={InitiatorUnitId}, StatType={StatType}, DC={DC}", nameof(NotifyInspectionKnowledgeCheckRolled), rolled.Check.TargetUnitId, rolled.Check.InitiatorUnitId, rolled.Check.StatType, rolled.Check.DC);
+            Logger.LogInformation("Received {MessageType}. TargetUnitId={TargetUnitId}, InitiatorUnitId={InitiatorUnitId}, StatType={StatType}, DC={DC}, RollResult={RollResult}", nameof(NotifyInspectionKnowledgeCheckRolled), rolled.Check.TargetUnitId, rolled.Check.InitiatorUnitId, rolled.Check.StatType, rolled.Check.DC, rolled.Check.RollResult);
             var check = Mapper.Map<NetworkInspectionKnowledgeCheck>(rolled.Check);
             GameInteraction.ApplyInspectionKnowledgeCheck(check);
         }

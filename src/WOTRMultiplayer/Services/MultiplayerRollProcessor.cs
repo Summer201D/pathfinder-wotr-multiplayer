@@ -59,7 +59,7 @@ namespace WOTRMultiplayer.Services
                     return true;
                 }
 
-                var networkRoll = _multiplayerActorAccessor.Current.RetrieveRoll<NetworkDamageListRollValue>(rollId.Value, ruleCalculateDamage.Initiator.UniqueId);
+                var networkRoll = _multiplayerActorAccessor.Current.RetrieveRoll<NetworkDamageListRollValue>(rollId.Value, nameof(RuleCalculateDamage), ruleCalculateDamage.Initiator.UniqueId);
 
                 if (networkRoll == null)
                 {
@@ -149,7 +149,7 @@ namespace WOTRMultiplayer.Services
                     return true;
                 }
 
-                var networkRoll = _multiplayerActorAccessor.Current.RetrieveRoll<NetworkNamedIntRollValue>(rollId.Value, ruleHealDamage.Initiator.UniqueId);
+                var networkRoll = _multiplayerActorAccessor.Current.RetrieveRoll<NetworkNamedIntRollValue>(rollId.Value, roll.RuleName, ruleHealDamage.Initiator.UniqueId);
                 if (networkRoll == null)
                 {
                     _logger.LogCritical("Failed to acquire heal damage roll from remote player which guarantees desync in the game. RollId={RollId}", rollId.Value);
@@ -873,7 +873,7 @@ namespace WOTRMultiplayer.Services
                     return null;
                 }
 
-                var roll = _multiplayerActorAccessor.Current.RetrieveRoll<NetworkIntRollValue>(rollId.Value, networkDiceRoll.InitiatorId);
+                var roll = _multiplayerActorAccessor.Current.RetrieveRoll<NetworkIntRollValue>(rollId.Value, networkDiceRoll.RuleName, networkDiceRoll.InitiatorId);
                 if (roll == null)
                 {
                     _logger.LogCritical("Failed to acquire roll from remote player which guarantees desync in the game. RollId={RollId}, RollType={RollType}, InitiatorId={InitiatorId}", rollId.Value, rollType, initiator.UniqueId);
