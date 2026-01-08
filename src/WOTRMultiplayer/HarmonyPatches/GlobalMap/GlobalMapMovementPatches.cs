@@ -9,6 +9,7 @@ using Kingmaker.Globalmap.State;
 using Kingmaker.Globalmap.View;
 using Kingmaker.UI;
 using Kingmaker.UI.Common;
+using Kingmaker.UI.GlobalMap;
 using Kingmaker.UI.MVVM._PCView.GlobalMap.Message;
 using Kingmaker.UI.MVVM._VM.GlobalMap.Message;
 using Owlcat.Runtime.UI.Controls.Button;
@@ -165,6 +166,19 @@ namespace WOTRMultiplayer.HarmonyPatches.GlobalMap
             }, null, 0, UIStrings.Instance.Tooltips.Collect, null, [.. traveler.Location.Ingredients.Select(i => i.Ingredient.Get())]);
 
             return false;
+        }
+
+        [HarmonyPatch(typeof(NavigationArrowsController), nameof(NavigationArrowsController.TrySet))]
+        [HarmonyPrefix]
+        public static bool NavigationArrowsController_TrySet_Prefix()
+        {
+            if (!Main.Multiplayer.IsActive)
+            {
+                return true;
+            }
+
+            var shouldContinue = Main.Multiplayer.CanNavigateOnGlobalMap();
+            return shouldContinue;
         }
 
         private static NetworkGlobalMapState GetGlobalMapState()
