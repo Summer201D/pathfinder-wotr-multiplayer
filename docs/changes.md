@@ -5,9 +5,9 @@
 ## TL/DR:
 - Prologue and Act1 are mostly playable. Anything beyond that (including any DLCs) does not work
 
-- DLC/Mods/Content should match across players. 
+- Game Version/DLC/Mods/Content should match across players. 
 
-  You can see a quick rundown of each player’s DLCs/mods once they connect to the host, but it's just for a reference. **The mod does not lock or unlock discrepant content for you**. The most obvious case is extra preorder/DLC items sitting in your stash. If someone doesn't own that DLC or bonus, those items are hidden for them, so anything you try to do with them (equip, drop, etc.) will just fail. One simple workaround is to get rid of them by dropping the items on the global map in single-player.
+  You can see a quick rundown of each player's DLCs/mods once they connect to the host, but it's just for a reference. **The mod does not lock or unlock discrepant content for you**. The most obvious case is extra preorder/DLC items sitting in your stash. If someone doesn't own that DLC or bonus, those items are hidden for them, so anything you try to do with them (equip, drop, etc.) will just fail. One simple workaround is to get rid of them by dropping the items on the global map in single-player.
 
 ## Other Mods Compatibility
 Most of the syncing relies on the blueprint asset ID (or something similiar) to replicate action for other players, so in **THEORY** things should work fine as long as those IDs are the same for abilities, spells, etc. This also includes any extra rolls (e.g. Skill Check or Attack Roll) added by mods, but those roll types must be available within base game.
@@ -180,6 +180,9 @@ The source of truth is the host. Position of units in combat is synchronized wit
 AI actions don't have any randomness, so their turns play out the same for everyone in multiplayer. AI rolls are handled by the host when out of combat, or by the `Turn Owner` during combat.
 
 In rare cases, AI might attack a different target or make an extra attack after moving - usually because of position desync or low FPS. There's a basic AI sync option that forces AI to attack the same target, but you can turn it off in 'Multiplayer Settings' if it causes issues
+
+## Cutscenes
+Cutscene skip is synchronized, but, as of now, there are no additional checks to make sure it started/ended for everyone.
 
 ## Action Bars
 Action bars stay synced. Any changes you make are instantly reflected for everyone in the multiplayer session.
