@@ -36,7 +36,6 @@ using Kingmaker.UI;
 using Kingmaker.UI._ConsoleUI.Overtips;
 using Kingmaker.UI.CharSelect;
 using Kingmaker.UI.Common;
-using Kingmaker.UI.Models.Log;
 using Kingmaker.UI.MVVM._PCView.NewGame.Story;
 using Kingmaker.UI.MVVM._PCView.Rest;
 using Kingmaker.UI.MVVM._PCView.Settings.Entities.Difficulty;

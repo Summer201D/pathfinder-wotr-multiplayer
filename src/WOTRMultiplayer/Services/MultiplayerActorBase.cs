@@ -383,22 +383,22 @@ namespace WOTRMultiplayer.Services
                 return;
             }
 
-            Logger.LogInformation("Sending changed equipment slot. SlotType={SlotType}, SlotIndex={SlotIndex}, ItemId={ItemId}, OwnerId={OwnerId}", equipmentSlot.Position.Type, equipmentSlot.Position.Index, equipmentSlot.Item?.UniqueId, equipmentSlot.OwnerId);
             var message = new NotifyEquipmentSlotChanged
             {
                 Slot = Mapper.Map<Networking.Messages.Contracts.NetworkEquipmentSlot>(equipmentSlot)
             };
+            Logger.LogInformation("Sending changed equipment slot. SlotType={SlotType}, SlotIndex={SlotIndex}, ItemId={ItemId}, OwnerId={OwnerId}", message.Slot.Position.Type, message.Slot.Position.Index, message.Slot.Item?.UniqueId, message.Slot.OwnerId);
 
             Send(message);
         }
 
         public void OnInteractWithMapObjectOvertip(NetworkOvertip networkOvertip)
         {
-            Logger.LogInformation("Sending overtip interaction. MapObjectId={MapObjectId}, Units={Units}", networkOvertip.MapObject.Id, networkOvertip.Units);
             var message = new NotifyOvertipInteracted
             {
                 Overtip = Mapper.Map<Networking.Messages.Contracts.NetworkOvertip>(networkOvertip)
             };
+            Logger.LogInformation("Sending overtip interaction. MapObjectId={MapObjectId}, Units={Units}", message.Overtip.MapObject.Id, message.Overtip.Units);
 
             Send(message);
         }
