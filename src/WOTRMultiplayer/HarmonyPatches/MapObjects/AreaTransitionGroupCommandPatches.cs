@@ -29,7 +29,7 @@ namespace WOTRMultiplayer.HarmonyPatches.MapObjects
 
         [HarmonyPatch(typeof(AreaTransitionGroupCommand), nameof(AreaTransitionGroupCommand.ExecuteTransition))]
         [HarmonyTranspiler]
-        public static IEnumerable<CodeInstruction> EntityOvertipVM_StartAreaTransition_Transpiler(IEnumerable<CodeInstruction> instructions)
+        public static IEnumerable<CodeInstruction> AreaTransitionGroupCommand_ExecuteTransition_Transpiler(IEnumerable<CodeInstruction> instructions)
         {
             var target = PatchesUtils.GetTranspilerTarget(MethodBase.GetCurrentMethod());
             var extraCall = AccessTools.Method(typeof(AreaTransitionGroupCommandPatches), nameof(AreaTransitionGroupCommandPatches.OnActionsAreaTransition));
