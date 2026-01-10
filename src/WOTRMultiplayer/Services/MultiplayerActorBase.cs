@@ -3475,27 +3475,27 @@ namespace WOTRMultiplayer.Services
             OnAfterNetworkMessageHandled(playerId, increased);
         }
 
-        private void OnNotifyLevelingPhaseChanged(long playerId, NotifyLevelingPhaseChanged changed)
+        private void OnNotifyLevelingPhaseChanged(long playerId, NotifyLevelingPhaseChanged levelingPhaseChanged)
         {
-            Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}, Index={Index}", nameof(NotifyLevelingPhaseChanged), playerId, changed.Phase.Index);
-            var phase = Mapper.Map<NetworkLevelingPhase>(changed.Phase);
+            Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}, Index={Index}", nameof(NotifyLevelingPhaseChanged), playerId, levelingPhaseChanged.Phase.Index);
+            var phase = Mapper.Map<NetworkLevelingPhase>(levelingPhaseChanged.Phase);
             ResetPlayersTracker(Game.Leveling.PlayerReadiness);
             LevelingInteraction.SwitchLevelingPhase(phase);
 
-            OnAfterNetworkMessageHandled(playerId, changed);
+            OnAfterNetworkMessageHandled(playerId, levelingPhaseChanged);
         }
 
-        private async void OnNotifyLevelingPhaseWitnessed(long playerId, NotifyLevelingPhaseWitnessed witnessed)
+        private async void OnNotifyLevelingPhaseWitnessed(long receivedFrom, NotifyLevelingPhaseWitnessed levelingPhaseWitnessed)
         {
-            Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}", nameof(NotifyLevelingPhaseWitnessed), playerId);
+            Logger.LogInformation("Received {MessageType}. ReceivedFrom={ReceivedFrom}, PlayerId={PlayerId}", nameof(NotifyLevelingPhaseWitnessed), receivedFrom, levelingPhaseWitnessed.PlayerId);
 
             // leveling is always created at the host first and later on on clients as a part of leveling confirmation
             // but not in case when game is forcing leveling ui to open for everyone at the same time => means there is some racing there
             await WaitWhileTrue(() => Game.Leveling == null, "Received leveling witness notification, but leveling has not been started yet.");
 
-            WitnessLevelingPhase(playerId);
+            WitnessLevelingPhase(levelingPhaseWitnessed.PlayerId);
 
-            OnAfterNetworkMessageHandled(playerId, witnessed);
+            OnAfterNetworkMessageHandled(receivedFrom, levelingPhaseWitnessed);
         }
 
         private void OnNotifyLevelingClassArchetypeSelected(long playerId, NotifyLevelingClassArchetypeSelected classArchetypeSelected)

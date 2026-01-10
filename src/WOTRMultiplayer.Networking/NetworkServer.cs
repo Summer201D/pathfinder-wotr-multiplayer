@@ -220,6 +220,7 @@ namespace WOTRMultiplayer.Networking
         {
             _logger.LogInformation("Reset. IsActive={IsActive}, ClientsCount={ClientsCount}", IsActive, _server?.AppServer?.GetOnlines()?.Length ?? 0);
             _server?.Dispose();
+            _server = null;
         }
     }
 }
