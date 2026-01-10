@@ -990,14 +990,14 @@ namespace WOTRMultiplayer.Services
             LoadSavedGame();
         }
 
-        private void OnNotifyCharactersOwnerChanged(long playerId, NotifyCharactersOwnerChanged changed)
+        private void OnNotifyCharactersOwnerChanged(long playerId, NotifyCharactersOwnerChanged charactersOwnerChanged)
         {
-            Logger.LogInformation("Received {MessageType}. OwnersCount={OwnersCount}", nameof(NotifyCharactersOwnerChanged), changed.Owners.Count);
+            Logger.LogInformation("Received {MessageType}. OwnersCount={OwnersCount}", nameof(NotifyCharactersOwnerChanged), charactersOwnerChanged.Owners.Count);
             try
             {
-                foreach (var owner in changed.Owners)
+                foreach (var owner in charactersOwnerChanged.Owners)
                 {
-                    var player = Game.Players.FirstOrDefault(p => p.Id == owner.PlayerId);
+                    var player = GetPlayer(owner.PlayerId);
                     if (player == null)
                     {
                         Logger.LogWarning("Unable to assign character ownership for missing player. PlayerId={PlayerId}", owner.PlayerId);

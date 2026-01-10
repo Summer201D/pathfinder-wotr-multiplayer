@@ -1184,7 +1184,7 @@ namespace WOTRMultiplayer.Services
                 SpeakerKey = requested.SpeakerKey
             };
 
-            _networkServer.SendAll(message);
+            Send(message);
         }
 
         private void OnClientDialogCueAnswerSuggested(long playerId, ClientDialogCueAnswerSuggested clientDialogCueAnswerSuggested)
@@ -1223,7 +1223,7 @@ namespace WOTRMultiplayer.Services
                 CueName = clientDialogCueAnswerSuggested.CueName,
                 Suggestions = Mapper.Map<List<Networking.Messages.Contracts.NetworkDialogAnswerSuggestion>>(suggestions),
             };
-            _networkServer.SendAll(notifyMessage);
+            Send(notifyMessage);
         }
 
         private void OnClientDialogCueWitnessed(long playerId, ClientDialogCueWitnessed clientDialogCueWitnessed)
@@ -1299,7 +1299,7 @@ namespace WOTRMultiplayer.Services
             Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}, Status={Status}", nameof(NotifyPlayerGameStartUpSyncStatusChanged), playerId, playerSaveGameSyncStatusChanged.Status);
 
             var status = Mapper.Map<NetworkGameStartUpSyncStatus>(playerSaveGameSyncStatusChanged.Status);
-            UpdatePlayerGameStartUpSyncStatus(playerId, status);
+            UpdatePlayerGameStartUpSyncStatus(playerSaveGameSyncStatusChanged.PlayerId, status);
 
             TryStartSavedGame();
 
@@ -1309,10 +1309,10 @@ namespace WOTRMultiplayer.Services
         private void OnPlayerReadyStatusChanged(long playerId, NotifyPlayerReadyStatusChanged readyStatusChanged)
         {
             Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}, IsReady={IsReady}", nameof(NotifyPlayerReadyStatusChanged), playerId, readyStatusChanged.IsReady);
-            UpdatePlayerReadyStatus(playerId, readyStatusChanged.IsReady);
+            UpdatePlayerReadyStatus(readyStatusChanged.PlayerId, readyStatusChanged.IsReady);
 
             // including original client so his UI can be properly updated as well
-            _networkServer.SendAll(readyStatusChanged);
+            Send(readyStatusChanged);
         }
 
         private void OnClientAreaLoaded(long playerId, ClientAreaLoaded loaded)
