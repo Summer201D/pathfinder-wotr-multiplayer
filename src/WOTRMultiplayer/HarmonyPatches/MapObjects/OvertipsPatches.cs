@@ -122,6 +122,12 @@ namespace WOTRMultiplayer.HarmonyPatches.MapObjects
 
         private static void SelectAllCharactersControlledByLocalPlayer()
         {
+            if (!Main.Multiplayer.IsActive)
+            {
+                Game.Instance.UI.SelectionManager.SelectAll();
+                return;
+            }
+
             if (Main.Multiplayer.RemoteContext?.SelectedUnits != null)
             {
                 return;
