@@ -5,6 +5,7 @@ using System.Reflection.Emit;
 using HarmonyLib;
 using Kingmaker;
 using Kingmaker.Assets.Code.UI._ConsoleUI.Overtips;
+using Kingmaker.EntitySystem.Entities;
 using Kingmaker.UI._ConsoleUI.Overtips;
 using Kingmaker.UI.Common;
 using Kingmaker.UI.Selection;
@@ -126,9 +127,9 @@ namespace WOTRMultiplayer.HarmonyPatches.MapObjects
                 return;
             }
 
-            var units = Main.Multiplayer.RemoteContext?.SelectedUnits ?? [.. Game.Instance.Player.PartyAndPets.Where(u => Main.Multiplayer.IsControlledByLocalPlayer(u.UniqueId))];
-            var unitsViews = units.Select(c => c.View).ToList();
-            (Game.Instance.UI.SelectionManager as SelectionManagerPC).MultiSelect(unitsViews, true);
+            List<UnitEntityData> units = [.. Game.Instance.Player.PartyAndPets.Where(u => Main.Multiplayer.IsControlledByLocalPlayer(u.UniqueId))];
+            var views = units.Select(c => c.View).ToList();
+            (Game.Instance.UI.SelectionManager as SelectionManagerPC).MultiSelect(views, true);
         }
     }
 }
