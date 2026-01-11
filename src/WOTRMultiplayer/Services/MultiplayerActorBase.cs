@@ -695,6 +695,10 @@ namespace WOTRMultiplayer.Services
                     OnLocalRestGameModeEnded();
                 }
             }
+            else if (type == GameModeType.Dialog)
+            {
+                Game.Dialog = null;
+            }
 
             var message = new NotifyGameModeTypeEnded { PlayerId = playerId, Type = type.Name };
             Logger.LogInformation("Sending {MessageType}. PlayerId={PlayerId}, Type={Type}", nameof(NotifyGameModeTypeEnded), message.PlayerId, message.Type);

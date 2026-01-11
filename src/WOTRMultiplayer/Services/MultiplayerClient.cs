@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
-using System.Threading.Tasks;
 using AutoMapper;
 using Microsoft.Extensions.Logging;
 using WOTRMultiplayer.Abstractions;
@@ -865,16 +864,9 @@ namespace WOTRMultiplayer.Services
 
         private async void OnNotifyDialogStarted(long playerId, NotifyDialogStarted started)
         {
-            Logger.LogInformation("Received {MessageType}. DialogueName={DialogueName}, TargetUnitId={TargetUnitId}, InitiatorUnitId={InitiatorUnitId}", nameof(NotifyDialogStarted), started.DialogName, started.TargetUnitId, started.InitiatorUnitId);
+            Logger.LogInformation("Received {MessageType}. DialogName={DialogName}, TargetUnitId={TargetUnitId}, InitiatorUnitId={InitiatorUnitId}", nameof(NotifyDialogStarted), started.DialogName, started.TargetUnitId, started.InitiatorUnitId);
 
-            if (Game.Dialog != null && Game.Dialog.IsSelectingAnswer)
-            {
-                Logger.LogWarning("Waiting until client finished processing previous answer");
-                while (Game.Dialog.IsSelectingAnswer)
-                {
-                    await Task.Delay(TimeSpan.FromMilliseconds(10));
-                }
-            }
+            await WaitWhileTrue(() => Game.Dialog != null && Game.Dialog.IsSelectingAnswer, "Waiting until the previous answer has been processed");
 
             if (Game.Dialog == null || Game.Dialog.Name != started.DialogName)
             {
