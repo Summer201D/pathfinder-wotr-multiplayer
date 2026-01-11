@@ -829,7 +829,8 @@ namespace WOTRMultiplayer.Services
                 return null;
             }
 
-            return _networkServer.SendAndWaitFor<DiceRollValueResponse>(character.Owner.Id, rollRequest);
+            // .Result is important to block current (main) thread
+            return _networkServer.SendAndWaitForAsync<DiceRollValueResponse>(character.Owner.Id, rollRequest).Result;
         }
 
         protected override void Send(object message)
@@ -1266,12 +1267,9 @@ namespace WOTRMultiplayer.Services
                     PlayerId = playerId
                 };
                 Logger.LogInformation("Asking another client for a roll. PlayerToAsk={PlayerToAsk}, PlayerId={PlayerId}, RollId={RollId}, UnitId={UnitId}, Timeout={Timeout}", playerToAsk, message.PlayerId, message.RollId, message.UnitId, message.Timeout);
-                await Task.Factory.StartNew(() =>
-                {
-                    var rollFromAnotherClient = _networkServer.SendAndWaitFor<DiceRollValueResponse>(playerToAsk.Value, message);
-                    Logger.LogInformation("Sending roll to a client. PlayerId={PlayerId}, RollId={RollId}", playerId, rollFromAnotherClient.RollId);
-                    Send(playerId, rollFromAnotherClient);
-                });
+                var rollFromAnotherClient = await _networkServer.SendAndWaitForAsync<DiceRollValueResponse>(playerToAsk.Value, message);
+                Logger.LogInformation("Sending roll to a client. PlayerId={PlayerId}, RollId={RollId}", playerId, rollFromAnotherClient.RollId);
+                Send(playerId, rollFromAnotherClient);
             }
             catch (Exception ex)
             {

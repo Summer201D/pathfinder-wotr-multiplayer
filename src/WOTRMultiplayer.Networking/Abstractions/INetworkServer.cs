@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Net;
+using System.Threading.Tasks;
 using WOTRMultiplayer.Networking.Awaiters;
 
 namespace WOTRMultiplayer.Networking.Abstractions
@@ -16,8 +17,14 @@ namespace WOTRMultiplayer.Networking.Abstractions
 
         void Send(long clientId, object message);
 
-        T SendAndWaitFor<T>(long clientId, IAwaitableRequest message)
-            where T : class, IAwaitableResponse;
+        /// <summary>
+        /// make sure to block main thread for every call (.Result)
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="message"></param>
+        /// <returns></returns>
+        Task<T> SendAndWaitForAsync<T>(long clientId, IAwaitableRequest message)
+            where T : IAwaitableResponse;
 
         void SendAll(object message);
 

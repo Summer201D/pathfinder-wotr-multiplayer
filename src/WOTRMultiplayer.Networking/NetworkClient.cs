@@ -15,7 +15,7 @@ namespace WOTRMultiplayer.Networking
 
         private ITcpClient _client;
         private readonly ConcurrentDictionary<Type, Action<long, object>> _handlers = new();
-        private readonly ConcurrentDictionary<string, TaskCompletionSource<object>> _awaiters = new(StringComparer.OrdinalIgnoreCase);
+        private readonly ConcurrentDictionary<string, TaskCompletionSource<IAwaitableResponse>> _awaiters = new(StringComparer.OrdinalIgnoreCase);
         private readonly ILogger<NetworkClient> _logger;
         private readonly ITcpClientFactory _tcpClientFactory;
 
@@ -81,17 +81,17 @@ namespace WOTRMultiplayer.Networking
             _client.Send(message).Wait();
         }
 
-        public T SendAndWaitFor<T>(IAwaitableRequest message)
-            where T : class, IAwaitableResponse
+        public async Task<T> SendAndWaitForAsync<T>(IAwaitableRequest message)
+            where T : IAwaitableResponse
         {
-            var taskCompletion = new TaskCompletionSource<object>();
+            var taskCompletion = new TaskCompletionSource<IAwaitableResponse>();
             var timeoutTask = Task.Delay(_defaultAwaiterTimeout);
 
             var awaiterKey = message.GetKey();
             _awaiters.TryAdd(awaiterKey, taskCompletion);
             _client.Send(message).Wait();
 
-            Task.WaitAny(timeoutTask, taskCompletion.Task);
+            await Task.WhenAny(timeoutTask, taskCompletion.Task).ConfigureAwait(false);
 
             if (!taskCompletion.Task.IsCompleted)
             {
@@ -100,7 +100,8 @@ namespace WOTRMultiplayer.Networking
                 return default;
             }
 
-            return taskCompletion.Task.Result as T;
+            var result = (T)taskCompletion.Task.Result;
+            return result;
         }
 
         public void Reset()
@@ -124,7 +125,7 @@ namespace WOTRMultiplayer.Networking
                 }
 
                 _logger.LogDebug("Awaiter has been found, other handlers will be skipped. AwaiterKey={AwaiterKey}", awaiterKey);
-                taskCompletion.SetResult(message);
+                taskCompletion.SetResult(awaitableMessage);
                 return;
             }
 

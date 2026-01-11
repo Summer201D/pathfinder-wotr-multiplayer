@@ -216,7 +216,7 @@ namespace WOTRMultiplayer.Services
 
                 var settings = SettingsService.GetSettings();
                 var message = new RandomEncounterContextRequest { SleepPhase = Game.Rest.SleepPhase, Timeout = settings.RestEncounterSyncTimeout };
-                var response = _networkClient.SendAndWaitFor<RandomEncounterContextResponse>(message);
+                var response = _networkClient.SendAndWaitForAsync<RandomEncounterContextResponse>(message).Result;
 
                 if (response?.Encounter == null)
                 {
@@ -265,7 +265,7 @@ namespace WOTRMultiplayer.Services
 
                 Logger.LogInformation("Retrieving AI action. UnitId={UnitId}, ActionIndex={ActionIndex}", networkAIAction.UnitId, message.ActionIndex);
 
-                var response = _networkClient.SendAndWaitFor<AIActionResponse>(message);
+                var response = _networkClient.SendAndWaitForAsync<AIActionResponse>(message).Result;
 
                 if (response?.Action == null)
                 {
@@ -368,7 +368,7 @@ namespace WOTRMultiplayer.Services
 
         protected override DiceRollValueResponse RetrieveRoll(DiceRollValueRequest rollRequest)
         {
-            return _networkClient.SendAndWaitFor<DiceRollValueResponse>(rollRequest);
+            return _networkClient.SendAndWaitForAsync<DiceRollValueResponse>(rollRequest).Result;
         }
 
         protected override void Send(object message)

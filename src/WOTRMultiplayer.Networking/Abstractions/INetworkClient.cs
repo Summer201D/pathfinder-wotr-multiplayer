@@ -15,8 +15,14 @@ namespace WOTRMultiplayer.Networking.Abstractions
 
         void Send(object message);
 
-        T SendAndWaitFor<T>(IAwaitableRequest message)
-            where T : class, IAwaitableResponse;
+        /// <summary>
+        /// make sure to block main thread for every call (.Result)
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="message"></param>
+        /// <returns></returns>
+        Task<T> SendAndWaitForAsync<T>(IAwaitableRequest message)
+            where T : IAwaitableResponse;
 
         Action<Exception> OnError { get; set; }
 
