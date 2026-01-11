@@ -34,13 +34,13 @@ namespace WOTRMultiplayer.Services
     {
         private readonly INetworkServer _networkServer;
 
-        private NetworkGameStage Status => Game?.Stage ?? NetworkGameStage.None;
+        private NetworkLobbyStage Status => Game?.Stage ?? NetworkLobbyStage.None;
 
         public Action<NetworkGameConnectivity> OnConnected { get; set; }
 
         public bool IsActive => _networkServer.IsActive;
 
-        public bool IsInLobby => IsActive && Status == NetworkGameStage.Lobby;
+        public bool IsInLobby => IsActive && Status == NetworkLobbyStage.Lobby;
 
         protected override bool HasControlOverUI => true;
 
@@ -180,7 +180,7 @@ namespace WOTRMultiplayer.Services
                 return false;
             }
 
-            SetGameStage(NetworkGameStage.PreparingToStart);
+            SetLobbyStage(NetworkLobbyStage.PreparingToStart);
             var host = GetHost();
             UpdatePlayerGameStartUpSyncStatus(host, NetworkGameStartUpSyncStatus.Succeed);
 
@@ -1707,11 +1707,11 @@ namespace WOTRMultiplayer.Services
         {
             lock (ActionLock)
             {
-                var canStart = Game.Stage == NetworkGameStage.PreparingToStart && Game.Players.All(p => p.StartUpSyncStatus == NetworkGameStartUpSyncStatus.Succeed);
+                var canStart = Game.Stage == NetworkLobbyStage.PreparingToStart && Game.Players.All(p => p.StartUpSyncStatus == NetworkGameStartUpSyncStatus.Succeed);
 
                 if (canStart)
                 {
-                    Logger.LogInformation("Everyone is synced, game can be started. Stage={Stage}, IsNewGameSequence={IsNewGameSequence}", Game.Stage, Game.StartUp.IsNewGameSequence);
+                    Logger.LogInformation("Everyone is synced, game can be started. LobbyStage={LobbyStage}, IsNewGameSequence={IsNewGameSequence}", Game.Stage, Game.StartUp.IsNewGameSequence);
                     _networkServer.SendAll(new NotifyGameStarted());
 
                     if (Game.StartUp.IsNewGameSequence)

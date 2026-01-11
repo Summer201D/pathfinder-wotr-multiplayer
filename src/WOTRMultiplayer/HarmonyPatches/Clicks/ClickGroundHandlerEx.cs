@@ -66,7 +66,7 @@ namespace WOTRMultiplayer.HarmonyPatches.Clicks
                 flag4 = false;
             }
             bool flag5 = flag4;
-            if (Game.Instance.IsControllerGamepad && unitEntityData != null && (!CommonTranspilerReplacements.IsControlledByPlayers(unitEntityData) || flag3 && !flag5))
+            if (Game.Instance.IsControllerGamepad && unitEntityData != null && (!IsControllable(unitEntityData) || flag3 && !flag5))
             {
                 return;
             }
@@ -75,7 +75,7 @@ namespace WOTRMultiplayer.HarmonyPatches.Clicks
                 return;
             }
             IPartyFormation currentFormation = Game.Instance.Player.FormationManager.CurrentFormation;
-            List<UnitEntityData> allUnits = [.. unitsToMove.Where(u => CommonTranspilerReplacements.IsControlledByPlayers(u) && u.SaddledPart == null)];
+            List<UnitEntityData> allUnits = [.. unitsToMove.Where(u => IsControllable(u) && u.SaddledPart == null)];
             float num = Mathf.Atan2(direction.x, direction.z) * 57.29578f;
             float? num2 = null;
             if (allUnits.Count > 1 && !Game.Instance.Player.IsInCombat)
@@ -195,6 +195,11 @@ namespace WOTRMultiplayer.HarmonyPatches.Clicks
                     h.OnMoveRequested(worldPosition);
                 }, true);
             }
+        }
+
+        private static bool IsControllable(UnitEntityData unit)
+        {
+            return unit.IsDirectlyControllable && Main.Multiplayer.IsControlledByPlayers(unit.UniqueId);
         }
     }
 }

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
 using HarmonyLib;
@@ -7,8 +8,6 @@ using Kingmaker;
 using Kingmaker.Blueprints.Area;
 using Kingmaker.EntitySystem.Persistence;
 using Kingmaker.GameModes;
-using Kingmaker.UI.MVVM._PCView.GlobalMap;
-using Kingmaker.UI.MVVM._PCView.InGame;
 using Microsoft.Extensions.Logging;
 
 namespace WOTRMultiplayer.HarmonyPatches.GameInstance
@@ -72,6 +71,23 @@ namespace WOTRMultiplayer.HarmonyPatches.GameInstance
 
             Main.Multiplayer.OnStopGameMode(type);
             return true;
+        }
+
+        [HarmonyPatch(typeof(Game), nameof(Game.DoStopMode))]
+        [HarmonyPostfix]
+        public static void Game_DoStopMode_Postfix(GameModeType type)
+        {
+            if (!Main.Multiplayer.IsActive)
+            {
+                return;
+            }
+
+            // expected 'Start FullScreen -> Stop Dialog -> DoStop Dialog -> DoStart FullScreen' sequence is broken because fullscreen mode is always denied
+            // 'DoStart FullScreen' action is never executed, so combat log is never hidden in case of Dialog->Vendor option
+            if (type == GameModeType.Dialog && Game.Instance.Vendor.IsTrading)
+            {
+                FixFullScreenUiToggle(true);
+            }
         }
 
         [HarmonyPatch(typeof(Game), nameof(Game.PauseBind))]
@@ -156,7 +172,9 @@ namespace WOTRMultiplayer.HarmonyPatches.GameInstance
         /// <param name="isStart"></param>
         private static void FixFullScreenUiToggle(bool isStart)
         {
-            var combatLogView = (Game.Instance.RootUiContext.m_UIView as InGamePCView)?.m_StaticPartPCView?.m_CombatLogPCView ?? (Game.Instance.RootUiContext.m_UIView as GlobalMapPCView)?.m_CombatLogPCView;
+            // known issues:
+            // combat log is not closed during vendor UI
+            var combatLogView = Main.UIAccessor.CombatLogPcView;
             if (combatLogView == null)
             {
                 Main.GetLogger<GamePatches>().LogError("Unable to fix full screen game mode sideeffects due to missing combat log view");
@@ -165,11 +183,19 @@ namespace WOTRMultiplayer.HarmonyPatches.GameInstance
 
             if (isStart)
             {
-                combatLogView.OnGameModeStart(GameModeType.FullScreenUi);
+                combatLogView.Hide();
                 return;
             }
 
-            combatLogView.OnGameModeStop(GameModeType.FullScreenUi);
+            combatLogView.Show();
+
+            // FullScreenUI has a separate 'selectedFullScreenCharacter' property, but it's not reliable due to skipped game modes.
+            // applying a generic fix for everything (with a hope not to cause extra problems smile) to make sure SelectedUnit is always set if we control atlease 1 character
+            if (Game.Instance.SelectionCharacter.SelectedUnits?.Count > 0)
+            {
+                var selectedCharacter = Game.Instance.SelectionCharacter.SelectedUnits.FirstOrDefault();
+                Game.Instance.SelectionCharacter.SelectedUnit.Value = selectedCharacter;
+            }
         }
     }
 }

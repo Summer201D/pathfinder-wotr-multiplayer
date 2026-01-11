@@ -1,4 +1,5 @@
 ﻿using Kingmaker.UI.MVVM._PCView.CharGen;
+using Kingmaker.UI.MVVM._PCView.CombatLog;
 using Kingmaker.UI.MVVM._PCView.Common;
 using Kingmaker.UI.MVVM._PCView.Common.MessageModal;
 using Kingmaker.UI.MVVM._PCView.EscMenu;
@@ -45,5 +46,7 @@ namespace WOTRMultiplayer.Abstractions.GameInteraction
         RespecWindowPCView RespecView { get; }
 
         InventoryVM InventoryVM { get; }
+
+        CombatLogPCView CombatLogPcView { get; }
     }
 }

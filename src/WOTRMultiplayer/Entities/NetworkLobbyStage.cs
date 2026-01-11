@@ -1,6 +1,6 @@
 ﻿namespace WOTRMultiplayer.Entities
 {
-    public enum NetworkGameStage
+    public enum NetworkLobbyStage
     {
         None,
         Lobby,

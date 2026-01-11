@@ -47,7 +47,7 @@ namespace WOTRMultiplayer.Abstractions
 
         Action<NetworkGameConnectivity> OnConnected { get; set; }
 
-        Action<NetworkGameStage, List<NetworkPlayer>> OnPlayersChanged { get; set; }
+        Action<NetworkLobbyStage, List<NetworkPlayer>> OnPlayersChanged { get; set; }
 
         Action<bool> OnNewGameSequenceStarted { get; set; }
 

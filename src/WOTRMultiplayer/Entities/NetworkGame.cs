@@ -19,7 +19,7 @@ namespace WOTRMultiplayer.Entities
 
         public NetworkGameConnectivity Connectivity { get; set; }
 
-        public NetworkGameStage Stage { get; set; }
+        public NetworkLobbyStage Stage { get; set; }
 
         public List<NetworkPlayer> Players { get; set; } = [];
 
@@ -62,7 +62,7 @@ namespace WOTRMultiplayer.Entities
         public NetworkGame(NetworkGameStartUp gameStartup)
         {
             StartUp = gameStartup;
-            Stage = NetworkGameStage.Lobby;
+            Stage = NetworkLobbyStage.Lobby;
         }
     }
 }

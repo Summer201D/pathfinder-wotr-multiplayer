@@ -261,7 +261,7 @@ namespace WOTRMultiplayer.UnitTests.Services
             _multiplayerClient.Connect(address);
             _multiplayerClient.Game = new NetworkGame(new NetworkGameStartUp("whatever"))
             {
-                Stage = NetworkGameStage.Playing
+                Stage = NetworkLobbyStage.Playing
             };
             var handler = FakeUtils.GetNetworkReceiverHandler<NotifyGameForceLoaded>(_networkClient);
             var request = new NotifyGameForceLoaded { Content = [], GameId = Guid.NewGuid().ToString() };
@@ -292,7 +292,7 @@ namespace WOTRMultiplayer.UnitTests.Services
             _multiplayerClient.Game = new NetworkGame(new NetworkGameStartUp("whatever"))
             {
                 LocalPlayerId = localPlayerId,
-                Stage = NetworkGameStage.Lobby,
+                Stage = NetworkLobbyStage.Lobby,
                 Players = [new NetworkPlayer { Id = localPlayerId }]
             };
             var handler = FakeUtils.GetNetworkReceiverHandler<NotifyGameForceLoaded>(_networkClient);

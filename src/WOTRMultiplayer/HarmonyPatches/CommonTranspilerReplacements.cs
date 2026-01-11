@@ -4,6 +4,7 @@ using System.Reflection.Emit;
 using HarmonyLib;
 using Kingmaker;
 using Kingmaker.EntitySystem.Entities;
+using Kingmaker.GameModes;
 using Kingmaker.UnitLogic;
 using Kingmaker.UnitLogic.Parts;
 using Kingmaker.View;
@@ -87,7 +88,7 @@ namespace WOTRMultiplayer.HarmonyPatches
             Main.GetLogger<CommonTranspilerReplacements>().LogInformation("Transpiler has been applied. Target={Target}", target);
         }
 
-        public static bool IsControlledByPlayers(UnitEntityData unit)
+        private static bool IsControlledByPlayers(UnitEntityData unit)
         {
             try
             {
@@ -105,7 +106,7 @@ namespace WOTRMultiplayer.HarmonyPatches
             }
         }
 
-        public static bool IsControlledByLocalPlayer(UnitEntityData unit)
+        private static bool IsControlledByLocalPlayer(UnitEntityData unit)
         {
             try
             {

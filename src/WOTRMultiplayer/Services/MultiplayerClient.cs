@@ -47,9 +47,9 @@ namespace WOTRMultiplayer.Services
 
         public bool IsConnecting => _networkClient.IsConnecting;
 
-        private NetworkGameStage Status => Game?.Stage ?? NetworkGameStage.None;
+        private NetworkLobbyStage Status => Game?.Stage ?? NetworkLobbyStage.None;
 
-        public bool IsInLobby => IsActive && Status == NetworkGameStage.Lobby;
+        public bool IsInLobby => IsActive && Status == NetworkLobbyStage.Lobby;
 
         protected override bool HasControlOverUI => false;
 

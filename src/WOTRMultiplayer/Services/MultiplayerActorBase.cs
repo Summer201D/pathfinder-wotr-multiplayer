@@ -50,7 +50,7 @@ namespace WOTRMultiplayer.Services
 
         public int? CombatSeed => Game.Combat?.Seed;
 
-        public Action<NetworkGameStage, List<NetworkPlayer>> OnPlayersChanged { get; set; }
+        public Action<NetworkLobbyStage, List<NetworkPlayer>> OnPlayersChanged { get; set; }
 
         public Action<bool> OnNewGameSequenceStarted { get; set; }
 
@@ -409,7 +409,7 @@ namespace WOTRMultiplayer.Services
             var currentArea = GameInteraction.GetCurrentAreaName();
             Logger.LogInformation("Area scenes loaded. Chapter={Chapter}, AreaName={AreaName}", currentChapter, currentArea);
 
-            SetGameStage(NetworkGameStage.Playing);
+            SetLobbyStage(NetworkLobbyStage.Playing);
 
             SoftReset();
 
@@ -508,7 +508,7 @@ namespace WOTRMultiplayer.Services
 
         public void ForceLoadGame(string gameId, string savePath)
         {
-            if (Game.Stage != NetworkGameStage.Playing && Game.Stage != NetworkGameStage.Lobby)
+            if (Game.Stage != NetworkLobbyStage.Playing && Game.Stage != NetworkLobbyStage.Lobby)
             {
                 return;
             }
@@ -1949,10 +1949,10 @@ namespace WOTRMultiplayer.Services
             }
         }
 
-        protected void SetGameStage(NetworkGameStage gameStage)
+        protected void SetLobbyStage(NetworkLobbyStage lobbyStage)
         {
-            Game.Stage = gameStage;
-            Logger.LogInformation("Game stage has been changed. Stage={Stage}", gameStage);
+            Game.Stage = lobbyStage;
+            Logger.LogInformation("Lobby stage has been changed. Stage={Stage}", lobbyStage);
         }
 
         protected void EnsureForcePaused(string reason, TimeSpan? removalDelay)
@@ -2022,7 +2022,7 @@ namespace WOTRMultiplayer.Services
 
         protected void ShowPlayerConnectedMessage(NetworkPlayer networkPlayer)
         {
-            if (Game.Stage != NetworkGameStage.Playing)
+            if (Game.Stage != NetworkLobbyStage.Playing)
             {
                 return;
             }
@@ -2032,7 +2032,7 @@ namespace WOTRMultiplayer.Services
 
         protected void ShowPlayerDisconnectedMessage(NetworkPlayer networkPlayer)
         {
-            if (networkPlayer == null || Game.Stage != NetworkGameStage.Playing)
+            if (networkPlayer == null || Game.Stage != NetworkLobbyStage.Playing)
             {
                 return;
             }
@@ -2142,7 +2142,7 @@ namespace WOTRMultiplayer.Services
 
             // We need to use different save load method if someone joined mid game
             // I assume game just need to load more resources or whatever if you are not in the game already
-            if (Game.Stage == NetworkGameStage.Playing)
+            if (Game.Stage == NetworkLobbyStage.Playing)
             {
                 Game.Id = GameInteraction.QuickLoadGame(Game.StartUp.SavePath);
             }
@@ -2159,7 +2159,7 @@ namespace WOTRMultiplayer.Services
                 Game.Id = GameInteraction.LoadGameFromMainMenu(Game.StartUp.SavePath);
             }
 
-            SetGameStage(NetworkGameStage.Loading);
+            SetLobbyStage(NetworkLobbyStage.Loading);
         }
 
         protected NetworkPlayer GetHost()
@@ -2470,7 +2470,7 @@ namespace WOTRMultiplayer.Services
         protected void StartNewGameSequence()
         {
             Logger.LogInformation("Starting new game sequence");
-            SetGameStage(NetworkGameStage.NewGameSequence);
+            SetLobbyStage(NetworkLobbyStage.NewGameSequence);
             OnNewGameSequenceStarted?.Invoke(true);
 
             var mainCharacterId = Game.Characters.First().UnitId;
@@ -2479,7 +2479,7 @@ namespace WOTRMultiplayer.Services
                 onBack: () =>
                 {
                     Logger.LogInformation("New game sequence has been cancelled");
-                    SetGameStage(NetworkGameStage.Lobby);
+                    SetLobbyStage(NetworkLobbyStage.Lobby);
                     foreach (var player in Game.Players)
                     {
                         player.IsReady = false;
@@ -2711,6 +2711,7 @@ namespace WOTRMultiplayer.Services
             var gameMode = GameModeType.All.FirstOrDefault(g => string.Equals(g.Name, gameModeTypeEnded.Type, StringComparison.OrdinalIgnoreCase));
             UnregisterGameMode(gameMode, gameModeTypeEnded.PlayerId);
             if (gameMode == GameModeType.Rest)
+
             {
                 OnRemoteRestGameModeEnded(gameModeTypeEnded.PlayerId);
             }
