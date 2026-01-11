@@ -947,6 +947,14 @@ namespace WOTRMultiplayer.Services.GameInteraction
                 var previousIndex = unit.Body.CurrentHandEquipmentSetIndex;
                 unit.Body.CurrentHandEquipmentSetIndex = networkActiveHandEquipmentSet.Index;
                 RefreshInventoryWindow();
+                if (_uiAccessor.VendorViewVM != null && string.Equals(_uiAccessor.VendorViewVM.DollVM?.Unit?.Value.Unit?.UniqueId, unit.UniqueId, StringComparison.OrdinalIgnoreCase))
+                {
+                    var set = _uiAccessor.VendorViewVM.DollVM.WeaponSets.FirstOrDefault(s => s.Index == unit.Body.CurrentHandEquipmentSetIndex);
+                    if (set != null)
+                    {
+                        _uiAccessor.VendorViewVM.DollVM.CurrentSet.Value = set;
+                    }
+                }
                 _logger.LogInformation("Changed active hand equipment slot. UnitId={UnitId}, PreviousIndex={PreviousIndex}, CurrentIndex={CurrentIndex}", networkActiveHandEquipmentSet.UnitId, previousIndex, unit.Body.CurrentHandEquipmentSetIndex);
             });
         }
