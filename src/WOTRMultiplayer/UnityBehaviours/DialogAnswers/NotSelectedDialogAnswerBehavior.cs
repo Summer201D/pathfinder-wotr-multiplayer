@@ -11,10 +11,10 @@ namespace WOTRMultiplayer.UnityBehaviours.DialogAnswers
 {
     public class NotSelectedDialogAnswerBehavior : AnimatedDialogAnswerBehaviorBase
     {
-        protected override void OnStart()
+        protected override void OnStarted()
         {
-            base.OnStart();
-            this.gameObject.GetComponentInChildren<TextMeshProUGUI>().DOFade(0.1f, Duration);
+            base.OnStarted();
+            this.gameObject.GetComponentInChildren<TextMeshProUGUI>().DOFade(0.15f, Duration);
         }
 
         protected override void OnPartialDecay(float decayState)

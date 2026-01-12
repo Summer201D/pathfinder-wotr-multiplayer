@@ -11,12 +11,12 @@ namespace WOTRMultiplayer.UnityBehaviours.DialogAnswers
 
         protected float Duration { get; private set; }
 
-        public void Initialize(float duration, Action onExpired)
+        public void Begin(float duration, Action onExpired)
         {
             Duration = duration;
             _onExpired = onExpired;
 
-            base.Initialize(TimeSpan.FromSeconds(duration), null);
+            base.Begin(TimeSpan.FromSeconds(duration), null);
         }
 
         private void Awake()
@@ -28,7 +28,7 @@ namespace WOTRMultiplayer.UnityBehaviours.DialogAnswers
         {
         }
 
-        protected override void OnStart()
+        protected override void OnStarted()
         {
             _view.Button.Interactable = false;
 

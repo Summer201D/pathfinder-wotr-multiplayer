@@ -2341,7 +2341,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
                 clickPointer.transform.localPosition = position;
 
                 var decayingBehaviour = pingObject.AddComponent<DecayingMeshRenderersBehaviour>();
-                decayingBehaviour.Initialize(TimeSpan.FromSeconds(2), UnityEngine.Object.DestroyImmediate, meshRenderers);
+                decayingBehaviour.Begin(TimeSpan.FromSeconds(2), UnityEngine.Object.DestroyImmediate, meshRenderers);
                 UISoundController.Instance.Play(UISoundType.GlobalMapLocationsSelect, pingObject);
             });
         }

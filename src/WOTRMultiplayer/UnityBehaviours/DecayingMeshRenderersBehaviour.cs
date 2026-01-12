@@ -8,11 +8,11 @@ namespace WOTRMultiplayer.UnityBehaviours
     {
         private List<MeshRenderer> _renderers;
 
-        public void Initialize(TimeSpan expiration, Action<GameObject> onExpired, List<MeshRenderer> renderers)
+        public void Begin(TimeSpan expiration, Action<GameObject> onExpired, List<MeshRenderer> renderers)
         {
             _renderers = renderers;
 
-            base.Initialize(expiration, onExpired);
+            base.Begin(expiration, onExpired);
         }
 
         protected override void OnPartialDecay(float decayState)

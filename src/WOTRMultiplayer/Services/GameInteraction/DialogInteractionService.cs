@@ -76,7 +76,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
                     if (string.Equals(answer.gameObject.GetComponent<DialogAnswerPCView>()?.ViewModel?.Answer.Value.name, answerName, StringComparison.OrdinalIgnoreCase))
                     {
                         var selectedAnswerBehavior = answer.gameObject.AddComponent<SelectedDialogAnswerBehavior>();
-                        selectedAnswerBehavior.Initialize(duration: 0.8f, onExpired: null);
+                        selectedAnswerBehavior.Begin(duration: 0.8f, onExpired: null);
                         break;
                     }
                 }
@@ -116,12 +116,12 @@ namespace WOTRMultiplayer.Services.GameInteraction
                         if (string.Equals(view.ViewModel.Answer.Value.name, answerName, StringComparison.OrdinalIgnoreCase))
                         {
                             var selectedAnswerBehavior = answer.gameObject.AddComponent<SelectedDialogAnswerBehavior>();
-                            selectedAnswerBehavior.Initialize(duration: 0.5f, () => DoSelectAnswer(answerBlueprint, manualUnitSelectionId));
+                            selectedAnswerBehavior.Begin(duration: 0.5f, () => DoSelectAnswer(answerBlueprint, manualUnitSelectionId));
                             continue;
                         }
 
                         var nonSelectedAnswerBehavior = answer.gameObject.AddComponent<NotSelectedDialogAnswerBehavior>();
-                        nonSelectedAnswerBehavior.Initialize(duration: 0.5f, onExpired: null);
+                        nonSelectedAnswerBehavior.Begin(duration: 0.5f, onExpired: null);
                     }
                 }
                 catch (Exception ex)
