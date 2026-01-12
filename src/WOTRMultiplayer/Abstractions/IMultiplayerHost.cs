@@ -16,7 +16,7 @@ namespace WOTRMultiplayer.Abstractions
 
         bool Start();
 
-        void ChangeCharacterOwner(int characterIndex, int playerIndex);
+        void ChangeCharacterOwner(NetworkCharacter character, NetworkPlayer player);
 
         void OnAreaTransition(NetworkAreaTransition areaTransition);
 

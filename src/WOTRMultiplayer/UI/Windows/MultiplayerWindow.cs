@@ -13,7 +13,7 @@ using WOTRMultiplayer.Abstractions.UI.Controllers.Menu;
 using WOTRMultiplayer.Abstractions.UI.Windows;
 using WOTRMultiplayer.Extensions;
 
-namespace WOTRMultiplayer.UI.Menu
+namespace WOTRMultiplayer.UI.Windows
 {
     public class MultiplayerWindow : FullScreenTabsWindow, IMultiplayerWindow
     {
@@ -146,7 +146,7 @@ namespace WOTRMultiplayer.UI.Menu
 
         private void OnChangeWindowVisibility(bool visibility)
         {
-            base.gameObject.SetActive(visibility);
+            gameObject.SetActive(visibility);
         }
 
         private GameObject CreateMenuItem(float positionX, GameObject objToCopy, Transform parent)

@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using WOTRMultiplayer.Entities;
-using WOTRMultiplayer.UI.Menu;
+using WOTRMultiplayer.UI.Windows;
 
 namespace WOTRMultiplayer.Abstractions.UI.Controllers
 {
@@ -16,14 +16,14 @@ namespace WOTRMultiplayer.Abstractions.UI.Controllers
 
         void UpdateServerInfo(NetworkGameConnectivity connectivity);
 
-        void UpdateCharacters(List<NetworkCharacter> characters, bool isHost);
+        void UpdateCharacters(List<NetworkCharacter> characters, bool isDropdownInteractable);
 
-        void UpdateCharacterOwnerDropdown(int characterIndex, int playerIndex, bool silent = false);
+        void UpdateCharacterOwnerDropdown(NetworkCharacter character, bool silent = false);
 
         void SetActiveOwner(LobbyWindowOwner owner);
 
         void ResetOwnerContent(LobbyWindowOwner owner);
 
-        Action<int, int> OnCharacterOwnerChanged { get; set; }
+        Action<NetworkCharacter, NetworkPlayer> OnCharacterOwnerChanged { get; set; }
     }
 }

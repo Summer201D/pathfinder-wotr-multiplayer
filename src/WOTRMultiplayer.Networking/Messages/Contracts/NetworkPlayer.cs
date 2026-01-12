@@ -15,7 +15,7 @@ namespace WOTRMultiplayer.Networking.Messages.Contracts
         public bool IsReady { get; set; }
 
         [ProtoMember(4)]
-        public string SaveGameSyncStatus { get; set; }
+        public string LobbySyncStatus { get; set; }
 
         [ProtoMember(5)]
         public NetworkContentState ContentState { get; set; }

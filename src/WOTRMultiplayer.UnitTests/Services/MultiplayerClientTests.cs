@@ -245,7 +245,7 @@ namespace WOTRMultiplayer.UnitTests.Services
 
             // Assert
             A.CallTo(() => _fileSystemService.WriteFile(A<string>.Ignored, request.Content)).MustHaveHappened();
-            A.CallTo(() => _networkClient.Send(A<NotifyPlayerGameStartUpSyncStatusChanged>.Ignored)).MustHaveHappened();
+            A.CallTo(() => _networkClient.Send(A<NotifyLobbySyncStatusChanged>.Ignored)).MustHaveHappened();
         }
 
         [Test]
@@ -272,7 +272,7 @@ namespace WOTRMultiplayer.UnitTests.Services
             // Assert
             A.CallTo(() => _fileSystemService.WriteFile(A<string>.Ignored, request.Content)).MustHaveHappened();
             A.CallTo(() => _gameInteractionService.QuickLoadGame(A<string>.Ignored)).MustHaveHappened();
-            A.CallTo(() => _networkClient.Send(A<NotifyPlayerGameStartUpSyncStatusChanged>.Ignored)).MustNotHaveHappened();
+            A.CallTo(() => _networkClient.Send(A<NotifyLobbySyncStatusChanged>.Ignored)).MustNotHaveHappened();
         }
 
         [Test]
@@ -305,7 +305,7 @@ namespace WOTRMultiplayer.UnitTests.Services
             A.CallTo(() => _fileSystemService.WriteFile(A<string>.Ignored, request.Content)).MustHaveHappened();
             A.CallTo(() => _gameInteractionService.LoadGameFromMainMenu(A<string>.That.Not.IsNullOrEmpty())).MustHaveHappened();
             A.CallTo(() => _networkClient.Send(A<NotifyPlayerReadyStatusChanged>.Ignored)).MustHaveHappened();
-            A.CallTo(() => _networkClient.Send(A<NotifyPlayerGameStartUpSyncStatusChanged>.Ignored)).MustHaveHappened();
+            A.CallTo(() => _networkClient.Send(A<NotifyLobbySyncStatusChanged>.Ignored)).MustHaveHappened();
         }
     }
 }

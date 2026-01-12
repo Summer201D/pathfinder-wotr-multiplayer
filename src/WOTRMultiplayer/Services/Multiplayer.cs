@@ -29,7 +29,7 @@ using WOTRMultiplayer.Entities.Spells;
 using WOTRMultiplayer.Entities.Vendor;
 using WOTRMultiplayer.Services.GameInteraction.Contexts;
 using WOTRMultiplayer.Services.Random;
-using WOTRMultiplayer.UI.Menu;
+using WOTRMultiplayer.UI.Windows;
 
 namespace WOTRMultiplayer.Services
 {
@@ -97,6 +97,7 @@ namespace WOTRMultiplayer.Services
             _logger.LogInformation("Disposing both multiplayer host/client");
             _multiplayerActorAccessor.Host.Reset();
             _multiplayerActorAccessor.Client.Reset();
+            _multiplayerActorAccessor.Client.OnCharacterOwnerChanged = null;
             _lobbyWindowController.ResetOwnerContent(LobbyWindowOwner.EscMenu);
             _lobbyWindowController.OnCharacterOwnerChanged = null;
             _logger.LogInformation("Disposing Esc menu window game objects");
@@ -120,7 +121,15 @@ namespace WOTRMultiplayer.Services
 
             _lobbyWindow.WithController(_lobbyWindowController);
 
-            _lobbyWindowController.OnCharacterOwnerChanged = OnLobbyCharacterOwnerChanged;
+            if (_multiplayerActorAccessor.Host.IsActive)
+            {
+                _lobbyWindowController.OnCharacterOwnerChanged = OnMultiplayerHostLobbyCharacterOwnerChanged;
+            }
+
+            if (_multiplayerActorAccessor.Client.IsActive)
+            {
+                _multiplayerActorAccessor.Client.OnCharacterOwnerChanged = OnMultiplayerClientCharacterOwnerChanged;
+            }
         }
 
         public void MoveNonCombatCharacter(NetworkCharacterMove networkCharacterMove)
@@ -2787,10 +2796,16 @@ namespace WOTRMultiplayer.Services
             _multiplayerWindow.Show(true);
         }
 
-        private void OnLobbyCharacterOwnerChanged(int characterIndex, int playerIndex)
+        private void OnMultiplayerHostLobbyCharacterOwnerChanged(NetworkCharacter character, NetworkPlayer player)
         {
-            _logger.LogInformation("OnLobbyCharacterOwnerChanged. CharacterIndex={CharacterIndex}, PlayerIndex={PlayerIndex}", characterIndex, playerIndex);
-            _multiplayerActorAccessor.Host.ChangeCharacterOwner(characterIndex, playerIndex);
+            _logger.LogInformation("OnMultiplayerHostLobbyCharacterOwnerChanged. CharacterId={CharacterId}, PlayerId={PlayerId}", character.UnitId, player.Id);
+            _multiplayerActorAccessor.Host.ChangeCharacterOwner(character, player);
+        }
+
+        private void OnMultiplayerClientCharacterOwnerChanged(NetworkCharacter character)
+        {
+            _logger.LogInformation("OnMultiplayerClientCharacterOwnerChanged. CharacterId={CharacterId}, PlayerId={PlayerId}", character.Name, character.Owner.Id);
+            _lobbyWindowController.UpdateCharacterOwnerDropdown(character, silent: true);
         }
     }
 }

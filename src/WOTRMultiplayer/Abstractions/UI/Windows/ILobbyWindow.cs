@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using WOTRMultiplayer.Abstractions.UI.Controllers;
 using WOTRMultiplayer.Entities;
-using WOTRMultiplayer.UI.Menu;
+using WOTRMultiplayer.UI.Windows;
 
 namespace WOTRMultiplayer.Abstractions.UI.Windows
 {

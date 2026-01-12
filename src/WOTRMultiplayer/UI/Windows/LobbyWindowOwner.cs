@@ -1,4 +1,4 @@
-﻿namespace WOTRMultiplayer.UI.Menu
+﻿namespace WOTRMultiplayer.UI.Windows
 {
     public enum LobbyWindowOwner
     {

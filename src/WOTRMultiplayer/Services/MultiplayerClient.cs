@@ -38,9 +38,7 @@ namespace WOTRMultiplayer.Services
 
         public Action<NetworkGameConnectivity> OnConnected { get; set; }
 
-        public Action<List<NetworkCharacter>> OnGameCharactersChanged { get; set; }
-
-        public Action<int, int> OnCharacterOwnerChanged { get; set; }
+        public Action<NetworkCharacter> OnCharacterOwnerChanged { get; set; }
 
         public bool IsActive => _networkClient.IsActive;
 
@@ -406,10 +404,10 @@ namespace WOTRMultiplayer.Services
                .On<NotifyLobbySaveGameChanged>(OnNotifyLobbySaveGameChanged)
                .On<GameServerConnectionSucceeded>(OnGameServerConnectionSucceeded)
                .On<NotifyLobbyPlayersChanged>(OnNotifyLobbyPlayersChanged)
-               .On<NotifyCharactersChanged>(OnNotifyGameCharactersChanged)
-               .On<NotifyCharactersOwnerChanged>(OnNotifyCharactersOwnerChanged)
+               .On<NotifyLobbyCharactersChanged>(OnNotifyLobbyCharactersChanged)
+               .On<NotifyCharacterOwnerChanged>(OnNotifyCharacterOwnerChanged)
                .On<NotifyGameStarted>(OnNotifyGameStarted)
-               .On<NotifyPlayerGameStartUpSyncStatusChanged>(OnNotifyPlayerSaveGameSyncStatusChanged)
+               .On<NotifyLobbySyncStatusChanged>(OnNotifyLobbySyncStatusChanged)
                .On<NotifyNewGameDifficultyChanged>(OnNotifyNewGameDifficultyChanged)
 
                // new game sequence
@@ -678,12 +676,12 @@ namespace WOTRMultiplayer.Services
             ResetPlayersTracker(Game.PlayersInGroupChanger);
         }
 
-        private void OnNotifyPlayerSaveGameSyncStatusChanged(long playerId, NotifyPlayerGameStartUpSyncStatusChanged playerGameStartUpSyncStatusChanged)
+        private void OnNotifyLobbySyncStatusChanged(long receivedFrom, NotifyLobbySyncStatusChanged lobbySyncStatusChanged)
         {
-            Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}, Status={Status}", nameof(NotifyPlayerGameStartUpSyncStatusChanged), playerGameStartUpSyncStatusChanged.PlayerId, playerGameStartUpSyncStatusChanged.Status);
+            Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}, Status={Status}", nameof(NotifyLobbySyncStatusChanged), lobbySyncStatusChanged.PlayerId, lobbySyncStatusChanged.Status);
 
-            var status = Mapper.Map<NetworkGameStartUpSyncStatus>(playerGameStartUpSyncStatusChanged.Status);
-            UpdatePlayerGameStartUpSyncStatus(playerGameStartUpSyncStatusChanged.PlayerId, status);
+            var status = Mapper.Map<NetworkLobbySyncStatus>(lobbySyncStatusChanged.Status);
+            UpdateLobbySyncStatus(lobbySyncStatusChanged.PlayerId, status);
         }
 
         private void OnNotifyGamePauseStarted(long playerId, NotifyGamePauseStarted pauseStarted)
@@ -981,30 +979,29 @@ namespace WOTRMultiplayer.Services
             LoadSavedGame();
         }
 
-        private void OnNotifyCharactersOwnerChanged(long playerId, NotifyCharactersOwnerChanged charactersOwnerChanged)
+        private void OnNotifyCharacterOwnerChanged(long playerId, NotifyCharacterOwnerChanged characterOwnerChanged)
         {
-            Logger.LogInformation("Received {MessageType}. OwnersCount={OwnersCount}", nameof(NotifyCharactersOwnerChanged), charactersOwnerChanged.Owners.Count);
+            Logger.LogInformation("Received {MessageType}. CharacterName={CharacterName}, CharacterId={CharacterId}, OwnerId={OwnerId}", nameof(NotifyCharacterOwnerChanged), characterOwnerChanged.Character.Name, characterOwnerChanged.Character.UnitId, characterOwnerChanged.Character.OwnerId);
             try
             {
-                foreach (var owner in charactersOwnerChanged.Owners)
+                var newOwner = GetPlayer(characterOwnerChanged.Character.OwnerId);
+
+                var character = Mapper.Map<NetworkCharacter>(characterOwnerChanged.Character);
+                var actualCharacter = FindCharacter(character);
+                if (actualCharacter == null)
                 {
-                    var player = GetPlayer(owner.PlayerId);
-                    if (player == null)
-                    {
-                        Logger.LogWarning("Unable to assign character ownership for missing player. PlayerId={PlayerId}", owner.PlayerId);
-                        player = Game.Players.First();
-                    }
-
-                    var character = Game.Characters[owner.CharacterIndex];
-                    character.Owner = player;
-                    if (!string.IsNullOrEmpty(character.UnitId))
-                    {
-                        UpdateCharacterOwnershipHistory(character);
-                    }
-
-                    OnCharacterOwnerChanged?.Invoke(owner.CharacterIndex, Game.Players.IndexOf(player));
-                    GameInteraction.ReselectSelectedCharacters();
+                    Logger.LogError("Unable to find character. CharacterName={CharacterName}, CharacterId={CharacterId}", character.Name, character.UnitId);
+                    return;
                 }
+                actualCharacter.Owner = newOwner;
+                if (!string.IsNullOrEmpty(character.UnitId))
+                {
+                    UpdateCharacterOwnershipHistory(character);
+                }
+
+                OnCharacterOwnerChanged?.Invoke(actualCharacter);
+
+                UpdateInGameCharacterOwnershipChange(actualCharacter);
             }
             catch (Exception ex)
             {
@@ -1020,21 +1017,24 @@ namespace WOTRMultiplayer.Services
             UpdateSaveInfo(notifyLobbySaveGameChanged.GameId, notifyLobbySaveGameChanged.Content);
 
             Logger.LogInformation("Game is ready to be started. SavePath={SavePath}", Game.StartUp.SavePath);
-            var confirmationMessage = new NotifyPlayerGameStartUpSyncStatusChanged { PlayerId = Game.LocalPlayerId, Status = NetworkGameStartUpSyncStatus.Succeed.ToString() };
+            var confirmationMessage = new NotifyLobbySyncStatusChanged { PlayerId = Game.LocalPlayerId, Status = NetworkLobbySyncStatus.Succeed.ToString() };
             Send(confirmationMessage);
         }
 
-        private void OnNotifyGameCharactersChanged(long playerId, NotifyCharactersChanged changed)
+        private void OnNotifyLobbyCharactersChanged(long playerId, NotifyLobbyCharactersChanged lobbyCharactersChanged)
         {
-            Logger.LogInformation("Received {MessageType}. Portraits={Portraits}", nameof(NotifyCharactersChanged), string.Join(";", changed.Characters.Select(c => c.Portrait)));
+            Logger.LogInformation("Received {MessageType}. Portraits={Portraits}", nameof(NotifyLobbyCharactersChanged), string.Join(";", lobbyCharactersChanged.Characters.Select(c => c.Portrait)));
 
-            var characters = Mapper.Map<List<NetworkCharacter>>(changed.Characters);
             Game.Characters.Clear();
-            Game.Characters.AddRange(characters);
-
             ResetCharacterOwnership();
+            foreach (var networkCharacter in lobbyCharactersChanged.Characters)
+            {
+                var character = Mapper.Map<NetworkCharacter>(networkCharacter);
+                character.Owner = GetPlayer(networkCharacter.OwnerId);
+                Game.Characters.Add(character);
+            }
 
-            OnGameCharactersChanged?.Invoke(Game.Characters);
+            OnCharactersChanged?.Invoke(Game.Characters);
         }
 
         private void OnNotifyLobbyPlayersChanged(long playerId, NotifyLobbyPlayersChanged playersChanged)

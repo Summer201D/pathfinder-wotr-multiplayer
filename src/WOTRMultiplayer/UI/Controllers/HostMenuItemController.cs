@@ -23,7 +23,7 @@ using WOTRMultiplayer.Abstractions.UI.Controllers.Menu;
 using WOTRMultiplayer.Abstractions.Unity;
 using WOTRMultiplayer.Entities;
 using WOTRMultiplayer.Extensions;
-using WOTRMultiplayer.UI.Menu;
+using WOTRMultiplayer.UI.Windows;
 
 namespace WOTRMultiplayer.UI.Controllers
 {
@@ -183,6 +183,7 @@ namespace WOTRMultiplayer.UI.Controllers
             _multiplayerHost.OnConnected = enable ? OnMultiplayerConnected : null;
             _multiplayerHost.OnPlayersChanged = enable ? OnMultiplayerPlayersChanged : null;
             _multiplayerHost.OnNewGameSequenceStarted = enable ? OnMultiplayerNewGameSequenceStarted : null;
+            _multiplayerHost.OnCharactersChanged = enable ? OnMultiplayerCharactersChanged : null;
 
             Lobby.OnCharacterOwnerChanged = enable ? OnLobbyCharacterOwnerChanged : null;
         }
@@ -248,8 +249,6 @@ namespace WOTRMultiplayer.UI.Controllers
             Title.SetText(titleText);
 
             var (gameId, startup) = CreateGameStartUp(selectedSave);
-            Lobby.UpdateCharacters(startup.Characters, true);
-
             if (!_multiplayerHost.IsActive)
             {
                 StartButtonObject.SetActive(true);
@@ -262,12 +261,6 @@ namespace WOTRMultiplayer.UI.Controllers
             }
 
             _multiplayerHost.ChangeHostedStartingPoint(gameId, startup);
-            // changing hosted game should reset all ownership
-            for (int i = 0; i < startup.Characters.Count; i++)
-            {
-                Lobby.UpdateCharacterOwnerDropdown(i, 0, true);
-            }
-
             _logger.LogInformation("Updated hosted game");
         }
 
@@ -350,10 +343,10 @@ namespace WOTRMultiplayer.UI.Controllers
             Lobby.InitializeContent(LobbyWindowOwner.HostMenu, lobbyWindowObject.transform);
         }
 
-        private void OnLobbyCharacterOwnerChanged(int characterIndex, int playerIndex)
+        private void OnLobbyCharacterOwnerChanged(NetworkCharacter character, NetworkPlayer player)
         {
-            _logger.LogInformation("OnLobbyCharacterOwnerChanged. CharacterIndex={CharacterIndex}, PlayerIndex={PlayerIndex}", characterIndex, playerIndex);
-            _multiplayerHost.ChangeCharacterOwner(characterIndex, playerIndex);
+            _logger.LogInformation("OnLobbyCharacterOwnerChanged. CharacterName={CharacterName}, PlayerId={PlayerId}", character.Name, player.Id);
+            _multiplayerHost.ChangeCharacterOwner(character, player);
         }
 
         private void OnMultiplayerConnected(NetworkGameConnectivity connectivity)
@@ -369,6 +362,11 @@ namespace WOTRMultiplayer.UI.Controllers
             {
                 StartButton.Interactable = canStart;
             });
+        }
+
+        private void OnMultiplayerCharactersChanged(List<NetworkCharacter> characters)
+        {
+            Lobby.UpdateCharacters(characters, isDropdownInteractable: true);
         }
 
         private void SetupLoadSaveGamesLayout()

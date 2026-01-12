@@ -11,7 +11,7 @@ using WOTRMultiplayer.Abstractions.UI.Controllers;
 using WOTRMultiplayer.Abstractions.UI.Windows;
 using WOTRMultiplayer.Entities;
 using WOTRMultiplayer.Services;
-using WOTRMultiplayer.UI.Menu;
+using WOTRMultiplayer.UI.Windows;
 
 namespace WOTRMultiplayer.UnitTests.Services
 {

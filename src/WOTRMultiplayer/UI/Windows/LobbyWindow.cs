@@ -8,7 +8,7 @@ using WOTRMultiplayer.Abstractions.UI.Controllers;
 using WOTRMultiplayer.Abstractions.UI.Windows;
 using WOTRMultiplayer.Entities;
 
-namespace WOTRMultiplayer.UI.Menu
+namespace WOTRMultiplayer.UI.Windows
 {
     public class LobbyWindow : UIWindow, ILobbyWindow
     {
@@ -52,7 +52,7 @@ namespace WOTRMultiplayer.UI.Menu
 
         public ILobbyWindow Initialize(LobbyWindowOwner lobbyWindowOwner)
         {
-            _lobbyWindowController.InitializeContent(lobbyWindowOwner, this.transform);
+            _lobbyWindowController.InitializeContent(lobbyWindowOwner, transform);
             return this;
         }
 
@@ -76,13 +76,6 @@ namespace WOTRMultiplayer.UI.Menu
                 _lobbyWindowController.UpdatePlayers(players);
                 var characters = GetCharacters();
                 _lobbyWindowController.UpdateCharacters(characters, GetIsHost());
-
-                for (int i = 0; i < characters.Count; i++)
-                {
-                    var character = characters[i];
-                    var playerIndex = players.IndexOf(character.Owner);
-                    _lobbyWindowController.UpdateCharacterOwnerDropdown(i, playerIndex, true);
-                }
             }
             catch (Exception ex)
             {

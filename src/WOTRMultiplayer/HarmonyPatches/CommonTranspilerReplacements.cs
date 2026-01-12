@@ -4,7 +4,6 @@ using System.Reflection.Emit;
 using HarmonyLib;
 using Kingmaker;
 using Kingmaker.EntitySystem.Entities;
-using Kingmaker.GameModes;
 using Kingmaker.UnitLogic;
 using Kingmaker.UnitLogic.Parts;
 using Kingmaker.View;

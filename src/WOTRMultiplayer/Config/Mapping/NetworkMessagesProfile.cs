@@ -43,6 +43,7 @@ namespace WOTRMultiplayer.Config.Mapping
                 .ReverseMap();
 
             CreateMap<NetworkCharacter, Networking.Messages.Contracts.NetworkCharacter>()
+                .ForMember(x => x.OwnerId, o => o.MapFrom(f => f.Owner.Id))
                 .ReverseMap();
 
             CreateMap<NetworkClick, Networking.Messages.Contracts.NetworkClick>()

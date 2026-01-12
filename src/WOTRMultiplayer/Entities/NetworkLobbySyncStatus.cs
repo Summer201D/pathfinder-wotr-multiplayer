@@ -1,6 +1,6 @@
 ﻿namespace WOTRMultiplayer.Entities
 {
-    public enum NetworkGameStartUpSyncStatus
+    public enum NetworkLobbySyncStatus
     {
         None,
         Succeed,

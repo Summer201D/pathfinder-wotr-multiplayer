@@ -95,10 +95,10 @@ namespace WOTRMultiplayer.Playground.Host
                         host.ReadyChanged();
                         break;
                     case "owner_00":
-                        host.ChangeCharacterOwner(0, 0);
+                        host.ChangeCharacterOwner(host.Game.Characters[0], host.Game.Players[0]);
                         break;
                     case "owner_01":
-                        host.ChangeCharacterOwner(0, 1);
+                        host.ChangeCharacterOwner(host.Game.Characters[0], host.Game.Players[1]);
                         break;
                     case "start":
                         host.Start();

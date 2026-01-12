@@ -707,6 +707,12 @@ public static class WellKnownKeys
             {
                 public static string Key { get; set; }
             }
+
+            [Description("characterOwnerChanged")]
+            public static class CharacterOwnerChanged
+            {
+                public static string Key { get; set; }
+            }
         }
 
         [Description("spellBook")]

@@ -11,13 +11,13 @@
             None = 100,
             GameServerConnectionSucceeded,
             ClientGameServerConnectionConfirmed,
-            NotifyCharactersOwnerChanged,
-            NotifyCharactersChanged,
+            NotifyCharacterOwnerChanged,
+            NotifyLobbyCharactersChanged,
             NotifyGameStarted,
             NotifyLobbyPlayersChanged,
             NotifyLobbySaveGameChanged,
             NotifyPlayerReadyStatusChanged,
-            NotifyPlayerGameStartUpSyncStatusChanged,
+            NotifyLobbySyncStatusChanged,
             NotifyNewGameDifficultyChanged,
             NotifyGameForceLoaded
         }

@@ -185,7 +185,8 @@
             },
             "session": {
                 "playerJoined": "Player {0} has joined the game",
-                "playerLeft": "Player {0} has left the game"
+                "playerLeft": "Player {0} has left the game",
+                "characterOwnerChanged": "Player {0} is in charge of {1} now"
             },
             "spellBook": {
                 "noSpellSlotPermission": "Changing spells is restricted to character owner only",

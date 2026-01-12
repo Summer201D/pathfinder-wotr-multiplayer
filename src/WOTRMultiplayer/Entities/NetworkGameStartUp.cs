@@ -11,7 +11,7 @@ namespace WOTRMultiplayer.Entities
 
         public NetworkNewGameSequencePhaseType PhaseType { get; set; }
 
-        public HashSet<long> PlayerReadiness { get; set; } = [];
+        public HashSet<long> ReadyPlayers { get; set; } = [];
 
         public string SavePath { get; set; }
 

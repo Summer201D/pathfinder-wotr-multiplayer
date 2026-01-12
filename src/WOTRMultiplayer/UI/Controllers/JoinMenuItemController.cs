@@ -15,7 +15,7 @@ using WOTRMultiplayer.Abstractions.UI.Controllers.Menu;
 using WOTRMultiplayer.Abstractions.Unity;
 using WOTRMultiplayer.Entities;
 using WOTRMultiplayer.Extensions;
-using WOTRMultiplayer.UI.Menu;
+using WOTRMultiplayer.UI.Windows;
 
 namespace WOTRMultiplayer.UI.Controllers
 {
@@ -232,10 +232,10 @@ namespace WOTRMultiplayer.UI.Controllers
             leaveButton.OnLeftClick.AddListener(OnLeaveButtonClicked);
         }
 
-        private void OnMultiplayerCharacterOwnerChanged(int characterIndex, int playerIndex)
+        private void OnMultiplayerCharacterOwnerChanged(NetworkCharacter character)
         {
-            _logger.LogInformation("Updating character owner. CharacterIndex={CharacterIndex}, PlayerIndex={PlayerIndex}", characterIndex, playerIndex);
-            Lobby.UpdateCharacterOwnerDropdown(characterIndex, playerIndex);
+            _logger.LogInformation("Updating character owner. CharacterName={CharacterName}, CharacterId={CharacterId}, OwnerId={OwnerId}", character.Name, character.UnitId, character.Owner.Id);
+            Lobby.UpdateCharacterOwnerDropdown(character);
         }
 
         private void SetupHandlers(bool enable)
@@ -243,7 +243,7 @@ namespace WOTRMultiplayer.UI.Controllers
             _multiplayerClient.OnNetworkError = enable ? OnMultiplayerError : null;
             _multiplayerClient.OnConnected = enable ? OnMultiplayerConnected : null;
             _multiplayerClient.OnPlayersChanged = enable ? OnMultiplayerPlayersChanged : null;
-            _multiplayerClient.OnGameCharactersChanged = enable ? OnMultiplayerGameCharactersChanged : null;
+            _multiplayerClient.OnCharactersChanged = enable ? OnMultiplayerCharactersChanged : null;
             _multiplayerClient.OnCharacterOwnerChanged = enable ? OnMultiplayerCharacterOwnerChanged : null;
             _multiplayerClient.OnNewGameSequenceStarted = enable ? OnMultiplayerNewGameSequenceStarted : null;
         }
@@ -273,9 +273,9 @@ namespace WOTRMultiplayer.UI.Controllers
             });
         }
 
-        private void OnMultiplayerGameCharactersChanged(List<NetworkCharacter> characters)
+        private void OnMultiplayerCharactersChanged(List<NetworkCharacter> characters)
         {
-            Lobby.UpdateCharacters(characters, false);
+            Lobby.UpdateCharacters(characters, isDropdownInteractable: false);
         }
 
         private void OnMultiplayerError()

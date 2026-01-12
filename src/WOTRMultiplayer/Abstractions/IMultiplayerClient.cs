@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using WOTRMultiplayer.Entities;
 
 namespace WOTRMultiplayer.Abstractions
@@ -12,9 +11,7 @@ namespace WOTRMultiplayer.Abstractions
 
         Action OnNetworkError { get; set; }
 
-        Action<List<NetworkCharacter>> OnGameCharactersChanged { get; set; }
-
-        Action<int, int> OnCharacterOwnerChanged { get; set; }
+        Action<NetworkCharacter> OnCharacterOwnerChanged { get; set; }
 
         void OnBeforeTryRollRestRandomEncounter();
     }

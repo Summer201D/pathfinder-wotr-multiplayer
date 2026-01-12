@@ -52,6 +52,8 @@ namespace WOTRMultiplayer.Services
 
         public Action<NetworkLobbyStage, List<NetworkPlayer>> OnPlayersChanged { get; set; }
 
+        public Action<List<NetworkCharacter>> OnCharactersChanged { get; set; }
+
         public Action<bool> OnNewGameSequenceStarted { get; set; }
 
         internal NetworkGame Game { get; set; }
@@ -907,7 +909,7 @@ namespace WOTRMultiplayer.Services
                 };
                 Send(phaseChangedMessage);
                 Game.StartUp.PhaseType = phase.Type;
-                ResetPlayersTracker(Game.StartUp.PlayerReadiness);
+                ResetPlayersTracker(Game.StartUp.ReadyPlayers);
                 Logger.LogInformation("Sending {MessageType}. Type={Type}", nameof(NotifyNewGameSequencePhaseChanged), phaseChangedMessage.Phase.Type);
             }
 
@@ -1451,7 +1453,7 @@ namespace WOTRMultiplayer.Services
 
             if (Game.Leveling.Type == NetworkLevelingType.NewGameSequence)
             {
-                ResetPlayersTracker(Game.StartUp.PlayerReadiness);
+                ResetPlayersTracker(Game.StartUp.ReadyPlayers);
             }
 
             var characterName = GameInteraction.GetUnitCharacterName(Game.Leveling.UnitId);
@@ -1992,9 +1994,9 @@ namespace WOTRMultiplayer.Services
         {
             lock (ActionLock)
             {
-                Game.StartUp.PlayerReadiness.Add(playerId);
+                Game.StartUp.ReadyPlayers.Add(playerId);
 
-                var isEnabled = HasControlOverUI && Game.StartUp.PlayerReadiness.Count >= GetSyncedPlayersCount();
+                var isEnabled = HasControlOverUI && Game.StartUp.ReadyPlayers.Count >= GetSyncedPlayersCount();
                 GameInteraction.UpdateNewGameSequencePhaseControls(isEnabled, newGameSequencePhaseType);
             }
         }
@@ -2155,9 +2157,9 @@ namespace WOTRMultiplayer.Services
                 var localPlayer = GetPlayer(Game.LocalPlayerId);
                 ReadyChanged(localPlayer, true);
 
-                var status = NetworkGameStartUpSyncStatus.Succeed;
-                UpdatePlayerGameStartUpSyncStatus(localPlayer, status);
-                var message = new NotifyPlayerGameStartUpSyncStatusChanged { PlayerId = localPlayer.Id, Status = status.ToString() };
+                var status = NetworkLobbySyncStatus.Succeed;
+                UpdateLobbySyncStatus(localPlayer, status);
+                var message = new NotifyLobbySyncStatusChanged { PlayerId = localPlayer.Id, Status = status.ToString() };
                 Send(message);
 
                 Game.Id = GameInteraction.LoadGameFromMainMenu(Game.StartUp.SavePath);
@@ -2337,6 +2339,14 @@ namespace WOTRMultiplayer.Services
             return Game.Characters.FirstOrDefault(c => string.Equals(c.UnitId, realCharacterId, StringComparison.OrdinalIgnoreCase));
         }
 
+        protected NetworkCharacter FindCharacter(NetworkCharacter character)
+        {
+            var actualCharacter = Game.Characters.FirstOrDefault(x => !string.IsNullOrEmpty(x.UnitId) && string.Equals(x.UnitId, character.UnitId, StringComparison.OrdinalIgnoreCase)
+                || string.Equals(x.Name, character.Name, StringComparison.OrdinalIgnoreCase));
+
+            return actualCharacter;
+        }
+
         protected NetworkPlayer GetPlayer(long playerId)
         {
             lock (ActionLock)
@@ -2360,25 +2370,36 @@ namespace WOTRMultiplayer.Services
         {
         }
 
-        protected void UpdatePlayerGameStartUpSyncStatus(long playerId, NetworkGameStartUpSyncStatus status)
+        protected void UpdateInGameCharacterOwnershipChange(NetworkCharacter networkCharacter)
+        {
+            if (Game.Stage != NetworkLobbyStage.Playing)
+            {
+                return;
+            }
+
+            GameInteraction.ReselectSelectedCharacters();
+            PlayerNotification.AddCombatText(WellKnownKeys.GameNotifications.Session.CharacterOwnerChanged.Key, networkCharacter.Owner.Name, networkCharacter.Name);
+        }
+
+        protected void UpdateLobbySyncStatus(long playerId, NetworkLobbySyncStatus syncStatus)
         {
             var player = GetPlayer(playerId);
             if (player == null)
             {
-                Logger.LogWarning("Unable to update player game startup sync status for missing player. PlayerId={PlayerId}", playerId);
+                Logger.LogWarning("Unable to update lobby sync status for missing player. PlayerId={PlayerId}", playerId);
                 return;
             }
 
-            UpdatePlayerGameStartUpSyncStatus(player, status);
+            UpdateLobbySyncStatus(player, syncStatus);
         }
 
-        protected void UpdatePlayerGameStartUpSyncStatus(NetworkPlayer player, NetworkGameStartUpSyncStatus status)
+        protected void UpdateLobbySyncStatus(NetworkPlayer player, NetworkLobbySyncStatus syncStatus)
         {
-            player.StartUpSyncStatus = status;
+            player.LobbySyncStatus = syncStatus;
             InvokeOnPlayersChanged();
         }
 
-        protected void UpdatePlayerReadyStatus(long playerId, bool isReady)
+        protected void UpdateReadyStatus(long playerId, bool isReady)
         {
             lock (ActionLock)
             {
@@ -2422,7 +2443,7 @@ namespace WOTRMultiplayer.Services
         {
             lock (ActionLock)
             {
-                return Game.Players.Count(x => x.StartUpSyncStatus == NetworkGameStartUpSyncStatus.Succeed);
+                return Game.Players.Count(x => x.LobbySyncStatus == NetworkLobbySyncStatus.Succeed);
             }
         }
 
@@ -2487,7 +2508,7 @@ namespace WOTRMultiplayer.Services
                     foreach (var player in Game.Players)
                     {
                         player.IsReady = false;
-                        UpdatePlayerGameStartUpSyncStatus(player, NetworkGameStartUpSyncStatus.None);
+                        UpdateLobbySyncStatus(player, NetworkLobbySyncStatus.None);
                     }
 
                     if (CanMakeNewGameSequenceDecisions())
@@ -2497,12 +2518,12 @@ namespace WOTRMultiplayer.Services
                         Send(message);
                     }
 
-                    ResetPlayersTracker(Game.StartUp.PlayerReadiness);
+                    ResetPlayersTracker(Game.StartUp.ReadyPlayers);
                     OnNewGameSequenceStarted?.Invoke(false);
                 },
                 onStart: () =>
                 {
-                    ResetPlayersTracker(Game.StartUp.PlayerReadiness);
+                    ResetPlayersTracker(Game.StartUp.ReadyPlayers);
 
                     OnForceLevelingUI(mainCharacterId, NetworkLevelingType.NewGameSequence);
                     Logger.LogInformation("New game sequence has been finished");
@@ -2663,7 +2684,7 @@ namespace WOTRMultiplayer.Services
         private void OnNotifyPlayerReadyStatusChanged(long receivedFrom, NotifyPlayerReadyStatusChanged readyStatusChanged)
         {
             Logger.LogInformation("Received {MessageType}. ReceivedFrom={ReceivedFrom}, PlayerId={PlayerId}, IsReady={IsReady}", nameof(NotifyPlayerReadyStatusChanged), receivedFrom, readyStatusChanged.PlayerId, readyStatusChanged.IsReady);
-            UpdatePlayerReadyStatus(readyStatusChanged.PlayerId, readyStatusChanged.IsReady);
+            UpdateReadyStatus(readyStatusChanged.PlayerId, readyStatusChanged.IsReady);
 
             OnAfterNetworkMessageHandled(receivedFrom, readyStatusChanged);
         }

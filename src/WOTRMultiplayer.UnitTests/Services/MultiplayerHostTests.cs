@@ -313,8 +313,8 @@ namespace WOTRMultiplayer.UnitTests.Services
             {
                 LocalPlayerId = NetworkingConsts.HostPlayerId,
                 Players = [
-                    new NetworkPlayer { Id = NetworkingConsts.HostPlayerId, StartUpSyncStatus = NetworkGameStartUpSyncStatus.Succeed },
-                    new NetworkPlayer { Id = 123123, StartUpSyncStatus = NetworkGameStartUpSyncStatus.Succeed },
+                    new NetworkPlayer { Id = NetworkingConsts.HostPlayerId, LobbySyncStatus = NetworkLobbySyncStatus.Succeed },
+                    new NetworkPlayer { Id = 123123, LobbySyncStatus = NetworkLobbySyncStatus.Succeed },
                     ]
             };
 
