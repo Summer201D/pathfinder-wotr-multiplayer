@@ -314,7 +314,7 @@ namespace WOTRMultiplayer.UI.Controllers
             layoutElement.preferredHeight = size;
             layoutElement.preferredWidth = size;
             var image = iconObject.AddComponent<Image>();
-            var sprite = _resourceProvider.GetSprite(WellKnownSpriteBundles.UI, iconName);
+            var sprite = _resourceProvider.GetSprite(WellKnownResourceBundles.UI, iconName);
             image.sprite = sprite;
             if (template != null)
             {
@@ -411,7 +411,7 @@ namespace WOTRMultiplayer.UI.Controllers
 
         private Sprite GetPortraitSprite(string portraitName)
         {
-            var portrait = _resourceProvider.GetSprite(WellKnownSpriteBundles.Portraits, portraitName) ?? _resourceProvider.GetSprite(WellKnownSpriteBundles.Portraits, PlaceholderPortrait);
+            var portrait = _resourceProvider.GetSprite(WellKnownResourceBundles.Portraits, portraitName) ?? _resourceProvider.GetSprite(WellKnownResourceBundles.Portraits, PlaceholderPortrait);
             if (portrait == null)
             {
                 _logger.LogWarning("Unable to load character portrait. PortraitName={PortraitName}", portraitName);

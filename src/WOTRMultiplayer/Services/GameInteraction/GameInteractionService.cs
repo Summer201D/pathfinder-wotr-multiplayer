@@ -2422,7 +2422,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
             {
                 marker = WidgetFactory.GetWidget(PointMarkerController.Instance.MarkerPrefab, true, false);
                 marker.gameObject.name = MarkerObjectName;
-                var markerSprite = _resourceProvider.GetSprite(WellKnownSpriteBundles.UI, "UI_QuestNotification_IconNew");
+                var markerSprite = _resourceProvider.GetSprite(WellKnownResourceBundles.UI, "UI_QuestNotification_IconNew");
                 marker.gameObject.AddComponent<WorldPositionPingOutsideOfCameraBehaviour>()
                     .WithPortrait(markerSprite);
             }

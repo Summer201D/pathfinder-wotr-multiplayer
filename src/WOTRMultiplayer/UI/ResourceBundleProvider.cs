@@ -46,14 +46,14 @@ namespace WOTRMultiplayer.UI
             if (_sprites == null)
             {
                 _sprites = new ConcurrentDictionary<string, ConcurrentDictionary<string, UnityEngine.Sprite>>();
-                _sprites.TryAdd(WellKnownSpriteBundles.Portraits, LoadBundle<UnityEngine.Sprite>(WellKnownSpriteBundles.Portraits));
-                _sprites.TryAdd(WellKnownSpriteBundles.UI, LoadBundle<UnityEngine.Sprite>(WellKnownSpriteBundles.UI));
+                _sprites.TryAdd(WellKnownResourceBundles.Portraits, LoadBundle<UnityEngine.Sprite>(WellKnownResourceBundles.Portraits));
+                _sprites.TryAdd(WellKnownResourceBundles.UI, LoadBundle<UnityEngine.Sprite>(WellKnownResourceBundles.UI));
             }
 
             if (_textures == null)
             {
                 _textures = new ConcurrentDictionary<string, ConcurrentDictionary<string, UnityEngine.Texture2D>>();
-                _textures.TryAdd(WellKnownSpriteBundles.UI, LoadBundle<UnityEngine.Texture2D>(WellKnownSpriteBundles.UI));
+                _textures.TryAdd(WellKnownResourceBundles.UI, LoadBundle<UnityEngine.Texture2D>(WellKnownResourceBundles.UI));
             }
         }
 
