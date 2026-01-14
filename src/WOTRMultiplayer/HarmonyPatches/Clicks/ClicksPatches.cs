@@ -60,7 +60,7 @@ namespace WOTRMultiplayer.HarmonyPatches.Clicks
         /// </summary>
         [HarmonyPatch(typeof(ClickGroundHandler), nameof(ClickGroundHandler.OnClick), [typeof(GameObject), typeof(Vector3), typeof(int), typeof(bool), typeof(bool), typeof(bool)])]
         [HarmonyPostfix]
-        public static void ClickGroundHandler_OnClick_Postfix(ClickUnitHandler __instance, bool __result, GameObject gameObject, Vector3 worldPosition, int button, bool simulate, bool muteEvents, bool IsTMBClick)
+        public static void ClickGroundHandler_OnClick_Postfix(bool __result, GameObject gameObject, Vector3 worldPosition, int button, bool simulate, bool muteEvents, bool IsTMBClick)
         {
             if (!Main.Multiplayer.IsActive || simulate || !__result)
             {
@@ -81,7 +81,7 @@ namespace WOTRMultiplayer.HarmonyPatches.Clicks
 
         [HarmonyPatch(typeof(ClickUnitHandler), nameof(ClickUnitHandler.OnClick))]
         [HarmonyPostfix]
-        public static void ClickUnitHandler_OnClick_Postfix(ClickUnitHandler __instance, bool __result, GameObject gameObject, Vector3 worldPosition, int button, bool simulate, bool muteEvents, bool IsTMBClick)
+        public static void ClickUnitHandler_OnClick_Postfix(bool __result, GameObject gameObject, Vector3 worldPosition, int button, bool simulate, bool muteEvents, bool IsTMBClick)
         {
             if (!Main.Multiplayer.IsActive || simulate || !__result)
             {
@@ -102,7 +102,7 @@ namespace WOTRMultiplayer.HarmonyPatches.Clicks
 
         [HarmonyPatch(typeof(ClickMapObjectHandler), nameof(ClickMapObjectHandler.OnClick), [typeof(GameObject), typeof(Vector3), typeof(int), typeof(bool), typeof(bool), typeof(bool)])]
         [HarmonyPostfix]
-        public static void ClickMapObjectHandler_OnClick_Postfix(ClickMapObjectHandler __instance, bool __result, GameObject gameObject, Vector3 worldPosition, int button, bool simulate, bool muteEvents, bool IsTMBClick)
+        public static void ClickMapObjectHandler_OnClick_Postfix(bool __result, GameObject gameObject, Vector3 worldPosition, int button, bool simulate, bool muteEvents, bool IsTMBClick)
         {
             if (!Main.Multiplayer.IsActive || simulate || !__result || gameObject != null && LockpickVM.NeedLockpick(gameObject.GetComponent<MapObjectView>()))
             {
@@ -127,7 +127,7 @@ namespace WOTRMultiplayer.HarmonyPatches.Clicks
             var targetUnitId = gameObject?.GetComponent<UnitEntityView>()?.UniqueId;
             var mapObject = gameObject?.GetComponent<MapObjectView>();
             var selectedUnit = Game.Instance.SelectionCharacter?.FirstSelectedUnit?.View;
-            var path = selectedUnit == null ? null : PathVisualizer.Instance.CurrentPathForUnit(selectedUnit);
+            var path = selectedUnit == null ? null : PathVisualizer.Instance?.CurrentPathForUnit(selectedUnit);
 
             return new NetworkClick
             {

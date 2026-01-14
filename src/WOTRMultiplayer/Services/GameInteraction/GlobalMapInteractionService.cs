@@ -127,7 +127,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
                 messageBoxView.m_AcceptButton.Interactable = !messageBoxView.ViewModel.IsCurrentLocation || isInteractable;
 
                 var buttonText = messageBoxView.m_AcceptButton.GetComponentInChildren<TextMeshProUGUI>();
-                if (messageBoxView.ViewModel.IsCurrentLocation)
+                if (messageBoxView.ViewModel.IsCurrentLocation || _uiAccessor.GlobalMapPCView.ViewModel.ArmyMode.Value)
                 {
                     _uiSyncCountersService.UpdateButtonTextCounter(buttonText, readyPlayersCount, totalPlayersCount);
                 }

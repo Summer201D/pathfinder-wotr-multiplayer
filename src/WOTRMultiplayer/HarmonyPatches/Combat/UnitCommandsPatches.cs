@@ -122,7 +122,7 @@ namespace WOTRMultiplayer.HarmonyPatches.Combat
 
         private static void OnAbilityUse(UnitUseAbility command)
         {
-            var path = PathVisualizer.Instance.CurrentPathForUnit(command.Executor.View);
+            var path = PathVisualizer.Instance?.CurrentPathForUnit(command.Executor.View);
             var networkPath = path?.vectorPath.Select(v => new NetworkVector3(v.x, v.y, v.z)).ToList();
             var networkAbility = new NetworkAbility
             {
@@ -142,7 +142,7 @@ namespace WOTRMultiplayer.HarmonyPatches.Combat
 
         private static void OnUnitAttack(UnitAttack command, bool forceMount)
         {
-            var path = PathVisualizer.Instance.CurrentPathForUnit(command.Executor.View);
+            var path = PathVisualizer.Instance?.CurrentPathForUnit(command.Executor.View);
             var networkPath = path?.vectorPath.Select(v => new NetworkVector3(v.x, v.y, v.z)).ToList();
             var executor = forceMount ? command.Executor.RiderPart.SaddledUnit.UniqueId : command.Executor.UniqueId;
             var networkAbility = new NetworkUnitAttack

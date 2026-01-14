@@ -20,6 +20,20 @@ namespace WOTRMultiplayer.HarmonyPatches.GlobalMap
     [HarmonyPatch]
     public class GlobalMapMovementPatches
     {
+        [HarmonyPatch(typeof(GlobalMapArmyState), nameof(GlobalMapArmyState.StartTravel))]
+        [HarmonyPrefix]
+        public static void GlobalMapArmyState_StartTravel_Prefix(GlobalMapTravelData travelData)
+        {
+            if (!Main.Multiplayer.IsActive)
+            {
+                return;
+            }
+
+            var destination = GetNetworkGlobalMapLocation(travelData.To.Location);
+
+            Main.Multiplayer.OnGlobalMapStartTravel(destination);
+        }
+
         [HarmonyPatch(typeof(GlobalMapPlayerState), nameof(GlobalMapPlayerState.StartTravel))]
         [HarmonyPrefix]
         public static void GlobalMapPlayerState_StartTravel_Prefix(GlobalMapTravelData travelData)
@@ -29,7 +43,6 @@ namespace WOTRMultiplayer.HarmonyPatches.GlobalMap
                 return;
             }
 
-            // not sure if location is always available during act2+ travels due to navigation arrows
             var destination = GetNetworkGlobalMapLocation(travelData.To.Location);
 
             Main.Multiplayer.OnGlobalMapStartTravel(destination);

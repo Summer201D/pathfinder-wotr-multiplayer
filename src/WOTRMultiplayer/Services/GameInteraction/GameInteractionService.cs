@@ -684,8 +684,11 @@ namespace WOTRMultiplayer.Services.GameInteraction
                     {
                         var movementPath = networkAbility.VectorPath.Select(v => new Vector3(v.X, v.Y, v.Z)).ToList();
                         command.ForcedPath = new ForcedPath(movementPath);
-                        PathVisualizer.Instance.m_CurrentPath = command.ForcedPath;
-                        PathVisualizer.Instance.m_CurrentPath.Claim(PathVisualizer.Instance);
+                        if (PathVisualizer.Instance != null)
+                        {
+                            PathVisualizer.Instance.m_CurrentPath = command.ForcedPath;
+                            PathVisualizer.Instance.m_CurrentPath.Claim(PathVisualizer.Instance);
+                        }
                     }
 
                     _logger.LogInformation("Running ability use command. Caster={Caster}, AbilityId={AbilityId}, AbilityName={AbilityName}, ForcedPath={ForcedPath}", caster.UniqueId, abilityData.UniqueId, abilityData.NameForAcronym, command.ForcedPath?.vectorPath?.Count);
@@ -3317,7 +3320,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
                         _logger.LogInformation("Movement limit has been updated. UnitId={UnitId}, Limit={Limit}", Game.Instance.TurnBasedCombatController.CurrentTurn.Rider.UniqueId, limit);
                     }
 
-                    if (click.VectorPath != null && click.VectorPath.Count > 0)
+                    if (click.VectorPath != null && click.VectorPath.Count > 0 && PathVisualizer.Instance != null)
                     {
                         var movementPath = click.VectorPath.Select(v => new Vector3(v.X, v.Y, v.Z)).ToList();
                         PathVisualizer.Instance.m_CurrentPath = new ForcedPath(movementPath);

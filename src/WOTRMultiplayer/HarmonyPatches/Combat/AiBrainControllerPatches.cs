@@ -24,6 +24,7 @@ namespace WOTRMultiplayer.HarmonyPatches.Combat
                 return;
             }
 
+            var calculatedBestPath = context.BestPath?.vectorPath.Select(v => new NetworkVector3(v.x, v.y, v.z)) ?? [];
             var action = new NetworkAIAction
             {
                 UnitId = unit.UniqueId,
@@ -31,7 +32,7 @@ namespace WOTRMultiplayer.HarmonyPatches.Combat
                 ActionBlueprintId = bestActionResult?.Blueprint.AssetGuid.ToString(),
                 ActionType = bestActionResult?.GetType().Name,
                 IsAutoUseAbility = isAutoUseAbility,
-                BestPath = [.. context.BestPath.vectorPath.Select(v => new NetworkVector3(v.x, v.y, v.z))],
+                BestPath = [.. calculatedBestPath],
                 BestEnableFiveFootStep = context.BestEnableFiveFootStep
             };
 
@@ -60,8 +61,8 @@ namespace WOTRMultiplayer.HarmonyPatches.Combat
             {
                 context.BestEnableFiveFootStep = possibleOverride.BestEnableFiveFootStep;
 
-                var bestPath = possibleOverride.BestPath.Select(v => new Vector3(v.X, v.Y, v.Z)).ToList();
-                context.BestPath = new ForcedPath(bestPath);
+                var bestPathOverride = possibleOverride.BestPath.Select(v => new Vector3(v.X, v.Y, v.Z)).ToList();
+                context.BestPath = new ForcedPath(bestPathOverride);
             }
         }
 
