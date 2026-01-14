@@ -18,6 +18,7 @@ using Kingmaker.UI.ServiceWindow.Credits;
 using Kingmaker.UI.SettingsUI;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Owlcat.Runtime.Core.Utils;
 using Owlcat.Runtime.UI.Controls.Button;
 using Owlcat.Runtime.UI.MVVM;
 using Owlcat.Runtime.UI.VirtualListSystem;
@@ -40,6 +41,7 @@ using WOTRMultiplayer.UI.Settings;
 using WOTRMultiplayer.UI.Settings.Entities;
 using WOTRMultiplayer.UI.Windows;
 using WOTRMultiplayer.UnityBehaviours;
+using WOTRMultiplayer.UnityBehaviours.Input;
 
 namespace WOTRMultiplayer.UI
 {
@@ -185,6 +187,7 @@ namespace WOTRMultiplayer.UI
         public GameObject CreateInput(Transform parent)
         {
             var inputObject = UnityEngine.Object.Instantiate(_inputPrefab, parent);
+            inputObject.EnsureComponent<InputFocusFixerBehaviour>();
             return inputObject;
         }
 
