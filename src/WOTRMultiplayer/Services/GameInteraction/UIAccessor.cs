@@ -13,6 +13,7 @@ using Kingmaker.UI.MVVM._PCView.MainMenu;
 using Kingmaker.UI.MVVM._PCView.NewGame;
 using Kingmaker.UI.MVVM._PCView.Party;
 using Kingmaker.UI.MVVM._PCView.Rest;
+using Kingmaker.UI.MVVM._VM.ServiceWindows;
 using Kingmaker.UI.MVVM._VM.ServiceWindows.Inventory;
 using Kingmaker.UI.MVVM._VM.ServiceWindows.Spellbook.MemorizingPanel;
 using Kingmaker.UI.MVVM._VM.Vendor;
@@ -24,6 +25,8 @@ namespace WOTRMultiplayer.Services.GameInteraction
     {
         private InGamePCView InGamePCView => Game.Instance.RootUiContext.m_UIView as InGamePCView;
         private MainMenuPCView MainMenuPCView => Game.Instance.RootUiContext.m_UIView as MainMenuPCView;
+
+        public ServiceWindowsVM ServiceWindowsVM => (Game.Instance.RootUiContext.InGameVM?.StaticPartVM?.ServiceWindowsVM ?? Game.Instance.RootUiContext?.GlobalMapVM?.ServiceWindowsVM);
 
         public CommonPCView CommonPCView => (Game.Instance.RootUiContext.m_CommonView as CommonPCView);
 
@@ -53,7 +56,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
 
         public RespecWindowPCView RespecView => (InGamePCView?.m_StaticPartPCView?.m_CharGenContextPCView ?? GlobalMapPCView?.m_CharGenContextPCView)?.m_RespecWindowPCView;
 
-        public InventoryVM InventoryVM => (Game.Instance.RootUiContext?.InGameVM?.StaticPartVM?.ServiceWindowsVM ?? Game.Instance.RootUiContext?.GlobalMapVM?.ServiceWindowsVM)?.InventoryVM?.Value;
+        public InventoryVM InventoryVM => ServiceWindowsVM?.InventoryVM?.Value;
 
         public CombatLogPCView CombatLogPCView => InGamePCView?.m_StaticPartPCView?.m_CombatLogPCView ?? GlobalMapPCView?.m_CombatLogPCView;
 

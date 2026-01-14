@@ -360,8 +360,28 @@ namespace WOTRMultiplayer.Services.GameInteraction
         public string QuickLoadGame(string savePath)
         {
             var save = LoadSave(savePath);
+            if (save == null)
+            {
+                _logger.LogError("Unable to quick load save. Path={Path}", savePath);
+                return null;
+            }
+
             _mainThreadAccessor.Post(() =>
             {
+                var currentFullScreenUI = _uiAccessor.ServiceWindowsVM?.m_FullScreenUIType ?? Kingmaker.UI.FullScreenUITypes.FullScreenUIType.Unknown;
+                switch (currentFullScreenUI)
+                {
+                    case Kingmaker.UI.FullScreenUITypes.FullScreenUIType.SaveLoad:
+                        _uiAccessor.CommonPCView?.m_SaveLoadPCView?.ViewModel?.OnClose();
+                        break;
+                    case Kingmaker.UI.FullScreenUITypes.FullScreenUIType.Settings:
+                        _uiAccessor.CommonPCView?.m_SettingsPCView?.ViewModel?.m_CloseAction?.Invoke();
+                        break;
+                    case Kingmaker.UI.FullScreenUITypes.FullScreenUIType.CharacterScreen:
+                        _uiAccessor.CharGenView?.ViewModel.m_CloseAction?.Invoke();
+                        break;
+                }
+
                 Game.Instance.LoadGame(save);
             });
             return save.GameId;
@@ -2423,12 +2443,15 @@ namespace WOTRMultiplayer.Services.GameInteraction
                 marker = WidgetFactory.GetWidget(PointMarkerController.Instance.MarkerPrefab, true, false);
                 marker.gameObject.name = MarkerObjectName;
                 var markerSprite = _resourceProvider.GetSprite(WellKnownResourceBundles.UI, "UI_QuestNotification_IconNew");
-                marker.gameObject.AddComponent<WorldPositionPingOutsideOfCameraBehaviour>()
+                marker.gameObject
+                    .AddComponent<WorldPositionPingOutsideOfCameraBehaviour>()
                     .WithPortrait(markerSprite);
             }
 
             var outsideOfCameraDuration = TimeSpan.FromMilliseconds(markerDuration.TotalMilliseconds * 2);
-            marker.gameObject.GetComponent<WorldPositionPingOutsideOfCameraBehaviour>().Begin(outsideOfCameraDuration, position);
+            marker.gameObject
+                .GetComponent<WorldPositionPingOutsideOfCameraBehaviour>()
+                .Begin(outsideOfCameraDuration, position);
         }
 
         private NetworkPing GetPingedGuiElement()

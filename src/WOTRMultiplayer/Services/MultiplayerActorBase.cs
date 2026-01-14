@@ -2145,8 +2145,7 @@ namespace WOTRMultiplayer.Services
             Game.ForcedPause = null;
             Game.Dialog = null;
 
-            // We need to use different save load method if someone joined mid game
-            // I assume game just need to load more resources or whatever if you are not in the game already
+            // it's important to use different loading method for players who joined mid-game
             if (Game.Stage == NetworkLobbyStage.Playing)
             {
                 Game.Id = GameInteraction.QuickLoadGame(Game.StartUp.SavePath);
@@ -2190,6 +2189,16 @@ namespace WOTRMultiplayer.Services
             Game.Leveling = null;
             DiceRollStorage.Reset();
             _valueGenerator.ResetSeedGenerators(SeedLifetime.Area, SeedLifetime.Combat);
+
+            ResetPlayersTracker(Game.PlayersInGroupChanger);
+            ResetPlayersTracker(Game.PlayersInSkipTime);
+            ResetPlayersTracker(Game.PlayersInGlobalMapLocationMessage);
+            ResetPlayersTracker(Game.PlayersInGlobalMapIngredientCollection);
+            ResetPlayersTracker(Game.PlayersInGlobalMapEncounterMessage);
+            ResetPlayersTracker(Game.PlayersInZoneLoot);
+            ResetPlayersTracker(Game.PlayersInDialogPopup);
+            ResetPlayersTracker(Game.PlayersInCharacterSelectionWindow);
+            ResetPlayersTracker(Game.PlayersInRespecWindow);
         }
 
         protected string StoreSaveGameContent(byte[] content)

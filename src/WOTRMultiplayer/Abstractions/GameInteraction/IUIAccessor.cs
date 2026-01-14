@@ -10,6 +10,7 @@ using Kingmaker.UI.MVVM._PCView.Loot;
 using Kingmaker.UI.MVVM._PCView.NewGame;
 using Kingmaker.UI.MVVM._PCView.Party;
 using Kingmaker.UI.MVVM._PCView.Rest;
+using Kingmaker.UI.MVVM._VM.ServiceWindows;
 using Kingmaker.UI.MVVM._VM.ServiceWindows.Inventory;
 using Kingmaker.UI.MVVM._VM.ServiceWindows.Spellbook.MemorizingPanel;
 using Kingmaker.UI.MVVM._VM.Vendor;
@@ -23,6 +24,8 @@ namespace WOTRMultiplayer.Abstractions.GameInteraction
         GlobalMapPCView GlobalMapPCView { get; }
 
         CommonPCView CommonPCView { get; }
+
+        ServiceWindowsVM ServiceWindowsVM { get; }
 
         NewGamePCView NewGamePCView { get; }
 

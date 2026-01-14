@@ -8,6 +8,7 @@ using Kingmaker;
 using Kingmaker.Blueprints.Area;
 using Kingmaker.EntitySystem.Persistence;
 using Kingmaker.GameModes;
+using Kingmaker.UI.MVVM;
 using Microsoft.Extensions.Logging;
 
 namespace WOTRMultiplayer.HarmonyPatches.GameInstance
@@ -19,7 +20,7 @@ namespace WOTRMultiplayer.HarmonyPatches.GameInstance
         [HarmonyPrefix]
         public static void Game_LoadGame_Prefix(SaveInfo saveInfo)
         {
-            if (!Main.Multiplayer.IsActive || !Game.Instance.Player.IsInGame)
+            if (!Main.Multiplayer.IsActive || !Game.Instance.Player.IsInGame || RootUIContext.Instance.InGameVM?.StaticPartVM?.CharGenContextVM?.CharGenVM?.Value != null || !saveInfo.CheckDlcAvailable())
             {
                 return;
             }
