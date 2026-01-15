@@ -640,6 +640,38 @@ namespace WOTRMultiplayer.Services
             Send(message);
         }
 
+        public void OnGlobalMapTravelerModeChanged(NetworkGlobalMapTravelerMode travelerMode)
+        {
+            Game.GlobalMapTravelerMode = travelerMode;
+
+            var message = new NotifyGlobalMapTravelerModeChanged
+            {
+                TravelerMode = travelerMode.ToString()
+            };
+            Logger.LogInformation("Sending {MessageType}. TravelerMode={TravelerMode}", nameof(NotifyGlobalMapTravelerModeChanged), message.TravelerMode);
+            Send(message);
+        }
+
+        public void OnGlobalMapSelectedArmyChanged(string armyId)
+        {
+            var message = new NotifyGlobalMapSelectedArmyChanged
+            {
+                ArmyId = armyId
+            };
+            Logger.LogInformation("Sending {MessageType}. ArmyId={ArmyId}", nameof(NotifyGlobalMapSelectedArmyChanged), message.ArmyId);
+            Send(message);
+        }
+
+        public void OnGlobalMapAutoCrusadeCombatChanged(bool isEnabled)
+        {
+            var message = new NotifyGlobalMapAutoCrusadeCombatChanged
+            {
+                IsEnabled = isEnabled
+            };
+            Logger.LogInformation("Sending {MessageType}. IsEnabled={IsEnabled}", nameof(NotifyGlobalMapAutoCrusadeCombatChanged), message.IsEnabled);
+            Send(message);
+        }
+
         public void OnSkipTimeClosed()
         {
             ResetPlayersTracker(Game.PlayersInSkipTime);
@@ -668,13 +700,15 @@ namespace WOTRMultiplayer.Services
 
         public bool OnGlobalMapSelectLocation(NetworkGlobalMapLocation globalMapLocation)
         {
-            if (Game.ForcedPause != null)
+            Game.PlayersInGlobalMapMode.TryGetValue(Game.GlobalMapTravelerMode, out var readyPlayers);
+
+            var canSelect = Game.ForcedPause == null && readyPlayers.Count >= GetSyncedPlayersCount();
+            if (!canSelect)
             {
-                ShowForcedPauseReason();
-                return false;
+                PlayerNotification.ShowWarningNotification(WellKnownKeys.GameNotifications.ForcedPause.AreaLoading.Key);
             }
 
-            return true;
+            return canSelect;
         }
 
         public void OnGlobalMapContinueTravel(NetworkGlobalMapState globalMapState)

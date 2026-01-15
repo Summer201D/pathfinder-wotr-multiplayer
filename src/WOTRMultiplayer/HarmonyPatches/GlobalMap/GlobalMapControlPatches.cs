@@ -108,11 +108,20 @@ namespace WOTRMultiplayer.HarmonyPatches.GlobalMap
                 return;
             }
 
+            var travelerMode = GetTravelerMode(state);
+            Main.Multiplayer.OnGlobalMapTravelerModeChanged(travelerMode);
+        }
 
-            // OnGlobalMapArmyModeChanged - Player=false Army=true
-            // CurrentArmyMode: Player, Army
-            var armyMode = GetTravelerMode(state);
-            Main.GetLogger<GlobalMapControlPatches>().LogWarning("GlobalMapToolbarVM_ChangeArmyMode_Prefix. ArmyMode={ArmyMode}", armyMode);
+        [HarmonyPatch(typeof(GlobalMapToolbarSettingsPCView), nameof(GlobalMapToolbarSettingsPCView.BindViewImplementation))]
+        [HarmonyPostfix]
+        public static void GlobalMapToolbarSettingsPCView_BindViewImplementation_Postfix(GlobalMapToolbarSettingsPCView __instance)
+        {
+            if (!Main.Multiplayer.IsActive)
+            {
+                return;
+            }
+
+            __instance.m_AutoTacticalCombat.m_Button.Interactable = Main.Multiplayer.CanNavigateOnGlobalMap();
         }
 
         [HarmonyPatch(typeof(GlobalMapToolbarSettingsVM), nameof(GlobalMapToolbarSettingsVM.SwitchAutoTacticalCombat))]
@@ -124,8 +133,8 @@ namespace WOTRMultiplayer.HarmonyPatches.GlobalMap
                 return;
             }
 
-            // OnGlobalMapAutoCrusadeCombatChanged - enforce always off?
-            Main.GetLogger<GlobalMapControlPatches>().LogWarning("GlobalMapToolbarSettingsVM_SwitchAutoTacticalCombat_Prefix. Value={Value}", __instance.UISettings.AutoTacticalCombat);
+            var isEnabled = __instance.UISettings.AutoTacticalCombat;
+            Main.Multiplayer.OnGlobalMapAutoCrusadeCombatChanged(isEnabled);
         }
 
         [HarmonyPatch(typeof(GlobalMapCrusadeArmyVM), nameof(GlobalMapCrusadeArmyVM.OnSelectClick))]
@@ -137,8 +146,8 @@ namespace WOTRMultiplayer.HarmonyPatches.GlobalMap
                 return;
             }
 
-            // OnGlobalMapSelectedArmyChanged(armyId) - force ArmyMode.Army ?
-            Main.GetLogger<GlobalMapControlPatches>().LogWarning("GlobalMapCrusadeArmyVM_OnSelectClick_Prefix. ArmyId={ArmyId}", __instance.Army?.Id);
+            var armyId = __instance.Army?.Id;
+            Main.Multiplayer.OnGlobalMapSelectedArmyChanged(armyId);
         }
 
         private static void OnArmyPawnClicked(GlobalMapArmyPawn armyPawn)
@@ -148,8 +157,8 @@ namespace WOTRMultiplayer.HarmonyPatches.GlobalMap
                 return;
             }
 
-            // OnGlobalMapSelectedArmyChanged(armyId)  - force ArmyMode.Army ?
-            Main.GetLogger<GlobalMapControlPatches>().LogWarning("OnArmyPawnClicked. ArmyId={ArmyId}", armyPawn.State.Id);
+            var armyId = armyPawn.State.Id;
+            Main.Multiplayer.OnGlobalMapSelectedArmyChanged(armyId);
         }
 
         private static void OnPlayerPawnClicked()
@@ -159,8 +168,7 @@ namespace WOTRMultiplayer.HarmonyPatches.GlobalMap
                 return;
             }
 
-            // OnGlobalMapSelectedArmyChanged(null)  - force ArmyMode.Player ?
-            Main.GetLogger<GlobalMapControlPatches>().LogWarning("OnPlayerPawnClicked");
+            Main.Multiplayer.OnGlobalMapSelectedArmyChanged(null);
         }
 
         private static NetworkGlobalMapTravelerMode GetTravelerMode(bool state)

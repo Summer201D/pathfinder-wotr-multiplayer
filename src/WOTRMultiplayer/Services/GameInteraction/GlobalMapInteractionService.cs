@@ -377,6 +377,63 @@ namespace WOTRMultiplayer.Services.GameInteraction
             });
         }
 
+        public void SetSelectedArmy(string armyId)
+        {
+            _mainThreadAccessor.Post(() =>
+            {
+                if (string.IsNullOrEmpty(armyId))
+                {
+                    Game.Instance.GlobalMapController.SetSelectedArmy(null);
+                    return;
+                }
+
+                var army = _gameStateLookupService.GetGlobalMapArmy(armyId);
+                if (army == null)
+                {
+                    _logger.LogError("Unable to find army. ArmyId={ArmyId}", armyId);
+                    return;
+                }
+
+                Game.Instance.GlobalMapController.SetSelectedArmy(army);
+                _logger.LogInformation("Selected army has been updated. ArmyId={ArmyId}", armyId);
+            });
+        }
+
+        public void ChangeArmyMode(NetworkGlobalMapTravelerMode travelerMode)
+        {
+            _mainThreadAccessor.Post(() =>
+            {
+                var viewModel = _uiAccessor.GlobalMapPCView?.m_GlobalMapToolbarPCView?.ViewModel;
+                if (viewModel == null)
+                {
+                    _logger.LogError("Unable to change army mode due to missing view model. TravelerMode={TravelerMode}", travelerMode);
+                    return;
+                }
+
+                viewModel.ArmyMode.Value = travelerMode == NetworkGlobalMapTravelerMode.Army;
+                _logger.LogInformation("Army mode has been changed. IsArmyMode={IsArmyMode}, TravelerMode={TravelerMode}", viewModel.ArmyMode.Value, travelerMode);
+            });
+        }
+
+        public void SetAutoCrusadeCombat(bool isEnabled)
+        {
+            _mainThreadAccessor.Post(() =>
+            {
+                var settingsView = _uiAccessor.GlobalMapPCView?.m_GlobalMapToolbarPCView?.m_SettingsView;
+                // settings are not opened -> update UI settings directly
+                if (settingsView?.ViewModel == null)
+                {
+                    Game.Instance.Player.UISettings.AutoTacticalCombat = isEnabled;
+                    _logger.LogInformation("Auto crusade combat setting has been updated directly. IsEnabled={IsEnabled}", isEnabled);
+                    return;
+                }
+
+                // update via view to make it visible for current player
+                settingsView.m_AutoTacticalCombat.ViewModel.IsOn.Value = isEnabled;
+                _logger.LogInformation("Auto crusade combat setting has been updated via view. IsEnabled={IsEnabled}", isEnabled);
+            });
+        }
+
         private void UpdateGlobalMapState(NetworkGlobalMapState globalMapState)
         {
             // not sure if player position is unavailable while army is selected (act2+), need to check later

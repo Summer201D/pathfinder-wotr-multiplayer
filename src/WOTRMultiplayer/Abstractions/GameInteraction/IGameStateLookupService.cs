@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using Kingmaker.EntitySystem.Entities;
+using Kingmaker.Globalmap.State;
 using Kingmaker.Globalmap.View;
 using WOTRMultiplayer.Entities;
 using WOTRMultiplayer.Entities.GlobalMap;
@@ -19,5 +20,7 @@ namespace WOTRMultiplayer.Abstractions.GameInteraction
         GlobalMapPointView GetGlobalMapPoint(NetworkGlobalMapLocation globalMapLocation);
 
         GlobalMapArmyPawn GetGlobalMapArmyPawn(NetworkGlobalMapArmyPawn globalMapArmyPawn);
+
+        GlobalMapArmyState GetGlobalMapArmy(string id);
     }
 }

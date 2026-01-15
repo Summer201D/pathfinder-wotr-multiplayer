@@ -483,6 +483,9 @@ namespace WOTRMultiplayer.Services
                .On<NotifyGlobalMapMessageBoxClosed>(OnNotifyGlobalMapMessageBoxClosed)
                .On<NotifyGlobalMapIngredientCollectionClosed>(OnNotifyGlobalMapIngredientCollectionClosed)
                .On<NotifyGlobalMapDaySkipped>(OnNotifyGlobalMapDaySkipped)
+               .On<NotifyGlobalMapTravelerModeChanged>(OnNotifyGlobalMapTravelerModeChanged)
+               .On<NotifyGlobalMapSelectedArmyChanged>(OnNotifyGlobalMapSelectedArmyChanged)
+               .On<NotifyGlobalMapAutoCrusadeCombatChanged>(OnNotifyGlobalMapAutoCrusadeCombatChanged)
 
                // zone loot
                .On<NotifyZoneLootCompleted>(OnNotifyZoneLootCompleted)
@@ -491,6 +494,30 @@ namespace WOTRMultiplayer.Services
                // inventory
                .On<NotifyPolymorphicItemCreated>(OnNotifyPolymorphicItemCreated)
                ;
+        }
+
+        private void OnNotifyGlobalMapAutoCrusadeCombatChanged(long receivedFrom, NotifyGlobalMapAutoCrusadeCombatChanged globalMapAutoCrusadeCombatChanged)
+        {
+            Logger.LogInformation("Received {MessageType}. IsEnabled={IsEnabled}", nameof(NotifyGlobalMapAutoCrusadeCombatChanged), globalMapAutoCrusadeCombatChanged.IsEnabled);
+
+            GlobalMapInteraction.SetAutoCrusadeCombat(globalMapAutoCrusadeCombatChanged.IsEnabled);
+        }
+
+        private void OnNotifyGlobalMapSelectedArmyChanged(long receivedFrom, NotifyGlobalMapSelectedArmyChanged globalMapSelectedArmyChanged)
+        {
+            Logger.LogInformation("Received {MessageType}. ArmyId={ArmyId}", nameof(NotifyGlobalMapSelectedArmyChanged), globalMapSelectedArmyChanged.ArmyId);
+
+            GlobalMapInteraction.SetSelectedArmy(globalMapSelectedArmyChanged.ArmyId);
+        }
+
+        private void OnNotifyGlobalMapTravelerModeChanged(long receivedFrom, NotifyGlobalMapTravelerModeChanged globalMapTravelerModeChanged)
+        {
+            Logger.LogInformation("Received {MessageType}. TravelerMode={TravelerMode}", nameof(NotifyGlobalMapTravelerModeChanged), globalMapTravelerModeChanged.TravelerMode);
+
+            var travelerMode = Mapper.Map<NetworkGlobalMapTravelerMode>(globalMapTravelerModeChanged.TravelerMode);
+
+            Game.GlobalMapTravelerMode = travelerMode;
+            GlobalMapInteraction.ChangeArmyMode(travelerMode);
         }
 
         private void OnNotifyGlobalMapDaySkipped(long receivedFrom, NotifyGlobalMapDaySkipped globalMapDaySkipped)

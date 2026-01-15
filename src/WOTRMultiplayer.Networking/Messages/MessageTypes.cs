@@ -166,7 +166,10 @@
             NotifyPingedByPlayer,
             NotifyCutsceneSkipped,
             NotifyGlobalMapDaySkipped,
-            NotifyGlobalMapShown
+            NotifyGlobalMapShown,
+            NotifyGlobalMapSelectedArmyChanged,
+            NotifyGlobalMapTravelerModeChanged,
+            NotifyGlobalMapAutoCrusadeCombatChanged
         }
 
         public enum Request

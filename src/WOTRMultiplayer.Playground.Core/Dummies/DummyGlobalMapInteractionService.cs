@@ -13,6 +13,10 @@ namespace WOTRMultiplayer.Playground.Core.Dummies
         {
         }
 
+        public void ChangeArmyMode(NetworkGlobalMapTravelerMode travelerMode)
+        {
+        }
+
         public void CloseIngredientCollection()
         {
         }
@@ -43,6 +47,14 @@ namespace WOTRMultiplayer.Playground.Core.Dummies
         }
 
         public void RollEncounter(NetworkGlobalMapEncounter encounter)
+        {
+        }
+
+        public void SetAutoCrusadeCombat(bool isEnabled)
+        {
+        }
+
+        public void SetSelectedArmy(string armyId)
         {
         }
 

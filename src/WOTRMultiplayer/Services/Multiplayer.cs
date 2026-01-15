@@ -2511,6 +2511,60 @@ namespace WOTRMultiplayer.Services
             }
         }
 
+        public void OnGlobalMapTravelerModeChanged(NetworkGlobalMapTravelerMode travelerMode)
+        {
+            try
+            {
+                if (_multiplayerActorAccessor.Current == null || _multiplayerActorAccessor.Client.IsActive)
+                {
+                    return;
+                }
+
+                _multiplayerActorAccessor.Host.OnGlobalMapTravelerModeChanged(travelerMode);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while changing global map traveler mode. TravelerMode={TravelerMode}", travelerMode);
+                throw;
+            }
+        }
+
+        public void OnGlobalMapSelectedArmyChanged(string armyId)
+        {
+            try
+            {
+                if (_multiplayerActorAccessor.Current == null || _multiplayerActorAccessor.Client.IsActive)
+                {
+                    return;
+                }
+
+                _multiplayerActorAccessor.Host.OnGlobalMapSelectedArmyChanged(armyId);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while selecting global map army. ArmyId={ArmyId}", armyId);
+                throw;
+            }
+        }
+
+        public void OnGlobalMapAutoCrusadeCombatChanged(bool isEnabled)
+        {
+            try
+            {
+                if (_multiplayerActorAccessor.Current == null || _multiplayerActorAccessor.Client.IsActive)
+                {
+                    return;
+                }
+
+                _multiplayerActorAccessor.Host.OnGlobalMapAutoCrusadeCombatChanged(isEnabled);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while changing global map auto crusade combat. IsEnabled={IsEnabled}", isEnabled);
+                throw;
+            }
+        }
+
         public void OnZoneLootShown()
         {
             try

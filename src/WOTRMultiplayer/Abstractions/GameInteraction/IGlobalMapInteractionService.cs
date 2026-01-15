@@ -37,5 +37,11 @@ namespace WOTRMultiplayer.Abstractions.GameInteraction
         void CloseIngredientCollection();
 
         void SkipDay();
+
+        void SetSelectedArmy(string armyId);
+
+        void ChangeArmyMode(NetworkGlobalMapTravelerMode travelerMode);
+
+        void SetAutoCrusadeCombat(bool isEnabled);
     }
 }

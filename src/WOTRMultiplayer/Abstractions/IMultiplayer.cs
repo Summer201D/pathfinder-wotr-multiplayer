@@ -269,6 +269,12 @@ namespace WOTRMultiplayer.Abstractions
 
         void OnGlobalMapDisposed();
 
+        void OnGlobalMapTravelerModeChanged(NetworkGlobalMapTravelerMode travelerMode);
+
+        void OnGlobalMapSelectedArmyChanged(string armyId);
+
+        void OnGlobalMapAutoCrusadeCombatChanged(bool isEnabled);
+
         int? GetCombatSeed();
 
         int? GetSessionSeed();
