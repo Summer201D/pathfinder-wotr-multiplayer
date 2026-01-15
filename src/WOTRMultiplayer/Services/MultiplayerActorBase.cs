@@ -21,6 +21,7 @@ using WOTRMultiplayer.Entities.Combat;
 using WOTRMultiplayer.Entities.Content;
 using WOTRMultiplayer.Entities.Dialogs;
 using WOTRMultiplayer.Entities.Equipment;
+using WOTRMultiplayer.Entities.GlobalMap;
 using WOTRMultiplayer.Entities.Items;
 using WOTRMultiplayer.Entities.Leveling;
 using WOTRMultiplayer.Entities.MapObjects;
@@ -72,6 +73,8 @@ namespace WOTRMultiplayer.Services
 
         protected IGlobalMapInteractionService GlobalMapInteraction { get; private set; }
 
+        protected IPingInteractionService PingInteraction { get; private set; }
+
         protected IDiceRollStorage DiceRollStorage { get; private set; }
 
         protected IFileSystemService FileSystem { get; private set; }
@@ -95,6 +98,7 @@ namespace WOTRMultiplayer.Services
             IPlayerNotificationService playerNotificationService,
             IDialogInteractionService dialogInteractionService,
             IGlobalMapInteractionService globalMapInteractionService,
+            IPingInteractionService pingInteractionService,
             IDiceRollStorage diceRollStorage,
             IFileSystemService fileSystemService,
             IValueGenerator valueGenerator,
@@ -107,6 +111,7 @@ namespace WOTRMultiplayer.Services
             PlayerNotification = playerNotificationService;
             DialogInteraction = dialogInteractionService;
             GlobalMapInteraction = globalMapInteractionService;
+            PingInteraction = pingInteractionService;
             DiceRollStorage = diceRollStorage;
             FileSystem = fileSystemService;
             SettingsService = multiplayerSettingsService;
@@ -493,7 +498,7 @@ namespace WOTRMultiplayer.Services
             Logger.LogInformation("Sending {MessageType}. Type={Type}, WorldPosition={WorldPosition}, TargetUnitId={TargetUnitId}, MapObjectId={MapObjectId}, MapObjectPosition={MapObjectPosition}", nameof(NotifyPingedByPlayer), ping.Type, ping.WorldPosition, ping.UnitId, ping.MapObject?.Id, ping.MapObject?.Position);
             Send(message);
 
-            GameInteraction.CreatePing(null, ping);
+            PingInteraction.Create(null, ping);
         }
 
 
@@ -1710,6 +1715,30 @@ namespace WOTRMultiplayer.Services
             UpdateGlobalMapEncounterMessageUIState();
         }
 
+        public void OnGlobalMapShown(NetworkGlobalMapTravelerMode travelerMode)
+        {
+            Game.GlobalMapTravelerMode = travelerMode;
+
+            var localPlayer = GetLocalPlayerId();
+            var tracker = Game.PlayersInGlobalMapMode.GetOrAdd(travelerMode, []);
+            AddPlayerToTracker(tracker, localPlayer);
+
+            UpdateGlobalMapUIState();
+
+            var message = new NotifyGlobalMapShown
+            {
+                PlayerId = localPlayer,
+                TravelerMode = travelerMode.ToString()
+            };
+            Logger.LogInformation("Sending {MessageType}. PlayerId={PlayerId}, TravelerMode={TravelerMode}", nameof(NotifyGlobalMapShown), message.PlayerId, message.TravelerMode);
+            Send(message);
+        }
+
+        public void OnGlobalMapDisposed()
+        {
+            ResetGlobalMapCounters();
+        }
+
         public void OnZoneLootCollectorButtonsUpdated()
         {
             UpdateZoneLootUIState();
@@ -1848,7 +1877,7 @@ namespace WOTRMultiplayer.Services
                 var readyPlayers = Game.PlayersInGlobalMapLocationMessage.Count;
                 var totalPlayers = GetSyncedPlayersCount();
                 var canUse = HasControlOverUI && readyPlayers >= totalPlayers;
-                GlobalMapInteraction.UpdateGlobalMapMessageBoxUI(canUse, readyPlayers, totalPlayers);
+                GlobalMapInteraction.UpdateMessageBoxUI(canUse, readyPlayers, totalPlayers);
             }
         }
 
@@ -1859,7 +1888,7 @@ namespace WOTRMultiplayer.Services
                 var readyPlayers = Game.PlayersInGlobalMapIngredientCollection.Count;
                 var totalPlayers = GetSyncedPlayersCount();
                 var canUse = HasControlOverUI && readyPlayers >= totalPlayers;
-                GlobalMapInteraction.UpdateGlobalMapIngredientCollectionUI(canUse, readyPlayers, totalPlayers);
+                GlobalMapInteraction.UpdateIngredientCollectionUI(canUse, readyPlayers, totalPlayers);
             }
         }
 
@@ -1870,7 +1899,7 @@ namespace WOTRMultiplayer.Services
                 var readyPlayers = Game.PlayersInGlobalMapEncounterMessage.Count;
                 var totalPlayers = GetSyncedPlayersCount();
                 var canUse = HasControlOverUI && readyPlayers >= totalPlayers;
-                GlobalMapInteraction.UpdateGlobalMapEncounterMessageUI(canUse, readyPlayers, totalPlayers);
+                GlobalMapInteraction.UpdateEncounterMessageUI(canUse, readyPlayers, totalPlayers);
             }
         }
 
@@ -1927,6 +1956,17 @@ namespace WOTRMultiplayer.Services
                 var totalPlayers = GetSyncedPlayersCount();
                 var canUse = HasControlOverUI && readyPlayers >= totalPlayers;
                 GameInteraction.UpdateStartRestButtonState(canUse, readyPlayers, totalPlayers);
+            }
+        }
+
+        protected void UpdateGlobalMapUIState()
+        {
+            lock (ActionLock)
+            {
+                Game.PlayersInGlobalMapMode.TryGetValue(Game.GlobalMapTravelerMode, out var readyPlayers);
+                var totalPlayers = GetSyncedPlayersCount();
+                var canUse = HasControlOverUI && readyPlayers.Count >= totalPlayers;
+                GlobalMapInteraction.UpdateUIState(canUse, readyPlayers.Count, totalPlayers);
             }
         }
 
@@ -2500,6 +2540,16 @@ namespace WOTRMultiplayer.Services
             Logger.LogInformation("Save info has been updated. GameId={GameId}, SavePath={SavePath}, IsNewGameSequence={IsNewGameSequence}", Game.Id, Game.StartUp.SavePath, Game.StartUp.IsNewGameSequence);
         }
 
+        protected void ResetGlobalMapCounters()
+        {
+            foreach (var mode in Game.PlayersInGlobalMapMode.Keys)
+            {
+                ResetPlayersTracker(Game.PlayersInGlobalMapMode[mode]);
+            }
+
+            Logger.LogInformation("Global map counters have been reset");
+        }
+
         protected void StartNewGameSequence()
         {
             Logger.LogInformation("Starting new game sequence");
@@ -2668,6 +2718,7 @@ namespace WOTRMultiplayer.Services
                 .On<NotifyGlobalMapMessageBoxShown>(OnNotifyGlobalMapMessageBoxShown)
                 .On<NotifyGlobalMapIngredientCollectionShown>(OnNotifyGlobalMapIngredientCollectionShown)
                 .On<NotifyGlobalMapEncounterMessageShown>(OnNotifyGlobalMapEncounterMessageShown)
+                .On<NotifyGlobalMapShown>(OnNotifyGlobalMapShown)
 
                 // group management
                 .On<NotifyGroupChangerOpened>(OnNotifyGroupChangerOpened)
@@ -2685,6 +2736,19 @@ namespace WOTRMultiplayer.Services
                 // cutscenes
                 .On<NotifyCutsceneSkipped>(OnNotifyCutsceneSkipped)
                 ;
+        }
+
+        private void OnNotifyGlobalMapShown(long receivedFrom, NotifyGlobalMapShown globalMapShown)
+        {
+            Logger.LogInformation("Received {MessageType}. ReceivedFrom={ReceivedFrom}, PlayerId={PlayerId}, TravelerMode={TravelerMode}", nameof(NotifyGlobalMapShown), receivedFrom, globalMapShown.PlayerId, globalMapShown.TravelerMode);
+
+            var travelerMode = Mapper.Map<NetworkGlobalMapTravelerMode>(globalMapShown.TravelerMode);
+            var tracker = Game.PlayersInGlobalMapMode.GetOrAdd(travelerMode, []);
+            AddPlayerToTracker(tracker, globalMapShown.PlayerId);
+
+            UpdateGlobalMapUIState();
+
+            OnAfterNetworkMessageHandled(receivedFrom, globalMapShown);
         }
 
         private void OnNotifyPlayerReadyStatusChanged(long receivedFrom, NotifyPlayerReadyStatusChanged readyStatusChanged)
@@ -2721,7 +2785,7 @@ namespace WOTRMultiplayer.Services
                 return;
             }
 
-            GameInteraction.CreatePing(player, ping);
+            PingInteraction.Create(player, ping);
 
             OnAfterNetworkMessageHandled(receivedFrom, pingedAt);
         }

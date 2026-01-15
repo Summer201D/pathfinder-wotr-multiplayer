@@ -28,9 +28,9 @@ namespace WOTRMultiplayer.HarmonyPatches.GlobalMap
     {
         [HarmonyPatch(typeof(GlobalMapArmyState), nameof(GlobalMapArmyState.StartTravel))]
         [HarmonyPrefix]
-        public static void GlobalMapArmyState_StartTravel_Prefix(GlobalMapTravelData travelData)
+        public static void GlobalMapArmyState_StartTravel_Prefix(GlobalMapArmyState __instance, GlobalMapTravelData travelData)
         {
-            if (!Main.Multiplayer.IsActive)
+            if (!Main.Multiplayer.IsActive || Game.Instance.GlobalMapController.SelectedArmy != __instance)
             {
                 return;
             }
@@ -44,7 +44,7 @@ namespace WOTRMultiplayer.HarmonyPatches.GlobalMap
         [HarmonyPrefix]
         public static void GlobalMapPlayerState_StartTravel_Prefix(GlobalMapTravelData travelData)
         {
-            if (!Main.Multiplayer.IsActive)
+            if (!Main.Multiplayer.IsActive || Game.Instance.GlobalMapController.SelectedArmy != null)
             {
                 return;
             }

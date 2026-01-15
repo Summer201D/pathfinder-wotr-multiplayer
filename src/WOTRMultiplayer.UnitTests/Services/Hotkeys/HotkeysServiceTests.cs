@@ -18,7 +18,7 @@ namespace WOTRMultiplayer.UnitTests.Services.Hotkeys
         private HotkeysService _hotkeysService;
         private ILogger<HotkeysService> _logger;
         private IMultiplayerActorAccessor _multiplayerActorAccessor;
-        private IGameInteractionService _gameInteractionService;
+        private IPingInteractionService _pingInteractionService;
         private ISettingsControllerAccessor _settingsControllerAccessor;
         private IKeyboardAccessor _keyboardAccessor;
 
@@ -29,7 +29,7 @@ namespace WOTRMultiplayer.UnitTests.Services.Hotkeys
 
             _logger = A.Fake<ILogger<HotkeysService>>();
             _multiplayerActorAccessor = A.Fake<IMultiplayerActorAccessor>();
-            _gameInteractionService = A.Fake<IGameInteractionService>();
+            _pingInteractionService = A.Fake<IPingInteractionService>();
             _settingsControllerAccessor = A.Fake<ISettingsControllerAccessor>();
             _keyboardAccessor = A.Fake<IKeyboardAccessor>();
 
@@ -37,7 +37,7 @@ namespace WOTRMultiplayer.UnitTests.Services.Hotkeys
                 _logger,
                 _multiplayerActorAccessor,
                 _settingsControllerAccessor,
-                _gameInteractionService,
+                _pingInteractionService,
                 _keyboardAccessor);
         }
 

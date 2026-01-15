@@ -252,6 +252,12 @@ namespace WOTRMultiplayer.Config.Mapping
 
             CreateMap<NetworkArea, Networking.Messages.Contracts.NetworkArea>()
                 .ReverseMap();
+
+            CreateMap<NetworkGlobalMapArmyPawn, Networking.Messages.Contracts.NetworkGlobalMapArmyPawn>()
+                .ReverseMap();
+
+            CreateMap<NetworkGlobalMapKingdomSettlement, Networking.Messages.Contracts.NetworkGlobalMapKingdomSettlement>()
+                .ReverseMap();
         }
     }
 }

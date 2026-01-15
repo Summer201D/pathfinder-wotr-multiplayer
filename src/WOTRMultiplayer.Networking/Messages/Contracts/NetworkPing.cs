@@ -15,6 +15,15 @@ namespace WOTRMultiplayer.Networking.Messages.Contracts
         public NetworkMapObject MapObject { get; set; }
 
         [ProtoMember(4)]
+        public NetworkGlobalMapLocation GlobalMapLocation { get; set; }
+
+        [ProtoMember(5)]
+        public NetworkGlobalMapArmyPawn GlobalMapArmyPawn { get; set; }
+
+        [ProtoMember(6)]
+        public NetworkGlobalMapKingdomSettlement GlobalMapKingdomSettlement { get; set; }
+
+        [ProtoMember(7)]
         public string Type { get; set; }
     }
 }

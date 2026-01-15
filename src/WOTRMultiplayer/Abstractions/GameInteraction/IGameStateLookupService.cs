@@ -1,6 +1,8 @@
 ﻿using System.Collections.Generic;
 using Kingmaker.EntitySystem.Entities;
+using Kingmaker.Globalmap.View;
 using WOTRMultiplayer.Entities;
+using WOTRMultiplayer.Entities.GlobalMap;
 
 namespace WOTRMultiplayer.Abstractions.GameInteraction
 {
@@ -11,5 +13,11 @@ namespace WOTRMultiplayer.Abstractions.GameInteraction
         MapObjectEntityData GetMapObject(string uniqueId);
 
         List<MapObjectEntityData> GetNeareastLootableMapObjects(NetworkVector3 position);
+
+        MapObjectEntityData GetNeareastLootBagMapObject(NetworkVector3 position);
+
+        GlobalMapPointView GetGlobalMapPoint(NetworkGlobalMapLocation globalMapLocation);
+
+        GlobalMapArmyPawn GetGlobalMapArmyPawn(NetworkGlobalMapArmyPawn globalMapArmyPawn);
     }
 }

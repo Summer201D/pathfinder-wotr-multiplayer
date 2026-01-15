@@ -1,6 +1,6 @@
 ﻿namespace WOTRMultiplayer.Entities.GlobalMap
 {
-    public enum NetworkGlobalMapArmyMode
+    public enum NetworkGlobalMapTravelerMode
     {
         Player,
         Army

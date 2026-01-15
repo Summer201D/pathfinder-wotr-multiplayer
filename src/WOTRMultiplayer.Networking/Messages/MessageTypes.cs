@@ -164,7 +164,9 @@
             NotifyPolymorphicItemCreated,
             NotifyPolymorphicItemCreationRequested,
             NotifyPingedByPlayer,
-            NotifyCutsceneSkipped
+            NotifyCutsceneSkipped,
+            NotifyGlobalMapDaySkipped,
+            NotifyGlobalMapShown
         }
 
         public enum Request

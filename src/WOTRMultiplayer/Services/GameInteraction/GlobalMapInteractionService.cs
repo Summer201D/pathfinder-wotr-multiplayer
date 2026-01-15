@@ -25,22 +25,25 @@ namespace WOTRMultiplayer.Services.GameInteraction
     {
         private readonly ILogger<GlobalMapInteractionService> _logger;
         private readonly IMainThreadAccessor _mainThreadAccessor;
+        private readonly IGameStateLookupService _gameStateLookupService;
         private readonly IUIAccessor _uiAccessor;
         private readonly IUISyncCountersService _uiSyncCountersService;
 
         public GlobalMapInteractionService(
             ILogger<GlobalMapInteractionService> logger,
             IMainThreadAccessor mainThreadAccessor,
+            IGameStateLookupService gameStateLookupService,
             IUIAccessor uiAccessor,
             IUISyncCountersService uiSyncCountersService)
         {
             _logger = logger;
             _mainThreadAccessor = mainThreadAccessor;
+            _gameStateLookupService = gameStateLookupService;
             _uiAccessor = uiAccessor;
             _uiSyncCountersService = uiSyncCountersService;
         }
 
-        public void OpenGlobalMapRestMenu()
+        public void OpenRestMenu()
         {
             _mainThreadAccessor.Post(() =>
             {
@@ -60,11 +63,11 @@ namespace WOTRMultiplayer.Services.GameInteraction
             });
         }
 
-        public void StartGlobalMapTravel(NetworkGlobalMapLocation destination)
+        public void StartTravel(NetworkGlobalMapLocation destination)
         {
             _mainThreadAccessor.Post(() =>
             {
-                var point = GetGlobalMapPoint(destination.Id);
+                var point = _gameStateLookupService.GetGlobalMapPoint(destination);
                 if (point == null)
                 {
                     _logger.LogError("Unable to find global map point. PointId={PointId}, PointName={PointName}", destination.Id, destination.Name);
@@ -116,13 +119,13 @@ namespace WOTRMultiplayer.Services.GameInteraction
             });
         }
 
-        public bool IsAtGlobalMapLocation(NetworkGlobalMapLocation globalMapLocation)
+        public bool IsAtLocation(NetworkGlobalMapLocation globalMapLocation)
         {
-            var targetPoint = GetGlobalMapPoint(globalMapLocation.Id);
+            var targetPoint = _gameStateLookupService.GetGlobalMapPoint(globalMapLocation);
             return targetPoint != null && GlobalMapView.Instance.State.Player.Location == targetPoint.Blueprint;
         }
 
-        public void ContinueGlobalMapTravel(NetworkGlobalMapState globalMapState)
+        public void ContinueTravel(NetworkGlobalMapState globalMapState)
         {
             _mainThreadAccessor.Post(() =>
             {
@@ -132,7 +135,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
             });
         }
 
-        public void StopGlobalMapTravel(NetworkGlobalMapState globalMapState)
+        public void StopTravel(NetworkGlobalMapState globalMapState)
         {
             _mainThreadAccessor.Post(() =>
             {
@@ -142,7 +145,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
             });
         }
 
-        public void UpdateGlobalMapMessageBoxUI(bool isInteractable, int readyPlayersCount, int totalPlayersCount)
+        public void UpdateMessageBoxUI(bool isInteractable, int readyPlayersCount, int totalPlayersCount)
         {
             _mainThreadAccessor.Post(() =>
             {
@@ -176,7 +179,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
             });
         }
 
-        public void UpdateGlobalMapIngredientCollectionUI(bool isInteractable, int readyPlayersCount, int totalPlayersCount)
+        public void UpdateIngredientCollectionUI(bool isInteractable, int readyPlayersCount, int totalPlayersCount)
         {
             _mainThreadAccessor.Post(() =>
             {
@@ -195,7 +198,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
             });
         }
 
-        public void UpdateGlobalMapEncounterMessageUI(bool isInteractable, int readyPlayersCount, int totalPlayersCount)
+        public void UpdateEncounterMessageUI(bool isInteractable, int readyPlayersCount, int totalPlayersCount)
         {
             _mainThreadAccessor.Post(() =>
             {
@@ -213,11 +216,33 @@ namespace WOTRMultiplayer.Services.GameInteraction
                 _uiSyncCountersService.UpdateButtonTextCounter(modalMessage.m_ContinueLabel, readyPlayersCount, totalPlayersCount);
                 _uiSyncCountersService.UpdateButtonTextCounter(modalMessage.m_EnterLabel, readyPlayersCount, totalPlayersCount);
 
-                _logger.LogInformation("Global Map Encounter Message has been updated. IsInteractable={IsInteractable}, ReadyPlayers={ReadyPlayers}, TotalPlayers={TotalPlayers}", isInteractable, readyPlayersCount, totalPlayersCount);
+                _logger.LogInformation("Encounter Message has been updated. IsInteractable={IsInteractable}, ReadyPlayers={ReadyPlayers}, TotalPlayers={TotalPlayers}", isInteractable, readyPlayersCount, totalPlayersCount);
             });
         }
 
-        public void CollectGlobalMapIngredients(NetworkGlobalMapLocation globalMapLocation)
+        public void UpdateUIState(bool isInteractable, int readyPlayersCount, int totalPlayersCount)
+        {
+            _mainThreadAccessor.Post(() =>
+            {
+                if (_uiAccessor.GlobalMapPCView?.ViewModel == null)
+                {
+                    _logger.LogWarning("Unable to update UI due to missing GlobalMapView");
+                    return;
+                }
+
+                _uiAccessor.GlobalMapPCView.m_GlobalMapToolbarPCView.m_ArmyModeCharacterButton.Interactable = isInteractable;
+                _uiAccessor.GlobalMapPCView.m_GlobalMapToolbarPCView.m_ArmyModeCrusadeButton.Interactable = isInteractable;
+                _uiAccessor.GlobalMapPCView.m_GlobalMapToolbarPCView.m_SkipDay.Interactable = isInteractable;
+                _uiAccessor.GlobalMapPCView.m_GlobalMapToolbarPCView.m_AddArmyCrusadeButton.Interactable = isInteractable;
+                _uiAccessor.GlobalMapPCView.m_GlobalMapToolbarPCView.m_AddArmyCrusadePlusButton.Interactable = isInteractable;
+
+                _uiSyncCountersService.UpdateButtonTextCounter(_uiAccessor.GlobalMapPCView.m_GlobalMapToolbarPCView.m_SkipDayLabel, readyPlayersCount, totalPlayersCount);
+
+                _logger.LogInformation("UI state has been updated. IsInteractable={IsInteractable}, ReadyPlayers={ReadyPlayers}, TotalPlayers={TotalPlayers}", isInteractable, readyPlayersCount, totalPlayersCount);
+            });
+        }
+
+        public void CollectIngredients(NetworkGlobalMapLocation globalMapLocation)
         {
             _mainThreadAccessor.Post(() =>
             {
@@ -235,7 +260,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
                 }
 
                 // safety measure to make sure ingredients are collected even if message is not shown
-                var point = GetGlobalMapPoint(globalMapLocation.Id);
+                var point = _gameStateLookupService.GetGlobalMapPoint(globalMapLocation);
                 if (point == null)
                 {
                     _logger.LogError("Unable to autocollect global map ingredients due to missing point. LocationId={LocationId}, LocationName={LocationName}", globalMapLocation.Id, globalMapLocation.Name);
@@ -254,11 +279,11 @@ namespace WOTRMultiplayer.Services.GameInteraction
             });
         }
 
-        public void EnterGlobalMapLocation(NetworkGlobalMapLocation globalMapLocation)
+        public void EnterLocation(NetworkGlobalMapLocation globalMapLocation)
         {
             _mainThreadAccessor.Post(() =>
             {
-                var point = GetGlobalMapPoint(globalMapLocation.Id);
+                var point = _gameStateLookupService.GetGlobalMapPoint(globalMapLocation);
                 if (point == null || GlobalMapView.Instance.State.Player.Location != point)
                 {
                     _logger.LogError("Unable to enter desynced global map location. ExpectedLocationId={ExpectedLocationId}, ExpectedLocationName={ExpectedLocationName}, ActualLocationId={ActualLocationId}, ActualLocationName={ActualLocationName}", globalMapLocation.Id, globalMapLocation.Name, point?.Blueprint.AssetGuid.ToString(), point?.Blueprint.name);
@@ -272,7 +297,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
             });
         }
 
-        public void AvoidGlobalMapEncounter()
+        public void AvoidEncounter()
         {
             _mainThreadAccessor.Post(() =>
             {
@@ -287,7 +312,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
             });
         }
 
-        public void AcceptGlobalMapEncounter()
+        public void AcceptEncounter()
         {
             _mainThreadAccessor.Post(() =>
             {
@@ -302,7 +327,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
             });
         }
 
-        public void RollGlobalMapEncounter(NetworkGlobalMapEncounter globalMapEncounter)
+        public void RollEncounter(NetworkGlobalMapEncounter globalMapEncounter)
         {
             _mainThreadAccessor.Post(() =>
             {
@@ -336,6 +361,22 @@ namespace WOTRMultiplayer.Services.GameInteraction
             });
         }
 
+        public void SkipDay()
+        {
+            _mainThreadAccessor.Post(() =>
+            {
+                var toolbarView = _uiAccessor.GlobalMapPCView?.m_GlobalMapToolbarPCView;
+                if (toolbarView?.ViewModel == null)
+                {
+                    _logger.LogError("Unable to skip day due to missing global map toolbar view");
+                    return;
+                }
+
+                toolbarView.ViewModel.SkipDay();
+                _logger.LogInformation("Global map day has been skipped");
+            });
+        }
+
         private void UpdateGlobalMapState(NetworkGlobalMapState globalMapState)
         {
             // not sure if player position is unavailable while army is selected (act2+), need to check later
@@ -343,12 +384,6 @@ namespace WOTRMultiplayer.Services.GameInteraction
             {
                 GlobalMapView.Instance.State.Player.TravelData.EdgePosition = globalMapState.Player.Position.Edge;
             }
-        }
-
-        private GlobalMapPointView GetGlobalMapPoint(string pointId)
-        {
-            var point = GlobalMapView.Instance.Points.FirstOrDefault(p => string.Equals(p.Blueprint.AssetGuid.ToString(), pointId, StringComparison.OrdinalIgnoreCase));
-            return point;
         }
     }
 }

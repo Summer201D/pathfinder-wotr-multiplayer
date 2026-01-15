@@ -51,6 +51,7 @@ namespace WOTRMultiplayer.Services
             IPlayerNotificationService playerNotificationService,
             IDialogInteractionService dialogInteractionService,
             IGlobalMapInteractionService globalMapInteractionService,
+            IPingInteractionService pingInteractionService,
             IMultiplayerSettingsService multiplayerSettingsProvider,
             IFileSystemService fileSystemService,
             INetworkServer networkServer,
@@ -65,6 +66,7 @@ namespace WOTRMultiplayer.Services
                   playerNotificationService,
                   dialogInteractionService,
                   globalMapInteractionService,
+                  pingInteractionService,
                   diceRollStorage,
                   fileSystemService,
                   valueGenerator,
@@ -736,6 +738,13 @@ namespace WOTRMultiplayer.Services
                 Encounter = Mapper.Map<Networking.Messages.Contracts.NetworkGlobalMapEncounter>(globalMapEncounter)
             };
             Logger.LogInformation("Sending {MessageType}. Seed={Seed}, EncounterId={EncounterId}, Position={Position}, Avoidance={Avoidance}", nameof(NotifyGlobalMapEncounterRolled), message.Encounter.Seed, message.Encounter.BlueprintId, message.Encounter.Position, message.Encounter.AvoidanceResult);
+            Send(message);
+        }
+
+        public void OnGlobalMapSkipDay()
+        {
+            var message = new NotifyGlobalMapDaySkipped();
+            Logger.LogInformation("Sending {MessageType}", nameof(NotifyGlobalMapDaySkipped));
             Send(message);
         }
 
@@ -1428,6 +1437,11 @@ namespace WOTRMultiplayer.Services
                 UpdateRespecWindowStateOnPlayerLeave(removedPlayer.Id);
 
                 UpdateCharacterSelectionUIState();
+
+                Game.PlayersInGlobalMapMode.GetOrAdd(NetworkGlobalMapTravelerMode.Army, []).Remove(removedPlayer.Id);
+                Game.PlayersInGlobalMapMode.GetOrAdd(NetworkGlobalMapTravelerMode.Player, []).Remove(removedPlayer.Id);
+
+                UpdateGlobalMapUIState();
 
                 TryEndForcedPause();
             }

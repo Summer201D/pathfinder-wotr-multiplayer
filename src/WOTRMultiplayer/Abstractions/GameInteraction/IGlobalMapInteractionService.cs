@@ -4,32 +4,38 @@ namespace WOTRMultiplayer.Abstractions.GameInteraction
 {
     public interface IGlobalMapInteractionService
     {
-        bool IsAtGlobalMapLocation(NetworkGlobalMapLocation globalMapLocation);
+        bool IsAtLocation(NetworkGlobalMapLocation globalMapLocation);
 
-        void ContinueGlobalMapTravel(NetworkGlobalMapState globalMapState);
+        void ContinueTravel(NetworkGlobalMapState globalMapState);
 
-        void StopGlobalMapTravel(NetworkGlobalMapState globalMapState);
+        void StopTravel(NetworkGlobalMapState globalMapState);
 
-        void UpdateGlobalMapMessageBoxUI(bool isInteractable, int readyPlayersCount, int totalPlayersCount);
+        void UpdateMessageBoxUI(bool isInteractable, int readyPlayersCount, int totalPlayersCount);
 
-        void UpdateGlobalMapIngredientCollectionUI(bool isInteractable, int readyPlayersCount, int totalPlayersCount);
+        void UpdateIngredientCollectionUI(bool isInteractable, int readyPlayersCount, int totalPlayersCount);
 
-        void CollectGlobalMapIngredients(NetworkGlobalMapLocation globalMapLocation);
+        void UpdateEncounterMessageUI(bool isInteractable, int readyPlayersCount, int totalPlayersCount);
 
-        void EnterGlobalMapLocation(NetworkGlobalMapLocation globalMapLocation);
+        void UpdateUIState(bool isInteractable, int readyPlayersCount, int totalPlayersCount);
 
-        void UpdateGlobalMapEncounterMessageUI(bool isInteractable, int readyPlayersCount, int totalPlayersCount);
+        void CollectIngredients(NetworkGlobalMapLocation globalMapLocation);
 
-        void AvoidGlobalMapEncounter();
+        void EnterLocation(NetworkGlobalMapLocation globalMapLocation);
 
-        void AcceptGlobalMapEncounter();
+        void AvoidEncounter();
 
-        void RollGlobalMapEncounter(NetworkGlobalMapEncounter encounter);
+        void AcceptEncounter();
 
-        void OpenGlobalMapRestMenu();
+        void RollEncounter(NetworkGlobalMapEncounter globalMapEncounter);
 
-        void StartGlobalMapTravel(NetworkGlobalMapLocation destination);
+        void OpenRestMenu();
+
+        void StartTravel(NetworkGlobalMapLocation destination);
+
         void CloseMessageBox();
+
         void CloseIngredientCollection();
+
+        void SkipDay();
     }
 }

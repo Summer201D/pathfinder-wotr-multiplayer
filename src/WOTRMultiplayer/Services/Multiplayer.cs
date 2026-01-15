@@ -2457,6 +2457,60 @@ namespace WOTRMultiplayer.Services
             return _multiplayerActorAccessor.Host.IsActive;
         }
 
+        public void OnGlobalMapSkipDay()
+        {
+            try
+            {
+                if (_multiplayerActorAccessor.Current == null || _multiplayerActorAccessor.Client.IsActive)
+                {
+                    return;
+                }
+
+                _multiplayerActorAccessor.Host.OnGlobalMapSkipDay();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while skipping day on global map");
+                throw;
+            }
+        }
+
+        public void OnGlobalMapShown(NetworkGlobalMapTravelerMode travelerMode)
+        {
+            try
+            {
+                if (_multiplayerActorAccessor.Current == null)
+                {
+                    return;
+                }
+
+                _multiplayerActorAccessor.Current.OnGlobalMapShown(travelerMode);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while showing global map. TravelerMode={TravelerMode}", travelerMode);
+                throw;
+            }
+        }
+
+        public void OnGlobalMapDisposed()
+        {
+            try
+            {
+                if (_multiplayerActorAccessor.Current == null)
+                {
+                    return;
+                }
+
+                _multiplayerActorAccessor.Current.OnGlobalMapDisposed();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while disposing global map");
+                throw;
+            }
+        }
+
         public void OnZoneLootShown()
         {
             try

@@ -40,7 +40,9 @@ namespace WOTRMultiplayer.Entities
 
         public NetworkLeveling Leveling { get; set; }
 
-        public ConcurrentDictionary<NetworkGlobalMapArmyMode, HashSet<long>> PlayersInGlobalMapMode { get; set; } = [];
+        public NetworkGlobalMapTravelerMode GlobalMapTravelerMode { get; set; }
+
+        public ConcurrentDictionary<NetworkGlobalMapTravelerMode, HashSet<long>> PlayersInGlobalMapMode { get; set; } = [];
 
         public ConcurrentDictionary<GameModeType, HashSet<long>> PlayersInGameMode { get; set; } = [];
 

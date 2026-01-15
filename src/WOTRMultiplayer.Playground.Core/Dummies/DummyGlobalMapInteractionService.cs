@@ -5,11 +5,11 @@ namespace WOTRMultiplayer.Playground.Core.Dummies
 {
     public class DummyGlobalMapInteractionService : IGlobalMapInteractionService
     {
-        public void AcceptGlobalMapEncounter()
+        public void AcceptEncounter()
         {
         }
 
-        public void AvoidGlobalMapEncounter()
+        public void AvoidEncounter()
         {
         }
 
@@ -21,48 +21,56 @@ namespace WOTRMultiplayer.Playground.Core.Dummies
         {
         }
 
-        public void CollectGlobalMapIngredients(NetworkGlobalMapLocation globalMapLocation)
+        public void CollectIngredients(NetworkGlobalMapLocation globalMapLocation)
         {
         }
 
-        public void ContinueGlobalMapTravel(NetworkGlobalMapState globalMapState)
+        public void ContinueTravel(NetworkGlobalMapState globalMapState)
         {
         }
 
-        public void EnterGlobalMapLocation(NetworkGlobalMapLocation globalMapLocation)
+        public void EnterLocation(NetworkGlobalMapLocation globalMapLocation)
         {
         }
 
-        public bool IsAtGlobalMapLocation(NetworkGlobalMapLocation globalMapLocation)
+        public bool IsAtLocation(NetworkGlobalMapLocation globalMapLocation)
         {
             return false;
         }
 
-        public void OpenGlobalMapRestMenu()
+        public void OpenRestMenu()
         {
         }
 
-        public void RollGlobalMapEncounter(NetworkGlobalMapEncounter encounter)
+        public void RollEncounter(NetworkGlobalMapEncounter encounter)
         {
         }
 
-        public void StartGlobalMapTravel(NetworkGlobalMapLocation destination)
+        public void SkipDay()
         {
         }
 
-        public void StopGlobalMapTravel(NetworkGlobalMapState globalMapState)
+        public void StartTravel(NetworkGlobalMapLocation destination)
         {
         }
 
-        public void UpdateGlobalMapEncounterMessageUI(bool isInteractable, int readyPlayersCount, int totalPlayersCount)
+        public void StopTravel(NetworkGlobalMapState globalMapState)
         {
         }
 
-        public void UpdateGlobalMapIngredientCollectionUI(bool isInteractable, int readyPlayersCount, int totalPlayersCount)
+        public void UpdateEncounterMessageUI(bool isInteractable, int readyPlayersCount, int totalPlayersCount)
         {
         }
 
-        public void UpdateGlobalMapMessageBoxUI(bool isInteractable, int readyPlayersCount, int totalPlayersCount)
+        public void UpdateIngredientCollectionUI(bool isInteractable, int readyPlayersCount, int totalPlayersCount)
+        {
+        }
+
+        public void UpdateMessageBoxUI(bool isInteractable, int readyPlayersCount, int totalPlayersCount)
+        {
+        }
+
+        public void UpdateUIState(bool isInteractable, int readyPlayersCount, int totalPlayersCount)
         {
         }
     }

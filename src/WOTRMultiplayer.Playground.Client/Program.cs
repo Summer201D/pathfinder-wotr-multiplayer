@@ -37,6 +37,7 @@ namespace WOTRMultiplayer.Playground.Client
                 new DummyPlayerNotificationService(),
                 new DummyDialogInteractionService(),
                 new DummyGlobalMapInteractionService(),
+                new DummyPingInteractionService(),
                 serviceProvider.GetService<IIPEndPointParser>(),
                 new MultiplayerSettingsProvider(new DummySettingsControllerAccessor()),
                 serviceProvider.GetService<IFileSystemService>(),

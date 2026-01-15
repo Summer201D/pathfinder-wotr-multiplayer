@@ -71,9 +71,8 @@ namespace WOTRMultiplayer.HarmonyPatches.GlobalMap
                 __instance.m_SkipDay.Interactable = value && Main.Multiplayer.CanNavigateOnGlobalMap();
             }));
 
-            var armyMode = GetArmyMode(__instance.ViewModel.ArmyMode.Value);
-            // OnGlobalMapLoaded(armyMode)
-            Main.GetLogger<GlobalMapControlPatches>().LogWarning("GlobalMapToolbarPCView_BindViewImplementation_Postfix. ArmyMode={ArmyMode}", armyMode);
+            var travelerMode = GetTravelerMode(__instance.ViewModel.ArmyMode.Value);
+            Main.Multiplayer.OnGlobalMapShown(travelerMode);
         }
 
         [HarmonyPatch(typeof(GlobalMapToolbarView<GlobalMapToolbarVM>), nameof(GlobalMapToolbarView<GlobalMapToolbarVM>.DestroyViewImplementation))]
@@ -85,8 +84,7 @@ namespace WOTRMultiplayer.HarmonyPatches.GlobalMap
                 return;
             }
 
-            // OnGlobalMapDisposed - remove army mode counters?
-            Main.GetLogger<GlobalMapControlPatches>().LogWarning("GlobalMapToolbarView_DestroyViewImplementation_Prefix");
+            Main.Multiplayer.OnGlobalMapDisposed();
         }
 
         [HarmonyPatch(typeof(GlobalMapToolbarView<GlobalMapToolbarVM>), nameof(GlobalMapToolbarView<GlobalMapToolbarVM>.OnSkipDay))]
@@ -98,8 +96,7 @@ namespace WOTRMultiplayer.HarmonyPatches.GlobalMap
                 return;
             }
 
-            // OnGlobalMapSkipDay
-            Main.GetLogger<GlobalMapControlPatches>().LogWarning("GlobalMapToolbarView_OnSkipDay_Prefix");
+            Main.Multiplayer.OnGlobalMapSkipDay();
         }
 
         [HarmonyPatch(typeof(GlobalMapToolbarVM), nameof(GlobalMapToolbarVM.ChangeArmyMode), [typeof(bool)])]
@@ -114,7 +111,7 @@ namespace WOTRMultiplayer.HarmonyPatches.GlobalMap
 
             // OnGlobalMapArmyModeChanged - Player=false Army=true
             // CurrentArmyMode: Player, Army
-            var armyMode = GetArmyMode(state);
+            var armyMode = GetTravelerMode(state);
             Main.GetLogger<GlobalMapControlPatches>().LogWarning("GlobalMapToolbarVM_ChangeArmyMode_Prefix. ArmyMode={ArmyMode}", armyMode);
         }
 
@@ -166,14 +163,14 @@ namespace WOTRMultiplayer.HarmonyPatches.GlobalMap
             Main.GetLogger<GlobalMapControlPatches>().LogWarning("OnPlayerPawnClicked");
         }
 
-        private static NetworkGlobalMapArmyMode GetArmyMode(bool state)
+        private static NetworkGlobalMapTravelerMode GetTravelerMode(bool state)
         {
             if (state)
             {
-                return NetworkGlobalMapArmyMode.Army;
+                return NetworkGlobalMapTravelerMode.Army;
             }
 
-            return NetworkGlobalMapArmyMode.Player;
+            return NetworkGlobalMapTravelerMode.Player;
         }
     }
 }

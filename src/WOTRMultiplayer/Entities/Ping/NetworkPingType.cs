@@ -5,6 +5,9 @@
         WorldPosition,
         Unit,
         MapObject,
-        GuiElement
+        GuiElement,
+        GlobalMapLocation,
+        GlobalMapArmyPawn,
+        GlobalMapKingdomSettlement
     }
 }

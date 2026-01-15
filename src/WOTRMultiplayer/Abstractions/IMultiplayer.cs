@@ -263,6 +263,12 @@ namespace WOTRMultiplayer.Abstractions
 
         bool CanNavigateOnGlobalMap();
 
+        void OnGlobalMapSkipDay();
+
+        void OnGlobalMapShown(NetworkGlobalMapTravelerMode travelerMode);
+
+        void OnGlobalMapDisposed();
+
         int? GetCombatSeed();
 
         int? GetSessionSeed();

@@ -68,6 +68,8 @@ namespace WOTRMultiplayer.Abstractions
 
         void OnGlobalMapRandomEncounterRolled(NetworkGlobalMapEncounter globalMapEncounter);
 
+        void OnGlobalMapSkipDay();
+
         void OnZoneLootRemoveToggleChanged(bool removeUncollectedLoot);
 
         void OnDialogPopupClosed(NetworkDialogPopup networkDialogPopup);

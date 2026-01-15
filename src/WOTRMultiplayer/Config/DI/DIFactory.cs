@@ -78,6 +78,7 @@ namespace WOTRMultiplayer.Config.DI
             serviceCollection.AddSingleton<IEquipmentDefinitions, EquipmentDefinitions>();
             serviceCollection.AddSingleton<IDialogInteractionService, DialogInteractionService>();
             serviceCollection.AddSingleton<IGlobalMapInteractionService, GlobalMapInteractionService>();
+            serviceCollection.AddSingleton<IPingInteractionService, PingInteractionService>();
 
             serviceCollection.AddSingleton<IHotkeysService, HotkeysService>();
             serviceCollection.AddSingleton<MultiplayerSubscriber>();

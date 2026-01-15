@@ -57,6 +57,7 @@ namespace WOTRMultiplayer.Services
             IPlayerNotificationService playerNotificationService,
             IDialogInteractionService dialogInteractionService,
             IGlobalMapInteractionService globalMapInteractionService,
+            IPingInteractionService pingInteractionService,
             IIPEndPointParser ipEndPointParser,
             IMultiplayerSettingsService multiplayerSettingsProvider,
             IFileSystemService fileSystemService,
@@ -72,6 +73,7 @@ namespace WOTRMultiplayer.Services
                   playerNotificationService,
                   dialogInteractionService,
                   globalMapInteractionService,
+                  pingInteractionService,
                   diceRollStorage,
                   fileSystemService,
                   valueGenerator,
@@ -335,7 +337,7 @@ namespace WOTRMultiplayer.Services
 
         public bool OnGlobalMapSelectLocation(NetworkGlobalMapLocation globalMapLocation)
         {
-            var canSelectLocation = GlobalMapInteraction.IsAtGlobalMapLocation(globalMapLocation);
+            var canSelectLocation = GlobalMapInteraction.IsAtLocation(globalMapLocation);
             return canSelectLocation;
         }
 
@@ -480,6 +482,7 @@ namespace WOTRMultiplayer.Services
                .On<NotifyGlobalMapEncounterRolled>(OnNotifyGlobalMapEncounterRolled)
                .On<NotifyGlobalMapMessageBoxClosed>(OnNotifyGlobalMapMessageBoxClosed)
                .On<NotifyGlobalMapIngredientCollectionClosed>(OnNotifyGlobalMapIngredientCollectionClosed)
+               .On<NotifyGlobalMapDaySkipped>(OnNotifyGlobalMapDaySkipped)
 
                // zone loot
                .On<NotifyZoneLootCompleted>(OnNotifyZoneLootCompleted)
@@ -488,6 +491,13 @@ namespace WOTRMultiplayer.Services
                // inventory
                .On<NotifyPolymorphicItemCreated>(OnNotifyPolymorphicItemCreated)
                ;
+        }
+
+        private void OnNotifyGlobalMapDaySkipped(long receivedFrom, NotifyGlobalMapDaySkipped globalMapDaySkipped)
+        {
+            Logger.LogInformation("Received {MessageType}", nameof(NotifyGlobalMapDaySkipped));
+
+            GlobalMapInteraction.SkipDay();
         }
 
         private void OnNotifyGlobalMapIngredientCollectionClosed(long receivedFrom, NotifyGlobalMapIngredientCollectionClosed globalMapIngredientCollectionClosed)
@@ -586,13 +596,13 @@ namespace WOTRMultiplayer.Services
             Logger.LogInformation("Sending {MessageType}. Seed={Seed}, EncounterId={EncounterId}, Position={Position}, Avoidance={Avoidance}", nameof(NotifyGlobalMapEncounterRolled), globalMapEncounterRolled.Encounter.Seed, globalMapEncounterRolled.Encounter.BlueprintId, globalMapEncounterRolled.Encounter.Position, globalMapEncounterRolled.Encounter.AvoidanceResult);
             var encounter = Mapper.Map<NetworkGlobalMapEncounter>(globalMapEncounterRolled.Encounter);
 
-            GlobalMapInteraction.RollGlobalMapEncounter(encounter);
+            GlobalMapInteraction.RollEncounter(encounter);
         }
 
         private void OnNotifyGlobalMapEncounterAvoided(long playerId, NotifyGlobalMapEncounterAvoided globalMapEncounterAvoided)
         {
             Logger.LogInformation("Received {MessageType}", nameof(NotifyGlobalMapLocationEntered));
-            GlobalMapInteraction.AvoidGlobalMapEncounter();
+            GlobalMapInteraction.AvoidEncounter();
 
             ResetPlayersTracker(Game.PlayersInGlobalMapEncounterMessage);
         }
@@ -600,7 +610,7 @@ namespace WOTRMultiplayer.Services
         private void OnNotifyGlobalMapEncounterAccepted(long playerId, NotifyGlobalMapEncounterAccepted notifyGlobalMapEncounterAccepted)
         {
             Logger.LogInformation("Received {MessageType}", nameof(NotifyGlobalMapEncounterAccepted));
-            GlobalMapInteraction.AcceptGlobalMapEncounter();
+            GlobalMapInteraction.AcceptEncounter();
 
             ResetPlayersTracker(Game.PlayersInGlobalMapEncounterMessage);
         }
@@ -610,7 +620,7 @@ namespace WOTRMultiplayer.Services
             Logger.LogInformation("Received {MessageType}. LocationId={LocationId}, LocationName={LocationName}", nameof(NotifyGlobalMapLocationEntered), globalMapLocationEntered.Location.Id, globalMapLocationEntered.Location.Name);
 
             var location = Mapper.Map<NetworkGlobalMapLocation>(globalMapLocationEntered.Location);
-            GlobalMapInteraction.EnterGlobalMapLocation(location);
+            GlobalMapInteraction.EnterLocation(location);
 
             ResetPlayersTracker(Game.PlayersInGlobalMapLocationMessage);
         }
@@ -620,7 +630,7 @@ namespace WOTRMultiplayer.Services
             Logger.LogInformation("Received {MessageType}. LocationId={LocationId}, LocationName={LocationName}", nameof(NotifyGlobalMapIngredientCollectionAccepted), globalMapIngredientCollectionAccepted.Location.Id, globalMapIngredientCollectionAccepted.Location.Name);
 
             var location = Mapper.Map<NetworkGlobalMapLocation>(globalMapIngredientCollectionAccepted.Location);
-            GlobalMapInteraction.CollectGlobalMapIngredients(location);
+            GlobalMapInteraction.CollectIngredients(location);
 
             ResetPlayersTracker(Game.PlayersInGlobalMapIngredientCollection);
         }
@@ -629,7 +639,7 @@ namespace WOTRMultiplayer.Services
         {
             Logger.LogInformation("Received {MessageType}. PlayerEdge={PlayerEdge}", nameof(NotifyGlobalMapTravelContinued), globalMapTravelContinued.State.Player.Position?.Edge);
             var globalMapState = Mapper.Map<NetworkGlobalMapState>(globalMapTravelContinued.State);
-            GlobalMapInteraction.ContinueGlobalMapTravel(globalMapState);
+            GlobalMapInteraction.ContinueTravel(globalMapState);
         }
 
         private void OnNotifyGlobalMapTravelStopped(long playerId, NotifyGlobalMapTravelStopped globalMapTravelStopped)
@@ -637,7 +647,7 @@ namespace WOTRMultiplayer.Services
             Logger.LogInformation("Received {MessageType}. PlayerEdge={PlayerEdge}", nameof(NotifyGlobalMapTravelStopped), globalMapTravelStopped.State.Player.Position?.Edge);
 
             var globalMapState = Mapper.Map<NetworkGlobalMapState>(globalMapTravelStopped.State);
-            GlobalMapInteraction.StopGlobalMapTravel(globalMapState);
+            GlobalMapInteraction.StopTravel(globalMapState);
         }
 
         private void OnNotifySkipTimeStarted(long playerId, NotifySkipTimeStarted skipTimeStarted)
@@ -666,13 +676,13 @@ namespace WOTRMultiplayer.Services
 
             var destination = Mapper.Map<NetworkGlobalMapLocation>(globalMapTravelStarted.Destination);
 
-            GlobalMapInteraction.StartGlobalMapTravel(destination);
+            GlobalMapInteraction.StartTravel(destination);
         }
 
         private void OnNotifyGlobalMapRestMenuOpened(long playerId, NotifyGlobalMapRestMenuOpened globalMapRestMenuOpened)
         {
             Logger.LogInformation("Received {MessageType}", nameof(NotifyGlobalMapRestMenuOpened));
-            GlobalMapInteraction.OpenGlobalMapRestMenu();
+            GlobalMapInteraction.OpenRestMenu();
         }
 
         private void OnNotifyGroupChangerPartyAccepted(long playerId, NotifyGroupChangerPartyAccepted groupChangerPartyAccepted)
