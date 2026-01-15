@@ -1017,7 +1017,31 @@ namespace WOTRMultiplayer.Services
 
                // inventory
                .On<NotifyPolymorphicItemCreationRequested>(OnNotifyPolymorphicItemCreationRequested)
+
+               // global map
+               .On<NotifyGlobalMapMessageBoxClosed>(OnNotifyGlobalMapMessageBoxClosed)
+               .On<NotifyGlobalMapIngredientCollectionClosed>(OnNotifyGlobalMapIngredientCollectionClosed)
                ;
+        }
+
+        private void OnNotifyGlobalMapIngredientCollectionClosed(long receivedFrom, NotifyGlobalMapIngredientCollectionClosed globalMapIngredientCollectionClosed)
+        {
+            Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}", nameof(NotifyGlobalMapIngredientCollectionClosed), globalMapIngredientCollectionClosed.PlayerId);
+
+            RemovePlayerFromTracker(Game.PlayersInGlobalMapIngredientCollection, globalMapIngredientCollectionClosed.PlayerId);
+            UpdateGlobalMapIngredientCollectionUIState();
+
+            OnAfterNetworkMessageHandled(receivedFrom, globalMapIngredientCollectionClosed);
+        }
+
+        private void OnNotifyGlobalMapMessageBoxClosed(long receivedFrom, NotifyGlobalMapMessageBoxClosed globalMapMessageBoxClosed)
+        {
+            Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}", nameof(NotifyGlobalMapMessageBoxClosed), globalMapMessageBoxClosed.PlayerId);
+
+            RemovePlayerFromTracker(Game.PlayersInGlobalMapLocationMessage, globalMapMessageBoxClosed.PlayerId);
+            UpdateGlobalMapMessageBoxUIState();
+
+            OnAfterNetworkMessageHandled(receivedFrom, globalMapMessageBoxClosed);
         }
 
         private void OnNotifyPolymorphicItemCreationRequested(long playerId, NotifyPolymorphicItemCreationRequested polymorphicItemCreationRequested)

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Kingmaker.GameModes;
 using WOTRMultiplayer.Entities.Combat;
 using WOTRMultiplayer.Entities.Dialogs;
+using WOTRMultiplayer.Entities.GlobalMap;
 using WOTRMultiplayer.Entities.Leveling;
 
 namespace WOTRMultiplayer.Entities
@@ -38,6 +39,8 @@ namespace WOTRMultiplayer.Entities
         public NetworkRest Rest { get; set; }
 
         public NetworkLeveling Leveling { get; set; }
+
+        public ConcurrentDictionary<NetworkGlobalMapArmyMode, HashSet<long>> PlayersInGlobalMapMode { get; set; } = [];
 
         public ConcurrentDictionary<GameModeType, HashSet<long>> PlayersInGameMode { get; set; } = [];
 

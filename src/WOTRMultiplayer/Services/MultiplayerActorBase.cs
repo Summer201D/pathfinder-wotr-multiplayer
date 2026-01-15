@@ -2666,9 +2666,7 @@ namespace WOTRMultiplayer.Services
 
                 // global map
                 .On<NotifyGlobalMapMessageBoxShown>(OnNotifyGlobalMapMessageBoxShown)
-                .On<NotifyGlobalMapMessageBoxClosed>(OnNotifyGlobalMapMessageBoxClosed)
                 .On<NotifyGlobalMapIngredientCollectionShown>(OnNotifyGlobalMapIngredientCollectionShown)
-                .On<NotifyGlobalMapIngredientCollectionClosed>(OnNotifyGlobalMapIngredientCollectionClosed)
                 .On<NotifyGlobalMapEncounterMessageShown>(OnNotifyGlobalMapEncounterMessageShown)
 
                 // group management
@@ -3030,16 +3028,6 @@ namespace WOTRMultiplayer.Services
             OnAfterNetworkMessageHandled(playerId, globalMapEncounterMessageShown);
         }
 
-        private void OnNotifyGlobalMapIngredientCollectionClosed(long playerId, NotifyGlobalMapIngredientCollectionClosed globalMapIngredientCollectionClosed)
-        {
-            Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}", nameof(NotifyGlobalMapIngredientCollectionClosed), globalMapIngredientCollectionClosed.PlayerId);
-
-            RemovePlayerFromTracker(Game.PlayersInGlobalMapIngredientCollection, globalMapIngredientCollectionClosed.PlayerId);
-            UpdateGlobalMapIngredientCollectionUIState();
-
-            OnAfterNetworkMessageHandled(playerId, globalMapIngredientCollectionClosed);
-        }
-
         private void OnNotifyGlobalMapIngredientCollectionShown(long playerId, NotifyGlobalMapIngredientCollectionShown globalMapIngredientCollectionShown)
         {
             Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}", nameof(NotifyGlobalMapIngredientCollectionShown), globalMapIngredientCollectionShown.PlayerId);
@@ -3060,19 +3048,9 @@ namespace WOTRMultiplayer.Services
             OnAfterNetworkMessageHandled(playerId, groupChangerVisible);
         }
 
-        private void OnNotifyGlobalMapMessageBoxClosed(long playerId, NotifyGlobalMapMessageBoxClosed globalMapMessageBoxClosed)
-        {
-            Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}", nameof(NotifyGlobalMapMessageBoxClosed), globalMapMessageBoxClosed.PlayerId);
-
-            RemovePlayerFromTracker(Game.PlayersInGlobalMapLocationMessage, globalMapMessageBoxClosed.PlayerId);
-            UpdateGlobalMapMessageBoxUIState();
-
-            OnAfterNetworkMessageHandled(playerId, globalMapMessageBoxClosed);
-        }
-
         private void OnNotifyGlobalMapMessageBoxShown(long playerId, NotifyGlobalMapMessageBoxShown globalMapMessageBoxShown)
         {
-            Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}", nameof(NotifyGlobalMapMessageBoxClosed), globalMapMessageBoxShown.PlayerId);
+            Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}", nameof(NotifyGlobalMapMessageBoxShown), globalMapMessageBoxShown.PlayerId);
 
             AddPlayerToTracker(Game.PlayersInGlobalMapLocationMessage, globalMapMessageBoxShown.PlayerId);
             UpdateGlobalMapMessageBoxUIState();

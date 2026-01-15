@@ -1,5 +1,10 @@
-﻿using System.Linq;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
+using System.Reflection.Emit;
 using HarmonyLib;
+using Kingmaker;
 using Kingmaker.Assets.Controllers.GlobalMap;
 using Kingmaker.Blueprints.Root;
 using Kingmaker.Blueprints.Root.Strings;
@@ -12,6 +17,7 @@ using Kingmaker.UI.Common;
 using Kingmaker.UI.GlobalMap;
 using Kingmaker.UI.MVVM._PCView.GlobalMap.Message;
 using Kingmaker.UI.MVVM._VM.GlobalMap.Message;
+using Microsoft.Extensions.Logging;
 using Owlcat.Runtime.UI.Controls.Button;
 using WOTRMultiplayer.Entities.GlobalMap;
 
@@ -62,13 +68,65 @@ namespace WOTRMultiplayer.HarmonyPatches.GlobalMap
         }
 
         [HarmonyPatch(typeof(GlobalMapEnterMessagePCView), nameof(GlobalMapEnterMessagePCView.BindViewImplementation))]
+        [HarmonyTranspiler]
+        public static IEnumerable<CodeInstruction> GlobalMapEnterMessagePCView_BindViewImplementation_Transpiler(IEnumerable<CodeInstruction> instructions)
+        {
+            var target = PatchesUtils.GetTranspilerTarget(MethodBase.GetCurrentMethod());
+            var lookFor = AccessTools.Method(typeof(EscHotkeyManager), nameof(EscHotkeyManager.Subscribe));
+            var replaceWith = AccessTools.Method(typeof(GlobalMapMovementPatches), nameof(GlobalMapMovementPatches.SubscribeEnterMessageEscPress));
+            var matcher = new CodeMatcher(instructions);
+
+            var match = matcher.SearchForward(x => x.Calls(lookFor));
+            if (match.IsInvalid)
+            {
+                Main.GetLogger<GlobalMapControlPatches>().LogError("Transpiler has not been applied. Target={Target}", target);
+                return instructions;
+            }
+
+            var newInstructions = new List<CodeInstruction>()
+            {
+                new(OpCodes.Ldarg_0),
+                new(OpCodes.Call, replaceWith)
+            };
+            match = match.Advance(-7)
+                .RemoveInstructions(8)
+                .Insert(newInstructions);
+
+            Main.GetLogger<GlobalMapControlPatches>().LogInformation("Transpiler has been applied. Target={Target}", target);
+            return matcher.Instructions();
+        }
+
+        private static IDisposable SubscribeEnterMessageEscPress(GlobalMapEnterMessagePCView view)
+        {
+            if (!Main.Multiplayer.IsActive)
+            {
+                return Game.Instance.UI.EscManager.Subscribe(view.ViewModel.Close);
+            }
+
+            var subscription = Game.Instance.UI.EscManager.Subscribe(() =>
+            {
+                if (!view.m_DeclineButton.Interactable)
+                {
+                    return;
+                }
+
+                view.ViewModel.Close();
+            });
+
+            return subscription;
+        }
+
+        [HarmonyPatch(typeof(GlobalMapEnterMessagePCView), nameof(GlobalMapEnterMessagePCView.BindViewImplementation))]
         [HarmonyPostfix]
-        public static void GlobalMapEnterMessagePCView_BindViewImplementation_Postfix()
+        public static void GlobalMapEnterMessagePCView_BindViewImplementation_Postfix(GlobalMapEnterMessagePCView __instance)
         {
             if (!Main.Multiplayer.IsActive)
             {
                 return;
             }
+
+            // responsible for hiding message box when you click somewhere else
+            __instance.m_VeilButton.Interactable = false;
 
             Main.Multiplayer.OnGlobalMapMessageBoxShown();
         }

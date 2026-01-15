@@ -13,6 +13,14 @@ namespace WOTRMultiplayer.Playground.Core.Dummies
         {
         }
 
+        public void CloseIngredientCollection()
+        {
+        }
+
+        public void CloseMessageBox()
+        {
+        }
+
         public void CollectGlobalMapIngredients(NetworkGlobalMapLocation globalMapLocation)
         {
         }

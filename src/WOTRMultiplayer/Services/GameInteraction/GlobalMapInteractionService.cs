@@ -83,6 +83,39 @@ namespace WOTRMultiplayer.Services.GameInteraction
             });
         }
 
+
+        public void CloseMessageBox()
+        {
+            _mainThreadAccessor.Post(() =>
+            {
+                var messageBoxView = _uiAccessor.GlobalMapPCView.m_GlobalMapEnterMessagePCView;
+                if (messageBoxView?.ViewModel == null)
+                {
+                    _logger.LogWarning("Unable to close missing global map message box");
+                    return;
+                }
+
+                messageBoxView.ViewModel.Close();
+                _logger.LogInformation("Global map message box has been closed");
+            });
+        }
+
+        public void CloseIngredientCollection()
+        {
+            _mainThreadAccessor.Post(() =>
+            {
+                var modalMessage = _uiAccessor.CommonPCView?.m_MessageModalPCView;
+                if (modalMessage == null)
+                {
+                    _logger.LogWarning("Global map ingredients message is missing");
+                    return;
+                }
+
+                modalMessage.m_DeclineButton.OnLeftClick.Invoke();
+                _logger.LogInformation("Global map ingredients message has been closed");
+            });
+        }
+
         public bool IsAtGlobalMapLocation(NetworkGlobalMapLocation globalMapLocation)
         {
             var targetPoint = GetGlobalMapPoint(globalMapLocation.Id);
@@ -125,18 +158,21 @@ namespace WOTRMultiplayer.Services.GameInteraction
                 }
 
                 messageBoxView.m_AcceptButton.Interactable = !messageBoxView.ViewModel.IsCurrentLocation || isInteractable;
+                messageBoxView.m_DeclineButton.Interactable = !messageBoxView.ViewModel.IsCurrentLocation || isInteractable;
 
                 var buttonText = messageBoxView.m_AcceptButton.GetComponentInChildren<TextMeshProUGUI>();
-                if (messageBoxView.ViewModel.IsCurrentLocation || _uiAccessor.GlobalMapPCView.ViewModel.ArmyMode.Value)
+                if (messageBoxView.ViewModel.IsCurrentLocation)
                 {
-                    _uiSyncCountersService.UpdateButtonTextCounter(buttonText, readyPlayersCount, totalPlayersCount);
+                    _uiSyncCountersService.UpdateButtonTextCounter(messageBoxView.m_AcceptText, readyPlayersCount, totalPlayersCount);
+                    _uiSyncCountersService.UpdateButtonTextCounter(messageBoxView.m_DeclineText, readyPlayersCount, totalPlayersCount);
                 }
                 else
                 {
-                    _uiSyncCountersService.RemoveButtonTextCounter(buttonText);
+                    _uiSyncCountersService.RemoveButtonTextCounter(messageBoxView.m_AcceptText);
+                    _uiSyncCountersService.RemoveButtonTextCounter(messageBoxView.m_DeclineText);
                 }
 
-                _logger.LogInformation("Global Map Message box accept button has been updated. IsInteractable={IsInteractable}, ReadyPlayers={ReadyPlayers}, TotalPlayers={TotalPlayers}", isInteractable, readyPlayersCount, totalPlayersCount);
+                _logger.LogInformation("Global Map Message box buttons have been updated. IsInteractable={IsInteractable}, ReadyPlayers={ReadyPlayers}, TotalPlayers={TotalPlayers}", isInteractable, readyPlayersCount, totalPlayersCount);
             });
         }
 
@@ -151,9 +187,11 @@ namespace WOTRMultiplayer.Services.GameInteraction
 
                 var modalMessage = _uiAccessor.CommonPCView?.m_MessageModalPCView;
                 modalMessage.m_AcceptButton.Interactable = isInteractable;
+                modalMessage.m_DeclineButton.Interactable = isInteractable;
                 _uiSyncCountersService.UpdateButtonTextCounter(modalMessage.m_AcceptText, readyPlayersCount, totalPlayersCount);
+                _uiSyncCountersService.UpdateButtonTextCounter(modalMessage.m_DeclineText, readyPlayersCount, totalPlayersCount);
 
-                _logger.LogInformation("Global Map Ingredient Collection Accept button has been updated. IsInteractable={IsInteractable}, ReadyPlayers={ReadyPlayers}, TotalPlayers={TotalPlayers}", isInteractable, readyPlayersCount, totalPlayersCount);
+                _logger.LogInformation("Global Map Ingredient Collection buttons have been updated. IsInteractable={IsInteractable}, ReadyPlayers={ReadyPlayers}, TotalPlayers={TotalPlayers}", isInteractable, readyPlayersCount, totalPlayersCount);
             });
         }
 
@@ -196,8 +234,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
                     return;
                 }
 
-                // no message box means client closed his message box right before host clicked accept
-                // autocollecting items since we are at the same place anyway
+                // safety measure to make sure ingredients are collected even if message is not shown
                 var point = GetGlobalMapPoint(globalMapLocation.Id);
                 if (point == null)
                 {
