@@ -333,7 +333,7 @@ namespace WOTRMultiplayer.HarmonyPatches.GlobalMap
                 return;
             }
 
-            var travel = CreateGlobalMapTravel(NetworkGlobalMapPathType.Exact, globalMapTravelData.To.Location, fromClick: true);
+            var travel = CreateGlobalMapTravel(NetworkGlobalMapPathType.Exact, globalMapTravelData.To.Location, fromClick);
             Main.Multiplayer.OnGlobalMapTravelStarted(travel);
         }
 

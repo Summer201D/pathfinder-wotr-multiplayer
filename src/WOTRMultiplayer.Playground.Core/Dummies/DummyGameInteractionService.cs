@@ -126,10 +126,6 @@ namespace WOTRMultiplayer.Playground.Core.Dummies
         {
         }
 
-        public void CreatePing(NetworkPlayer player, NetworkPing ping)
-        {
-        }
-
         public void DelayCombatTurn(string unitId, string targetUnitId)
         {
         }

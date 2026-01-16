@@ -31,6 +31,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
 
         private readonly ILogger<PingInteractionService> _logger;
         private readonly IMainThreadAccessor _mainThreadAccessor;
+        private readonly IUIAccessor _uiAccessor;
         private readonly IGameStateLookupService _gameStateLookupService;
         private readonly IResourceProvider _resourceProvider;
 
@@ -38,12 +39,14 @@ namespace WOTRMultiplayer.Services.GameInteraction
             ILogger<PingInteractionService> logger,
             IGameStateLookupService gameStateLookupService,
             IResourceProvider resourceProvider,
-            IMainThreadAccessor mainThreadAccessor)
+            IMainThreadAccessor mainThreadAccessor,
+            IUIAccessor uiAccessor)
         {
             _logger = logger;
             _gameStateLookupService = gameStateLookupService;
             _resourceProvider = resourceProvider;
             _mainThreadAccessor = mainThreadAccessor;
+            _uiAccessor = uiAccessor;
         }
 
         public NetworkPing Get()
@@ -116,13 +119,13 @@ namespace WOTRMultiplayer.Services.GameInteraction
                         CreateMapObjectPing(player, ping);
                         break;
                     case NetworkPingType.GlobalMapLocation:
-                        CreateGlobalMapLocationPing(player, ping);
+                        CreateGlobalMapLocationPing(ping);
                         break;
                     case NetworkPingType.GlobalMapArmyPawn:
-                        CreateGlobalMapArmyPawnPing(player, ping);
+                        CreateGlobalMapArmyPawnPing(ping);
                         break;
                     case NetworkPingType.GlobalMapKingdomSettlement:
-                        CreateGlobalMapKingdomSettlementPing(player, ping);
+                        CreateGlobalMapKingdomSettlementPing(ping);
                         break;
                     default:
                         return;
@@ -159,7 +162,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
             CreateWorldEntityPing(false, mapGameObject);
         }
 
-        private void CreateGlobalMapLocationPing(NetworkPlayer player, NetworkPing ping)
+        private void CreateGlobalMapLocationPing(NetworkPing ping)
         {
             var point = _gameStateLookupService.GetGlobalMapPoint(ping.GlobalMapLocation);
             if (point == null)
@@ -188,7 +191,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
             PlayPingSound(point.gameObject);
         }
 
-        private void CreateGlobalMapArmyPawnPing(NetworkPlayer player, NetworkPing ping)
+        private void CreateGlobalMapArmyPawnPing(NetworkPing ping)
         {
             var armyPawn = _gameStateLookupService.GetGlobalMapArmyPawn(ping.GlobalMapArmyPawn);
             if (armyPawn == null)
@@ -207,7 +210,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
             PlayPingSound(armyPawn.gameObject);
         }
 
-        private void CreateGlobalMapKingdomSettlementPing(NetworkPlayer player, NetworkPing ping)
+        private void CreateGlobalMapKingdomSettlementPing(NetworkPing ping)
         {
             var point = _gameStateLookupService.GetGlobalMapPoint(ping.GlobalMapLocation);
             if (point == null)

@@ -13,6 +13,7 @@ using Kingmaker.PubSubSystem;
 using Kingmaker.RandomEncounters;
 using Kingmaker.RandomEncounters.Settings;
 using Kingmaker.UI.Common;
+using Kingmaker.UI.MVVM._PCView.Crusade.Armies;
 using Microsoft.Extensions.Logging;
 using TMPro;
 using UnityEngine;
@@ -237,21 +238,50 @@ namespace WOTRMultiplayer.Services.GameInteraction
         {
             _mainThreadAccessor.Post(() =>
             {
-                if (_uiAccessor.GlobalMapPCView?.ViewModel == null)
+                var globalMapView = _uiAccessor.GlobalMapPCView;
+                if (globalMapView?.ViewModel == null)
                 {
                     _logger.LogWarning("Unable to update UI due to missing GlobalMapView");
                     return;
                 }
 
-                var toolbar = _uiAccessor.GlobalMapPCView.m_GlobalMapToolbarPCView;
-
+                var toolbar = globalMapView.m_GlobalMapToolbarPCView;
                 toolbar.m_ArmyModeCharacterButton.Interactable = isInteractable;
                 toolbar.m_ArmyModeCrusadeButton.Interactable = isInteractable;
                 toolbar.m_SkipDay.Interactable = isInteractable;
                 toolbar.m_AddArmyCrusadeButton.Interactable = isInteractable;
                 toolbar.m_AddArmyCrusadePlusButton.Interactable = isInteractable;
-
                 _uiSyncCountersService.UpdateButtonTextCounter(toolbar.m_SkipDayLabel, readyPlayersCount, totalPlayersCount);
+
+                // bottom left list
+                var armies = globalMapView.m_ArmiesPCView.m_ArmiesContainer?.gameObject.GetComponentsInChildren<GlobalMapCrusadeArmyPCView>() ?? [];
+                foreach (var army in armies)
+                {
+                    army.m_SelectButton.Interactable = isInteractable;
+                    army.m_SettingsButton.Interactable = isInteractable;
+                }
+
+                var armyHud = globalMapView.m_ArmyInfoHUDPCView;
+                if (armyHud?.ViewModel != null)
+                {
+                    armyHud.m_InfoButton.Interactable = isInteractable;
+                }
+
+                var menuView = globalMapView.m_GlobalMapMenuPCView;
+                if (menuView?.ViewModel != null)
+                {
+                    menuView.m_KingdomButton.Interactable = isInteractable;
+                    menuView.m_RecruitButton.Interactable = isInteractable;
+                }
+
+                var markersView = globalMapView.m_GlobalMapArmyPointerMarkerPCView;
+                if (markersView?.m_Items != null)
+                {
+                    foreach (var marker in markersView.m_Items.Values)
+                    {
+                        marker.m_Button.Interactable = isInteractable;
+                    }
+                }
 
                 _logger.LogInformation("UI state has been updated. IsInteractable={IsInteractable}, ReadyPlayers={ReadyPlayers}, TotalPlayers={TotalPlayers}", isInteractable, readyPlayersCount, totalPlayersCount);
             });
