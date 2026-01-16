@@ -230,13 +230,15 @@ namespace WOTRMultiplayer.Services.GameInteraction
                     return;
                 }
 
-                _uiAccessor.GlobalMapPCView.m_GlobalMapToolbarPCView.m_ArmyModeCharacterButton.Interactable = isInteractable;
-                _uiAccessor.GlobalMapPCView.m_GlobalMapToolbarPCView.m_ArmyModeCrusadeButton.Interactable = isInteractable;
-                _uiAccessor.GlobalMapPCView.m_GlobalMapToolbarPCView.m_SkipDay.Interactable = isInteractable;
-                _uiAccessor.GlobalMapPCView.m_GlobalMapToolbarPCView.m_AddArmyCrusadeButton.Interactable = isInteractable;
-                _uiAccessor.GlobalMapPCView.m_GlobalMapToolbarPCView.m_AddArmyCrusadePlusButton.Interactable = isInteractable;
+                var toolbar = _uiAccessor.GlobalMapPCView.m_GlobalMapToolbarPCView;
 
-                _uiSyncCountersService.UpdateButtonTextCounter(_uiAccessor.GlobalMapPCView.m_GlobalMapToolbarPCView.m_SkipDayLabel, readyPlayersCount, totalPlayersCount);
+                toolbar.m_ArmyModeCharacterButton.Interactable = isInteractable;
+                toolbar.m_ArmyModeCrusadeButton.Interactable = isInteractable;
+                toolbar.m_SkipDay.Interactable = isInteractable;
+                toolbar.m_AddArmyCrusadeButton.Interactable = isInteractable;
+                toolbar.m_AddArmyCrusadePlusButton.Interactable = isInteractable;
+
+                _uiSyncCountersService.UpdateButtonTextCounter(toolbar.m_SkipDayLabel, readyPlayersCount, totalPlayersCount);
 
                 _logger.LogInformation("UI state has been updated. IsInteractable={IsInteractable}, ReadyPlayers={ReadyPlayers}, TotalPlayers={TotalPlayers}", isInteractable, readyPlayersCount, totalPlayersCount);
             });

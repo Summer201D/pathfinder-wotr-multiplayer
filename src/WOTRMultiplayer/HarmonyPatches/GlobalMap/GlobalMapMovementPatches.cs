@@ -28,13 +28,13 @@ namespace WOTRMultiplayer.HarmonyPatches.GlobalMap
     {
         [HarmonyPatch(typeof(GlobalMapArmyState), nameof(GlobalMapArmyState.StartTravel))]
         [HarmonyPrefix]
-        public static void GlobalMapArmyState_StartTravel_Prefix(GlobalMapArmyState __instance, GlobalMapTravelData travelData)
+        public static void GlobalMapArmyState_StartTravel_Prefix(GlobalMapArmyState __instance, GlobalMapTravelData travelData, bool fromClick)
         {
-            if (!Main.Multiplayer.IsActive || Game.Instance.GlobalMapController.SelectedArmy != __instance)
+            if (!Main.Multiplayer.IsActive || !Game.Instance.GlobalMapController.ArmyMode.Value || Game.Instance.GlobalMapController.SelectedArmy != __instance)
             {
                 return;
             }
-
+            Main.GetLogger<GlobalMapMovementPatches>().LogError(fromClick.ToString());
             var destination = GetNetworkGlobalMapLocation(travelData.To.Location);
 
             Main.Multiplayer.OnGlobalMapStartTravel(destination);
@@ -42,13 +42,14 @@ namespace WOTRMultiplayer.HarmonyPatches.GlobalMap
 
         [HarmonyPatch(typeof(GlobalMapPlayerState), nameof(GlobalMapPlayerState.StartTravel))]
         [HarmonyPrefix]
-        public static void GlobalMapPlayerState_StartTravel_Prefix(GlobalMapTravelData travelData)
+        public static void GlobalMapPlayerState_StartTravel_Prefix(GlobalMapTravelData travelData, bool fromClick)
         {
-            if (!Main.Multiplayer.IsActive || Game.Instance.GlobalMapController.SelectedArmy != null)
+            if (!Main.Multiplayer.IsActive || Game.Instance.GlobalMapController.ArmyMode.Value || Game.Instance.GlobalMapController.SelectedArmy != null)
             {
                 return;
             }
 
+            Main.GetLogger<GlobalMapMovementPatches>().LogError(fromClick.ToString());
             var destination = GetNetworkGlobalMapLocation(travelData.To.Location);
 
             Main.Multiplayer.OnGlobalMapStartTravel(destination);

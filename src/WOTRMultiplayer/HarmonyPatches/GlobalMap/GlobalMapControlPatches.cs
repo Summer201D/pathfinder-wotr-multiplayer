@@ -1,14 +1,10 @@
-﻿using System.Collections.Generic;
-using System.Reflection;
-using System.Reflection.Emit;
-using HarmonyLib;
+﻿using HarmonyLib;
 using Kingmaker.Globalmap;
+using Kingmaker.Globalmap.State;
 using Kingmaker.Globalmap.View;
 using Kingmaker.UI.MVVM._PCView.GlobalMap.Toolbar;
-using Kingmaker.UI.MVVM._VM.Crusade.Armies;
 using Kingmaker.UI.MVVM._VM.GlobalMap;
 using Kingmaker.UI.MVVM._VM.GlobalMap.Toolbar;
-using Microsoft.Extensions.Logging;
 using UniRx;
 using WOTRMultiplayer.Entities.GlobalMap;
 
@@ -18,43 +14,16 @@ namespace WOTRMultiplayer.HarmonyPatches.GlobalMap
     public class GlobalMapControlPatches
     {
         [HarmonyPatch(typeof(GlobalMapSelectController), nameof(GlobalMapSelectController.HandleClick), [typeof(GlobalMapPawn)])]
-        [HarmonyTranspiler]
-        public static IEnumerable<CodeInstruction> GlobalMapSelectController_HandleClick_Transpiler(IEnumerable<CodeInstruction> instructions)
+        [HarmonyPrefix]
+        public static bool GlobalMapSelectController_HandleClick_Prefix()
         {
-            var target = PatchesUtils.GetTranspilerTarget(MethodBase.GetCurrentMethod());
-            var lookFor = AccessTools.Method(typeof(GlobalMapController), nameof(GlobalMapController.SetSelectedArmy));
-            var armyClickCall = AccessTools.Method(typeof(GlobalMapControlPatches), nameof(GlobalMapControlPatches.OnArmyPawnClicked));
-            var playerClickCall = AccessTools.Method(typeof(GlobalMapControlPatches), nameof(GlobalMapControlPatches.OnPlayerPawnClicked));
-            var matcher = new CodeMatcher(instructions);
-
-            var match = matcher.SearchForward(x => x.Calls(lookFor));
-            if (match.IsInvalid)
+            if (!Main.Multiplayer.IsActive)
             {
-                Main.GetLogger<GlobalMapControlPatches>().LogError("Transpiler has not been applied (GlobalMapArmyPawnClick). Target={Target}", target);
-                return instructions;
+                return true;
             }
 
-            var armyPawnInstructions = new List<CodeInstruction>()
-            {
-                new(OpCodes.Ldloc_S, 4),
-                new(OpCodes.Call, armyClickCall)
-            };
-            match = match.Advance(-1).Insert(armyPawnInstructions);
-
-            match = matcher.End().SearchBackwards(x => x.Calls(lookFor));
-            if (match.IsInvalid)
-            {
-                Main.GetLogger<GlobalMapControlPatches>().LogError("Transpiler has not been applied (GlobalMapPlayerPawnClick). Target={Target}", target);
-                return instructions;
-            }
-            var playerPawnInstructions = new List<CodeInstruction>()
-            {
-                new(OpCodes.Call, playerClickCall)
-            };
-            match = match.Insert(playerPawnInstructions);
-
-            Main.GetLogger<GlobalMapControlPatches>().LogInformation("Transpiler has been applied (GlobalMapArmyPawnClick + GlobalMapPlayerPawnClick). Target={Target}", target);
-            return matcher.Instructions();
+            var canContinue = Main.Multiplayer.CanNavigateOnGlobalMap();
+            return canContinue;
         }
 
         [HarmonyPatch(typeof(GlobalMapToolbarPCView), nameof(GlobalMapToolbarPCView.BindViewImplementation))]
@@ -122,38 +91,17 @@ namespace WOTRMultiplayer.HarmonyPatches.GlobalMap
             Main.Multiplayer.OnGlobalMapAutoCrusadeCombatChanged(isEnabled);
         }
 
-        [HarmonyPatch(typeof(GlobalMapCrusadeArmyVM), nameof(GlobalMapCrusadeArmyVM.OnSelectClick))]
+        [HarmonyPatch(typeof(GlobalMapController), nameof(GlobalMapController.SetSelectedArmy))]
         [HarmonyPrefix]
-        public static void GlobalMapCrusadeArmyVM_OnSelectClick_Prefix(GlobalMapCrusadeArmyVM __instance)
+        public static void GlobalMapCrusadeArmyVM_OnSelectClick_Prefix(GlobalMapArmyState army)
         {
             if (!Main.Multiplayer.IsActive)
             {
                 return;
             }
 
-            var armyId = __instance.Army?.Id;
+            var armyId = army?.Id;
             Main.Multiplayer.OnGlobalMapSelectedArmyChanged(armyId);
-        }
-
-        private static void OnArmyPawnClicked(GlobalMapArmyPawn armyPawn)
-        {
-            if (!Main.Multiplayer.IsActive)
-            {
-                return;
-            }
-
-            var armyId = armyPawn.State.Id;
-            Main.Multiplayer.OnGlobalMapSelectedArmyChanged(armyId);
-        }
-
-        private static void OnPlayerPawnClicked()
-        {
-            if (!Main.Multiplayer.IsActive)
-            {
-                return;
-            }
-
-            Main.Multiplayer.OnGlobalMapSelectedArmyChanged(null);
         }
 
         private static NetworkGlobalMapTravelerMode GetTravelerMode(bool state)

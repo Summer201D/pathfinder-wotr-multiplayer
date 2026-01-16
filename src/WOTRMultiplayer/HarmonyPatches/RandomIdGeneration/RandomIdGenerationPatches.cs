@@ -4,12 +4,17 @@ using System.Reflection;
 using System.Reflection.Emit;
 using HarmonyLib;
 using Kingmaker;
+using Kingmaker.Armies;
+using Kingmaker.Armies.Blueprints;
+using Kingmaker.Armies.State;
 using Kingmaker.Blueprints;
 using Kingmaker.Blueprints.Classes.Spells;
 using Kingmaker.Blueprints.Items;
 using Kingmaker.Controllers;
 using Kingmaker.EntitySystem;
 using Kingmaker.EntitySystem.Entities;
+using Kingmaker.Globalmap;
+using Kingmaker.Globalmap.State;
 using Kingmaker.Items;
 using Kingmaker.UnitLogic;
 using Kingmaker.UnitLogic.Abilities;
@@ -66,6 +71,36 @@ namespace WOTRMultiplayer.HarmonyPatches.RandomIdGeneration
             }
 
             Main.GetLogger<RandomIdGenerationPatches>().LogError("Player.GetNewUniqueId should never be called, Result={Result}, StackTrace={StackTrace}", __result, Environment.StackTrace);
+        }
+
+        [HarmonyPatch(typeof(GlobalMapState), nameof(GlobalMapState.CreateArmy), [typeof(ArmyFaction), typeof(BlueprintArmyPreset), typeof(GlobalMapPosition), typeof(bool), typeof(bool)])]
+        [HarmonyTranspiler]
+        public static IEnumerable<CodeInstruction> GlobalMapState_CreateArmy_Transpiler(IEnumerable<CodeInstruction> instructions)
+        {
+            var target = PatchesUtils.GetTranspilerTarget(MethodBase.GetCurrentMethod());
+            var lookFor = AccessTools.Method(typeof(Guid), nameof(Guid.NewGuid));
+            var replaceWith = AccessTools.Method(typeof(RandomIdGenerationPatches), nameof(RandomIdGenerationPatches.GetNewArmyId));
+            var matcher = new CodeMatcher(instructions);
+            var match = matcher.SearchForward(x => x.Calls(lookFor));
+            if (match.IsInvalid)
+            {
+                Main.GetLogger<RandomIdGenerationPatches>().LogError("Unable to find Guid.NewGuid() call. Target={Target}", target);
+                return matcher.Instructions();
+            }
+
+            var newInstructions = new List<CodeInstruction>
+            {
+                new(OpCodes.Ldloc_1),
+                new(OpCodes.Ldarg_1),
+                new(OpCodes.Ldarg_2),
+                new(OpCodes.Ldarg_3),
+                new(OpCodes.Ldarg_S, 4),
+                new(OpCodes.Ldarg_S, 5),
+                new(OpCodes.Call, replaceWith),
+            };
+            match = match.RemoveInstructions(5).Insert(newInstructions);
+            Main.GetLogger<RandomIdGenerationPatches>().LogInformation("Transpiler has been applied. Target={Target}", target);
+            return matcher.Instructions();
         }
 
         [HarmonyPatch(typeof(AbilityData), MethodType.Constructor, argumentTypes: [typeof(BlueprintAbility), typeof(UnitDescriptor), typeof(Ability), typeof(BlueprintSpellbook)])]
@@ -386,7 +421,7 @@ namespace WOTRMultiplayer.HarmonyPatches.RandomIdGeneration
             }
             catch (Exception ex)
             {
-                Main.GetLogger<RandomIdGenerationPatches>().LogError(ex, "Error while generating unique Id. Type={Type}", UniqueIdType.Unit);
+                Main.GetLogger<RandomIdGenerationPatches>().LogError(ex, "Error while generating new unit Id. Type={Type}", UniqueIdType.Unit);
                 throw;
             }
         }
@@ -401,7 +436,7 @@ namespace WOTRMultiplayer.HarmonyPatches.RandomIdGeneration
             }
             catch (Exception ex)
             {
-                Main.GetLogger<RandomIdGenerationPatches>().LogError(ex, "Error while generating unique Id. Type={Type}", UniqueIdType.Fact);
+                Main.GetLogger<RandomIdGenerationPatches>().LogError(ex, "Error while generating new entity fact Id. Type={Type}", UniqueIdType.Fact);
                 throw;
             }
         }
@@ -416,7 +451,7 @@ namespace WOTRMultiplayer.HarmonyPatches.RandomIdGeneration
             }
             catch (Exception ex)
             {
-                Main.GetLogger<RandomIdGenerationPatches>().LogError(ex, "Error while generating unique Id. Type={Type}", UniqueIdType.ChangeBlueprintUnit);
+                Main.GetLogger<RandomIdGenerationPatches>().LogError(ex, "Error while generating 'changeBlueprint' Id. Type={Type}", UniqueIdType.ChangeBlueprintUnit);
                 throw;
             }
         }
@@ -431,7 +466,44 @@ namespace WOTRMultiplayer.HarmonyPatches.RandomIdGeneration
             }
             catch (Exception ex)
             {
-                Main.GetLogger<RandomIdGenerationPatches>().LogError(ex, "Error while generating unique Id. Type={Type}", UniqueIdType.ItemEntity);
+                Main.GetLogger<RandomIdGenerationPatches>().LogError(ex, "Error while generating new item entity Id. Type={Type}", UniqueIdType.ItemEntity);
+                throw;
+            }
+        }
+
+        public static string GetNewArmyId(ArmyNameWithIndex armyNameWithIndex, ArmyFaction armyFaction, BlueprintArmyPreset armyPreset, GlobalMapPosition position, bool isGarrison, bool isTraveling)
+        {
+            if (!Main.Multiplayer.IsActive)
+            {
+                // default logic is fine as these IDs will be synced by loading save. Just need to make sure game generates same IDs within the MP session
+                return Guid.NewGuid().ToString();
+            }
+
+            // the idea is to generate deterministic GUIDs based on army data.
+            // each area reload will reset the seed sequence, so we will eventually reuse old IDs for new armies.
+            // hopefully, this shouldn't be a problem, and the game doesn't use 'historic' army IDs for anything
+            try
+            {
+                string id = null;
+                var sessionSeed = Main.Multiplayer.GetSessionSeed();
+                var identifier = $"{GetCommonIdPart()}:{armyNameWithIndex.ArmyName}:{armyNameWithIndex.ArmyIndex}:{armyFaction}:{armyPreset?.AssetGuid.ToString()}:{position?.Location?.name}:{isGarrison}:{isTraveling}:{sessionSeed.Value}";
+                while (string.IsNullOrEmpty(id))
+                {
+                    id = Main.Multiplayer.ValueGenerator.CreateGuid(SeedLifetime.Area, identifier).ToString();
+                    var army = GlobalMapController.State.Armies.FirstOrDefault(a => string.Equals(a.Id, id, StringComparison.OrdinalIgnoreCase));
+                    if (army != null)
+                    {
+                        id = null;
+                        continue;
+                    }
+                }
+
+                Main.GetLogger<RandomIdGenerationPatches>().LogInformation("ArmyId has been generated. GameId={GameId}, Identifier={Identifier}, Id={Id}", Game.Instance.Player.GameId, identifier, id);
+                return id;
+            }
+            catch (Exception ex)
+            {
+                Main.GetLogger<RandomIdGenerationPatches>().LogError(ex, "Error while generating new army Id");
                 throw;
             }
         }

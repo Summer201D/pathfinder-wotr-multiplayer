@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Kingmaker;
 using Kingmaker.EntitySystem.Entities;
+using Kingmaker.Globalmap;
 using Kingmaker.Globalmap.State;
 using Kingmaker.Globalmap.View;
 using Kingmaker.View.MapObjects;
@@ -65,9 +66,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
 
         public GlobalMapArmyState GetGlobalMapArmy(string id)
         {
-            var map = Game.Instance.GlobalMapController.SelectedTraveler?.Location.GlobalMap;
-            var state = Game.Instance.Player.GetGlobalMap(map);
-            var army = state?.Armies.FirstOrDefault(a => string.Equals(a.Id, id, StringComparison.OrdinalIgnoreCase));
+            var army = GlobalMapController.State?.Armies.FirstOrDefault(a => string.Equals(a.Id, id, StringComparison.OrdinalIgnoreCase));
             return army;
         }
     }

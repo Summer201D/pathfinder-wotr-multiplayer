@@ -1985,7 +1985,7 @@ namespace WOTRMultiplayer.Services
                 var readyPlayers = GetPlayersCountWithSyncedGlobalMapMode();
                 if (!readyPlayers.HasValue)
                 {
-                    Logger.LogError("Unable to update global map ui state due to invalid ready players count");
+                    Logger.LogWarning("Unable to update global map ui state due to invalid ready players count");
                     return;
                 }
 

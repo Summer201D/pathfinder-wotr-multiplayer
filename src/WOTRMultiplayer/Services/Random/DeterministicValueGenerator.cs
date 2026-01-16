@@ -1,4 +1,5 @@
-﻿using System.Collections.Concurrent;
+﻿using System;
+using System.Collections.Concurrent;
 using System.ComponentModel;
 using System.Linq;
 using Microsoft.Extensions.Logging;
@@ -9,22 +10,32 @@ using WOTRMultiplayer.Extensions;
 
 namespace WOTRMultiplayer.Services.Random
 {
-    public class PredictableValueGenerator : IValueGenerator
+    public class DeterministicValueGenerator : IValueGenerator
     {
         private readonly ConcurrentDictionary<string, UniqueIdCounters> _entityCounters = new();
         private readonly ConcurrentDictionary<int, Seed> _seedGenerators = new();
-        private readonly ILogger<PredictableValueGenerator> _logger;
+        private readonly ILogger<DeterministicValueGenerator> _logger;
         private readonly IGameInteractionService _gameInteractionService;
         private readonly IHashService _hashService;
 
-        public PredictableValueGenerator(
-            ILogger<PredictableValueGenerator> logger,
+        public DeterministicValueGenerator(
+            ILogger<DeterministicValueGenerator> logger,
             IGameInteractionService gameInteractionService,
             IHashService hashService)
         {
             _logger = logger;
             _gameInteractionService = gameInteractionService;
             _hashService = hashService;
+        }
+
+        public Guid CreateGuid(SeedLifetime seedLifetime, string seed)
+        {
+            var actualSeed = _hashService.Murmur3(seed);
+            var generator = GetSeed(seedLifetime, actualSeed);
+            var guidBytes = new byte[16];
+            generator.Random.NextBytes(guidBytes);
+            var guid = new Guid(guidBytes);
+            return guid;
         }
 
         public int Range(SeedLifetime seedLifetime, int seed, int minInclusive, int maxExclusive)

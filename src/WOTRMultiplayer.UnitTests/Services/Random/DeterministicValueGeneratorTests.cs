@@ -7,16 +7,17 @@ using Microsoft.Extensions.Logging;
 using NUnit.Framework;
 using WOTRMultiplayer.Abstractions.GameInteraction;
 using WOTRMultiplayer.Abstractions.Hashing;
+using WOTRMultiplayer.Abstractions.Random;
 using WOTRMultiplayer.Extensions;
 using WOTRMultiplayer.Services.Random;
 
 namespace WOTRMultiplayer.UnitTests.Services.Random
 {
     [TestFixture]
-    public class PredictableValueGeneratorTests
+    public class DeterministicValueGeneratorTests
     {
-        private ILogger<PredictableValueGenerator> _logger;
-        private PredictableValueGenerator _predictableValueGenerator;
+        private ILogger<DeterministicValueGenerator> _logger;
+        private DeterministicValueGenerator _valueGenerator;
         private IHashService _hashService;
         private IGameInteractionService _gameInteractionService;
 
@@ -25,9 +26,9 @@ namespace WOTRMultiplayer.UnitTests.Services.Random
         {
             _hashService = A.Fake<IHashService>();
             _gameInteractionService = A.Fake<IGameInteractionService>();
-            _logger = A.Fake<ILogger<PredictableValueGenerator>>();
+            _logger = A.Fake<ILogger<DeterministicValueGenerator>>();
 
-            _predictableValueGenerator = new PredictableValueGenerator(_logger, _gameInteractionService, _hashService);
+            _valueGenerator = new DeterministicValueGenerator(_logger, _gameInteractionService, _hashService);
         }
 
         [TestCase(0)]
@@ -51,7 +52,7 @@ namespace WOTRMultiplayer.UnitTests.Services.Random
             }
 
             // Act
-            var actualId = _predictableValueGenerator.GenerateUniqueId(idType, gameId, identifier);
+            var actualId = _valueGenerator.GenerateUniqueId(idType, gameId, identifier);
             // Assert
             Assert.That(actualId, Does.StartWith(expectedPrefix));
             Assert.That(actualId, Does.EndWith(expectedCounter.ToString()));
@@ -71,7 +72,7 @@ namespace WOTRMultiplayer.UnitTests.Services.Random
             A.CallTo(() => _hashService.Murmur3(A<string>.Ignored)).Throws(expectedException);
 
             // Act
-            var actualException = Assert.Throws<InvalidOperationException>(() => _predictableValueGenerator.GenerateUniqueId(idType, gameId, identifier));
+            var actualException = Assert.Throws<InvalidOperationException>(() => _valueGenerator.GenerateUniqueId(idType, gameId, identifier));
 
             // Assert
             Assert.That(actualException.Message, Is.EqualTo(expectedException.Message));
@@ -90,7 +91,7 @@ namespace WOTRMultiplayer.UnitTests.Services.Random
             A.CallTo(() => _gameInteractionService.GetEntity(A<string>.Ignored)).Throws(expectedException);
 
             // Act
-            var actualException = Assert.Throws<InvalidOperationException>(() => _predictableValueGenerator.GenerateUniqueId(idType, gameId, identifier));
+            var actualException = Assert.Throws<InvalidOperationException>(() => _valueGenerator.GenerateUniqueId(idType, gameId, identifier));
 
             // Assert
             Assert.That(actualException.Message, Is.EqualTo(expectedException.Message));
@@ -110,8 +111,8 @@ namespace WOTRMultiplayer.UnitTests.Services.Random
             A.CallTo(() => _gameInteractionService.GetEntity(A<string>.Ignored)).Returns(null);
 
             // Act
-            var actualIdOne = _predictableValueGenerator.GenerateUniqueId(idType, gameId, identifierOne);
-            var actualIdTwo = _predictableValueGenerator.GenerateUniqueId(idType, gameId, identifierTwo);
+            var actualIdOne = _valueGenerator.GenerateUniqueId(idType, gameId, identifierOne);
+            var actualIdTwo = _valueGenerator.GenerateUniqueId(idType, gameId, identifierTwo);
 
             // Assert
             Assert.That(actualIdOne, Does.EndWith("1"));
@@ -131,8 +132,8 @@ namespace WOTRMultiplayer.UnitTests.Services.Random
             A.CallTo(() => _gameInteractionService.GetEntity(A<string>.Ignored)).Returns(null);
 
             // Act
-            var actualIdOne = _predictableValueGenerator.GenerateUniqueId(idType, gameId, identifierOne);
-            var actualIdTwo = _predictableValueGenerator.GenerateUniqueId(idType, gameId, identifierOne);
+            var actualIdOne = _valueGenerator.GenerateUniqueId(idType, gameId, identifierOne);
+            var actualIdTwo = _valueGenerator.GenerateUniqueId(idType, gameId, identifierOne);
 
             // Assert
             Assert.That(actualIdOne, Does.EndWith("1"));
@@ -152,8 +153,8 @@ namespace WOTRMultiplayer.UnitTests.Services.Random
             A.CallTo(() => _gameInteractionService.GetEntity(A<string>.Ignored)).Returns(null);
 
             // Act
-            var actualIdOne = _predictableValueGenerator.GenerateUniqueId(idType, gameId, identifierOne);
-            var actualIdTwo = _predictableValueGenerator.GenerateUniqueId(idType, Guid.NewGuid().ToString(), identifierOne);
+            var actualIdOne = _valueGenerator.GenerateUniqueId(idType, gameId, identifierOne);
+            var actualIdTwo = _valueGenerator.GenerateUniqueId(idType, Guid.NewGuid().ToString(), identifierOne);
 
             // Assert
             Assert.That(actualIdOne, Does.EndWith("1"));
@@ -177,14 +178,30 @@ namespace WOTRMultiplayer.UnitTests.Services.Random
             A.CallTo(() => _gameInteractionService.GetEntity(A<string>.Ignored)).Returns(null);
 
             // Act
-            var actualIdOne = _predictableValueGenerator.GenerateUniqueId(idTypeOne, gameId, identifierOne);
-            var actualIdTwo = _predictableValueGenerator.GenerateUniqueId(idTypeTwo, gameId, identifierOne);
+            var actualIdOne = _valueGenerator.GenerateUniqueId(idTypeOne, gameId, identifierOne);
+            var actualIdTwo = _valueGenerator.GenerateUniqueId(idTypeTwo, gameId, identifierOne);
 
             // Assert
             Assert.That(actualIdOne, Does.EndWith("1"));
             Assert.That(actualIdTwo, Does.EndWith("1"));
             Assert.That(actualIdOne, Is.Not.EqualTo(actualIdTwo));
             A.CallTo(() => _gameInteractionService.GetEntity(A<string>.Ignored)).MustHaveHappened(2, Times.Exactly);
+        }
+
+        [Test]
+        public void CreateGuid_SameSeed_GeneratesSameSequence()
+        {
+            // Arrange
+            var seed = Guid.NewGuid().ToString();
+            A.CallTo(() => _hashService.Murmur3(seed)).Returns(123456);
+
+            // Act
+            var firstSequence = Enumerable.Range(0, 10).Select(_ => _valueGenerator.CreateGuid(SeedLifetime.Area, seed)).ToList();
+            _valueGenerator.ResetSeedGenerators(SeedLifetime.Area);
+            var secondSequence = Enumerable.Range(0, 10).Select(_ => _valueGenerator.CreateGuid(SeedLifetime.Area, seed)).ToList();
+
+            // Assert
+            Assert.That(firstSequence, Is.EqualTo(secondSequence));
         }
 
         private static IEnumerable<UniqueIdType> GetAllUniqueIdTypes()

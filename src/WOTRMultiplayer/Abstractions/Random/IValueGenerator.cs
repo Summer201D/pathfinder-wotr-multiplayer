@@ -1,4 +1,5 @@
-﻿using WOTRMultiplayer.Services.Random;
+﻿using System;
+using WOTRMultiplayer.Services.Random;
 
 namespace WOTRMultiplayer.Abstractions.Random
 {
@@ -15,5 +16,7 @@ namespace WOTRMultiplayer.Abstractions.Random
         void ResetUniqueIdCounters(string gameId);
 
         void ResetSeedGenerators(params SeedLifetime[] lifetimes);
+
+        Guid CreateGuid(SeedLifetime area, string seed);
     }
 }

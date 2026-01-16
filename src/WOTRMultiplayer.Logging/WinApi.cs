@@ -8,7 +8,6 @@ namespace WOTRMultiplayer.Logging
 {
     public static class WinApi
     {
-        public const int MY_CODE_PAGE = 437;
         public const uint GENERIC_WRITE = 0x40000000;
         public const uint FILE_SHARE_WRITE = 0x2;
         public const uint OPEN_EXISTING = 0x3;
@@ -29,10 +28,9 @@ namespace WOTRMultiplayer.Logging
             var fileHandle = CreateFile("CONOUT$", GENERIC_WRITE, FILE_SHARE_WRITE, 0, OPEN_EXISTING, 0, 0);
             var safeFileHandle = new SafeFileHandle(fileHandle, true);
             var fileStream = new FileStream(safeFileHandle, FileAccess.Write);
-            var encoding = Encoding.GetEncoding(MY_CODE_PAGE);
-            var standardOutput = new StreamWriter(fileStream, encoding)
+            var standardOutput = new StreamWriter(fileStream, Encoding.UTF8)
             {
-                AutoFlush = true
+                AutoFlush = true,
             };
 
             return standardOutput;
