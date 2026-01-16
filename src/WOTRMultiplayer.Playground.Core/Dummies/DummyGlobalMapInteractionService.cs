@@ -62,7 +62,7 @@ namespace WOTRMultiplayer.Playground.Core.Dummies
         {
         }
 
-        public void StartTravel(NetworkGlobalMapLocation destination)
+        public void StartTravel(NetworkGlobalMapTravel globalMapTravel)
         {
         }
 

@@ -703,11 +703,11 @@ namespace WOTRMultiplayer.Services
 
         private void OnNotifyGlobalMapTravelStarted(long playerId, NotifyGlobalMapTravelStarted globalMapTravelStarted)
         {
-            Logger.LogInformation("Received {MessageType}. DestinationId={DestinationId}, DestinationName={DestinationName}", nameof(NotifyGlobalMapTravelStarted), globalMapTravelStarted.Destination.Id, globalMapTravelStarted.Destination.Name);
+            Logger.LogInformation("Received {MessageType}. Type={Type}, Mode={Mode}, FromClick={FromClick}, DestinationId={DestinationId}, DestinationName={DestinationName}", nameof(NotifyGlobalMapTravelStarted), globalMapTravelStarted.Travel.Type, globalMapTravelStarted.Travel.Mode, globalMapTravelStarted.Travel.FromClick, globalMapTravelStarted.Travel.Destination.Id, globalMapTravelStarted.Travel.Destination.Name);
 
-            var destination = Mapper.Map<NetworkGlobalMapLocation>(globalMapTravelStarted.Destination);
+            var travel = Mapper.Map<NetworkGlobalMapTravel>(globalMapTravelStarted.Travel);
 
-            GlobalMapInteraction.StartTravel(destination);
+            GlobalMapInteraction.StartTravel(travel);
         }
 
         private void OnNotifyGlobalMapRestMenuOpened(long playerId, NotifyGlobalMapRestMenuOpened globalMapRestMenuOpened)

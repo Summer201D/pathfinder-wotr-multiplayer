@@ -630,13 +630,13 @@ namespace WOTRMultiplayer.Services
             Send(message);
         }
 
-        public void OnGlobalMapStartTravel(NetworkGlobalMapLocation destination)
+        public void OnGlobalMapTravelStarted(NetworkGlobalMapTravel globalMapTravel)
         {
             var message = new NotifyGlobalMapTravelStarted
             {
-                Destination = Mapper.Map<Networking.Messages.Contracts.NetworkGlobalMapLocation>(destination)
+                Travel = Mapper.Map<Networking.Messages.Contracts.NetworkGlobalMapTravel>(globalMapTravel)
             };
-            Logger.LogInformation("Sending {MessageType}. DestinationId={DestinationId}, DestinationName={DestinationName}", nameof(NotifyGlobalMapTravelStarted), message.Destination.Id, message.Destination.Name);
+            Logger.LogInformation("Sending {MessageType}. Type={Type}, Mode={Mode}, FromClick={FromClick}, DestinationId={DestinationId}, DestinationName={DestinationName}", nameof(NotifyGlobalMapTravelStarted), message.Travel.Type, message.Travel.Mode, message.Travel.FromClick, message.Travel.Destination.Id, message.Travel.Destination.Name);
             Send(message);
         }
 

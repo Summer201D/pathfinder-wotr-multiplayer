@@ -211,6 +211,9 @@ namespace WOTRMultiplayer.Config.Mapping
             CreateMap<NetworkGlobalMapEncounter, Networking.Messages.Contracts.NetworkGlobalMapEncounter>()
                 .ReverseMap();
 
+            CreateMap<NetworkGlobalMapTravel, Networking.Messages.Contracts.NetworkGlobalMapTravel>()
+                .ReverseMap();
+
             CreateMap<NetworkItemsTransfer, Networking.Messages.Contracts.NetworkItemsTransfer>()
                 .ReverseMap();
 

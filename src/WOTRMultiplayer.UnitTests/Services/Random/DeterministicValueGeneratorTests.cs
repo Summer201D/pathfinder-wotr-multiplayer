@@ -7,7 +7,6 @@ using Microsoft.Extensions.Logging;
 using NUnit.Framework;
 using WOTRMultiplayer.Abstractions.GameInteraction;
 using WOTRMultiplayer.Abstractions.Hashing;
-using WOTRMultiplayer.Abstractions.Random;
 using WOTRMultiplayer.Extensions;
 using WOTRMultiplayer.Services.Random;
 

@@ -8,6 +8,7 @@ using Kingmaker;
 using Kingmaker.Assets.Controllers.GlobalMap;
 using Kingmaker.Blueprints.Root;
 using Kingmaker.Blueprints.Root.Strings;
+using Kingmaker.GameModes;
 using Kingmaker.Globalmap;
 using Kingmaker.Globalmap.Blueprints;
 using Kingmaker.Globalmap.State;
@@ -17,6 +18,7 @@ using Kingmaker.UI.Common;
 using Kingmaker.UI.GlobalMap;
 using Kingmaker.UI.MVVM._PCView.GlobalMap.Message;
 using Kingmaker.UI.MVVM._VM.GlobalMap.Message;
+using Kingmaker.UI.MVVM._VM.GlobalMap.Movement;
 using Microsoft.Extensions.Logging;
 using Owlcat.Runtime.UI.Controls.Button;
 using WOTRMultiplayer.Entities.GlobalMap;
@@ -26,33 +28,112 @@ namespace WOTRMultiplayer.HarmonyPatches.GlobalMap
     [HarmonyPatch]
     public class GlobalMapMovementPatches
     {
-        [HarmonyPatch(typeof(GlobalMapArmyState), nameof(GlobalMapArmyState.StartTravel))]
-        [HarmonyPrefix]
-        public static void GlobalMapArmyState_StartTravel_Prefix(GlobalMapArmyState __instance, GlobalMapTravelData travelData, bool fromClick)
+        [HarmonyPatch(typeof(GlobalMapMovementVM), nameof(GlobalMapMovementVM.TryEnterLocation))]
+        [HarmonyTranspiler]
+        public static IEnumerable<CodeInstruction> GlobalMapMovementVM_TryEnterLocation_Transpiler(IEnumerable<CodeInstruction> instructions)
         {
-            if (!Main.Multiplayer.IsActive || !Game.Instance.GlobalMapController.ArmyMode.Value || Game.Instance.GlobalMapController.SelectedArmy != __instance)
-            {
-                return;
-            }
-            Main.GetLogger<GlobalMapMovementPatches>().LogError(fromClick.ToString());
-            var destination = GetNetworkGlobalMapLocation(travelData.To.Location);
+            var target = PatchesUtils.GetTranspilerTarget(MethodBase.GetCurrentMethod());
+            var extraDirectionalCall = AccessTools.Method(typeof(GlobalMapMovementPatches), nameof(GlobalMapMovementPatches.OnGlobalMapDirectionalMovement));
+            var extraExactCall = AccessTools.Method(typeof(GlobalMapMovementPatches), nameof(GlobalMapMovementPatches.OnGlobalMapExactMovement));
+            var lookFor = AccessTools.Method(typeof(IGlobalMapTraveler), nameof(IGlobalMapTraveler.StartTravel));
+            var matcher = new CodeMatcher(instructions);
+            var match = matcher.SearchForward(x => x.Calls(lookFor));
 
-            Main.Multiplayer.OnGlobalMapStartTravel(destination);
+            if (match.IsInvalid)
+            {
+                Main.GetLogger<GlobalMapMovementPatches>().LogError("Invalid transpiler position (GlobalMapDirectionalMovement). Target={Target}, Position={Position}", target, match.Pos);
+                return instructions;
+            }
+
+            var newDirectionalInstructions = new List<CodeInstruction>()
+            {
+                new(OpCodes.Ldloc_S, 4),
+                new(OpCodes.Call, extraDirectionalCall),
+            };
+            match = match.Insert(newDirectionalInstructions);
+
+            match = match.Advance(newDirectionalInstructions.Count).SearchForward(x => x.Calls(lookFor));
+            if (match.IsInvalid)
+            {
+                Main.GetLogger<GlobalMapMovementPatches>().LogError("Invalid transpiler position (GlobalMapExactMovement). Target={Target}, Position={Position}", target, match.Pos);
+                return instructions;
+            }
+            var newExactInstructions = new List<CodeInstruction>()
+            {
+                new(OpCodes.Ldloc_S, 5),
+                new(OpCodes.Ldc_I4_1),
+                new(OpCodes.Call, extraExactCall),
+            };
+            match = match.Insert(newExactInstructions);
+            Main.GetLogger<GlobalMapMovementPatches>().LogInformation("Transpiler has been applied (GlobalMapDirectionalMovement + GlobalMapExactMovement). Target={Target}", target);
+            return matcher.Instructions();
         }
 
-        [HarmonyPatch(typeof(GlobalMapPlayerState), nameof(GlobalMapPlayerState.StartTravel))]
-        [HarmonyPrefix]
-        public static void GlobalMapPlayerState_StartTravel_Prefix(GlobalMapTravelData travelData, bool fromClick)
+        [HarmonyPatch(typeof(GlobalMapView), nameof(GlobalMapView.GoToLocationRevealed))]
+        [HarmonyTranspiler]
+        public static IEnumerable<CodeInstruction> GlobalMapView_GoToLocationRevealed_Transpiler(IEnumerable<CodeInstruction> instructions)
         {
-            if (!Main.Multiplayer.IsActive || Game.Instance.GlobalMapController.ArmyMode.Value || Game.Instance.GlobalMapController.SelectedArmy != null)
+            var target = PatchesUtils.GetTranspilerTarget(MethodBase.GetCurrentMethod());
+            var extraExactCall = AccessTools.Method(typeof(GlobalMapMovementPatches), nameof(GlobalMapMovementPatches.OnGlobalMapExactMovement));
+            var lookFor = AccessTools.Method(typeof(GlobalMapPlayerState), nameof(GlobalMapPlayerState.StartTravel));
+            var matcher = new CodeMatcher(instructions);
+            var match = matcher.SearchForward(x => x.Calls(lookFor));
+
+            match = match.SearchForward(x => x.Calls(lookFor));
+            if (match.IsInvalid)
+            {
+                Main.GetLogger<GlobalMapMovementPatches>().LogError("Invalid transpiler position. Target={Target}, Position={Position}", target, match.Pos);
+                return instructions;
+            }
+            var newExactInstructions = new List<CodeInstruction>()
+            {
+                new(OpCodes.Ldloc_0),
+                new(OpCodes.Ldc_I4_0),
+                new(OpCodes.Call, extraExactCall),
+            };
+            match = match.Insert(newExactInstructions);
+            Main.GetLogger<GlobalMapMovementPatches>().LogInformation("Transpiler has been applied. Target={Target}", target);
+            return matcher.Instructions();
+        }
+
+        [HarmonyPatch(typeof(GlobalMapEnterMessageVM), nameof(GlobalMapEnterMessageVM.Accept))]
+        [HarmonyTranspiler]
+        public static IEnumerable<CodeInstruction> GlobalMapEnterMessageVM_Accept_Transpiler(IEnumerable<CodeInstruction> instructions)
+        {
+            var target = PatchesUtils.GetTranspilerTarget(MethodBase.GetCurrentMethod());
+            var extraExactCall = AccessTools.Method(typeof(GlobalMapMovementPatches), nameof(GlobalMapMovementPatches.OnGlobalMapExactMovement));
+            var lookFor = AccessTools.Method(typeof(GlobalMapArmyState), nameof(GlobalMapArmyState.StartTravel));
+            var matcher = new CodeMatcher(instructions);
+            var match = matcher.SearchForward(x => x.Calls(lookFor));
+
+            match = match.SearchForward(x => x.Calls(lookFor));
+            if (match.IsInvalid)
+            {
+                Main.GetLogger<GlobalMapMovementPatches>().LogError("Invalid transpiler position. Target={Target}, Position={Position}", target, match.Pos);
+                return instructions;
+            }
+            var newExactInstructions = new List<CodeInstruction>()
+            {
+                new(OpCodes.Ldloc_S, 4),
+                new(OpCodes.Ldc_I4_1),
+                new(OpCodes.Call, extraExactCall),
+            };
+            match = match.Insert(newExactInstructions);
+            Main.GetLogger<GlobalMapMovementPatches>().LogInformation("Transpiler has been applied. Target={Target}", target);
+            return matcher.Instructions();
+        }
+
+        [HarmonyPatch(typeof(NavigationArrowView), nameof(NavigationArrowView.OnClick))]
+        [HarmonyPrefix]
+        public static void NavigationArrowsController_OnClick_Prefix(NavigationArrowView __instance)
+        {
+            if (!Main.Multiplayer.IsActive || Game.Instance.CutsceneLock.Active || Game.Instance.CurrentMode == GameModeType.Rest)
             {
                 return;
             }
 
-            Main.GetLogger<GlobalMapMovementPatches>().LogError(fromClick.ToString());
-            var destination = GetNetworkGlobalMapLocation(travelData.To.Location);
-
-            Main.Multiplayer.OnGlobalMapStartTravel(destination);
+            var travel = CreateGlobalMapTravel(NetworkGlobalMapPathType.Direction, __instance.m_DirLoc.Blueprint, fromClick: true);
+            Main.Multiplayer.OnGlobalMapTravelStarted(travel);
         }
 
         [HarmonyPatch(typeof(GlobalMapView), nameof(GlobalMapView.EnterLocation))]
@@ -95,26 +176,6 @@ namespace WOTRMultiplayer.HarmonyPatches.GlobalMap
 
             Main.GetLogger<GlobalMapControlPatches>().LogInformation("Transpiler has been applied. Target={Target}", target);
             return matcher.Instructions();
-        }
-
-        private static IDisposable SubscribeEnterMessageEscPress(GlobalMapEnterMessagePCView view)
-        {
-            if (!Main.Multiplayer.IsActive)
-            {
-                return Game.Instance.UI.EscManager.Subscribe(view.ViewModel.Close);
-            }
-
-            var subscription = Game.Instance.UI.EscManager.Subscribe(() =>
-            {
-                if (!view.m_DeclineButton.Interactable)
-                {
-                    return;
-                }
-
-                view.ViewModel.Close();
-            });
-
-            return subscription;
         }
 
         [HarmonyPatch(typeof(GlobalMapEnterMessagePCView), nameof(GlobalMapEnterMessagePCView.BindViewImplementation))]
@@ -251,6 +312,62 @@ namespace WOTRMultiplayer.HarmonyPatches.GlobalMap
 
             var shouldContinue = Main.Multiplayer.CanNavigateOnGlobalMap();
             return shouldContinue;
+        }
+
+
+        private static void OnGlobalMapDirectionalMovement(GlobalMapTravelData globalMapTravelData)
+        {
+            if (!Main.Multiplayer.IsActive)
+            {
+                return;
+            }
+
+            var travel = CreateGlobalMapTravel(NetworkGlobalMapPathType.Direction, globalMapTravelData.To.Location, fromClick: true);
+            Main.Multiplayer.OnGlobalMapTravelStarted(travel);
+        }
+
+        private static void OnGlobalMapExactMovement(GlobalMapTravelData globalMapTravelData, bool fromClick)
+        {
+            if (!Main.Multiplayer.IsActive)
+            {
+                return;
+            }
+
+            var travel = CreateGlobalMapTravel(NetworkGlobalMapPathType.Exact, globalMapTravelData.To.Location, fromClick: true);
+            Main.Multiplayer.OnGlobalMapTravelStarted(travel);
+        }
+
+        private static NetworkGlobalMapTravel CreateGlobalMapTravel(NetworkGlobalMapPathType pathType, BlueprintGlobalMapPoint globalMapPoint, bool fromClick)
+        {
+            var travel = new NetworkGlobalMapTravel
+            {
+                Mode = Game.Instance.GlobalMapController.ArmyMode.Value ? NetworkGlobalMapTravelerMode.Army : NetworkGlobalMapTravelerMode.Player,
+                Destination = GetNetworkGlobalMapLocation(globalMapPoint),
+                Type = pathType,
+                FromClick = fromClick
+            };
+            return travel;
+        }
+
+
+        private static IDisposable SubscribeEnterMessageEscPress(GlobalMapEnterMessagePCView view)
+        {
+            if (!Main.Multiplayer.IsActive)
+            {
+                return Game.Instance.UI.EscManager.Subscribe(view.ViewModel.Close);
+            }
+
+            var subscription = Game.Instance.UI.EscManager.Subscribe(() =>
+            {
+                if (!view.m_DeclineButton.Interactable)
+                {
+                    return;
+                }
+
+                view.ViewModel.Close();
+            });
+
+            return subscription;
         }
 
         private static NetworkGlobalMapState GetGlobalMapState()

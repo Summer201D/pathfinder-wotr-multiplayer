@@ -30,7 +30,7 @@ namespace WOTRMultiplayer.Abstractions.GameInteraction
 
         void OpenRestMenu();
 
-        void StartTravel(NetworkGlobalMapLocation destination);
+        void StartTravel(NetworkGlobalMapTravel globalMapTravel);
 
         void CloseMessageBox();
 

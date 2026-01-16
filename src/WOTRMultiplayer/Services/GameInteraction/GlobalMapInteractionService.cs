@@ -7,6 +7,7 @@ using Kingmaker.Blueprints.Root;
 using Kingmaker.Controllers.Rest;
 using Kingmaker.Globalmap;
 using Kingmaker.Globalmap.Blueprints;
+using Kingmaker.Globalmap.State;
 using Kingmaker.Globalmap.View;
 using Kingmaker.PubSubSystem;
 using Kingmaker.RandomEncounters;
@@ -63,14 +64,14 @@ namespace WOTRMultiplayer.Services.GameInteraction
             });
         }
 
-        public void StartTravel(NetworkGlobalMapLocation destination)
+        public void StartTravel(NetworkGlobalMapTravel travel)
         {
             _mainThreadAccessor.Post(() =>
             {
-                var point = _gameStateLookupService.GetGlobalMapPoint(destination);
+                var point = _gameStateLookupService.GetGlobalMapPoint(travel.Destination);
                 if (point == null)
                 {
-                    _logger.LogError("Unable to find global map point. PointId={PointId}, PointName={PointName}", destination.Id, destination.Name);
+                    _logger.LogError("Unable to find global map point. PointId={PointId}, PointName={PointName}", travel.Destination.Id, travel.Destination.Name);
                     return;
                 }
 
@@ -80,9 +81,21 @@ namespace WOTRMultiplayer.Services.GameInteraction
                 messageBoxView.ViewModel?.Close();
 
                 var traveler = Game.Instance.GlobalMapController.SelectedTraveler;
-                var globalMapTravelData = GlobalMapView.Instance.State.PathManager.CalculateTravelerPathToLocation(traveler, point.Blueprint);
-                traveler.StartTravel(globalMapTravelData, true);
-                _logger.LogInformation("Global map traveler has been started. Destination={DestinationId}, DestinationName={DestinationName}", point.Blueprint.AssetGuid.ToString(), point.name);
+                GlobalMapTravelData globalMapTravelData = travel.Type switch
+                {
+                    NetworkGlobalMapPathType.Direction => GlobalMapView.Instance.State.PathManager.CalculatePathByDirection(traveler, point.Blueprint),
+                    NetworkGlobalMapPathType.Exact => GlobalMapView.Instance.State.PathManager.CalculateTravelerPathToLocation(traveler, point.Blueprint),
+                    _ => null
+                };
+
+                if (globalMapTravelData == null)
+                {
+                    _logger.LogError("Failed to calculate travel data. PathType={PathType}, Destination={DestinationId}, DestinationName={DestinationName}", travel.Type, point.Blueprint.AssetGuid.ToString(), point.name);
+                    return;
+                }
+
+                traveler.StartTravel(globalMapTravelData, travel.FromClick);
+                _logger.LogInformation("Global map traveler has been started. Type={Type}, FromClick={FromClick}, Destination={DestinationId}, DestinationName={DestinationName}", travel.Type, travel.FromClick, point.Blueprint.AssetGuid.ToString(), point.name);
             });
         }
 

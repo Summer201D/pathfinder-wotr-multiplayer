@@ -225,7 +225,7 @@ namespace WOTRMultiplayer.Abstractions
 
         bool OnGlobalMapBeforeRollTravelEncounter();
 
-        void OnGlobalMapStartTravel(NetworkGlobalMapLocation destination);
+        void OnGlobalMapTravelStarted(NetworkGlobalMapTravel globalMapTravel);
 
         void OnSkipTimeOpened();
 

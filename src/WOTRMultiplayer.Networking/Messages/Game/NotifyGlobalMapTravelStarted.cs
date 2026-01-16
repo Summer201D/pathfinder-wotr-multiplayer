@@ -8,6 +8,6 @@ namespace WOTRMultiplayer.Networking.Messages.Game
     public class NotifyGlobalMapTravelStarted
     {
         [ProtoMember(1)]
-        public NetworkGlobalMapLocation Destination { get; set; }
+        public NetworkGlobalMapTravel Travel { get; set; }
     }
 }

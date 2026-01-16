@@ -46,7 +46,7 @@ namespace WOTRMultiplayer.Abstractions
 
         void OnGlobalMapRestMenuOpened();
 
-        void OnGlobalMapStartTravel(NetworkGlobalMapLocation destination);
+        void OnGlobalMapTravelStarted(NetworkGlobalMapTravel globalMapTravel);
 
         void OnSkipTimeClosed();
 

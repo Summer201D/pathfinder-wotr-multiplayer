@@ -2122,7 +2122,7 @@ namespace WOTRMultiplayer.Services
             }
         }
 
-        public void OnGlobalMapStartTravel(NetworkGlobalMapLocation destination)
+        public void OnGlobalMapTravelStarted(NetworkGlobalMapTravel globalMapTravel)
         {
             try
             {
@@ -2131,7 +2131,7 @@ namespace WOTRMultiplayer.Services
                     return;
                 }
 
-                _multiplayerActorAccessor.Host.OnGlobalMapStartTravel(destination);
+                _multiplayerActorAccessor.Host.OnGlobalMapTravelStarted(globalMapTravel);
             }
             catch (Exception ex)
             {
