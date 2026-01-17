@@ -7,6 +7,7 @@ using Kingmaker;
 using Kingmaker.Armies;
 using Kingmaker.Armies.Blueprints;
 using Kingmaker.Armies.State;
+using Kingmaker.Armies.TacticalCombat.Controllers;
 using Kingmaker.Blueprints;
 using Kingmaker.Blueprints.Classes.Spells;
 using Kingmaker.Blueprints.Items;
@@ -16,6 +17,7 @@ using Kingmaker.EntitySystem.Entities;
 using Kingmaker.Globalmap;
 using Kingmaker.Globalmap.State;
 using Kingmaker.Items;
+using Kingmaker.Kingdom.Blueprints;
 using Kingmaker.UnitLogic;
 using Kingmaker.UnitLogic.Abilities;
 using Kingmaker.UnitLogic.Abilities.Blueprints;
@@ -33,7 +35,37 @@ namespace WOTRMultiplayer.HarmonyPatches.RandomIdGeneration
     [HarmonyPatch]
     public class RandomIdGenerationPatches
     {
-        public readonly static MethodInfo _lookUpMethod = AccessTools.Method(typeof(Player), nameof(Player.GetNewUniqueId));
+        private readonly static MethodInfo _getNewIdLookupMethod = AccessTools.Method(typeof(Player), nameof(Player.GetNewUniqueId));
+
+        [HarmonyPatch(typeof(TacticalCombatController), nameof(TacticalCombatController.CreateUnit))]
+        [HarmonyTranspiler]
+        public static IEnumerable<CodeInstruction> TacticalCombatController_CreateUnit_Transpiler(IEnumerable<CodeInstruction> instructions)
+        {
+            var target = PatchesUtils.GetTranspilerTarget(MethodBase.GetCurrentMethod());
+            var lookFor = AccessTools.Method(typeof(Guid), nameof(Guid.NewGuid));
+            var replaceWith = AccessTools.Method(typeof(RandomIdGenerationPatches), nameof(RandomIdGenerationPatches.GetNewArmyUnitId));
+            var matcher = new CodeMatcher(instructions);
+            var match = matcher.SearchForward(x => x.Calls(lookFor));
+            if (match.IsInvalid)
+            {
+                Main.GetLogger<RandomIdGenerationPatches>().LogError("Unable to find Guid.NewGuid() call. Target={Target}", target);
+                return matcher.Instructions();
+            }
+
+            var newInstructions = new List<CodeInstruction>
+            {
+                new(OpCodes.Ldarg_1),
+                new(OpCodes.Ldarg_2),
+                new(OpCodes.Ldarg_3),
+                new(OpCodes.Ldarg_S, 4),
+                new(OpCodes.Ldloc_1),
+                new(OpCodes.Call, replaceWith)
+            };
+            match = match.RemoveInstructions(5).Insert(newInstructions);
+            PatchesUtils.Dump(match);
+            Main.GetLogger<RandomIdGenerationPatches>().LogInformation("Transpiler has been applied. Target={Target}", target);
+            return matcher.Instructions();
+        }
 
         [HarmonyPatch(typeof(Player), nameof(Player.CreateCustomCompanion))]
         [HarmonyTranspiler]
@@ -338,7 +370,7 @@ namespace WOTRMultiplayer.HarmonyPatches.RandomIdGeneration
         {
             var matcher = new CodeMatcher(instructions);
             var match = matcher
-                .SearchForward(x => x.Calls(_lookUpMethod))
+                .SearchForward(x => x.Calls(_getNewIdLookupMethod))
                 .Advance(-2);
 
             if (match.Instruction.opcode != OpCodes.Call)
@@ -471,11 +503,34 @@ namespace WOTRMultiplayer.HarmonyPatches.RandomIdGeneration
             }
         }
 
+        public static string GetNewArmyUnitId(GlobalMapArmyState globalMapArmyState, SquadState squadState, string groupId, RegionId regionId, BlueprintFaction faction)
+        {
+            if (!Main.Multiplayer.IsActive)
+            {
+                return Guid.NewGuid().ToString();
+            }
+
+            try
+            {
+                var crusadeArmyCombatSeed = Game.Instance.TacticalCombat.Data.Seed;
+                var leader = globalMapArmyState.Data.Leader;
+                var armyName = globalMapArmyState.Data.ArmyName;
+                var rawIdentifier = $"{GetCommonIdPart()}:{globalMapArmyState.Id}:{globalMapArmyState.ArmyType}:{armyName?.ArmyName}:{armyName?.ArmyIndex}:{squadState.Size}:{squadState.Unit.name}:{groupId}:{regionId}:{leader?.Blueprint.name}:{faction.name}:{crusadeArmyCombatSeed}";
+                var id = Main.Multiplayer.ValueGenerator.GenerateUniqueId(UniqueIdType.CrusadeArmyCombatUnit, Game.Instance.Player.GameId, rawIdentifier);
+                Main.GetLogger<RandomIdGenerationPatches>().LogInformation("Army UnitId has been generated. GameId={GameId}, Seed={Seed}, RawIdentifier={RawIdentifier}, Id={Id}", Game.Instance.Player.GameId, crusadeArmyCombatSeed, rawIdentifier, id);
+                return id;
+            }
+            catch (Exception ex)
+            {
+                Main.GetLogger<RandomIdGenerationPatches>().LogError(ex, "Error while generating new army unit Id");
+                throw;
+            }
+        }
+
         public static string GetNewArmyId(ArmyNameWithIndex armyNameWithIndex, ArmyFaction armyFaction, BlueprintArmyPreset armyPreset, GlobalMapPosition position, bool isGarrison, bool isTraveling)
         {
             if (!Main.Multiplayer.IsActive)
             {
-                // default logic is fine as these IDs will be synced by loading save. Just need to make sure game generates same IDs within the MP session
                 return Guid.NewGuid().ToString();
             }
 
