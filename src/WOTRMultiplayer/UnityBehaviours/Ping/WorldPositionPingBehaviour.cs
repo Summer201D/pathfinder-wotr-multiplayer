@@ -11,10 +11,14 @@ namespace WOTRMultiplayer.UnityBehaviours.Ping
     {
         private List<MeshRenderer> _renderers;
 
-        public void Begin(TimeSpan expiration, Vector3 position)
+        public void Begin(TimeSpan expiration, Vector3 position, Vector3? scale = null)
         {
             transform.SetParent(ClickPointerManager.Instance.transform);
             transform.localPosition = position;
+            if (scale.HasValue)
+            {
+                transform.localScale += scale.Value;
+            }
 
             Begin(expiration);
         }

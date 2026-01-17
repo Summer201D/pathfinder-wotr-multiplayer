@@ -1,6 +1,9 @@
 ﻿using System;
 using System.Linq;
 using Kingmaker;
+using Kingmaker.Armies.TacticalCombat;
+using Kingmaker.Armies.TacticalCombat.Blueprints;
+using Kingmaker.Armies.TacticalCombat.Grid;
 using Kingmaker.Controllers.Clicks;
 using Kingmaker.Globalmap.View;
 using Kingmaker.UI;
@@ -69,7 +72,23 @@ namespace WOTRMultiplayer.Services.GameInteraction
                 var guiPing = GetGlobalMapPing(gameObject);
                 return guiPing;
             }
-
+            else if (TacticalCombatHelper.IsActive && Game.Instance.CurrentlyLoadedArea is BlueprintTacticalCombatArea)
+            {
+                var hitGroundPosition = TacticalCombatGridHelper.GetHitGroundPosition();
+                if (hitGroundPosition != null && hitGroundPosition.Value != Vector3.zero)
+                {
+                    var cellIndex = TacticalCombatGrid.Instance.PositionToIndex(hitGroundPosition.Value);
+                    var isValidCellIndex = TacticalCombatGrid.Instance.IsValid(cellIndex);
+                    if (isValidCellIndex)
+                    {
+                        var unit = TacticalCombatGrid.Instance[cellIndex].Unit;
+                        if (unit != null)
+                        {
+                            gameObject = unit.View.gameObject;
+                        }
+                    }
+                }
+            }
 
             var point = new NetworkVector3(worldPosition.x, worldPosition.y, worldPosition.z);
             var unitId = gameObject?.GetComponent<UnitEntityView>()?.Data?.UniqueId;
@@ -144,7 +163,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
 
             CreateWorldPositionPing(player, unit.Position);
             var unitGameObject = unit.View.gameObject;
-            var isEnemyUnit = unit.IsEnemy(Game.Instance.Player.MainCharacter);
+            var isEnemyUnit = unit.IsPlayersEnemy || TacticalCombatHelper.IsDemon(unit);
             CreateWorldEntityPing(isEnemyUnit, unitGameObject);
         }
 
@@ -249,7 +268,8 @@ namespace WOTRMultiplayer.Services.GameInteraction
             var pingObject = UnityEngine.Object.Instantiate(ClickPointerManager.Instance.PointerPrefab.gameObject);
             var decayingBehaviour = pingObject.AddComponent<WorldPositionPingBehaviour>();
             var markerDuration = TimeSpan.FromSeconds(2);
-            decayingBehaviour.Begin(markerDuration, position);
+            Vector3? scale = TacticalCombatHelper.IsActive ? new Vector3(1f, 3f, 1f) : null;
+            decayingBehaviour.Begin(markerDuration, position, scale);
             PlayPingSound(pingObject);
 
             // no need to create marker if there is no responsible player for it (local player)
