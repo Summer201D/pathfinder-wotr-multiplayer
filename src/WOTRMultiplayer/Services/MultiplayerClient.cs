@@ -556,20 +556,20 @@ namespace WOTRMultiplayer.Services
         {
             Logger.LogInformation("Received {MessageType}. ReceivedFrom={ReceivedFrom}", nameof(NotifyGlobalMapCombatResultsClosed), receivedFrom);
             ResetPlayersTracker(Game.PlayersInGlobalMapCombatResults);
-            GlobalMapInteraction.CloseCombatBattleResults();
+            GlobalMapInteraction.CloseCombatResults();
         }
 
         private void OnNotifyCrusadeArmyBattleResultsClosed(long receivedFrom, NotifyCrusadeArmyBattleResultsClosed crusadeArmyBattleResultsClosed)
         {
             Logger.LogInformation("Received {MessageType}. ReceivedFrom={ReceivedFrom}", nameof(NotifyCrusadeArmyBattleResultsClosed), receivedFrom);
-            ResetPlayersTracker(Game.PlayersInGlobalMapBattleResults);
+            ResetPlayersTracker(Game.PlayersInGlobalMapCrusadeArmyBattleResults);
             GlobalMapInteraction.CloseCrusadeArmyBattleResults();
         }
 
         private void OnNotifyCrusadeArmyBattleResultsManualCombatStarted(long receivedFrom, NotifyCrusadeArmyBattleResultsManualCombatStarted crusadeArmyBattleResultsManualCombatStarted)
         {
             Logger.LogInformation("Received {MessageType}. ReceivedFrom={ReceivedFrom}", nameof(NotifyCrusadeArmyBattleResultsManualCombatStarted), receivedFrom);
-            ResetPlayersTracker(Game.PlayersInGlobalMapBattleResults);
+            ResetPlayersTracker(Game.PlayersInGlobalMapCrusadeArmyBattleResults);
 
             GlobalMapInteraction.StartCrusadeArmyBattleResultsManualCombat();
         }

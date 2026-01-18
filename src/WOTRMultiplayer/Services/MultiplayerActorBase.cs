@@ -1764,7 +1764,7 @@ namespace WOTRMultiplayer.Services
         public void OnCrusadeArmyBattleResultsShown()
         {
             var localPlayer = GetLocalPlayerId();
-            AddPlayerToTracker(Game.PlayersInGlobalMapBattleResults, localPlayer);
+            AddPlayerToTracker(Game.PlayersInGlobalMapCrusadeArmyBattleResults, localPlayer);
 
             var message = new NotifyCrusadeArmyBattleResultsShown
             {
@@ -1994,7 +1994,7 @@ namespace WOTRMultiplayer.Services
         {
             lock (ActionLock)
             {
-                var readyPlayers = Game.PlayersInGlobalMapBattleResults.Count;
+                var readyPlayers = Game.PlayersInGlobalMapCrusadeArmyBattleResults.Count;
                 var totalPlayers = GetSyncedPlayersCount();
                 var canUse = HasControlOverUI && readyPlayers >= totalPlayers;
                 GlobalMapInteraction.UpdateCrusadeArmyBattleResultsUI(canUse, readyPlayers, totalPlayers);
@@ -2881,7 +2881,7 @@ namespace WOTRMultiplayer.Services
         private void OnNotifyCrusadeArmyBattleResultsShown(long receivedFrom, NotifyCrusadeArmyBattleResultsShown crusadeArmyBattleResultsShown)
         {
             Logger.LogInformation("Received {MessageType}. ReceivedFrom={ReceivedFrom}, PlayerId={PlayerId}", nameof(NotifyCrusadeArmyBattleResultsShown), receivedFrom, crusadeArmyBattleResultsShown.PlayerId);
-            AddPlayerToTracker(Game.PlayersInGlobalMapBattleResults, crusadeArmyBattleResultsShown.PlayerId);
+            AddPlayerToTracker(Game.PlayersInGlobalMapCrusadeArmyBattleResults, crusadeArmyBattleResultsShown.PlayerId);
 
             UpdateGlobalMapCrusadeArmyBattleResultsUIState();
 

@@ -102,7 +102,7 @@ namespace WOTRMultiplayer.Playground.Core.Dummies
         {
         }
 
-        public void CloseCombatBattleResults()
+        public void CloseCombatResults()
         {
         }
     }

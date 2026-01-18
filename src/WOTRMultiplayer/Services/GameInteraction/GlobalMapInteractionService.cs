@@ -265,7 +265,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
             });
         }
 
-        public void CloseCombatBattleResults()
+        public void CloseCombatResults()
         {
             _mainThreadAccessor.Post(() =>
             {
