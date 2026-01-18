@@ -379,7 +379,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
                         {
                             mainMenuVM.m_Campaign = Game.NewGamePreset.Campaign;
                             mainMenuVM.m_ChargenUnit?.Dispose();
-                            using (Kingmaker.ElementsSystem.ContextData<UnitEntityData.ChargenUnit>.Request())
+                            using (ContextData<UnitEntityData.ChargenUnit>.Request())
                             {
                                 var unit = new UnitEntityData(mainCharacterId, true, Game.NewGamePreset.PlayerCharacter);
                                 mainMenuVM.m_ChargenUnit = unit;

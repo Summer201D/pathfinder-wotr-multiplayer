@@ -848,7 +848,7 @@ namespace WOTRMultiplayer.Services
 
         public void OnCrusadeArmyBattleResultsClosed()
         {
-            ResetPlayersTracker(Game.PlayersInGlobalMapCrusadeArmyAutoBattleResults);
+            ResetPlayersTracker(Game.PlayersInGlobalMapBattleResults);
             var message = new NotifyCrusadeArmyBattleResultsClosed();
             Logger.LogInformation("Sending {MessageType}", nameof(NotifyCrusadeArmyBattleResultsClosed));
             Send(message);
@@ -856,7 +856,7 @@ namespace WOTRMultiplayer.Services
 
         public void OnCrusadeArmyBattleResultsManualCombatStarted()
         {
-            ResetPlayersTracker(Game.PlayersInGlobalMapCrusadeArmyAutoBattleResults);
+            ResetPlayersTracker(Game.PlayersInGlobalMapBattleResults);
             var message = new NotifyCrusadeArmyBattleResultsManualCombatStarted();
             Logger.LogInformation("Sending {MessageType}", nameof(NotifyCrusadeArmyBattleResultsManualCombatStarted));
             Send(message);

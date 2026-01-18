@@ -245,11 +245,11 @@ namespace WOTRMultiplayer.Services.GameInteraction
                 }
 
                 view.ViewModel.Close();
-                _logger.LogInformation("AutoBattleResults window has been closed");
+                _logger.LogInformation("BattleResults window has been closed");
             });
         }
 
-        public void StartCrusadeArmyAutoBattleResultsManualCombat()
+        public void StartCrusadeArmyBattleResultsManualCombat()
         {
             _mainThreadAccessor.Post(() =>
             {
@@ -261,7 +261,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
                 }
 
                 view.ViewModel.StartManualCombat();
-                _logger.LogInformation("Manual combat has been started via AutoBattleResults");
+                _logger.LogInformation("Manual combat has been started via BattleResults");
             });
         }
 

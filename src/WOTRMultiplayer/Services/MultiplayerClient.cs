@@ -487,8 +487,8 @@ namespace WOTRMultiplayer.Services
                .On<NotifyGlobalMapAutoCrusadeCombatChanged>(OnNotifyGlobalMapAutoCrusadeCombatChanged)
                .On<NotifyGlobalMapCombatResultsClosed>(OnNotifyGlobalMapCombatResultsClosed)
                .On<NotifyCrusadeArmyCombatInitialized>(OnNotifyCrusadeArmyCombatInitialized)
-               .On<NotifyCrusadeArmyBattleResultsManualCombatStarted>(OnNotifyCrusadeArmyAutoBattleResultsManualCombatStarted)
-               .On<NotifyCrusadeArmyBattleResultsClosed>(OnNotifyCrusadeArmyAutoBattleResultsClosed)
+               .On<NotifyCrusadeArmyBattleResultsManualCombatStarted>(OnNotifyCrusadeArmyBattleResultsManualCombatStarted)
+               .On<NotifyCrusadeArmyBattleResultsClosed>(OnNotifyCrusadeArmyBattleResultsClosed)
                .On<NotifyTacticalUnitAttackCommandExecuted>(OnNotifyTacticalUnitAttackCommandExecuted)
                .On<NotifyTacticalUnitUseAbilityCommandExecuted>(OnNotifyTacticalUnitUseAbilityCommandExecuted)
                .On<NotifyTacticalUnitMoveToCommandExecuted>(OnNotifyTacticalUnitMoveToCommandExecuted)
@@ -559,19 +559,19 @@ namespace WOTRMultiplayer.Services
             GlobalMapInteraction.CloseCombatBattleResults();
         }
 
-        private void OnNotifyCrusadeArmyAutoBattleResultsClosed(long receivedFrom, NotifyCrusadeArmyBattleResultsClosed crusadeArmyAutoBattleResultsClosed)
+        private void OnNotifyCrusadeArmyBattleResultsClosed(long receivedFrom, NotifyCrusadeArmyBattleResultsClosed crusadeArmyBattleResultsClosed)
         {
             Logger.LogInformation("Received {MessageType}. ReceivedFrom={ReceivedFrom}", nameof(NotifyCrusadeArmyBattleResultsClosed), receivedFrom);
-            ResetPlayersTracker(Game.PlayersInGlobalMapCrusadeArmyAutoBattleResults);
+            ResetPlayersTracker(Game.PlayersInGlobalMapBattleResults);
             GlobalMapInteraction.CloseCrusadeArmyBattleResults();
         }
 
-        private void OnNotifyCrusadeArmyAutoBattleResultsManualCombatStarted(long receivedFrom, NotifyCrusadeArmyBattleResultsManualCombatStarted crusadeArmyAutoBattleResultsManualCombatStarted)
+        private void OnNotifyCrusadeArmyBattleResultsManualCombatStarted(long receivedFrom, NotifyCrusadeArmyBattleResultsManualCombatStarted crusadeArmyBattleResultsManualCombatStarted)
         {
             Logger.LogInformation("Received {MessageType}. ReceivedFrom={ReceivedFrom}", nameof(NotifyCrusadeArmyBattleResultsManualCombatStarted), receivedFrom);
-            ResetPlayersTracker(Game.PlayersInGlobalMapCrusadeArmyAutoBattleResults);
+            ResetPlayersTracker(Game.PlayersInGlobalMapBattleResults);
 
-            GlobalMapInteraction.StartCrusadeArmyAutoBattleResultsManualCombat();
+            GlobalMapInteraction.StartCrusadeArmyBattleResultsManualCombat();
         }
 
         private async void OnNotifyCrusadeArmyCombatInitialized(long receivedFrom, NotifyCrusadeArmyCombatInitialized crusadeArmyCombatInitialized)

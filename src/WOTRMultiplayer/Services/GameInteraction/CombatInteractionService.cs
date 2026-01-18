@@ -245,7 +245,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
                     ShouldSkipAnimation = Game.Instance.TacticalCombat.Data.Accelerated
                 };
                 unit.Commands.Run(attackCommand);
-                _logger.LogWarning("Command {command} has been executed. UnitId={UnitId}", nameof(NetworkTacticalUnitAttackCommand), tacticalUnitAttackCommand.UnitId);
+                _logger.LogInformation("Command {command} has been executed. UnitId={UnitId}", nameof(NetworkTacticalUnitAttackCommand), tacticalUnitAttackCommand.UnitId);
             });
         }
 

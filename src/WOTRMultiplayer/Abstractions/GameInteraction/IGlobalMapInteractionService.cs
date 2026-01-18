@@ -50,7 +50,7 @@ namespace WOTRMultiplayer.Abstractions.GameInteraction
 
         void CloseCrusadeArmyBattleResults();
 
-        void StartCrusadeArmyAutoBattleResultsManualCombat();
+        void StartCrusadeArmyBattleResultsManualCombat();
 
         void CloseCombatBattleResults();
     }

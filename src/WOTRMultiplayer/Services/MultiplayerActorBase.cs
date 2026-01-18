@@ -1764,7 +1764,7 @@ namespace WOTRMultiplayer.Services
         public void OnCrusadeArmyBattleResultsShown()
         {
             var localPlayer = GetLocalPlayerId();
-            AddPlayerToTracker(Game.PlayersInGlobalMapCrusadeArmyAutoBattleResults, localPlayer);
+            AddPlayerToTracker(Game.PlayersInGlobalMapBattleResults, localPlayer);
 
             var message = new NotifyCrusadeArmyBattleResultsShown
             {
@@ -1994,7 +1994,7 @@ namespace WOTRMultiplayer.Services
         {
             lock (ActionLock)
             {
-                var readyPlayers = Game.PlayersInGlobalMapCrusadeArmyAutoBattleResults.Count;
+                var readyPlayers = Game.PlayersInGlobalMapBattleResults.Count;
                 var totalPlayers = GetSyncedPlayersCount();
                 var canUse = HasControlOverUI && readyPlayers >= totalPlayers;
                 GlobalMapInteraction.UpdateCrusadeArmyBattleResultsUI(canUse, readyPlayers, totalPlayers);
@@ -2810,7 +2810,7 @@ namespace WOTRMultiplayer.Services
                 .On<NotifyGlobalMapEncounterMessageShown>(OnNotifyGlobalMapEncounterMessageShown)
                 .On<NotifyGlobalMapCombatResultsShown>(OnNotifyGlobalMapCombatResultsShown)
                 .On<NotifyCrusadeArmyCombatTurnInitialized>(OnNotifyCrusadeArmyCombatTurnInitialized)
-                .On<NotifyCrusadeArmyBattleResultsShown>(OnNotifyCrusadeArmyAutoBattleResultsShown)
+                .On<NotifyCrusadeArmyBattleResultsShown>(OnNotifyCrusadeArmyBattleResultsShown)
 
                 // overtips
                 .On<NotifyOvertipInteracted>(OnNotifyOvertipInteracted)
@@ -2878,14 +2878,14 @@ namespace WOTRMultiplayer.Services
             OnAfterNetworkMessageHandled(receivedFrom, globalMapCombatResultsShown);
         }
 
-        private void OnNotifyCrusadeArmyAutoBattleResultsShown(long receivedFrom, NotifyCrusadeArmyBattleResultsShown crusadeArmyAutoBattleResultsShown)
+        private void OnNotifyCrusadeArmyBattleResultsShown(long receivedFrom, NotifyCrusadeArmyBattleResultsShown crusadeArmyBattleResultsShown)
         {
-            Logger.LogInformation("Received {MessageType}. ReceivedFrom={ReceivedFrom}, PlayerId={PlayerId}", nameof(NotifyCrusadeArmyBattleResultsShown), receivedFrom, crusadeArmyAutoBattleResultsShown.PlayerId);
-            AddPlayerToTracker(Game.PlayersInGlobalMapCrusadeArmyAutoBattleResults, crusadeArmyAutoBattleResultsShown.PlayerId);
+            Logger.LogInformation("Received {MessageType}. ReceivedFrom={ReceivedFrom}, PlayerId={PlayerId}", nameof(NotifyCrusadeArmyBattleResultsShown), receivedFrom, crusadeArmyBattleResultsShown.PlayerId);
+            AddPlayerToTracker(Game.PlayersInGlobalMapBattleResults, crusadeArmyBattleResultsShown.PlayerId);
 
             UpdateGlobalMapCrusadeArmyBattleResultsUIState();
 
-            OnAfterNetworkMessageHandled(receivedFrom, crusadeArmyAutoBattleResultsShown);
+            OnAfterNetworkMessageHandled(receivedFrom, crusadeArmyBattleResultsShown);
         }
 
         private async void OnNotifyCrusadeArmyCombatTurnInitialized(long receivedFrom, NotifyCrusadeArmyCombatTurnInitialized crusadeArmyCombatTurnInitialized)
