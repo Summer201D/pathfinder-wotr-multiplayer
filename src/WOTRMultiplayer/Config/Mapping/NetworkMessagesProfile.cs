@@ -261,6 +261,9 @@ namespace WOTRMultiplayer.Config.Mapping
 
             CreateMap<NetworkGlobalMapKingdomSettlement, Networking.Messages.Contracts.NetworkGlobalMapKingdomSettlement>()
                 .ReverseMap();
+
+            CreateMap<NetworkGlobalMapCommonPopup, Networking.Messages.Contracts.NetworkGlobalMapCommonPopup>()
+                .ReverseMap();
         }
     }
 }

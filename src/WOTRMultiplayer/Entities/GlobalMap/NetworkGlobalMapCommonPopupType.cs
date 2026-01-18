@@ -1,0 +1,8 @@
+﻿namespace WOTRMultiplayer.Entities.GlobalMap
+{
+    public enum NetworkGlobalMapCommonPopupType
+    {
+        Ingredients,
+        Flee
+    }
+}

@@ -44,6 +44,10 @@ namespace WOTRMultiplayer.Abstractions
 
         void OnCloseGroupChangerPartyUI();
 
+        void OnGlobalMapLocationMessageClosed();
+
+        void OnGlobalMapCommonPopupDeclined(NetworkGlobalMapCommonPopup globalMapCommonPopup);
+
         void OnGlobalMapRestMenuOpened();
 
         void OnGlobalMapTravelStarted(NetworkGlobalMapTravel globalMapTravel);
@@ -58,7 +62,7 @@ namespace WOTRMultiplayer.Abstractions
 
         void OnGlobalMapStopTravel(NetworkGlobalMapState globalMapState);
 
-        void OnGlobalMapIngredientCollectionAccepted(NetworkGlobalMapLocation globalMapLocation);
+        void OnGlobalMapCommonPopupAccepted(NetworkGlobalMapCommonPopup globalMapCommonPopup);
 
         void OnGlobalMapEnterLocation(NetworkGlobalMapLocation globalMapLocation);
 
@@ -76,6 +80,8 @@ namespace WOTRMultiplayer.Abstractions
 
         void OnZoneLootRemoveToggleChanged(bool removeUncollectedLoot);
 
+        void OnZoneLootCompleted();
+
         void OnDialogPopupClosed(NetworkDialogPopup networkDialogPopup);
 
         void OnCharacterSelectionWindowAccepted();
@@ -87,5 +93,8 @@ namespace WOTRMultiplayer.Abstractions
         void OnNewGameDifficultyChanged(string difficulty);
 
         void OnCrusadeArmyCombatInitialized();
+        void OnCrusadeArmyAutoBattleResultsClosed();
+        void OnCrusadeArmyAutoBattleResultsManualCombatStarted();
+        void OnGlobalMapCombatResultsClosed();
     }
 }

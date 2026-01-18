@@ -105,11 +105,11 @@
             NotifySkipTimeStarted,
             NotifyGlobalMapTravelContinued,
             NotifyGlobalMapTravelStopped,
-            NotifyGlobalMapMessageBoxClosed,
-            NotifyGlobalMapMessageBoxShown,
-            NotifyGlobalMapIngredientCollectionShown,
-            NotifyGlobalMapIngredientCollectionClosed,
-            NotifyGlobalMapIngredientCollectionAccepted,
+            NotifyGlobalMapLocationMessageClosed,
+            NotifyGlobalMapLocationMessageShown,
+            NotifyGlobalMapCommonPopupShown,
+            NotifyGlobalMapCommonPopupDeclined,
+            NotifyGlobalMapCommonPopupAccepted,
             NotifyGlobalMapLocationEntered,
             NotifyGlobalMapEncounterMessageShown,
             NotifyGlobalMapEncounterAccepted,
@@ -171,7 +171,12 @@
             NotifyGlobalMapAutoCrusadeCombatChanged,
             NotifyCrusadeArmyCombatInitializationConfirmed,
             NotifyCrusadeArmyCombatInitialized,
-            NotifyCrusadeArmyCombatTurnInitialized
+            NotifyCrusadeArmyCombatTurnInitialized,
+            NotifyCrusadeArmyAutoBattleResultsShown,
+            NotifyCrusadeArmyAutoBattleResultsClosed,
+            NotifyCrusadeArmyAutoBattleResultsManualCombatStarted,
+            NotifyGlobalMapCombatResultsShown,
+            NotifyGlobalMapCombatResultsClosed
         }
 
         public enum Request

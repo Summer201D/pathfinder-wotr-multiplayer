@@ -3,8 +3,8 @@
 namespace WOTRMultiplayer.Networking.Messages.Game
 {
     [ProtoContract]
-    [BeetleX.Packets.MessageType((int)MessageTypes.Game.NotifyGlobalMapIngredientCollectionClosed)]
-    public class NotifyGlobalMapIngredientCollectionClosed
+    [BeetleX.Packets.MessageType((int)MessageTypes.Game.NotifyGlobalMapLocationMessageClosed)]
+    public class NotifyGlobalMapLocationMessageClosed
     {
         [ProtoMember(1)]
         public long PlayerId { get; set; }

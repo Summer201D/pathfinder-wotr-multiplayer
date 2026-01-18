@@ -8,7 +8,6 @@ using Kingmaker.DialogSystem.Blueprints;
 using Kingmaker.EntitySystem.Entities;
 using Kingmaker.Localization;
 using Kingmaker.UI;
-using Kingmaker.UI.MVVM._PCView.Common;
 using Kingmaker.UI.MVVM._PCView.Dialog.Dialog;
 using Kingmaker.UI.MVVM._PCView.InGame;
 using Kingmaker.View.MapObjects;
@@ -215,7 +214,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
         {
             _mainThreadAccessor.Post(() =>
             {
-                var modalMessage = (Game.Instance.RootUiContext.m_CommonView as CommonPCView).m_MessageModalPCView;
+                var modalMessage = _uiAccessor.CommonPCView?.m_MessageModalPCView;
                 if (modalMessage?.ViewModel == null)
                 {
                     _logger.LogWarning("Unable to update missing dialog popup");

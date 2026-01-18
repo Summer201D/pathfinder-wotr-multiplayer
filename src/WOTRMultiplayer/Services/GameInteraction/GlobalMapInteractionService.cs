@@ -6,13 +6,10 @@ using Kingmaker.Blueprints;
 using Kingmaker.Blueprints.Root;
 using Kingmaker.Controllers.Rest;
 using Kingmaker.Globalmap;
-using Kingmaker.Globalmap.Blueprints;
 using Kingmaker.Globalmap.State;
 using Kingmaker.Globalmap.View;
-using Kingmaker.PubSubSystem;
 using Kingmaker.RandomEncounters;
 using Kingmaker.RandomEncounters.Settings;
-using Kingmaker.UI.Common;
 using Kingmaker.UI.MVVM._PCView.Crusade.Armies;
 using Microsoft.Extensions.Logging;
 using TMPro;
@@ -100,36 +97,19 @@ namespace WOTRMultiplayer.Services.GameInteraction
             });
         }
 
-
-        public void CloseMessageBox()
-        {
-            _mainThreadAccessor.Post(() =>
-            {
-                var messageBoxView = _uiAccessor.GlobalMapPCView.m_GlobalMapEnterMessagePCView;
-                if (messageBoxView?.ViewModel == null)
-                {
-                    _logger.LogWarning("Unable to close missing global map message box");
-                    return;
-                }
-
-                messageBoxView.ViewModel.Close();
-                _logger.LogInformation("Global map message box has been closed");
-            });
-        }
-
-        public void CloseIngredientCollection()
+        public void DeclineCommonPopup()
         {
             _mainThreadAccessor.Post(() =>
             {
                 var modalMessage = _uiAccessor.CommonPCView?.m_MessageModalPCView;
-                if (modalMessage == null)
+                if (modalMessage?.ViewModel == null)
                 {
-                    _logger.LogWarning("Global map ingredients message is missing");
+                    _logger.LogWarning("Global map common popup is missing");
                     return;
                 }
 
                 modalMessage.m_DeclineButton.OnLeftClick.Invoke();
-                _logger.LogInformation("Global map ingredients message has been closed");
+                _logger.LogInformation("Global map common popup has been closed");
             });
         }
 
@@ -159,7 +139,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
             });
         }
 
-        public void UpdateMessageBoxUI(bool isInteractable, int readyPlayersCount, int totalPlayersCount)
+        public void UpdateEnterMessageBoxUI(bool isInteractable, int readyPlayersCount, int totalPlayersCount)
         {
             _mainThreadAccessor.Post(() =>
             {
@@ -193,7 +173,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
             });
         }
 
-        public void UpdateIngredientCollectionUI(bool isInteractable, int readyPlayersCount, int totalPlayersCount)
+        public void UpdateCommonPopupUI(NetworkGlobalMapCommonPopup globalMapCommonPopup, bool isInteractable, int readyPlayersCount, int totalPlayersCount)
         {
             _mainThreadAccessor.Post(() =>
             {
@@ -208,7 +188,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
                 _uiSyncCountersService.UpdateButtonTextCounter(modalMessage.m_AcceptText, readyPlayersCount, totalPlayersCount);
                 _uiSyncCountersService.UpdateButtonTextCounter(modalMessage.m_DeclineText, readyPlayersCount, totalPlayersCount);
 
-                _logger.LogInformation("Global Map Ingredient Collection buttons have been updated. IsInteractable={IsInteractable}, ReadyPlayers={ReadyPlayers}, TotalPlayers={TotalPlayers}", isInteractable, readyPlayersCount, totalPlayersCount);
+                _logger.LogInformation("Global Map Common Popup buttons have been updated. Type={Type}, IsInteractable={IsInteractable}, ReadyPlayers={ReadyPlayers}, TotalPlayers={TotalPlayers}", globalMapCommonPopup.Type, isInteractable, readyPlayersCount, totalPlayersCount);
             });
         }
 
@@ -231,6 +211,91 @@ namespace WOTRMultiplayer.Services.GameInteraction
                 _uiSyncCountersService.UpdateButtonTextCounter(modalMessage.m_EnterLabel, readyPlayersCount, totalPlayersCount);
 
                 _logger.LogInformation("Encounter Message has been updated. IsInteractable={IsInteractable}, ReadyPlayers={ReadyPlayers}, TotalPlayers={TotalPlayers}", isInteractable, readyPlayersCount, totalPlayersCount);
+            });
+        }
+
+        public void UpdateCrusadeArmyBattleResultsUI(bool isInteractable, int readyPlayersCount, int totalPlayersCount)
+        {
+            _mainThreadAccessor.Post(() =>
+            {
+                var view = _uiAccessor.GlobalMapPCView?.m_AutoCombatResultsPCView;
+                if (view?.ViewModel == null)
+                {
+                    _logger.LogWarning("Unable to update crusade army battle results due to missing view");
+                    return;
+                }
+
+                view.m_CloseButton.Interactable = isInteractable;
+                view.m_StartManualCombatButton.Interactable = isInteractable;
+
+                _uiSyncCountersService.UpdateButtonTextCounter(view.m_CloseButtonLabel, readyPlayersCount, totalPlayersCount);
+                _uiSyncCountersService.UpdateButtonTextCounter(view.m_StartManualCombatButtonLabel, readyPlayersCount, totalPlayersCount);
+            });
+        }
+
+        public void CloseCrusadeArmyAutoBattleResults()
+        {
+            _mainThreadAccessor.Post(() =>
+            {
+                var view = _uiAccessor.GlobalMapPCView?.m_AutoCombatResultsPCView;
+                if (view?.ViewModel == null)
+                {
+                    _logger.LogWarning("Unable to close crusade army battle results due to missing view");
+                    return;
+                }
+
+                view.ViewModel.Close();
+                _logger.LogInformation("AutoBattleResults window has been closed");
+            });
+        }
+
+        public void StartCrusadeArmyAutoBattleResultsManualCombat()
+        {
+            _mainThreadAccessor.Post(() =>
+            {
+                var view = _uiAccessor.GlobalMapPCView?.m_AutoCombatResultsPCView;
+                if (view?.ViewModel == null)
+                {
+                    _logger.LogWarning("Unable to start crusade army battle results manual combat due to missing view");
+                    return;
+                }
+
+                view.ViewModel.StartManualCombat();
+                _logger.LogInformation("Manual combat has been started via AutoBattleResults");
+            });
+        }
+
+        public void CloseCombatBattleResults()
+        {
+            _mainThreadAccessor.Post(() =>
+            {
+                var view = _uiAccessor.GlobalMapPCView?.m_CombatResultPCView;
+                if (view?.ViewModel == null)
+                {
+                    _logger.LogWarning("Unable to close combat results UI due to missing view");
+                    return;
+                }
+
+                view.ViewModel.Close();
+                _logger.LogInformation("Combat results window has been closed");
+            });
+        }
+
+        public void UpdateCombatResultsUI(bool isInteractable, int readyPlayersCount, int totalPlayersCount)
+        {
+            _mainThreadAccessor.Post(() =>
+            {
+                var view = _uiAccessor.GlobalMapPCView?.m_CombatResultPCView;
+                if (view?.ViewModel == null)
+                {
+                    _logger.LogWarning("Unable to update combat results UI due to missing view");
+                    return;
+                }
+
+                view.m_CloseButton.Interactable = isInteractable;
+                var closeButtonText = view.m_CloseButton.GetComponentInChildren<TextMeshProUGUI>();
+                _uiSyncCountersService.UpdateButtonTextCounter(closeButtonText, readyPlayersCount, totalPlayersCount);
+                _logger.LogInformation("Combat results UI state has been updated. IsInteractable={IsInteractable}, ReadyPlayers={ReadyPlayers}, TotalPlayers={TotalPlayers}", isInteractable, readyPlayersCount, totalPlayersCount);
             });
         }
 
@@ -287,7 +352,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
             });
         }
 
-        public void CollectIngredients(NetworkGlobalMapLocation globalMapLocation)
+        public void AcceptCommonPopup(NetworkGlobalMapCommonPopup globalMapCommonPopup)
         {
             _mainThreadAccessor.Post(() =>
             {
@@ -297,30 +362,28 @@ namespace WOTRMultiplayer.Services.GameInteraction
                 }
 
                 var modalMessage = _uiAccessor.CommonPCView?.m_MessageModalPCView;
-                if (modalMessage != null)
+                if (modalMessage?.ViewModel != null)
                 {
                     modalMessage.m_AcceptButton.OnLeftClick?.Invoke();
-                    _logger.LogInformation("Global map ingredients have been collected via Accept button");
+                    _logger.LogInformation("Global map common popup has been accepted");
                     return;
                 }
+            });
+        }
 
-                // safety measure to make sure ingredients are collected even if message is not shown
-                var point = _gameStateLookupService.GetGlobalMapPoint(globalMapLocation);
-                if (point == null)
+        public void CloseLocationMessageBox()
+        {
+            _mainThreadAccessor.Post(() =>
+            {
+                var messageBoxView = _uiAccessor.GlobalMapPCView.m_GlobalMapEnterMessagePCView;
+                if (messageBoxView?.ViewModel == null)
                 {
-                    _logger.LogError("Unable to autocollect global map ingredients due to missing point. LocationId={LocationId}, LocationName={LocationName}", globalMapLocation.Id, globalMapLocation.Name);
+                    _logger.LogWarning("Unable to close missing global map message box");
                     return;
                 }
 
-                var craftRoot = BlueprintRoot.Instance.CraftRoot.CollectRoot;
-                var collected = craftRoot.CollectIngredient(point.Blueprint);
-                var warningMessage = collected.Count > 0 ? craftRoot.SuccessCollect : craftRoot.FailCollected;
-                UIUtility.SendWarning(warningMessage, addLog: false);
-                EventBus.RaiseEvent<ILogMessageUIHandler>(x => x.HandleLogMessage(collected.Count > 0 ? $"{craftRoot.SuccessCollect}:\n{BlueprintGlobalMapPoint.IngredientToString(collected)}" : (string)craftRoot.FailCollected));
-                point.State.IngredientWasCollected = true;
-                point.State.SetVisited();
-
-                _logger.LogInformation("Global map ingredients have been collected via auto collection. LocationId={LocationId}, LocationName={LocationName}", globalMapLocation.Id, globalMapLocation.Name);
+                messageBoxView.ViewModel.Close();
+                _logger.LogInformation("Global map message box has been closed");
             });
         }
 

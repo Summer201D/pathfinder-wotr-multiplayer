@@ -169,12 +169,12 @@ Works the same way as Perception checks - unit info only gets revealed once the 
 Game spams this 'rule' every tick, but actually relies on cached perception check roll. Changed to work the same way as regular perception checks.
 
 ### Inspection Buff check rolls
-##### Disclaimer: Always passed in Tactical combat by default
+##### Disclaimer: Always passed in RTwP combat by default
 Automatically passed on both host/client
 
 ## Combat
 
-Turn-Based only. Tactical Combat is completly disabled.
+Turn-Based only. Real-Time with Pause (RTwP) combat is completely disabled.
 
 The only caveat is that you can't change character control once combat has started. Although technically you can do that, as the lobby window is not blocked/disabled during combat, some important calculations only run on the host before starting the turn. Supporting this feature would require re-running/re-syncing info after character ownership change, but this is surely out of scope as of now.
 

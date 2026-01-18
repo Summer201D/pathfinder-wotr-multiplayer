@@ -5,6 +5,7 @@ using System.Reflection;
 using System.Reflection.Emit;
 using HarmonyLib;
 using Kingmaker;
+using Kingmaker.Armies.TacticalCombat;
 using Kingmaker.Assets.Controllers.GlobalMap;
 using Kingmaker.Blueprints.Root;
 using Kingmaker.Blueprints.Root.Strings;
@@ -13,6 +14,7 @@ using Kingmaker.Globalmap;
 using Kingmaker.Globalmap.Blueprints;
 using Kingmaker.Globalmap.State;
 using Kingmaker.Globalmap.View;
+using Kingmaker.PubSubSystem;
 using Kingmaker.UI;
 using Kingmaker.UI.Common;
 using Kingmaker.UI.GlobalMap;
@@ -28,6 +30,91 @@ namespace WOTRMultiplayer.HarmonyPatches.GlobalMap
     [HarmonyPatch]
     public class GlobalMapMovementPatches
     {
+        [HarmonyPatch(typeof(GlobalMapController), nameof(GlobalMapController.BeginCombat))]
+        [HarmonyTranspiler]
+        public static IEnumerable<CodeInstruction> GlobalMapController_BeginCombat_Transpiler(IEnumerable<CodeInstruction> instructions)
+        {
+            var target = PatchesUtils.GetTranspilerTarget(MethodBase.GetCurrentMethod());
+            var replaceWith = AccessTools.Method(typeof(GlobalMapMovementPatches), nameof(GlobalMapMovementPatches.OnShowFleeMessageBox));
+            var lookFor = AccessTools.Method(typeof(UIUtility), nameof(UIUtility.ShowMessageBox));
+            var matcher = new CodeMatcher(instructions);
+            var match = matcher.SearchForward(x => x.Calls(lookFor));
+
+            match = match.SearchForward(x => x.Calls(lookFor));
+            if (match.IsInvalid)
+            {
+                Main.GetLogger<GlobalMapMovementPatches>().LogError("Invalid transpiler position. Target={Target}, Position={Position}", target, match.Pos);
+                return instructions;
+            }
+            var newExactInstructions = new List<CodeInstruction>()
+            {
+                new(OpCodes.Ldloc_0),
+                new(OpCodes.Call, replaceWith),
+            };
+            match = match.Advance(-19).RemoveInstructions(20).Insert(newExactInstructions);
+            Main.GetLogger<GlobalMapMovementPatches>().LogInformation("Transpiler has been applied. Target={Target}", target);
+            return matcher.Instructions();
+        }
+
+        /// <summary>
+        /// 1. loading fields via IL instructions requires to get type of anonymous class, but it's a really bad idea to have strict dependency on anonymous compiler-generated class
+        /// 2. 'dynamic' requires an extra dlls to be addeded and loaded by the game
+        /// All options above don't look likeable enough, so sticking to this temu 'dynamic at home' anon class representation for now
+        /// </summary>
+        private class CompilerGeneratedFleeMessageBoxData
+        {
+            // order must match order of the anonymous class fields
+            public GlobalMapController controller = null;
+            public TacticalCombatResults prediction = null;
+            public GlobalMapArmyState attacker = null;
+            public GlobalMapArmyState defender = null;
+
+            public bool IsValid()
+            {
+                return controller is not null and GlobalMapController
+                    && prediction is not null and TacticalCombatResults
+                    && attacker is not null and GlobalMapArmyState
+                    && defender is not null and GlobalMapArmyState
+                    && attacker != defender;
+            }
+        }
+
+        /// <summary>
+        /// modified copy-paste of GlobalMapController.BeginCombat (flee message box section)
+        /// </summary>
+        /// <param name="controller"></param>
+        /// <param name="fleeMessageBoxData"></param>
+        private static void OnShowFleeMessageBox(CompilerGeneratedFleeMessageBoxData fleeMessageBoxData)
+        {
+            if (!(fleeMessageBoxData?.IsValid() ?? false))
+            {
+                Main.GetLogger<GlobalMapMovementPatches>().LogError("Invalid compiler-generated flee message box data supplied.");
+                return;
+            }
+
+            GlobalMapController controller = fleeMessageBoxData.controller;
+            GlobalMapArmyState attacker = fleeMessageBoxData.attacker;
+            GlobalMapArmyState defender = fleeMessageBoxData.defender;
+            TacticalCombatResults prediction = fleeMessageBoxData.prediction;
+
+            var popup = new NetworkGlobalMapCommonPopup { Type = NetworkGlobalMapCommonPopupType.Flee };
+            Main.Multiplayer.OnGlobalMapCommonPopupShown(popup);
+            UIUtility.ShowMessageBox(UIStrings.Instance.CrusadeTexts.EnemyFleeText, MessageModalBase.ModalType.Dialog, delegate (MessageModalBase.ButtonType result)
+            {
+                if (result == MessageModalBase.ButtonType.Yes)
+                {
+                    Main.Multiplayer.OnGlobalMapCommonPopupAccepted(popup);
+                    controller.OpenAutoBattleResults(prediction, attacker, defender);
+                    return;
+                }
+
+                Main.Multiplayer.OnGlobalMapCommonPopupDeclined(popup);
+                prediction.Units?.Clear();
+                prediction.ToResurrect?.Clear();
+                controller.StartManualCombat(attacker, defender);
+            }, null, 0, UIStrings.Instance.CrusadeTexts.EnemyFleeAccept, UIStrings.Instance.CrusadeTexts.EnemyFleeDecline, null);
+        }
+
         [HarmonyPatch(typeof(GlobalMapMovementVM), nameof(GlobalMapMovementVM.TryEnterLocation))]
         [HarmonyTranspiler]
         public static IEnumerable<CodeInstruction> GlobalMapMovementVM_TryEnterLocation_Transpiler(IEnumerable<CodeInstruction> instructions)
@@ -202,7 +289,7 @@ namespace WOTRMultiplayer.HarmonyPatches.GlobalMap
                 return;
             }
 
-            Main.Multiplayer.OnGlobalMapMessageBoxClosed();
+            Main.Multiplayer.OnGlobalMapLocationMessageClosed();
         }
 
         [HarmonyPatch(typeof(GlobalMapEnterMessageVM), nameof(GlobalMapEnterMessageVM.CanLocationSelect))]
@@ -273,29 +360,34 @@ namespace WOTRMultiplayer.HarmonyPatches.GlobalMap
             var craftRoot = BlueprintRoot.Instance.CraftRoot.CollectRoot;
             if (pointState.IngredientWasCollected)
             {
-                // this one doesn't make sense to sync, so we just ignore it
-                UIUtility.ShowMessageBox(craftRoot.AlreadyCollected, MessageModalBase.ModalType.Message, null);
+                // this one doesn't make sense to sync
+                // UIUtility.ShowMessageBox(craftRoot.AlreadyCollected, MessageModalBase.ModalType.Message, null);
+                EventBus.RaiseEvent<IWarningNotificationUIHandler>(x => x.HandleWarning(craftRoot.AlreadyCollected, false), true);
                 return false;
             }
 
-            Main.Multiplayer.OnGlobalMapIngredientCollectionShown();
+            var popup = new NetworkGlobalMapCommonPopup
+            {
+                Type = NetworkGlobalMapCommonPopupType.Ingredients,
+                Location = GetNetworkGlobalMapLocation(traveler.Location)
+            };
+            Main.Multiplayer.OnGlobalMapCommonPopupShown(popup);
             UIUtility.ShowMessageBox(craftRoot.PointResources, MessageModalBase.ModalType.Dialog, delegate (MessageModalBase.ButtonType result)
             {
                 if (result != MessageModalBase.ButtonType.Yes)
                 {
-                    Main.Multiplayer.OnGlobalMapIngredientCollectionClosed();
+                    Main.Multiplayer.OnGlobalMapCommonPopupDeclined(popup);
                     return;
                 }
 
                 var collected = craftRoot.CollectIngredient(traveler.Location);
                 var warningMessage = collected.Count > 0 ? craftRoot.SuccessCollect : craftRoot.FailCollected;
                 UIUtility.SendWarning(warningMessage, addLog: false);
-                Kingmaker.PubSubSystem.EventBus.RaiseEvent<Kingmaker.PubSubSystem.ILogMessageUIHandler>(x => x.HandleLogMessage((collected.Count > 0) ? $"{craftRoot.SuccessCollect}:\n{BlueprintGlobalMapPoint.IngredientToString(collected)}" : ((string)craftRoot.FailCollected)));
+                EventBus.RaiseEvent<ILogMessageUIHandler>(x => x.HandleLogMessage((collected.Count > 0) ? $"{craftRoot.SuccessCollect}:\n{BlueprintGlobalMapPoint.IngredientToString(collected)}" : ((string)craftRoot.FailCollected)));
                 pointState.IngredientWasCollected = true;
                 pointState.SetVisited();
 
-                var location = GetNetworkGlobalMapLocation(traveler.Location);
-                Main.Multiplayer.OnGlobalMapIngredientCollectionAccepted(location);
+                Main.Multiplayer.OnGlobalMapCommonPopupAccepted(popup);
             }, null, 0, UIStrings.Instance.Tooltips.Collect, null, [.. traveler.Location.Ingredients.Select(i => i.Ingredient.Get())]);
 
             return false;
@@ -313,7 +405,6 @@ namespace WOTRMultiplayer.HarmonyPatches.GlobalMap
             var shouldContinue = Main.Multiplayer.CanNavigateOnGlobalMap();
             return shouldContinue;
         }
-
 
         private static void OnGlobalMapDirectionalMovement(GlobalMapTravelData globalMapTravelData)
         {
@@ -348,7 +439,6 @@ namespace WOTRMultiplayer.HarmonyPatches.GlobalMap
             };
             return travel;
         }
-
 
         private static IDisposable SubscribeEnterMessageEscPress(GlobalMapEnterMessagePCView view)
         {

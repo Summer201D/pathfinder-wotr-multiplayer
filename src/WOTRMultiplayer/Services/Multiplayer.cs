@@ -2311,61 +2311,7 @@ namespace WOTRMultiplayer.Services
             }
         }
 
-        public void OnGlobalMapMessageBoxClosed()
-        {
-            try
-            {
-                if (_multiplayerActorAccessor.Current == null)
-                {
-                    return;
-                }
-
-                _multiplayerActorAccessor.Current.OnGlobalMapMessageBoxClosed();
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error while closing global map message box");
-                throw;
-            }
-        }
-
-        public void OnGlobalMapIngredientCollectionShown()
-        {
-            try
-            {
-                if (_multiplayerActorAccessor.Current == null)
-                {
-                    return;
-                }
-
-                _multiplayerActorAccessor.Current.OnGlobalMapIngredientCollectionShown();
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error while showing global map ingredient collection");
-                throw;
-            }
-        }
-
-        public void OnGlobalMapIngredientCollectionClosed()
-        {
-            try
-            {
-                if (_multiplayerActorAccessor.Current == null)
-                {
-                    return;
-                }
-
-                _multiplayerActorAccessor.Current.OnGlobalMapIngredientCollectionClosed();
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error while closing global map ingredient collection");
-                throw;
-            }
-        }
-
-        public void OnGlobalMapIngredientCollectionAccepted(NetworkGlobalMapLocation globalMapLocation)
+        public void OnGlobalMapLocationMessageClosed()
         {
             try
             {
@@ -2374,7 +2320,61 @@ namespace WOTRMultiplayer.Services
                     return;
                 }
 
-                _multiplayerActorAccessor.Host.OnGlobalMapIngredientCollectionAccepted(globalMapLocation);
+                _multiplayerActorAccessor.Host.OnGlobalMapLocationMessageClosed();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while closing global map message box");
+                throw;
+            }
+        }
+
+        public void OnGlobalMapCommonPopupShown(NetworkGlobalMapCommonPopup globalMapCommonPopup)
+        {
+            try
+            {
+                if (_multiplayerActorAccessor.Current == null)
+                {
+                    return;
+                }
+
+                _multiplayerActorAccessor.Current.OnGlobalMapCommonPopupShown(globalMapCommonPopup);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while showing global map common popup. Type={Type}", globalMapCommonPopup.Type);
+                throw;
+            }
+        }
+
+        public void OnGlobalMapCommonPopupDeclined(NetworkGlobalMapCommonPopup globalMapCommonPopup)
+        {
+            try
+            {
+                if (_multiplayerActorAccessor.Current == null || _multiplayerActorAccessor.Client.IsActive)
+                {
+                    return;
+                }
+
+                _multiplayerActorAccessor.Host.OnGlobalMapCommonPopupDeclined(globalMapCommonPopup);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while declining global map common popup. Type={Type}", globalMapCommonPopup.Type);
+                throw;
+            }
+        }
+
+        public void OnGlobalMapCommonPopupAccepted(NetworkGlobalMapCommonPopup globalMapCommonPopup)
+        {
+            try
+            {
+                if (_multiplayerActorAccessor.Current == null || _multiplayerActorAccessor.Client.IsActive)
+                {
+                    return;
+                }
+
+                _multiplayerActorAccessor.Host.OnGlobalMapCommonPopupAccepted(globalMapCommonPopup);
             }
             catch (Exception ex)
             {
@@ -2626,12 +2626,12 @@ namespace WOTRMultiplayer.Services
         {
             try
             {
-                if (_multiplayerActorAccessor.Current == null)
+                if (_multiplayerActorAccessor.Current == null || _multiplayerActorAccessor.Client.IsActive)
                 {
                     return;
                 }
 
-                _multiplayerActorAccessor.Current.OnZoneLootCompleted();
+                _multiplayerActorAccessor.Host.OnZoneLootCompleted();
             }
             catch (Exception ex)
             {
@@ -2983,6 +2983,96 @@ namespace WOTRMultiplayer.Services
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error while starting crusade army combat turn");
+                throw;
+            }
+        }
+
+        public void OnCrusadeArmyAutoBattleResultsShown()
+        {
+            try
+            {
+                if (_multiplayerActorAccessor.Current == null)
+                {
+                    return;
+                }
+
+                _multiplayerActorAccessor.Current.OnCrusadeArmyAutoBattleResultsShown();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while showing crusade army auto battle results");
+                throw;
+            }
+        }
+
+        public void OnCrusadeArmyAutoBattleResultsClosed()
+        {
+            try
+            {
+                if (_multiplayerActorAccessor.Current == null || _multiplayerActorAccessor.Client.IsActive)
+                {
+                    return;
+                }
+
+                _multiplayerActorAccessor.Host.OnCrusadeArmyAutoBattleResultsClosed();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while closing crusade army auto battle results");
+                throw;
+            }
+        }
+
+        public void OnCrusadeArmyAutoBattleResultsManualCombatStarted()
+        {
+            try
+            {
+                if (_multiplayerActorAccessor.Current == null || _multiplayerActorAccessor.Client.IsActive)
+                {
+                    return;
+                }
+
+                _multiplayerActorAccessor.Host.OnCrusadeArmyAutoBattleResultsManualCombatStarted();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while starting manual combat via crusade army auto battle results");
+                throw;
+            }
+        }
+
+        public void OnGlobalMapCombatResultsShown()
+        {
+            try
+            {
+                if (_multiplayerActorAccessor.Current == null)
+                {
+                    return;
+                }
+
+                _multiplayerActorAccessor.Current.OnGlobalMapCombatResultsShown();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while showing global map combat results");
+                throw;
+            }
+        }
+
+        public void OnGlobalMapCombatResultsClosed()
+        {
+            try
+            {
+                if (_multiplayerActorAccessor.Current == null || _multiplayerActorAccessor.Client.IsActive)
+                {
+                    return;
+                }
+
+                _multiplayerActorAccessor.Host.OnGlobalMapCombatResultsClosed();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while closing global map combat results");
                 throw;
             }
         }

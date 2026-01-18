@@ -1601,34 +1601,19 @@ namespace WOTRMultiplayer.Services
             Send(message);
         }
 
-        public void OnGlobalMapMessageBoxClosed()
-        {
-            var localPlayer = GetLocalPlayerId();
-            RemovePlayerFromTracker(Game.PlayersInGlobalMapLocationMessage, localPlayer);
-
-            var message = new NotifyGlobalMapMessageBoxClosed
-            {
-                PlayerId = localPlayer
-            };
-            Logger.LogInformation("Sending {MessageType}. PlayerId={PlayerId}", nameof(NotifyGlobalMapMessageBoxClosed), message.PlayerId);
-            Send(message);
-
-            UpdateGlobalMapMessageBoxUIState();
-        }
-
         public void OnGlobalMapMessageBoxShown()
         {
             var localPlayer = GetLocalPlayerId();
             AddPlayerToTracker(Game.PlayersInGlobalMapLocationMessage, localPlayer);
 
-            var message = new NotifyGlobalMapMessageBoxShown
+            var message = new NotifyGlobalMapLocationMessageShown
             {
                 PlayerId = localPlayer
             };
-            Logger.LogInformation("Sending {MessageType}. PlayerId={PlayerId}", nameof(NotifyGlobalMapMessageBoxShown), message.PlayerId);
+            Logger.LogInformation("Sending {MessageType}. PlayerId={PlayerId}", nameof(NotifyGlobalMapLocationMessageShown), message.PlayerId);
             Send(message);
 
-            UpdateGlobalMapMessageBoxUIState();
+            UpdateGlobalMapLocationMessageUIState();
         }
 
         public void OnShowGroupChangerUI()
@@ -1677,34 +1662,20 @@ namespace WOTRMultiplayer.Services
             UpdateDialogPopupState();
         }
 
-        public void OnGlobalMapIngredientCollectionShown()
+        public void OnGlobalMapCommonPopupShown(NetworkGlobalMapCommonPopup globalMapCommonPopup)
         {
             var localPlayer = GetLocalPlayerId();
-            AddPlayerToTracker(Game.PlayersInGlobalMapIngredientCollection, localPlayer);
+            AddPlayerToTracker(Game.PlayersInGlobalMapCommonPopup, localPlayer);
 
-            var message = new NotifyGlobalMapIngredientCollectionShown
+            var message = new NotifyGlobalMapCommonPopupShown
             {
-                PlayerId = localPlayer
+                PlayerId = localPlayer,
+                Popup = Mapper.Map<Networking.Messages.Contracts.NetworkGlobalMapCommonPopup>(globalMapCommonPopup)
             };
-            Logger.LogInformation("Sending {MessageType}. PlayerId={PlayerId}", nameof(NotifyGlobalMapIngredientCollectionShown), message.PlayerId);
+            Logger.LogInformation("Sending {MessageType}. PlayerId={PlayerId}, Type={Type}, LocationId={LocationId}, LocationName={LocationName}", nameof(NotifyGlobalMapCommonPopupShown), message.PlayerId, message.Popup.Type, message.Popup.Location?.Id, message.Popup.Location?.Name);
             Send(message);
 
-            UpdateGlobalMapIngredientCollectionUIState();
-        }
-
-        public void OnGlobalMapIngredientCollectionClosed()
-        {
-            var localPlayer = GetLocalPlayerId();
-            RemovePlayerFromTracker(Game.PlayersInGlobalMapIngredientCollection, localPlayer);
-
-            var message = new NotifyGlobalMapIngredientCollectionClosed
-            {
-                PlayerId = localPlayer
-            };
-            Logger.LogInformation("Sending {MessageType}. PlayerId={PlayerId}", nameof(NotifyGlobalMapIngredientCollectionClosed), message.PlayerId);
-            Send(message);
-
-            UpdateGlobalMapIngredientCollectionUIState();
+            UpdateGlobalMapCommonPopupUIState(globalMapCommonPopup);
         }
 
         public void OnGlobalMapEncounterMessageShown()
@@ -1779,12 +1750,8 @@ namespace WOTRMultiplayer.Services
 
         public void OnZoneLootCompleted()
         {
-            var localPlayer = GetLocalPlayerId();
-            var message = new NotifyZoneLootCompleted
-            {
-                PlayerId = localPlayer
-            };
-            Logger.LogInformation("Sending {MessageType}. PlayerId={PlayerId}", nameof(NotifyZoneLootCompleted), message.PlayerId);
+            var message = new NotifyZoneLootCompleted();
+            Logger.LogInformation("Sending {MessageType}. PlayerId={PlayerId}", nameof(NotifyZoneLootCompleted));
             Send(message);
         }
 
@@ -1792,6 +1759,36 @@ namespace WOTRMultiplayer.Services
         {
             var player = Game.Players.First(p => p.Id == Game.LocalPlayerId);
             return ReadyChanged(player, !player.IsReady);
+        }
+
+        public void OnCrusadeArmyAutoBattleResultsShown()
+        {
+            var localPlayer = GetLocalPlayerId();
+            AddPlayerToTracker(Game.PlayersInGlobalMapCrusadeArmyAutoBattleResults, localPlayer);
+
+            var message = new NotifyCrusadeArmyAutoBattleResultsShown
+            {
+                PlayerId = localPlayer
+            };
+            Logger.LogInformation("Sending {MessageType}. PlayerId={PlayerId}", nameof(NotifyCrusadeArmyAutoBattleResultsShown), message.PlayerId);
+            Send(message);
+
+            UpdateGlobalMapCrusadeArmyAutoBattleResultsUIState();
+        }
+
+        public void OnGlobalMapCombatResultsShown()
+        {
+            var localPlayer = GetLocalPlayerId();
+            AddPlayerToTracker(Game.PlayersInGlobalMapCombatResults, localPlayer);
+
+            var message = new NotifyGlobalMapCombatResultsShown
+            {
+                PlayerId = localPlayer
+            };
+            Logger.LogInformation("Sending {MessageType}. PlayerId={PlayerId}", nameof(NotifyGlobalMapCombatResultsShown), message.PlayerId);
+            Send(message);
+
+            UpdateGlobalMapCombatResultsUIState();
         }
 
         public void OnCrusadeArmyCombatEnded()
@@ -1960,25 +1957,47 @@ namespace WOTRMultiplayer.Services
             }
         }
 
-        protected void UpdateGlobalMapMessageBoxUIState()
+        protected void UpdateGlobalMapLocationMessageUIState()
         {
             lock (ActionLock)
             {
                 var readyPlayers = Game.PlayersInGlobalMapLocationMessage.Count;
                 var totalPlayers = GetSyncedPlayersCount();
                 var canUse = HasControlOverUI && readyPlayers >= totalPlayers;
-                GlobalMapInteraction.UpdateMessageBoxUI(canUse, readyPlayers, totalPlayers);
+                GlobalMapInteraction.UpdateEnterMessageBoxUI(canUse, readyPlayers, totalPlayers);
             }
         }
 
-        protected void UpdateGlobalMapIngredientCollectionUIState()
+        protected void UpdateGlobalMapCommonPopupUIState(NetworkGlobalMapCommonPopup globalMapCommonPopup)
         {
             lock (ActionLock)
             {
-                var readyPlayers = Game.PlayersInGlobalMapIngredientCollection.Count;
+                var readyPlayers = Game.PlayersInGlobalMapCommonPopup.Count;
                 var totalPlayers = GetSyncedPlayersCount();
                 var canUse = HasControlOverUI && readyPlayers >= totalPlayers;
-                GlobalMapInteraction.UpdateIngredientCollectionUI(canUse, readyPlayers, totalPlayers);
+                GlobalMapInteraction.UpdateCommonPopupUI(globalMapCommonPopup, canUse, readyPlayers, totalPlayers);
+            }
+        }
+
+        protected void UpdateGlobalMapCombatResultsUIState()
+        {
+            lock (ActionLock)
+            {
+                var readyPlayers = Game.PlayersInGlobalMapCombatResults.Count;
+                var totalPlayers = GetSyncedPlayersCount();
+                var canUse = HasControlOverUI && readyPlayers >= totalPlayers;
+                GlobalMapInteraction.UpdateCombatResultsUI(canUse, readyPlayers, totalPlayers);
+            }
+        }
+
+        protected void UpdateGlobalMapCrusadeArmyAutoBattleResultsUIState()
+        {
+            lock (ActionLock)
+            {
+                var readyPlayers = Game.PlayersInGlobalMapCrusadeArmyAutoBattleResults.Count;
+                var totalPlayers = GetSyncedPlayersCount();
+                var canUse = HasControlOverUI && readyPlayers >= totalPlayers;
+                GlobalMapInteraction.UpdateCrusadeArmyBattleResultsUI(canUse, readyPlayers, totalPlayers);
             }
         }
 
@@ -2346,7 +2365,7 @@ namespace WOTRMultiplayer.Services
             ResetPlayersTracker(Game.PlayersInGroupChanger);
             ResetPlayersTracker(Game.PlayersInSkipTime);
             ResetPlayersTracker(Game.PlayersInGlobalMapLocationMessage);
-            ResetPlayersTracker(Game.PlayersInGlobalMapIngredientCollection);
+            ResetPlayersTracker(Game.PlayersInGlobalMapCommonPopup);
             ResetPlayersTracker(Game.PlayersInGlobalMapEncounterMessage);
             ResetPlayersTracker(Game.PlayersInZoneLoot);
             ResetPlayersTracker(Game.PlayersInDialogPopup);
@@ -2785,8 +2804,13 @@ namespace WOTRMultiplayer.Services
                 .On<NotifyUnitAttacked>(OnNotifyUnitAttacked)
                 .On<NotifyCombatTurnDelayed>(OnNotifyCombatTurnDelayed)
 
-                // crusade combat
+                // global map & crusade combat
+                .On<NotifyGlobalMapLocationMessageShown>(OnNotifyGlobalMapLocationMessageShown)
+                .On<NotifyGlobalMapCommonPopupShown>(OnNotifyGlobalMapCommonPopupShown)
+                .On<NotifyGlobalMapEncounterMessageShown>(OnNotifyGlobalMapEncounterMessageShown)
+                .On<NotifyGlobalMapCombatResultsShown>(OnNotifyGlobalMapCombatResultsShown)
                 .On<NotifyCrusadeArmyCombatTurnInitialized>(OnNotifyCrusadeArmyCombatTurnInitialized)
+                .On<NotifyCrusadeArmyAutoBattleResultsShown>(OnNotifyCrusadeArmyAutoBattleResultsShown)
 
                 // overtips
                 .On<NotifyOvertipInteracted>(OnNotifyOvertipInteracted)
@@ -2826,11 +2850,6 @@ namespace WOTRMultiplayer.Services
                 // skip time
                 .On<NotifySkipTimeOpened>(OnNotifySkipTimeOpened)
 
-                // global map
-                .On<NotifyGlobalMapMessageBoxShown>(OnNotifyGlobalMapMessageBoxShown)
-                .On<NotifyGlobalMapIngredientCollectionShown>(OnNotifyGlobalMapIngredientCollectionShown)
-                .On<NotifyGlobalMapEncounterMessageShown>(OnNotifyGlobalMapEncounterMessageShown)
-
                 // group management
                 .On<NotifyGroupChangerOpened>(OnNotifyGroupChangerOpened)
 
@@ -2842,11 +2861,31 @@ namespace WOTRMultiplayer.Services
                 .On<NotifyGameModeTypeEnded>(OnNotifyGameModeTypeEnded)
 
                 // ping
-                .On<NotifyPingedByPlayer>(OnNotifyPingedAt)
+                .On<NotifyPingedByPlayer>(OnNotifyPingedByPlayer)
 
                 // cutscenes
                 .On<NotifyCutsceneSkipped>(OnNotifyCutsceneSkipped)
                 ;
+        }
+
+        private void OnNotifyGlobalMapCombatResultsShown(long receivedFrom, NotifyGlobalMapCombatResultsShown globalMapCombatResultsShown)
+        {
+            Logger.LogInformation("Received {MessageType}. ReceivedFrom={ReceivedFrom}, PlayerId={PlayerId}", nameof(NotifyGlobalMapCombatResultsShown), receivedFrom, globalMapCombatResultsShown.PlayerId);
+            AddPlayerToTracker(Game.PlayersInGlobalMapCombatResults, globalMapCombatResultsShown.PlayerId);
+
+            UpdateGlobalMapCombatResultsUIState();
+
+            OnAfterNetworkMessageHandled(receivedFrom, globalMapCombatResultsShown);
+        }
+
+        private void OnNotifyCrusadeArmyAutoBattleResultsShown(long receivedFrom, NotifyCrusadeArmyAutoBattleResultsShown crusadeArmyAutoBattleResultsShown)
+        {
+            Logger.LogInformation("Received {MessageType}. ReceivedFrom={ReceivedFrom}, PlayerId={PlayerId}", nameof(NotifyCrusadeArmyAutoBattleResultsShown), receivedFrom, crusadeArmyAutoBattleResultsShown.PlayerId);
+            AddPlayerToTracker(Game.PlayersInGlobalMapCrusadeArmyAutoBattleResults, crusadeArmyAutoBattleResultsShown.PlayerId);
+
+            UpdateGlobalMapCrusadeArmyAutoBattleResultsUIState();
+
+            OnAfterNetworkMessageHandled(receivedFrom, crusadeArmyAutoBattleResultsShown);
         }
 
         private void OnNotifyCrusadeArmyCombatTurnInitialized(long receivedFrom, NotifyCrusadeArmyCombatTurnInitialized crusadeArmyCombatTurnInitialized)
@@ -2879,7 +2918,7 @@ namespace WOTRMultiplayer.Services
             OnAfterNetworkMessageHandled(playerId, cutsceneSkipped);
         }
 
-        private void OnNotifyPingedAt(long receivedFrom, NotifyPingedByPlayer pingedAt)
+        private void OnNotifyPingedByPlayer(long receivedFrom, NotifyPingedByPlayer pingedAt)
         {
             Logger.LogInformation("Received {MessageType}. ReceivedFrom={ReceivedFrom}, PlayerId={PlayerId}, Type={Type}, WorldPosition={WorldPosition}, TargetUnitId={TargetUnitId}, MapObjectId={MapObjectId}, MapObjectPosition={MapObjectPosition}",
                 nameof(NotifyPingedByPlayer), receivedFrom, pingedAt.PlayerId, pingedAt.Ping.Type, pingedAt.Ping.WorldPosition, pingedAt.Ping.UnitId, pingedAt.Ping.MapObject?.Id, pingedAt.Ping.MapObject?.Position);
@@ -3189,24 +3228,25 @@ namespace WOTRMultiplayer.Services
             OnAfterNetworkMessageHandled(playerId, zoneLootShown);
         }
 
-        private void OnNotifyGlobalMapEncounterMessageShown(long playerId, NotifyGlobalMapEncounterMessageShown globalMapEncounterMessageShown)
+        private void OnNotifyGlobalMapEncounterMessageShown(long receivedFrom, NotifyGlobalMapEncounterMessageShown globalMapEncounterMessageShown)
         {
             Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}", nameof(NotifyGlobalMapEncounterMessageShown), globalMapEncounterMessageShown.PlayerId);
 
             AddPlayerToTracker(Game.PlayersInGlobalMapEncounterMessage, globalMapEncounterMessageShown.PlayerId);
             UpdateGlobalMapEncounterMessageUIState();
 
-            OnAfterNetworkMessageHandled(playerId, globalMapEncounterMessageShown);
+            OnAfterNetworkMessageHandled(receivedFrom, globalMapEncounterMessageShown);
         }
 
-        private void OnNotifyGlobalMapIngredientCollectionShown(long playerId, NotifyGlobalMapIngredientCollectionShown globalMapIngredientCollectionShown)
+        private void OnNotifyGlobalMapCommonPopupShown(long receivedFrom, NotifyGlobalMapCommonPopupShown globalMapCommonPopupShown)
         {
-            Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}", nameof(NotifyGlobalMapIngredientCollectionShown), globalMapIngredientCollectionShown.PlayerId);
+            Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}, Type={Type}, LocationId={LocationId}, LocationName={LocationName}", nameof(NotifyGlobalMapCommonPopupShown), globalMapCommonPopupShown.PlayerId, globalMapCommonPopupShown.Popup.Type, globalMapCommonPopupShown.Popup.Location?.Id.Length, globalMapCommonPopupShown.Popup.Location?.Name);
 
-            AddPlayerToTracker(Game.PlayersInGlobalMapIngredientCollection, globalMapIngredientCollectionShown.PlayerId);
-            UpdateGlobalMapIngredientCollectionUIState();
+            AddPlayerToTracker(Game.PlayersInGlobalMapCommonPopup, globalMapCommonPopupShown.PlayerId);
+            var popup = Mapper.Map<NetworkGlobalMapCommonPopup>(globalMapCommonPopupShown.Popup);
+            UpdateGlobalMapCommonPopupUIState(popup);
 
-            OnAfterNetworkMessageHandled(playerId, globalMapIngredientCollectionShown);
+            OnAfterNetworkMessageHandled(receivedFrom, globalMapCommonPopupShown);
         }
 
         private void OnNotifyGroupChangerOpened(long playerId, NotifyGroupChangerOpened groupChangerVisible)
@@ -3219,14 +3259,14 @@ namespace WOTRMultiplayer.Services
             OnAfterNetworkMessageHandled(playerId, groupChangerVisible);
         }
 
-        private void OnNotifyGlobalMapMessageBoxShown(long playerId, NotifyGlobalMapMessageBoxShown globalMapMessageBoxShown)
+        private void OnNotifyGlobalMapLocationMessageShown(long playerId, NotifyGlobalMapLocationMessageShown globalMapLocationMessageShown)
         {
-            Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}", nameof(NotifyGlobalMapMessageBoxShown), globalMapMessageBoxShown.PlayerId);
+            Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}", nameof(NotifyGlobalMapLocationMessageShown), globalMapLocationMessageShown.PlayerId);
 
-            AddPlayerToTracker(Game.PlayersInGlobalMapLocationMessage, globalMapMessageBoxShown.PlayerId);
-            UpdateGlobalMapMessageBoxUIState();
+            AddPlayerToTracker(Game.PlayersInGlobalMapLocationMessage, globalMapLocationMessageShown.PlayerId);
+            UpdateGlobalMapLocationMessageUIState();
 
-            OnAfterNetworkMessageHandled(playerId, globalMapMessageBoxShown);
+            OnAfterNetworkMessageHandled(playerId, globalMapLocationMessageShown);
         }
 
         private void OnNotifySkipTimeOpened(long playerId, NotifySkipTimeOpened skipTimeOpened)

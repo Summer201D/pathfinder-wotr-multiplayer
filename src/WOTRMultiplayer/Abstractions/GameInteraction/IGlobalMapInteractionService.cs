@@ -10,15 +10,21 @@ namespace WOTRMultiplayer.Abstractions.GameInteraction
 
         void StopTravel(NetworkGlobalMapState globalMapState);
 
-        void UpdateMessageBoxUI(bool isInteractable, int readyPlayersCount, int totalPlayersCount);
+        void UpdateEnterMessageBoxUI(bool isInteractable, int readyPlayersCount, int totalPlayersCount);
 
-        void UpdateIngredientCollectionUI(bool isInteractable, int readyPlayersCount, int totalPlayersCount);
+        void UpdateCommonPopupUI(NetworkGlobalMapCommonPopup globalMapCommonPopup, bool isInteractable, int readyPlayersCount, int totalPlayersCount);
 
         void UpdateEncounterMessageUI(bool isInteractable, int readyPlayersCount, int totalPlayersCount);
 
         void UpdateUIState(bool isInteractable, int readyPlayersCount, int totalPlayersCount);
 
-        void CollectIngredients(NetworkGlobalMapLocation globalMapLocation);
+        void UpdateCombatResultsUI(bool isInteractable, int readyPlayersCount, int totalPlayersCount);
+
+        void UpdateCrusadeArmyBattleResultsUI(bool isInteractable, int readyPlayersCount, int totalPlayersCount);
+
+        void AcceptCommonPopup(NetworkGlobalMapCommonPopup globalMapCommonPopup);
+
+        void DeclineCommonPopup();
 
         void EnterLocation(NetworkGlobalMapLocation globalMapLocation);
 
@@ -32,9 +38,7 @@ namespace WOTRMultiplayer.Abstractions.GameInteraction
 
         void StartTravel(NetworkGlobalMapTravel globalMapTravel);
 
-        void CloseMessageBox();
-
-        void CloseIngredientCollection();
+        void CloseLocationMessageBox();
 
         void SkipDay();
 
@@ -43,5 +47,11 @@ namespace WOTRMultiplayer.Abstractions.GameInteraction
         void ChangeArmyMode(NetworkGlobalMapTravelerMode travelerMode);
 
         void SetAutoCrusadeCombat(bool isEnabled);
+
+        void CloseCrusadeArmyAutoBattleResults();
+
+        void StartCrusadeArmyAutoBattleResultsManualCombat();
+
+        void CloseCombatBattleResults();
     }
 }

@@ -17,15 +17,15 @@ namespace WOTRMultiplayer.Playground.Core.Dummies
         {
         }
 
-        public void CloseIngredientCollection()
+        public void DeclineCommonPopup()
         {
         }
 
-        public void CloseMessageBox()
+        public void CloseLocationMessageBox()
         {
         }
 
-        public void CollectIngredients(NetworkGlobalMapLocation globalMapLocation)
+        public void AcceptCommonPopup(NetworkGlobalMapCommonPopup globalMapCommonPopup)
         {
         }
 
@@ -74,15 +74,35 @@ namespace WOTRMultiplayer.Playground.Core.Dummies
         {
         }
 
-        public void UpdateIngredientCollectionUI(bool isInteractable, int readyPlayersCount, int totalPlayersCount)
+        public void UpdateCommonPopupUI(NetworkGlobalMapCommonPopup globalMapCommonPopup, bool isInteractable, int readyPlayersCount, int totalPlayersCount)
         {
         }
 
-        public void UpdateMessageBoxUI(bool isInteractable, int readyPlayersCount, int totalPlayersCount)
+        public void UpdateEnterMessageBoxUI(bool isInteractable, int readyPlayersCount, int totalPlayersCount)
         {
         }
 
         public void UpdateUIState(bool isInteractable, int readyPlayersCount, int totalPlayersCount)
+        {
+        }
+
+        public void UpdateCrusadeArmyBattleResultsUI(bool isInteractable, int readyPlayersCount, int totalPlayersCount)
+        {
+        }
+
+        public void CloseCrusadeArmyAutoBattleResults()
+        {
+        }
+
+        public void StartCrusadeArmyAutoBattleResultsManualCombat()
+        {
+        }
+
+        public void UpdateCombatResultsUI(bool isInteractable, int readyPlayersCount, int totalPlayersCount)
+        {
+        }
+
+        public void CloseCombatBattleResults()
         {
         }
     }

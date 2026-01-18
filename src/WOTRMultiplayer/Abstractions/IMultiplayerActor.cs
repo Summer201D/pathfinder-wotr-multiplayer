@@ -215,11 +215,7 @@ namespace WOTRMultiplayer.Abstractions
 
         void OnGlobalMapMessageBoxShown();
 
-        void OnGlobalMapMessageBoxClosed();
-
-        void OnGlobalMapIngredientCollectionShown();
-
-        void OnGlobalMapIngredientCollectionClosed();
+        void OnGlobalMapCommonPopupShown(NetworkGlobalMapCommonPopup globalMapCommonPopup);
 
         void OnGlobalMapEncounterMessageShown();
 
@@ -232,8 +228,6 @@ namespace WOTRMultiplayer.Abstractions
         void OnZoneLootShown();
 
         void OnZoneLootClosed();
-
-        void OnZoneLootCompleted();
 
         void OnZoneLootCollectorButtonsUpdated();
 
@@ -306,5 +300,9 @@ namespace WOTRMultiplayer.Abstractions
         bool OnBeforeCrusadeArmyCombatTurnStart(int turnNumber);
 
         void OnCrusadeArmyCombatTurnStarted(NetworkArmyCombatTurn armyCombatTurn);
+
+        void OnCrusadeArmyAutoBattleResultsShown();
+
+        void OnGlobalMapCombatResultsShown();
     }
 }
