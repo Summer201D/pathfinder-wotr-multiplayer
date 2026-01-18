@@ -1791,14 +1791,14 @@ namespace WOTRMultiplayer.Services
             UpdateGlobalMapCombatResultsUIState();
         }
 
-        public void OnCrusadeArmyCombatEnded()
+        public void OnTacticalCombatEnded()
         {
             Game.ArmyCombat = null;
             Logger.LogInformation("Crusade army combat has ended");
             _valueGenerator.ResetSeedGenerators(SeedLifetime.Combat);
         }
 
-        public bool OnBeforeCrusadeArmyCombatTurnStart(int turnNumber)
+        public bool OnBeforeTacticalCombatTurnStart(int turnNumber)
         {
             var playerId = Game.LocalPlayerId;
             if (AddPlayerCrusadeArmyCombatTurnInitialization(turnNumber, playerId))
@@ -1808,12 +1808,12 @@ namespace WOTRMultiplayer.Services
                     Game.ArmyCombat.Turn = new NetworkArmyCombatTurn { Number = turnNumber };
                 }
 
-                var message = new NotifyCrusadeArmyCombatTurnInitialized
+                var message = new NotifyTacticalCombatTurnInitialized
                 {
                     PlayerId = playerId,
                     TurnNumber = turnNumber
                 };
-                Logger.LogInformation("Sending {MessageType}. PlayerId={PlayerId}, TurnNumber={TurnNumber}", nameof(NotifyCrusadeArmyCombatTurnInitialized), message.PlayerId, message.TurnNumber);
+                Logger.LogInformation("Sending {MessageType}. PlayerId={PlayerId}, TurnNumber={TurnNumber}", nameof(NotifyTacticalCombatTurnInitialized), message.PlayerId, message.TurnNumber);
                 Send(message);
             }
 
@@ -2809,7 +2809,7 @@ namespace WOTRMultiplayer.Services
                 .On<NotifyGlobalMapCommonPopupShown>(OnNotifyGlobalMapCommonPopupShown)
                 .On<NotifyGlobalMapEncounterMessageShown>(OnNotifyGlobalMapEncounterMessageShown)
                 .On<NotifyGlobalMapCombatResultsShown>(OnNotifyGlobalMapCombatResultsShown)
-                .On<NotifyCrusadeArmyCombatTurnInitialized>(OnNotifyCrusadeArmyCombatTurnInitialized)
+                .On<NotifyTacticalCombatTurnInitialized>(OnNotifyTacticalCombatTurnInitialized)
                 .On<NotifyCrusadeArmyBattleResultsShown>(OnNotifyCrusadeArmyBattleResultsShown)
 
                 // overtips
@@ -2888,15 +2888,15 @@ namespace WOTRMultiplayer.Services
             OnAfterNetworkMessageHandled(receivedFrom, crusadeArmyBattleResultsShown);
         }
 
-        private async void OnNotifyCrusadeArmyCombatTurnInitialized(long receivedFrom, NotifyCrusadeArmyCombatTurnInitialized crusadeArmyCombatTurnInitialized)
+        private async void OnNotifyTacticalCombatTurnInitialized(long receivedFrom, NotifyTacticalCombatTurnInitialized tacticalCombatTurnInitialized)
         {
-            Logger.LogInformation("Received {MessageType}. ReceivedFrom={ReceivedFrom}, PlayerId={PlayerId}, TurnNumber={TurnNumber}", nameof(NotifyCrusadeArmyCombatTurnInitialized), receivedFrom, crusadeArmyCombatTurnInitialized.PlayerId, crusadeArmyCombatTurnInitialized.TurnNumber);
+            Logger.LogInformation("Received {MessageType}. ReceivedFrom={ReceivedFrom}, PlayerId={PlayerId}, TurnNumber={TurnNumber}", nameof(NotifyTacticalCombatTurnInitialized), receivedFrom, tacticalCombatTurnInitialized.PlayerId, tacticalCombatTurnInitialized.TurnNumber);
 
             await WaitWhileTrue(() => Game.ArmyCombat == null, "Crusade army combat has not been started yet");
 
-            AddPlayerCrusadeArmyCombatTurnInitialization(crusadeArmyCombatTurnInitialized.TurnNumber, crusadeArmyCombatTurnInitialized.PlayerId);
+            AddPlayerCrusadeArmyCombatTurnInitialization(tacticalCombatTurnInitialized.TurnNumber, tacticalCombatTurnInitialized.PlayerId);
 
-            OnAfterNetworkMessageHandled(receivedFrom, crusadeArmyCombatTurnInitialized);
+            OnAfterNetworkMessageHandled(receivedFrom, tacticalCombatTurnInitialized);
         }
 
         private void OnNotifyPlayerReadyStatusChanged(long receivedFrom, NotifyPlayerReadyStatusChanged readyStatusChanged)

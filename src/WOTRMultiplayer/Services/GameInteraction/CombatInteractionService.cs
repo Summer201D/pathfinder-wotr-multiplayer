@@ -11,6 +11,7 @@ using Kingmaker.Armies.TacticalCombat.Controllers;
 using Kingmaker.EntitySystem.Entities;
 using Kingmaker.GameModes;
 using Kingmaker.Pathfinding;
+using Kingmaker.PubSubSystem;
 using Kingmaker.UnitLogic.Commands;
 using Kingmaker.Utility;
 using Microsoft.Extensions.Logging;
@@ -282,6 +283,8 @@ namespace WOTRMultiplayer.Services.GameInteraction
                     ShouldSkipAnimation = Game.Instance.TacticalCombat.Data.Accelerated
                 };
 
+                EventBus.RaiseEvent<IClickActionHandler>(x => x.OnCastRequested(ability, target), true);
+                unit.Commands.Run(useAbilityCommand);
                 _logger.LogInformation("Command {command} has been executed. UnitId={UnitId}, AbilityId={AbilityId}, AbilityName={AbilityName}", nameof(NetworkTacticalUnitUseAbilityCommand), tacticalUnitUseAbilityCommand.Ability.CasterId, tacticalUnitUseAbilityCommand.Ability.Id, tacticalUnitUseAbilityCommand.Ability.Name);
             });
         }
@@ -304,20 +307,59 @@ namespace WOTRMultiplayer.Services.GameInteraction
                 }
 
                 var forcedPath = CreateForcedPath(tacticalUnitMoveToCommand.Path);
-                var attackCommand = new UnitMoveTo(forcedPath.vectorPath.Last())
+                var moveToCommand = new UnitMoveTo(forcedPath.vectorPath.Last())
                 {
                     ForcedPath = forcedPath,
                 };
-                unit.Commands.Run(attackCommand);
+
+                unit.Commands.Run(moveToCommand);
                 _logger.LogInformation("Command {command} has been executed. UnitId={UnitId}", nameof(NetworkTacticalUnitMoveToCommand), tacticalUnitMoveToCommand.UnitId);
             });
         }
 
-        public bool IsControlledInTacticalCombat(string unitId)
+        public void UseTacticalCombatTotalDefense()
         {
-            var unit = Game.Instance.TacticalCombat?.Data?.UnitRefs.FirstOrDefault(u => string.Equals(u.Id, unitId, StringComparison.OrdinalIgnoreCase)).Entity;
-            var isControlled = unit != null && unit.IsDirectlyControllable;
-            return isControlled;
+            _mainThreadAccessor.Post(() =>
+            {
+                if (!TacticalCombatHelper.IsActive)
+                {
+                    _logger.LogWarning("Unable to use total defense due to inactive tactical combat");
+                    return;
+                }
+
+                Game.Instance.TacticalCombat.TurnController.UseTotalDefense(true);
+                _logger.LogInformation("Total defense has been used");
+            });
+        }
+
+        public void PostponeTacticalCombatTurn()
+        {
+            _mainThreadAccessor.Post(() =>
+            {
+                if (!TacticalCombatHelper.IsActive)
+                {
+                    _logger.LogWarning("Unable to postpone turn due to inactive tactical combat");
+                    return;
+                }
+
+                Game.Instance.TacticalCombat.TurnController.PostponeTurn(true);
+                _logger.LogInformation("Combat turn has been postponed");
+            });
+        }
+
+        public void RetreatFromTacticalCombat()
+        {
+            _mainThreadAccessor.Post(() =>
+            {
+                if (!TacticalCombatHelper.IsActive)
+                {
+                    _logger.LogWarning("Unable to retreat due to inactive tactical combat");
+                    return;
+                }
+
+                Game.Instance.TacticalCombat.RetreatFromBattle();
+                _logger.LogInformation("Retreated from tactical combat");
+            });
         }
 
         private static ForcedPath CreateForcedPath(List<NetworkVector3> path)

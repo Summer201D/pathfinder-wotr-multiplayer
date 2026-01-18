@@ -293,11 +293,11 @@ namespace WOTRMultiplayer.Abstractions
 
         void OnCutsceneSkip();
 
-        bool OnCrusadeArmyCombatInitialization();
+        bool OnTacticalCombatInitialization();
 
-        void OnCrusadeArmyCombatEnded();
+        void OnTacticalCombatEnded();
 
-        bool OnBeforeCrusadeArmyCombatTurnStart(int turnNumber);
+        bool OnBeforeTacticalCombatTurnStart(int turnNumber);
 
         void OnCrusadeArmyCombatTurnStarted(NetworkArmyCombatTurn armyCombatTurn);
 

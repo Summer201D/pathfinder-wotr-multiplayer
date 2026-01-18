@@ -169,9 +169,9 @@
             NotifyGlobalMapSelectedArmyChanged,
             NotifyGlobalMapTravelerModeChanged,
             NotifyGlobalMapAutoCrusadeCombatChanged,
-            NotifyCrusadeArmyCombatInitializationConfirmed,
-            NotifyCrusadeArmyCombatInitialized,
-            NotifyCrusadeArmyCombatTurnInitialized,
+            NotifyTacticalCombatInitializationConfirmed,
+            NotifyTacticalCombatInitialized,
+            NotifyTacticalCombatTurnInitialized,
             NotifyCrusadeArmyBattleResultsShown,
             NotifyCrusadeArmyBattleResultsClosed,
             NotifyCrusadeArmyBattleResultsManualCombatStarted,
@@ -179,7 +179,10 @@
             NotifyGlobalMapCombatResultsClosed,
             NotifyTacticalUnitMoveToCommandExecuted,
             NotifyTacticalUnitAttackCommandExecuted,
-            NotifyTacticalUnitUseAbilityCommandExecuted
+            NotifyTacticalUnitUseAbilityCommandExecuted,
+            NotifyTacticalCombatTotalDefenseUsed,
+            NotifyTacticalCombatTurnPostponed,
+            NotifyTacticalCombatRetreated
         }
 
         public enum Request

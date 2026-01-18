@@ -3,8 +3,8 @@
 namespace WOTRMultiplayer.Networking.Messages.Game
 {
     [ProtoContract]
-    [BeetleX.Packets.MessageType((int)MessageTypes.Game.NotifyCrusadeArmyCombatTurnInitialized)]
-    public class NotifyCrusadeArmyCombatTurnInitialized
+    [BeetleX.Packets.MessageType((int)MessageTypes.Game.NotifyTacticalCombatTurnInitialized)]
+    public class NotifyTacticalCombatTurnInitialized
     {
         [ProtoMember(1)]
         public long PlayerId { get; set; }

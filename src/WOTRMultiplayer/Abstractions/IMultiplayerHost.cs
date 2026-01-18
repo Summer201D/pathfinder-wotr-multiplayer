@@ -94,7 +94,7 @@ namespace WOTRMultiplayer.Abstractions
 
         void OnNewGameDifficultyChanged(string difficulty);
 
-        void OnCrusadeArmyCombatInitialized();
+        void OnTacticalCombatInitialized();
 
         void OnCrusadeArmyBattleResultsClosed();
 
@@ -102,10 +102,16 @@ namespace WOTRMultiplayer.Abstractions
 
         void OnGlobalMapCombatResultsClosed();
 
-        void OnCrusadeTacticalUnitUseAbilityCommand(NetworkTacticalUnitUseAbilityCommand tacticalUnitUseAbilityCommand);
+        void OnTacticalCombatUnitUseAbilityCommand(NetworkTacticalUnitUseAbilityCommand tacticalUnitUseAbilityCommand);
 
-        void OnCrusadeTacticalUnitAttackCommand(NetworkTacticalUnitAttackCommand tacticalUnitAttackCommand);
+        void OnTacticalCombatUnitAttackCommand(NetworkTacticalUnitAttackCommand tacticalUnitAttackCommand);
 
-        void OnCrusadeTacticalUnitMoveToCommand(NetworkTacticalUnitMoveToCommand tacticalUnitMoveToCommand);
+        void OnTacticalCombatUnitMoveToCommand(NetworkTacticalUnitMoveToCommand tacticalUnitMoveToCommand);
+
+        bool OnTacticalCombatTotalDefenseUsed();
+
+        bool OnTacticalCombatTurnPostponed();
+
+        void OnTacticalCombatRetreat();
     }
 }

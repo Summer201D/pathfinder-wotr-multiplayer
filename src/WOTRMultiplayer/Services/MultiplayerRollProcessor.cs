@@ -794,25 +794,33 @@ namespace WOTRMultiplayer.Services
                 return false;
             }
 
-            switch (rule)
+            if (!_combatInteractionService.IsInCrusadeTacticalCombat())
             {
-                case RuleAttackRoll attackRoll:
-                    return !attackRoll.IsFake;
-                case RuleCalculateDamage:
-                case RuleHealDamage:
-                case RuleDealDamage:
-                    var targetEvent = (RulebookTargetEvent)rule;
-                    return _combatInteractionService.IsInCombat()
-                            || _multiplayerActorAccessor.Current.IsControlledByPlayers(targetEvent.Initiator?.UniqueId)
-                            || _multiplayerActorAccessor.Current.IsControlledByPlayers(targetEvent.Target?.UniqueId)
-                            || (_combatInteractionService.IsInCrusadeTacticalCombat()
-                                    && (_combatInteractionService.IsControlledInTacticalCombat(targetEvent.Initiator?.UniqueId) || _combatInteractionService.IsControlledInTacticalCombat(targetEvent.Target?.UniqueId)));
-                // this one is used to detect stealth units. It's always rolled on the host and sent to the client as separate info to prevent sync issues (similar to other perception/inspection checks)
-                case RuleCachedPerceptionCheck:
-                    return false;
+                switch (rule)
+                {
+                    case RuleCalculateDamage:
+                    case RuleHealDamage:
+                    case RuleDealDamage:
+                        var targetEvent = (RulebookTargetEvent)rule;
+                        var initiator = targetEvent.Initiator?.UniqueId;
+                        var target = targetEvent.Target?.UniqueId;
+                        var affectsControlledCharacters = _combatInteractionService.IsInCombat() || _multiplayerActorAccessor.Current.IsControlledByPlayers(initiator) || _multiplayerActorAccessor.Current.IsControlledByPlayers(target);
+                        return affectsControlledCharacters;
+                    // this one is used to detect stealth units. It's always rolled on the host and sent to the client as separate info to prevent sync issues (similar to other perception/inspection checks)
+                    case RuleCachedPerceptionCheck:
+                        return false;
+                }
+
+                return true;
             }
 
-            return true;
+            // tactical combat
+            return rule switch
+            {
+                RuleAttackRoll attackRoll => !attackRoll.IsFake,
+                RuleCalculateDamage calculateDamage when calculateDamage.ParentRule is RuleDealDamage dealDamage => !dealDamage.IsFake,
+                _ => true,
+            };
         }
 
         private int? GetDiceRollId(NetworkDiceRollBase roll)

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using HarmonyLib;
 using Kingmaker.Armies.TacticalCombat;
@@ -57,41 +58,53 @@ namespace WOTRMultiplayer.HarmonyPatches.Combat.Crusades
 
         private static void OnTacticalCommand(UnitEntityData unit, UnitCommand unitCommand)
         {
-            switch (unitCommand)
+            try
             {
-                case TacticalCombatUnitUseAbility useAbility:
-                    OnUseAbilityCommand(useAbility);
-                    break;
-                case TacticalCombatUnitAttack unitAttack:
-                    OnUnitAttackCommand(unit, unitAttack);
-                    break;
-                case UnitMoveTo unitMoveTo:
-                    OnMoveToCommand(unit, unitMoveTo);
-                    break;
-                default:
-                    Main.GetLogger<TacticalCombatCommandsPatches>().LogWarning("Unhandled unit command. Type={Type}", unitCommand?.GetType().Name);
-                    break;
+                switch (unitCommand)
+                {
+                    case TacticalCombatUnitUseAbility useAbility:
+                        // TotalDefense action is handled separately
+                        if (!string.Equals(useAbility.Ability.Blueprint.name, "ArmyTotalDefense", StringComparison.OrdinalIgnoreCase))
+                        {
+                            OnUseAbilityCommand(unit, useAbility);
+                        }
+                        break;
+                    case TacticalCombatUnitAttack unitAttack:
+                        OnUnitAttackCommand(unit, unitAttack);
+                        break;
+                    case UnitMoveTo unitMoveTo:
+                        OnMoveToCommand(unit, unitMoveTo);
+                        break;
+                    default:
+                        Main.GetLogger<TacticalCombatCommandsPatches>().LogWarning("Unhandled unit command. UnitId={UnitId}, Type={Type}", unit, unitCommand?.GetType().Name);
+                        break;
+                }
+            }
+            catch (Exception ex)
+            {
+                Main.GetLogger<TacticalCombatCommandsPatches>().LogError(ex, "Unable to handle tactical command. UnitId={UnitId}, Type={Type}", unit?.UniqueId, unitCommand?.GetType().Name);
+                throw;
             }
         }
 
-        private static void OnUseAbilityCommand(TacticalCombatUnitUseAbility command)
+        private static void OnUseAbilityCommand(UnitEntityData unit, TacticalCombatUnitUseAbility command)
         {
             var unitUseAbilityCommand = new NetworkTacticalUnitUseAbilityCommand
             {
-                Ability = GetAbility(command),
+                Ability = GetAbility(unit, command),
             };
 
-            Main.Multiplayer.OnCrusadeTacticalUnitUseAbilityCommand(unitUseAbilityCommand);
+            Main.Multiplayer.OnTacticalCombatUnitUseAbilityCommand(unitUseAbilityCommand);
         }
 
-        private static NetworkAbility GetAbility(TacticalCombatUnitUseAbility command)
+        private static NetworkAbility GetAbility(UnitEntityData unit, TacticalCombatUnitUseAbility command)
         {
             var ability = new NetworkAbility
             {
                 Id = command.Ability.UniqueId,
                 Name = command.Ability.NameForAcronym,
                 SpellbookId = command.Ability.Spellbook?.Blueprint.Name.Key,
-                CasterId = command.Executor.UniqueId,
+                CasterId = unit.UniqueId,
                 VectorPath = GetPath(command.ForcedPath),
                 TargetId = command.Target?.Unit?.UniqueId,
                 TargetPoint = command.Target?.Point == null ? null : new NetworkVector3(command.Target.Point.x, command.Target.Point.y, command.Target.Point.z),
@@ -110,7 +123,7 @@ namespace WOTRMultiplayer.HarmonyPatches.Combat.Crusades
                 TargetUnitId = command.Target.UniqueId
             };
 
-            Main.Multiplayer.OnCrusadeTacticalUnitAttackCommand(unitAttackCommand);
+            Main.Multiplayer.OnTacticalCombatUnitAttackCommand(unitAttackCommand);
         }
 
         private static void OnMoveToCommand(UnitEntityData unit, UnitMoveTo command)
@@ -121,7 +134,7 @@ namespace WOTRMultiplayer.HarmonyPatches.Combat.Crusades
                 Path = GetPath(command.ForcedPath)
             };
 
-            Main.Multiplayer.OnCrusadeTacticalUnitMoveToCommand(moveToCommand);
+            Main.Multiplayer.OnTacticalCombatUnitMoveToCommand(moveToCommand);
         }
 
         private static List<NetworkVector3> GetPath(Path commandPath)

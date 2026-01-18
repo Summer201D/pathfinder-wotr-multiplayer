@@ -899,7 +899,7 @@ namespace WOTRMultiplayer.Services
             Send(message);
         }
 
-        public bool OnCrusadeArmyCombatInitialization()
+        public bool OnTacticalCombatInitialization()
         {
             ResetPlayersTracker(Game.PlayersInGlobalMapCombatResults);
 
@@ -907,21 +907,21 @@ namespace WOTRMultiplayer.Services
             return true;
         }
 
-        public void OnCrusadeArmyCombatInitialized()
+        public void OnTacticalCombatInitialized()
         {
             Game.ArmyCombat.PlayersCombatInitialization.TryAdd(Game.LocalPlayerId, true);
-            Game.ArmyCombat.IsInitialized = TryConfirmCrusadeArmyCombatInitialization();
+            Game.ArmyCombat.IsInitialized = TryConfirmTacticalCombatInitialization();
 
             var seed = CombatInteraction.GetCrusadeArmyCombatSeed();
-            var message = new NotifyCrusadeArmyCombatInitialized()
+            var message = new NotifyTacticalCombatInitialized()
             {
                 Seed = seed
             };
-            Logger.LogInformation("Sending {MessageType}. Seed={Seed}", nameof(NotifyCrusadeArmyCombatInitialized), message.Seed);
+            Logger.LogInformation("Sending {MessageType}. Seed={Seed}", nameof(NotifyTacticalCombatInitialized), message.Seed);
             Send(message);
         }
 
-        public void OnCrusadeTacticalUnitUseAbilityCommand(NetworkTacticalUnitUseAbilityCommand tacticalUnitUseAbilityCommand)
+        public void OnTacticalCombatUnitUseAbilityCommand(NetworkTacticalUnitUseAbilityCommand tacticalUnitUseAbilityCommand)
         {
             var message = new NotifyTacticalUnitUseAbilityCommandExecuted
             {
@@ -931,7 +931,7 @@ namespace WOTRMultiplayer.Services
             Send(message);
         }
 
-        public void OnCrusadeTacticalUnitAttackCommand(NetworkTacticalUnitAttackCommand tacticalUnitAttackCommand)
+        public void OnTacticalCombatUnitAttackCommand(NetworkTacticalUnitAttackCommand tacticalUnitAttackCommand)
         {
             var message = new NotifyTacticalUnitAttackCommandExecuted
             {
@@ -941,13 +941,35 @@ namespace WOTRMultiplayer.Services
             Send(message);
         }
 
-        public void OnCrusadeTacticalUnitMoveToCommand(NetworkTacticalUnitMoveToCommand tacticalUnitMoveToCommand)
+        public void OnTacticalCombatUnitMoveToCommand(NetworkTacticalUnitMoveToCommand tacticalUnitMoveToCommand)
         {
             var message = new NotifyTacticalUnitMoveToCommandExecuted
             {
                 Command = Mapper.Map<Networking.Messages.Contracts.NetworkTacticalUnitMoveToCommand>(tacticalUnitMoveToCommand)
             };
             Logger.LogInformation("Sending {MessageType}. UnitId={UnitId}, Path={Path}", nameof(NotifyTacticalUnitMoveToCommandExecuted), message.Command.UnitId, message.Command.Path);
+            Send(message);
+        }
+
+        public bool OnTacticalCombatTotalDefenseUsed()
+        {
+            var message = new NotifyTacticalCombatTotalDefenseUsed();
+            Logger.LogInformation("Sending {MessageType}", nameof(NotifyTacticalCombatTotalDefenseUsed));
+            Send(message);
+            return true;
+        }
+
+        public bool OnTacticalCombatTurnPostponed()
+        {
+            var message = new NotifyTacticalCombatTurnPostponed();
+            Logger.LogInformation("Sending {MessageType}", nameof(NotifyTacticalCombatTurnPostponed));
+            Send(message);
+            return true;
+        }
+        public void OnTacticalCombatRetreat()
+        {
+            var message = new NotifyTacticalCombatRetreated();
+            Logger.LogInformation("Sending {MessageType}", nameof(NotifyTacticalCombatRetreated));
             Send(message);
         }
 
@@ -1154,7 +1176,7 @@ namespace WOTRMultiplayer.Services
 
                // global map & crusade combat
                .On<NotifyGlobalMapTravelerModeChanged>(OnNotifyGlobalMapTravelerModeChanged)
-               .On<NotifyCrusadeArmyCombatInitializationConfirmed>(OnNotifyCrusadeArmyCombatInitializationConfirmed)
+               .On<NotifyTacticalCombatInitializationConfirmed>(OnNotifyTacticalCombatInitializationConfirmed)
 
                // dialogs
                .On<ClientDialogCueAnswerSuggested>(OnClientDialogCueAnswerSuggested)
@@ -1169,13 +1191,13 @@ namespace WOTRMultiplayer.Services
                ;
         }
 
-        private void OnNotifyCrusadeArmyCombatInitializationConfirmed(long receivedFrom, NotifyCrusadeArmyCombatInitializationConfirmed crusadeArmyCombatInitializationConfirmed)
+        private void OnNotifyTacticalCombatInitializationConfirmed(long receivedFrom, NotifyTacticalCombatInitializationConfirmed tacticalCombatInitializationConfirmed)
         {
-            Logger.LogInformation("Received {MessageType}. ReceivedFrom={ReceivedFrom}, PlayerId={PlayerId}", nameof(NotifyGlobalMapTravelerModeChanged), receivedFrom, crusadeArmyCombatInitializationConfirmed.PlayerId);
+            Logger.LogInformation("Received {MessageType}. ReceivedFrom={ReceivedFrom}, PlayerId={PlayerId}", nameof(NotifyGlobalMapTravelerModeChanged), receivedFrom, tacticalCombatInitializationConfirmed.PlayerId);
 
-            Game.ArmyCombat.PlayersCombatInitialization.TryAdd(crusadeArmyCombatInitializationConfirmed.PlayerId, true);
+            Game.ArmyCombat.PlayersCombatInitialization.TryAdd(tacticalCombatInitializationConfirmed.PlayerId, true);
 
-            Game.ArmyCombat.IsInitialized = TryConfirmCrusadeArmyCombatInitialization();
+            Game.ArmyCombat.IsInitialized = TryConfirmTacticalCombatInitialization();
         }
 
         private void OnNotifyGlobalMapTravelerModeChanged(long receivedFrom, NotifyGlobalMapTravelerModeChanged globalMapTravelerModeChanged)
@@ -1559,26 +1581,40 @@ namespace WOTRMultiplayer.Services
                     UpdateRestResultsUIState();
                 }
 
-                TryEnableDialogContinueButton();
-
-                RemovePlayerFromTracker(Game.PlayersInSkipTime, removedPlayer.Id);
-                UpdateSkipTimeUIState();
-
-                RemovePlayerFromTracker(Game.PlayersInGroupChanger, removedPlayer.Id);
-                UpdateGroupManagerUIState();
-
-                RemovePlayerFromTracker(Game.PlayersInZoneLoot, removedPlayer.Id);
-                UpdateZoneLootUIState();
-
-                UpdateRespecWindowStateOnPlayerLeave(removedPlayer.Id);
-
-                UpdateCharacterSelectionUIState();
-
-                Game.PlayersInGlobalMapMode.TryRemove(removedPlayer.Id, out _);
-                UpdateGlobalMapUIState();
+                RefreshUIOnPlayerDisconnect(removedPlayer.Id);
 
                 TryEndForcedPause();
             }
+        }
+
+        private void RefreshUIOnPlayerDisconnect(long playerId)
+        {
+            TryEnableDialogContinueButton();
+
+            RemovePlayerFromTracker(Game.PlayersInSkipTime, playerId);
+            UpdateSkipTimeUIState();
+
+            RemovePlayerFromTracker(Game.PlayersInGroupChanger, playerId);
+            UpdateGroupManagerUIState();
+
+            RemovePlayerFromTracker(Game.PlayersInZoneLoot, playerId);
+            UpdateZoneLootUIState();
+
+            UpdateRespecWindowStateOnPlayerLeave(playerId);
+
+            UpdateCharacterSelectionUIState();
+
+            Game.PlayersInGlobalMapMode.TryRemove(playerId, out _);
+            UpdateGlobalMapUIState();
+
+            RemovePlayerFromTracker(Game.PlayersInGlobalMapCrusadeArmyBattleResults, playerId);
+            UpdateGlobalMapCrusadeArmyBattleResultsUIState();
+
+            RemovePlayerFromTracker(Game.PlayersInGlobalMapCommonPopup, playerId);
+            UpdateGlobalMapCommonPopupUIState(null);
+
+            RemovePlayerFromTracker(Game.PlayersInGlobalMapCombatResults, playerId);
+            UpdateGlobalMapCombatResultsUIState();
         }
 
         private void OnClientGameServerConnectionConfirmed(long playerId, ClientGameServerConnectionConfirmed connectionConfirmed)
@@ -1766,7 +1802,7 @@ namespace WOTRMultiplayer.Services
             Logger.LogInformation("Cue witness has been added. CueName={CueName}, PlayerId={PlayerId}", cueName, playerId);
         }
 
-        private bool TryConfirmCrusadeArmyCombatInitialization()
+        private bool TryConfirmTacticalCombatInitialization()
         {
             if (Game.ArmyCombat.IsInitialized)
             {

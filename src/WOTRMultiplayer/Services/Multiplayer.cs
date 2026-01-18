@@ -2479,7 +2479,12 @@ namespace WOTRMultiplayer.Services
 
         public bool CanNavigateOnGlobalMap()
         {
-            return _multiplayerActorAccessor.Host.IsActive;
+            return _multiplayerActorAccessor.Current != null && _multiplayerActorAccessor.Host.IsActive;
+        }
+
+        public bool CanControlTacticalCombat()
+        {
+            return _multiplayerActorAccessor.Current != null && _multiplayerActorAccessor.Host.IsActive;
         }
 
         public void OnGlobalMapSkipDay()
@@ -2899,7 +2904,7 @@ namespace WOTRMultiplayer.Services
             }
         }
 
-        public bool OnCrusadeArmyCombatInitialization()
+        public bool OnTacticalCombatInitialization()
         {
             try
             {
@@ -2908,17 +2913,17 @@ namespace WOTRMultiplayer.Services
                     return true;
                 }
 
-                var canContinue = _multiplayerActorAccessor.Current.OnCrusadeArmyCombatInitialization();
+                var canContinue = _multiplayerActorAccessor.Current.OnTacticalCombatInitialization();
                 return canContinue;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error while initializing crusade army combat");
+                _logger.LogError(ex, "Error while initializing tactical combat");
                 throw;
             }
         }
 
-        public void OnCrusadeArmyCombatEnded()
+        public void OnTacticalCombatEnded()
         {
             try
             {
@@ -2927,7 +2932,7 @@ namespace WOTRMultiplayer.Services
                     return;
                 }
 
-                _multiplayerActorAccessor.Current.OnCrusadeArmyCombatEnded();
+                _multiplayerActorAccessor.Current.OnTacticalCombatEnded();
             }
             catch (Exception ex)
             {
@@ -2936,7 +2941,7 @@ namespace WOTRMultiplayer.Services
             }
         }
 
-        public void OnCrusadeArmyCombatInitialized()
+        public void OnTacticalCombatInitialized()
         {
             try
             {
@@ -2945,7 +2950,7 @@ namespace WOTRMultiplayer.Services
                     return;
                 }
 
-                _multiplayerActorAccessor.Host.OnCrusadeArmyCombatInitialized();
+                _multiplayerActorAccessor.Host.OnTacticalCombatInitialized();
             }
             catch (Exception ex)
             {
@@ -2954,7 +2959,7 @@ namespace WOTRMultiplayer.Services
             }
         }
 
-        public bool OnBeforeCrusadeArmyCombatTurnStart(int turnNumber)
+        public bool OnBeforeTacticalCombatTurnStart(int turnNumber)
         {
             try
             {
@@ -2963,7 +2968,7 @@ namespace WOTRMultiplayer.Services
                     return true;
                 }
 
-                var canContinue = _multiplayerActorAccessor.Current.OnBeforeCrusadeArmyCombatTurnStart(turnNumber);
+                var canContinue = _multiplayerActorAccessor.Current.OnBeforeTacticalCombatTurnStart(turnNumber);
                 return canContinue;
             }
             catch (Exception ex)
@@ -3081,7 +3086,7 @@ namespace WOTRMultiplayer.Services
             }
         }
 
-        public void OnCrusadeTacticalUnitMoveToCommand(NetworkTacticalUnitMoveToCommand tacticalUnitMoveToCommand)
+        public void OnTacticalCombatUnitMoveToCommand(NetworkTacticalUnitMoveToCommand tacticalUnitMoveToCommand)
         {
             try
             {
@@ -3090,7 +3095,7 @@ namespace WOTRMultiplayer.Services
                     return;
                 }
 
-                _multiplayerActorAccessor.Host.OnCrusadeTacticalUnitMoveToCommand(tacticalUnitMoveToCommand);
+                _multiplayerActorAccessor.Host.OnTacticalCombatUnitMoveToCommand(tacticalUnitMoveToCommand);
             }
             catch (Exception ex)
             {
@@ -3099,7 +3104,7 @@ namespace WOTRMultiplayer.Services
             }
         }
 
-        public void OnCrusadeTacticalUnitAttackCommand(NetworkTacticalUnitAttackCommand tacticalUnitAttackCommand)
+        public void OnTacticalCombatUnitAttackCommand(NetworkTacticalUnitAttackCommand tacticalUnitAttackCommand)
         {
             try
             {
@@ -3108,7 +3113,7 @@ namespace WOTRMultiplayer.Services
                     return;
                 }
 
-                _multiplayerActorAccessor.Host.OnCrusadeTacticalUnitAttackCommand(tacticalUnitAttackCommand);
+                _multiplayerActorAccessor.Host.OnTacticalCombatUnitAttackCommand(tacticalUnitAttackCommand);
             }
             catch (Exception ex)
             {
@@ -3117,7 +3122,7 @@ namespace WOTRMultiplayer.Services
             }
         }
 
-        public void OnCrusadeTacticalUnitUseAbilityCommand(NetworkTacticalUnitUseAbilityCommand tacticalUnitUseAbilityCommand)
+        public void OnTacticalCombatUnitUseAbilityCommand(NetworkTacticalUnitUseAbilityCommand tacticalUnitUseAbilityCommand)
         {
             try
             {
@@ -3126,11 +3131,77 @@ namespace WOTRMultiplayer.Services
                     return;
                 }
 
-                _multiplayerActorAccessor.Host.OnCrusadeTacticalUnitUseAbilityCommand(tacticalUnitUseAbilityCommand);
+                _multiplayerActorAccessor.Host.OnTacticalCombatUnitUseAbilityCommand(tacticalUnitUseAbilityCommand);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error while processing crusade tactical unitUseAbility command");
+                throw;
+            }
+        }
+
+        public bool OnTacticalCombatTotalDefenseUsed()
+        {
+            try
+            {
+                if (_multiplayerActorAccessor.Current == null)
+                {
+                    return true;
+                }
+
+                if (_multiplayerActorAccessor.Client.IsActive)
+                {
+                    return false;
+                }
+
+                var canContinue = _multiplayerActorAccessor.Host.OnTacticalCombatTotalDefenseUsed();
+                return canContinue;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while using crusade army combat total defense");
+                throw;
+            }
+        }
+
+        public bool OnTacticalCombatTurnPostponed()
+        {
+            try
+            {
+                if (_multiplayerActorAccessor.Current == null)
+                {
+                    return true;
+                }
+
+                if (_multiplayerActorAccessor.Client.IsActive)
+                {
+                    return false;
+                }
+
+                var canContinue = _multiplayerActorAccessor.Host.OnTacticalCombatTurnPostponed();
+                return canContinue;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while postponing crusade army combat turn");
+                throw;
+            }
+        }
+
+        public void OnTacticalCombatRetreat()
+        {
+            try
+            {
+                if (_multiplayerActorAccessor.Current == null || _multiplayerActorAccessor.Client.IsActive)
+                {
+                    return;
+                }
+
+                _multiplayerActorAccessor.Host.OnTacticalCombatRetreat();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while retreating from crusade army battle");
                 throw;
             }
         }

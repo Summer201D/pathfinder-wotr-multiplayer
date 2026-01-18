@@ -809,6 +809,16 @@ public static class WellKnownKeys
             }
         }
 
+        [Description("tacticalCombat")]
+        public static class TacticalCombat
+        {
+            [Description("disabledAutoCombat")]
+            public static class DisabledAutoCombat
+            {
+                public static string Key { get; set; }
+            }
+        }
+
         [Description("looting")]
         public static class Looting
         {

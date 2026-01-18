@@ -34,6 +34,10 @@ namespace WOTRMultiplayer.Abstractions.GameInteraction
 
         void RunTacticalUnitMoveToCommand(NetworkTacticalUnitMoveToCommand tacticalUnitMoveToCommand);
 
-        bool IsControlledInTacticalCombat(string unitId);
+        void UseTacticalCombatTotalDefense();
+
+        void PostponeTacticalCombatTurn();
+
+        void RetreatFromTacticalCombat();
     }
 }

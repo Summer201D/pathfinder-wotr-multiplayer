@@ -38,7 +38,7 @@ namespace WOTRMultiplayer.HarmonyPatches.Combat.Crusades
             }
 
             var data = Game.Instance.TacticalCombat.Data;
-            var canContinue = Main.Multiplayer.OnBeforeCrusadeArmyCombatTurnStart(data.Turn.Number);
+            var canContinue = Main.Multiplayer.OnBeforeTacticalCombatTurnStart(data.Turn.Number);
             return canContinue;
         }
     }

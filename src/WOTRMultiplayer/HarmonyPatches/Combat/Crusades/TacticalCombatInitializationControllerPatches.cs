@@ -15,7 +15,7 @@ namespace WOTRMultiplayer.HarmonyPatches.Combat.Crusades
                 return true;
             }
 
-            var canContinue = Main.Multiplayer.OnCrusadeArmyCombatInitialization();
+            var canContinue = Main.Multiplayer.OnTacticalCombatInitialization();
             return canContinue;
         }
     }

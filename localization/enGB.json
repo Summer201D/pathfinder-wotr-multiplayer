@@ -209,6 +209,9 @@
                 "clientTurnOrderDesync": "Turn order has been overriden by Host due to detected desync",
                 "hostTurnOrderDesync": "Player {0} is trying to start different character turn, forcing to start the same one"
             },
+            "tacticalCombat": {
+                "disabledAutoCombat": "Auto combat is disabled within multiplayer session"
+            },
             "looting": {
                 "disposedLootbagBugWarning": "Unable to move items into disposed container",
                 "itemsMismatch": "Unable to find looted items. Make sure your DLC content is the same"

@@ -350,13 +350,13 @@ namespace WOTRMultiplayer.Abstractions
 
         void OnAreaTransition(NetworkAreaTransition areaTransition);
 
-        bool OnCrusadeArmyCombatInitialization();
+        bool OnTacticalCombatInitialization();
 
-        void OnCrusadeArmyCombatEnded();
+        void OnTacticalCombatEnded();
 
-        void OnCrusadeArmyCombatInitialized();
+        void OnTacticalCombatInitialized();
 
-        bool OnBeforeCrusadeArmyCombatTurnStart(int turnNumber);
+        bool OnBeforeTacticalCombatTurnStart(int turnNumber);
 
         void OnCrusadeArmyCombatTurnStarted(NetworkArmyCombatTurn armyCombatTurn);
 
@@ -372,10 +372,18 @@ namespace WOTRMultiplayer.Abstractions
 
         void OnGlobalMapCombatResultsClosed();
 
-        void OnCrusadeTacticalUnitMoveToCommand(NetworkTacticalUnitMoveToCommand tacticalUnitMoveToCommand);
+        void OnTacticalCombatUnitMoveToCommand(NetworkTacticalUnitMoveToCommand tacticalUnitMoveToCommand);
 
-        void OnCrusadeTacticalUnitAttackCommand(NetworkTacticalUnitAttackCommand tacticalUnitAttackCommand);
+        void OnTacticalCombatUnitAttackCommand(NetworkTacticalUnitAttackCommand tacticalUnitAttackCommand);
 
-        void OnCrusadeTacticalUnitUseAbilityCommand(NetworkTacticalUnitUseAbilityCommand tacticalUnitUseAbilityCommand);
+        void OnTacticalCombatUnitUseAbilityCommand(NetworkTacticalUnitUseAbilityCommand tacticalUnitUseAbilityCommand);
+
+        bool CanControlTacticalCombat();
+
+        bool OnTacticalCombatTotalDefenseUsed();
+
+        bool OnTacticalCombatTurnPostponed();
+
+        void OnTacticalCombatRetreat();
     }
 }

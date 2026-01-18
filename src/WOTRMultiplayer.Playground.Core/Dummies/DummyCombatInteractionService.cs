@@ -73,5 +73,17 @@ namespace WOTRMultiplayer.Playground.Core.Dummies
         {
             return false;
         }
+
+        public void UseTacticalCombatTotalDefense()
+        {
+        }
+
+        public void PostponeTacticalCombatTurn()
+        {
+        }
+
+        public void RetreatFromTacticalCombat()
+        {
+        }
     }
 }

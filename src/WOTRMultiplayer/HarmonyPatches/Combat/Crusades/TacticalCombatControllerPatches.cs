@@ -59,7 +59,7 @@ namespace WOTRMultiplayer.HarmonyPatches.Combat.Crusades
                 return;
             }
 
-            Main.Multiplayer.OnCrusadeArmyCombatEnded();
+            Main.Multiplayer.OnTacticalCombatEnded();
         }
 
         [HarmonyPatch(typeof(TacticalCombatController), nameof(TacticalCombatController.Setup))]
@@ -71,7 +71,7 @@ namespace WOTRMultiplayer.HarmonyPatches.Combat.Crusades
                 return;
             }
 
-            Main.Multiplayer.OnCrusadeArmyCombatInitialized();
+            Main.Multiplayer.OnTacticalCombatInitialized();
         }
 
         private static void SetCrusadeArmyCombatSeed(TacticalCombatData data, int seed)

@@ -369,16 +369,16 @@ namespace WOTRMultiplayer.Services
             return false;
         }
 
-        public bool OnCrusadeArmyCombatInitialization()
+        public bool OnTacticalCombatInitialization()
         {
             if (Game.ArmyCombat != null && !Game.ArmyCombat.IsInitialized)
             {
                 Game.ArmyCombat.IsInitialized = true;
-                var message = new NotifyCrusadeArmyCombatInitializationConfirmed
+                var message = new NotifyTacticalCombatInitializationConfirmed
                 {
                     PlayerId = Game.LocalPlayerId
                 };
-                Logger.LogInformation("Sending {MessageType}. PlayerId={PlayerId}", nameof(NotifyCrusadeArmyCombatInitializationConfirmed), message.PlayerId);
+                Logger.LogInformation("Sending {MessageType}. PlayerId={PlayerId}", nameof(NotifyTacticalCombatInitializationConfirmed), message.PlayerId);
                 Send(message);
                 return true;
             }
@@ -486,13 +486,15 @@ namespace WOTRMultiplayer.Services
                .On<NotifyGlobalMapSelectedArmyChanged>(OnNotifyGlobalMapSelectedArmyChanged)
                .On<NotifyGlobalMapAutoCrusadeCombatChanged>(OnNotifyGlobalMapAutoCrusadeCombatChanged)
                .On<NotifyGlobalMapCombatResultsClosed>(OnNotifyGlobalMapCombatResultsClosed)
-               .On<NotifyCrusadeArmyCombatInitialized>(OnNotifyCrusadeArmyCombatInitialized)
                .On<NotifyCrusadeArmyBattleResultsManualCombatStarted>(OnNotifyCrusadeArmyBattleResultsManualCombatStarted)
                .On<NotifyCrusadeArmyBattleResultsClosed>(OnNotifyCrusadeArmyBattleResultsClosed)
+               .On<NotifyTacticalCombatInitialized>(OnNotifyTacticalCombatInitialized)
                .On<NotifyTacticalUnitAttackCommandExecuted>(OnNotifyTacticalUnitAttackCommandExecuted)
                .On<NotifyTacticalUnitUseAbilityCommandExecuted>(OnNotifyTacticalUnitUseAbilityCommandExecuted)
                .On<NotifyTacticalUnitMoveToCommandExecuted>(OnNotifyTacticalUnitMoveToCommandExecuted)
-
+               .On<NotifyTacticalCombatTurnPostponed>(OnNotifyTacticalCombatTurnPostponed)
+               .On<NotifyTacticalCombatTotalDefenseUsed>(OnNotifyTacticalCombatTotalDefenseUsed)
+               .On<NotifyTacticalCombatRetreated>(OnNotifyTacticalCombatRetreated)
 
                // dialogs
                .On<NotifyDialogStarted>(OnNotifyDialogStarted)
@@ -526,6 +528,27 @@ namespace WOTRMultiplayer.Services
                // inventory
                .On<NotifyPolymorphicItemCreated>(OnNotifyPolymorphicItemCreated)
                ;
+        }
+
+        private void OnNotifyTacticalCombatRetreated(long receivedFrom, NotifyTacticalCombatRetreated tacticalCombatRetreated)
+        {
+            Logger.LogInformation("Received {MessageType}", nameof(NotifyTacticalCombatRetreated));
+
+            CombatInteraction.RetreatFromTacticalCombat();
+        }
+
+        private void OnNotifyTacticalCombatTotalDefenseUsed(long receivedFrom, NotifyTacticalCombatTotalDefenseUsed tacticalCombatTotalDefenseUsed)
+        {
+            Logger.LogInformation("Received {MessageType}", nameof(NotifyTacticalCombatTotalDefenseUsed));
+
+            CombatInteraction.UseTacticalCombatTotalDefense();
+        }
+
+        private void OnNotifyTacticalCombatTurnPostponed(long receivedFrom, NotifyTacticalCombatTurnPostponed tacticalCombatTurnPostponed)
+        {
+            Logger.LogInformation("Received {MessageType}", nameof(NotifyTacticalCombatTurnPostponed));
+
+            CombatInteraction.PostponeTacticalCombatTurn();
         }
 
         private void OnNotifyTacticalUnitMoveToCommandExecuted(long receivedFrom, NotifyTacticalUnitMoveToCommandExecuted tacticalUnitMoveToCommandExecuted)
@@ -574,13 +597,13 @@ namespace WOTRMultiplayer.Services
             GlobalMapInteraction.StartCrusadeArmyBattleResultsManualCombat();
         }
 
-        private async void OnNotifyCrusadeArmyCombatInitialized(long receivedFrom, NotifyCrusadeArmyCombatInitialized crusadeArmyCombatInitialized)
+        private async void OnNotifyTacticalCombatInitialized(long receivedFrom, NotifyTacticalCombatInitialized tacticalCombatInitialized)
         {
-            Logger.LogInformation("Received {MessageType}. ReceivedFrom={ReceivedFrom}, Seed={Seed}", nameof(NotifyCrusadeArmyCombatInitialized), receivedFrom, crusadeArmyCombatInitialized.Seed);
+            Logger.LogInformation("Received {MessageType}. ReceivedFrom={ReceivedFrom}, Seed={Seed}", nameof(NotifyTacticalCombatInitialized), receivedFrom, tacticalCombatInitialized.Seed);
 
             await WaitWhileTrue(() => Game.ArmyCombat == null, "Crusade army combat has not been started yet");
 
-            Game.ArmyCombat.Seed = crusadeArmyCombatInitialized.Seed;
+            Game.ArmyCombat.Seed = tacticalCombatInitialized.Seed;
             CombatInteraction.InitializeCrusadeArmyCombat();
         }
 
