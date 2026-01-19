@@ -13,7 +13,7 @@ namespace WOTRMultiplayer.Entities.Ping
 
         public NetworkGlobalMapLocation GlobalMapLocation { get; set; }
 
-        public NetworkGlobalMapArmyPawn GlobalMapArmyPawn { get; set; }
+        public NetworkGlobalMapArmy GlobalMapArmy { get; set; }
 
         public NetworkGlobalMapKingdomSettlement GlobalMapKingdomSettlement { get; set; }
 

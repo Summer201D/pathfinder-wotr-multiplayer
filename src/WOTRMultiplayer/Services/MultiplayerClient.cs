@@ -495,6 +495,12 @@ namespace WOTRMultiplayer.Services
                .On<NotifyTacticalCombatTurnPostponed>(OnNotifyTacticalCombatTurnPostponed)
                .On<NotifyTacticalCombatTotalDefenseUsed>(OnNotifyTacticalCombatTotalDefenseUsed)
                .On<NotifyTacticalCombatRetreated>(OnNotifyTacticalCombatRetreated)
+               .On<NotifyGlobalMapCrusadeArmySquadSplitted>(OnNotifyGlobalMapCrusadeArmySquadSplitted)
+               .On<NotifyGlobalMapCrusadeArmySquadsMerged>(OnNotifyGlobalMapCrusadeArmySquadsMerged)
+               .On<NotifyGlobalMapCrusadeArmySquadsSwitched>(OnNotifyGlobalMapCrusadeArmySquadsSwitched)
+               .On<NotifyGlobalMapCrusadeArmySquadSplitRequested>(OnNotifyGlobalMapCrusadeArmySquadSplitRequested)
+               .On<NotifyGlobalMapCrusadeArmyMergedInOne>(OnNotifyGlobalMapCrusadeArmyMergedInOne)
+               .On<NotifyGlobalMapCrusadeArmySquadDismissed>(OnNotifyGlobalMapCrusadeArmySquadDismissed)
 
                // dialogs
                .On<NotifyDialogStarted>(OnNotifyDialogStarted)
@@ -528,6 +534,68 @@ namespace WOTRMultiplayer.Services
                // inventory
                .On<NotifyPolymorphicItemCreated>(OnNotifyPolymorphicItemCreated)
                ;
+        }
+
+        private void OnNotifyGlobalMapCrusadeArmySquadDismissed(long receivedFrom, NotifyGlobalMapCrusadeArmySquadDismissed crusadeArmySquadDismissed)
+        {
+            Logger.LogInformation("Received {MessageType}. ArmyId={SourceArmyId}, SquadId={SourceSquadId}, Position={SourcePosition}", nameof(NotifyGlobalMapCrusadeArmySquadDismissed), crusadeArmySquadDismissed.SquadSlot.ArmyId, crusadeArmySquadDismissed.SquadSlot.SquadId, crusadeArmySquadDismissed.SquadSlot.Position);
+
+            var squadSlot = Mapper.Map<NetworkGlobalMapArmySquadSlot>(crusadeArmySquadDismissed.SquadSlot);
+
+            GlobalMapInteraction.DismissCrusadeArmySquad(squadSlot);
+        }
+
+        private void OnNotifyGlobalMapCrusadeArmyMergedInOne(long receivedFrom, NotifyGlobalMapCrusadeArmyMergedInOne crusadeArmyMergedInOne)
+        {
+            Logger.LogInformation("Received {MessageType}. SourceArmyId={SourceArmyId}, SourceSquadId={SourceSquadId}, SourcePosition={SourcePosition}", nameof(NotifyGlobalMapCrusadeArmyMergedInOne),
+                crusadeArmyMergedInOne.SquadSlot.ArmyId, crusadeArmyMergedInOne.SquadSlot.SquadId, crusadeArmyMergedInOne.SquadSlot.Position);
+
+            var squadSlot = Mapper.Map<NetworkGlobalMapArmySquadSlot>(crusadeArmyMergedInOne.SquadSlot);
+
+            GlobalMapInteraction.MergeInOneCrusadeArmySquad(squadSlot);
+        }
+
+        private void OnNotifyGlobalMapCrusadeArmySquadSplitRequested(long receivedFrom, NotifyGlobalMapCrusadeArmySquadSplitRequested crusadeArmySquadSplitRequested)
+        {
+            Logger.LogInformation("Received {MessageType}. SourceArmyId={SourceArmyId}, SourceSquadId={SourceSquadId}, SourcePosition={SourcePosition}, TargetArmyId={TargetArmyId}, TargetSquadId={TargetSquadId}, TargetPosition={TargetPosition}, Count={Count}", nameof(NotifyGlobalMapCrusadeArmySquadSplitRequested),
+                crusadeArmySquadSplitRequested.SourceSquadSlot.ArmyId, crusadeArmySquadSplitRequested.SourceSquadSlot.SquadId, crusadeArmySquadSplitRequested.SourceSquadSlot.Position, crusadeArmySquadSplitRequested.TargetSquadSlot.ArmyId, crusadeArmySquadSplitRequested.TargetSquadSlot.SquadId, crusadeArmySquadSplitRequested.TargetSquadSlot.Position, crusadeArmySquadSplitRequested.Count);
+
+            var sourceSquadSlot = Mapper.Map<NetworkGlobalMapArmySquadSlot>(crusadeArmySquadSplitRequested.SourceSquadSlot);
+            var targetSquadSlot = Mapper.Map<NetworkGlobalMapArmySquadSlot>(crusadeArmySquadSplitRequested.TargetSquadSlot);
+
+            GlobalMapInteraction.RunSplitRequestForCrusadeArmySquad(sourceSquadSlot, targetSquadSlot, crusadeArmySquadSplitRequested.Count);
+        }
+
+        private void OnNotifyGlobalMapCrusadeArmySquadsSwitched(long receivedFrom, NotifyGlobalMapCrusadeArmySquadsSwitched crusadeArmySquadsSwitched)
+        {
+            Logger.LogInformation("Received {MessageType}. SourceArmyId={SourceArmyId}, SourceSquadId={SourceSquadId}, SourcePosition={SourcePosition}, TargetArmyId={TargetArmyId}, TargetSquadId={TargetSquadId}, TargetPosition={TargetPosition}", nameof(NotifyGlobalMapCrusadeArmySquadsSwitched),
+                crusadeArmySquadsSwitched.SourceSquadSlot.ArmyId, crusadeArmySquadsSwitched.SourceSquadSlot.SquadId, crusadeArmySquadsSwitched.SourceSquadSlot.Position, crusadeArmySquadsSwitched.TargetSquadSlot.ArmyId, crusadeArmySquadsSwitched.TargetSquadSlot.SquadId, crusadeArmySquadsSwitched.TargetSquadSlot.Position);
+
+            var sourceSquadSlot = Mapper.Map<NetworkGlobalMapArmySquadSlot>(crusadeArmySquadsSwitched.SourceSquadSlot);
+            var targetSquadSlot = Mapper.Map<NetworkGlobalMapArmySquadSlot>(crusadeArmySquadsSwitched.TargetSquadSlot);
+
+            GlobalMapInteraction.SwitchCrusadeArmySquads(sourceSquadSlot, targetSquadSlot);
+        }
+
+        private void OnNotifyGlobalMapCrusadeArmySquadsMerged(long receivedFrom, NotifyGlobalMapCrusadeArmySquadsMerged crusadeArmySquadsMerged)
+        {
+            Logger.LogInformation("Received {MessageType}. SourceArmyId={SourceArmyId}, SourceSquadId={SourceSquadId}, SourcePosition={SourcePosition}, TargetArmyId={TargetArmyId}, TargetSquadId={TargetSquadId}, TargetPosition={TargetPosition}, Count={Count}", nameof(NotifyGlobalMapCrusadeArmySquadsMerged),
+                crusadeArmySquadsMerged.SourceSquadSlot.ArmyId, crusadeArmySquadsMerged.SourceSquadSlot.SquadId, crusadeArmySquadsMerged.SourceSquadSlot.Position, crusadeArmySquadsMerged.TargetSquadSlot.ArmyId, crusadeArmySquadsMerged.TargetSquadSlot.SquadId, crusadeArmySquadsMerged.TargetSquadSlot.Position, crusadeArmySquadsMerged.Count);
+
+            var sourceSquadSlot = Mapper.Map<NetworkGlobalMapArmySquadSlot>(crusadeArmySquadsMerged.SourceSquadSlot);
+            var targetSquadSlot = Mapper.Map<NetworkGlobalMapArmySquadSlot>(crusadeArmySquadsMerged.TargetSquadSlot);
+
+            GlobalMapInteraction.MergeCrusadeArmySquads(sourceSquadSlot, targetSquadSlot, crusadeArmySquadsMerged.Count);
+        }
+
+        private void OnNotifyGlobalMapCrusadeArmySquadSplitted(long receivedFrom, NotifyGlobalMapCrusadeArmySquadSplitted crusadeArmySquadSplitted)
+        {
+            Logger.LogInformation("Received {MessageType}. SourceArmyId={SourceArmyId}, SourceSquadId={SourceSquadId}, SourcePosition={SourcePosition}, Count={Count}", nameof(NotifyGlobalMapCrusadeArmySquadSplitted),
+                crusadeArmySquadSplitted.SquadSlot.ArmyId, crusadeArmySquadSplitted.SquadSlot.SquadId, crusadeArmySquadSplitted.SquadSlot.Position, crusadeArmySquadSplitted.Count);
+
+            var squadSlot = Mapper.Map<NetworkGlobalMapArmySquadSlot>(crusadeArmySquadSplitted.SquadSlot);
+
+            GlobalMapInteraction.SplitCrusadeArmySquad(squadSlot, crusadeArmySquadSplitted.Count);
         }
 
         private void OnNotifyTacticalCombatRetreated(long receivedFrom, NotifyTacticalCombatRetreated tacticalCombatRetreated)
@@ -616,9 +684,11 @@ namespace WOTRMultiplayer.Services
 
         private void OnNotifyGlobalMapSelectedArmyChanged(long receivedFrom, NotifyGlobalMapSelectedArmyChanged globalMapSelectedArmyChanged)
         {
-            Logger.LogInformation("Received {MessageType}. ArmyId={ArmyId}", nameof(NotifyGlobalMapSelectedArmyChanged), globalMapSelectedArmyChanged.ArmyId);
+            Logger.LogInformation("Received {MessageType}. ArmyId={ArmyId}", nameof(NotifyGlobalMapSelectedArmyChanged), globalMapSelectedArmyChanged.Army?.Id);
 
-            GlobalMapInteraction.SetSelectedArmy(globalMapSelectedArmyChanged.ArmyId);
+            var army = Mapper.Map<NetworkGlobalMapArmy>(globalMapSelectedArmyChanged.Army);
+
+            GlobalMapInteraction.SetSelectedArmy(army);
         }
 
         private void OnNotifyGlobalMapTravelerModeChanged(long receivedFrom, NotifyGlobalMapTravelerModeChanged globalMapTravelerModeChanged)
@@ -1223,7 +1293,7 @@ namespace WOTRMultiplayer.Services
                 CleanupPlayer(disconnectedPlayer);
                 ShowPlayerDisconnectedMessage(disconnectedPlayer);
 
-                UpdateRespecWindowStateOnPlayerLeave(disconnectedPlayer.Id);
+                RefreshUIOnPlayerDisconnect(disconnectedPlayer.Id);
             }
 
             foreach (var newPlayer in newPlayers)

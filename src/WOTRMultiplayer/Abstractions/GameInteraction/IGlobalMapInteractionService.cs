@@ -42,7 +42,7 @@ namespace WOTRMultiplayer.Abstractions.GameInteraction
 
         void SkipDay();
 
-        void SetSelectedArmy(string armyId);
+        void SetSelectedArmy(NetworkGlobalMapArmy globalMapArmy);
 
         void ChangeArmyMode(NetworkGlobalMapTravelerMode travelerMode);
 
@@ -53,5 +53,17 @@ namespace WOTRMultiplayer.Abstractions.GameInteraction
         void StartCrusadeArmyBattleResultsManualCombat();
 
         void CloseCombatResults();
+
+        void RunSplitRequestForCrusadeArmySquad(NetworkGlobalMapArmySquadSlot sourceSquadSlot, NetworkGlobalMapArmySquadSlot targetSquadSlot, int count);
+
+        void SwitchCrusadeArmySquads(NetworkGlobalMapArmySquadSlot sourceSquadSlot, NetworkGlobalMapArmySquadSlot targetSquadSlot);
+
+        void MergeCrusadeArmySquads(NetworkGlobalMapArmySquadSlot sourceSquadSlot, NetworkGlobalMapArmySquadSlot targetSquadSlot, int count);
+
+        void SplitCrusadeArmySquad(NetworkGlobalMapArmySquadSlot globalMapArmySquadSlot, int count);
+
+        void MergeInOneCrusadeArmySquad(NetworkGlobalMapArmySquadSlot globalMapArmySquadSlot);
+
+        void DismissCrusadeArmySquad(NetworkGlobalMapArmySquadSlot globalMapArmySquadSlot);
     }
 }

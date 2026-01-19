@@ -3,6 +3,7 @@ using Kingmaker.UI.MVVM._PCView.CharGen;
 using Kingmaker.UI.MVVM._PCView.CombatLog;
 using Kingmaker.UI.MVVM._PCView.Common;
 using Kingmaker.UI.MVVM._PCView.Common.MessageModal;
+using Kingmaker.UI.MVVM._PCView.Crusade.ArmyInfo;
 using Kingmaker.UI.MVVM._PCView.Dialog;
 using Kingmaker.UI.MVVM._PCView.EscMenu;
 using Kingmaker.UI.MVVM._PCView.GlobalMap;
@@ -66,5 +67,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
         public DialogContextPCView DialogContextPCView => InGamePCView?.m_StaticPartPCView?.m_DialogContextPCView ?? GlobalMapPCView?.m_DialogContextPCView;
 
         public TacticalCombatResultsPCView TacticalCombatResultsPCView => GlobalMapPCView?.m_AutoCombatResultsPCView ?? TacticalCombatPCView?.m_TacticalCombatResultsPCView;
+
+        public ArmySquadsPCView ArmySquadsPCView => GlobalMapPCView?.m_ArmyInfoHUDPCView?.m_SquadView as ArmySquadsPCView;
     }
 }

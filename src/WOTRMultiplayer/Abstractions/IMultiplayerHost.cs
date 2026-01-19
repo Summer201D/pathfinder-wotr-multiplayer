@@ -76,7 +76,7 @@ namespace WOTRMultiplayer.Abstractions
 
         void OnGlobalMapSkipDay();
 
-        void OnGlobalMapSelectedArmyChanged(string armyId);
+        void OnGlobalMapSelectedArmyChanged(NetworkGlobalMapArmy globalMapArmy);
 
         void OnGlobalMapAutoCrusadeCombatChanged(bool isEnabled);
 
@@ -113,5 +113,17 @@ namespace WOTRMultiplayer.Abstractions
         bool OnTacticalCombatTurnPostponed();
 
         void OnTacticalCombatRetreat();
+
+        bool OnGlobalMapCrusadeArmySquadSplitted(NetworkGlobalMapArmySquadSlot globalMapArmySquadSlot, int count);
+
+        void OnGlobalMapCrusadeArmySquadsMerged(NetworkGlobalMapArmySquadSlot globalMapArmySquadSlot, NetworkGlobalMapArmySquadSlot targetSquadSlot, int count);
+
+        void OnGlobalMapCrusadeArmySquadsSwitched(NetworkGlobalMapArmySquadSlot globalMapArmySquadSlot, NetworkGlobalMapArmySquadSlot targetSquadSlot);
+
+        void OnGlobalMapCrusadeArmySquadSplitRequested(NetworkGlobalMapArmySquadSlot globalMapArmySquadSlot, NetworkGlobalMapArmySquadSlot targetSquadSlot, int count);
+
+        bool OnGlobalMapCrusadeArmyMergedInOne(NetworkGlobalMapArmySquadSlot globalMapArmySquadSlot);
+
+        void OnGlobalMapCrusadeArmyDismissSquad(NetworkGlobalMapArmySquadSlot globalMapArmySquadSlot);
     }
 }

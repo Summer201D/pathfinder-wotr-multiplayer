@@ -54,7 +54,7 @@ namespace WOTRMultiplayer.Playground.Core.Dummies
         {
         }
 
-        public void SetSelectedArmy(string armyId)
+        public void SetSelectedArmy(NetworkGlobalMapArmy globalMapArmy)
         {
         }
 
@@ -103,6 +103,30 @@ namespace WOTRMultiplayer.Playground.Core.Dummies
         }
 
         public void CloseCombatResults()
+        {
+        }
+
+        public void RunSplitRequestForCrusadeArmySquad(NetworkGlobalMapArmySquadSlot sourceSquadSlot, NetworkGlobalMapArmySquadSlot targetSquadSlot, int count)
+        {
+        }
+
+        public void SwitchCrusadeArmySquads(NetworkGlobalMapArmySquadSlot sourceSquadSlot, NetworkGlobalMapArmySquadSlot targetSquadSlot)
+        {
+        }
+
+        public void MergeCrusadeArmySquads(NetworkGlobalMapArmySquadSlot sourceSquadSlot, NetworkGlobalMapArmySquadSlot targetSquadSlot, int count)
+        {
+        }
+
+        public void SplitCrusadeArmySquad(NetworkGlobalMapArmySquadSlot sourceSquadSlot, int count)
+        {
+        }
+
+        public void MergeInOneCrusadeArmySquad(NetworkGlobalMapArmySquadSlot sourceSquadSlot)
+        {
+        }
+
+        public void DismissCrusadeArmySquad(NetworkGlobalMapArmySquadSlot globalMapArmySquadSlot)
         {
         }
     }

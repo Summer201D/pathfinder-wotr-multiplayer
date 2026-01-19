@@ -74,19 +74,10 @@ namespace WOTRMultiplayer.Services.GameInteraction
             }
             else if (TacticalCombatHelper.IsActive && Game.Instance.CurrentlyLoadedArea is BlueprintTacticalCombatArea)
             {
-                var hitGroundPosition = TacticalCombatGridHelper.GetHitGroundPosition();
-                if (hitGroundPosition != null && hitGroundPosition.Value != Vector3.zero)
+                var unit = TacticalCombatGridHelper.TryGetUnitUnderCursor();
+                if (unit != null)
                 {
-                    var cellIndex = TacticalCombatGrid.Instance.PositionToIndex(hitGroundPosition.Value);
-                    var isValidCellIndex = TacticalCombatGrid.Instance.IsValid(cellIndex);
-                    if (isValidCellIndex)
-                    {
-                        var unit = TacticalCombatGrid.Instance[cellIndex].Unit;
-                        if (unit != null)
-                        {
-                            gameObject = unit.View.gameObject;
-                        }
-                    }
+                    gameObject = unit.View.gameObject;
                 }
             }
 
@@ -212,10 +203,10 @@ namespace WOTRMultiplayer.Services.GameInteraction
 
         private void CreateGlobalMapArmyPawnPing(NetworkPing ping)
         {
-            var armyPawn = _gameStateLookupService.GetGlobalMapArmyPawn(ping.GlobalMapArmyPawn);
+            var armyPawn = _gameStateLookupService.GetGlobalMapArmyPawn(ping.GlobalMapArmy);
             if (armyPawn == null)
             {
-                _logger.LogWarning("Unable to enable ping missing global map army pawn. PawnId={PawnId}", ping.GlobalMapArmyPawn.Id);
+                _logger.LogWarning("Unable to enable ping missing global map army pawn. PawnId={PawnId}", ping.GlobalMapArmy.Id);
                 return;
             }
 
@@ -332,7 +323,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
             {
                 var globalMapArmyPing = new NetworkPing
                 {
-                    GlobalMapArmyPawn = new NetworkGlobalMapArmyPawn
+                    GlobalMapArmy = new NetworkGlobalMapArmy
                     {
                         Id = pawnView.Id,
                     },

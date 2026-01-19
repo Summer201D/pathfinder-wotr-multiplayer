@@ -2645,6 +2645,42 @@ namespace WOTRMultiplayer.Services
             }
         }
 
+        protected void RefreshUIOnPlayerDisconnect(long playerId)
+        {
+            UpdateRestUIState();
+
+            if (Game.Rest != null)
+            {
+                RemovePlayerFromTracker(Game.Rest.PlayersFinishedRest, playerId);
+                UpdateRestResultsUIState();
+            }
+
+            RemovePlayerFromTracker(Game.PlayersInSkipTime, playerId);
+            UpdateSkipTimeUIState();
+
+            RemovePlayerFromTracker(Game.PlayersInGroupChanger, playerId);
+            UpdateGroupManagerUIState();
+
+            RemovePlayerFromTracker(Game.PlayersInZoneLoot, playerId);
+            UpdateZoneLootUIState();
+
+            UpdateRespecWindowStateOnPlayerLeave(playerId);
+
+            UpdateCharacterSelectionUIState();
+
+            Game.PlayersInGlobalMapMode.TryRemove(playerId, out _);
+            UpdateGlobalMapUIState();
+
+            RemovePlayerFromTracker(Game.PlayersInGlobalMapCrusadeArmyBattleResults, playerId);
+            UpdateGlobalMapCrusadeArmyBattleResultsUIState();
+
+            RemovePlayerFromTracker(Game.PlayersInGlobalMapCommonPopup, playerId);
+            UpdateGlobalMapCommonPopupUIState(null);
+
+            RemovePlayerFromTracker(Game.PlayersInGlobalMapCombatResults, playerId);
+            UpdateGlobalMapCombatResultsUIState();
+        }
+
         protected async Task WaitWhileTrue(Func<bool> condition, string warningMessage)
         {
             var delay = TimeSpan.FromMilliseconds(10);

@@ -644,13 +644,13 @@ namespace WOTRMultiplayer.Services
             Send(message);
         }
 
-        public void OnGlobalMapSelectedArmyChanged(string armyId)
+        public void OnGlobalMapSelectedArmyChanged(NetworkGlobalMapArmy globalMapArmy)
         {
             var message = new NotifyGlobalMapSelectedArmyChanged
             {
-                ArmyId = armyId
+                Army = Mapper.Map<Networking.Messages.Contracts.NetworkGlobalMapArmy>(globalMapArmy)
             };
-            Logger.LogInformation("Sending {MessageType}. ArmyId={ArmyId}", nameof(NotifyGlobalMapSelectedArmyChanged), message.ArmyId);
+            Logger.LogInformation("Sending {MessageType}. ArmyId={ArmyId}", nameof(NotifyGlobalMapSelectedArmyChanged), message.Army?.Id);
             Send(message);
         }
 
@@ -966,10 +966,82 @@ namespace WOTRMultiplayer.Services
             Send(message);
             return true;
         }
+
         public void OnTacticalCombatRetreat()
         {
             var message = new NotifyTacticalCombatRetreated();
             Logger.LogInformation("Sending {MessageType}", nameof(NotifyTacticalCombatRetreated));
+            Send(message);
+        }
+
+        public void OnGlobalMapCrusadeArmyDismissSquad(NetworkGlobalMapArmySquadSlot globalMapArmySquadSlot)
+        {
+            var message = new NotifyGlobalMapCrusadeArmySquadDismissed
+            {
+                SquadSlot = Mapper.Map<Networking.Messages.Contracts.NetworkGlobalMapArmySquadSlot>(globalMapArmySquadSlot),
+            };
+            Logger.LogInformation("Sending {MessageType}. ArmyId={SourceArmyId}, SquadId={SourceSquadId}, Position={SourcePosition}", nameof(NotifyGlobalMapCrusadeArmySquadDismissed), message.SquadSlot.ArmyId, message.SquadSlot.SquadId, message.SquadSlot.Position);
+            Send(message);
+        }
+
+        public bool OnGlobalMapCrusadeArmyMergedInOne(NetworkGlobalMapArmySquadSlot globalMapArmySquadSlot)
+        {
+            var message = new NotifyGlobalMapCrusadeArmyMergedInOne
+            {
+                SquadSlot = Mapper.Map<Networking.Messages.Contracts.NetworkGlobalMapArmySquadSlot>(globalMapArmySquadSlot),
+            };
+            Logger.LogInformation("Sending {MessageType}. ArmyId={SourceArmyId}, SquadId={SourceSquadId}, Position={SourcePosition}", nameof(NotifyGlobalMapCrusadeArmyMergedInOne), message.SquadSlot.ArmyId, message.SquadSlot.SquadId, message.SquadSlot.Position);
+            Send(message);
+            return true;
+        }
+
+        public bool OnGlobalMapCrusadeArmySquadSplitted(NetworkGlobalMapArmySquadSlot globalMapArmySquadSlot, int count)
+        {
+            var message = new NotifyGlobalMapCrusadeArmySquadSplitted
+            {
+                SquadSlot = Mapper.Map<Networking.Messages.Contracts.NetworkGlobalMapArmySquadSlot>(globalMapArmySquadSlot),
+                Count = count
+            };
+            Logger.LogInformation("Sending {MessageType}. ArmyId={SourceArmyId}, SquadId={SourceSquadId}, Position={SourcePosition}, Count={Count}", nameof(NotifyGlobalMapCrusadeArmySquadSplitted), message.SquadSlot.ArmyId, message.SquadSlot.SquadId, message.SquadSlot.Position, count);
+            Send(message);
+            return true;
+        }
+
+        public void OnGlobalMapCrusadeArmySquadsMerged(NetworkGlobalMapArmySquadSlot sourceSquadSlot, NetworkGlobalMapArmySquadSlot targetSquadSlot, int count)
+        {
+            var message = new NotifyGlobalMapCrusadeArmySquadsMerged
+            {
+                SourceSquadSlot = Mapper.Map<Networking.Messages.Contracts.NetworkGlobalMapArmySquadSlot>(sourceSquadSlot),
+                TargetSquadSlot = Mapper.Map<Networking.Messages.Contracts.NetworkGlobalMapArmySquadSlot>(targetSquadSlot),
+                Count = count
+            };
+            Logger.LogInformation("Sending {MessageType}. SourceArmyId={SourceArmyId}, SourceSquadId={SourceSquadId}, SourcePosition={SourcePosition}, TargetArmyId={TargetArmyId}, TargetSquadId={TargetSquadId}, TargetPosition={TargetPosition}, Count={Count}", nameof(NotifyGlobalMapCrusadeArmySquadsMerged),
+                message.SourceSquadSlot.ArmyId, message.SourceSquadSlot.SquadId, message.SourceSquadSlot.Position, message.TargetSquadSlot.ArmyId, message.TargetSquadSlot.SquadId, message.TargetSquadSlot.Position, count);
+            Send(message);
+        }
+
+        public void OnGlobalMapCrusadeArmySquadsSwitched(NetworkGlobalMapArmySquadSlot sourceSquadSlot, NetworkGlobalMapArmySquadSlot targetSquadSlot)
+        {
+            var message = new NotifyGlobalMapCrusadeArmySquadsSwitched
+            {
+                SourceSquadSlot = Mapper.Map<Networking.Messages.Contracts.NetworkGlobalMapArmySquadSlot>(sourceSquadSlot),
+                TargetSquadSlot = Mapper.Map<Networking.Messages.Contracts.NetworkGlobalMapArmySquadSlot>(targetSquadSlot),
+            };
+            Logger.LogInformation("Sending {MessageType}. SourceArmyId={SourceArmyId}, SourceSquadId={SourceSquadId}, SourcePosition={SourcePosition}, TargetArmyId={TargetArmyId}, TargetSquadId={TargetSquadId}, TargetPosition={TargetPosition}", nameof(NotifyGlobalMapCrusadeArmySquadsSwitched),
+                message.SourceSquadSlot.ArmyId, message.SourceSquadSlot.SquadId, message.SourceSquadSlot.Position, message.TargetSquadSlot.ArmyId, message.TargetSquadSlot.SquadId, message.TargetSquadSlot.Position);
+            Send(message);
+        }
+
+        public void OnGlobalMapCrusadeArmySquadSplitRequested(NetworkGlobalMapArmySquadSlot sourceSquadSlot, NetworkGlobalMapArmySquadSlot targetSquadSlot, int count)
+        {
+            var message = new NotifyGlobalMapCrusadeArmySquadSplitRequested
+            {
+                SourceSquadSlot = Mapper.Map<Networking.Messages.Contracts.NetworkGlobalMapArmySquadSlot>(sourceSquadSlot),
+                TargetSquadSlot = Mapper.Map<Networking.Messages.Contracts.NetworkGlobalMapArmySquadSlot>(targetSquadSlot),
+                Count = count
+            };
+            Logger.LogInformation("Sending {MessageType}. SourceArmyId={SourceArmyId}, SourceSquadId={SourceSquadId}, SourcePosition={SourcePosition}, TargetArmyId={TargetArmyId}, TargetSquadId={TargetSquadId}, TargetPosition={TargetPosition}, Count={Count}", nameof(NotifyGlobalMapCrusadeArmySquadSplitRequested),
+                message.SourceSquadSlot.ArmyId, message.SourceSquadSlot.SquadId, message.SourceSquadSlot.Position, message.TargetSquadSlot.ArmyId, message.TargetSquadSlot.SquadId, message.TargetSquadSlot.Position, count);
             Send(message);
         }
 
@@ -1573,48 +1645,12 @@ namespace WOTRMultiplayer.Services
                 _networkServer.SendAllExcept(playerId, playersChanged);
                 ShowPlayerDisconnectedMessage(removedPlayer);
 
-                UpdateRestUIState();
-
-                if (Game.Rest != null)
-                {
-                    RemovePlayerFromTracker(Game.Rest.PlayersFinishedRest, removedPlayer.Id);
-                    UpdateRestResultsUIState();
-                }
+                TryEnableDialogContinueButton();
 
                 RefreshUIOnPlayerDisconnect(removedPlayer.Id);
 
                 TryEndForcedPause();
             }
-        }
-
-        private void RefreshUIOnPlayerDisconnect(long playerId)
-        {
-            TryEnableDialogContinueButton();
-
-            RemovePlayerFromTracker(Game.PlayersInSkipTime, playerId);
-            UpdateSkipTimeUIState();
-
-            RemovePlayerFromTracker(Game.PlayersInGroupChanger, playerId);
-            UpdateGroupManagerUIState();
-
-            RemovePlayerFromTracker(Game.PlayersInZoneLoot, playerId);
-            UpdateZoneLootUIState();
-
-            UpdateRespecWindowStateOnPlayerLeave(playerId);
-
-            UpdateCharacterSelectionUIState();
-
-            Game.PlayersInGlobalMapMode.TryRemove(playerId, out _);
-            UpdateGlobalMapUIState();
-
-            RemovePlayerFromTracker(Game.PlayersInGlobalMapCrusadeArmyBattleResults, playerId);
-            UpdateGlobalMapCrusadeArmyBattleResultsUIState();
-
-            RemovePlayerFromTracker(Game.PlayersInGlobalMapCommonPopup, playerId);
-            UpdateGlobalMapCommonPopupUIState(null);
-
-            RemovePlayerFromTracker(Game.PlayersInGlobalMapCombatResults, playerId);
-            UpdateGlobalMapCombatResultsUIState();
         }
 
         private void OnClientGameServerConnectionConfirmed(long playerId, ClientGameServerConnectionConfirmed connectionConfirmed)

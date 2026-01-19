@@ -1894,6 +1894,17 @@ namespace WOTRMultiplayer.Services.GameInteraction
                         }
                     }
 
+                    if (attack.IsSingleAttack)
+                    {
+                        command.ForceFullAttack = false;
+                        command.IsSingleAttack = true;
+                        var turn = Game.Instance.TurnBasedCombatController.CurrentTurn;
+                        if (turn != null)
+                        {
+                            turn.m_AttackMode = TurnBased.Controllers.TurnController.AttackMode.SingleAttack;
+                        }
+                    }
+
                     var movementPath = attack.VectorPath.Select(v => new Vector3(v.X, v.Y, v.Z)).ToList();
                     command.ForcedPath = new ForcedPath(movementPath);
                     command.CreatedByPlayer = true;

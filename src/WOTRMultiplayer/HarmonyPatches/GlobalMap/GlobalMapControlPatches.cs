@@ -45,15 +45,6 @@ namespace WOTRMultiplayer.HarmonyPatches.GlobalMap
             return matcher.Instructions();
         }
 
-        public static void OnSelectMarkerArmy(GlobalMapArmyPointerMarkerEntityVM pointerMarkerEntityVM)
-        {
-            if (!Main.Multiplayer.IsActive || Main.Multiplayer.CanNavigateOnGlobalMap())
-            {
-                var army = pointerMarkerEntityVM.ArmyState;
-                Game.Instance.GlobalMapController.SetSelectedArmy(army);
-            }
-        }
-
         [HarmonyPatch(typeof(GlobalMapSelectController), nameof(GlobalMapSelectController.HandleClick), [typeof(GlobalMapPawn)])]
         [HarmonyPrefix]
         public static bool GlobalMapSelectController_HandleClick_Prefix()
@@ -141,8 +132,8 @@ namespace WOTRMultiplayer.HarmonyPatches.GlobalMap
                 return;
             }
 
-            var armyId = army?.Id;
-            Main.Multiplayer.OnGlobalMapSelectedArmyChanged(armyId);
+            var globalMapArmy = Create(army);
+            Main.Multiplayer.OnGlobalMapSelectedArmyChanged(globalMapArmy);
         }
 
         private static NetworkGlobalMapTravelerMode GetTravelerMode(bool state)
@@ -153,6 +144,30 @@ namespace WOTRMultiplayer.HarmonyPatches.GlobalMap
             }
 
             return NetworkGlobalMapTravelerMode.Player;
+        }
+
+        private static void OnSelectMarkerArmy(GlobalMapArmyPointerMarkerEntityVM pointerMarkerEntityVM)
+        {
+            if (!Main.Multiplayer.IsActive || Main.Multiplayer.CanNavigateOnGlobalMap())
+            {
+                var army = pointerMarkerEntityVM.ArmyState;
+                Game.Instance.GlobalMapController.SetSelectedArmy(army);
+            }
+        }
+
+        private static NetworkGlobalMapArmy Create(GlobalMapArmyState army)
+        {
+            if (army == null)
+            {
+                return null;
+            }
+
+            var globalMapArmy = new NetworkGlobalMapArmy
+            {
+                Id = army.Id
+            };
+
+            return globalMapArmy;
         }
     }
 }

@@ -2541,7 +2541,7 @@ namespace WOTRMultiplayer.Services
             }
         }
 
-        public void OnGlobalMapSelectedArmyChanged(string armyId)
+        public void OnGlobalMapSelectedArmyChanged(NetworkGlobalMapArmy globalMapArmy)
         {
             try
             {
@@ -2550,11 +2550,11 @@ namespace WOTRMultiplayer.Services
                     return;
                 }
 
-                _multiplayerActorAccessor.Host.OnGlobalMapSelectedArmyChanged(armyId);
+                _multiplayerActorAccessor.Host.OnGlobalMapSelectedArmyChanged(globalMapArmy);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error while selecting global map army. ArmyId={ArmyId}", armyId);
+                _logger.LogError(ex, "Error while selecting global map army. ArmyId={ArmyId}", globalMapArmy?.Id);
                 throw;
             }
         }
@@ -3202,6 +3202,126 @@ namespace WOTRMultiplayer.Services
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error while retreating from crusade army battle");
+                throw;
+            }
+        }
+
+        public void OnGlobalMapCrusadeArmySquadSplitRequested(NetworkGlobalMapArmySquadSlot sourceSquadSlot, NetworkGlobalMapArmySquadSlot targetSquadSlot, int count)
+        {
+            try
+            {
+                if (_multiplayerActorAccessor.Current == null || _multiplayerActorAccessor.Client.IsActive)
+                {
+                    return;
+                }
+
+                _multiplayerActorAccessor.Host.OnGlobalMapCrusadeArmySquadSplitRequested(sourceSquadSlot, targetSquadSlot, count);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while splitting squad. SourceArmyId={ArmyId}, SourcePosition={Position}, TargetArmyId={TargetArmyId}, TargetPosition={TargetPosition}, Count={Count}", sourceSquadSlot.ArmyId, sourceSquadSlot.Position, targetSquadSlot.ArmyId, targetSquadSlot.Position, count);
+                throw;
+            }
+        }
+
+        public void OnGlobalMapCrusadeArmySquadsSwitched(NetworkGlobalMapArmySquadSlot sourceSquadSlot, NetworkGlobalMapArmySquadSlot targetSquadSlot)
+        {
+            try
+            {
+                if (_multiplayerActorAccessor.Current == null || _multiplayerActorAccessor.Client.IsActive)
+                {
+                    return;
+                }
+
+                _multiplayerActorAccessor.Host.OnGlobalMapCrusadeArmySquadsSwitched(sourceSquadSlot, targetSquadSlot);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while splitting squad. SourceArmyId={ArmyId}, SourcePosition={Position}, TargetArmyId={TargetArmyId}, TargetPosition={TargetPosition}", sourceSquadSlot.ArmyId, sourceSquadSlot.Position, targetSquadSlot.ArmyId, targetSquadSlot.Position);
+                throw;
+            }
+        }
+
+        public void OnGlobalMapCrusadeArmySquadsMerged(NetworkGlobalMapArmySquadSlot sourceSquadSlot, NetworkGlobalMapArmySquadSlot targetSquadSlot, int count)
+        {
+            try
+            {
+                if (_multiplayerActorAccessor.Current == null || _multiplayerActorAccessor.Client.IsActive)
+                {
+                    return;
+                }
+
+                _multiplayerActorAccessor.Host.OnGlobalMapCrusadeArmySquadsMerged(sourceSquadSlot, targetSquadSlot, count);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while splitting squad. SourceArmyId={ArmyId}, SourcePosition={Position}, TargetArmyId={TargetArmyId}, TargetPosition={TargetPosition}, Count={Count}", sourceSquadSlot.ArmyId, sourceSquadSlot.Position, targetSquadSlot.ArmyId, targetSquadSlot.Position, count);
+                throw;
+            }
+        }
+
+        public bool OnGlobalMapCrusadeArmySquadSplitted(NetworkGlobalMapArmySquadSlot globalMapArmySquadSlot, int count)
+        {
+            try
+            {
+                if (_multiplayerActorAccessor.Current == null)
+                {
+                    return true;
+                }
+
+                if (_multiplayerActorAccessor.Client.IsActive)
+                {
+                    return false;
+                }
+
+                var canContinue = _multiplayerActorAccessor.Host.OnGlobalMapCrusadeArmySquadSplitted(globalMapArmySquadSlot, count);
+                return canContinue;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while splitting squad. ArmyId={ArmyId}, Position={Position}, Count={Count}", globalMapArmySquadSlot.ArmyId, globalMapArmySquadSlot.Position, count);
+                throw;
+            }
+        }
+
+        public bool OnGlobalMapCrusadeArmyMergedInOne(NetworkGlobalMapArmySquadSlot globalMapArmySquadSlot)
+        {
+            try
+            {
+                if (_multiplayerActorAccessor.Current == null)
+                {
+                    return true;
+                }
+
+                if (_multiplayerActorAccessor.Client.IsActive)
+                {
+                    return false;
+                }
+
+                var canContinue = _multiplayerActorAccessor.Host.OnGlobalMapCrusadeArmyMergedInOne(globalMapArmySquadSlot);
+                return canContinue;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while merging crusade squad in one. ArmyId={ArmyId}, Position={Position}", globalMapArmySquadSlot.ArmyId, globalMapArmySquadSlot.Position);
+                throw;
+            }
+        }
+
+        public void OnGlobalMapCrusadeArmyDismissSquad(NetworkGlobalMapArmySquadSlot globalMapArmySquadSlot)
+        {
+            try
+            {
+                if (_multiplayerActorAccessor.Current == null || _multiplayerActorAccessor.Client.IsActive)
+                {
+                    return;
+                }
+
+                _multiplayerActorAccessor.Host.OnGlobalMapCrusadeArmyDismissSquad(globalMapArmySquadSlot);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while dismissing crusade army squad. ArmyId={ArmyId}, Position={Position}", globalMapArmySquadSlot.ArmyId, globalMapArmySquadSlot.Position);
                 throw;
             }
         }

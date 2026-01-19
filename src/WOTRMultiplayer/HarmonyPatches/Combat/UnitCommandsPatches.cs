@@ -150,6 +150,7 @@ namespace WOTRMultiplayer.HarmonyPatches.Combat
                 ExecutorUnitId = executor,
                 TargetUnitId = command.TargetUnit?.UniqueId,
                 IsFullAttack = command.IsAttackFull,
+                IsSingleAttack = command.IsSingleAttack,
                 VectorPath = networkPath
             };
 

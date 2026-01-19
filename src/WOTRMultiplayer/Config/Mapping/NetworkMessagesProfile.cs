@@ -31,6 +31,9 @@ namespace WOTRMultiplayer.Config.Mapping
             CreateMap<NetworkVector3, Networking.Messages.Contracts.NetworkVector3>()
                 .ReverseMap();
 
+            CreateMap<NetworkVector2Int, Networking.Messages.Contracts.NetworkVector2Int>()
+                .ReverseMap();
+
             CreateMap<NetworkTargetWrapper, Networking.Messages.Contracts.NetworkTargetWrapper>()
                 .ReverseMap();
 
@@ -254,7 +257,10 @@ namespace WOTRMultiplayer.Config.Mapping
             CreateMap<NetworkArea, Networking.Messages.Contracts.NetworkArea>()
                 .ReverseMap();
 
-            CreateMap<NetworkGlobalMapArmyPawn, Networking.Messages.Contracts.NetworkGlobalMapArmyPawn>()
+            CreateMap<NetworkGlobalMapArmy, Networking.Messages.Contracts.NetworkGlobalMapArmy>()
+                .ReverseMap();
+
+            CreateMap<NetworkGlobalMapArmySquadSlot, Networking.Messages.Contracts.NetworkGlobalMapArmySquadSlot>()
                 .ReverseMap();
 
             CreateMap<NetworkGlobalMapKingdomSettlement, Networking.Messages.Contracts.NetworkGlobalMapKingdomSettlement>()

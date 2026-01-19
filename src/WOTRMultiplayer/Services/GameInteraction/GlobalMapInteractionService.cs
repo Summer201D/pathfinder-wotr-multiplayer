@@ -8,9 +8,12 @@ using Kingmaker.Controllers.Rest;
 using Kingmaker.Globalmap;
 using Kingmaker.Globalmap.State;
 using Kingmaker.Globalmap.View;
+using Kingmaker.Kingdom.Armies;
 using Kingmaker.RandomEncounters;
 using Kingmaker.RandomEncounters.Settings;
 using Kingmaker.UI.MVVM._PCView.Crusade.Armies;
+using Kingmaker.UI.MVVM._PCView.Crusade.ArmyInfo;
+using Kingmaker.UI.MVVM._VM.Crusade.ArmyInfo;
 using Microsoft.Extensions.Logging;
 using TMPro;
 using UnityEngine;
@@ -486,25 +489,25 @@ namespace WOTRMultiplayer.Services.GameInteraction
             });
         }
 
-        public void SetSelectedArmy(string armyId)
+        public void SetSelectedArmy(NetworkGlobalMapArmy globalMapArmy)
         {
             _mainThreadAccessor.Post(() =>
             {
-                if (string.IsNullOrEmpty(armyId))
+                if (globalMapArmy == null)
                 {
                     Game.Instance.GlobalMapController.SetSelectedArmy(null);
                     return;
                 }
 
-                var army = _gameStateLookupService.GetGlobalMapArmy(armyId);
-                if (army == null)
+                var armyState = _gameStateLookupService.GetGlobalMapArmy(globalMapArmy.Id);
+                if (armyState == null)
                 {
-                    _logger.LogError("Unable to find army. ArmyId={ArmyId}", armyId);
+                    _logger.LogError("Unable to find army. ArmyId={ArmyId}", globalMapArmy.Id);
                     return;
                 }
 
-                Game.Instance.GlobalMapController.SetSelectedArmy(army);
-                _logger.LogInformation("Selected army has been updated. ArmyId={ArmyId}", armyId);
+                Game.Instance.GlobalMapController.SetSelectedArmy(armyState);
+                _logger.LogInformation("Selected army has been updated. ArmyId={ArmyId}", armyState.Id);
             });
         }
 
@@ -515,7 +518,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
                 var viewModel = _uiAccessor.GlobalMapPCView?.m_GlobalMapToolbarPCView?.ViewModel;
                 if (viewModel == null)
                 {
-                    _logger.LogError("Unable to change army mode due to missing view model. TravelerMode={TravelerMode}", travelerMode);
+                    _logger.LogWarning("Unable to change army mode due to missing view model. TravelerMode={TravelerMode}", travelerMode);
                     return;
                 }
 
@@ -541,6 +544,173 @@ namespace WOTRMultiplayer.Services.GameInteraction
                 settingsView.m_AutoTacticalCombat.ViewModel.IsOn.Value = isEnabled;
                 _logger.LogInformation("Auto crusade combat setting has been updated via view. IsEnabled={IsEnabled}", isEnabled);
             });
+        }
+
+        public void RunSplitRequestForCrusadeArmySquad(NetworkGlobalMapArmySquadSlot sourceSquadSlot, NetworkGlobalMapArmySquadSlot targetSquadSlot, int count)
+        {
+            _mainThreadAccessor.Post(() =>
+            {
+                var view = _uiAccessor.ArmySquadsPCView;
+                if (view?.ViewModel == null)
+                {
+                    _logger.LogWarning("Unable to run split request for crusade army squad due to missing view");
+                    return;
+                }
+
+                var sourceSquadVM = GetArmyInfoSquadVM(view, sourceSquadSlot);
+                if (sourceSquadVM == null)
+                {
+                    _logger.LogWarning("Unable to run split request for crusade army squad due to missing source squad vm. ArmyId={ArmyId}, SquadPosition={SquadPosition}", sourceSquadSlot.ArmyId, sourceSquadSlot.Position);
+                    return;
+                }
+
+                var targetSquadVM = GetArmyInfoSquadVM(view, targetSquadSlot);
+                if (targetSquadVM == null)
+                {
+                    _logger.LogWarning("Unable to run split request for crusade army squad due to missing target squad vm. ArmyId={ArmyId}, SquadPosition={SquadPosition}", targetSquadSlot.ArmyId, targetSquadSlot.Position);
+                    return;
+                }
+
+                var errros = view.ViewModel.m_State.Data.MergeSquads(sourceSquadVM.SquadPosition, targetSquadVM.SquadPosition, count);
+                view.ViewModel.SquadErrorsTrigger.Execute(errros);
+                _logger.LogInformation("Split request for crusade army squad completed. SourceArmyId={SourceArmyId}, SourceSquadPosition={SourceSquadPosition}, TargetArmyId={TargetArmyId}, TargetSquadPosition={TargetSquadPosition}, Count={Count}", sourceSquadSlot.ArmyId, sourceSquadSlot.Position, targetSquadSlot.ArmyId, targetSquadSlot.Position, count);
+            });
+        }
+
+        public void SwitchCrusadeArmySquads(NetworkGlobalMapArmySquadSlot sourceSquadSlot, NetworkGlobalMapArmySquadSlot targetSquadSlot)
+        {
+            _mainThreadAccessor.Post(() =>
+            {
+                var view = _uiAccessor.ArmySquadsPCView;
+                if (view?.ViewModel == null)
+                {
+                    _logger.LogWarning("Unable to switch crusade army squads due to missing view");
+                    return;
+                }
+
+                var sourceSquadVM = GetArmyInfoSquadVM(view, sourceSquadSlot);
+                if (sourceSquadVM == null)
+                {
+                    _logger.LogWarning("Unable to switch crusade army squads due to missing source squad vm. ArmyId={ArmyId}, SquadPosition={SquadPosition}", sourceSquadSlot.ArmyId, sourceSquadSlot.Position);
+                    return;
+                }
+
+                var targetSquadVM = GetArmyInfoSquadVM(view, targetSquadSlot);
+                if (targetSquadVM == null)
+                {
+                    _logger.LogWarning("Unable to switch crusade army squads due to missing target squad vm. ArmyId={ArmyId}, SquadPosition={SquadPosition}", targetSquadSlot.ArmyId, targetSquadSlot.Position);
+                    return;
+                }
+
+                view.ViewModel.SwitchSquads(sourceSquadVM, targetSquadVM);
+                _logger.LogInformation("Crusade army squads have been switched. SourceArmyId={SourceArmyId}, SourceSquadPosition={SourceSquadPosition}, TargetArmyId={TargetArmyId}, TargetSquadPosition={TargetSquadPosition}", sourceSquadSlot.ArmyId, sourceSquadSlot.Position, targetSquadSlot.ArmyId, targetSquadSlot.Position);
+            });
+        }
+
+        public void MergeCrusadeArmySquads(NetworkGlobalMapArmySquadSlot sourceSquadSlot, NetworkGlobalMapArmySquadSlot targetSquadSlot, int count)
+        {
+            _mainThreadAccessor.Post(() =>
+            {
+                var view = _uiAccessor.ArmySquadsPCView;
+                if (view?.ViewModel == null)
+                {
+                    _logger.LogWarning("Unable to merge crusade army squads due to missing view");
+                    return;
+                }
+
+                var sourceSquadVM = GetArmyInfoSquadVM(view, sourceSquadSlot);
+                if (sourceSquadVM == null)
+                {
+                    _logger.LogWarning("Unable to merge crusade army squads due to missing source squad vm. ArmyId={ArmyId}, SquadPosition={SquadPosition}", sourceSquadSlot.ArmyId, sourceSquadSlot.Position);
+                    return;
+                }
+
+                var targetSquadVM = GetArmyInfoSquadVM(view, targetSquadSlot);
+                if (targetSquadVM == null)
+                {
+                    _logger.LogWarning("Unable to merge crusade army squads due to missing target squad vm. ArmyId={ArmyId}, SquadPosition={SquadPosition}", targetSquadSlot.ArmyId, targetSquadSlot.Position);
+                    return;
+                }
+
+                view.ViewModel.MergeSquads(sourceSquadVM, targetSquadVM, count);
+                _logger.LogInformation("Crusade army squads have been merged. SourceArmyId={SourceArmyId}, SourceSquadPosition={SourceSquadPosition}, TargetArmyId={TargetArmyId}, TargetSquadPosition={TargetSquadPosition}, Count={Count}", sourceSquadSlot.ArmyId, sourceSquadSlot.Position, targetSquadSlot.ArmyId, targetSquadSlot.Position, count);
+            });
+        }
+
+        public void SplitCrusadeArmySquad(NetworkGlobalMapArmySquadSlot globalMapArmySquadSlot, int count)
+        {
+            _mainThreadAccessor.Post(() =>
+            {
+                var view = _uiAccessor.ArmySquadsPCView;
+                if (view?.ViewModel == null)
+                {
+                    _logger.LogWarning("Unable to split crusade army squads due to missing view");
+                    return;
+                }
+
+                var sourceSquadVM = GetArmyInfoSquadVM(view, globalMapArmySquadSlot);
+                if (sourceSquadVM == null)
+                {
+                    _logger.LogWarning("Unable to split crusade army squads due to missing squad vm. ArmyId={ArmyId}, SquadPosition={SquadPosition}", globalMapArmySquadSlot.ArmyId, globalMapArmySquadSlot.Position);
+                    return;
+                }
+
+                sourceSquadVM.Army.Split(sourceSquadVM.Squad, count);
+                _logger.LogInformation("Crusade army squad has been split. ArmyId={ArmyId}, SquadPosition={SquadPosition}, Count={Count}", globalMapArmySquadSlot.ArmyId, globalMapArmySquadSlot.Position, count);
+            });
+        }
+
+        public void MergeInOneCrusadeArmySquad(NetworkGlobalMapArmySquadSlot globalMapArmySquadSlot)
+        {
+            _mainThreadAccessor.Post(() =>
+            {
+                var view = _uiAccessor.ArmySquadsPCView;
+                if (view?.ViewModel == null)
+                {
+                    _logger.LogWarning("Unable to merge in one crusade army squads due to missing view");
+                    return;
+                }
+
+                var sourceSquadVM = GetArmyInfoSquadVM(view, globalMapArmySquadSlot);
+                if (sourceSquadVM == null)
+                {
+                    _logger.LogWarning("Unable to merge in one crusade army squads due to missing squad vm. ArmyId={ArmyId}, SquadPosition={SquadPosition}", globalMapArmySquadSlot.ArmyId, globalMapArmySquadSlot.Position);
+                    return;
+                }
+
+                sourceSquadVM.Army.MergeInOne(sourceSquadVM.Squad);
+                _logger.LogInformation("Crusade army squad has been merged in one. ArmyId={ArmyId}, SquadPosition={SquadPosition}", globalMapArmySquadSlot.ArmyId, globalMapArmySquadSlot.Position);
+            });
+        }
+
+        public void DismissCrusadeArmySquad(NetworkGlobalMapArmySquadSlot globalMapArmySquadSlot)
+        {
+            _mainThreadAccessor.Post(() =>
+            {
+                var view = _uiAccessor.ArmySquadsPCView;
+                if (view?.ViewModel == null)
+                {
+                    _logger.LogWarning("Unable to dismiss crusade army squads due to missing view");
+                    return;
+                }
+
+                var sourceSquadVM = GetArmyInfoSquadVM(view, globalMapArmySquadSlot);
+                if (sourceSquadVM == null)
+                {
+                    _logger.LogWarning("Unable to dismiss crusade army squads due to missing source squad vm. ArmyId={ArmyId}, SquadPosition={SquadPosition}", globalMapArmySquadSlot.ArmyId, globalMapArmySquadSlot.Position);
+                    return;
+                }
+
+                ArmyDismissManager.Instance.DismissSquad(sourceSquadVM.Army, sourceSquadVM.Squad);
+                _logger.LogInformation("Crusade army squad has been dismissed. ArmyId={ArmyId}, SquadPosition={SquadPosition}", globalMapArmySquadSlot.ArmyId, globalMapArmySquadSlot.Position);
+            });
+        }
+
+        private ArmyInfoSquadVM GetArmyInfoSquadVM(ArmySquadsPCView armySquadsView, NetworkGlobalMapArmySquadSlot mapArmySquadSlot)
+        {
+            var position = new Vector2Int(mapArmySquadSlot.Position.X, mapArmySquadSlot.Position.Y);
+            var squadView = armySquadsView?.m_Squads.FirstOrDefault(v => v.ViewModel != null && string.Equals(v.ViewModel.Army.ArmyStateId, mapArmySquadSlot.ArmyId, StringComparison.OrdinalIgnoreCase) && v.ViewModel.SquadPosition == position);
+            return squadView?.ViewModel;
         }
 
         private void UpdateTraveler(NetworkGlobalMapTraveler traveler)

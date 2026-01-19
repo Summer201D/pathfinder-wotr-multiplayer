@@ -69,7 +69,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
             return point;
         }
 
-        public GlobalMapArmyPawn GetGlobalMapArmyPawn(NetworkGlobalMapArmyPawn globalMapArmyPawn)
+        public GlobalMapArmyPawn GetGlobalMapArmyPawn(NetworkGlobalMapArmy globalMapArmyPawn)
         {
             var armyPawn = GlobalMapView.Instance?.GetArmyView(globalMapArmyPawn.Id);
             return armyPawn;

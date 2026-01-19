@@ -22,7 +22,7 @@ namespace WOTRMultiplayer.Abstractions.GameInteraction
 
         GlobalMapPointView GetGlobalMapPoint(NetworkGlobalMapLocation globalMapLocation);
 
-        GlobalMapArmyPawn GetGlobalMapArmyPawn(NetworkGlobalMapArmyPawn globalMapArmyPawn);
+        GlobalMapArmyPawn GetGlobalMapArmyPawn(NetworkGlobalMapArmy globalMapArmyPawn);
 
         GlobalMapArmyState GetGlobalMapArmy(string id);
 

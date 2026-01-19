@@ -182,7 +182,13 @@
             NotifyTacticalUnitUseAbilityCommandExecuted,
             NotifyTacticalCombatTotalDefenseUsed,
             NotifyTacticalCombatTurnPostponed,
-            NotifyTacticalCombatRetreated
+            NotifyTacticalCombatRetreated,
+            NotifyGlobalMapCrusadeArmySquadSplitRequested,
+            NotifyGlobalMapCrusadeArmySquadsSwitched,
+            NotifyGlobalMapCrusadeArmySquadsMerged,
+            NotifyGlobalMapCrusadeArmySquadSplitted,
+            NotifyGlobalMapCrusadeArmyMergedInOne,
+            NotifyGlobalMapCrusadeArmySquadDismissed
         }
 
         public enum Request

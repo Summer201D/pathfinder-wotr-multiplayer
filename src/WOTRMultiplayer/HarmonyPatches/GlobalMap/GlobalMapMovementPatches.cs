@@ -41,7 +41,6 @@ namespace WOTRMultiplayer.HarmonyPatches.GlobalMap
             var matcher = new CodeMatcher(instructions);
             var match = matcher.SearchForward(x => x.Calls(lookFor));
 
-            match = match.SearchForward(x => x.Calls(lookFor));
             if (match.IsInvalid)
             {
                 Main.GetLogger<GlobalMapMovementPatches>().LogError("Invalid transpiler position. Target={Target}, Position={Position}", target, match.Pos);

@@ -45,8 +45,6 @@ namespace WOTRMultiplayer.UnitTests.HarmonyPatches
             // Act
             foreach (var enumerated in EnumeratePatches())
             {
-                var target = enumerated.Method.GetCustomAttribute<HarmonyPatch>();
-
                 var instanceParameter = enumerated.Method.GetParameters().FirstOrDefault(x => x.Name == parameterName);
                 if (instanceParameter != null && instanceParameter.ParameterType != enumerated.PatchedClass)
                 {
