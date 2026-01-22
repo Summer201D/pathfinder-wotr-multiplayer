@@ -8,6 +8,7 @@ using Kingmaker.UI;
 using Kingmaker.UI.MVVM._PCView.Crusade.ArmyInfo;
 using Kingmaker.UI.MVVM._VM.Crusade.ArmyInfo;
 using Microsoft.Extensions.Logging;
+using WOTRMultiplayer.Entities.GlobalMap;
 
 namespace WOTRMultiplayer.HarmonyPatches.GlobalMap
 {
@@ -75,6 +76,27 @@ namespace WOTRMultiplayer.HarmonyPatches.GlobalMap
             }
 
             __instance.m_InfoButton.Interactable = Main.Multiplayer.CanNavigateOnGlobalMap();
+        }
+
+        [HarmonyPatch(typeof(ArmyInfoArmyCartView), nameof(ArmyInfoArmyCartView.SetArmyName))]
+        [HarmonyPrefix]
+        public static void ArmyInfoArmyCartView_SetArmyName_Prefix(ArmyInfoArmyCartView __instance, string armyName)
+        {
+            if (!Main.Multiplayer.IsActive)
+            {
+                return;
+            }
+
+            var globalMapArmy = new NetworkGlobalMapArmy { Id = __instance.ViewModel.State?.Id, Name = armyName };
+            var armyInfo = Main.UIAccessor.GlobalMapPCView?.m_ArmyInfoPCView;
+            if (armyInfo?.m_MainArmyCartView == __instance)
+            {
+                Main.Multiplayer.OnGlobalMapCrusadeArmyInfoMainNameChanged(globalMapArmy);
+            }
+            else if (armyInfo?.m_MergeArmyCartView == __instance)
+            {
+                Main.Multiplayer.OnGlobalMapCrusadeArmyInfoMergeNameChanged(globalMapArmy);
+            }
         }
 
         [HarmonyPatch(typeof(ArmyInfoArmyCartPCView), nameof(ArmyInfoArmyCartPCView.BindViewImplementation))]
@@ -159,80 +181,6 @@ namespace WOTRMultiplayer.HarmonyPatches.GlobalMap
             }
 
             Main.Multiplayer.OnGlobalMapCrusadeArmyMoveSquadsToSecondArmy();
-        }
-
-        [HarmonyPatch(typeof(ArmyLeaderInfoVM), nameof(ArmyLeaderInfoVM.OnClick))]
-        [HarmonyPrefix]
-        public static void ArmyLeaderInfoVM_OnClick_Prefix(ArmyLeaderInfoVM __instance)
-        {
-            if (!Main.Multiplayer.IsActive)
-            {
-                return;
-            }
-
-            OnArmyInfoArmyLeaderAction(__instance,
-            () =>
-            {
-                Main.Multiplayer.OnGlobalMapCrusadeArmyMainLeaderAction();
-            },
-            () =>
-            {
-                Main.Multiplayer.OnGlobalMapCrusadeArmyMergeLeaderAction();
-            });
-        }
-
-        [HarmonyPatch(typeof(ArmyLeaderInfoVM), nameof(ArmyLeaderInfoVM.OnLevelUp))]
-        [HarmonyPrefix]
-        public static void ArmyLeaderInfoVM_OnLevelUp_Prefix(ArmyLeaderInfoVM __instance)
-        {
-            if (!Main.Multiplayer.IsActive)
-            {
-                return;
-            }
-
-            OnArmyInfoArmyLeaderAction(__instance,
-            () =>
-            {
-                Main.Multiplayer.OnGlobalMapCrusadeArmyMainLeaderLevelUp();
-            },
-            () =>
-            {
-                Main.Multiplayer.OnGlobalMapCrusadeArmyMergeLeaderLevelUp();
-            });
-        }
-
-        [HarmonyPatch(typeof(ArmyLeaderInfoVM), nameof(ArmyLeaderInfoVM.OnLookAtLeaderPool))]
-        [HarmonyPrefix]
-        public static void ArmyLeaderInfoVM_OnLookAtLeaderPool_Prefix(ArmyLeaderInfoVM __instance)
-        {
-            if (!Main.Multiplayer.IsActive)
-            {
-                return;
-            }
-
-            OnArmyInfoArmyLeaderAction(__instance,
-            () =>
-            {
-                Main.Multiplayer.OnGlobalMapCrusadeArmyMainLeaderLookAtPool();
-            },
-            () =>
-            {
-                Main.Multiplayer.OnGlobalMapCrusadeArmyMergeLeaderLookAtPool();
-            });
-        }
-
-        private static void OnArmyInfoArmyLeaderAction(ArmyLeaderInfoVM __instance, Action onMainCart, Action onMergeCart)
-        {
-            var armyInfo = Main.UIAccessor.GlobalMapPCView?.m_ArmyInfoPCView;
-            if (armyInfo?.m_MainArmyCartView?.m_LeaderInfoView?.ViewModel == __instance)
-            {
-                onMainCart?.Invoke();
-            }
-            else if (armyInfo?.m_MergeArmyCartView?.m_LeaderInfoView?.ViewModel == __instance)
-            {
-                onMergeCart?.Invoke();
-            }
-
         }
 
         private IDisposable SubscribeEnterMessageEscPress(Action action, ArmyInfoPCView view)

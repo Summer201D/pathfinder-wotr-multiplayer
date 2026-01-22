@@ -903,7 +903,11 @@ namespace WOTRMultiplayer.Services
         {
             ResetPlayersTracker(Game.PlayersInGlobalMapCombatResults);
 
-            Game.ArmyCombat = new NetworkArmyCombat { IsInitialized = false };
+            Game.ArmyCombat = new NetworkArmyCombat
+            {
+                IsInitialized = false,
+                Seed = CreateRandomSeed()
+            };
             return true;
         }
 
@@ -911,13 +915,14 @@ namespace WOTRMultiplayer.Services
         {
             Game.ArmyCombat.PlayersCombatInitialization.TryAdd(Game.LocalPlayerId, true);
             Game.ArmyCombat.IsInitialized = TryConfirmTacticalCombatInitialization();
+            Game.ArmyCombat.AreaSeed = CombatInteraction.GetCrusadeArmyCombatAreaSeed();
 
-            var seed = CombatInteraction.GetCrusadeArmyCombatSeed();
             var message = new NotifyTacticalCombatInitialized()
             {
-                Seed = seed
+                AreaSeed = Game.ArmyCombat.AreaSeed,
+                Seed = Game.ArmyCombat.Seed
             };
-            Logger.LogInformation("Sending {MessageType}. Seed={Seed}", nameof(NotifyTacticalCombatInitialized), message.Seed);
+            Logger.LogInformation("Sending {MessageType}. AreaSeed={AreaSeed}, Seed={Seed}", nameof(NotifyTacticalCombatInitialized), message.AreaSeed, message.Seed);
             Send(message);
         }
 
@@ -1071,6 +1076,40 @@ namespace WOTRMultiplayer.Services
         {
             var message = new NotifyGlobalMapCrusadeArmyInfoMainClosed();
             Logger.LogInformation("Sending {MessageType}", nameof(NotifyGlobalMapCrusadeArmyInfoMainClosed));
+            Send(message);
+        }
+
+        public void OnGlobalMapCrusadeArmyInfoMainNameChanged(NetworkGlobalMapArmy globalMapArmy)
+        {
+            var message = new NotifyGlobalMapCrusadeArmyInfoMainNameChanged
+            {
+                Army = Mapper.Map<Networking.Messages.Contracts.NetworkGlobalMapArmy>(globalMapArmy)
+            };
+            Logger.LogInformation("Sending {MessageType}. ArmyId={ArmyId}, Name={Name}", nameof(NotifyGlobalMapCrusadeArmyInfoMainNameChanged), message.Army.Id, message.Army.Name);
+            Send(message);
+        }
+
+        public void OnGlobalMapCrusadeArmyInfoMergeNameChanged(NetworkGlobalMapArmy globalMapArmy)
+        {
+            var message = new NotifyGlobalMapCrusadeArmyInfoMergeNameChanged
+            {
+                Army = Mapper.Map<Networking.Messages.Contracts.NetworkGlobalMapArmy>(globalMapArmy)
+            };
+            Logger.LogInformation("Sending {MessageType}. ArmyId={ArmyId}, Name={Name}", nameof(NotifyGlobalMapCrusadeArmyInfoMergeNameChanged), message.Army.Id, message.Army.Name);
+            Send(message);
+        }
+
+        public void OnGlobalMapCrusadeArmySetLeaderClear()
+        {
+            var message = new NotifyGlobalMapCrusadeArmySetLeaderClearClicked();
+            Logger.LogInformation("Sending {MessageType}", nameof(NotifyGlobalMapCrusadeArmySetLeaderClearClicked));
+            Send(message);
+        }
+
+        public void OnGlobalMapCrusadeArmySetLeaderRecruit()
+        {
+            var message = new NotifyGlobalMapCrusadeArmySetLeaderRecruitClicked();
+            Logger.LogInformation("Sending {MessageType}", nameof(NotifyGlobalMapCrusadeArmySetLeaderRecruitClicked));
             Send(message);
         }
 
@@ -1361,6 +1400,8 @@ namespace WOTRMultiplayer.Services
                .On<NotifyTacticalCombatInitializationConfirmed>(OnNotifyTacticalCombatInitializationConfirmed)
                .On<NotifyGlobalMapCrusadeArmyInfoMergeClosed>(OnNotifyGlobalMapCrusadeArmyInfoMergeClosed)
                .On<NotifyGlobalMapCrusadeArmyInfoShown>(OnNotifyGlobalMapCrusadeArmyInfoShown)
+               .On<NotifyGlobalMapCrusadeArmySetLeaderClosed>(OnNotifyGlobalMapCrusadeArmySetLeaderClosed)
+               .On<NotifyGlobalMapCrusadeArmyBuyLeaderClosed>(OnNotifyGlobalMapCrusadeArmyBuyLeaderClosed)
 
                // dialogs
                .On<ClientDialogCueAnswerSuggested>(OnClientDialogCueAnswerSuggested)
@@ -1373,6 +1414,24 @@ namespace WOTRMultiplayer.Services
                // inventory
                .On<NotifyPolymorphicItemCreationRequested>(OnNotifyPolymorphicItemCreationRequested)
                ;
+        }
+
+        private void OnNotifyGlobalMapCrusadeArmyBuyLeaderClosed(long receivedFrom, NotifyGlobalMapCrusadeArmyBuyLeaderClosed globalMapCrusadeArmyBuyLeaderClosed)
+        {
+            Logger.LogInformation("Received {MessageType}. ReceivedFrom={ReceivedFrom}, PlayerId={PlayerId}", nameof(NotifyGlobalMapTravelerModeChanged), receivedFrom, globalMapCrusadeArmyBuyLeaderClosed.PlayerId);
+            RemovePlayerFromTracker(Game.PlayersInGlobalMapCrusadeArmyBuyLeader, globalMapCrusadeArmyBuyLeaderClosed.PlayerId);
+            UpdateGlobalMapCrusadeArmyInfoUIStateAfterBuyLeader();
+
+            OnAfterNetworkMessageHandled(receivedFrom, globalMapCrusadeArmyBuyLeaderClosed);
+        }
+
+        private void OnNotifyGlobalMapCrusadeArmySetLeaderClosed(long receivedFrom, NotifyGlobalMapCrusadeArmySetLeaderClosed globalMapCrusadeArmyInfoSetLeaderClosed)
+        {
+            Logger.LogInformation("Received {MessageType}. ReceivedFrom={ReceivedFrom}, PlayerId={PlayerId}", nameof(NotifyGlobalMapTravelerModeChanged), receivedFrom, globalMapCrusadeArmyInfoSetLeaderClosed.PlayerId);
+            RemovePlayerFromTracker(Game.PlayersInGlobalMapCrusadeArmySetLeader, globalMapCrusadeArmyInfoSetLeaderClosed.PlayerId);
+            UpdateGlobalMapCrusadeArmyInfoUIStateAfterSetLeader();
+
+            OnAfterNetworkMessageHandled(receivedFrom, globalMapCrusadeArmyInfoSetLeaderClosed);
         }
 
         private void OnNotifyGlobalMapCrusadeArmyInfoShown(long receivedFrom, NotifyGlobalMapCrusadeArmyInfoShown globalMapCrusadeArmyInfoShown)
@@ -1390,6 +1449,8 @@ namespace WOTRMultiplayer.Services
             Logger.LogInformation("Received {MessageType}. ReceivedFrom={ReceivedFrom}, PlayerId={PlayerId}", nameof(NotifyGlobalMapTravelerModeChanged), receivedFrom, globalMapCrusadeArmyInfoMergeClosed.PlayerId);
             RemovePlayerFromTracker(Game.PlayersInGlobalMapCrusadeArmyInfoMerge, globalMapCrusadeArmyInfoMergeClosed.PlayerId);
             UpdateGlobalMapCrusadeArmyInfoUIStateAfterMerge();
+
+            OnAfterNetworkMessageHandled(receivedFrom, globalMapCrusadeArmyInfoMergeClosed);
         }
 
         private void OnNotifyTacticalCombatInitializationConfirmed(long receivedFrom, NotifyTacticalCombatInitializationConfirmed tacticalCombatInitializationConfirmed)

@@ -360,6 +360,8 @@ namespace WOTRMultiplayer.Abstractions
 
         void OnCrusadeArmyCombatTurnStarted(NetworkArmyCombatTurn armyCombatTurn);
 
+        int? GetCrusadeArmyCombatAreaSeed();
+
         int? GetCrusadeArmyCombatSeed();
 
         void OnCrusadeArmyBattleResultsShown();
@@ -433,5 +435,21 @@ namespace WOTRMultiplayer.Abstractions
         void OnGlobalMapMergeArmies();
 
         void OnGlobalMapCrusadeArmyInfoCreateArmy();
+
+        void OnGlobalMapCrusadeArmyInfoMainNameChanged(NetworkGlobalMapArmy globalMapArmy);
+
+        void OnGlobalMapCrusadeArmyInfoMergeNameChanged(NetworkGlobalMapArmy globalMapArmy);
+
+        void OnGlobalMapCrusadeArmySetLeaderShown();
+
+        void OnGlobalMapCrusadeArmySetLeaderClosed();
+
+        void OnGlobalMapCrusadeArmySetLeaderClear();
+
+        void OnGlobalMapCrusadeArmyInfoSetLeaderRecruit();
+
+        void OnGlobalMapCrusadeArmyBuyLeaderShown();
+
+        void OnGlobalMapCrusadeArmyBuyLeaderClosed();
     }
 }

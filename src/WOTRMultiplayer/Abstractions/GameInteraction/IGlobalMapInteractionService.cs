@@ -101,5 +101,19 @@ namespace WOTRMultiplayer.Abstractions.GameInteraction
         void CreateArmyAtCrusadeArmyInfo();
 
         void CloseCrusadeArmyMainInfo();
+
+        void SetCrusadeArmyInfoMergeName(NetworkGlobalMapArmy army);
+
+        void SetCrusadeArmyInfoMainName(NetworkGlobalMapArmy army);
+
+        void CloseCrusadeArmySetLeaderInfo();
+
+        void ClearLeaderOnCrusdeArmyInfo();
+
+        void ClickRecruitmentOnSetLeaderScreen();
+
+        void CloseBuyLeaderScreen();
+
+        void UpdateBuyLeaderUI(bool isInteractable, int readyPlayersCount, int totalPlayersCount);
     }
 }

@@ -201,5 +201,33 @@ namespace WOTRMultiplayer.Playground.Core.Dummies
         public void CloseCrusadeArmyMainInfo()
         {
         }
+
+        public void SetCrusadeArmyInfoMergeName(NetworkGlobalMapArmy army)
+        {
+        }
+
+        public void SetCrusadeArmyInfoMainName(NetworkGlobalMapArmy army)
+        {
+        }
+
+        public void CloseCrusadeArmySetLeaderInfo()
+        {
+        }
+
+        public void ClearLeaderOnCrusdeArmyInfo()
+        {
+        }
+
+        public void ClickRecruitmentOnSetLeaderScreen()
+        {
+        }
+
+        public void CloseBuyLeaderScreen()
+        {
+        }
+
+        public void UpdateBuyLeaderUI(bool isInteractable, int readyPlayersCount, int totalPlayersCount)
+        {
+        }
     }
 }

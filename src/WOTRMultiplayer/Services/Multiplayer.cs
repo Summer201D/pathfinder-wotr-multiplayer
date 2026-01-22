@@ -1014,11 +1014,30 @@ namespace WOTRMultiplayer.Services
             return _multiplayerActorAccessor.Current?.SessionSeed;
         }
 
-        public int? GetCrusadeArmyCombatSeed()
+        public int? GetCrusadeArmyCombatAreaSeed()
         {
             try
             {
                 if (_multiplayerActorAccessor == null || _multiplayerActorAccessor.Host.IsActive)
+                {
+                    return null;
+                }
+
+                var seed = _multiplayerActorAccessor.Current.CrusadeArmyCombatAreaSeed;
+                return seed;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while getting crusade army combat seed");
+                throw;
+            }
+        }
+
+        public int? GetCrusadeArmyCombatSeed()
+        {
+            try
+            {
+                if (_multiplayerActorAccessor == null)
                 {
                     return null;
                 }
@@ -3646,6 +3665,151 @@ namespace WOTRMultiplayer.Services
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error while creating army via crusade army info");
+                throw;
+            }
+        }
+
+        public void OnGlobalMapCrusadeArmyInfoMainNameChanged(NetworkGlobalMapArmy globalMapArmy)
+        {
+            try
+            {
+                if (_multiplayerActorAccessor.Current == null || _multiplayerActorAccessor.Client.IsActive)
+                {
+                    return;
+                }
+
+                _multiplayerActorAccessor.Host.OnGlobalMapCrusadeArmyInfoMainNameChanged(globalMapArmy);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while changing main army info name");
+                throw;
+            }
+        }
+
+        public void OnGlobalMapCrusadeArmyInfoMergeNameChanged(NetworkGlobalMapArmy globalMapArmy)
+        {
+            try
+            {
+                if (_multiplayerActorAccessor.Current == null || _multiplayerActorAccessor.Client.IsActive)
+                {
+                    return;
+                }
+
+                _multiplayerActorAccessor.Host.OnGlobalMapCrusadeArmyInfoMergeNameChanged(globalMapArmy);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while changing merge army info name");
+                throw;
+            }
+        }
+
+        public void OnGlobalMapCrusadeArmySetLeaderShown()
+        {
+            try
+            {
+                if (_multiplayerActorAccessor.Current == null)
+                {
+                    return;
+                }
+
+                _multiplayerActorAccessor.Current.OnGlobalMapCrusadeArmySetLeaderShown();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while showing army info set leader");
+                throw;
+            }
+        }
+
+        public void OnGlobalMapCrusadeArmySetLeaderClosed()
+        {
+            try
+            {
+                if (_multiplayerActorAccessor.Current == null)
+                {
+                    return;
+                }
+
+                _multiplayerActorAccessor.Current.OnGlobalMapCrusadeArmySetLeaderClosed();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while closing army set leader");
+                throw;
+            }
+        }
+
+
+        public void OnGlobalMapCrusadeArmySetLeaderClear()
+        {
+            try
+            {
+                if (_multiplayerActorAccessor.Current == null || _multiplayerActorAccessor.Client.IsActive)
+                {
+                    return;
+                }
+
+                _multiplayerActorAccessor.Host.OnGlobalMapCrusadeArmySetLeaderClear();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while clearing leader on army info");
+                throw;
+            }
+        }
+
+        public void OnGlobalMapCrusadeArmyInfoSetLeaderRecruit()
+        {
+            try
+            {
+                if (_multiplayerActorAccessor.Current == null || _multiplayerActorAccessor.Client.IsActive)
+                {
+                    return;
+                }
+
+                _multiplayerActorAccessor.Host.OnGlobalMapCrusadeArmySetLeaderRecruit();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while opening leader recruitment on army info");
+                throw;
+            }
+        }
+
+        public void OnGlobalMapCrusadeArmyBuyLeaderShown()
+        {
+            try
+            {
+                if (_multiplayerActorAccessor.Current == null)
+                {
+                    return;
+                }
+
+                _multiplayerActorAccessor.Current.OnGlobalMapCrusadeArmyBuyLeaderShown();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while showing buy leader screen");
+                throw;
+            }
+        }
+
+        public void OnGlobalMapCrusadeArmyBuyLeaderClosed()
+        {
+            try
+            {
+                if (_multiplayerActorAccessor.Current == null)
+                {
+                    return;
+                }
+
+                _multiplayerActorAccessor.Current.OnGlobalMapCrusadeArmyBuyLeaderClosed();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while closing buy leader screen");
                 throw;
             }
         }

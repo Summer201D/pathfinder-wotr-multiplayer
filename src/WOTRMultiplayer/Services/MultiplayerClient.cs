@@ -518,6 +518,12 @@ namespace WOTRMultiplayer.Services
                .On<NotifyGlobalMapCrusadeArmiesMerging>(OnNotifyGlobalMapCrusadeArmiesMerging)
                .On<NotifyGlobalMapCrusadeArmyInfoArmyCreated>(OnNotifyGlobalMapCrusadeArmyInfoArmyCreated)
                .On<NotifyGlobalMapCrusadeArmyInfoMainClosed>(OnNotifyGlobalMapCrusadeArmyInfoMainClosed)
+               .On<NotifyGlobalMapCrusadeArmyInfoMainNameChanged>(OnNotifyGlobalMapCrusadeArmyInfoMainNameChanged)
+               .On<NotifyGlobalMapCrusadeArmyInfoMergeNameChanged>(OnNotifyGlobalMapCrusadeArmyInfoMergeNameChanged)
+               .On<NotifyGlobalMapCrusadeArmySetLeaderClosed>(OnNotifyGlobalMapCrusadeArmySetLeaderClosed)
+               .On<NotifyGlobalMapCrusadeArmySetLeaderClearClicked>(OnNotifyGlobalMapCrusadeArmySetLeaderCleared)
+               .On<NotifyGlobalMapCrusadeArmySetLeaderRecruitClicked>(OnNotifyGlobalMapCrusadeArmySetLeaderRecruitClicked)
+               .On<NotifyGlobalMapCrusadeArmyBuyLeaderClosed>(OnNotifyGlobalMapCrusadeArmyBuyLeaderClosed)
 
                // dialogs
                .On<NotifyDialogStarted>(OnNotifyDialogStarted)
@@ -553,9 +559,64 @@ namespace WOTRMultiplayer.Services
                ;
         }
 
+        private void OnNotifyGlobalMapCrusadeArmyBuyLeaderClosed(long receivedFrom, NotifyGlobalMapCrusadeArmyBuyLeaderClosed globalMapCrusadeArmyBuyLeaderClosed)
+        {
+            Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}", nameof(NotifyGlobalMapTravelerModeChanged), globalMapCrusadeArmyBuyLeaderClosed.PlayerId);
+            RemovePlayerFromTracker(Game.PlayersInGlobalMapCrusadeArmyBuyLeader, globalMapCrusadeArmyBuyLeaderClosed.PlayerId);
+            UpdateGlobalMapCrusadeArmyInfoUIStateAfterBuyLeader();
+
+            GlobalMapInteraction.CloseBuyLeaderScreen();
+
+            OnAfterNetworkMessageHandled(receivedFrom, globalMapCrusadeArmyBuyLeaderClosed);
+        }
+
+        private void OnNotifyGlobalMapCrusadeArmySetLeaderRecruitClicked(long arg1, NotifyGlobalMapCrusadeArmySetLeaderRecruitClicked globalMapCrusadeArmySetLeaderRecruitClicked)
+        {
+            Logger.LogInformation("Received {MessageType}", nameof(NotifyGlobalMapCrusadeArmySetLeaderRecruitClicked));
+
+            GlobalMapInteraction.ClickRecruitmentOnSetLeaderScreen();
+        }
+
+        private void OnNotifyGlobalMapCrusadeArmySetLeaderCleared(long receivedFrom, NotifyGlobalMapCrusadeArmySetLeaderClearClicked globalMapCrusadeArmyInfoSetLeaderCleared)
+        {
+            Logger.LogInformation("Received {MessageType}", nameof(NotifyGlobalMapCrusadeArmySetLeaderClearClicked));
+
+            GlobalMapInteraction.ClearLeaderOnCrusdeArmyInfo();
+        }
+
+        private void OnNotifyGlobalMapCrusadeArmySetLeaderClosed(long receivedFrom, NotifyGlobalMapCrusadeArmySetLeaderClosed globalMapCrusadeArmyInfoSetLeaderClosed)
+        {
+            Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}", nameof(NotifyGlobalMapTravelerModeChanged), globalMapCrusadeArmyInfoSetLeaderClosed.PlayerId);
+            RemovePlayerFromTracker(Game.PlayersInGlobalMapCrusadeArmySetLeader, globalMapCrusadeArmyInfoSetLeaderClosed.PlayerId);
+
+            UpdateGlobalMapCrusadeArmyInfoUIStateAfterSetLeader();
+
+            GlobalMapInteraction.CloseCrusadeArmySetLeaderInfo();
+        }
+
+        private void OnNotifyGlobalMapCrusadeArmyInfoMergeNameChanged(long receivedFrom, NotifyGlobalMapCrusadeArmyInfoMergeNameChanged globalMapCrusadeArmyInfoMergeNameChanged)
+        {
+            Logger.LogInformation("Received {MessageType}. ArmyId={ArmyId}, Name={Name}", nameof(NotifyGlobalMapCrusadeArmyInfoMainNameChanged), globalMapCrusadeArmyInfoMergeNameChanged.Army.Id, globalMapCrusadeArmyInfoMergeNameChanged.Army.Name);
+
+            var army = Mapper.Map<NetworkGlobalMapArmy>(globalMapCrusadeArmyInfoMergeNameChanged.Army);
+
+            GlobalMapInteraction.SetCrusadeArmyInfoMergeName(army);
+        }
+
+        private void OnNotifyGlobalMapCrusadeArmyInfoMainNameChanged(long receivedFrom, NotifyGlobalMapCrusadeArmyInfoMainNameChanged globalMapCrusadeArmyInfoMainNameChanged)
+        {
+            Logger.LogInformation("Received {MessageType}. ArmyId={ArmyId}, Name={Name}", nameof(NotifyGlobalMapCrusadeArmyInfoMainNameChanged), globalMapCrusadeArmyInfoMainNameChanged.Army.Id, globalMapCrusadeArmyInfoMainNameChanged.Army.Name);
+
+            var army = Mapper.Map<NetworkGlobalMapArmy>(globalMapCrusadeArmyInfoMainNameChanged.Army);
+
+            GlobalMapInteraction.SetCrusadeArmyInfoMainName(army);
+        }
+
         private void OnNotifyGlobalMapCrusadeArmyInfoMainClosed(long receivedFrom, NotifyGlobalMapCrusadeArmyInfoMainClosed globalMapCrusadeArmyInfoMainClosed)
         {
             Logger.LogInformation("Received {MessageType}", nameof(NotifyGlobalMapCrusadeArmyInfoMainClosed));
+
+            ResetPlayersTracker(Game.PlayersInGlobalMapCrusadeArmyInfo);
 
             GlobalMapInteraction.CloseCrusadeArmyMainInfo();
         }
@@ -661,6 +722,7 @@ namespace WOTRMultiplayer.Services
         {
             Logger.LogInformation("Received {MessageType}", nameof(NotifyGlobalMapCrusadeArmyInfoClosed));
 
+            ResetPlayersTracker(Game.PlayersInGlobalMapCrusadeArmyInfo);
             GlobalMapInteraction.CloseCrusadeArmyInfo();
         }
 
@@ -803,10 +865,11 @@ namespace WOTRMultiplayer.Services
 
         private async void OnNotifyTacticalCombatInitialized(long receivedFrom, NotifyTacticalCombatInitialized tacticalCombatInitialized)
         {
-            Logger.LogInformation("Received {MessageType}. ReceivedFrom={ReceivedFrom}, Seed={Seed}", nameof(NotifyTacticalCombatInitialized), receivedFrom, tacticalCombatInitialized.Seed);
+            Logger.LogInformation("Received {MessageType}. ReceivedFrom={ReceivedFrom}, AreaSeed={AreaSeed}, Seed={Seed}", nameof(NotifyTacticalCombatInitialized), receivedFrom, tacticalCombatInitialized.AreaSeed, tacticalCombatInitialized.AreaSeed);
 
             await WaitWhileTrue(() => Game.ArmyCombat == null, "Crusade army combat has not been started yet");
 
+            Game.ArmyCombat.AreaSeed = tacticalCombatInitialized.AreaSeed;
             Game.ArmyCombat.Seed = tacticalCombatInitialized.Seed;
             CombatInteraction.InitializeCrusadeArmyCombat();
         }

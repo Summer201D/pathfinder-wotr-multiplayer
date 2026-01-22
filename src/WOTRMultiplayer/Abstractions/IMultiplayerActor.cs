@@ -58,6 +58,8 @@ namespace WOTRMultiplayer.Abstractions
 
         int? CombatSeed { get; }
 
+        int? CrusadeArmyCombatAreaSeed { get; }
+
         int? CrusadeArmyCombatSeed { get; }
 
         bool IsControlledByLocalPlayer(string unitId);
@@ -310,5 +312,13 @@ namespace WOTRMultiplayer.Abstractions
         void OnGlobalMapCrusadeArmyInfoMergeClosed();
 
         void OnGlobalMapCrusadeArmyInfoMergeShown();
+
+        void OnGlobalMapCrusadeArmySetLeaderShown();
+
+        void OnGlobalMapCrusadeArmySetLeaderClosed();
+
+        void OnGlobalMapCrusadeArmyBuyLeaderShown();
+
+        void OnGlobalMapCrusadeArmyBuyLeaderClosed();
     }
 }

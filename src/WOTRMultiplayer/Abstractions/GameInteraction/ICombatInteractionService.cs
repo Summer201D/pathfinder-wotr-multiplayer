@@ -26,7 +26,7 @@ namespace WOTRMultiplayer.Abstractions.GameInteraction
 
         void InitializeCrusadeArmyCombat();
 
-        int GetCrusadeArmyCombatSeed();
+        int GetCrusadeArmyCombatAreaSeed();
 
         void RunTacticalUnitAttackCommand(NetworkTacticalUnitAttackCommand tacticalUnitAttackCommand);
 

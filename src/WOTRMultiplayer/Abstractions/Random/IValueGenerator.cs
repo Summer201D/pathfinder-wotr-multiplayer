@@ -18,5 +18,7 @@ namespace WOTRMultiplayer.Abstractions.Random
         void ResetSeedGenerators(params SeedLifetime[] lifetimes);
 
         Guid CreateGuid(SeedLifetime area, string seed);
+
+        System.Random GetRandom(SeedLifetime seedLifetime, string seed);
     }
 }

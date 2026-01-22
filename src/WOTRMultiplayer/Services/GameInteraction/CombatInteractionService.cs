@@ -61,10 +61,10 @@ namespace WOTRMultiplayer.Services.GameInteraction
             return TacticalCombatHelper.IsActive;
         }
 
-        public int GetCrusadeArmyCombatSeed()
+        public int GetCrusadeArmyCombatAreaSeed()
         {
-            var seed = Game.Instance.TacticalCombat?.Data?.Seed ?? -1;
-            return seed;
+            var areaSeed = Game.Instance.TacticalCombat?.Data?.Seed ?? -1;
+            return areaSeed;
         }
 
         public void InitializeCrusadeArmyCombat()

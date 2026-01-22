@@ -18,7 +18,7 @@ namespace WOTRMultiplayer.HarmonyPatches.Combat.Crusades
         {
             var target = PatchesUtils.GetTranspilerTarget(MethodBase.GetCurrentMethod());
             var lookFor = AccessTools.PropertySetter(typeof(TacticalCombatData), nameof(TacticalCombatData.Seed));
-            var replaceWith = AccessTools.Method(typeof(TacticalCombatControllerPatches), nameof(TacticalCombatControllerPatches.SetCrusadeArmyCombatSeed));
+            var replaceWith = AccessTools.Method(typeof(TacticalCombatControllerPatches), nameof(TacticalCombatControllerPatches.SetCrusadeArmyCombatAreaSeed));
             var matcher = new CodeMatcher(instructions);
             var match = matcher.SearchForward(x => x.Calls(lookFor));
             if (match.IsInvalid)
@@ -74,7 +74,7 @@ namespace WOTRMultiplayer.HarmonyPatches.Combat.Crusades
             Main.Multiplayer.OnTacticalCombatInitialized();
         }
 
-        private static void SetCrusadeArmyCombatSeed(TacticalCombatData data, int seed)
+        private static void SetCrusadeArmyCombatAreaSeed(TacticalCombatData data, int seed)
         {
             if (!Main.Multiplayer.IsActive)
             {
@@ -82,7 +82,7 @@ namespace WOTRMultiplayer.HarmonyPatches.Combat.Crusades
                 return;
             }
 
-            var multiplayerSeed = Main.Multiplayer.GetCrusadeArmyCombatSeed() ?? seed;
+            var multiplayerSeed = Main.Multiplayer.GetCrusadeArmyCombatAreaSeed() ?? seed;
             Main.GetLogger<TacticalCombatControllerPatches>().LogInformation("Crusade Army Combat seed has been overriden. OldValue={OldValue}, NewValue={NewValue}", seed, multiplayerSeed);
             data.Seed = multiplayerSeed;
         }

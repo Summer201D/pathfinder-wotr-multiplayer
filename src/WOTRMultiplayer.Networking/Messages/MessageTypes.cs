@@ -206,7 +206,15 @@
             NotifyGlobalMapCrusadeArmyMergeLeaderLookAtPool,
             NotifyGlobalMapCrusadeArmiesMerging,
             NotifyGlobalMapCrusadeArmyInfoArmyCreated,
-            NotifyGlobalMapCrusadeArmyInfoMainClosed
+            NotifyGlobalMapCrusadeArmyInfoMainClosed,
+            NotifyGlobalMapCrusadeArmyInfoMainNameChanged,
+            NotifyGlobalMapCrusadeArmyInfoMergeNameChanged,
+            NotifyGlobalMapCrusadeArmySetLeaderShown,
+            NotifyGlobalMapCrusadeArmySetLeaderClosed,
+            NotifyGlobalMapCrusadeArmySetLeaderClearClicked,
+            NotifyGlobalMapCrusadeArmySetLeaderRecruitClicked,
+            NotifyGlobalMapCrusadeArmyBuyLeaderClosed,
+            NotifyGlobalMapCrusadeArmyBuyLeaderShown
         }
 
         public enum Request

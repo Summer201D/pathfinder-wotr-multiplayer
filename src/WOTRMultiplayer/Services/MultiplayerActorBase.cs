@@ -52,6 +52,8 @@ namespace WOTRMultiplayer.Services
 
         public int? CombatSeed => Game.Combat?.Seed;
 
+        public int? CrusadeArmyCombatAreaSeed => Game.ArmyCombat?.AreaSeed;
+
         public int? CrusadeArmyCombatSeed => Game.ArmyCombat?.Seed;
 
         public Action<NetworkLobbyStage, List<NetworkPlayer>> OnPlayersChanged { get; set; }
@@ -1836,6 +1838,66 @@ namespace WOTRMultiplayer.Services
             UpdateGlobalMapCrusadeArmyInfoUIStateOnMerge();
         }
 
+        public void OnGlobalMapCrusadeArmySetLeaderShown()
+        {
+            var localPlayer = GetLocalPlayerId();
+            AddPlayerToTracker(Game.PlayersInGlobalMapCrusadeArmySetLeader, localPlayer);
+
+            var message = new NotifyGlobalMapCrusadeArmySetLeaderShown
+            {
+                PlayerId = localPlayer
+            };
+            Logger.LogInformation("Sending {MessageType}. PlayerId={PlayerId}", nameof(NotifyGlobalMapCrusadeArmySetLeaderShown), message.PlayerId);
+            Send(message);
+
+            UpdateGlobalMapCrusadeArmyInfoUIStateOnSetLeader();
+        }
+
+        public void OnGlobalMapCrusadeArmySetLeaderClosed()
+        {
+            var localPlayer = GetLocalPlayerId();
+            RemovePlayerFromTracker(Game.PlayersInGlobalMapCrusadeArmySetLeader, localPlayer);
+
+            var message = new NotifyGlobalMapCrusadeArmySetLeaderClosed
+            {
+                PlayerId = localPlayer
+            };
+            Logger.LogInformation("Sending {MessageType}. PlayerId={PlayerId}", nameof(NotifyGlobalMapCrusadeArmySetLeaderClosed), message.PlayerId);
+            Send(message);
+
+            UpdateGlobalMapCrusadeArmyInfoUIStateAfterSetLeader();
+        }
+
+        public void OnGlobalMapCrusadeArmyBuyLeaderShown()
+        {
+            var localPlayer = GetLocalPlayerId();
+            AddPlayerToTracker(Game.PlayersInGlobalMapCrusadeArmyBuyLeader, localPlayer);
+
+            var message = new NotifyGlobalMapCrusadeArmyBuyLeaderShown
+            {
+                PlayerId = localPlayer
+            };
+            Logger.LogInformation("Sending {MessageType}. PlayerId={PlayerId}", nameof(NotifyGlobalMapCrusadeArmyBuyLeaderShown), message.PlayerId);
+            Send(message);
+
+            UpdateGlobalMapCrusadeArmyBuyLeaderUIState();
+        }
+
+        public void OnGlobalMapCrusadeArmyBuyLeaderClosed()
+        {
+            var localPlayer = GetLocalPlayerId();
+            RemovePlayerFromTracker(Game.PlayersInGlobalMapCrusadeArmyBuyLeader, localPlayer);
+
+            var message = new NotifyGlobalMapCrusadeArmyBuyLeaderClosed
+            {
+                PlayerId = localPlayer
+            };
+            Logger.LogInformation("Sending {MessageType}. PlayerId={PlayerId}", nameof(NotifyGlobalMapCrusadeArmyBuyLeaderClosed), message.PlayerId);
+            Send(message);
+
+            UpdateGlobalMapCrusadeArmyInfoUIStateAfterBuyLeader();
+        }
+
         public void OnTacticalCombatEnded()
         {
             Game.ArmyCombat = null;
@@ -2057,13 +2119,57 @@ namespace WOTRMultiplayer.Services
             }
         }
 
+        protected void UpdateGlobalMapCrusadeArmyInfoUIStateOnSetLeader()
+        {
+            lock (ActionLock)
+            {
+                var readyPlayers = Game.PlayersInGlobalMapCrusadeArmySetLeader.Count;
+                var totalPlayers = GetSyncedPlayersCount();
+                var canUse = HasControlOverUI && readyPlayers >= totalPlayers;
+                GlobalMapInteraction.UpdateCrusadeArmyInfoUI(canUse, readyPlayers, totalPlayers);
+            }
+        }
+
+        protected void UpdateGlobalMapCrusadeArmyBuyLeaderUIState()
+        {
+            lock (ActionLock)
+            {
+                var readyPlayers = Game.PlayersInGlobalMapCrusadeArmyBuyLeader.Count;
+                var totalPlayers = GetSyncedPlayersCount();
+                var canUse = HasControlOverUI && readyPlayers >= totalPlayers;
+                GlobalMapInteraction.UpdateBuyLeaderUI(canUse, readyPlayers, totalPlayers);
+            }
+        }
+
         protected void UpdateGlobalMapCrusadeArmyInfoUIStateAfterMerge()
         {
             lock (ActionLock)
             {
-                var readyPlayers = GetSyncedPlayersCount() - Game.PlayersInGlobalMapCrusadeArmyInfoMerge.Count;
                 var totalPlayers = GetSyncedPlayersCount();
+                var readyPlayers = totalPlayers - Game.PlayersInGlobalMapCrusadeArmyInfoMerge.Count;
                 var canUse = HasControlOverUI && Game.PlayersInGlobalMapCrusadeArmyInfoMerge.Count == 0;
+                GlobalMapInteraction.UpdateCrusadeArmyInfoUI(canUse, readyPlayers, totalPlayers);
+            }
+        }
+
+        protected void UpdateGlobalMapCrusadeArmyInfoUIStateAfterBuyLeader()
+        {
+            lock (ActionLock)
+            {
+                var totalPlayers = GetSyncedPlayersCount();
+                var readyPlayers = totalPlayers - Game.PlayersInGlobalMapCrusadeArmyBuyLeader.Count;
+                var canUse = HasControlOverUI && Game.PlayersInGlobalMapCrusadeArmyBuyLeader.Count == 0;
+                GlobalMapInteraction.UpdateCrusadeArmyInfoUI(canUse, readyPlayers, totalPlayers);
+            }
+        }
+
+        protected void UpdateGlobalMapCrusadeArmyInfoUIStateAfterSetLeader()
+        {
+            lock (ActionLock)
+            {
+                var totalPlayers = GetSyncedPlayersCount();
+                var readyPlayers = totalPlayers - Game.PlayersInGlobalMapCrusadeArmySetLeader.Count;
+                var canUse = HasControlOverUI && Game.PlayersInGlobalMapCrusadeArmySetLeader.Count == 0;
                 GlobalMapInteraction.UpdateCrusadeArmyInfoUI(canUse, readyPlayers, totalPlayers);
             }
         }
@@ -2449,7 +2555,11 @@ namespace WOTRMultiplayer.Services
             ResetPlayersTracker(Game.PlayersInDialogPopup);
             ResetPlayersTracker(Game.PlayersInCharacterSelectionWindow);
             ResetPlayersTracker(Game.PlayersInRespecWindow);
+
             ResetPlayersTracker(Game.PlayersInGlobalMapCrusadeArmyInfo);
+            ResetPlayersTracker(Game.PlayersInGlobalMapCrusadeArmyInfoMerge);
+            ResetPlayersTracker(Game.PlayersInGlobalMapCrusadeArmySetLeader);
+            ResetPlayersTracker(Game.PlayersInGlobalMapCrusadeArmyBuyLeader);
         }
 
         protected string StoreSaveGameContent(byte[] content)
@@ -2926,6 +3036,8 @@ namespace WOTRMultiplayer.Services
                 .On<NotifyTacticalCombatTurnInitialized>(OnNotifyTacticalCombatTurnInitialized)
                 .On<NotifyCrusadeArmyBattleResultsShown>(OnNotifyCrusadeArmyBattleResultsShown)
                 .On<NotifyGlobalMapCrusadeArmyInfoMergeShown>(OnNotifyGlobalMapCrusadeArmyInfoMergeShown)
+                .On<NotifyGlobalMapCrusadeArmySetLeaderShown>(OnNotifyGlobalMapCrusadeArmySetLeaderShown)
+                .On<NotifyGlobalMapCrusadeArmyBuyLeaderShown>(OnNotifyGlobalMapCrusadeArmyBuyLeaderShown)
 
                 // overtips
                 .On<NotifyOvertipInteracted>(OnNotifyOvertipInteracted)
@@ -2981,6 +3093,25 @@ namespace WOTRMultiplayer.Services
                 // cutscenes
                 .On<NotifyCutsceneSkipped>(OnNotifyCutsceneSkipped)
                 ;
+        }
+
+        private void OnNotifyGlobalMapCrusadeArmyBuyLeaderShown(long receivedFrom, NotifyGlobalMapCrusadeArmyBuyLeaderShown globalMapCrusadeArmyBuyLeaderShown)
+        {
+            Logger.LogInformation("Received {MessageType}. ReceivedFrom={ReceivedFrom}, PlayerId={PlayerId}", nameof(NotifyGlobalMapCrusadeArmyInfoMergeShown), receivedFrom, globalMapCrusadeArmyBuyLeaderShown.PlayerId);
+            AddPlayerToTracker(Game.PlayersInGlobalMapCrusadeArmyBuyLeader, globalMapCrusadeArmyBuyLeaderShown.PlayerId);
+
+            UpdateGlobalMapCrusadeArmyBuyLeaderUIState();
+
+            OnAfterNetworkMessageHandled(receivedFrom, globalMapCrusadeArmyBuyLeaderShown);
+        }
+
+        private void OnNotifyGlobalMapCrusadeArmySetLeaderShown(long receivedFrom, NotifyGlobalMapCrusadeArmySetLeaderShown globalMapCrusadeArmyInfoSetLeaderShown)
+        {
+            Logger.LogInformation("Received {MessageType}. ReceivedFrom={ReceivedFrom}, PlayerId={PlayerId}", nameof(NotifyGlobalMapCrusadeArmyInfoMergeShown), receivedFrom, globalMapCrusadeArmyInfoSetLeaderShown.PlayerId);
+            AddPlayerToTracker(Game.PlayersInGlobalMapCrusadeArmySetLeader, globalMapCrusadeArmyInfoSetLeaderShown.PlayerId);
+            UpdateGlobalMapCrusadeArmyInfoUIStateOnSetLeader();
+
+            OnAfterNetworkMessageHandled(receivedFrom, globalMapCrusadeArmyInfoSetLeaderShown);
         }
 
         private void OnNotifyGlobalMapCrusadeArmyInfoMergeShown(long receivedFrom, NotifyGlobalMapCrusadeArmyInfoMergeShown globalMapCrusadeArmyInfoMergeShown)

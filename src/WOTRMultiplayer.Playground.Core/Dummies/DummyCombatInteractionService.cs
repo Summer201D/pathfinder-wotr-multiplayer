@@ -38,7 +38,7 @@ namespace WOTRMultiplayer.Playground.Core.Dummies
         {
         }
 
-        public int GetCrusadeArmyCombatSeed()
+        public int GetCrusadeArmyCombatAreaSeed()
         {
             return 0;
         }

@@ -698,8 +698,18 @@ namespace WOTRMultiplayer.Services.GameInteraction
                 view.m_MoveSquadsToMainButton.Interactable = isInteractable;
                 view.m_MoveSquadsToSecondButton.Interactable = isInteractable;
 
-                var setLeaderView = view.m_SetLeaderView.m_LeaderInfoView;
-                UpdateLeaderInfoUIState((ArmyLeaderInfoPCView)setLeaderView, isInteractable, readyPlayersCount, totalPlayersCount);
+                var setLeaderView = view.m_SetLeaderView;
+                if (setLeaderView?.ViewModel != null)
+                {
+                    var pcView = (ArmyCartSetLeaderPCView)setLeaderView;
+                    pcView.m_CloseButton.Interactable = isInteractable;
+                    pcView.m_ClearLeaderButton.Interactable = isInteractable;
+                    pcView.m_RecruitNewLeaderButton.Interactable = isInteractable;
+                    _uiSyncCountersService.UpdateButtonTextCounter(setLeaderView.m_ClearLeaderButtonText, readyPlayersCount, totalPlayersCount);
+                    _uiSyncCountersService.UpdateButtonTextCounter(setLeaderView.m_RecruitNewLeaderButtonText, readyPlayersCount, totalPlayersCount);
+
+                    UpdateLeaderInfoUIState((ArmyLeaderInfoPCView)setLeaderView.m_LeaderInfoView, isInteractable, readyPlayersCount, totalPlayersCount);
+                }
 
                 var mainCartView = view.m_MainArmyCartView;
                 UpdateArmyCartView(mainCartView, isInteractable, readyPlayersCount, totalPlayersCount);
@@ -709,23 +719,6 @@ namespace WOTRMultiplayer.Services.GameInteraction
 
                 _logger.LogInformation("Crusade army info ui has been updated. IsInteractable={IsInteractable}, ReadyPlayers={ReadyPlayers}, TotalPlayers={TotalPlayers}", isInteractable, readyPlayersCount, totalPlayersCount);
             });
-        }
-
-        private void UpdateArmyCartView(ArmyInfoArmyCartView armyInfoArmyCartView, bool isInteractable, int readyPlayersCount, int totalPlayersCount)
-        {
-            if (armyInfoArmyCartView?.ViewModel == null)
-            {
-                return;
-            }
-
-            var view = (ArmyInfoArmyCartPCView)armyInfoArmyCartView;
-            if (armyInfoArmyCartView?.ViewModel != null)
-            {
-                view.m_CloseButton.Interactable = isInteractable;
-                view.m_DismissButton.Interactable = isInteractable;
-
-                UpdateLeaderInfoUIState((ArmyLeaderInfoPCView)view.m_LeaderInfoView, isInteractable, readyPlayersCount, totalPlayersCount);
-            }
         }
 
         public void CloseCrusadeArmyInfo()
@@ -757,6 +750,124 @@ namespace WOTRMultiplayer.Services.GameInteraction
 
                 view.ViewModel.OnClose();
                 _logger.LogInformation("Crusade army main info close handler has been executed");
+            });
+        }
+
+        public void CloseCrusadeArmySetLeaderInfo()
+        {
+            _mainThreadAccessor.Post(() =>
+            {
+                var view = _uiAccessor.GlobalMapPCView?.m_ArmyInfoPCView?.m_SetLeaderView;
+                if (view?.ViewModel == null)
+                {
+                    _logger.LogWarning("Unable to close crusade army info set leader due to missing view");
+                    return;
+                }
+
+                view.ViewModel.OnClose();
+                _logger.LogInformation("Crusade army info set leader close handler has been executed");
+            });
+        }
+
+        public void ClearLeaderOnCrusdeArmyInfo()
+        {
+            _mainThreadAccessor.Post(() =>
+            {
+                var view = _uiAccessor.GlobalMapPCView?.m_ArmyInfoPCView?.m_SetLeaderView;
+                if (view?.ViewModel == null)
+                {
+                    _logger.LogWarning("Unable to clear leader on crusade army info due to missing view");
+                    return;
+                }
+
+                view.ViewModel.OnClearLeader();
+                _logger.LogInformation("ClearLeader has been executed on crusade army info set leader");
+            });
+        }
+
+        public void ClickRecruitmentOnSetLeaderScreen()
+        {
+            _mainThreadAccessor.Post(() =>
+            {
+                var view = _uiAccessor.GlobalMapPCView?.m_ArmyInfoPCView?.m_SetLeaderView;
+                if (view?.ViewModel == null)
+                {
+                    _logger.LogWarning("Unable to open leader recruitment on crusade army info due to missing view");
+                    return;
+                }
+
+                view.ViewModel.OnBuyLeader();
+                _logger.LogInformation("OnBuyLeader has been executed on crusade army info set leader");
+            });
+        }
+
+        public void CloseBuyLeaderScreen()
+        {
+            _mainThreadAccessor.Post(() =>
+            {
+                var view = _uiAccessor.GlobalMapPCView?.m_BuyLeaderPCView;
+                if (view?.ViewModel == null)
+                {
+                    _logger.LogWarning("Unable to close buy leader screen due to missing view");
+                    return;
+                }
+
+                view.ViewModel.OnClose();
+                _logger.LogInformation("Buy leader screen has been closed");
+            });
+        }
+
+        public void UpdateBuyLeaderUI(bool isInteractable, int readyPlayersCount, int totalPlayersCount)
+        {
+            _mainThreadAccessor.Post(() =>
+            {
+                var view = _uiAccessor.GlobalMapPCView?.m_BuyLeaderPCView;
+                if (view?.ViewModel == null)
+                {
+                    _logger.LogWarning("Unable to update buy leader screen due to missing view");
+                    return;
+                }
+
+                view.m_CloseButton.Interactable = isInteractable;
+
+                foreach (var leader in view.m_Leaders)
+                {
+                    UpdateLeaderInfoUIState((ArmyLeaderInfoPCView)leader, isInteractable, readyPlayersCount, totalPlayersCount);
+                }
+
+                _logger.LogInformation("Crusade army info ui has been updated. IsInteractable={IsInteractable}, ReadyPlayers={ReadyPlayers}, TotalPlayers={TotalPlayers}", isInteractable, readyPlayersCount, totalPlayersCount);
+            });
+        }
+
+        public void SetCrusadeArmyInfoMergeName(NetworkGlobalMapArmy army)
+        {
+            _mainThreadAccessor.Post(() =>
+            {
+                var view = _uiAccessor.GlobalMapPCView?.m_ArmyInfoPCView?.m_MergeArmyCartView;
+                if (view?.ViewModel == null)
+                {
+                    _logger.LogWarning("Unable to change crusade army merge name due to missing view");
+                    return;
+                }
+
+                view.ViewModel.SetArmyName(army.Name);
+                _logger.LogInformation("Crusade army info merge name has been set. Name={Name}", army.Name);
+            });
+        }
+
+        public void SetCrusadeArmyInfoMainName(NetworkGlobalMapArmy army)
+        {
+            _mainThreadAccessor.Post(() =>
+            {
+                var view = _uiAccessor.GlobalMapPCView?.m_ArmyInfoPCView?.m_MainArmyCartView;
+                if (view?.ViewModel == null)
+                {
+                    _logger.LogWarning("Unable to change crusade army main name due to missing view");
+                    return;
+                }
+
+                view.ViewModel.SetArmyName(army.Name);
+                _logger.LogInformation("Crusade army info main name has been set. Name={Name}", army.Name);
             });
         }
 
@@ -1004,6 +1115,24 @@ namespace WOTRMultiplayer.Services.GameInteraction
 
             view.m_EmptyButton.Interactable = isInteractable;
             _uiSyncCountersService.UpdateButtonTextCounter(view.m_EmptyButtonText, readyPlayersCount, totalPlayersCount);
+        }
+
+        private void UpdateArmyCartView(ArmyInfoArmyCartView armyInfoArmyCartView, bool isInteractable, int readyPlayersCount, int totalPlayersCount)
+        {
+            if (armyInfoArmyCartView?.ViewModel == null)
+            {
+                return;
+            }
+
+            var view = (ArmyInfoArmyCartPCView)armyInfoArmyCartView;
+            if (armyInfoArmyCartView?.ViewModel != null)
+            {
+                view.m_CloseButton.Interactable = isInteractable;
+                view.m_DismissButton.Interactable = isInteractable;
+                view.m_Header.interactable = isInteractable;
+
+                UpdateLeaderInfoUIState((ArmyLeaderInfoPCView)view.m_LeaderInfoView, isInteractable, readyPlayersCount, totalPlayersCount);
+            }
         }
 
         private (ArmySquadsPCView view, ArmyInfoSquadVM squadVM)? GetArmyInfoSquadVM(ArmySquadsPCView armySquadsView, NetworkGlobalMapArmySquadSlot mapArmySquadSlot)

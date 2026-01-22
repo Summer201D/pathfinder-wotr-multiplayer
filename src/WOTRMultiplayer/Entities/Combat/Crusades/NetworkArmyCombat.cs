@@ -5,6 +5,14 @@ namespace WOTRMultiplayer.Entities.Combat.Crusades
 {
     public class NetworkArmyCombat
     {
+        /// <summary>
+        /// Determined by the game. It's mostly based on combat area coordinates
+        /// </summary>
+        public int AreaSeed { get; set; }
+
+        /// <summary>
+        /// Random int created on combat initialization
+        /// </summary>
         public int Seed { get; set; }
 
         public bool IsInitialized { get; set; }

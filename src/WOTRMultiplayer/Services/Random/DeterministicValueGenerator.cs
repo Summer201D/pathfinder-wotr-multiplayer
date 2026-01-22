@@ -38,6 +38,13 @@ namespace WOTRMultiplayer.Services.Random
             return guid;
         }
 
+        public System.Random GetRandom(SeedLifetime seedLifetime, string seed)
+        {
+            var actualSeed = _hashService.Murmur3(seed);
+            var generator = GetSeed(seedLifetime, actualSeed);
+            return generator.Random;
+        }
+
         public int Range(SeedLifetime seedLifetime, int seed, int minInclusive, int maxExclusive)
         {
             var generator = GetSeed(seedLifetime, seed);

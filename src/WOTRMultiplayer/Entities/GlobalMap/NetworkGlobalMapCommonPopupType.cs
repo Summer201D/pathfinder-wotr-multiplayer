@@ -4,6 +4,7 @@
     {
         Ingredients,
         Flee,
-        Fatigue
+        Fatigue,
+        ClearLeader,
     }
 }

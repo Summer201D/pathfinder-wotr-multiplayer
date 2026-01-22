@@ -155,5 +155,13 @@ namespace WOTRMultiplayer.Abstractions
         void OnGlobalMapCrusadeArmyInfoCreateArmy();
 
         void OnGlobalMapCrusadeArmyInfoMainClosed();
+
+        void OnGlobalMapCrusadeArmyInfoMainNameChanged(NetworkGlobalMapArmy globalMapArmy);
+
+        void OnGlobalMapCrusadeArmyInfoMergeNameChanged(NetworkGlobalMapArmy globalMapArmy);
+
+        void OnGlobalMapCrusadeArmySetLeaderClear();
+
+        void OnGlobalMapCrusadeArmySetLeaderRecruit();
     }
 }
