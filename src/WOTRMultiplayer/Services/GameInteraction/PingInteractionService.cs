@@ -23,6 +23,7 @@ using WOTRMultiplayer.Entities;
 using WOTRMultiplayer.Entities.GlobalMap;
 using WOTRMultiplayer.Entities.MapObjects;
 using WOTRMultiplayer.Entities.Ping;
+using WOTRMultiplayer.Extensions;
 using WOTRMultiplayer.UI;
 using WOTRMultiplayer.UnityBehaviours.Ping;
 
@@ -81,7 +82,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
                 }
             }
 
-            var point = new NetworkVector3(worldPosition.x, worldPosition.y, worldPosition.z);
+            var point = worldPosition.ToNetworkVector3();
             var unitId = gameObject?.GetComponent<UnitEntityView>()?.Data?.UniqueId;
             var mapObjectData = gameObject?.GetComponent<MapObjectView>()?.Data;
             var ping = new NetworkPing
@@ -92,8 +93,8 @@ namespace WOTRMultiplayer.Services.GameInteraction
                     : new NetworkMapObject
                     {
                         Id = mapObjectData.UniqueId,
-                        Position = new NetworkVector3(mapObjectData.Position.x, mapObjectData.Position.y, mapObjectData.Position.z)
-                    },
+                        Position = mapObjectData.Position.ToNetworkVector3()
+                    }
             };
 
             if (ping.MapObject != null)
@@ -119,7 +120,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
                 switch (ping.Type)
                 {
                     case NetworkPingType.WorldPosition:
-                        var position = new Vector3(ping.WorldPosition.X, ping.WorldPosition.Y, ping.WorldPosition.Z);
+                        var position = ping.WorldPosition.ToUnityVector3();
                         CreateWorldPositionPing(player, position);
                         break;
                     case NetworkPingType.Unit:

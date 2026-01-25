@@ -13,6 +13,7 @@ using Pathfinding;
 using WOTRMultiplayer.Entities;
 using WOTRMultiplayer.Entities.Combat;
 using WOTRMultiplayer.Entities.Combat.Crusades;
+using WOTRMultiplayer.Extensions;
 
 namespace WOTRMultiplayer.HarmonyPatches.Combat.Crusades
 {
@@ -106,8 +107,10 @@ namespace WOTRMultiplayer.HarmonyPatches.Combat.Crusades
                 SpellbookId = command.Ability.Spellbook?.Blueprint.Name.Key,
                 CasterId = unit.UniqueId,
                 VectorPath = GetPath(command.ForcedPath),
-                TargetId = command.Target?.Unit?.UniqueId,
-                TargetPoint = command.Target?.Point == null ? null : new NetworkVector3(command.Target.Point.x, command.Target.Point.y, command.Target.Point.z),
+                Target = new NetworkTargetWrapper(
+                    command.Target.Point.ToNetworkVector3(),
+                    command.Target.Orientation,
+                    command.Target.Unit?.UniqueId),
                 ConvertedFromId = command.Ability.ConvertedFrom?.UniqueId
             };
 
@@ -139,7 +142,7 @@ namespace WOTRMultiplayer.HarmonyPatches.Combat.Crusades
 
         private static List<NetworkVector3> GetPath(Path commandPath)
         {
-            var path = commandPath?.vectorPath.Select(v => new NetworkVector3(v.x, v.y, v.z)).ToList() ?? [];
+            var path = commandPath?.vectorPath.Select(v => v.ToNetworkVector3()).ToList() ?? [];
             return path;
         }
     }

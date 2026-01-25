@@ -10,11 +10,11 @@ using Kingmaker.UnitLogic;
 using Kingmaker.UnitLogic.Abilities;
 using Kingmaker.View.MapObjects;
 using Microsoft.Extensions.Logging;
-using UnityEngine;
 using WOTRMultiplayer.Abstractions.GameInteraction;
 using WOTRMultiplayer.Entities;
 using WOTRMultiplayer.Entities.Combat;
 using WOTRMultiplayer.Entities.GlobalMap;
+using WOTRMultiplayer.Extensions;
 
 namespace WOTRMultiplayer.Services.GameInteraction
 {
@@ -44,7 +44,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
 
         public List<MapObjectEntityData> GetNeareastLootableMapObjects(NetworkVector3 position)
         {
-            var targetPoint = new Vector3(position.X, position.Y, position.Z);
+            var targetPoint = position.ToUnityVector3();
             var orderedContainers = Game.Instance.State.MapObjects.All
                 .Where(o => o.Interactions.Any(i => i is InteractionLootPart))
                 .OrderBy(o => (o.Position - targetPoint).magnitude)

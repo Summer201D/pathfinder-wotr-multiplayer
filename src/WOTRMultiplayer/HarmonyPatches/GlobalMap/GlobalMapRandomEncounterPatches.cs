@@ -2,8 +2,8 @@
 using Kingmaker.Assets.Controllers.GlobalMap;
 using Kingmaker.UI.MVVM._PCView.GlobalMap.Message;
 using Kingmaker.UI.MVVM._VM.GlobalMap.Message;
-using WOTRMultiplayer.Entities;
 using WOTRMultiplayer.Entities.GlobalMap;
+using WOTRMultiplayer.Extensions;
 
 namespace WOTRMultiplayer.HarmonyPatches.GlobalMap
 {
@@ -79,7 +79,7 @@ namespace WOTRMultiplayer.HarmonyPatches.GlobalMap
             {
                 AvoidanceResult = encounter.AvoidanceCheckResult.ToString(),
                 BlueprintId = encounter.Blueprint.AssetGuid.ToString(),
-                Position = encounter.Position == null ? null : new NetworkVector3(encounter.Position.Value.x, encounter.Position.Value.y, encounter.Position.Value.z),
+                Position = encounter.Position?.ToNetworkVector3(),
                 Seed = encounter.RandomCombat.Seed,
                 IsTrader = encounter.IsTraderRE,
             };

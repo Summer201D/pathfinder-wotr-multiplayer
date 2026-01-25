@@ -208,8 +208,8 @@ namespace WOTRMultiplayer.Services
                 return;
             }
 
-            Logger.LogInformation("Sending ability use. CasterId={CasterId}, TargetId={TargetId}, TargetPoint={TargetPoint}, AbilityId={AbilityId}, SpellbookId={SpellbookId}, VectorPathCount={VectorPathCount}",
-              ability.CasterId, ability.TargetId, ability.TargetPoint, ability.Id, ability.SpellbookId, ability.VectorPath?.Count);
+            Logger.LogInformation("Sending ability use. CasterId={CasterId}, TargetUnitId={TargetUnitId}, TargetPoint={TargetPoint}, AbilityId={AbilityId}, SpellbookId={SpellbookId}, VectorPathCount={VectorPathCount}",
+              ability.CasterId, ability.Target.UnitId, ability.Target.Point, ability.Id, ability.SpellbookId, ability.VectorPath?.Count);
 
             var message = new NotifyAbilityUsed
             {
@@ -371,7 +371,7 @@ namespace WOTRMultiplayer.Services
             {
                 UseItem = Mapper.Map<Networking.Messages.Contracts.NetworkUseInventoryItem>(useInventoryItem)
             };
-            Logger.LogInformation("Sending {MessageType}. UserUnitId={UserUnitId}, TargetUnitId={TargetUnitId}, ItemId={ItemId}, ItemName={ItemName}", nameof(NetworkUseInventoryItem), message.UseItem.UserUnitId, message.UseItem.Target?.UnitUniqueId, message.UseItem.Item.UniqueId, message.UseItem.Item.Name);
+            Logger.LogInformation("Sending {MessageType}. UserUnitId={UserUnitId}, TargetUnitId={TargetUnitId}, ItemId={ItemId}, ItemName={ItemName}", nameof(NetworkUseInventoryItem), message.UseItem.UserUnitId, message.UseItem.Target?.UnitId, message.UseItem.Item.UniqueId, message.UseItem.Item.Name);
 
             Send(message);
         }
@@ -3768,7 +3768,7 @@ namespace WOTRMultiplayer.Services
 
         private void OnNotifyInventoryItemUsed(long playerId, NotifyInventoryItemUsed inventoryItemUsed)
         {
-            Logger.LogInformation("Received {MessageType}. UserUnitId={UserUnitId}, TargetUnitId={TargetUnitId}, ItemId={ItemId}, ItemName={ItemName}", nameof(NetworkUseInventoryItem), inventoryItemUsed.UseItem.UserUnitId, inventoryItemUsed.UseItem.Target?.UnitUniqueId, inventoryItemUsed.UseItem.Item.UniqueId, inventoryItemUsed.UseItem.Item.Name);
+            Logger.LogInformation("Received {MessageType}. UserUnitId={UserUnitId}, TargetUnitId={TargetUnitId}, ItemId={ItemId}, ItemName={ItemName}", nameof(NetworkUseInventoryItem), inventoryItemUsed.UseItem.UserUnitId, inventoryItemUsed.UseItem.Target?.UnitId, inventoryItemUsed.UseItem.Item.UniqueId, inventoryItemUsed.UseItem.Item.Name);
 
             var useItem = Mapper.Map<NetworkUseInventoryItem>(inventoryItemUsed.UseItem);
             GameInteraction.UseInventoryItem(useItem);

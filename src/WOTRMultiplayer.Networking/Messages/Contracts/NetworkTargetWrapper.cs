@@ -12,6 +12,6 @@ namespace WOTRMultiplayer.Networking.Messages.Contracts
         public float? Orientation { get; set; }
 
         [ProtoMember(3)]
-        public string UnitUniqueId { get; set; }
+        public string UnitId { get; set; }
     }
 }

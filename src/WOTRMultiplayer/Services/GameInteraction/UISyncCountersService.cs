@@ -30,6 +30,5 @@ namespace WOTRMultiplayer.Services.GameInteraction
 
             return baseText;
         }
-
     }
 }

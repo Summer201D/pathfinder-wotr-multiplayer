@@ -56,9 +56,6 @@ namespace WOTRMultiplayer.Config.Mapping
             CreateMap<NetworkAbility, Networking.Messages.Contracts.NetworkAbility>()
                 .ReverseMap();
 
-            CreateMap<NetworkCombatAction, Networking.Messages.Contracts.NetworkCombatAction>()
-                .ReverseMap();
-
             CreateMap<NetworkDamageRollValue, Networking.Messages.Contracts.NetworkDamageRollValue>()
                 .ReverseMap();
 

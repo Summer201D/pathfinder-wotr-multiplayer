@@ -26,6 +26,7 @@ using UnityEngine;
 using WOTRMultiplayer.Abstractions.GameInteraction;
 using WOTRMultiplayer.Abstractions.Unity;
 using WOTRMultiplayer.Entities.GlobalMap;
+using WOTRMultiplayer.Extensions;
 
 namespace WOTRMultiplayer.Services.GameInteraction
 {
@@ -467,7 +468,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
                         return;
                     }
 
-                    var position = new Vector3(globalMapEncounter.Position.X, globalMapEncounter.Position.Y, globalMapEncounter.Position.Z);
+                    var position = globalMapEncounter.Position.ToUnityVector3();
                     var combatRandomEncounterData = new CombatRandomEncounterData(encounter, position)
                     {
                         IsTraderRE = globalMapEncounter.IsTrader,

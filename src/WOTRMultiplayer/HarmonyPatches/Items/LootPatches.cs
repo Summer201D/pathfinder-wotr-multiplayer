@@ -12,9 +12,9 @@ using Kingmaker.UI.MVVM._VM.Loot;
 using Kingmaker.UI.MVVM._VM.Slots;
 using Kingmaker.View.MapObjects;
 using Microsoft.Extensions.Logging;
-using WOTRMultiplayer.Entities;
 using WOTRMultiplayer.Entities.Equipment;
 using WOTRMultiplayer.Entities.Items;
+using WOTRMultiplayer.Extensions;
 
 namespace WOTRMultiplayer.HarmonyPatches.Items
 {
@@ -202,7 +202,7 @@ namespace WOTRMultiplayer.HarmonyPatches.Items
             var entity = new NetworkLootableEntity
             {
                 Id = owner.UniqueId,
-                Position = new NetworkVector3(owner.Position.x, owner.Position.y, owner.Position.z),
+                Position = owner.Position.ToNetworkVector3(),
                 Type = GetNetworkLootableEntityType(owner, collection)
             };
 

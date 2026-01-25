@@ -12,6 +12,7 @@ using Microsoft.Extensions.Logging;
 using WOTRMultiplayer.Entities;
 using WOTRMultiplayer.Entities.Equipment;
 using WOTRMultiplayer.Entities.Items;
+using WOTRMultiplayer.Extensions;
 using static Kingmaker.Blueprints.Items.Components.ItemPolymorph;
 
 namespace WOTRMultiplayer.HarmonyPatches.Items
@@ -101,7 +102,7 @@ namespace WOTRMultiplayer.HarmonyPatches.Items
             {
                 UserUnitId = user.UniqueId,
                 SlotPosition = Main.Multiplayer.GetEquipmentSlotPosition(item.HoldingSlot),
-                Target = new NetworkTargetWrapper(new NetworkVector3(target.m_Point.x, target.m_Point.y, target.m_Point.z), target.m_Orientation, target.Unit?.UniqueId),
+                Target = new NetworkTargetWrapper(target.Point.ToNetworkVector3(), target.Orientation, target.Unit?.UniqueId),
                 Item = NetworkItem.FromItemEntity(item)
             };
 

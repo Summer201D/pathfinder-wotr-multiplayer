@@ -55,10 +55,8 @@ using Microsoft.Extensions.Logging;
 using Owlcat.Runtime.UI.Controls.Button;
 using TMPro;
 using UniRx;
-using UnityEngine;
 using UnityModManagerNet;
 using WOTRMultiplayer.Abstractions.GameInteraction;
-using WOTRMultiplayer.Abstractions.UI;
 using WOTRMultiplayer.Abstractions.Unity;
 using WOTRMultiplayer.Entities;
 using WOTRMultiplayer.Entities.ActionBar;
@@ -75,6 +73,7 @@ using WOTRMultiplayer.Entities.Rest;
 using WOTRMultiplayer.Entities.Settings;
 using WOTRMultiplayer.Entities.Spells;
 using WOTRMultiplayer.Entities.Vendor;
+using WOTRMultiplayer.Extensions;
 using WOTRMultiplayer.Services.GameInteraction.Contexts;
 using WOTRMultiplayer.Services.Settings;
 
@@ -91,7 +90,6 @@ namespace WOTRMultiplayer.Services.GameInteraction
         private readonly IPlayerNotificationService _playerNotificationService;
         private readonly IUISyncCountersService _uiSyncCountersService;
         private readonly IGameStateLookupService _gameStateLookupService;
-        private readonly IResourceProvider _resourceProvider;
 
         public RemoteExecutionContext RemoteContext => _networkExecutionContext.Value;
 
@@ -104,8 +102,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
             IEquipmentDefinitions equipmentDefinitions,
             IPlayerNotificationService playerNotificationService,
             IUISyncCountersService uiSyncCountersService,
-            IGameStateLookupService gameStateLookupService,
-            IResourceProvider resourceProvider)
+            IGameStateLookupService gameStateLookupService)
         {
             _logger = logger;
             _uiAccessor = uiAccessor;
@@ -114,7 +111,6 @@ namespace WOTRMultiplayer.Services.GameInteraction
             _playerNotificationService = playerNotificationService;
             _uiSyncCountersService = uiSyncCountersService;
             _gameStateLookupService = gameStateLookupService;
-            _resourceProvider = resourceProvider;
         }
 
         public NetworkCampingState GetCampigState()
@@ -248,7 +244,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
 
             _mainThreadAccessor.Post(() =>
             {
-                var unityDestination = new Vector3(networkCharacterMove.Destination.X, networkCharacterMove.Destination.Y, networkCharacterMove.Destination.Z);
+                var unityDestination = networkCharacterMove.Destination.ToUnityVector3();
                 var command = new UnitMoveTo(unityDestination, 0.3f)
                 {
                     MovementDelay = networkCharacterMove.Delay,
@@ -564,18 +560,16 @@ namespace WOTRMultiplayer.Services.GameInteraction
                     return;
                 }
 
-                var target = _gameStateLookupService.GetUnitEntity(networkAbility.TargetId);
-                var point = new Vector3(networkAbility.TargetPoint.X, networkAbility.TargetPoint.Y, networkAbility.TargetPoint.Z);
-                var targetWrapper = new TargetWrapper(point, null, target);
+                var target = CreateTargetWrapper(networkAbility.Target);
                 Enum.TryParse<UnitCommand.CommandType>(networkAbility.CommandType, true, out var commandType);
 
                 _mainThreadAccessor.Post(() =>
                 {
-                    var command = UnitUseAbility.CreateCastCommand(abilityData, targetWrapper, commandType);
+                    var command = UnitUseAbility.CreateCastCommand(abilityData, target, commandType);
                     command.CreatedByPlayer = true;
                     if (networkAbility.VectorPath != null)
                     {
-                        var movementPath = networkAbility.VectorPath.Select(v => new Vector3(v.X, v.Y, v.Z)).ToList();
+                        var movementPath = networkAbility.VectorPath.Select(v => v.ToUnityVector3()).ToList();
                         command.ForcedPath = new ForcedPath(movementPath);
                         if (PathVisualizer.Instance != null)
                         {
@@ -591,7 +585,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
             catch (Exception ex)
             {
 
-                _logger.LogError(ex, "Unable to initiate UseAbility.  CasterId={CasterId}, TargetId={TargetId}, AbilityId={AbilityId}", networkAbility.CasterId, networkAbility.TargetId, networkAbility.Id);
+                _logger.LogError(ex, "Unable to initiate UseAbility.  CasterId={CasterId}, TargetUnitId={TargetUnitId}, AbilityId={AbilityId}", networkAbility.CasterId, networkAbility.Target.UnitId, networkAbility.Id);
                 throw;
             }
         }
@@ -1155,7 +1149,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
         {
             _mainThreadAccessor.Post(() =>
             {
-                var campPosition = new Vector3(position.X, position.Y, position.Z);
+                var campPosition = position.ToUnityVector3();
                 _logger.LogInformation("Spawning camp place. Position={Position}", position);
                 RestHelper.SpawnCampPlace(campPosition);
             });
@@ -1905,11 +1899,10 @@ namespace WOTRMultiplayer.Services.GameInteraction
                         }
                     }
 
-                    var movementPath = attack.VectorPath.Select(v => new Vector3(v.X, v.Y, v.Z)).ToList();
+                    var movementPath = attack.VectorPath.Select(v => v.ToUnityVector3()).ToList();
                     command.ForcedPath = new ForcedPath(movementPath);
                     command.CreatedByPlayer = true;
                     var cd = executor.CombatState.Cooldown;
-                    var combatState = Game.Instance.TurnBasedCombatController.CurrentTurn?.GetActionsStates(Game.Instance.TurnBasedCombatController.CurrentTurn.Rider);
                     _logger.LogInformation("Starting unit attack command. ExecutorUnitId={ExecutorUnitId}, TargetUnitId={TargetUnitId}, ForceFullAttack={ForceFullAttack}, SelectedUnitId={SelectedUnitId}, StandardCD={StandardAction}, MoveCD={MoveAction}, SwiftCD={SwiftAction}, InitiativeCD={Initiative}",
                         attack.ExecutorUnitId, attack.TargetUnitId, attack.IsFullAttack, Game.Instance.TurnBasedCombatController.CurrentTurn?.SelectedUnit?.UniqueId, cd.StandardAction, cd.MoveAction, cd.SwiftAction, cd.Initiative);
                     executor.Commands.Run(command);
@@ -2302,8 +2295,8 @@ namespace WOTRMultiplayer.Services.GameInteraction
                 return null;
             }
 
-            var point = new Vector3(networkTargetWrapper.Point.X, networkTargetWrapper.Point.Y, networkTargetWrapper.Point.Z);
-            var unit = _gameStateLookupService.GetUnitEntity(networkTargetWrapper.UnitUniqueId);
+            var point = networkTargetWrapper.Point.ToUnityVector3();
+            var unit = _gameStateLookupService.GetUnitEntity(networkTargetWrapper.UnitId);
             var wrapper = new TargetWrapper(point, networkTargetWrapper.Orientation, unit);
             return wrapper;
         }
@@ -2713,7 +2706,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
             var targetUnit = _gameStateLookupService.GetUnitEntity(click.TargetUnitId);
             var selectedUnits = click.SelectedUnits.Select(_gameStateLookupService.GetUnitEntity).ToList();
             var selectedUnit = selectedUnits.FirstOrDefault();
-            var worldPosition = new Vector3(click.WorldPosition.X, click.WorldPosition.Y, click.WorldPosition.Z);
+            var worldPosition = click.WorldPosition.ToUnityVector3();
 
             _mainThreadAccessor.Post(() =>
             {
@@ -2734,7 +2727,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
 
                     if (click.VectorPath != null && click.VectorPath.Count > 0 && PathVisualizer.Instance != null)
                     {
-                        var movementPath = click.VectorPath.Select(v => new Vector3(v.X, v.Y, v.Z)).ToList();
+                        var movementPath = click.VectorPath.Select(v => v.ToUnityVector3()).ToList();
                         PathVisualizer.Instance.m_CurrentPath = new ForcedPath(movementPath);
                         PathVisualizer.Instance.m_CurrentPath.Claim(PathVisualizer.Instance);
                     }

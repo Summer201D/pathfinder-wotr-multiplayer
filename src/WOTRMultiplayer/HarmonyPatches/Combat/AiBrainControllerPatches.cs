@@ -6,9 +6,8 @@ using Kingmaker.AI;
 using Kingmaker.EntitySystem.Entities;
 using Kingmaker.Pathfinding;
 using Microsoft.Extensions.Logging;
-using UnityEngine;
-using WOTRMultiplayer.Entities;
 using WOTRMultiplayer.Entities.Combat;
+using WOTRMultiplayer.Extensions;
 
 namespace WOTRMultiplayer.HarmonyPatches.Combat
 {
@@ -24,7 +23,7 @@ namespace WOTRMultiplayer.HarmonyPatches.Combat
                 return;
             }
 
-            var calculatedBestPath = context.BestPath?.vectorPath.Select(v => new NetworkVector3(v.x, v.y, v.z)) ?? [];
+            var calculatedBestPath = context.BestPath?.vectorPath.Select(v => v.ToNetworkVector3()) ?? [];
             var action = new NetworkAIAction
             {
                 UnitId = unit.UniqueId,
@@ -61,7 +60,7 @@ namespace WOTRMultiplayer.HarmonyPatches.Combat
             {
                 context.BestEnableFiveFootStep = possibleOverride.BestEnableFiveFootStep;
 
-                var bestPathOverride = possibleOverride.BestPath.Select(v => new Vector3(v.X, v.Y, v.Z)).ToList();
+                var bestPathOverride = possibleOverride.BestPath.Select(v => v.ToUnityVector3()).ToList();
                 context.BestPath = new ForcedPath(bestPathOverride);
             }
         }

@@ -2,8 +2,8 @@
 using HarmonyLib;
 using Kingmaker;
 using Kingmaker.UI.MVVM._VM.Lockpick;
-using WOTRMultiplayer.Entities;
 using WOTRMultiplayer.Entities.MapObjects;
+using WOTRMultiplayer.Extensions;
 
 namespace WOTRMultiplayer.HarmonyPatches.MapObjects
 {
@@ -24,7 +24,7 @@ namespace WOTRMultiplayer.HarmonyPatches.MapObjects
                 MapObject = new NetworkMapObject
                 {
                     Id = __instance.LockpickMapObject.UniqueId,
-                    Position = new NetworkVector3(__instance.LockpickMapObject.Data.Position.x, __instance.LockpickMapObject.Data.Position.y, __instance.LockpickMapObject.Data.Position.z),
+                    Position = __instance.LockpickMapObject.Data.Position.ToNetworkVector3(),
                 },
                 LockpickType = type,
                 Units = [.. Game.Instance.SelectionCharacter.SelectedUnits.Select(x => x.UniqueId)]

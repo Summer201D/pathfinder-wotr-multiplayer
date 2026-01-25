@@ -12,6 +12,7 @@ using Microsoft.Extensions.Logging;
 using UnityEngine;
 using WOTRMultiplayer.Entities;
 using WOTRMultiplayer.Entities.Movement;
+using WOTRMultiplayer.Extensions;
 
 namespace WOTRMultiplayer.HarmonyPatches.Clicks
 {
@@ -49,7 +50,7 @@ namespace WOTRMultiplayer.HarmonyPatches.Clicks
             {
                 UnitId = unit.UniqueId,
                 Delay = settings.Delay,
-                Destination = new NetworkVector3(settings.Destination.x, settings.Destination.y, settings.Destination.z),
+                Destination = settings.Destination.ToNetworkVector3(),
                 Orientation = settings.Orientation
             };
             Main.Multiplayer.MoveNonCombatCharacter(move);
@@ -137,9 +138,9 @@ namespace WOTRMultiplayer.HarmonyPatches.Clicks
                 IsLootBagMapObject = mapObject?.Data is DroppedLoot.EntityData,
                 IsTMBClick = isTMBClick,
                 Button = button,
-                WorldPosition = new NetworkVector3(worldPosition.x, worldPosition.y, worldPosition.z),
+                WorldPosition = worldPosition.ToNetworkVector3(),
                 MuteEvents = muteEvents,
-                VectorPath = [.. path?.vectorPath?.Select(v => new NetworkVector3 { X = v.x, Y = v.y, Z = v.z }) ?? []],
+                VectorPath = [.. path?.vectorPath?.Select(v => v.ToNetworkVector3()) ?? []],
                 MovementLimit = Game.Instance.TurnBasedCombatController.CurrentTurn?.CurrentMovementLimit.ToString()
             };
         }

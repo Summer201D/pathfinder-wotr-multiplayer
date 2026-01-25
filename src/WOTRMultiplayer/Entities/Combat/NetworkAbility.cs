@@ -10,9 +10,7 @@ namespace WOTRMultiplayer.Entities.Combat
 
         public string CasterId { get; set; }
 
-        public string TargetId { get; set; }
-
-        public NetworkVector3 TargetPoint { get; set; }
+        public NetworkTargetWrapper Target { get; set; }
 
         public List<NetworkVector3> VectorPath { get; set; }
 

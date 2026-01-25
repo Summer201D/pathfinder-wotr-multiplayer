@@ -6,7 +6,7 @@ using Kingmaker.Controllers.Clicks.Handlers;
 using Kingmaker.Controllers.Rest;
 using Microsoft.Extensions.Logging;
 using UnityEngine;
-using WOTRMultiplayer.Entities;
+using WOTRMultiplayer.Extensions;
 
 namespace WOTRMultiplayer.HarmonyPatches.Rest
 {
@@ -46,7 +46,7 @@ namespace WOTRMultiplayer.HarmonyPatches.Rest
 
         public static void SpawnCampPlace(Vector3 worldPosition)
         {
-            var position = new NetworkVector3(worldPosition.x, worldPosition.y, worldPosition.z);
+            var position = worldPosition.ToNetworkVector3();
             var canContinue = Main.Multiplayer.OnSpawnCampPlace(position);
             if (canContinue)
             {

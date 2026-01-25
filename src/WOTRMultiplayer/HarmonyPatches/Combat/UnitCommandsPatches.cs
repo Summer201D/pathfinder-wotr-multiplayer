@@ -9,6 +9,7 @@ using Kingmaker.UnitLogic.Commands.Base;
 using Microsoft.Extensions.Logging;
 using WOTRMultiplayer.Entities;
 using WOTRMultiplayer.Entities.Combat;
+using WOTRMultiplayer.Extensions;
 using static Kingmaker.UnitLogic.Commands.Base.UnitCommand;
 
 namespace WOTRMultiplayer.HarmonyPatches.Combat
@@ -123,15 +124,17 @@ namespace WOTRMultiplayer.HarmonyPatches.Combat
         private static void OnAbilityUse(UnitUseAbility command)
         {
             var path = PathVisualizer.Instance?.CurrentPathForUnit(command.Executor.View);
-            var networkPath = path?.vectorPath.Select(v => new NetworkVector3(v.x, v.y, v.z)).ToList();
+            var networkPath = path?.vectorPath.Select(v => v.ToNetworkVector3()).ToList();
             var networkAbility = new NetworkAbility
             {
                 Id = command.Ability.UniqueId,
                 Name = command.Ability.NameForAcronym,
                 SpellbookId = command.Ability.Spellbook?.Blueprint.Name.Key,
                 CasterId = command.Executor.UniqueId,
-                TargetId = command.Target?.Unit?.UniqueId,
-                TargetPoint = command.Target?.Point == null ? null : new NetworkVector3(command.Target.Point.x, command.Target.Point.y, command.Target.Point.z),
+                Target = new NetworkTargetWrapper(
+                    command.Target.Point.ToNetworkVector3(),
+                    command.Target.Orientation,
+                    command.Target.Unit?.UniqueId),
                 VectorPath = networkPath,
                 CommandType = command.Type.ToString(),
                 ConvertedFromId = command.Ability.ConvertedFrom?.UniqueId
@@ -143,7 +146,7 @@ namespace WOTRMultiplayer.HarmonyPatches.Combat
         private static void OnUnitAttack(UnitAttack command, bool forceMount)
         {
             var path = PathVisualizer.Instance?.CurrentPathForUnit(command.Executor.View);
-            var networkPath = path?.vectorPath.Select(v => new NetworkVector3(v.x, v.y, v.z)).ToList();
+            var networkPath = path?.vectorPath.Select(v => v.ToNetworkVector3()).ToList();
             var executor = forceMount ? command.Executor.RiderPart.SaddledUnit.UniqueId : command.Executor.UniqueId;
             var networkAbility = new NetworkUnitAttack
             {

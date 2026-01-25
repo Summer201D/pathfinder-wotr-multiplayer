@@ -10,8 +10,8 @@ using Kingmaker.UI._ConsoleUI.Overtips;
 using Kingmaker.UI.Common;
 using Kingmaker.UI.Selection;
 using Microsoft.Extensions.Logging;
-using WOTRMultiplayer.Entities;
 using WOTRMultiplayer.Entities.MapObjects;
+using WOTRMultiplayer.Extensions;
 
 namespace WOTRMultiplayer.HarmonyPatches.MapObjects
 {
@@ -114,7 +114,7 @@ namespace WOTRMultiplayer.HarmonyPatches.MapObjects
             var mapObject = new NetworkMapObject
             {
                 Id = view.MapObjectView.UniqueId,
-                Position = new NetworkVector3(view.MapObjectView.Data.Position.x, view.MapObjectView.Data.Position.y, view.MapObjectView.Data.Position.z)
+                Position = view.MapObjectView.Data.Position.ToNetworkVector3()
             };
 
             return mapObject;

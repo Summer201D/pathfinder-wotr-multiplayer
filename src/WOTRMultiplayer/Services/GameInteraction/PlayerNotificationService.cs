@@ -64,7 +64,6 @@ namespace WOTRMultiplayer.Services.GameInteraction
 
                 Game.Instance.GameLogController.AddReadyEvent(logEvent);
             });
-
         }
 
         private string GetLocalizedText(string messageKey, params object[] args)

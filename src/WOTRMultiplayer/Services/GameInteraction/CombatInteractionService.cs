@@ -16,13 +16,13 @@ using Kingmaker.UnitLogic.Commands;
 using Kingmaker.Utility;
 using Microsoft.Extensions.Logging;
 using UniRx;
-using UnityEngine;
 using WOTRMultiplayer.Abstractions.GameInteraction;
 using WOTRMultiplayer.Abstractions.Unity;
 using WOTRMultiplayer.Entities;
 using WOTRMultiplayer.Entities.Combat;
 using WOTRMultiplayer.Entities.Combat.Crusades;
 using WOTRMultiplayer.Entities.Units;
+using WOTRMultiplayer.Extensions;
 
 namespace WOTRMultiplayer.Services.GameInteraction
 {
@@ -274,8 +274,8 @@ namespace WOTRMultiplayer.Services.GameInteraction
                     return;
                 }
 
-                var target = _gameStateLookupService.GetUnitEntity(tacticalUnitUseAbilityCommand.Ability.TargetId);
-                var point = new Vector3(tacticalUnitUseAbilityCommand.Ability.TargetPoint.X, tacticalUnitUseAbilityCommand.Ability.TargetPoint.Y, tacticalUnitUseAbilityCommand.Ability.TargetPoint.Z);
+                var target = _gameStateLookupService.GetUnitEntity(tacticalUnitUseAbilityCommand.Ability.Target.UnitId);
+                var point = tacticalUnitUseAbilityCommand.Ability.Target.Point.ToUnityVector3(); ;
                 var targetWrapper = new TargetWrapper(point, null, target);
                 var useAbilityCommand = new TacticalCombatUnitUseAbility(ability, targetWrapper)
                 {
@@ -369,7 +369,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
                 return null;
             }
 
-            var vectorPath = path.Select(v => new Vector3(v.X, v.Y, v.Z)).ToList();
+            var vectorPath = path.Select(v => v.ToUnityVector3()).ToList();
             var forcedPath = new ForcedPath(vectorPath);
             return forcedPath;
         }
@@ -381,7 +381,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
             switch (Game.Instance.CurrentlyLoadedArea.name)
             {
                 case "Prologue_Caves_1":
-                    var anevia = Game.Instance.State.Units.FirstOrDefault(u => u.CharacterName == "Anevia");
+                    var anevia = Game.Instance.State.Units.FirstOrDefault(u => string.Equals(u.CharacterName, "Anevia", StringComparison.OrdinalIgnoreCase));
                     if (anevia != null)
                     {
                         // Anevia, constantly joins midfight
@@ -399,7 +399,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
                 var unit = new NetworkUnit
                 {
                     Id = combatUnit.UniqueId,
-                    Position = new NetworkVector3(combatUnit.Position.x, combatUnit.Position.y, combatUnit.Position.z),
+                    Position = combatUnit.Position.ToNetworkVector3(),
                     Orientation = combatUnit.Orientation,
                     TurnBasedInfo = GetUnitTurnBasedInfo(combatUnit),
                     CombatState = GetUnitCombatState(combatUnit),
@@ -467,7 +467,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
 
                 UpdateCombatUnitState(unitsToUpdate);
 
-                _logger.LogInformation("Finished updating combat state. RoundNumber={RoundNumber}, UnitsCount={UnitsCount}, IsFullUpdate={IsFullUpdate}", networkCombatState.RoundNumber, networkCombatState.Units.Count, requiresFullUpdate);
+                _logger.LogInformation("Combat state has been updated. RoundNumber={RoundNumber}, UnitsCount={UnitsCount}, IsFullUpdate={IsFullUpdate}", networkCombatState.RoundNumber, networkCombatState.Units.Count, requiresFullUpdate);
             }
             catch (Exception ex)
             {
@@ -545,7 +545,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
                 || unit.Position.y != networkUnit.Position.Y
                 || unit.Position.z != networkUnit.Position.Z)
             {
-                var newPosition = new Vector3(networkUnit.Position.X, networkUnit.Position.Y, networkUnit.Position.Z);
+                var newPosition = networkUnit.Position.ToUnityVector3();
                 _logger.LogInformation("Updating unit position. UnitId={UnitId}, PreviousPosition={PreviousPosition}, NewPosition={NewPosition}", unit.UniqueId, unit.Position.ToString("F4"), newPosition.ToString("F4"));
                 unit.Translocate(newPosition, unit.Orientation);
             }
