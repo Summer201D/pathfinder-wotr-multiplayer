@@ -1077,6 +1077,32 @@ namespace WOTRMultiplayer.Services
             Send(message);
         }
 
+        public void OnGlobalMapCrusadeArmyLeaderLevelingClosed()
+        {
+            ResetPlayersTracker(Game.PlayersInGlobalMapCrusadeArmyLeaderLeveling);
+            var message = new NotifyGlobalMapCrusadeArmyLeaderLevelingClosed();
+            Logger.LogInformation("Sending {MessageType}", nameof(NotifyGlobalMapCrusadeArmyLeaderLevelingClosed));
+            Send(message);
+        }
+
+        public void OnGlobalMapCrusadeArmyLeaderLevelingConfirmed()
+        {
+            ResetPlayersTracker(Game.PlayersInGlobalMapCrusadeArmyLeaderLeveling);
+            var message = new NotifyGlobalMapCrusadeArmyLeaderLevelingConfirmed();
+            Logger.LogInformation("Sending {MessageType}", nameof(NotifyGlobalMapCrusadeArmyLeaderLevelingConfirmed));
+            Send(message);
+        }
+
+        public void OnGlobalMapCrusadeArmyLeaderLevelingSkillSelected(string skillId)
+        {
+            var message = new NotifyGlobalMapCrusadeArmyLeaderLevelingSkillSelected
+            {
+                Id = skillId
+            };
+            Logger.LogInformation("Sending {MessageType}", nameof(NotifyGlobalMapCrusadeArmyLeaderLevelingSkillSelected));
+            Send(message);
+        }
+
         public void OnGlobalMapMagicSpellUsed(NetworkGlobalMapMagicSpell globalMagicSpell)
         {
             var message = new NotifyGlobalMapMagicSpellUsed

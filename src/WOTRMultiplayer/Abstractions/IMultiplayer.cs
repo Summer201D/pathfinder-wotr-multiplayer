@@ -457,5 +457,13 @@ namespace WOTRMultiplayer.Abstractions
         void OnGlobalMapRecruitmentBuyUnits(NetworkGlobalMapUnitRecruitmentOrder globalMapUnitRecruitmentOrder);
 
         void OnGlobalMapMagicSpellUsed(NetworkGlobalMapMagicSpell globalMagicSpell);
+
+        void OnGlobalMapCrusadeArmyLeaderLevelingShown();
+
+        void OnGlobalMapCrusadeArmyLeaderLevelingClosed();
+
+        void OnGlobalMapCrusadeArmyLeaderLevelingConfirmed();
+
+        void OnGlobalMapCrusadeArmyLeaderLevelingSkillSelected(string skillId);
     }
 }

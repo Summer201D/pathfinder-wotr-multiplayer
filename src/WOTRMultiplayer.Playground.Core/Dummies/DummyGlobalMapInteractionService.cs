@@ -245,5 +245,21 @@ namespace WOTRMultiplayer.Playground.Core.Dummies
         public void UseSpell(NetworkGlobalMapMagicSpell globalMapMagicSpell)
         {
         }
+
+        public void UpdateLeaderLevelingUI(bool isInteractable, int readyPlayersCount, int totalPlayersCount)
+        {
+        }
+
+        public void CloseLeaderLeveling()
+        {
+        }
+
+        public void ConfirmLeaderLeveling()
+        {
+        }
+
+        public void SelectLeaderLevelingSkill(string id)
+        {
+        }
     }
 }

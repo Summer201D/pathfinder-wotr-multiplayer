@@ -527,6 +527,9 @@ namespace WOTRMultiplayer.Services
                .On<NotifyGlobalMapCrusadeArmyDismissed>(OnNotifyGlobalMapCrusadeArmyDismissed)
                .On<NotifyGlobalMapCrusadeArmyRecruitCartClosed>(OnNotifyGlobalMapCrusadeArmyRecruitCartClosed)
                .On<NotifyGlobalMapMagicSpellUsed>(OnNotifyGlobalMapMagicSpellUsed)
+               .On<NotifyGlobalMapCrusadeArmyLeaderLevelingClosed>(OnNotifyGlobalMapCrusadeArmyLeaderLevelingClosed)
+               .On<NotifyGlobalMapCrusadeArmyLeaderLevelingConfirmed>(OnNotifyGlobalMapCrusadeArmyLeaderLevelingConfirmed)
+               .On<NotifyGlobalMapCrusadeArmyLeaderLevelingSkillSelected>(OnNotifyGlobalMapCrusadeArmyLeaderLevelingSkillSelected)
 
                // dialogs
                .On<NotifyDialogStarted>(OnNotifyDialogStarted)
@@ -560,6 +563,29 @@ namespace WOTRMultiplayer.Services
                // inventory
                .On<NotifyPolymorphicItemCreated>(OnNotifyPolymorphicItemCreated)
                ;
+        }
+
+        private void OnNotifyGlobalMapCrusadeArmyLeaderLevelingSkillSelected(long receivedFrom, NotifyGlobalMapCrusadeArmyLeaderLevelingSkillSelected message)
+        {
+            Logger.LogInformation("Received {MessageType}. SkillId={SkillId}", nameof(NotifyGlobalMapCrusadeArmyLeaderLevelingSkillSelected), message.Id);
+
+            GlobalMapInteraction.SelectLeaderLevelingSkill(message.Id);
+        }
+
+        private void OnNotifyGlobalMapCrusadeArmyLeaderLevelingConfirmed(long receivedFrom, NotifyGlobalMapCrusadeArmyLeaderLevelingConfirmed message)
+        {
+            Logger.LogInformation("Received {MessageType}", nameof(NotifyGlobalMapCrusadeArmyLeaderLevelingConfirmed));
+            ResetPlayersTracker(Game.PlayersInGlobalMapCrusadeArmyLeaderLeveling);
+
+            GlobalMapInteraction.ConfirmLeaderLeveling();
+        }
+
+        private void OnNotifyGlobalMapCrusadeArmyLeaderLevelingClosed(long receivedFrom, NotifyGlobalMapCrusadeArmyLeaderLevelingClosed message)
+        {
+            Logger.LogInformation("Received {MessageType}", nameof(NotifyGlobalMapCrusadeArmyLeaderLevelingClosed));
+            ResetPlayersTracker(Game.PlayersInGlobalMapCrusadeArmyLeaderLeveling);
+
+            GlobalMapInteraction.CloseLeaderLeveling();
         }
 
         private void OnNotifyGlobalMapMagicSpellUsed(long receivedFrom, NotifyGlobalMapMagicSpellUsed message)

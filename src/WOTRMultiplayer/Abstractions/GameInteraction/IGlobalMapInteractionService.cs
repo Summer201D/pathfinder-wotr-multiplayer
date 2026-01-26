@@ -123,5 +123,13 @@ namespace WOTRMultiplayer.Abstractions.GameInteraction
         void DismissCrusadeArmy(NetworkGlobalMapArmy globalMapArmy);
 
         void UseSpell(NetworkGlobalMapMagicSpell globalMapMagicSpell);
+
+        void UpdateLeaderLevelingUI(bool isInteractable, int readyPlayersCount, int totalPlayersCount);
+
+        void CloseLeaderLeveling();
+
+        void ConfirmLeaderLeveling();
+
+        void SelectLeaderLevelingSkill(string id);
     }
 }

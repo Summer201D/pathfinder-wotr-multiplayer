@@ -217,7 +217,11 @@
             NotifyGlobalMapResourcesBought,
             NotifyGlobalMapCrusadeArmyDismissed,
             NotifyGlobalMapCrusadeArmyRecruitCartClosed,
-            NotifyGlobalMapMagicSpellUsed
+            NotifyGlobalMapMagicSpellUsed,
+            NotifyGlobalMapCrusadeArmyLeaderLevelingShown,
+            NotifyGlobalMapCrusadeArmyLeaderLevelingClosed,
+            NotifyGlobalMapCrusadeArmyLeaderLevelingConfirmed,
+            NotifyGlobalMapCrusadeArmyLeaderLevelingSkillSelected
         }
 
         public enum Request

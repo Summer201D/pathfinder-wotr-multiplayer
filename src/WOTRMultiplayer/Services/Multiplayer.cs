@@ -3864,6 +3864,78 @@ namespace WOTRMultiplayer.Services
             }
         }
 
+        public void OnGlobalMapCrusadeArmyLeaderLevelingShown()
+        {
+            try
+            {
+                if (_multiplayerActorAccessor.Current == null)
+                {
+                    return;
+                }
+
+                _multiplayerActorAccessor.Current.OnGlobalMapCrusadeArmyLeaderLevelingShown();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while showing crusade army leader leveling screen");
+                throw;
+            }
+        }
+
+        public void OnGlobalMapCrusadeArmyLeaderLevelingClosed()
+        {
+            try
+            {
+                if (_multiplayerActorAccessor.Current == null || _multiplayerActorAccessor.Client.IsActive)
+                {
+                    return;
+                }
+
+                _multiplayerActorAccessor.Host.OnGlobalMapCrusadeArmyLeaderLevelingClosed();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while closing crusade army leader leveling screen");
+                throw;
+            }
+        }
+
+        public void OnGlobalMapCrusadeArmyLeaderLevelingConfirmed()
+        {
+            try
+            {
+                if (_multiplayerActorAccessor.Current == null || _multiplayerActorAccessor.Client.IsActive)
+                {
+                    return;
+                }
+
+                _multiplayerActorAccessor.Host.OnGlobalMapCrusadeArmyLeaderLevelingConfirmed();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while confirming crusade army leader leveling screen");
+                throw;
+            }
+        }
+
+        public void OnGlobalMapCrusadeArmyLeaderLevelingSkillSelected(string skillId)
+        {
+            try
+            {
+                if (_multiplayerActorAccessor.Current == null || _multiplayerActorAccessor.Client.IsActive)
+                {
+                    return;
+                }
+
+                _multiplayerActorAccessor.Host.OnGlobalMapCrusadeArmyLeaderLevelingSkillSelected(skillId);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while selecting crusade army leader leveling skill. SkillId={SkillId}", skillId);
+                throw;
+            }
+        }
+
         private void ShowEscMenuMultiplayerLobby()
         {
             _logger.LogInformation("Show lobby window");

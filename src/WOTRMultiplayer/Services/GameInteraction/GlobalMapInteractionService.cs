@@ -24,6 +24,7 @@ using Kingmaker.UI.MVVM._VM.Crusade.ArmyInfo;
 using Microsoft.Extensions.Logging;
 using TMPro;
 using UniRx;
+using UniRx.Triggers;
 using UnityEngine;
 using WOTRMultiplayer.Abstractions.GameInteraction;
 using WOTRMultiplayer.Abstractions.Unity;
@@ -347,6 +348,11 @@ namespace WOTRMultiplayer.Services.GameInteraction
                 if (armyHud?.ViewModel != null)
                 {
                     armyHud.m_InfoButton.Interactable = isInteractable;
+
+                    if (armyHud.m_LeaderView?.ViewModel != null)
+                    {
+                        armyHud.m_LeaderView.m_LevelupButton.Interactable = isInteractable;
+                    }
                 }
 
                 var menuView = globalMapView.m_GlobalMapMenuPCView;
@@ -1164,24 +1170,24 @@ namespace WOTRMultiplayer.Services.GameInteraction
         {
             _mainThreadAccessor.Post(() =>
             {
-                var view = GetArmyLeaderView(globalMapArmyLeader, armyLeaderActionType);
-                if (view?.ViewModel == null)
+                var viewModel = GetArmyLeaderView(globalMapArmyLeader, armyLeaderActionType);
+                if (viewModel == null)
                 {
-                    _logger.LogWarning("Unable to run leader action due to missing view. LeaderId={LeaderId}, ActionType={ActionType}", globalMapArmyLeader?.Id, armyLeaderActionType);
+                    _logger.LogWarning("Unable to run leader action due to missing viewModel. LeaderId={LeaderId}, ActionType={ActionType}", globalMapArmyLeader?.Id, armyLeaderActionType);
                     return;
                 }
 
                 switch (armyLeaderActionType)
                 {
                     case NetworkGlobalMapArmyLeaderActionType.Main:
-                        view.ViewModel.OnClick();
+                        viewModel.OnClick();
                         break;
                     case NetworkGlobalMapArmyLeaderActionType.LevelUp:
-                        view.ViewModel.OnLevelUp();
+                        viewModel.OnLevelUp();
                         break;
                     case NetworkGlobalMapArmyLeaderActionType.MainLookAtPool:
                     case NetworkGlobalMapArmyLeaderActionType.MergeLookAtPool:
-                        view.ViewModel.OnLookAtLeaderPool();
+                        viewModel.OnLookAtLeaderPool();
                         break;
                     default:
                         _logger.LogWarning("Unknown leader action type. ActionType={ActionType}", armyLeaderActionType);
@@ -1293,6 +1299,84 @@ namespace WOTRMultiplayer.Services.GameInteraction
             }
 
             return spellWasUsed;
+        }
+
+        public void UpdateLeaderLevelingUI(bool isInteractable, int readyPlayersCount, int totalPlayersCount)
+        {
+            _mainThreadAccessor.Post(() =>
+            {
+                var view = _uiAccessor.GlobalMapPCView?.m_LeaderLevelUpPCView;
+                if (view?.ViewModel == null)
+                {
+                    _logger.LogWarning("Unable to update leader leveling ui due to missing view");
+                    return;
+                }
+
+                view.m_CloseButton.Interactable = isInteractable;
+                view.m_ConfirmButton.Interactable = view.CanConfirm.Value && isInteractable;
+                foreach (var skill in view.m_Skills)
+                {
+                    skill.GetComponent<ObservablePointerClickTrigger>().enabled = isInteractable;
+                }
+
+                _uiSyncCountersService.UpdateButtonTextCounter(view.m_ConfirmButtonText, readyPlayersCount, totalPlayersCount);
+                _logger.LogInformation("Leader leveling ui has been updated. IsInteractable={IsInteractable}, ReadyPlayers={ReadyPlayers}, TotalPlayers={TotalPlayers}", isInteractable, readyPlayersCount, totalPlayersCount);
+            });
+        }
+
+        public void CloseLeaderLeveling()
+        {
+            _mainThreadAccessor.Post(() =>
+            {
+                var view = _uiAccessor.GlobalMapPCView?.m_LeaderLevelUpPCView;
+                if (view?.ViewModel == null)
+                {
+                    _logger.LogWarning("Unable to close leader leveling due to missing view");
+                    return;
+                }
+
+                view.ViewModel.Close();
+                _logger.LogInformation("Army Leader leveling has been closed");
+            });
+        }
+
+        public void ConfirmLeaderLeveling()
+        {
+            _mainThreadAccessor.Post(() =>
+            {
+                var view = _uiAccessor.GlobalMapPCView?.m_LeaderLevelUpPCView;
+                if (view?.ViewModel == null)
+                {
+                    _logger.LogWarning("Unable to confirm leader leveling due to missing view");
+                    return;
+                }
+
+                view.ViewModel.Confirm();
+                _logger.LogInformation("Army Leader leveling has been confirmed");
+            });
+        }
+
+        public void SelectLeaderLevelingSkill(string id)
+        {
+            _mainThreadAccessor.Post(() =>
+            {
+                var view = _uiAccessor.GlobalMapPCView?.m_LeaderLevelUpPCView;
+                if (view?.ViewModel == null)
+                {
+                    _logger.LogWarning("Unable to select leader leveling skll to missing view");
+                    return;
+                }
+
+                var skill = view.ViewModel.SkillsToChoose.FirstOrDefault(s => string.Equals(s.Skill.AssetGuid.ToString(), id, StringComparison.OrdinalIgnoreCase));
+                if (skill == null)
+                {
+                    _logger.LogError("Unable to select leader leveling skll to missing skill. Id={Id}", id);
+                    return;
+                }
+
+                view.ViewModel.SelectedSkill.Value = skill.Skill;
+                _logger.LogInformation("Army Leader leveling skill has been selected. Id={Id}, Name={Name}", view.ViewModel.SelectedSkill.Value.AssetGuid.ToString(), view.ViewModel.SelectedSkill.Value.name);
+            });
         }
 
         private void UseSpell(BlueprintGlobalMagicSpell.GlobalMagicData context, BlueprintGlobalMagicSpell spell, GlobalMapArmyState armyState, GlobalMapPointState pointState)
@@ -1427,7 +1511,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
         /// </summary>
         /// <param name="globalMapArmyLeader"></param>
         /// <returns></returns>
-        private ArmyLeaderInfoView GetArmyLeaderView(NetworkGlobalMapArmyLeader globalMapArmyLeader, NetworkGlobalMapArmyLeaderActionType armyLeaderActionType)
+        private ArmyLeaderInfoVM GetArmyLeaderView(NetworkGlobalMapArmyLeader globalMapArmyLeader, NetworkGlobalMapArmyLeaderActionType armyLeaderActionType)
         {
             var armyInfo = _uiAccessor.GlobalMapPCView.m_ArmyInfoPCView;
             var mainCartView = armyInfo?.m_MainArmyCartView?.m_LeaderInfoView;
@@ -1438,11 +1522,11 @@ namespace WOTRMultiplayer.Services.GameInteraction
                 switch (armyLeaderActionType)
                 {
                     case NetworkGlobalMapArmyLeaderActionType.MainLookAtPool when mainCartView?.ViewModel != null:
-                        return mainCartView;
+                        return mainCartView.ViewModel;
                     case NetworkGlobalMapArmyLeaderActionType.MergeLookAtPool when mergeCartView?.ViewModel != null:
-                        return mergeCartView;
+                        return mergeCartView.ViewModel;
                     case NetworkGlobalMapArmyLeaderActionType.MergeLookAtPool when recruitmentView?.m_ArmyView?.m_LeaderInfoView?.ViewModel != null:
-                        return recruitmentView.m_ArmyView.m_LeaderInfoView;
+                        return recruitmentView.m_ArmyView.m_LeaderInfoView.ViewModel;
                     default:
                         _logger.LogError("GlobalMapArmyLeader is null. Type={Type}", armyLeaderActionType);
                         return null;
@@ -1453,8 +1537,14 @@ namespace WOTRMultiplayer.Services.GameInteraction
             List<ArmyLeaderInfoView> viewsToSearch = [.. _uiAccessor.GlobalMapPCView.m_BuyLeaderPCView.m_Leaders, mainCartView, mergeCartView, .. armyInfo.m_SetLeaderView.Leaders,
                 recruitmentView.m_ArmyView.m_LeaderInfoView, .. recruitmentView.m_LeaderSetView.Leaders];
 
-            var view = viewsToSearch.FirstOrDefault(v => IsArmyLeaderViewMatched(v, globalMapArmyLeader));
-            return view;
+            var viewModel = viewsToSearch.FirstOrDefault(v => IsArmyLeaderViewMatched(v, globalMapArmyLeader))?.ViewModel;
+
+            if (viewModel == null && armyLeaderActionType == NetworkGlobalMapArmyLeaderActionType.LevelUp)
+            {
+                return _uiAccessor.GlobalMapPCView?.m_ArmyInfoHUDPCView?.m_LeaderView?.ViewModel;
+            }
+
+            return viewModel;
         }
 
         private bool IsArmyLeaderViewMatched(ArmyLeaderInfoView view, NetworkGlobalMapArmyLeader globalMapArmyLeader)
