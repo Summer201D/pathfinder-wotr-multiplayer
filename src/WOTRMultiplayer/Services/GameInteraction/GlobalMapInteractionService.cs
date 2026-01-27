@@ -5,7 +5,6 @@ using Kingmaker;
 using Kingmaker.Assets.Controllers.GlobalMap;
 using Kingmaker.Blueprints;
 using Kingmaker.Blueprints.Root;
-using Kingmaker.Controllers.Rest;
 using Kingmaker.Crusade.GlobalMagic;
 using Kingmaker.ElementsSystem;
 using Kingmaker.Globalmap;

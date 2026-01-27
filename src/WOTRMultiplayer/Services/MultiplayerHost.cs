@@ -551,8 +551,7 @@ namespace WOTRMultiplayer.Services
                 {
                     // removalDelay doesn't matter since returning true from this method will end pause immediately
                     EnsureForcePaused(WellKnownKeys.GameNotifications.ForcedPause.NotSyncedPauseYet.Key, removalDelay: null);
-                    var localPlayer = GetLocalPlayerId();
-                    Game.ForcedPause.ReadyPlayers.Add(localPlayer);
+                    Game.ForcedPause.ReadyPlayers.Add(Game.LocalPlayerId);
 
                     var pauseStarted = new NotifyGamePauseStarted();
                     Logger.LogInformation("Sending {MessageType}", nameof(NotifyGamePauseStarted));
@@ -569,8 +568,7 @@ namespace WOTRMultiplayer.Services
             lock (ActionLock)
             {
                 EnsureForcePaused(WellKnownKeys.GameNotifications.ForcedPause.NoTrapDetectedYet.Key, removalDelay: null);
-                var playerId = GetLocalPlayerId();
-                Game.ForcedPause.ReadyPlayers.Add(playerId);
+                Game.ForcedPause.ReadyPlayers.Add(Game.LocalPlayerId);
             }
         }
 
@@ -878,12 +876,11 @@ namespace WOTRMultiplayer.Services
 
         public void OnGlobalMapLocationMessageClosed()
         {
-            var localPlayer = GetLocalPlayerId();
-            RemovePlayerFromTracker(Game.PlayersInGlobalMapLocationMessage, localPlayer);
+            RemovePlayerFromTracker(Game.PlayersInGlobalMapLocationMessage, Game.LocalPlayerId);
 
             var message = new NotifyGlobalMapLocationMessageClosed
             {
-                PlayerId = localPlayer
+                PlayerId = Game.LocalPlayerId
             };
             Logger.LogInformation("Sending {MessageType}. PlayerId={PlayerId}", nameof(NotifyGlobalMapLocationMessageClosed), message.PlayerId);
             Send(message);
@@ -893,12 +890,11 @@ namespace WOTRMultiplayer.Services
 
         public void OnGlobalMapCommonPopupDeclined(NetworkGlobalMapCommonPopup globalMapCommonPopup)
         {
-            var localPlayer = GetLocalPlayerId();
-            RemovePlayerFromTracker(Game.PlayersInGlobalMapCommonPopup, localPlayer);
+            RemovePlayerFromTracker(Game.PlayersInGlobalMapCommonPopup, Game.LocalPlayerId);
 
             var message = new NotifyGlobalMapCommonPopupDeclined
             {
-                PlayerId = localPlayer,
+                PlayerId = Game.LocalPlayerId,
                 Popup = Mapper.Map<Networking.Messages.Contracts.NetworkGlobalMapCommonPopup>(globalMapCommonPopup)
             };
             Logger.LogInformation("Sending {MessageType}. PlayerId={PlayerId}, Type={Type}, LocationId={LocationId}, LocationName={LocationName}", nameof(NotifyGlobalMapCommonPopupDeclined), message.PlayerId, message.Popup.Type, message.Popup.Location?.Id, message.Popup.Location?.Name);

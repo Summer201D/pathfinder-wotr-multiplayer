@@ -24,8 +24,6 @@ namespace WOTRMultiplayer.Abstractions
 {
     public interface IMultiplayerActor
     {
-        long GetLocalPlayerId();
-
         NetworkGameConnectivity GetGameConnectivity();
 
         List<NetworkPlayer> GetPlayers();

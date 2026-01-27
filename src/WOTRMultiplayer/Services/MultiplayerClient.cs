@@ -1620,7 +1620,7 @@ namespace WOTRMultiplayer.Services
                 case SocketError.Success:
                     error = WellKnownKeys.MultiplayerClient.Errors.Disconnected.Key;
                     Game.Players.Clear();
-                    UpdateRespecWindowStateOnPlayerLeave(GetLocalPlayerId());
+                    UpdateRespecWindowStateOnPlayerLeave(Game.LocalPlayerId);
                     break;
                 default:
                     socketError = socketException.SocketErrorCode;

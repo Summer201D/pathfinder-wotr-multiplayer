@@ -128,11 +128,6 @@ namespace WOTRMultiplayer.Services
             _networkReceiver = networkReceiver;
         }
 
-        public long GetLocalPlayerId()
-        {
-            return Game?.LocalPlayerId ?? 0;
-        }
-
         public NetworkGameConnectivity GetGameConnectivity()
         {
             return Game?.Connectivity;
@@ -433,8 +428,7 @@ namespace WOTRMultiplayer.Services
             lock (ActionLock)
             {
                 EnsureForcePaused(WellKnownKeys.GameNotifications.ForcedPause.AreaLoading.Key);
-                var localPlayerId = GetLocalPlayerId();
-                Game.ForcedPause.ReadyPlayers.Add(localPlayerId);
+                Game.ForcedPause.ReadyPlayers.Add(Game.LocalPlayerId);
                 GameInteraction.SetPause(true);
             }
 
@@ -648,16 +642,15 @@ namespace WOTRMultiplayer.Services
                     return true;
                 }
 
-                var localPlayerId = GetLocalPlayerId();
-                var isFirstJoinEvent = !IsPlayerReady(PlayerTurnReadinessType.UnitJoinedMidCombat, localPlayerId, unitId);
+                var isFirstJoinEvent = !IsPlayerReady(PlayerTurnReadinessType.UnitJoinedMidCombat, Game.LocalPlayerId, unitId);
                 if (isFirstJoinEvent)
                 {
                     Logger.LogInformation("Sending {MessageType}. UnitId={UnitId}", nameof(NotifyUnitJoinedMidCombat), unitId);
-                    var message = new NotifyUnitJoinedMidCombat { UnitId = unitId, PlayerId = localPlayerId };
+                    var message = new NotifyUnitJoinedMidCombat { UnitId = unitId, PlayerId = Game.LocalPlayerId };
                     Send(message);
                 }
 
-                AddPlayerReadyStatus(PlayerTurnReadinessType.UnitJoinedMidCombat, localPlayerId, unitId);
+                AddPlayerReadyStatus(PlayerTurnReadinessType.UnitJoinedMidCombat, Game.LocalPlayerId, unitId);
 
                 return false;
             }
@@ -676,8 +669,7 @@ namespace WOTRMultiplayer.Services
 
         public void OnStartGameMode(GameModeType type)
         {
-            var playerId = GetLocalPlayerId();
-            var isFirstTime = RegisterGameMode(type, playerId);
+            var isFirstTime = RegisterGameMode(type, Game.LocalPlayerId);
             if (!isFirstTime)
             {
                 return;
@@ -688,15 +680,14 @@ namespace WOTRMultiplayer.Services
                 UpdateRestUIState();
             }
 
-            var message = new NotifyGameModeTypeStarted { PlayerId = playerId, Type = type.Name };
+            var message = new NotifyGameModeTypeStarted { PlayerId = Game.LocalPlayerId, Type = type.Name };
             Logger.LogInformation("Sending {MessageType}. PlayerId={PlayerId}, Type={Type}", nameof(NotifyGameModeTypeStarted), message.PlayerId, message.Type);
             Send(message);
         }
 
         public void OnStopGameMode(GameModeType type)
         {
-            var playerId = GetLocalPlayerId();
-            var isFirstTime = UnregisterGameMode(type, playerId);
+            var isFirstTime = UnregisterGameMode(type, Game.LocalPlayerId);
             if (!isFirstTime)
             {
                 return;
@@ -714,7 +705,7 @@ namespace WOTRMultiplayer.Services
                 Game.Dialog = null;
             }
 
-            var message = new NotifyGameModeTypeEnded { PlayerId = playerId, Type = type.Name };
+            var message = new NotifyGameModeTypeEnded { PlayerId = Game.LocalPlayerId, Type = type.Name };
             Logger.LogInformation("Sending {MessageType}. PlayerId={PlayerId}, Type={Type}", nameof(NotifyGameModeTypeEnded), message.PlayerId, message.Type);
             Send(message);
         }
@@ -747,14 +738,13 @@ namespace WOTRMultiplayer.Services
                 return;
             }
 
-            var localPlayer = GetLocalPlayerId();
             lock (ActionLock)
             {
-                AddPlayerToTracker(Game.Rest.PlayersFinishedRest, localPlayer);
+                AddPlayerToTracker(Game.Rest.PlayersFinishedRest, Game.LocalPlayerId);
                 UpdateRestResultsUIState();
             }
 
-            var message = new NotifyRestEnded { PlayerId = localPlayer };
+            var message = new NotifyRestEnded { PlayerId = Game.LocalPlayerId };
             Logger.LogInformation("Sending {MessageType}. PlayerId={PlayerId}", nameof(NotifyRestEnded), message.PlayerId);
             Send(message);
         }
@@ -872,7 +862,7 @@ namespace WOTRMultiplayer.Services
             var characterControl = Game.Leveling.Type switch
             {
                 // we don't have character id yet, so we rely on 'fake' character
-                NetworkLevelingType.NewGameSequence => Game.Characters.FirstOrDefault()?.Owner?.Id == GetLocalPlayerId(),
+                NetworkLevelingType.NewGameSequence => Game.Characters.FirstOrDefault()?.Owner?.Id == Game.LocalPlayerId,
                 NetworkLevelingType.Mercenary => HasControlOverUI,
                 // either this character has been controlled by someone previously (and that player is still in lobby) or fallback to default
                 _ => WasControlledByCurrentPlayer(Game.Leveling.UnitId),
@@ -900,11 +890,10 @@ namespace WOTRMultiplayer.Services
                 Logger.LogInformation("Sending {MessageType}. Index={Index}", nameof(NotifyLevelingPhaseChanged), phaseChangedMessage.Phase.Index);
             }
 
-            var localPlayer = GetLocalPlayerId();
-            WitnessLevelingPhase(localPlayer);
+            WitnessLevelingPhase(Game.LocalPlayerId);
             var message = new NotifyLevelingPhaseWitnessed
             {
-                PlayerId = localPlayer,
+                PlayerId = Game.LocalPlayerId,
                 Phase = Mapper.Map<Networking.Messages.Contracts.NetworkLevelingPhase>(phase)
             };
             Logger.LogInformation("Sending {MessageType}. PlayerId={PlayerId}, Index={Index}", nameof(NotifyLevelingPhaseWitnessed), message.PlayerId, message.Phase.Index);
@@ -930,11 +919,10 @@ namespace WOTRMultiplayer.Services
                 Logger.LogInformation("Sending {MessageType}. Type={Type}", nameof(NotifyNewGameSequencePhaseChanged), phaseChangedMessage.Phase.Type);
             }
 
-            var localPlayer = GetLocalPlayerId();
-            WitnessNewGameSequencePhase(localPlayer, phase.Type);
+            WitnessNewGameSequencePhase(Game.LocalPlayerId, phase.Type);
             var message = new NotifyNewGameSequenceWitnessed
             {
-                PlayerId = localPlayer,
+                PlayerId = Game.LocalPlayerId,
                 Phase = Mapper.Map<Networking.Messages.Contracts.NetworkNewGameSequencePhase>(phase)
             };
             Logger.LogInformation("Sending {MessageType}. PlayerId={PlayerId}, Type={Type}", nameof(NotifyNewGameSequenceWitnessed), message.PlayerId, message.Phase.Type);
@@ -1371,14 +1359,13 @@ namespace WOTRMultiplayer.Services
 
         public void OnLevelingRespecWindowShown(string unitId)
         {
-            var localPlayer = GetLocalPlayerId();
-            AddPlayerToTracker(Game.PlayersInRespecWindow, localPlayer);
+            AddPlayerToTracker(Game.PlayersInRespecWindow, Game.LocalPlayerId);
 
             UpdateLevelingRespecUIState(unitId);
 
             var message = new NotifyLevelingRespecWindowShown
             {
-                PlayerId = localPlayer,
+                PlayerId = Game.LocalPlayerId,
                 UnitId = unitId
             };
 
@@ -1388,12 +1375,11 @@ namespace WOTRMultiplayer.Services
 
         public void OnLevelingRespecLevelUp()
         {
-            var localPlayer = GetLocalPlayerId();
-            RemovePlayerFromTracker(Game.PlayersInRespecWindow, localPlayer);
+            RemovePlayerFromTracker(Game.PlayersInRespecWindow, Game.LocalPlayerId);
 
             var message = new NotifyLevelingRespecLevelUp
             {
-                PlayerId = localPlayer
+                PlayerId = Game.LocalPlayerId
             };
             Logger.LogInformation("Sending {MessageType}. PlayerId={PlayerId}", nameof(NotifyLevelingRespecLevelUp), message.PlayerId);
             Send(message);
@@ -1401,12 +1387,11 @@ namespace WOTRMultiplayer.Services
 
         public void OnLevelingRespecMythicLevelUp()
         {
-            var localPlayer = GetLocalPlayerId();
-            RemovePlayerFromTracker(Game.PlayersInRespecWindow, localPlayer);
+            RemovePlayerFromTracker(Game.PlayersInRespecWindow, Game.LocalPlayerId);
 
             var message = new NotifyLevelingRespecMythicLevelUp
             {
-                PlayerId = localPlayer
+                PlayerId = Game.LocalPlayerId
             };
             Logger.LogInformation("Sending {MessageType}. PlayerId={PlayerId}", nameof(NotifyLevelingRespecMythicLevelUp), message.PlayerId);
             Send(message);
@@ -1520,14 +1505,13 @@ namespace WOTRMultiplayer.Services
 
         public void OnCharacterSelectionWindowShown()
         {
-            var localPlayer = GetLocalPlayerId();
-            AddPlayerToTracker(Game.PlayersInCharacterSelectionWindow, localPlayer);
+            AddPlayerToTracker(Game.PlayersInCharacterSelectionWindow, Game.LocalPlayerId);
 
             UpdateCharacterSelectionUIState();
 
             var message = new NotifyCharacterSelectionWindowShown
             {
-                PlayerId = localPlayer
+                PlayerId = Game.LocalPlayerId
             };
 
             Logger.LogInformation("Sending {MessageType}. PlayerId={PlayerId}", nameof(NotifyCharacterSelectionWindowShown), message.PlayerId);
@@ -1609,12 +1593,11 @@ namespace WOTRMultiplayer.Services
 
         public void OnGlobalMapMessageBoxShown()
         {
-            var localPlayer = GetLocalPlayerId();
-            AddPlayerToTracker(Game.PlayersInGlobalMapLocationMessage, localPlayer);
+            AddPlayerToTracker(Game.PlayersInGlobalMapLocationMessage, Game.LocalPlayerId);
 
             var message = new NotifyGlobalMapLocationMessageShown
             {
-                PlayerId = localPlayer
+                PlayerId = Game.LocalPlayerId
             };
             Logger.LogInformation("Sending {MessageType}. PlayerId={PlayerId}", nameof(NotifyGlobalMapLocationMessageShown), message.PlayerId);
             Send(message);
@@ -1624,12 +1607,11 @@ namespace WOTRMultiplayer.Services
 
         public void OnShowGroupChangerUI()
         {
-            var localPlayer = GetLocalPlayerId();
-            AddPlayerToTracker(Game.PlayersInGroupChanger, localPlayer);
+            AddPlayerToTracker(Game.PlayersInGroupChanger, Game.LocalPlayerId);
 
             var message = new NotifyGroupChangerOpened
             {
-                PlayerId = localPlayer
+                PlayerId = Game.LocalPlayerId
             };
             Logger.LogInformation("Sending {MessageType}. PlayerId={PlayerId}", nameof(NotifyGroupChangerOpened), message.PlayerId);
             Send(message);
@@ -1639,12 +1621,11 @@ namespace WOTRMultiplayer.Services
 
         public void OnSkipTimeOpened()
         {
-            var localPlayer = GetLocalPlayerId();
-            AddPlayerToTracker(Game.PlayersInSkipTime, localPlayer);
+            AddPlayerToTracker(Game.PlayersInSkipTime, Game.LocalPlayerId);
 
             var message = new NotifySkipTimeOpened
             {
-                PlayerId = localPlayer
+                PlayerId = Game.LocalPlayerId
             };
             Logger.LogInformation("Sending {MessageType}. PlayerId={PlayerId}", nameof(NotifySkipTimeOpened), message.PlayerId);
             Send(message);
@@ -1654,12 +1635,11 @@ namespace WOTRMultiplayer.Services
 
         public void OnDialogPopupShown(NetworkDialogPopup networkDialogPopup)
         {
-            var localPlayer = GetLocalPlayerId();
-            AddPlayerToTracker(Game.PlayersInDialogPopup, localPlayer);
+            AddPlayerToTracker(Game.PlayersInDialogPopup, Game.LocalPlayerId);
 
             var message = new NotifyDialogPopupShown
             {
-                PlayerId = localPlayer,
+                PlayerId = Game.LocalPlayerId,
                 Popup = Mapper.Map<Networking.Messages.Contracts.NetworkDialogPopup>(networkDialogPopup)
             };
             Logger.LogInformation("Sending {MessageType}. PlayerId={PlayerId}, AreaName={AreaName}, DialogName={DialogName}, CueName={CueName}", nameof(NotifyDialogPopupShown), message.PlayerId, message.Popup.AreaName, message.Popup.DialogName, message.Popup.CueName);
@@ -1670,12 +1650,11 @@ namespace WOTRMultiplayer.Services
 
         public void OnGlobalMapCommonPopupShown(NetworkGlobalMapCommonPopup globalMapCommonPopup)
         {
-            var localPlayer = GetLocalPlayerId();
-            AddPlayerToTracker(Game.PlayersInGlobalMapCommonPopup, localPlayer);
+            AddPlayerToTracker(Game.PlayersInGlobalMapCommonPopup, Game.LocalPlayerId);
 
             var message = new NotifyGlobalMapCommonPopupShown
             {
-                PlayerId = localPlayer,
+                PlayerId = Game.LocalPlayerId,
                 Popup = Mapper.Map<Networking.Messages.Contracts.NetworkGlobalMapCommonPopup>(globalMapCommonPopup)
             };
             Logger.LogInformation("Sending {MessageType}. PlayerId={PlayerId}, Type={Type}, LocationId={LocationId}, LocationName={LocationName}", nameof(NotifyGlobalMapCommonPopupShown), message.PlayerId, message.Popup.Type, message.Popup.Location?.Id, message.Popup.Location?.Name);
@@ -1686,12 +1665,11 @@ namespace WOTRMultiplayer.Services
 
         public void OnGlobalMapEncounterMessageShown()
         {
-            var localPlayer = GetLocalPlayerId();
-            AddPlayerToTracker(Game.PlayersInGlobalMapEncounterMessage, localPlayer);
+            AddPlayerToTracker(Game.PlayersInGlobalMapEncounterMessage, Game.LocalPlayerId);
 
             var message = new NotifyGlobalMapEncounterMessageShown
             {
-                PlayerId = localPlayer
+                PlayerId = Game.LocalPlayerId
             };
             Logger.LogInformation("Sending {MessageType}. PlayerId={PlayerId}", nameof(NotifyGlobalMapEncounterMessageShown), message.PlayerId);
             Send(message);
@@ -1706,12 +1684,11 @@ namespace WOTRMultiplayer.Services
 
         public void OnGlobalMapTravelerModeChanged(NetworkGlobalMapTravelerMode travelerMode)
         {
-            var localPlayer = GetLocalPlayerId();
-            RegisterGlobalMapMode(localPlayer, travelerMode);
+            RegisterGlobalMapMode(Game.LocalPlayerId, travelerMode);
 
             var message = new NotifyGlobalMapTravelerModeChanged
             {
-                PlayerId = localPlayer,
+                PlayerId = Game.LocalPlayerId,
                 TravelerMode = travelerMode.ToString(),
                 MustBeEnforced = HasControlOverUI
             };
@@ -1728,12 +1705,11 @@ namespace WOTRMultiplayer.Services
 
         public void OnZoneLootShown()
         {
-            var localPlayer = GetLocalPlayerId();
-            AddPlayerToTracker(Game.PlayersInZoneLoot, localPlayer);
+            AddPlayerToTracker(Game.PlayersInZoneLoot, Game.LocalPlayerId);
 
             var message = new NotifyZoneLootShown
             {
-                PlayerId = localPlayer
+                PlayerId = Game.LocalPlayerId
             };
             Logger.LogInformation("Sending {MessageType}. PlayerId={PlayerId}", nameof(NotifyZoneLootShown), message.PlayerId);
             Send(message);
@@ -1743,12 +1719,11 @@ namespace WOTRMultiplayer.Services
 
         public void OnZoneLootClosed()
         {
-            var localPlayer = GetLocalPlayerId();
-            RemovePlayerFromTracker(Game.PlayersInZoneLoot, localPlayer);
+            RemovePlayerFromTracker(Game.PlayersInZoneLoot, Game.LocalPlayerId);
 
             var message = new NotifyZoneLootClosed
             {
-                PlayerId = localPlayer
+                PlayerId = Game.LocalPlayerId
             };
             Logger.LogInformation("Sending {MessageType}. PlayerId={PlayerId}", nameof(NotifyZoneLootClosed), message.PlayerId);
             Send(message);
@@ -1769,12 +1744,11 @@ namespace WOTRMultiplayer.Services
 
         public void OnCrusadeArmyBattleResultsShown()
         {
-            var localPlayer = GetLocalPlayerId();
-            AddPlayerToTracker(Game.PlayersInGlobalMapCrusadeArmyBattleResults, localPlayer);
+            AddPlayerToTracker(Game.PlayersInGlobalMapCrusadeArmyBattleResults, Game.LocalPlayerId);
 
             var message = new NotifyCrusadeArmyBattleResultsShown
             {
-                PlayerId = localPlayer
+                PlayerId = Game.LocalPlayerId
             };
             Logger.LogInformation("Sending {MessageType}. PlayerId={PlayerId}", nameof(NotifyCrusadeArmyBattleResultsShown), message.PlayerId);
             Send(message);
@@ -1784,12 +1758,11 @@ namespace WOTRMultiplayer.Services
 
         public void OnGlobalMapCombatResultsShown()
         {
-            var localPlayer = GetLocalPlayerId();
-            AddPlayerToTracker(Game.PlayersInGlobalMapCombatResults, localPlayer);
+            AddPlayerToTracker(Game.PlayersInGlobalMapCombatResults, Game.LocalPlayerId);
 
             var message = new NotifyGlobalMapCombatResultsShown
             {
-                PlayerId = localPlayer
+                PlayerId = Game.LocalPlayerId
             };
             Logger.LogInformation("Sending {MessageType}. PlayerId={PlayerId}", nameof(NotifyGlobalMapCombatResultsShown), message.PlayerId);
             Send(message);
@@ -1799,12 +1772,11 @@ namespace WOTRMultiplayer.Services
 
         public void OnGlobalMapCrusadeArmyInfoShown()
         {
-            var localPlayer = GetLocalPlayerId();
-            AddPlayerToTracker(Game.PlayersInGlobalMapCrusadeArmyInfo, localPlayer);
+            AddPlayerToTracker(Game.PlayersInGlobalMapCrusadeArmyInfo, Game.LocalPlayerId);
 
             var message = new NotifyGlobalMapCrusadeArmyInfoShown
             {
-                PlayerId = localPlayer
+                PlayerId = Game.LocalPlayerId
             };
             Logger.LogInformation("Sending {MessageType}. PlayerId={PlayerId}", nameof(NotifyGlobalMapCrusadeArmyInfoShown), message.PlayerId);
             Send(message);
@@ -1814,12 +1786,11 @@ namespace WOTRMultiplayer.Services
 
         public void OnGlobalMapCrusadeArmyMergeCartClosed()
         {
-            var localPlayer = GetLocalPlayerId();
-            RemovePlayerFromTracker(Game.PlayersInGlobalMapCrusadeArmyInfoMerge, localPlayer);
+            RemovePlayerFromTracker(Game.PlayersInGlobalMapCrusadeArmyInfoMerge, Game.LocalPlayerId);
 
             var message = new NotifyGlobalMapCrusadeArmyMergeCartClosed
             {
-                PlayerId = localPlayer
+                PlayerId = Game.LocalPlayerId
             };
             Logger.LogInformation("Sending {MessageType}. PlayerId={PlayerId}", nameof(NotifyGlobalMapCrusadeArmyMergeCartClosed), message.PlayerId);
             Send(message);
@@ -1829,12 +1800,11 @@ namespace WOTRMultiplayer.Services
 
         public void OnGlobalMapCrusadeArmyInfoMergeShown()
         {
-            var localPlayer = GetLocalPlayerId();
-            AddPlayerToTracker(Game.PlayersInGlobalMapCrusadeArmyInfoMerge, localPlayer);
+            AddPlayerToTracker(Game.PlayersInGlobalMapCrusadeArmyInfoMerge, Game.LocalPlayerId);
 
             var message = new NotifyGlobalMapCrusadeArmyMergeCartShown
             {
-                PlayerId = localPlayer
+                PlayerId = Game.LocalPlayerId
             };
             Logger.LogInformation("Sending {MessageType}. PlayerId={PlayerId}", nameof(NotifyGlobalMapCrusadeArmyMergeCartShown), message.PlayerId);
             Send(message);
@@ -1844,12 +1814,11 @@ namespace WOTRMultiplayer.Services
 
         public void OnGlobalMapCrusadeArmySetLeaderShown()
         {
-            var localPlayer = GetLocalPlayerId();
-            AddPlayerToTracker(Game.PlayersInGlobalMapCrusadeArmySetLeader, localPlayer);
+            AddPlayerToTracker(Game.PlayersInGlobalMapCrusadeArmySetLeader, Game.LocalPlayerId);
 
             var message = new NotifyGlobalMapCrusadeArmySetLeaderShown
             {
-                PlayerId = localPlayer
+                PlayerId = Game.LocalPlayerId
             };
             Logger.LogInformation("Sending {MessageType}. PlayerId={PlayerId}", nameof(NotifyGlobalMapCrusadeArmySetLeaderShown), message.PlayerId);
             Send(message);
@@ -1859,12 +1828,11 @@ namespace WOTRMultiplayer.Services
 
         public void OnGlobalMapCrusadeArmySetLeaderClosed()
         {
-            var localPlayer = GetLocalPlayerId();
-            RemovePlayerFromTracker(Game.PlayersInGlobalMapCrusadeArmySetLeader, localPlayer);
+            RemovePlayerFromTracker(Game.PlayersInGlobalMapCrusadeArmySetLeader, Game.LocalPlayerId);
 
             var message = new NotifyGlobalMapCrusadeArmySetLeaderClosed
             {
-                PlayerId = localPlayer
+                PlayerId = Game.LocalPlayerId
             };
             Logger.LogInformation("Sending {MessageType}. PlayerId={PlayerId}", nameof(NotifyGlobalMapCrusadeArmySetLeaderClosed), message.PlayerId);
             Send(message);
@@ -1874,12 +1842,11 @@ namespace WOTRMultiplayer.Services
 
         public void OnGlobalMapCrusadeArmyBuyLeaderShown()
         {
-            var localPlayer = GetLocalPlayerId();
-            AddPlayerToTracker(Game.PlayersInGlobalMapCrusadeArmyBuyLeader, localPlayer);
+            AddPlayerToTracker(Game.PlayersInGlobalMapCrusadeArmyBuyLeader, Game.LocalPlayerId);
 
             var message = new NotifyGlobalMapCrusadeArmyBuyLeaderShown
             {
-                PlayerId = localPlayer
+                PlayerId = Game.LocalPlayerId
             };
             Logger.LogInformation("Sending {MessageType}. PlayerId={PlayerId}", nameof(NotifyGlobalMapCrusadeArmyBuyLeaderShown), message.PlayerId);
             Send(message);
@@ -1889,12 +1856,11 @@ namespace WOTRMultiplayer.Services
 
         public void OnGlobalMapCrusadeArmyBuyLeaderClosed()
         {
-            var localPlayer = GetLocalPlayerId();
-            RemovePlayerFromTracker(Game.PlayersInGlobalMapCrusadeArmyBuyLeader, localPlayer);
+            RemovePlayerFromTracker(Game.PlayersInGlobalMapCrusadeArmyBuyLeader, Game.LocalPlayerId);
 
             var message = new NotifyGlobalMapCrusadeArmyBuyLeaderClosed
             {
-                PlayerId = localPlayer
+                PlayerId = Game.LocalPlayerId
             };
             Logger.LogInformation("Sending {MessageType}. PlayerId={PlayerId}", nameof(NotifyGlobalMapCrusadeArmyBuyLeaderClosed), message.PlayerId);
             Send(message);
@@ -1904,12 +1870,11 @@ namespace WOTRMultiplayer.Services
 
         public void OnGlobalMapRecruitmentShown()
         {
-            var localPlayer = GetLocalPlayerId();
-            AddPlayerToTracker(Game.PlayersInGlobalMapRecruitment, localPlayer);
+            AddPlayerToTracker(Game.PlayersInGlobalMapRecruitment, Game.LocalPlayerId);
 
             var message = new NotifyGlobalMapRecruitmentShown
             {
-                PlayerId = localPlayer
+                PlayerId = Game.LocalPlayerId
             };
             Logger.LogInformation("Sending {MessageType}. PlayerId={PlayerId}", nameof(NotifyGlobalMapRecruitmentShown), message.PlayerId);
             Send(message);
@@ -1919,12 +1884,11 @@ namespace WOTRMultiplayer.Services
 
         public void OnGlobalMapRecruitmentClosed()
         {
-            var localPlayer = GetLocalPlayerId();
-            RemovePlayerFromTracker(Game.PlayersInGlobalMapRecruitment, localPlayer);
+            RemovePlayerFromTracker(Game.PlayersInGlobalMapRecruitment, Game.LocalPlayerId);
 
             var message = new NotifyGlobalMapRecruitmentClosed
             {
-                PlayerId = localPlayer
+                PlayerId = Game.LocalPlayerId
             };
             Logger.LogInformation("Sending {MessageType}. PlayerId={PlayerId}", nameof(NotifyGlobalMapRecruitmentClosed), message.PlayerId);
             Send(message);
@@ -1937,8 +1901,7 @@ namespace WOTRMultiplayer.Services
 
         public void OnGlobalMapCrusadeArmyLeaderLevelingShown()
         {
-            var localPlayer = GetLocalPlayerId();
-            AddPlayerToTracker(Game.PlayersInGlobalMapCrusadeArmyLeaderLeveling, localPlayer);
+            AddPlayerToTracker(Game.PlayersInGlobalMapCrusadeArmyLeaderLeveling, Game.LocalPlayerId);
 
             var message = new NotifyGlobalMapCrusadeArmyLeaderLevelingShown();
             Send(message);
@@ -2322,8 +2285,7 @@ namespace WOTRMultiplayer.Services
         {
             lock (ActionLock)
             {
-                var localPlayer = GetLocalPlayerId();
-                if (!Game.PlayersInGlobalMapMode.TryGetValue(localPlayer, out var localPlayerMode))
+                if (!Game.PlayersInGlobalMapMode.TryGetValue(Game.LocalPlayerId, out var localPlayerMode))
                 {
                     Logger.LogWarning("Global map mode for local player is not set");
                     return null;
@@ -4163,11 +4125,13 @@ namespace WOTRMultiplayer.Services
                 return HasControlOverUI;
             }
 
-            var canControl = playerId == GetLocalPlayerId();
+            var canControl = playerId == Game.LocalPlayerId;
             return canControl;
         }
 
+#pragma warning disable IDE0060 // Remove unused parameter
         private bool IsOutOfSupportedArea(int currentChapter, string currentArea)
+#pragma warning restore IDE0060 // Remove unused parameter
         {
             var isOutOfSupport = currentChapter switch
             {
