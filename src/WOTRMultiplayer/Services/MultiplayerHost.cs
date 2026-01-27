@@ -100,7 +100,7 @@ namespace WOTRMultiplayer.Services
             var settings = SettingsService.GetSettings();
             _networkServer.Start(settings.HostPortRangeStart, settings.HostPortRangeEnd, settings.NetworkAwaiterTimeout);
 
-            OnCharactersChanged?.Invoke(Game.Characters);
+            OnCharactersChanged?.Invoke(Game.StartUp.Title, Game.Characters);
             Logger.LogInformation("Host has been created. GameId={GameId}, IsNewGameSequence={IsNewGameSequence}, SavePath={SavePath}, Portraits={Portraits}", Game.Id, gameStartUp.IsNewGameSequence, gameStartUp.SavePath, string.Join(";", Game.Characters.Select(c => c.Portrait)));
         }
 
@@ -112,14 +112,15 @@ namespace WOTRMultiplayer.Services
             Game.Characters.AddRange(gameStartUp.Characters);
 
             ResetCharacterOwnership();
-            var message = new NotifyLobbyCharactersChanged
+            var charactersChanged = new NotifyLobbyCharactersChanged
             {
+                Title = Game.StartUp.Title,
                 Characters = Mapper.Map<List<Networking.Messages.Contracts.NetworkCharacter>>(Game.Characters)
             };
-            Logger.LogInformation("Sending {MessageType} to ALL players. Portraits={Portraits}", nameof(NotifyLobbyCharactersChanged), message.Characters.Select(x => x.Portrait));
-            Send(message);
+            Logger.LogInformation("Sending {MessageType} to ALL players. Portraits={Portraits}", nameof(NotifyLobbyCharactersChanged), charactersChanged.Characters.Select(x => x.Portrait));
+            Send(charactersChanged);
 
-            OnCharactersChanged?.Invoke(Game.Characters);
+            OnCharactersChanged?.Invoke(Game.StartUp.Title, Game.Characters);
             Logger.LogInformation("Game starting point has been updated. GameId={GameId}, IsNewGameSequence={IsNewGameSequence}, SavePath={SavePath}, Portraits={Portraits}", Game.Id, Game.StartUp.IsNewGameSequence, Game.StartUp.SavePath, string.Join(";", Game.Characters.Select(c => c.Portrait)));
         }
 
@@ -1635,9 +1636,9 @@ namespace WOTRMultiplayer.Services
             }
         }
 
-        private async void OnRandomEncounterContextRequest(long playerId, RandomEncounterContextRequest request)
+        private async void OnRandomEncounterContextRequest(long receivedFrom, RandomEncounterContextRequest request)
         {
-            Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}", nameof(RandomEncounterContextRequest));
+            Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}", nameof(RandomEncounterContextRequest), receivedFrom);
 
             var randomEncounterIndex = request.SleepPhase - 1;
             var timeout = Task.Delay(request.Timeout);
@@ -1652,7 +1653,7 @@ namespace WOTRMultiplayer.Services
 
             Logger.LogInformation("Sending {MessageType}. IsAvailable={IsAvailable}", response.Encounter != null);
 
-            Send(playerId, response);
+            Send(receivedFrom, response);
         }
 
         private void OnClientCombatTurnSynchronized(long playerId, ClientCombatTurnSynchronized synchronized)
@@ -1852,7 +1853,10 @@ namespace WOTRMultiplayer.Services
                 Game.Players.Add(player);
 
                 var settings = GameInteraction.GetGameSettings();
-                settings.Multiplayer = SettingsService.GetSettings();
+                if (settings != null)
+                {
+                    settings.Multiplayer = SettingsService.GetSettings();
+                }
 
                 var message = new GameServerConnectionSucceeded
                 {
@@ -1953,6 +1957,7 @@ namespace WOTRMultiplayer.Services
 
                     var lobbyCharactersChanged = new NotifyLobbyCharactersChanged
                     {
+                        Title = Game.StartUp?.Title,
                         Characters = Mapper.Map<List<Networking.Messages.Contracts.NetworkCharacter>>(Game.Characters)
                     };
                     Logger.LogInformation("Sending {MessageType} to new player. PlayerId={PlayerId}", nameof(NotifyLobbyCharactersChanged), playerId);

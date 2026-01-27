@@ -7,6 +7,8 @@ namespace WOTRMultiplayer.Entities
     {
         public bool IsNewGameSequence { get; set; }
 
+        public string Title { get; set; }
+
         public List<NetworkCharacter> Characters { get; set; } = [];
 
         public NetworkNewGameSequencePhaseType PhaseType { get; set; }

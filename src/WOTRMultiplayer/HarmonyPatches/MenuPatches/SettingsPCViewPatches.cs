@@ -25,7 +25,7 @@ namespace WOTRMultiplayer.HarmonyPatches.MenuPatches
             }
             catch (Exception ex)
             {
-                Main.GetLogger<SettingsPCViewPatches>().LogError(ex, "Unable to apply SettingsPCView patch");
+                Main.GetLogger<SettingsPCViewPatches>().LogError(ex, "Unable to store dropdown prefab");
                 throw;
             }
         }

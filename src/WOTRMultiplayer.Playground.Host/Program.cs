@@ -25,6 +25,8 @@ namespace WOTRMultiplayer.Playground.Host
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0059:Unnecessary assignment of a value", Justification = "Playground")]
         public static void Main(string[] args)
         {
+            WellKnownSettings.Initialize();
+
             Console.WriteLine("Hello World!");
             Console.WriteLine("Press enter to host");
             Console.ReadLine();
@@ -62,7 +64,7 @@ namespace WOTRMultiplayer.Playground.Host
             // Manual_34_FIRST_COMBAT - first combat in first cave
             var saveGamePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
                 "AppData\\LocalLow\\Owlcat Games\\Pathfinder Wrath Of The Righteous\\Saved Games\\Manual_34_FIRST_COMBAT.zks");
-            var startUp = new NetworkGameStartUp(saveGamePath) { Characters = characters };
+            var startUp = new NetworkGameStartUp(saveGamePath) { Characters = characters, Title = "Playground Host Game Title Playground Host Game Title Playground Host Game Title Playground Host Game Title Playground Host Game Title" };
             host.Create("1", startUp);
             var input = string.Empty;
 

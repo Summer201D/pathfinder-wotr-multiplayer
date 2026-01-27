@@ -244,9 +244,6 @@ namespace WOTRMultiplayer.UI.Controllers
         private void OnHostButtonClicked()
         {
             var selectedSave = _saveLoadViewModel.SelectedSaveSlot.Value;
-            var gameName = selectedSave.SaveName.Value;
-            var titleText = UIUtility.GetSaberBookFormat(gameName);
-            Title.SetText(titleText);
 
             var (gameId, startup) = CreateGameStartUp(selectedSave);
             if (!_multiplayerHost.IsActive)
@@ -273,6 +270,7 @@ namespace WOTRMultiplayer.UI.Controllers
                 {
                     // empty character that can be used to assign control for leveling (chargen) screen
                     Characters = [new NetworkCharacter { Portrait = "b7aa1433ab20e3745a4a169ee34ca738_MaskGolem", UnitId = mainCharacterId }],
+                    Title = saveSlot.SaveName.Value
                 };
 
                 var gameId = Guid.NewGuid().ToString("N");
@@ -285,6 +283,7 @@ namespace WOTRMultiplayer.UI.Controllers
             var savePath = saveSlot.Reference.FolderName;
             var saveGame = new NetworkGameStartUp(savePath)
             {
+                Title = saveSlot.SaveName.Value,
                 Characters = characters
             };
 
@@ -364,8 +363,11 @@ namespace WOTRMultiplayer.UI.Controllers
             });
         }
 
-        private void OnMultiplayerCharactersChanged(List<NetworkCharacter> characters)
+        private void OnMultiplayerCharactersChanged(string title, List<NetworkCharacter> characters)
         {
+            var titleText = UIUtility.GetSaberBookFormat(title);
+            Title.SetText(titleText);
+
             Lobby.UpdateCharacters(characters, isDropdownInteractable: true);
         }
 

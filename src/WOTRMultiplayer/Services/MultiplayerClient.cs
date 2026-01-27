@@ -682,7 +682,7 @@ namespace WOTRMultiplayer.Services
             OnAfterNetworkMessageHandled(receivedFrom, globalMapCrusadeArmyBuyLeaderClosed);
         }
 
-        private void OnNotifyGlobalMapCrusadeArmySetLeaderRecruitClicked(long arg1, NotifyGlobalMapCrusadeArmySetLeaderRecruitClicked globalMapCrusadeArmySetLeaderRecruitClicked)
+        private void OnNotifyGlobalMapCrusadeArmySetLeaderRecruitClicked(long receivedFrom, NotifyGlobalMapCrusadeArmySetLeaderRecruitClicked globalMapCrusadeArmySetLeaderRecruitClicked)
         {
             Logger.LogInformation("Received {MessageType}", nameof(NotifyGlobalMapCrusadeArmySetLeaderRecruitClicked));
 
@@ -1557,7 +1557,7 @@ namespace WOTRMultiplayer.Services
                 Game.Characters.Add(character);
             }
 
-            OnCharactersChanged?.Invoke(Game.Characters);
+            OnCharactersChanged?.Invoke(lobbyCharactersChanged.Title, Game.Characters);
         }
 
         private void OnNotifyLobbyPlayersChanged(long playerId, NotifyLobbyPlayersChanged playersChanged)

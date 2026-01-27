@@ -3,7 +3,7 @@
 #### Disclaimer: All of the changes below only kick in when you are playing in Multiplayer (started or joined through the Multiplayer Window). Single-player isn't affected at all, so you can keep playing normally. But if you are curious about what the mod adds, you can always host a solo game to check it out.
 
 ## TL/DR:
-- Prologue and Act1 are mostly playable. Anything beyond that (including any DLCs) does not work
+- Prologue, Act1 and Act2 are mostly playable. Anything beyond that (including any DLCs) does not work
 
 - Game Version/DLC/Mods/Content should match across players. 
 

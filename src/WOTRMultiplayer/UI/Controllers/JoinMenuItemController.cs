@@ -2,6 +2,7 @@
 using Kingmaker.Localization;
 using Kingmaker.PubSubSystem;
 using Kingmaker.UI;
+using Kingmaker.UI.Common;
 using Microsoft.Extensions.Logging;
 using Owlcat.Runtime.UI.Controls.Button;
 using TMPro;
@@ -33,6 +34,8 @@ namespace WOTRMultiplayer.UI.Controllers
 
         public const string LobbyWindowObjectName = "LobbyWindow";
 
+        public const string GameTitleObjectName = "LobbyTitleObject";
+
         private readonly ILogger<JoinMenuItemController> _logger;
         private readonly IUIFactory _uIFactory;
         private readonly IMultiplayerClient _multiplayerClient;
@@ -41,6 +44,14 @@ namespace WOTRMultiplayer.UI.Controllers
 
         protected override GameObject MenuContent => _menuContent;
         protected override LobbyWindowOwner Owner => LobbyWindowOwner.JoinMenu;
+
+        protected GameObject LobbyTitleGameObject => _menuContent.transform
+            .Find(RootContentScreenObjectName)
+            .Find(GameTitleObjectName)
+            ?.gameObject;
+
+        protected TextMeshProUGUI LobbyTitle => LobbyTitleGameObject
+            ?.GetComponent<TextMeshProUGUI>();
 
         protected GameObject JoinLobbyControlsObject => _menuContent.transform
             .Find(RootContentScreenObjectName)
@@ -167,6 +178,17 @@ namespace WOTRMultiplayer.UI.Controllers
             content.name = RootContentScreenObjectName;
             content.AddComponent<VerticalLayoutGroup>();
 
+            var gameTitle = _uIFactory.CreateDefaultGameObject(content.transform);
+            gameTitle.name = GameTitleObjectName;
+            var title = gameTitle.AddComponent<TextMeshProUGUI>();
+            title.alignment = TextAlignmentOptions.Center;
+            title.fontSize = 28;
+            var mesh = _uIFactory.GetDefaultMesh();
+            title.material = mesh.Material;
+            title.color = mesh.Color;
+            var gameTitleVertical = gameTitle.AddComponent<VerticalLayoutGroup>();
+            gameTitleVertical.padding = new RectOffset(0, 0, 0, 55);
+
             var lobbyWindow = _uIFactory.CreateDefaultGameObject(content.transform);
             lobbyWindow.name = LobbyWindowObjectName;
             var lobbyWindowLayout = lobbyWindow.AddComponent<LayoutElement>();
@@ -273,8 +295,14 @@ namespace WOTRMultiplayer.UI.Controllers
             });
         }
 
-        private void OnMultiplayerCharactersChanged(List<NetworkCharacter> characters)
+        private void OnMultiplayerCharactersChanged(string title, List<NetworkCharacter> characters)
         {
+            MainThreadAccessor.Post(() =>
+            {
+                var titleText = UIUtility.GetSaberBookFormat(title);
+                LobbyTitle.SetText(titleText);
+            });
+
             Lobby.UpdateCharacters(characters, isDropdownInteractable: false);
         }
 
@@ -293,6 +321,9 @@ namespace WOTRMultiplayer.UI.Controllers
         {
             MainThreadAccessor.Post(() =>
             {
+                LobbyTitle.SetText(string.Empty);
+                LobbyTitleGameObject.SetActive(true);
+
                 ToggleReadyButton(false);
 
                 JoinLobbyControlsObject.SetActive(false);
@@ -310,6 +341,8 @@ namespace WOTRMultiplayer.UI.Controllers
 
             MainThreadAccessor.Post(() =>
             {
+                LobbyTitle.SetText(string.Empty);
+                LobbyTitleGameObject.SetActive(false);
                 Lobby.ResetData();
                 SetButtonActive(JoinButtonObject, true);
                 JoinLobbyControlsObject.SetActive(true);

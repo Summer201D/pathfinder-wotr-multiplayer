@@ -58,7 +58,7 @@ namespace WOTRMultiplayer.Services
 
         public Action<NetworkLobbyStage, List<NetworkPlayer>> OnPlayersChanged { get; set; }
 
-        public Action<List<NetworkCharacter>> OnCharactersChanged { get; set; }
+        public Action<string, List<NetworkCharacter>> OnCharactersChanged { get; set; }
 
         public Action<bool> OnNewGameSequenceStarted { get; set; }
 
