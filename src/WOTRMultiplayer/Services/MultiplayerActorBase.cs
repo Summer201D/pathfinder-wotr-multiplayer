@@ -619,7 +619,7 @@ namespace WOTRMultiplayer.Services
             if (Game.Combat.Turn.IsLocalPlayer)
             {
                 Logger.LogInformation("Ending local player turn. Round={Round}, UnitId={UnitId}", Game.Combat.Round, Game.Combat.Turn.UnitId);
-                var message = new NotifyPlayerCombatTurnEnded { UnitId = Game.Combat.Turn.UnitId };
+                var message = new NotifyPlayerCombatTurnEnded { UnitId = Game.Combat.Turn.UnitId, PlayerId = Game.LocalPlayerId };
                 Send(message);
             }
 
@@ -3324,15 +3324,15 @@ namespace WOTRMultiplayer.Services
             OnAfterNetworkMessageHandled(receivedFrom, gameModeTypeStarted);
         }
 
-        private void OnNotifyGameForceLoaded(long playerId, NotifyGameForceLoaded gameForceLoaded)
+        private void OnNotifyGameForceLoaded(long receivedFrom, NotifyGameForceLoaded gameForceLoaded)
         {
-            Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}, GameId={GameId}, ContentSize={ContentSize}", nameof(NotifyGameForceLoaded), playerId, gameForceLoaded.GameId, gameForceLoaded.Content.Length);
+            Logger.LogInformation("Received {MessageType}. ReceivedFrom={ReceivedFrom}, GameId={GameId}, ContentSize={ContentSize}", nameof(NotifyGameForceLoaded), receivedFrom, gameForceLoaded.GameId, gameForceLoaded.Content.Length);
 
             UpdateSaveInfo(gameForceLoaded.GameId, gameForceLoaded.Content);
 
             LoadSavedGame();
 
-            OnAfterNetworkMessageHandled(playerId, gameForceLoaded);
+            OnAfterNetworkMessageHandled(receivedFrom, gameForceLoaded);
         }
 
         private void OnNotifyNewGameSequenceWitnessed(long receivedFrom, NotifyNewGameSequenceWitnessed newGameSequenceWitnessed)
@@ -3386,197 +3386,199 @@ namespace WOTRMultiplayer.Services
             OnAfterNetworkMessageHandled(receivedFrom, levelingRespecWindowShown);
         }
 
-        private void OnNotifyLevelingRespecCompleted(long playerId, NotifyLevelingRespecCompleted levelingRespecCompleted)
+        private void OnNotifyLevelingRespecCompleted(long receivedFrom, NotifyLevelingRespecCompleted levelingRespecCompleted)
         {
-            Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}", nameof(NotifyLevelingRespecCompleted), playerId);
+            Logger.LogInformation("Received {MessageType}. ReceivedFrom={ReceivedFrom}", nameof(NotifyLevelingRespecCompleted), receivedFrom);
 
             ResetPlayersTracker(Game.PlayersInRespecWindow);
 
             LevelingInteraction.CompleteLevelingRespec();
 
-            OnAfterNetworkMessageHandled(playerId, levelingRespecCompleted);
+            OnAfterNetworkMessageHandled(receivedFrom, levelingRespecCompleted);
         }
 
-        private void OnNotifyLevelingWarpaintColorAppearanceChanged(long playerId, NotifyLevelingWarpaintColorAppearanceChanged levelingWarpaintColorAppearanceChanged)
+        private void OnNotifyLevelingWarpaintColorAppearanceChanged(long receivedFrom, NotifyLevelingWarpaintColorAppearanceChanged levelingWarpaintColorAppearanceChanged)
         {
-            Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}, TextureName={TextureName}, PageNumber={PageNumber}", nameof(NotifyLevelingWarpaintColorAppearanceChanged), playerId, levelingWarpaintColorAppearanceChanged.Warpaint.TextureName, levelingWarpaintColorAppearanceChanged.Warpaint.PageNumber);
+            Logger.LogInformation("Received {MessageType}. ReceivedFrom={ReceivedFrom}, TextureName={TextureName}, PageNumber={PageNumber}", nameof(NotifyLevelingWarpaintColorAppearanceChanged), receivedFrom, levelingWarpaintColorAppearanceChanged.Warpaint.TextureName, levelingWarpaintColorAppearanceChanged.Warpaint.PageNumber);
 
             var levelingWarpaint = Mapper.Map<NetworkLevelingWarpaint>(levelingWarpaintColorAppearanceChanged.Warpaint);
             LevelingInteraction.SelectLevelingWarpaintColorAppearance(levelingWarpaint);
 
-            OnAfterNetworkMessageHandled(playerId, levelingWarpaintColorAppearanceChanged);
+            OnAfterNetworkMessageHandled(receivedFrom, levelingWarpaintColorAppearanceChanged);
         }
 
-        private void OnNotifyLevelingWarpaintAppearanceChanged(long playerId, NotifyLevelingWarpaintAppearanceChanged levelingWarpaintAppearanceChanged)
+        private void OnNotifyLevelingWarpaintAppearanceChanged(long receivedFrom, NotifyLevelingWarpaintAppearanceChanged levelingWarpaintAppearanceChanged)
         {
-            Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}, Index={Index}, PageNumber={PageNumber}", nameof(NotifyLevelingWarpaintAppearanceChanged), playerId, levelingWarpaintAppearanceChanged.Warpaint.Index, levelingWarpaintAppearanceChanged.Warpaint.PageNumber);
+            Logger.LogInformation("Received {MessageType}. ReceivedFrom={ReceivedFrom}, Index={Index}, PageNumber={PageNumber}", nameof(NotifyLevelingWarpaintAppearanceChanged), receivedFrom, levelingWarpaintAppearanceChanged.Warpaint.Index, levelingWarpaintAppearanceChanged.Warpaint.PageNumber);
 
             var levelingWarpaint = Mapper.Map<NetworkLevelingWarpaint>(levelingWarpaintAppearanceChanged.Warpaint);
             LevelingInteraction.SelectLevelingWarpaintAppearance(levelingWarpaint);
 
-            OnAfterNetworkMessageHandled(playerId, levelingWarpaintAppearanceChanged);
+            OnAfterNetworkMessageHandled(receivedFrom, levelingWarpaintAppearanceChanged);
         }
 
-        private void OnNotifyLevelingTattooColorAppearanceChanged(long playerId, NotifyLevelingTattooColorAppearanceChanged levelingTattooColorAppearanceChanged)
+        private void OnNotifyLevelingTattooColorAppearanceChanged(long receivedFrom, NotifyLevelingTattooColorAppearanceChanged levelingTattooColorAppearanceChanged)
         {
-            Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}, TextureName={Index}, PageNumber={PageNumber}", nameof(NotifyLevelingTattooColorAppearanceChanged), playerId, levelingTattooColorAppearanceChanged.Tattoo.TextureName, levelingTattooColorAppearanceChanged.Tattoo.PageNumber);
+            Logger.LogInformation("Received {MessageType}. ReceivedFrom={ReceivedFrom}, TextureName={Index}, PageNumber={PageNumber}", nameof(NotifyLevelingTattooColorAppearanceChanged), receivedFrom, levelingTattooColorAppearanceChanged.Tattoo.TextureName, levelingTattooColorAppearanceChanged.Tattoo.PageNumber);
 
             var levelingTattoo = Mapper.Map<NetworkLevelingTattoo>(levelingTattooColorAppearanceChanged.Tattoo);
             LevelingInteraction.SelectLevelingTattooColorAppearance(levelingTattoo);
 
-            OnAfterNetworkMessageHandled(playerId, levelingTattooColorAppearanceChanged);
+            OnAfterNetworkMessageHandled(receivedFrom, levelingTattooColorAppearanceChanged);
         }
 
-        private void OnNotifyLevelingTattooAppearanceChanged(long playerId, NotifyLevelingTattooAppearanceChanged levelingTattooAppearanceChanged)
+        private void OnNotifyLevelingTattooAppearanceChanged(long receivedFrom, NotifyLevelingTattooAppearanceChanged levelingTattooAppearanceChanged)
         {
-            Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}, Index={Index}, PageNumber={PageNumber}", nameof(NotifyLevelingTattooAppearanceChanged), playerId, levelingTattooAppearanceChanged.Tattoo.Index, levelingTattooAppearanceChanged.Tattoo.PageNumber);
+            Logger.LogInformation("Received {MessageType}. ReceivedFrom={ReceivedFrom}, Index={Index}, PageNumber={PageNumber}", nameof(NotifyLevelingTattooAppearanceChanged), receivedFrom, levelingTattooAppearanceChanged.Tattoo.Index, levelingTattooAppearanceChanged.Tattoo.PageNumber);
 
             var levelingTattoo = Mapper.Map<NetworkLevelingTattoo>(levelingTattooAppearanceChanged.Tattoo);
             LevelingInteraction.SelectLevelingTattooAppearance(levelingTattoo);
 
-            OnAfterNetworkMessageHandled(playerId, levelingTattooAppearanceChanged);
+            OnAfterNetworkMessageHandled(receivedFrom, levelingTattooAppearanceChanged);
         }
 
-        private void OnNotifyLevelingScarAppearanceChanged(long playerId, NotifyLevelingScarAppearanceChanged levelingScarAppearanceChanged)
+        private void OnNotifyLevelingScarAppearanceChanged(long receivedFrom, NotifyLevelingScarAppearanceChanged levelingScarAppearanceChanged)
         {
-            Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}, Index={Index}", nameof(NotifyLevelingScarAppearanceChanged), playerId, levelingScarAppearanceChanged.Index);
+            Logger.LogInformation("Received {MessageType}. ReceivedFrom={ReceivedFrom}, Index={Index}", nameof(NotifyLevelingScarAppearanceChanged), receivedFrom, levelingScarAppearanceChanged.Index);
 
             LevelingInteraction.SelectLevelingScarAppearance(levelingScarAppearanceChanged.Index);
 
-            OnAfterNetworkMessageHandled(playerId, levelingScarAppearanceChanged);
+            OnAfterNetworkMessageHandled(receivedFrom, levelingScarAppearanceChanged);
         }
 
-        private void OnNotifyLevelingSecondaryOutfitColorAppearanceChanged(long playerId, NotifyLevelingSecondaryOutfitColorAppearanceChanged levelingSecondaryOutfitColorAppearanceChanged)
+        private void OnNotifyLevelingSecondaryOutfitColorAppearanceChanged(long receivedFrom, NotifyLevelingSecondaryOutfitColorAppearanceChanged levelingSecondaryOutfitColorAppearanceChanged)
         {
-            Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}, TextureName={TextureName}", nameof(NotifyLevelingSecondaryOutfitColorAppearanceChanged), playerId, levelingSecondaryOutfitColorAppearanceChanged.TextureName);
+            Logger.LogInformation("Received {MessageType}. ReceivedFrom={ReceivedFrom}, TextureName={TextureName}", nameof(NotifyLevelingSecondaryOutfitColorAppearanceChanged), receivedFrom, levelingSecondaryOutfitColorAppearanceChanged.TextureName);
 
             LevelingInteraction.SelectLevelingSecondaryOutfitColorAppearance(levelingSecondaryOutfitColorAppearanceChanged.TextureName);
 
-            OnAfterNetworkMessageHandled(playerId, levelingSecondaryOutfitColorAppearanceChanged);
+            OnAfterNetworkMessageHandled(receivedFrom, levelingSecondaryOutfitColorAppearanceChanged);
         }
 
-        private void OnNotifyLevelingPrimaryOutfitColorAppearanceChanged(long playerId, NotifyLevelingPrimaryOutfitColorAppearanceChanged levelingPrimaryOutfitColorAppearanceChanged)
+        private void OnNotifyLevelingPrimaryOutfitColorAppearanceChanged(long receivedFrom, NotifyLevelingPrimaryOutfitColorAppearanceChanged levelingPrimaryOutfitColorAppearanceChanged)
         {
-            Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}, TextureName={TextureName}", nameof(NotifyLevelingPrimaryOutfitColorAppearanceChanged), playerId, levelingPrimaryOutfitColorAppearanceChanged.TextureName);
+            Logger.LogInformation("Received {MessageType}. ReceivedFrom={ReceivedFrom}, TextureName={TextureName}", nameof(NotifyLevelingPrimaryOutfitColorAppearanceChanged), receivedFrom, levelingPrimaryOutfitColorAppearanceChanged.TextureName);
 
             LevelingInteraction.SelectLevelingPrimaryOutfitColorAppearance(levelingPrimaryOutfitColorAppearanceChanged.TextureName);
 
-            OnAfterNetworkMessageHandled(playerId, levelingPrimaryOutfitColorAppearanceChanged);
+            OnAfterNetworkMessageHandled(receivedFrom, levelingPrimaryOutfitColorAppearanceChanged);
         }
 
-        private void OnNotifyLevelingHornsColorAppearanceChanged(long playerId, NotifyLevelingHornsColorAppearanceChanged levelingHornsColorAppearanceChanged)
+        private void OnNotifyLevelingHornsColorAppearanceChanged(long receivedFrom, NotifyLevelingHornsColorAppearanceChanged levelingHornsColorAppearanceChanged)
         {
-            Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}, TextureName={TextureName}", nameof(NotifyLevelingHornsColorAppearanceChanged), playerId, levelingHornsColorAppearanceChanged.TextureName);
+            Logger.LogInformation("Received {MessageType}. ReceivedFrom={ReceivedFrom}, TextureName={TextureName}", nameof(NotifyLevelingHornsColorAppearanceChanged), receivedFrom, levelingHornsColorAppearanceChanged.TextureName);
 
             LevelingInteraction.SelectLevelingHornsColorAppearance(levelingHornsColorAppearanceChanged.TextureName);
 
-            OnAfterNetworkMessageHandled(playerId, levelingHornsColorAppearanceChanged);
+            OnAfterNetworkMessageHandled(receivedFrom, levelingHornsColorAppearanceChanged);
         }
 
-        private void OnNotifyLevelingHornsAppearanceChanged(long playerId, NotifyLevelingHornsAppearanceChanged levelingHornsAppearanceChanged)
+        private void OnNotifyLevelingHornsAppearanceChanged(long receivedFrom, NotifyLevelingHornsAppearanceChanged levelingHornsAppearanceChanged)
         {
-            Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}, Index={Index}", nameof(NotifyLevelingHornsAppearanceChanged), playerId, levelingHornsAppearanceChanged.Index);
+            Logger.LogInformation("Received {MessageType}. ReceivedFrom={ReceivedFrom}, Index={Index}", nameof(NotifyLevelingHornsAppearanceChanged), receivedFrom, levelingHornsAppearanceChanged.Index);
 
             LevelingInteraction.SelectLevelingHornsAppearance(levelingHornsAppearanceChanged.Index);
 
-            OnAfterNetworkMessageHandled(playerId, levelingHornsAppearanceChanged);
+            OnAfterNetworkMessageHandled(receivedFrom, levelingHornsAppearanceChanged);
         }
 
-        private void OnNotifyLevelingHairStyleAppearanceChanged(long playerId, NotifyLevelingHairStyleAppearanceChanged levelingHairStyleAppearanceChanged)
+        private void OnNotifyLevelingHairStyleAppearanceChanged(long receivedFrom, NotifyLevelingHairStyleAppearanceChanged levelingHairStyleAppearanceChanged)
         {
-            Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}, Index={Index}", nameof(NotifyLevelingHairStyleAppearanceChanged), playerId, levelingHairStyleAppearanceChanged.Index);
+            Logger.LogInformation("Received {MessageType}. ReceivedFrom={ReceivedFrom}, Index={Index}", nameof(NotifyLevelingHairStyleAppearanceChanged), receivedFrom, levelingHairStyleAppearanceChanged.Index);
 
             LevelingInteraction.SelectLevelingHairStyleAppearance(levelingHairStyleAppearanceChanged.Index);
 
-            OnAfterNetworkMessageHandled(playerId, levelingHairStyleAppearanceChanged);
+            OnAfterNetworkMessageHandled(receivedFrom, levelingHairStyleAppearanceChanged);
         }
 
-        private void OnNotifyLevelingHairColorAppearanceChanged(long playerId, NotifyLevelingHairColorAppearanceChanged levelingHairColorAppearanceChanged)
+        private void OnNotifyLevelingHairColorAppearanceChanged(long receivedFrom, NotifyLevelingHairColorAppearanceChanged levelingHairColorAppearanceChanged)
         {
-            Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}, TextureName={TextureName}", nameof(NotifyLevelingHairColorAppearanceChanged), playerId, levelingHairColorAppearanceChanged.TextureName);
+            Logger.LogInformation("Received {MessageType}. ReceivedFrom={ReceivedFrom}, TextureName={TextureName}", nameof(NotifyLevelingHairColorAppearanceChanged), receivedFrom, levelingHairColorAppearanceChanged.TextureName);
 
             LevelingInteraction.SelectLevelingHairColorAppearance(levelingHairColorAppearanceChanged.TextureName);
 
-            OnAfterNetworkMessageHandled(playerId, levelingHairColorAppearanceChanged);
+            OnAfterNetworkMessageHandled(receivedFrom, levelingHairColorAppearanceChanged);
         }
 
-        private void OnNotifyLevelingFaceAppearanceChanged(long playerId, NotifyLevelingFaceAppearanceChanged levelingFaceAppearanceChanged)
+        private void OnNotifyLevelingFaceAppearanceChanged(long receivedFrom, NotifyLevelingFaceAppearanceChanged levelingFaceAppearanceChanged)
         {
-            Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}, Index={Index}", nameof(NotifyLevelingFaceAppearanceChanged), playerId, levelingFaceAppearanceChanged.Index);
+            Logger.LogInformation("Received {MessageType}. ReceivedFrom={ReceivedFrom}, Index={Index}", nameof(NotifyLevelingFaceAppearanceChanged), receivedFrom, levelingFaceAppearanceChanged.Index);
 
             LevelingInteraction.SelectLevelingFaceAppearance(levelingFaceAppearanceChanged.Index);
 
-            OnAfterNetworkMessageHandled(playerId, levelingFaceAppearanceChanged);
+            OnAfterNetworkMessageHandled(receivedFrom, levelingFaceAppearanceChanged);
         }
 
-        private void OnNotifyLevelingEyesColorAppearanceChanged(long playerId, NotifyLevelingEyesColorAppearanceChanged levelingEyesColorAppearanceChanged)
+        private void OnNotifyLevelingEyesColorAppearanceChanged(long receivedFrom, NotifyLevelingEyesColorAppearanceChanged levelingEyesColorAppearanceChanged)
         {
-            Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}, TextureName={TextureName}", nameof(NotifyLevelingEyesColorAppearanceChanged), playerId, levelingEyesColorAppearanceChanged.TextureName);
+            Logger.LogInformation("Received {MessageType}. ReceivedFrom={ReceivedFrom}, TextureName={TextureName}", nameof(NotifyLevelingEyesColorAppearanceChanged), receivedFrom, levelingEyesColorAppearanceChanged.TextureName);
 
             LevelingInteraction.SelectLevelingEyesColorAppearance(levelingEyesColorAppearanceChanged.TextureName);
 
-            OnAfterNetworkMessageHandled(playerId, levelingEyesColorAppearanceChanged);
+            OnAfterNetworkMessageHandled(receivedFrom, levelingEyesColorAppearanceChanged);
         }
 
-        private void OnNotifyLevelingBodyColorAppearanceChanged(long playerId, NotifyLevelingBodyColorAppearanceChanged levelingBodyColorAppearanceChanged)
+        private void OnNotifyLevelingBodyColorAppearanceChanged(long receivedFrom, NotifyLevelingBodyColorAppearanceChanged levelingBodyColorAppearanceChanged)
         {
-            Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}, TextureName={TextureName}", nameof(NotifyLevelingBodyColorAppearanceChanged), playerId, levelingBodyColorAppearanceChanged.TextureName);
+            Logger.LogInformation("Received {MessageType}. ReceivedFrom={ReceivedFrom}, TextureName={TextureName}", nameof(NotifyLevelingBodyColorAppearanceChanged), receivedFrom, levelingBodyColorAppearanceChanged.TextureName);
 
             LevelingInteraction.SelectLevelingBodyColorAppearance(levelingBodyColorAppearanceChanged.TextureName);
 
-            OnAfterNetworkMessageHandled(playerId, levelingBodyColorAppearanceChanged);
+            OnAfterNetworkMessageHandled(receivedFrom, levelingBodyColorAppearanceChanged);
         }
 
-        private void OnNotifyLevelingBodyTypeAppearanceChanged(long playerId, NotifyLevelingBodyTypeAppearanceChanged levelingBodyTypeAppearanceChanged)
+        private void OnNotifyLevelingBodyTypeAppearanceChanged(long receivedFrom, NotifyLevelingBodyTypeAppearanceChanged levelingBodyTypeAppearanceChanged)
         {
-            Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}, Index={Index}", nameof(NotifyLevelingBodyTypeAppearanceChanged), playerId, levelingBodyTypeAppearanceChanged.Index);
+            Logger.LogInformation("Received {MessageType}. ReceivedFrom={ReceivedFrom}, Index={Index}", nameof(NotifyLevelingBodyTypeAppearanceChanged), receivedFrom, levelingBodyTypeAppearanceChanged.Index);
 
             LevelingInteraction.SelectLevelingBodyTypeAppearance(levelingBodyTypeAppearanceChanged.Index);
 
-            OnAfterNetworkMessageHandled(playerId, levelingBodyTypeAppearanceChanged);
+            OnAfterNetworkMessageHandled(receivedFrom, levelingBodyTypeAppearanceChanged);
         }
 
-        private void OnNotifyDialogPopupShown(long playerId, NotifyDialogPopupShown dialogPopupShown)
+        private void OnNotifyDialogPopupShown(long receivedFrom, NotifyDialogPopupShown dialogPopupShown)
         {
-            Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}, AreaName={AreaName}, DialogName={DialogName}, CueName={CueName}", nameof(NotifyDialogPopupShown), playerId, dialogPopupShown.Popup.AreaName, dialogPopupShown.Popup.DialogName, dialogPopupShown.Popup.CueName);
+            Logger.LogInformation("Received {MessageType}. ReceivedFrom={ReceivedFrom}, PlayerId={PlayerId}, AreaName={AreaName}, DialogName={DialogName}, CueName={CueName}", nameof(NotifyDialogPopupShown), receivedFrom, dialogPopupShown.PlayerId, dialogPopupShown.Popup.AreaName, dialogPopupShown.Popup.DialogName, dialogPopupShown.Popup.CueName);
             AddPlayerToTracker(Game.PlayersInDialogPopup, dialogPopupShown.PlayerId);
 
             UpdateDialogPopupState();
+
+            OnAfterNetworkMessageHandled(receivedFrom, dialogPopupShown);
         }
 
-        private void OnNotifyInventoryItemTransferred(long playerId, NotifyInventoryItemTransferred itemTransferred)
+        private void OnNotifyInventoryItemTransferred(long receivedFrom, NotifyInventoryItemTransferred itemTransferred)
         {
-            Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}, Items={Items}, Source={Source}, Destination={Destination}", nameof(NotifyInventoryItemTransferred), playerId, itemTransferred.TransferItem.Items.Select(x => x.UniqueId), itemTransferred.TransferItem.Source.Id, itemTransferred.TransferItem.Destination?.Id);
+            Logger.LogInformation("Received {MessageType}. ReceivedFrom={ReceivedFrom}, Items={Items}, Source={Source}, Destination={Destination}", nameof(NotifyInventoryItemTransferred), receivedFrom, itemTransferred.TransferItem.Items.Select(x => x.UniqueId), itemTransferred.TransferItem.Source.Id, itemTransferred.TransferItem.Destination?.Id);
 
             var transferItem = Mapper.Map<NetworkItemsTransfer>(itemTransferred.TransferItem);
             GameInteraction.TransferInventoryItems(transferItem);
 
-            OnAfterNetworkMessageHandled(playerId, itemTransferred);
+            OnAfterNetworkMessageHandled(receivedFrom, itemTransferred);
         }
 
-        private void OnNotifyZoneLootClosed(long playerId, NotifyZoneLootClosed zoneLootClosed)
+        private void OnNotifyZoneLootClosed(long receivedFrom, NotifyZoneLootClosed zoneLootClosed)
         {
-            Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}", nameof(NotifyZoneLootClosed), zoneLootClosed.PlayerId);
+            Logger.LogInformation("Received {MessageType}. ReceivedFrom={ReceivedFrom}, PlayerId={PlayerId}", nameof(NotifyZoneLootClosed), receivedFrom, zoneLootClosed.PlayerId);
 
             RemovePlayerFromTracker(Game.PlayersInZoneLoot, zoneLootClosed.PlayerId);
             UpdateZoneLootUIState();
 
-            OnAfterNetworkMessageHandled(playerId, zoneLootClosed);
+            OnAfterNetworkMessageHandled(receivedFrom, zoneLootClosed);
         }
 
-        private void OnNotifyZoneLootShown(long playerId, NotifyZoneLootShown zoneLootShown)
+        private void OnNotifyZoneLootShown(long receivedFrom, NotifyZoneLootShown zoneLootShown)
         {
-            Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}", nameof(NotifyZoneLootShown), zoneLootShown.PlayerId);
+            Logger.LogInformation("Received {MessageType}. ReceivedFrom={ReceivedFrom}, PlayerId={PlayerId}", nameof(NotifyZoneLootShown), receivedFrom, zoneLootShown.PlayerId);
 
             AddPlayerToTracker(Game.PlayersInZoneLoot, zoneLootShown.PlayerId);
             UpdateZoneLootUIState();
 
-            OnAfterNetworkMessageHandled(playerId, zoneLootShown);
+            OnAfterNetworkMessageHandled(receivedFrom, zoneLootShown);
         }
 
         private void OnNotifyGlobalMapEncounterMessageShown(long receivedFrom, NotifyGlobalMapEncounterMessageShown globalMapEncounterMessageShown)
         {
-            Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}", nameof(NotifyGlobalMapEncounterMessageShown), globalMapEncounterMessageShown.PlayerId);
+            Logger.LogInformation("Received {MessageType}. ReceivedFrom={ReceivedFrom}, PlayerId={PlayerId}", nameof(NotifyGlobalMapEncounterMessageShown), receivedFrom, globalMapEncounterMessageShown.PlayerId);
 
             AddPlayerToTracker(Game.PlayersInGlobalMapEncounterMessage, globalMapEncounterMessageShown.PlayerId);
             UpdateGlobalMapEncounterMessageUIState();
@@ -3586,7 +3588,7 @@ namespace WOTRMultiplayer.Services
 
         private void OnNotifyGlobalMapCommonPopupShown(long receivedFrom, NotifyGlobalMapCommonPopupShown globalMapCommonPopupShown)
         {
-            Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}, Type={Type}, LocationId={LocationId}, LocationName={LocationName}", nameof(NotifyGlobalMapCommonPopupShown), globalMapCommonPopupShown.PlayerId, globalMapCommonPopupShown.Popup.Type, globalMapCommonPopupShown.Popup.Location?.Id.Length, globalMapCommonPopupShown.Popup.Location?.Name);
+            Logger.LogInformation("Received {MessageType}. ReceivedFrom={ReceivedFrom}, PlayerId={PlayerId}, Type={Type}, LocationId={LocationId}, LocationName={LocationName}", nameof(NotifyGlobalMapCommonPopupShown), receivedFrom, globalMapCommonPopupShown.PlayerId, globalMapCommonPopupShown.Popup.Type, globalMapCommonPopupShown.Popup.Location?.Id.Length, globalMapCommonPopupShown.Popup.Location?.Name);
 
             AddPlayerToTracker(Game.PlayersInGlobalMapCommonPopup, globalMapCommonPopupShown.PlayerId);
             var popup = Mapper.Map<NetworkGlobalMapCommonPopup>(globalMapCommonPopupShown.Popup);
@@ -3595,29 +3597,29 @@ namespace WOTRMultiplayer.Services
             OnAfterNetworkMessageHandled(receivedFrom, globalMapCommonPopupShown);
         }
 
-        private void OnNotifyGroupChangerOpened(long playerId, NotifyGroupChangerOpened groupChangerVisible)
+        private void OnNotifyGroupChangerOpened(long receivedFrom, NotifyGroupChangerOpened groupChangerVisible)
         {
-            Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}", nameof(NotifyGroupChangerOpened), groupChangerVisible.PlayerId);
+            Logger.LogInformation("Received {MessageType}. ReceivedFrom={ReceivedFrom}, PlayerId={PlayerId}", nameof(NotifyGroupChangerOpened), receivedFrom, groupChangerVisible.PlayerId);
 
             AddPlayerToTracker(Game.PlayersInGroupChanger, groupChangerVisible.PlayerId);
             UpdateGroupManagerUIState();
 
-            OnAfterNetworkMessageHandled(playerId, groupChangerVisible);
+            OnAfterNetworkMessageHandled(receivedFrom, groupChangerVisible);
         }
 
-        private void OnNotifyGlobalMapLocationMessageShown(long playerId, NotifyGlobalMapLocationMessageShown globalMapLocationMessageShown)
+        private void OnNotifyGlobalMapLocationMessageShown(long receivedFrom, NotifyGlobalMapLocationMessageShown globalMapLocationMessageShown)
         {
-            Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}", nameof(NotifyGlobalMapLocationMessageShown), globalMapLocationMessageShown.PlayerId);
+            Logger.LogInformation("Received {MessageType}. ReceivedFrom={ReceivedFrom}, PlayerId={PlayerId}", nameof(NotifyGlobalMapLocationMessageShown), receivedFrom, globalMapLocationMessageShown.PlayerId);
 
             AddPlayerToTracker(Game.PlayersInGlobalMapLocationMessage, globalMapLocationMessageShown.PlayerId);
             UpdateGlobalMapLocationMessageUIState();
 
-            OnAfterNetworkMessageHandled(playerId, globalMapLocationMessageShown);
+            OnAfterNetworkMessageHandled(receivedFrom, globalMapLocationMessageShown);
         }
 
         private void OnNotifySkipTimeOpened(long receivedFrom, NotifySkipTimeOpened skipTimeOpened)
         {
-            Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}", nameof(NotifySkipTimeOpened), skipTimeOpened.PlayerId);
+            Logger.LogInformation("Received {MessageType}. ReceivedFrom={ReceivedFrom}, PlayerId={PlayerId}", nameof(NotifySkipTimeOpened), receivedFrom, skipTimeOpened.PlayerId);
 
             AddPlayerToTracker(Game.PlayersInSkipTime, skipTimeOpened.PlayerId);
             GameInteraction.OpenSkipTimeUI();
@@ -3627,72 +3629,72 @@ namespace WOTRMultiplayer.Services
             OnAfterNetworkMessageHandled(receivedFrom, skipTimeOpened);
         }
 
-        private void OnNotifyUnitStealthChanged(long playerId, NotifyUnitStealthChanged unitStealthChanged)
+        private void OnNotifyUnitStealthChanged(long receivedFrom, NotifyUnitStealthChanged unitStealthChanged)
         {
-            Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}, UnitId={Round}, IsEnabled={IsEnabled}, IsForced={IsForced}", nameof(NotifyUnitStealthChanged), playerId, unitStealthChanged.UnitId, unitStealthChanged.IsEnabled, unitStealthChanged.IsForced);
+            Logger.LogInformation("Received {MessageType}. ReceivedFrom={ReceivedFrom}, UnitId={Round}, IsEnabled={IsEnabled}, IsForced={IsForced}", nameof(NotifyUnitStealthChanged), receivedFrom, unitStealthChanged.UnitId, unitStealthChanged.IsEnabled, unitStealthChanged.IsForced);
 
             GameInteraction.ChangeUnitStealth(unitStealthChanged.UnitId, unitStealthChanged.IsEnabled, unitStealthChanged.IsForced);
 
-            OnAfterNetworkMessageHandled(playerId, unitStealthChanged);
+            OnAfterNetworkMessageHandled(receivedFrom, unitStealthChanged);
         }
 
-        private void OnNotifyCombatTurnDelayed(long playerId, NotifyCombatTurnDelayed combatTurnDelayed)
+        private void OnNotifyCombatTurnDelayed(long receivedFrom, NotifyCombatTurnDelayed combatTurnDelayed)
         {
-            Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}, UnitId={Round}, TargetUnitId={TargetUnitId}", nameof(NotifyCombatTurnDelayed), playerId, combatTurnDelayed.UnitId, combatTurnDelayed.TargetUnitId);
+            Logger.LogInformation("Received {MessageType}. ReceivedFrom={ReceivedFrom}, UnitId={Round}, TargetUnitId={TargetUnitId}", nameof(NotifyCombatTurnDelayed), receivedFrom, combatTurnDelayed.UnitId, combatTurnDelayed.TargetUnitId);
 
             Game.Combat.Turn.IsInProgress = false;
             CombatInteraction.DelayCombatTurn(combatTurnDelayed.UnitId, combatTurnDelayed.TargetUnitId);
 
-            OnAfterNetworkMessageHandled(playerId, combatTurnDelayed);
+            OnAfterNetworkMessageHandled(receivedFrom, combatTurnDelayed);
         }
 
-        private void OnNotifyMapObjectLockpicked(long playerId, NotifyMapObjectLockpicked mapObjectLockpicked)
+        private void OnNotifyMapObjectLockpicked(long receivedFrom, NotifyMapObjectLockpicked mapObjectLockpicked)
         {
-            Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}, MapObjectId={MapObjectId}, MapObjectPosition={MapObjectPosition}, Units={Units}", nameof(NotifyMapObjectLockpicked), playerId, mapObjectLockpicked.LockpickInteraction.MapObject.Id, mapObjectLockpicked.LockpickInteraction.MapObject.Position, mapObjectLockpicked.LockpickInteraction.Units);
+            Logger.LogInformation("Received {MessageType}. ReceivedFrom={ReceivedFrom}, MapObjectId={MapObjectId}, MapObjectPosition={MapObjectPosition}, Units={Units}", nameof(NotifyMapObjectLockpicked), receivedFrom, mapObjectLockpicked.LockpickInteraction.MapObject.Id, mapObjectLockpicked.LockpickInteraction.MapObject.Position, mapObjectLockpicked.LockpickInteraction.Units);
             var lockpickInteraction = Mapper.Map<NetworkLockpickInteraction>(mapObjectLockpicked.LockpickInteraction);
 
             GameInteraction.LockpickMapObject(lockpickInteraction);
 
-            OnAfterNetworkMessageHandled(playerId, mapObjectLockpicked);
+            OnAfterNetworkMessageHandled(receivedFrom, mapObjectLockpicked);
         }
 
-        private void OnNotifyActionBarSlotMoved(long playerId, NotifyActionBarSlotMoved actionBarSlotMoved)
+        private void OnNotifyActionBarSlotMoved(long receivedFrom, NotifyActionBarSlotMoved actionBarSlotMoved)
         {
-            Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}, UnitId={UnitId}, SourceSlotIndex={SourceSlotIndex}, SourceSlotAbilityId={SourceSlotAbilityId}, SourceSlotActivatableAbilityId={SourceSlotActivatableAbilityId}, SourceSlotItemId={SourceSlotItemId}, TargetSlotIndex={TargetSlotIndex}, TargetSlotAbilityId={TargetSlotAbilityId}, TargetSlotActivatableAbilityId={TargetSlotActivatableAbilityId}, TargetSlotItemId={TargetSlotItemId}",
-                nameof(NotifyActionBarSlotMoved), playerId, actionBarSlotMoved.SourceActionBarSlot.UnitId, actionBarSlotMoved.SourceActionBarSlot.Index, actionBarSlotMoved.SourceActionBarSlot.Ability?.Id, actionBarSlotMoved.SourceActionBarSlot.ActivatableAbility?.Id, actionBarSlotMoved.SourceActionBarSlot.Item?.UniqueId, actionBarSlotMoved.TargetActionBarSlot.Index, actionBarSlotMoved.TargetActionBarSlot.Ability?.Id, actionBarSlotMoved.TargetActionBarSlot.ActivatableAbility?.Id, actionBarSlotMoved.TargetActionBarSlot.Item?.UniqueId);
+            Logger.LogInformation("Received {MessageType}. ReceivedFrom={ReceivedFrom}, UnitId={UnitId}, SourceSlotIndex={SourceSlotIndex}, SourceSlotAbilityId={SourceSlotAbilityId}, SourceSlotActivatableAbilityId={SourceSlotActivatableAbilityId}, SourceSlotItemId={SourceSlotItemId}, TargetSlotIndex={TargetSlotIndex}, TargetSlotAbilityId={TargetSlotAbilityId}, TargetSlotActivatableAbilityId={TargetSlotActivatableAbilityId}, TargetSlotItemId={TargetSlotItemId}",
+                nameof(NotifyActionBarSlotMoved), receivedFrom, actionBarSlotMoved.SourceActionBarSlot.UnitId, actionBarSlotMoved.SourceActionBarSlot.Index, actionBarSlotMoved.SourceActionBarSlot.Ability?.Id, actionBarSlotMoved.SourceActionBarSlot.ActivatableAbility?.Id, actionBarSlotMoved.SourceActionBarSlot.Item?.UniqueId, actionBarSlotMoved.TargetActionBarSlot.Index, actionBarSlotMoved.TargetActionBarSlot.Ability?.Id, actionBarSlotMoved.TargetActionBarSlot.ActivatableAbility?.Id, actionBarSlotMoved.TargetActionBarSlot.Item?.UniqueId);
 
             var sourceActionBarSlot = Mapper.Map<NetworkActionBarSlot>(actionBarSlotMoved.SourceActionBarSlot);
             var targetActionBarSlot = Mapper.Map<NetworkActionBarSlot>(actionBarSlotMoved.TargetActionBarSlot);
 
             GameInteraction.MoveActionBarSlots(sourceActionBarSlot, targetActionBarSlot);
 
-            OnAfterNetworkMessageHandled(playerId, actionBarSlotMoved);
+            OnAfterNetworkMessageHandled(receivedFrom, actionBarSlotMoved);
         }
 
-        private void OnNotifyActionBarSlotCleared(long playerId, NotifyActionBarSlotCleared actionBarSlotCleared)
+        private void OnNotifyActionBarSlotCleared(long receivedFrom, NotifyActionBarSlotCleared actionBarSlotCleared)
         {
-            Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}, UnitId={UnitId}, SlotIndex={SlotIndex}", nameof(NotifyActionBarSlotCleared), playerId, actionBarSlotCleared.ActionBarSlot.UnitId, actionBarSlotCleared.ActionBarSlot.Index);
+            Logger.LogInformation("Received {MessageType}. ReceivedFrom={ReceivedFrom}, UnitId={UnitId}, SlotIndex={SlotIndex}", nameof(NotifyActionBarSlotCleared), receivedFrom, actionBarSlotCleared.ActionBarSlot.UnitId, actionBarSlotCleared.ActionBarSlot.Index);
 
             var actionBarSlot = Mapper.Map<NetworkActionBarSlot>(actionBarSlotCleared.ActionBarSlot);
 
             GameInteraction.ClearActionBarSlot(actionBarSlot);
 
-            OnAfterNetworkMessageHandled(playerId, actionBarSlotCleared);
+            OnAfterNetworkMessageHandled(receivedFrom, actionBarSlotCleared);
         }
 
-        private void OnNotifyCharacterMove(long playerId, NotifyCharacterMove characterMove)
+        private void OnNotifyCharacterMove(long receivedFrom, NotifyCharacterMove characterMove)
         {
-            Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}, UnitId={UnitId}, Destination={Destination}, Delay={Delay}, Orientation={Orientation}", nameof(NotifyCharacterMove), playerId, characterMove.Move.UnitId, characterMove.Move.Destination, characterMove.Move.Delay, characterMove.Move.Orientation);
+            Logger.LogInformation("Received {MessageType}. ReceivedFrom={ReceivedFrom}, UnitId={UnitId}, Destination={Destination}, Delay={Delay}, Orientation={Orientation}", nameof(NotifyCharacterMove), receivedFrom, characterMove.Move.UnitId, characterMove.Move.Destination, characterMove.Move.Delay, characterMove.Move.Orientation);
 
             var move = Mapper.Map<NetworkCharacterMove>(characterMove.Move);
             GameInteraction.MoveNonCombatCharacter(move);
 
-            OnAfterNetworkMessageHandled(playerId, characterMove);
+            OnAfterNetworkMessageHandled(receivedFrom, characterMove);
         }
 
-        private void OnNotifyGroundClicked(long playerId, NotifyGroundClicked clicked)
+        private void OnNotifyGroundClicked(long receivedFrom, NotifyGroundClicked clicked)
         {
-            Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}, SelectedUnits={SelectedUnits}, WorldPosition={WorldPosition}", nameof(NotifyGroundClicked), playerId, clicked.Click.SelectedUnits.Count, clicked.Click.WorldPosition);
+            Logger.LogInformation("Received {MessageType}. ReceivedFrom={ReceivedFrom}, SelectedUnits={SelectedUnits}, WorldPosition={WorldPosition}", nameof(NotifyGroundClicked), receivedFrom, clicked.Click.SelectedUnits.Count, clicked.Click.WorldPosition);
             if (Game.Combat == null)
             {
                 Logger.LogWarning($"{nameof(NotifyGroundClicked)} is ignored out of combat");
@@ -3702,12 +3704,12 @@ namespace WOTRMultiplayer.Services
             var click = Mapper.Map<NetworkClick>(clicked.Click);
             GameInteraction.ClickGroundInCombat(click);
 
-            OnAfterNetworkMessageHandled(playerId, clicked);
+            OnAfterNetworkMessageHandled(receivedFrom, clicked);
         }
 
-        private void OnNotifyUnitClicked(long playerId, NotifyUnitClicked clicked)
+        private void OnNotifyUnitClicked(long receivedFrom, NotifyUnitClicked clicked)
         {
-            Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}, TargetUnitId={TargetUnitId}, SelectedUnits={SelectedUnits}", nameof(NotifyUnitClicked), playerId, clicked.Click.TargetUnitId, clicked.Click.SelectedUnits.Count);
+            Logger.LogInformation("Received {MessageType}. ReceivedFrom={ReceivedFrom}, TargetUnitId={TargetUnitId}, SelectedUnits={SelectedUnits}", nameof(NotifyUnitClicked), receivedFrom, clicked.Click.TargetUnitId, clicked.Click.SelectedUnits.Count);
 
             // Combat Unit clicks are usually followed up with UnitAttack command
             // UnitAttack commands are synced separately as we can enforce specific rules like fullattack
@@ -3722,349 +3724,345 @@ namespace WOTRMultiplayer.Services
             var click = Mapper.Map<NetworkClick>(clicked.Click);
             GameInteraction.ClickUnit(click);
 
-            OnAfterNetworkMessageHandled(playerId, clicked);
+            OnAfterNetworkMessageHandled(receivedFrom, clicked);
         }
 
-        private void OnNotifyMapObjectClicked(long playerId, NotifyMapObjectClicked clicked)
+        private void OnNotifyMapObjectClicked(long receivedFrom, NotifyMapObjectClicked clicked)
         {
-            Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}, TargetUnitId={TargetUnitId}, SelectedUnits={SelectedUnits}", nameof(NotifyMapObjectClicked), playerId, clicked.Click.TargetUnitId, clicked.Click.SelectedUnits.Count);
+            Logger.LogInformation("Received {MessageType}. ReceivedFrom={ReceivedFrom}, TargetUnitId={TargetUnitId}, SelectedUnits={SelectedUnits}", nameof(NotifyMapObjectClicked), receivedFrom, clicked.Click.TargetUnitId, clicked.Click.SelectedUnits.Count);
 
             var click = Mapper.Map<NetworkClick>(clicked.Click);
             GameInteraction.ClickMapObject(click);
 
-            OnAfterNetworkMessageHandled(playerId, clicked);
+            OnAfterNetworkMessageHandled(receivedFrom, clicked);
         }
 
-        private void OnNotifyToggleActivatableAbility(long playerId, NotifyToggleActivatableAbility activatableAbility)
+        private void OnNotifyToggleActivatableAbility(long receivedFrom, NotifyToggleActivatableAbility activatableAbility)
         {
-            Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}, AbilityId={AbilityId}, IsActive={IsActive}", nameof(NotifyToggleActivatableAbility), playerId, activatableAbility.Ability.Id, activatableAbility.Ability.IsActive);
+            Logger.LogInformation("Received {MessageType}. ReceivedFrom={ReceivedFrom}, AbilityId={AbilityId}, IsActive={IsActive}", nameof(NotifyToggleActivatableAbility), receivedFrom, activatableAbility.Ability.Id, activatableAbility.Ability.IsActive);
 
             var ability = Mapper.Map<NetworkActivatableAbility>(activatableAbility.Ability);
             GameInteraction.ToggleActivatableAbility(ability);
 
-            OnAfterNetworkMessageHandled(playerId, activatableAbility);
+            OnAfterNetworkMessageHandled(receivedFrom, activatableAbility);
         }
 
-        private void OnNotifyAbilityUsed(long playerId, NotifyAbilityUsed abilityUse)
+        private void OnNotifyAbilityUsed(long receivedFrom, NotifyAbilityUsed abilityUse)
         {
-            Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}, CasterId={CasterId}, AbilityId={AbilityId}, TargetUnitId={TargetUnitId}, TargetPoint={TargetPoint}", nameof(NotifyAbilityUsed), playerId, abilityUse.Ability.CasterId, abilityUse.Ability.Id, abilityUse.Ability.Target.UnitId, abilityUse.Ability.Target.Point);
+            Logger.LogInformation("Received {MessageType}. ReceivedFrom={ReceivedFrom}, CasterId={CasterId}, AbilityId={AbilityId}, TargetUnitId={TargetUnitId}, TargetPoint={TargetPoint}", nameof(NotifyAbilityUsed), receivedFrom, abilityUse.Ability.CasterId, abilityUse.Ability.Id, abilityUse.Ability.Target.UnitId, abilityUse.Ability.Target.Point);
 
             var ability = Mapper.Map<NetworkAbility>(abilityUse.Ability);
             CombatInteraction.UseAbility(ability);
 
-            OnAfterNetworkMessageHandled(playerId, abilityUse);
+            OnAfterNetworkMessageHandled(receivedFrom, abilityUse);
         }
 
-        private void OnNotifyUnitAttacked(long playerId, NotifyUnitAttacked unitAttacked)
+        private void OnNotifyUnitAttacked(long receivedFrom, NotifyUnitAttacked unitAttacked)
         {
-            Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}, ExecutorUnitId={ExecutorUnitId}, TargetUnitId={TargetUnitId}, IsFullAttack={IsFullAttack}, IsSingleAttack={IsSingleAttack}, MovementLimit={MovementLimit}",
-                nameof(NotifyUnitAttacked), playerId, unitAttacked.Attack.ExecutorUnitId, unitAttacked.Attack.TargetUnitId, unitAttacked.Attack.IsFullAttack, unitAttacked.Attack.IsSingleAttack, unitAttacked.Attack.MovementLimit);
+            Logger.LogInformation("Received {MessageType}. ReceivedFrom={ReceivedFrom}, ExecutorUnitId={ExecutorUnitId}, TargetUnitId={TargetUnitId}, IsFullAttack={IsFullAttack}, IsSingleAttack={IsSingleAttack}, MovementLimit={MovementLimit}",
+                nameof(NotifyUnitAttacked), receivedFrom, unitAttacked.Attack.ExecutorUnitId, unitAttacked.Attack.TargetUnitId, unitAttacked.Attack.IsFullAttack, unitAttacked.Attack.IsSingleAttack, unitAttacked.Attack.MovementLimit);
 
             var attack = Mapper.Map<NetworkUnitAttack>(unitAttacked.Attack);
             CombatInteraction.AttackUnit(attack);
 
-            OnAfterNetworkMessageHandled(playerId, unitAttacked);
+            OnAfterNetworkMessageHandled(receivedFrom, unitAttacked);
         }
 
-        private async void OnNotifyPlayerCombatTurnEnded(long playerId, NotifyPlayerCombatTurnEnded ended)
+        private async void OnNotifyPlayerCombatTurnEnded(long receivedFrom, NotifyPlayerCombatTurnEnded ended)
         {
-            Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}, UnitId={UnitId}", nameof(NotifyPlayerCombatTurnEnded), playerId, ended.UnitId);
+            Logger.LogInformation("Received {MessageType}. ReceivedFrom={ReceivedFrom}, PlayerId={PlayerId}, UnitId={UnitId}", nameof(NotifyPlayerCombatTurnEnded), receivedFrom, ended.PlayerId, ended.UnitId);
 
             await WaitWhileTrue(GameInteraction.HasAnyRunningCombatCommands, "Waiting for all combat commands to finish before ending turn");
 
-            OnAfterNetworkMessageHandled(playerId, ended);
-
-            if (!string.Equals(Game.Combat.Turn?.UnitId, ended.UnitId, StringComparison.OrdinalIgnoreCase))
-            {
-                Logger.LogWarning("Player ended invalid turn. PlayerId={PlayerId}, PlayerUnitId={PlayerUnitId}, LocalUnitId={LocalUnitId}", playerId, ended.UnitId, Game.Combat.Turn?.UnitId);
-                return;
-            }
-
             EndLocalTurn();
+
+            OnAfterNetworkMessageHandled(receivedFrom, ended);
         }
 
-        private void OnNotifyActiveHandEquipmentSetChanged(long playerId, NotifyActiveHandEquipmentSetChanged changed)
+        private void OnNotifyActiveHandEquipmentSetChanged(long receivedFrom, NotifyActiveHandEquipmentSetChanged changed)
         {
-            Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}, UnitId={UnitId}, SetIndex={SetIndex}", nameof(NotifyEquipmentSlotChanged), playerId, changed.Set.UnitId, changed.Set.Index);
+            Logger.LogInformation("Received {MessageType}. ReceivedFrom={ReceivedFrom}, UnitId={UnitId}, SetIndex={SetIndex}", nameof(NotifyEquipmentSlotChanged), receivedFrom, changed.Set.UnitId, changed.Set.Index);
             var set = Mapper.Map<NetworkActiveHandEquipmentSet>(changed.Set);
             GameInteraction.SetActiveHandEquipmentSet(set);
 
-            OnAfterNetworkMessageHandled(playerId, changed);
+            OnAfterNetworkMessageHandled(receivedFrom, changed);
         }
 
-        private void OnNotifyEquipmentSlotChanged(long playerId, NotifyEquipmentSlotChanged slotChanged)
+        private void OnNotifyEquipmentSlotChanged(long receivedFrom, NotifyEquipmentSlotChanged slotChanged)
         {
-            Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}, SlotType={SlotType}, SlotIndex={SlotIndex}, ItemId={ItemId}, OwnerId={OwnerId}", nameof(NotifyEquipmentSlotChanged), playerId, slotChanged.Slot.Position.Type, slotChanged.Slot.Position.Index, slotChanged.Slot.Item?.UniqueId, slotChanged.Slot.OwnerId);
+            Logger.LogInformation("Received {MessageType}. ReceivedFrom={ReceivedFrom}, SlotType={SlotType}, SlotIndex={SlotIndex}, ItemId={ItemId}, OwnerId={OwnerId}", nameof(NotifyEquipmentSlotChanged), receivedFrom, slotChanged.Slot.Position.Type, slotChanged.Slot.Position.Index, slotChanged.Slot.Item?.UniqueId, slotChanged.Slot.OwnerId);
             var slot = Mapper.Map<NetworkEquipmentSlot>(slotChanged.Slot);
             GameInteraction.UpdateEquipmentSlot(slot);
 
-            OnAfterNetworkMessageHandled(playerId, slotChanged);
+            OnAfterNetworkMessageHandled(receivedFrom, slotChanged);
         }
 
-        private void OnNotifyDropItem(long playerId, NotifyDropItem item)
+        private void OnNotifyDropItem(long receivedFrom, NotifyDropItem item)
         {
-            Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}, OwnerId={OwnerId}, ItemId={ItemId}, ItemName={ItemName}", nameof(NotifyDropItem), playerId, item.Drop.OwnerEntityId, item.Drop.Item.UniqueId, item.Drop.Item.Name);
+            Logger.LogInformation("Received {MessageType}. ReceivedFrom={ReceivedFrom}, OwnerId={OwnerId}, ItemId={ItemId}, ItemName={ItemName}", nameof(NotifyDropItem), receivedFrom, item.Drop.OwnerEntityId, item.Drop.Item.UniqueId, item.Drop.Item.Name);
 
             var dropItem = Mapper.Map<NetworkDropItem>(item.Drop);
             GameInteraction.DropItem(dropItem);
 
-            OnAfterNetworkMessageHandled(playerId, item);
+            OnAfterNetworkMessageHandled(receivedFrom, item);
         }
 
-        private void OnNotifyInventoryItemUsed(long playerId, NotifyInventoryItemUsed inventoryItemUsed)
+        private void OnNotifyInventoryItemUsed(long receivedFrom, NotifyInventoryItemUsed inventoryItemUsed)
         {
-            Logger.LogInformation("Received {MessageType}. UserUnitId={UserUnitId}, TargetUnitId={TargetUnitId}, ItemId={ItemId}, ItemName={ItemName}", nameof(NetworkUseInventoryItem), inventoryItemUsed.UseItem.UserUnitId, inventoryItemUsed.UseItem.Target?.UnitId, inventoryItemUsed.UseItem.Item.UniqueId, inventoryItemUsed.UseItem.Item.Name);
+            Logger.LogInformation("Received {MessageType}. ReceivedFrom={ReceivedFrom}, UserUnitId={UserUnitId}, TargetUnitId={TargetUnitId}, ItemId={ItemId}, ItemName={ItemName}", nameof(NetworkUseInventoryItem), receivedFrom, inventoryItemUsed.UseItem.UserUnitId, inventoryItemUsed.UseItem.Target?.UnitId, inventoryItemUsed.UseItem.Item.UniqueId, inventoryItemUsed.UseItem.Item.Name);
 
             var useItem = Mapper.Map<NetworkUseInventoryItem>(inventoryItemUsed.UseItem);
             GameInteraction.UseInventoryItem(useItem);
 
-            OnAfterNetworkMessageHandled(playerId, inventoryItemUsed);
+            OnAfterNetworkMessageHandled(receivedFrom, inventoryItemUsed);
         }
 
-        private void OnNotifyContainerSkinned(long playerId, NotifyLootableEntitySkinned notifyLootableEntitySkinned)
+        private void OnNotifyContainerSkinned(long receivedFrom, NotifyLootableEntitySkinned notifyLootableEntitySkinned)
         {
-            Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}, Id={Id}, Position={Position}, Type={Type}", nameof(NotifyLootableEntitySkinned), playerId, notifyLootableEntitySkinned.Entity.Id, notifyLootableEntitySkinned.Entity.Position, notifyLootableEntitySkinned.Entity.Type);
+            Logger.LogInformation("Received {MessageType}. ReceivedFrom={ReceivedFrom}, Id={Id}, Position={Position}, Type={Type}", nameof(NotifyLootableEntitySkinned), receivedFrom, notifyLootableEntitySkinned.Entity.Id, notifyLootableEntitySkinned.Entity.Position, notifyLootableEntitySkinned.Entity.Type);
             var container = Mapper.Map<NetworkLootableEntity>(notifyLootableEntitySkinned.Entity);
             GameInteraction.SkinLootContainer(container);
+
+            OnAfterNetworkMessageHandled(receivedFrom, notifyLootableEntitySkinned);
         }
 
-        private void OnNotifyOvertipInteracted(long playerId, NotifyOvertipInteracted interacted)
+        private void OnNotifyOvertipInteracted(long receivedFrom, NotifyOvertipInteracted interacted)
         {
-            Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}, MapObjectId={MapObjectId}, UnitsCount={UnitsCount}", nameof(NotifyOvertipInteracted), playerId, interacted.Overtip.MapObject.Id, interacted.Overtip.Units);
+            Logger.LogInformation("Received {MessageType}. ReceivedFrom={ReceivedFrom}, MapObjectId={MapObjectId}, UnitsCount={UnitsCount}", nameof(NotifyOvertipInteracted), receivedFrom, interacted.Overtip.MapObject.Id, interacted.Overtip.Units);
             var overtip = Mapper.Map<NetworkOvertip>(interacted.Overtip);
             GameInteraction.InteractWithOvertip(overtip);
 
-            OnAfterNetworkMessageHandled(playerId, interacted);
+            OnAfterNetworkMessageHandled(receivedFrom, interacted);
         }
 
-        private void OnNotifyUnitJoinedMidCombat(long playerId, NotifyUnitJoinedMidCombat combat)
+        private void OnNotifyUnitJoinedMidCombat(long receivedFrom, NotifyUnitJoinedMidCombat combat)
         {
-            Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}, UnitId={UnitId}", nameof(NotifyUnitJoinedMidCombat), playerId, combat.UnitId);
+            Logger.LogInformation("Received {MessageType}. ReceivedFrom={ReceivedFrom}, PlayerId={PlayerId}, UnitId={UnitId}", nameof(NotifyUnitJoinedMidCombat), receivedFrom, combat.PlayerId, combat.UnitId);
             AddPlayerReadyStatus(PlayerTurnReadinessType.UnitJoinedMidCombat, combat.PlayerId, combat.UnitId);
 
-            OnAfterNetworkMessageHandled(playerId, combat);
+            OnAfterNetworkMessageHandled(receivedFrom, combat);
         }
 
-        private void OnNotifyRestBanterInterrupted(long playerId, NotifyRestBanterInterrupted interrupted)
+        private void OnNotifyRestBanterInterrupted(long receivedFrom, NotifyRestBanterInterrupted interrupted)
         {
-            Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}, SpeakerUnitId={SpeakerUnitId}, Key={Key}", nameof(NotifyRestBanterInterrupted), playerId, interrupted.Banter.SpeakerUnitId, interrupted.Banter.Key);
+            Logger.LogInformation("Received {MessageType}. ReceivedFrom={ReceivedFrom}, SpeakerUnitId={SpeakerUnitId}, Key={Key}", nameof(NotifyRestBanterInterrupted), receivedFrom, interrupted.Banter.SpeakerUnitId, interrupted.Banter.Key);
             var banter = Mapper.Map<NetworkRestBanter>(interrupted.Banter);
             GameInteraction.TryInterruptRestBanter(banter);
 
-            OnAfterNetworkMessageHandled(playerId, interrupted);
+            OnAfterNetworkMessageHandled(receivedFrom, interrupted);
         }
 
-        private void OnNotifyVendorItemTransferred(long playerId, NotifyVendorItemTransferred message)
+        private void OnNotifyVendorItemTransferred(long receivedFrom, NotifyVendorItemTransferred message)
         {
-            Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}, ItemId={ItemId}, Count={Count}, Action={Action}, ActionTarget={ActionTarget}", nameof(NotifyVendorItemTransferred), playerId, message.ItemTransfer.Item.UniqueId, message.ItemTransfer.Count, message.ItemTransfer.ItemAction, message.ItemTransfer.ItemActionTarget);
+            Logger.LogInformation("Received {MessageType}. ReceivedFrom={ReceivedFrom}, ItemId={ItemId}, Count={Count}, Action={Action}, ActionTarget={ActionTarget}", nameof(NotifyVendorItemTransferred), receivedFrom, message.ItemTransfer.Item.UniqueId, message.ItemTransfer.Count, message.ItemTransfer.ItemAction, message.ItemTransfer.ItemActionTarget);
 
             var transfer = Mapper.Map<NetworkVendorItemTransfer>(message.ItemTransfer);
             GameInteraction.TransferVendorItem(transfer);
 
-            OnAfterNetworkMessageHandled(playerId, message);
+            OnAfterNetworkMessageHandled(receivedFrom, message);
         }
 
-        private void OnNotifySpellForgotten(long playerId, NotifySpellForgotten spellForgotten)
+        private void OnNotifySpellForgotten(long receivedFrom, NotifySpellForgotten spellForgotten)
         {
-            Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}, UnitId={UnitId}, SpellbookId={SpellbookId}, SpellSlotIndex={SpellSlotIndex}, SpellSlotType={SpellSlotType}",
-                nameof(NotifySpellForgotten), playerId, spellForgotten.Slot.UnitId, spellForgotten.Slot.SpellbookId, spellForgotten.Slot.Index, spellForgotten.Slot.Type);
+            Logger.LogInformation("Received {MessageType}. ReceivedFrom={ReceivedFrom}, UnitId={UnitId}, SpellbookId={SpellbookId}, SpellSlotIndex={SpellSlotIndex}, SpellSlotType={SpellSlotType}",
+                nameof(NotifySpellForgotten), receivedFrom, spellForgotten.Slot.UnitId, spellForgotten.Slot.SpellbookId, spellForgotten.Slot.Index, spellForgotten.Slot.Type);
 
             var slot = Mapper.Map<NetworkSpellSlot>(spellForgotten.Slot);
 
             GameInteraction.ForgetSpell(slot);
 
-            OnAfterNetworkMessageHandled(playerId, spellForgotten);
+            OnAfterNetworkMessageHandled(receivedFrom, spellForgotten);
         }
 
-        private void OnNotifySpellMemorized(long playerId, NotifySpellMemorized memorized)
+        private void OnNotifySpellMemorized(long receivedFrom, NotifySpellMemorized memorized)
         {
-            Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}, UnitId={UnitId}, SpellbookId={SpellbookId}, SpellId={SpellId}, SpellLevel={SpellLevel}, SpellName={SpellName}, SpellSlotIndex={SpellSlotIndex}, SpellSlotType={SpellSlotType}",
-                nameof(NotifySpellMemorized), playerId, memorized.Slot.UnitId, memorized.Slot.SpellbookId, memorized.Slot.SpellId, memorized.Slot.SpellLevel, memorized.Slot.SpellName, memorized.Slot.Index, memorized.Slot.Type);
+            Logger.LogInformation("Received {MessageType}. ReceivedFrom={ReceivedFrom}, UnitId={UnitId}, SpellbookId={SpellbookId}, SpellId={SpellId}, SpellLevel={SpellLevel}, SpellName={SpellName}, SpellSlotIndex={SpellSlotIndex}, SpellSlotType={SpellSlotType}",
+                nameof(NotifySpellMemorized), receivedFrom, memorized.Slot.UnitId, memorized.Slot.SpellbookId, memorized.Slot.SpellId, memorized.Slot.SpellLevel, memorized.Slot.SpellName, memorized.Slot.Index, memorized.Slot.Type);
 
             var slot = Mapper.Map<NetworkSpellSlot>(memorized.Slot);
 
             GameInteraction.MemorizeSpell(slot);
 
-            OnAfterNetworkMessageHandled(playerId, memorized);
+            OnAfterNetworkMessageHandled(receivedFrom, memorized);
         }
 
-        private void OnNotifyLevelingPortraitSelected(long playerId, NotifyLevelingPortraitSelected levelingPortraitSelected)
+        private void OnNotifyLevelingPortraitSelected(long receivedFrom, NotifyLevelingPortraitSelected levelingPortraitSelected)
         {
-            Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}, Name={Name}, CustomId={CustomId}, Category={Category}", nameof(NotifyLevelingPortraitSelected), playerId, levelingPortraitSelected.Portrait.Name, levelingPortraitSelected.Portrait.CustomId, levelingPortraitSelected.Portrait.Category);
+            Logger.LogInformation("Received {MessageType}. ReceivedFrom={ReceivedFrom}, Name={Name}, CustomId={CustomId}, Category={Category}", nameof(NotifyLevelingPortraitSelected), receivedFrom, levelingPortraitSelected.Portrait.Name, levelingPortraitSelected.Portrait.CustomId, levelingPortraitSelected.Portrait.Category);
 
             var levelingPortrait = Mapper.Map<NetworkLevelingPortrait>(levelingPortraitSelected.Portrait);
             LevelingInteraction.SelectLevelingPortrait(levelingPortrait);
 
-            OnAfterNetworkMessageHandled(playerId, levelingPortraitSelected);
+            OnAfterNetworkMessageHandled(receivedFrom, levelingPortraitSelected);
         }
 
-        private void OnNotifyLevelingVoiceSelected(long playerId, NotifyLevelingVoiceSelected levelingVoiceSelected)
+        private void OnNotifyLevelingVoiceSelected(long receivedFrom, NotifyLevelingVoiceSelected levelingVoiceSelected)
         {
-            Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}, Id={Id}, GenderId={GenderId}", nameof(NotifyLevelingVoiceSelected), playerId, levelingVoiceSelected.Voice.Id, levelingVoiceSelected.Voice.GenderId);
+            Logger.LogInformation("Received {MessageType}. ReceivedFrom={ReceivedFrom}, Id={Id}, GenderId={GenderId}", nameof(NotifyLevelingVoiceSelected), receivedFrom, levelingVoiceSelected.Voice.Id, levelingVoiceSelected.Voice.GenderId);
 
             var levelingVoice = Mapper.Map<NetworkLevelingVoice>(levelingVoiceSelected.Voice);
             LevelingInteraction.SelectLevelingVoice(levelingVoice);
 
-            OnAfterNetworkMessageHandled(playerId, levelingVoiceSelected);
+            OnAfterNetworkMessageHandled(receivedFrom, levelingVoiceSelected);
         }
 
-        private void OnNotifyLevelingAlignmentSelected(long playerId, NotifyLevelingAlignmentSelected levelingAlignmentSelected)
+        private void OnNotifyLevelingAlignmentSelected(long receivedFrom, NotifyLevelingAlignmentSelected levelingAlignmentSelected)
         {
-            Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}, AlignmentId={AlignmentId}", nameof(NotifyLevelingGenderSelected), playerId, levelingAlignmentSelected.AlignmentId);
+            Logger.LogInformation("Received {MessageType}. ReceivedFrom={ReceivedFrom}, AlignmentId={AlignmentId}", nameof(NotifyLevelingGenderSelected), receivedFrom, levelingAlignmentSelected.AlignmentId);
 
             LevelingInteraction.SelectLevelingAlignment(levelingAlignmentSelected.AlignmentId);
 
-            OnAfterNetworkMessageHandled(playerId, levelingAlignmentSelected);
+            OnAfterNetworkMessageHandled(receivedFrom, levelingAlignmentSelected);
         }
 
-        private void OnNotifyLevelingNameChanged(long playerId, NotifyLevelingNameChanged levelingNameChanged)
+        private void OnNotifyLevelingNameChanged(long receivedFrom, NotifyLevelingNameChanged levelingNameChanged)
         {
-            Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}, Name={Name}", nameof(NotifyLevelingGenderSelected), playerId, levelingNameChanged.Name);
+            Logger.LogInformation("Received {MessageType}. ReceivedFrom={ReceivedFrom}, Name={Name}", nameof(NotifyLevelingGenderSelected), receivedFrom, levelingNameChanged.Name);
 
             LevelingInteraction.SetLevelingName(levelingNameChanged.Name);
 
-            OnAfterNetworkMessageHandled(playerId, levelingNameChanged);
+            OnAfterNetworkMessageHandled(receivedFrom, levelingNameChanged);
         }
 
-        private void OnNotifyLevelingGenderSelected(long playerId, NotifyLevelingGenderSelected levelingGenderSelected)
+        private void OnNotifyLevelingGenderSelected(long receivedFrom, NotifyLevelingGenderSelected levelingGenderSelected)
         {
-            Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}, GenderId={GenderId}", nameof(NotifyLevelingGenderSelected), playerId, levelingGenderSelected.GenderId);
+            Logger.LogInformation("Received {MessageType}. ReceivedFrom={ReceivedFrom}, GenderId={GenderId}", nameof(NotifyLevelingGenderSelected), receivedFrom, levelingGenderSelected.GenderId);
 
             LevelingInteraction.SelectLevelingGender(levelingGenderSelected.GenderId);
 
-            OnAfterNetworkMessageHandled(playerId, levelingGenderSelected);
+            OnAfterNetworkMessageHandled(receivedFrom, levelingGenderSelected);
         }
 
-        private void OnNotifyLevelingRaceSelected(long playerId, NotifyLevelingRaceSelected levelingRaceSelected)
+        private void OnNotifyLevelingRaceSelected(long receivedFrom, NotifyLevelingRaceSelected levelingRaceSelected)
         {
-            Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}, RaceId={RaceId}", nameof(NotifyLevelingRaceSelected), playerId, levelingRaceSelected.RaceId);
+            Logger.LogInformation("Received {MessageType}. ReceivedFrom={ReceivedFrom}, RaceId={RaceId}", nameof(NotifyLevelingRaceSelected), receivedFrom, levelingRaceSelected.RaceId);
 
             LevelingInteraction.SelectLevelingRace(levelingRaceSelected.RaceId);
 
-            OnAfterNetworkMessageHandled(playerId, levelingRaceSelected);
+            OnAfterNetworkMessageHandled(receivedFrom, levelingRaceSelected);
         }
 
-        private void OnNotifyLevelingRacialAbilityScoreBonusChanged(long playerId, NotifyLevelingRacialAbilityScoreBonusChanged racialAbilityScoreBonusChanged)
+        private void OnNotifyLevelingRacialAbilityScoreBonusChanged(long receivedFrom, NotifyLevelingRacialAbilityScoreBonusChanged racialAbilityScoreBonusChanged)
         {
-            Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}, Direction={Direction}", nameof(NotifyLevelingRaceSelected), playerId, racialAbilityScoreBonusChanged.Direction);
+            Logger.LogInformation("Received {MessageType}. ReceivedFrom={ReceivedFrom}, Direction={Direction}", nameof(NotifyLevelingRaceSelected), receivedFrom, racialAbilityScoreBonusChanged.Direction);
 
             var direction = Mapper.Map<NetworkLevelingSequenceDirection>(racialAbilityScoreBonusChanged.Direction);
 
             LevelingInteraction.ChangeLevelingRacialAbilityScoreBonus(direction);
 
-            OnAfterNetworkMessageHandled(playerId, racialAbilityScoreBonusChanged);
+            OnAfterNetworkMessageHandled(receivedFrom, racialAbilityScoreBonusChanged);
         }
 
-        private void OnNotifyLevelingBirthDayChanged(long playerId, NotifyLevelingBirthDayChanged levelingBirthDayChanged)
+        private void OnNotifyLevelingBirthDayChanged(long receivedFrom, NotifyLevelingBirthDayChanged levelingBirthDayChanged)
         {
-            Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}, Direction={Direction}", nameof(NotifyLevelingBirthDayChanged), playerId, levelingBirthDayChanged.Direction);
+            Logger.LogInformation("Received {MessageType}. ReceivedFrom={ReceivedFrom}, Direction={Direction}", nameof(NotifyLevelingBirthDayChanged), receivedFrom, levelingBirthDayChanged.Direction);
 
             var direction = Mapper.Map<NetworkLevelingSequenceDirection>(levelingBirthDayChanged.Direction);
 
             LevelingInteraction.ChangeLevelingBirthDay(direction);
 
-            OnAfterNetworkMessageHandled(playerId, levelingBirthDayChanged);
+            OnAfterNetworkMessageHandled(receivedFrom, levelingBirthDayChanged);
         }
 
-        private void OnNotifyLevelingBirthMonthChanged(long playerId, NotifyLevelingBirthMonthChanged levelingBirthMonthChanged)
+        private void OnNotifyLevelingBirthMonthChanged(long receivedFrom, NotifyLevelingBirthMonthChanged levelingBirthMonthChanged)
         {
-            Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}, Direction={Direction}", nameof(NotifyLevelingBirthMonthChanged), playerId, levelingBirthMonthChanged.Direction);
+            Logger.LogInformation("Received {MessageType}. ReceivedFrom={ReceivedFrom}, Direction={Direction}", nameof(NotifyLevelingBirthMonthChanged), receivedFrom, levelingBirthMonthChanged.Direction);
 
             var direction = Mapper.Map<NetworkLevelingSequenceDirection>(levelingBirthMonthChanged.Direction);
 
             LevelingInteraction.ChangeLevelingBirthMonth(direction);
 
-            OnAfterNetworkMessageHandled(playerId, levelingBirthMonthChanged);
+            OnAfterNetworkMessageHandled(receivedFrom, levelingBirthMonthChanged);
         }
 
-        private void OnNotifyLevelingAbilityScoreDecreased(long playerId, NotifyLevelingAbilityScoreDecreased levelingAbilityScoreDecreased)
+        private void OnNotifyLevelingAbilityScoreDecreased(long receivedFrom, NotifyLevelingAbilityScoreDecreased levelingAbilityScoreDecreased)
         {
-            Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}, StatType={StatType}", nameof(NotifyLevelingAbilityScoreDecreased), playerId, levelingAbilityScoreDecreased.AbilityScore.StatType);
+            Logger.LogInformation("Received {MessageType}. ReceivedFrom={ReceivedFrom}, StatType={StatType}", nameof(NotifyLevelingAbilityScoreDecreased), receivedFrom, levelingAbilityScoreDecreased.AbilityScore.StatType);
 
             var abilityScore = Mapper.Map<NetworkLevelingAbilityScore>(levelingAbilityScoreDecreased.AbilityScore);
             LevelingInteraction.DecreaseLevelingAbilityScore(abilityScore);
 
-            OnAfterNetworkMessageHandled(playerId, levelingAbilityScoreDecreased);
+            OnAfterNetworkMessageHandled(receivedFrom, levelingAbilityScoreDecreased);
         }
 
-        private void OnNotifyLevelingAbilityScoreIncreased(long playerId, NotifyLevelingAbilityScoreIncreased levelingAbilityScoreIncreased)
+        private void OnNotifyLevelingAbilityScoreIncreased(long receivedFrom, NotifyLevelingAbilityScoreIncreased levelingAbilityScoreIncreased)
         {
-            Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}, StatType={StatType}", nameof(NotifyLevelingAbilityScoreIncreased), playerId, levelingAbilityScoreIncreased.AbilityScore.StatType);
+            Logger.LogInformation("Received {MessageType}. ReceivedFrom={ReceivedFrom}, StatType={StatType}", nameof(NotifyLevelingAbilityScoreIncreased), receivedFrom, levelingAbilityScoreIncreased.AbilityScore.StatType);
 
             var abilityScore = Mapper.Map<NetworkLevelingAbilityScore>(levelingAbilityScoreIncreased.AbilityScore);
             LevelingInteraction.IncreaseLevelingAbilityScore(abilityScore);
 
-            OnAfterNetworkMessageHandled(playerId, levelingAbilityScoreIncreased);
+            OnAfterNetworkMessageHandled(receivedFrom, levelingAbilityScoreIncreased);
         }
 
-        private void OnNotifyLevelingCompleted(long playerId, NotifyLevelingCompleted completed)
+        private void OnNotifyLevelingCompleted(long receivedFrom, NotifyLevelingCompleted completed)
         {
-            Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}", nameof(NotifyLevelingCompleted), playerId);
+            Logger.LogInformation("Received {MessageType}. ReceivedFrom={ReceivedFrom}", nameof(NotifyLevelingCompleted), receivedFrom);
             LevelingInteraction.CompleteLeveling();
 
-            OnAfterNetworkMessageHandled(playerId, completed);
+            OnAfterNetworkMessageHandled(receivedFrom, completed);
         }
 
-        private void OnNotifyLevelingTerminated(long playerId, NotifyLevelingTerminated terminated)
+        private void OnNotifyLevelingTerminated(long receivedFrom, NotifyLevelingTerminated terminated)
         {
-            Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}", nameof(NotifyLevelingTerminated), playerId);
+            Logger.LogInformation("Received {MessageType}. ReceivedFrom={ReceivedFrom}", nameof(NotifyLevelingTerminated), receivedFrom);
             LevelingInteraction.TerminateLeveling();
 
-            OnAfterNetworkMessageHandled(playerId, terminated);
+            OnAfterNetworkMessageHandled(receivedFrom, terminated);
         }
 
-        private void OnNotifyLevelingSpellRemoved(long playerId, NotifyLevelingSpellRemoved removed)
+        private void OnNotifyLevelingSpellRemoved(long receivedFrom, NotifyLevelingSpellRemoved removed)
         {
-            Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}, SpellName={SpellName}, SpellId={SpellId}", nameof(NotifyLevelingSpellRemoved), playerId, removed.Spell.Name, removed.Spell.Id);
+            Logger.LogInformation("Received {MessageType}. ReceivedFrom={ReceivedFrom}, SpellName={SpellName}, SpellId={SpellId}", nameof(NotifyLevelingSpellRemoved), receivedFrom, removed.Spell.Name, removed.Spell.Id);
             var spell = Mapper.Map<NetworkLevelingSpell>(removed.Spell);
             LevelingInteraction.RemoveLevelingSpell(spell);
 
-            OnAfterNetworkMessageHandled(playerId, removed);
+            OnAfterNetworkMessageHandled(receivedFrom, removed);
         }
 
-        private void OnNotifyLevelingSpellChosen(long playerId, NotifyLevelingSpellChosen chosen)
+        private void OnNotifyLevelingSpellChosen(long receivedFrom, NotifyLevelingSpellChosen chosen)
         {
-            Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}, SpellName={SpellName}, SpellId={SpellId}", nameof(NotifyLevelingSpellChosen), playerId, chosen.Spell.Name, chosen.Spell.Id);
+            Logger.LogInformation("Received {MessageType}. ReceivedFrom={ReceivedFrom}, SpellName={SpellName}, SpellId={SpellId}", nameof(NotifyLevelingSpellChosen), receivedFrom, chosen.Spell.Name, chosen.Spell.Id);
             var spell = Mapper.Map<NetworkLevelingSpell>(chosen.Spell);
             LevelingInteraction.SelectLevelingSpell(spell);
 
-            OnAfterNetworkMessageHandled(playerId, chosen);
+            OnAfterNetworkMessageHandled(receivedFrom, chosen);
         }
 
-        private void OnNotifyLevelingFeatureSelected(long playerId, NotifyLevelingFeatureSelected selected)
+        private void OnNotifyLevelingFeatureSelected(long receivedFrom, NotifyLevelingFeatureSelected selected)
         {
-            Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}, FeatureName={FeatureName}, FeatureId={FeatureId}", nameof(NotifyLevelingFeatureSelected), playerId, selected.Feature.Name, selected.Feature.Id);
+            Logger.LogInformation("Received {MessageType}. ReceivedFrom={ReceivedFrom}, FeatureName={FeatureName}, FeatureId={FeatureId}", nameof(NotifyLevelingFeatureSelected), receivedFrom, selected.Feature.Name, selected.Feature.Id);
             var feature = Mapper.Map<NetworkLevelingFeature>(selected.Feature);
             LevelingInteraction.SelectLevelingFeature(feature);
 
-            OnAfterNetworkMessageHandled(playerId, selected);
+            OnAfterNetworkMessageHandled(receivedFrom, selected);
         }
 
-        private void OnNotifyLevelingSkillPointDecreased(long playerId, NotifyLevelingSkillPointDecreased decreased)
+        private void OnNotifyLevelingSkillPointDecreased(long receivedFrom, NotifyLevelingSkillPointDecreased decreased)
         {
-            Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}, StatType={StatType}", nameof(NotifyLevelingSkillPointDecreased), playerId, decreased.Skill.StatType);
+            Logger.LogInformation("Received {MessageType}. ReceivedFrom={ReceivedFrom}, StatType={StatType}", nameof(NotifyLevelingSkillPointDecreased), receivedFrom, decreased.Skill.StatType);
             var skillPoint = Mapper.Map<NetworkLevelingSkillPoint>(decreased.Skill);
             LevelingInteraction.DecreaseLevelingSkillPoint(skillPoint);
-            OnAfterNetworkMessageHandled(playerId, decreased);
+            OnAfterNetworkMessageHandled(receivedFrom, decreased);
         }
 
-        private void OnNotifyLevelingSkillPointIncreased(long playerId, NotifyLevelingSkillPointIncreased increased)
+        private void OnNotifyLevelingSkillPointIncreased(long receivedFrom, NotifyLevelingSkillPointIncreased increased)
         {
-            Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}, StatType={StatType}", nameof(NotifyLevelingSkillPointIncreased), playerId, increased.Skill.StatType);
+            Logger.LogInformation("Received {MessageType}. ReceivedFrom={ReceivedFrom}, StatType={StatType}", nameof(NotifyLevelingSkillPointIncreased), receivedFrom, increased.Skill.StatType);
             var skillPoint = Mapper.Map<NetworkLevelingSkillPoint>(increased.Skill);
             LevelingInteraction.IncreaseLevelingSkillPoint(skillPoint);
 
-            OnAfterNetworkMessageHandled(playerId, increased);
+            OnAfterNetworkMessageHandled(receivedFrom, increased);
         }
 
-        private void OnNotifyLevelingPhaseChanged(long playerId, NotifyLevelingPhaseChanged levelingPhaseChanged)
+        private void OnNotifyLevelingPhaseChanged(long receivedFrom, NotifyLevelingPhaseChanged levelingPhaseChanged)
         {
-            Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}, Index={Index}", nameof(NotifyLevelingPhaseChanged), playerId, levelingPhaseChanged.Phase.Index);
+            Logger.LogInformation("Received {MessageType}. ReceivedFrom={ReceivedFrom}, Index={Index}", nameof(NotifyLevelingPhaseChanged), receivedFrom, levelingPhaseChanged.Phase.Index);
             var phase = Mapper.Map<NetworkLevelingPhase>(levelingPhaseChanged.Phase);
             ResetPlayersTracker(Game.Leveling.PlayerReadiness);
             LevelingInteraction.SwitchLevelingPhase(phase);
 
-            OnAfterNetworkMessageHandled(playerId, levelingPhaseChanged);
+            OnAfterNetworkMessageHandled(receivedFrom, levelingPhaseChanged);
         }
 
         private async void OnNotifyLevelingPhaseWitnessed(long receivedFrom, NotifyLevelingPhaseWitnessed levelingPhaseWitnessed)
@@ -4080,29 +4078,29 @@ namespace WOTRMultiplayer.Services
             OnAfterNetworkMessageHandled(receivedFrom, levelingPhaseWitnessed);
         }
 
-        private void OnNotifyLevelingClassArchetypeSelected(long playerId, NotifyLevelingClassArchetypeSelected classArchetypeSelected)
+        private void OnNotifyLevelingClassArchetypeSelected(long receivedFrom, NotifyLevelingClassArchetypeSelected classArchetypeSelected)
         {
-            Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}, ArchetypeId={ArchetypeId}", nameof(NotifyLevelingClassArchetypeSelected), playerId, classArchetypeSelected.ArchetypeId);
+            Logger.LogInformation("Received {MessageType}. ReceivedFrom={ReceivedFrom}, ArchetypeId={ArchetypeId}", nameof(NotifyLevelingClassArchetypeSelected), receivedFrom, classArchetypeSelected.ArchetypeId);
             LevelingInteraction.SelectLevelingClassArchetype(classArchetypeSelected.ArchetypeId);
 
-            OnAfterNetworkMessageHandled(playerId, classArchetypeSelected);
+            OnAfterNetworkMessageHandled(receivedFrom, classArchetypeSelected);
         }
 
 
-        private void OnNotifyLevelingMythicClassSelected(long playerId, NotifyLevelingMythicClassSelected mythicClassSelected)
+        private void OnNotifyLevelingMythicClassSelected(long receivedFrom, NotifyLevelingMythicClassSelected mythicClassSelected)
         {
-            Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}, MythicClassId={MythicClassId}", nameof(NotifyLevelingMythicClassSelected), playerId, mythicClassSelected.MythicClassId);
+            Logger.LogInformation("Received {MessageType}. ReceivedFrom={ReceivedFrom}, MythicClassId={MythicClassId}", nameof(NotifyLevelingMythicClassSelected), receivedFrom, mythicClassSelected.MythicClassId);
             LevelingInteraction.SelectMythicLevelingClass(mythicClassSelected.MythicClassId);
 
-            OnAfterNetworkMessageHandled(playerId, mythicClassSelected);
+            OnAfterNetworkMessageHandled(receivedFrom, mythicClassSelected);
         }
 
-        private void OnNotifyLevelingClassSelected(long playerId, NotifyLevelingClassSelected classSelected)
+        private void OnNotifyLevelingClassSelected(long receivedFrom, NotifyLevelingClassSelected classSelected)
         {
-            Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}, ClassId={ClassId}", nameof(NotifyCharacterLevelingStarted), playerId, classSelected.ClassId);
+            Logger.LogInformation("Received {MessageType}. ReceivedFrom={ReceivedFrom}, ClassId={ClassId}", nameof(NotifyCharacterLevelingStarted), receivedFrom, classSelected.ClassId);
             LevelingInteraction.SelectLevelingClass(classSelected.ClassId);
 
-            OnAfterNetworkMessageHandled(playerId, classSelected);
+            OnAfterNetworkMessageHandled(receivedFrom, classSelected);
         }
 
         private bool IsControlledByLocalPlayer(List<string> units)
@@ -4173,8 +4171,7 @@ namespace WOTRMultiplayer.Services
         {
             var isOutOfSupport = currentChapter switch
             {
-                <= 1 => false,
-                2 => currentArea != "WarCamp",
+                <= 2 => false,
                 _ => true,
             };
 

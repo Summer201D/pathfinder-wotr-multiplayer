@@ -7,6 +7,10 @@ namespace WOTRMultiplayer.Networking.Messages.Game
     public class NotifyPlayerCombatTurnEnded
     {
         [ProtoMember(1)]
+        public long PlayerId { get; set; }
+
+        [ProtoMember(2)]
         public string UnitId { get; set; }
+
     }
 }
