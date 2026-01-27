@@ -42,10 +42,6 @@ namespace WOTRMultiplayer.Playground.Core.Dummies
             return false;
         }
 
-        public void OpenRestMenu()
-        {
-        }
-
         public void RollEncounter(NetworkGlobalMapEncounter encounter)
         {
         }
@@ -259,6 +255,10 @@ namespace WOTRMultiplayer.Playground.Core.Dummies
         }
 
         public void SelectLeaderLevelingSkill(string id)
+        {
+        }
+
+        public void OpenGroupChanger()
         {
         }
     }

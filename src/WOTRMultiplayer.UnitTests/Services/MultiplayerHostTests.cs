@@ -142,7 +142,7 @@ namespace WOTRMultiplayer.UnitTests.Services
             handler.Invoke(playerId, message);
 
             // Assert
-            A.CallTo(() => _gameInteractionService.UpdateStartRestButtonState(true, 1, 0)).MustHaveHappenedOnceExactly();
+            A.CallTo(() => _gameInteractionService.UpdateRestUI(true, 1, 0)).MustHaveHappenedOnceExactly();
             Assert.That(_multiplayerHost.Game.Rest.PlayersFinishedRest, Contains.Item(playerId));
         }
 
@@ -329,7 +329,7 @@ namespace WOTRMultiplayer.UnitTests.Services
 
             // Assert
             _multiplayerHost.Game.PlayersInGameMode.TryGetValue(gameMode, out var players);
-            A.CallTo(() => _gameInteractionService.UpdateStartRestButtonState(false, players.Count, _multiplayerHost.Game.Players.Count)).MustHaveHappened();
+            A.CallTo(() => _gameInteractionService.UpdateRestUI(false, players.Count, _multiplayerHost.Game.Players.Count)).MustHaveHappened();
         }
 
         private static IEnumerable<ContentStateTestCase> DlcDifferencesTestCases()

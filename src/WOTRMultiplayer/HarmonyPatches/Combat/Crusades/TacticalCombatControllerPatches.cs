@@ -64,7 +64,7 @@ namespace WOTRMultiplayer.HarmonyPatches.Combat.Crusades
 
         [HarmonyPatch(typeof(TacticalCombatController), nameof(TacticalCombatController.Setup))]
         [HarmonyPostfix]
-        public static void TacticalCombatController_Setup_Prefix()
+        public static void TacticalCombatController_Setup_Postfix()
         {
             if (!Main.Multiplayer.IsActive)
             {

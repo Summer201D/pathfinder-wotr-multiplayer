@@ -1,8 +1,8 @@
-﻿using HarmonyLib;
+﻿using System;
+using HarmonyLib;
 using Kingmaker.UI.MVVM._PCView.EscMenu;
 using Microsoft.Extensions.Logging;
 using Owlcat.Runtime.UI.Controls.Button;
-using UnityEngine;
 using WOTRMultiplayer.UI;
 
 namespace WOTRMultiplayer.HarmonyPatches.MenuPatches
@@ -12,10 +12,8 @@ namespace WOTRMultiplayer.HarmonyPatches.MenuPatches
     {
         [HarmonyPatch(typeof(EscMenuPCView), nameof(EscMenuPCView.BindViewImplementation))]
         [HarmonyPrefix]
-        public static void EscMenuPCView_BindViewImplementation_Postfix(EscMenuPCView __instance)
+        public static void EscMenuPCView_BindViewImplementation_Prefix(EscMenuPCView __instance)
         {
-            var logger = Main.GetLogger<EscMenuPCViewPatches>();
-            logger.LogInformation("Applying patch [{PatchName}]", nameof(EscMenuPCView_BindViewImplementation_Postfix));
             try
             {
                 var mainMenu = __instance.transform.Find($"Window/ButtonBlock/{UIFactory.MultiplayerMenuObjectName}")?.gameObject;
@@ -26,14 +24,14 @@ namespace WOTRMultiplayer.HarmonyPatches.MenuPatches
                 }
                 else if (mainMenu != null && !Main.Multiplayer.IsActive)
                 {
-                    logger.LogInformation("Deleting lobby menu item since current game is not a multiplayer one");
-                    Object.DestroyImmediate(mainMenu);
+                    Main.GetLogger<EscMenuPCViewPatches>().LogInformation("Deleting lobby menu item since current game is not a multiplayer one");
+                    UnityEngine.Object.DestroyImmediate(mainMenu);
                     SetPhotoModeButtonState(__instance, true);
                 }
             }
-            catch (System.Exception ex)
+            catch (Exception ex)
             {
-                logger.LogError(ex, "Unable to apply patch");
+                Main.GetLogger<EscMenuPCViewPatches>().LogError(ex, "Unable to apply patch");
                 throw;
             }
         }

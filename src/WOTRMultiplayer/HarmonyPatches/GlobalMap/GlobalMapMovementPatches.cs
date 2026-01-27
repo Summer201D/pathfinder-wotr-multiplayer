@@ -311,7 +311,7 @@ namespace WOTRMultiplayer.HarmonyPatches.GlobalMap
 
         [HarmonyPatch(typeof(GlobalMapEnterMessageVM), nameof(GlobalMapEnterMessageVM.CanLocationSelect))]
         [HarmonyPostfix]
-        public static void GlobalMapEnterMessageVM_CanLocationSelect_Prefix(GlobalMapPointView locationView, ref bool __result)
+        public static void GlobalMapEnterMessageVM_CanLocationSelect_Postfix(GlobalMapPointView locationView, ref bool __result)
         {
             if (!Main.Multiplayer.IsActive)
             {
@@ -332,7 +332,7 @@ namespace WOTRMultiplayer.HarmonyPatches.GlobalMap
                 return;
             }
 
-            var canNavigate = Main.Multiplayer.CanNavigateOnGlobalMap();
+            var canNavigate = Main.Multiplayer.CanControlGlobalMap();
             __instance.m_BtnContinue.GetComponentInChildren<OwlcatButton>().Interactable = canNavigate;
             __instance.m_BtnStop.GetComponentInChildren<OwlcatButton>().Interactable = canNavigate;
         }
@@ -419,7 +419,7 @@ namespace WOTRMultiplayer.HarmonyPatches.GlobalMap
                 return true;
             }
 
-            var shouldContinue = Main.Multiplayer.CanNavigateOnGlobalMap();
+            var shouldContinue = Main.Multiplayer.CanControlGlobalMap();
             return shouldContinue;
         }
 

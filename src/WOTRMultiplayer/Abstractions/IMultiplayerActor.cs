@@ -285,6 +285,8 @@ namespace WOTRMultiplayer.Abstractions
 
         bool OnCreateAndEquipPolymorphInSlot(NetworkPolymorphicItem polymorphicItem);
 
+        void OnCapitalModeRest();
+
         void OnStartRest();
 
         void OnStartRestSleepPhase();

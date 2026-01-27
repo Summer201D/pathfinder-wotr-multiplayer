@@ -90,7 +90,9 @@ namespace WOTRMultiplayer.Abstractions.GameInteraction
 
         void SetCampingRoles(List<NetworkCampingRole> networkCampingRoles);
 
-        void UpdateStartRestButtonState(bool isInteractable, int readyPlayersCount, int totalPlayersCount);
+        void InitiateRest();
+
+        void UpdateRestUI(bool isInteractable, int readyPlayersCount, int totalPlayersCount);
 
         void StartRest();
 
@@ -129,6 +131,8 @@ namespace WOTRMultiplayer.Abstractions.GameInteraction
         void CloseSkipTimeUI();
 
         void OpenSkipTimeUI();
+
+        void CloseRestWindow();
 
         void UpdateSkipTimeHours(float hours);
 

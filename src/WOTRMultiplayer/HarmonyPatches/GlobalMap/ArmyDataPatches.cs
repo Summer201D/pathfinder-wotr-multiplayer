@@ -128,7 +128,7 @@ namespace WOTRMultiplayer.HarmonyPatches.GlobalMap
                 return;
             }
 
-            __instance.m_DismissButton.Interactable = Main.Multiplayer.CanNavigateOnGlobalMap();
+            __instance.m_DismissButton.Interactable = Main.Multiplayer.CanControlGlobalMap();
         }
 
         [HarmonyPatch(typeof(ArmyInfoSquadPCView), nameof(ArmyInfoSquadPCView.OnBeginDrag))]
@@ -140,7 +140,7 @@ namespace WOTRMultiplayer.HarmonyPatches.GlobalMap
                 return true;
             }
 
-            var canContinue = Main.Multiplayer.CanNavigateOnGlobalMap();
+            var canContinue = Main.Multiplayer.CanControlGlobalMap();
             return canContinue;
         }
 
@@ -153,7 +153,7 @@ namespace WOTRMultiplayer.HarmonyPatches.GlobalMap
                 return true;
             }
 
-            var canContinue = Main.Multiplayer.CanNavigateOnGlobalMap();
+            var canContinue = Main.Multiplayer.CanControlGlobalMap();
             return canContinue;
         }
 
@@ -166,7 +166,7 @@ namespace WOTRMultiplayer.HarmonyPatches.GlobalMap
                 return true;
             }
 
-            var canContinue = Main.Multiplayer.CanNavigateOnGlobalMap();
+            var canContinue = Main.Multiplayer.CanControlGlobalMap();
             return canContinue;
         }
 

@@ -18,7 +18,7 @@ namespace WOTRMultiplayer.HarmonyPatches.GlobalMap
                 return;
             }
 
-            __instance.m_MergeButton.Interactable = Main.Multiplayer.CanNavigateOnGlobalMap();
+            __instance.m_MergeButton.Interactable = Main.Multiplayer.CanControlGlobalMap();
         }
 
         [HarmonyPatch(typeof(GlobalMapArmyOvertipsVM), nameof(GlobalMapArmyOvertipsVM.MergeArmies))]

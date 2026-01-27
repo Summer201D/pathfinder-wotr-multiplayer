@@ -55,23 +55,21 @@ namespace WOTRMultiplayer.Services.GameInteraction
             _uiSyncCountersService = uiSyncCountersService;
         }
 
-        public void OpenRestMenu()
+        public void OpenGroupChanger()
         {
             _mainThreadAccessor.Post(() =>
             {
-                if (_uiAccessor.RestView != null)
+                var view = _uiAccessor.GroupChangerView;
+                if (view?.ViewModel != null)
                 {
+                    _logger.LogWarning("GroupChanger is already opened");
                     return;
                 }
 
-                var isOk = RestHelper.TryStartRest();
-                if (!isOk)
-                {
-                    _logger.LogError("Unable to start global map rest");
-                    return;
-                }
+                _uiAccessor.CloseAllWindows();
 
-                _logger.LogInformation("Opened global map rest menu");
+                GlobalMapView.Instance.StartChangedPartyOnGlobalMap();
+                _logger.LogInformation("GroupChanger has been opened");
             });
         }
 
@@ -360,6 +358,10 @@ namespace WOTRMultiplayer.Services.GameInteraction
                 {
                     menuView.m_KingdomButton.Interactable = isInteractable;
                     menuView.m_RecruitButton.Interactable = isInteractable;
+
+                    menuView.m_RestButton.Interactable = isInteractable;
+                    menuView.m_GroupManagerButton.Interactable = isInteractable;
+                    menuView.m_SkipTime.Interactable = isInteractable;
                 }
 
                 var markersView = globalMapView.m_GlobalMapArmyPointerMarkerPCView;

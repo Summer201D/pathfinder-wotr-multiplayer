@@ -32,6 +32,8 @@ namespace WOTRMultiplayer.Abstractions
 
         IValueGenerator ValueGenerator { get; }
 
+        void CloseMultiplayerLobbyWindow();
+
         bool InitializeMultiplayer(InitializeMultiplayerContext context);
 
         void TerminateMultiplayer();
@@ -112,11 +114,13 @@ namespace WOTRMultiplayer.Abstractions
 
         void OnCampingUnitsRoleChanged(List<NetworkCampingRole> networkCampingRoles);
 
+        void OnCapitalModeRest();
+
         void OnStartRest();
 
         void OnStartRestSleepPhase();
 
-        bool CanUseCampingUI();
+        bool CanUseRestUI();
 
         void OnBeforeTryRollRestRandomEncounter();
 
@@ -222,6 +226,10 @@ namespace WOTRMultiplayer.Abstractions
 
         void OnGlobalMapRestOpened();
 
+        void OnRestWindowClosed();
+
+        void OnGlobalMapGroupChangerOpened();
+
         bool OnGlobalMapBeforeRollTravelEncounter();
 
         void OnGlobalMapTravelStarted(NetworkGlobalMapTravel globalMapTravel);
@@ -260,7 +268,7 @@ namespace WOTRMultiplayer.Abstractions
 
         void OnGlobalMapEncounterRolled(NetworkGlobalMapEncounter globalMapRandomEncounter);
 
-        bool CanNavigateOnGlobalMap();
+        bool CanControlGlobalMap();
 
         void OnGlobalMapSkipDay();
 

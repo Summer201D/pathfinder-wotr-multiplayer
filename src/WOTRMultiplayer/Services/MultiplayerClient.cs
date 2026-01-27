@@ -457,6 +457,7 @@ namespace WOTRMultiplayer.Services
                .On<NotifyCharacterSelectionWindowClosed>(OnNotifyCharacterSelectionWindowClosed)
 
                // rest
+               .On<NotifyRestWindowClosed>(OnNotifyRestWindowClosed)
                .On<NotifyRestStarted>(OnNotifyRestStarted)
                .On<NotifySpawnCampPlace>(OnNotifySpawnCampPlace)
                .On<NotifyCampingUseHealingSpellsChanged>(OnNotifyCampingUseHealingSpellsChanged)
@@ -470,7 +471,8 @@ namespace WOTRMultiplayer.Services
                .On<NotifyCombatTurnSynchronizationRequired>(OnNotifyCombatTurnSynchronizationRequired)
 
                // global map & crusade combat
-               .On<NotifyGlobalMapRestMenuOpened>(OnNotifyGlobalMapRestMenuOpened)
+               .On<NotifyGlobalMapRestOpened>(OnNotifyGlobalMapRestOpened)
+               .On<NotifyGlobalMapGroupChangerOpened>(OnNotifyGlobalMapGroupChangerOpened)
                .On<NotifyGlobalMapTravelStarted>(OnNotifyGlobalMapTravelStarted)
                .On<NotifyGlobalMapTravelStopped>(OnNotifyGlobalMapTravelStopped)
                .On<NotifyGlobalMapTravelContinued>(OnNotifyGlobalMapTravelContinued)
@@ -1056,21 +1058,21 @@ namespace WOTRMultiplayer.Services
             GameInteraction.ToggleCharacterSelectionWindow(characterSelectionToggleChanged.UnitId);
         }
 
-        private void OnNotifyZoneLootRemoveToggleChanged(long playerId, NotifyZoneLootRemoveToggleChanged zoneLootRemoveToggleChanged)
+        private void OnNotifyZoneLootRemoveToggleChanged(long receivedFrom, NotifyZoneLootRemoveToggleChanged zoneLootRemoveToggleChanged)
         {
             Logger.LogInformation("Received {MessageType}. RemoveLoot={RemoveLoot}", nameof(NotifyZoneLootRemoveToggleChanged), zoneLootRemoveToggleChanged.RemoveLoot);
 
             GameInteraction.UpdateZoneLootRemoveToggle(zoneLootRemoveToggleChanged.RemoveLoot);
         }
 
-        private void OnNotifyZoneLootCompleted(long playerId, NotifyZoneLootCompleted zoneLootCompleted)
+        private void OnNotifyZoneLootCompleted(long receivedFrom, NotifyZoneLootCompleted zoneLootCompleted)
         {
             Logger.LogInformation("Received {MessageType}. RemoveLoot={RemoveLoot}", nameof(NotifyZoneLootCompleted));
 
             GameInteraction.CompleteZoneLoot();
         }
 
-        private void OnNotifyGlobalMapEncounterRolled(long playerId, NotifyGlobalMapEncounterRolled globalMapEncounterRolled)
+        private void OnNotifyGlobalMapEncounterRolled(long receivedFrom, NotifyGlobalMapEncounterRolled globalMapEncounterRolled)
         {
             Logger.LogInformation("Sending {MessageType}. Seed={Seed}, EncounterId={EncounterId}, Position={Position}, Avoidance={Avoidance}", nameof(NotifyGlobalMapEncounterRolled), globalMapEncounterRolled.Encounter.Seed, globalMapEncounterRolled.Encounter.BlueprintId, globalMapEncounterRolled.Encounter.Position, globalMapEncounterRolled.Encounter.AvoidanceResult);
             var encounter = Mapper.Map<NetworkGlobalMapEncounter>(globalMapEncounterRolled.Encounter);
@@ -1078,7 +1080,7 @@ namespace WOTRMultiplayer.Services
             GlobalMapInteraction.RollEncounter(encounter);
         }
 
-        private void OnNotifyGlobalMapEncounterAvoided(long playerId, NotifyGlobalMapEncounterAvoided globalMapEncounterAvoided)
+        private void OnNotifyGlobalMapEncounterAvoided(long receivedFrom, NotifyGlobalMapEncounterAvoided globalMapEncounterAvoided)
         {
             Logger.LogInformation("Received {MessageType}", nameof(NotifyGlobalMapLocationEntered));
             GlobalMapInteraction.AvoidEncounter();
@@ -1086,7 +1088,7 @@ namespace WOTRMultiplayer.Services
             ResetPlayersTracker(Game.PlayersInGlobalMapEncounterMessage);
         }
 
-        private void OnNotifyGlobalMapEncounterAccepted(long playerId, NotifyGlobalMapEncounterAccepted notifyGlobalMapEncounterAccepted)
+        private void OnNotifyGlobalMapEncounterAccepted(long receivedFrom, NotifyGlobalMapEncounterAccepted notifyGlobalMapEncounterAccepted)
         {
             Logger.LogInformation("Received {MessageType}", nameof(NotifyGlobalMapEncounterAccepted));
             GlobalMapInteraction.AcceptEncounter();
@@ -1094,7 +1096,7 @@ namespace WOTRMultiplayer.Services
             ResetPlayersTracker(Game.PlayersInGlobalMapEncounterMessage);
         }
 
-        private void OnNotifyGlobalMapLocationEntered(long playerId, NotifyGlobalMapLocationEntered globalMapLocationEntered)
+        private void OnNotifyGlobalMapLocationEntered(long receivedFrom, NotifyGlobalMapLocationEntered globalMapLocationEntered)
         {
             Logger.LogInformation("Received {MessageType}. LocationId={LocationId}, LocationName={LocationName}", nameof(NotifyGlobalMapLocationEntered), globalMapLocationEntered.Location.Id, globalMapLocationEntered.Location.Name);
 
@@ -1104,7 +1106,7 @@ namespace WOTRMultiplayer.Services
             ResetPlayersTracker(Game.PlayersInGlobalMapLocationMessage);
         }
 
-        private void OnNotifyGlobalMapIngredientCollectionAccepted(long playerId, NotifyGlobalMapCommonPopupAccepted globalMapCommonPopupAccepted)
+        private void OnNotifyGlobalMapIngredientCollectionAccepted(long receivedFrom, NotifyGlobalMapCommonPopupAccepted globalMapCommonPopupAccepted)
         {
             Logger.LogInformation("Received {MessageType}. Type={Type}, LocationId={LocationId}, LocationName={LocationName}", nameof(NotifyGlobalMapCommonPopupAccepted), globalMapCommonPopupAccepted.Popup.Type, globalMapCommonPopupAccepted.Popup.Location?.Id, globalMapCommonPopupAccepted.Popup.Location?.Name);
 
@@ -1114,14 +1116,14 @@ namespace WOTRMultiplayer.Services
             ResetPlayersTracker(Game.PlayersInGlobalMapCommonPopup);
         }
 
-        private void OnNotifyGlobalMapTravelContinued(long playerId, NotifyGlobalMapTravelContinued globalMapTravelContinued)
+        private void OnNotifyGlobalMapTravelContinued(long receivedFrom, NotifyGlobalMapTravelContinued globalMapTravelContinued)
         {
             Logger.LogInformation("Received {MessageType}. EdgePosition={EdgePosition}", nameof(NotifyGlobalMapTravelContinued), globalMapTravelContinued.Traveler.Position?.EdgePosition);
             var traveler = Mapper.Map<NetworkGlobalMapTraveler>(globalMapTravelContinued.Traveler);
             GlobalMapInteraction.ContinueTravel(traveler);
         }
 
-        private void OnNotifyGlobalMapTravelStopped(long playerId, NotifyGlobalMapTravelStopped globalMapTravelStopped)
+        private void OnNotifyGlobalMapTravelStopped(long receivedFrom, NotifyGlobalMapTravelStopped globalMapTravelStopped)
         {
             Logger.LogInformation("Received {MessageType}. EdgePosition={EdgePosition}", nameof(NotifyGlobalMapTravelStopped), globalMapTravelStopped.Traveler.Position?.EdgePosition);
 
@@ -1129,27 +1131,27 @@ namespace WOTRMultiplayer.Services
             GlobalMapInteraction.StopTravel(traveler);
         }
 
-        private void OnNotifySkipTimeStarted(long playerId, NotifySkipTimeStarted skipTimeStarted)
+        private void OnNotifySkipTimeStarted(long receivedFrom, NotifySkipTimeStarted skipTimeStarted)
         {
             Logger.LogInformation("Received {MessageType}", nameof(NotifySkipTimeStarted));
             ResetPlayersTracker(Game.PlayersInSkipTime);
             GameInteraction.StartSkipTime();
         }
 
-        private void OnNotifySkipTimeHoursChanged(long playerId, NotifySkipTimeHoursChanged skipTimeHoursChanged)
+        private void OnNotifySkipTimeHoursChanged(long receivedFrom, NotifySkipTimeHoursChanged skipTimeHoursChanged)
         {
             Logger.LogInformation("Received {MessageType}. Hours={Hours}", nameof(NotifySkipTimeHoursChanged), skipTimeHoursChanged.Hours);
             GameInteraction.UpdateSkipTimeHours(skipTimeHoursChanged.Hours);
         }
 
-        private void OnNotifySkipTimeClosed(long playerId, NotifySkipTimeClosed skipTimeClosed)
+        private void OnNotifySkipTimeClosed(long receivedFrom, NotifySkipTimeClosed skipTimeClosed)
         {
-            Logger.LogInformation("Received {MessageType}", nameof(NotifySkipTimeOpened));
+            Logger.LogInformation("Received {MessageType}", nameof(NotifySkipTimeClosed));
             GameInteraction.CloseSkipTimeUI();
             ResetPlayersTracker(Game.PlayersInSkipTime);
         }
 
-        private void OnNotifyGlobalMapTravelStarted(long playerId, NotifyGlobalMapTravelStarted globalMapTravelStarted)
+        private void OnNotifyGlobalMapTravelStarted(long receivedFrom, NotifyGlobalMapTravelStarted globalMapTravelStarted)
         {
             Logger.LogInformation("Received {MessageType}. Type={Type}, MovementPoints={MovementPoints}, FromClick={FromClick}, DestinationId={DestinationId}, DestinationName={DestinationName}", nameof(NotifyGlobalMapTravelStarted), globalMapTravelStarted.Travel.Type, globalMapTravelStarted.Travel.Traveler.MovementPoints, globalMapTravelStarted.Travel.FromClick, globalMapTravelStarted.Travel.Destination.Id, globalMapTravelStarted.Travel.Destination.Name);
 
@@ -1158,10 +1160,22 @@ namespace WOTRMultiplayer.Services
             GlobalMapInteraction.StartTravel(travel);
         }
 
-        private void OnNotifyGlobalMapRestMenuOpened(long playerId, NotifyGlobalMapRestMenuOpened globalMapRestMenuOpened)
+        private void OnNotifyGlobalMapRestOpened(long receivedFrom, NotifyGlobalMapRestOpened message)
         {
-            Logger.LogInformation("Received {MessageType}", nameof(NotifyGlobalMapRestMenuOpened));
-            GlobalMapInteraction.OpenRestMenu();
+            Logger.LogInformation("Received {MessageType}", nameof(NotifyGlobalMapRestOpened));
+            GameInteraction.InitiateRest();
+        }
+
+        private void OnNotifyGlobalMapGroupChangerOpened(long receivedFrom, NotifyGlobalMapGroupChangerOpened message)
+        {
+            Logger.LogInformation("Received {MessageType}", nameof(NotifyGlobalMapGroupChangerOpened));
+            GlobalMapInteraction.OpenGroupChanger();
+        }
+
+        private void OnNotifyRestWindowClosed(long receivedFrom, NotifyRestWindowClosed message)
+        {
+            Logger.LogInformation("Received {MessageType}", nameof(NotifyRestWindowClosed));
+            GameInteraction.CloseRestWindow();
         }
 
         private void OnNotifyGroupChangerPartyAccepted(long playerId, NotifyGroupChangerPartyAccepted groupChangerPartyAccepted)

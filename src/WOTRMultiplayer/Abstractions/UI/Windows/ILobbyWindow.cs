@@ -19,7 +19,11 @@ namespace WOTRMultiplayer.Abstractions.UI.Windows
 
         Func<List<NetworkCharacter>> GetCharacters { get; set; }
 
-        void Show(bool state);
+        bool IsVisible { get; }
+
+        void Close();
+
+        void Show();
 
         ILobbyWindow WithController(ILobbyWindowController controller);
 

@@ -97,7 +97,7 @@
             NotifyGroupChangerClosed,
             NotifyGroupChangerUnitClicked,
             NotifyGroupChangerPartyAccepted,
-            NotifyGlobalMapRestMenuOpened,
+            NotifyGlobalMapRestOpened,
             NotifyGlobalMapTravelStarted,
             NotifySkipTimeOpened,
             NotifySkipTimeClosed,
@@ -221,7 +221,10 @@
             NotifyGlobalMapCrusadeArmyLeaderLevelingShown,
             NotifyGlobalMapCrusadeArmyLeaderLevelingClosed,
             NotifyGlobalMapCrusadeArmyLeaderLevelingConfirmed,
-            NotifyGlobalMapCrusadeArmyLeaderLevelingSkillSelected
+            NotifyGlobalMapCrusadeArmyLeaderLevelingSkillSelected,
+            NotifyRestWindowClosed,
+            NotifyGlobalMapGroupChangerOpened,
+            NotifyCapitalModeRestInitiated
         }
 
         public enum Request

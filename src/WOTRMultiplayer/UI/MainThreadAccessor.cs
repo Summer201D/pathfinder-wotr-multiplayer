@@ -8,6 +8,7 @@ namespace WOTRMultiplayer.UI
     {
         public void Post(Action action)
         {
+            // TODO: review usages, a lot of calculations can be done outside on main thread
             MainThreadDispatcher.Post(x => action(), null);
         }
     }

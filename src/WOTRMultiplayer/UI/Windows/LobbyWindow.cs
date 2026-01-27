@@ -26,6 +26,8 @@ namespace WOTRMultiplayer.UI.Windows
 
         public GameObject Initiator { get; private set; }
 
+        public bool IsVisible => base.IsShow;
+
         public LobbyWindow WithLogger(ILogger<LobbyWindow> logger)
         {
             _logger = logger;
@@ -92,12 +94,17 @@ namespace WOTRMultiplayer.UI.Windows
             base.Dispose();
         }
 
-        private void Close()
+        public void Close()
         {
             _logger.LogInformation("Close lobby window");
             _lobbyWindowController?.ResetData();
             Show(false);
             _onClose?.Invoke();
+        }
+
+        public void Show()
+        {
+            Show(true);
         }
     }
 }

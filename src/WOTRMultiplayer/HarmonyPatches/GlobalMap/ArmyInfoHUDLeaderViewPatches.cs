@@ -15,7 +15,7 @@ namespace WOTRMultiplayer.HarmonyPatches.GlobalMap
                 return;
             }
 
-            __instance.m_LevelupButton.Interactable = __instance.m_LevelupButton.Interactable && Main.Multiplayer.CanNavigateOnGlobalMap();
+            __instance.m_LevelupButton.Interactable = __instance.m_LevelupButton.Interactable && Main.Multiplayer.CanControlGlobalMap();
         }
     }
 }

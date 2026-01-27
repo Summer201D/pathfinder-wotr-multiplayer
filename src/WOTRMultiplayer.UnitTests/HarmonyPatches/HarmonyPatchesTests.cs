@@ -73,6 +73,27 @@ namespace WOTRMultiplayer.UnitTests.HarmonyPatches
             Assert.That(duplicated, Is.Empty, "Duplicate harmony patch method names detected");
         }
 
+        [Test]
+        public void HarmonyPatch_EndsWithCorrectSuffix()
+        {
+            // Arrange
+            var invalidMethods = new ConcurrentDictionary<string, string>();
+
+            // Act
+            foreach (var enumerated in EnumeratePatches())
+            {
+                var expectedSuffix = enumerated.PatchType.Replace("Harmony", string.Empty);
+                var endsWith = enumerated.Method.Name.Split('_').LastOrDefault();
+                if (string.IsNullOrEmpty(endsWith) || endsWith != expectedSuffix)
+                {
+                    invalidMethods.AddOrUpdate(enumerated.Method.Name, expectedSuffix, (key, value) => expectedSuffix);
+                }
+            }
+
+            // Assert
+            Assert.That(invalidMethods, Is.Empty, $"Invalid harmony patch method name suffix detected ({invalidMethods.Count})");
+        }
+
         private IEnumerable<EnumeratedHarmonyPatch> EnumeratePatches()
         {
             var classesWithPatches = typeof(Main).Assembly.GetTypes().Where(x => x.GetCustomAttribute<HarmonyPatch>() != null);

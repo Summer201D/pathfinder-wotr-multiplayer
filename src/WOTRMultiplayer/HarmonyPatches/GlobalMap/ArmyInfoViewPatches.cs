@@ -73,7 +73,7 @@ namespace WOTRMultiplayer.HarmonyPatches.GlobalMap
                 return;
             }
 
-            __instance.m_InfoButton.Interactable = Main.Multiplayer.CanNavigateOnGlobalMap();
+            __instance.m_InfoButton.Interactable = Main.Multiplayer.CanControlGlobalMap();
         }
 
         [HarmonyPatch(typeof(ArmyInfoVM), nameof(ArmyInfoVM.NextMergeArmy))]

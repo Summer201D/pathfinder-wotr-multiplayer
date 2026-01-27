@@ -19,7 +19,7 @@ namespace WOTRMultiplayer.HarmonyPatches.GlobalMap
         [HarmonyPrefix]
         public static bool GlobalMapArmyPointerMarkerEntityVM_OnLeftClick_Prefix(GlobalMapArmyPointerMarkerEntityVM __instance)
         {
-            if (!Main.Multiplayer.IsActive || Main.Multiplayer.CanNavigateOnGlobalMap())
+            if (!Main.Multiplayer.IsActive || Main.Multiplayer.CanControlGlobalMap())
             {
                 return true;
             }
@@ -37,7 +37,7 @@ namespace WOTRMultiplayer.HarmonyPatches.GlobalMap
                 return true;
             }
 
-            var canContinue = Main.Multiplayer.CanNavigateOnGlobalMap();
+            var canContinue = Main.Multiplayer.CanControlGlobalMap();
             return canContinue;
         }
 
@@ -90,7 +90,7 @@ namespace WOTRMultiplayer.HarmonyPatches.GlobalMap
                 return;
             }
 
-            __instance.m_AutoTacticalCombat.m_Button.Interactable = Main.Multiplayer.CanNavigateOnGlobalMap();
+            __instance.m_AutoTacticalCombat.m_Button.Interactable = Main.Multiplayer.CanControlGlobalMap();
         }
 
         [HarmonyPatch(typeof(GlobalMapToolbarSettingsVM), nameof(GlobalMapToolbarSettingsVM.SwitchAutoTacticalCombat))]

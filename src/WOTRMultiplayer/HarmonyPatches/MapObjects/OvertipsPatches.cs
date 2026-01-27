@@ -21,7 +21,7 @@ namespace WOTRMultiplayer.HarmonyPatches.MapObjects
     {
         [HarmonyPatch(typeof(OvertipViewPartName), nameof(OvertipViewPartName.SetName))]
         [HarmonyPostfix]
-        public static void OvertipViewPartName_SetName_Prefix(OvertipViewPartName __instance)
+        public static void OvertipViewPartName_SetName_Postfix(OvertipViewPartName __instance)
         {
             if (!Main.Multiplayer.IsActive)
             {

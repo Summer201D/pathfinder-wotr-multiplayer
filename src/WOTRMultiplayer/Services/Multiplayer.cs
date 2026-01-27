@@ -115,7 +115,7 @@ namespace WOTRMultiplayer.Services
             }
 
             _logger.LogInformation("Creating Esc menu multiplayer lobby window");
-            _lobbyWindow = Factory.InitializeEscMenuLobbyWindow(_lobbyWindowController, ShowEscMenuMultiplayerLobby);
+            _lobbyWindow = Factory.InitializeEscMenuLobbyWindow(_lobbyWindowController, ShowMultiplayerLobbyWindow);
 
             _lobbyWindow.GetGameConnectivity = _multiplayerActorAccessor.Current.GetGameConnectivity;
             _lobbyWindow.GetPlayers = _multiplayerActorAccessor.Current.GetPlayers;
@@ -805,6 +805,24 @@ namespace WOTRMultiplayer.Services
             }
         }
 
+        public void OnCapitalModeRest()
+        {
+            try
+            {
+                if (_multiplayerActorAccessor.Current == null)
+                {
+                    return;
+                }
+
+                _multiplayerActorAccessor.Current.OnCapitalModeRest();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while starting capital mode rest");
+                throw;
+            }
+        }
+
         public void OnStartRest()
         {
             try
@@ -841,7 +859,7 @@ namespace WOTRMultiplayer.Services
             }
         }
 
-        public bool CanUseCampingUI()
+        public bool CanUseRestUI()
         {
             return _multiplayerActorAccessor.Current != null && _multiplayerActorAccessor.Host.IsActive;
         }
@@ -2135,11 +2153,47 @@ namespace WOTRMultiplayer.Services
                     return;
                 }
 
-                _multiplayerActorAccessor.Host.OnGlobalMapRestMenuOpened();
+                _multiplayerActorAccessor.Host.OnGlobalMapRestOpened();
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error while opening rest menu on global map");
+                _logger.LogError(ex, "Error while opening rest window on global map");
+                throw;
+            }
+        }
+
+        public void OnRestWindowClosed()
+        {
+            try
+            {
+                if (_multiplayerActorAccessor.Current == null || _multiplayerActorAccessor.Client.IsActive)
+                {
+                    return;
+                }
+
+                _multiplayerActorAccessor.Host.OnRestWindowClosed();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while closing rest window on global map");
+                throw;
+            }
+        }
+
+        public void OnGlobalMapGroupChangerOpened()
+        {
+            try
+            {
+                if (_multiplayerActorAccessor.Current == null || _multiplayerActorAccessor.Client.IsActive)
+                {
+                    return;
+                }
+
+                _multiplayerActorAccessor.Host.OnGlobalMapGroupChangerOpened();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while opening group changer on global map");
                 throw;
             }
         }
@@ -2474,7 +2528,7 @@ namespace WOTRMultiplayer.Services
             }
         }
 
-        public bool CanNavigateOnGlobalMap()
+        public bool CanControlGlobalMap()
         {
             return _multiplayerActorAccessor.Current != null && _multiplayerActorAccessor.Host.IsActive;
         }
@@ -3936,10 +3990,19 @@ namespace WOTRMultiplayer.Services
             }
         }
 
-        private void ShowEscMenuMultiplayerLobby()
+        public void CloseMultiplayerLobbyWindow()
         {
-            _logger.LogInformation("Show lobby window");
-            _lobbyWindow.Show(true);
+            if (_lobbyWindow != null && _lobbyWindow.IsVisible)
+            {
+                _logger.LogInformation("Closing lobby window");
+                _lobbyWindow.Close();
+            }
+        }
+
+        private void ShowMultiplayerLobbyWindow()
+        {
+            _logger.LogInformation("Opening lobby window");
+            _lobbyWindow.Show();
         }
 
         private void ShowMultiplayerWindow()

@@ -34,7 +34,7 @@ namespace WOTRMultiplayer.Abstractions.GameInteraction
 
         void RollEncounter(NetworkGlobalMapEncounter globalMapEncounter);
 
-        void OpenRestMenu();
+        void OpenGroupChanger();
 
         void StartTravel(NetworkGlobalMapTravel globalMapTravel);
 

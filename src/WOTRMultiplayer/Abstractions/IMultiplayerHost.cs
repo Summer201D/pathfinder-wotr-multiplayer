@@ -50,7 +50,11 @@ namespace WOTRMultiplayer.Abstractions
 
         void OnGlobalMapCommonPopupDeclined(NetworkGlobalMapCommonPopup globalMapCommonPopup);
 
-        void OnGlobalMapRestMenuOpened();
+        void OnGlobalMapRestOpened();
+
+        void OnRestWindowClosed();
+
+        void OnGlobalMapGroupChangerOpened();
 
         void OnGlobalMapTravelStarted(NetworkGlobalMapTravel globalMapTravel);
 

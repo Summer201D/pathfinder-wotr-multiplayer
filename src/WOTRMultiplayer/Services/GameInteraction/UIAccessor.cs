@@ -1,4 +1,5 @@
 ﻿using Kingmaker;
+using Kingmaker.Settings;
 using Kingmaker.UI.MVVM._PCView.CharGen;
 using Kingmaker.UI.MVVM._PCView.CombatLog;
 using Kingmaker.UI.MVVM._PCView.Common;
@@ -66,5 +67,26 @@ namespace WOTRMultiplayer.Services.GameInteraction
         public DialogContextPCView DialogContextPCView => InGamePCView?.m_StaticPartPCView?.m_DialogContextPCView ?? GlobalMapPCView?.m_DialogContextPCView;
 
         public TacticalCombatResultsPCView TacticalCombatResultsPCView => GlobalMapPCView?.m_AutoCombatResultsPCView ?? TacticalCombatPCView?.m_TacticalCombatResultsPCView;
+
+        public void CloseAllWindows()
+        {
+            ServiceWindowsVM?.HandleCloseAll();
+
+            var saveLoadVM = CommonPCView?.m_SaveLoadPCView?.ViewModel;
+            saveLoadVM?.OnClose();
+
+            var settingsVM = CommonPCView?.m_SettingsPCView?.ViewModel;
+            if (settingsVM != null)
+            {
+                if (SettingsController.HasUnconfirmedSettings())
+                {
+                    settingsVM.RevertSettings();
+                }
+
+                settingsVM.m_CloseAction?.Invoke();
+            }
+
+            Main.Multiplayer.CloseMultiplayerLobbyWindow();
+        }
     }
 }

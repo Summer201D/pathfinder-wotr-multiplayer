@@ -627,10 +627,24 @@ namespace WOTRMultiplayer.Services
             ResetPlayersTracker(Game.PlayersInGroupChanger);
         }
 
-        public void OnGlobalMapRestMenuOpened()
+        public void OnGlobalMapRestOpened()
         {
-            var message = new NotifyGlobalMapRestMenuOpened();
-            Logger.LogInformation("Sending {MessageType}", nameof(NotifyGlobalMapRestMenuOpened));
+            var message = new NotifyGlobalMapRestOpened();
+            Logger.LogInformation("Sending {MessageType}", nameof(NotifyGlobalMapRestOpened));
+            Send(message);
+        }
+
+        public void OnRestWindowClosed()
+        {
+            var message = new NotifyRestWindowClosed();
+            Logger.LogInformation("Sending {MessageType}", nameof(NotifyRestWindowClosed));
+            Send(message);
+        }
+
+        public void OnGlobalMapGroupChangerOpened()
+        {
+            var message = new NotifyGlobalMapGroupChangerOpened();
+            Logger.LogInformation("Sending {MessageType}", nameof(NotifyGlobalMapGroupChangerOpened));
             Send(message);
         }
 
@@ -1239,6 +1253,15 @@ namespace WOTRMultiplayer.Services
             Send(message);
         }
 
+        public override void OnStartRest()
+        {
+            base.OnStartRest();
+
+            var message = new NotifyRestStarted();
+            Logger.LogInformation("Sending {MessageType}", nameof(NotifyRestStarted));
+            Send(message);
+        }
+
         protected override DiceRollValueResponse RetrieveRoll(DiceRollValueRequest rollRequest)
         {
             // the only case when host is retrieving rolls - he is not the turn owner + it's not AI turn
@@ -1399,15 +1422,6 @@ namespace WOTRMultiplayer.Services
                     TryEndForcedPause();
                 }
             }
-        }
-
-        protected override void OnLocalRestStarted()
-        {
-            base.OnLocalRestStarted();
-
-            var message = new NotifyRestStarted();
-            Logger.LogInformation("Sending {MessageType}", nameof(NotifyRestStarted));
-            Send(message);
         }
 
         protected override void SetupNetworkMessageHandlers()

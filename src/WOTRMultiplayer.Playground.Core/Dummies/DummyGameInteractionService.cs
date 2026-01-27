@@ -390,7 +390,7 @@ namespace WOTRMultiplayer.Playground.Core.Dummies
         {
         }
 
-        public void UpdateStartRestButtonState(bool isInteractable, int readyPlayersCount, int totalPlayersCount)
+        public void UpdateRestUI(bool isInteractable, int readyPlayersCount, int totalPlayersCount)
         {
         }
 
@@ -403,6 +403,14 @@ namespace WOTRMultiplayer.Playground.Core.Dummies
         }
 
         public void UseInventoryItem(NetworkUseInventoryItem useInventoryItem)
+        {
+        }
+
+        public void CloseRestWindow()
+        {
+        }
+
+        public void InitiateRest()
         {
         }
     }

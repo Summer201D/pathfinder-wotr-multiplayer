@@ -719,11 +719,16 @@ namespace WOTRMultiplayer.Services
             Send(message);
         }
 
-        public void OnStartRest()
+        public void OnCapitalModeRest()
+        {
+            var message = new NotifyCapitalModeRestInitiated();
+            Logger.LogInformation("Sending {MessageType}", nameof(NotifyCapitalModeRestInitiated));
+            Send(message);
+        }
+
+        public virtual void OnStartRest()
         {
             Game.Rest = new NetworkRest();
-
-            OnLocalRestStarted();
         }
 
         public void OnStartRestSleepPhase()
@@ -2055,10 +2060,6 @@ namespace WOTRMultiplayer.Services
             }
         }
 
-        protected virtual void OnLocalRestStarted()
-        {
-        }
-
         protected void RegisterGlobalMapMode(long playerId, NetworkGlobalMapTravelerMode travelerMode)
         {
             Game.PlayersInGlobalMapMode.AddOrUpdate(playerId, travelerMode, (key, existing) => travelerMode);
@@ -2302,7 +2303,7 @@ namespace WOTRMultiplayer.Services
                 var readyPlayersCount = (restReadyPlayers ?? []).Count;
                 var totalPlayers = GetSyncedPlayersCount();
                 var canUse = HasControlOverUI && readyPlayersCount >= totalPlayers;
-                GameInteraction.UpdateStartRestButtonState(canUse, readyPlayersCount, totalPlayers);
+                GameInteraction.UpdateRestUI(canUse, readyPlayersCount, totalPlayers);
             }
         }
 
@@ -2313,7 +2314,7 @@ namespace WOTRMultiplayer.Services
                 var readyPlayers = Game.Rest.PlayersFinishedRest.Count;
                 var totalPlayers = GetSyncedPlayersCount();
                 var canUse = HasControlOverUI && readyPlayers >= totalPlayers;
-                GameInteraction.UpdateStartRestButtonState(canUse, readyPlayers, totalPlayers);
+                GameInteraction.UpdateRestUI(canUse, readyPlayers, totalPlayers);
             }
         }
 
@@ -3088,6 +3089,7 @@ namespace WOTRMultiplayer.Services
                 // rest
                 .On<NotifyRestBanterInterrupted>(OnNotifyRestBanterInterrupted)
                 .On<NotifyRestEnded>(OnNotifyRestEnded)
+                .On<NotifyCapitalModeRestInitiated>(OnNotifyCapitalModeRestInitiated)
 
                 // combat
                 .On<NotifyUnitJoinedMidCombat>(OnNotifyUnitJoinedMidCombat)
@@ -3161,6 +3163,15 @@ namespace WOTRMultiplayer.Services
                 // cutscenes
                 .On<NotifyCutsceneSkipped>(OnNotifyCutsceneSkipped)
                 ;
+        }
+
+        private void OnNotifyCapitalModeRestInitiated(long receivedFrom, NotifyCapitalModeRestInitiated message)
+        {
+            Logger.LogInformation("Received {MessageType}. ReceivedFrom={ReceivedFrom}, PlayerId={PlayerId}", nameof(NotifyCapitalModeRestInitiated), receivedFrom);
+
+            GameInteraction.InitiateRest();
+
+            OnAfterNetworkMessageHandled(receivedFrom, message);
         }
 
         private void OnNotifyGlobalMapCrusadeArmyLeaderLevelingShown(long receivedFrom, NotifyGlobalMapCrusadeArmyLeaderLevelingShown message)
@@ -3604,7 +3615,7 @@ namespace WOTRMultiplayer.Services
             OnAfterNetworkMessageHandled(playerId, globalMapLocationMessageShown);
         }
 
-        private void OnNotifySkipTimeOpened(long playerId, NotifySkipTimeOpened skipTimeOpened)
+        private void OnNotifySkipTimeOpened(long receivedFrom, NotifySkipTimeOpened skipTimeOpened)
         {
             Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}", nameof(NotifySkipTimeOpened), skipTimeOpened.PlayerId);
 
@@ -3613,7 +3624,7 @@ namespace WOTRMultiplayer.Services
 
             UpdateSkipTimeUIState();
 
-            OnAfterNetworkMessageHandled(playerId, skipTimeOpened);
+            OnAfterNetworkMessageHandled(receivedFrom, skipTimeOpened);
         }
 
         private void OnNotifyUnitStealthChanged(long playerId, NotifyUnitStealthChanged unitStealthChanged)

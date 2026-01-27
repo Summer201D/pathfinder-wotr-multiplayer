@@ -57,5 +57,7 @@ namespace WOTRMultiplayer.Abstractions.GameInteraction
         DialogContextPCView DialogContextPCView { get; }
 
         TacticalCombatResultsPCView TacticalCombatResultsPCView { get; }
+
+        void CloseAllWindows();
     }
 }

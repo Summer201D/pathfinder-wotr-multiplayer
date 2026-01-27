@@ -36,6 +36,7 @@ using Kingmaker.TurnBasedMode;
 using Kingmaker.UI._ConsoleUI.Overtips;
 using Kingmaker.UI.CharSelect;
 using Kingmaker.UI.Common;
+using Kingmaker.UI.MVVM;
 using Kingmaker.UI.MVVM._PCView.NewGame.Story;
 using Kingmaker.UI.MVVM._PCView.Rest;
 using Kingmaker.UI.MVVM._PCView.Settings.Entities.Difficulty;
@@ -48,13 +49,13 @@ using Kingmaker.UI.UnitSettings;
 using Kingmaker.UnitLogic;
 using Kingmaker.UnitLogic.ActivatableAbilities;
 using Kingmaker.UnitLogic.Commands;
-using Kingmaker.UnitLogic.Commands.Base;
 using Kingmaker.Utility;
 using Kingmaker.View.MapObjects;
 using Microsoft.Extensions.Logging;
 using Owlcat.Runtime.UI.Controls.Button;
 using TMPro;
 using UniRx;
+using UniRx.Triggers;
 using UnityModManagerNet;
 using WOTRMultiplayer.Abstractions.GameInteraction;
 using WOTRMultiplayer.Abstractions.Unity;
@@ -1310,13 +1311,14 @@ namespace WOTRMultiplayer.Services.GameInteraction
             {
                 try
                 {
-                    if (_uiAccessor.SkipTimeView?.ViewModel == null)
+                    var view = _uiAccessor.SkipTimeView;
+                    if (view?.ViewModel == null)
                     {
                         _logger.LogWarning("Skip time UI is already closed");
                         return;
                     }
 
-                    _uiAccessor.SkipTimeView.ViewModel.Close();
+                    view.ViewModel.Close();
                     _logger.LogInformation("Skip time UI has been closed");
                 }
                 catch (Exception ex)
@@ -1337,7 +1339,25 @@ namespace WOTRMultiplayer.Services.GameInteraction
                     return;
                 }
 
+                _uiAccessor.CloseAllWindows();
+
                 EventBus.RaiseEvent<ISkipTimeWindowUIHandler>(x => x.HandleOpenSkipTime(), true);
+            });
+        }
+
+        public void CloseRestWindow()
+        {
+            _mainThreadAccessor.Post(() =>
+            {
+                var view = _uiAccessor.RestView;
+                if (view?.ViewModel == null)
+                {
+                    _logger.LogWarning("Rest window is already closed");
+                    return;
+                }
+
+                view.CloseRest();
+                _logger.LogInformation("Rest window has been closed");
             });
         }
 
@@ -1347,13 +1367,14 @@ namespace WOTRMultiplayer.Services.GameInteraction
             {
                 try
                 {
-                    if (_uiAccessor.SkipTimeView?.ViewModel == null)
+                    var view = _uiAccessor.SkipTimeView;
+                    if (view?.ViewModel == null)
                     {
                         _logger.LogWarning("Unable to update skip time hours due to missing UI");
                         return;
                     }
 
-                    _uiAccessor.SkipTimeView.m_HoursSlider.value = hours;
+                    view.m_HoursSlider.value = hours;
                     _logger.LogInformation("Skip time hours has been updated. Hours={Hours}", hours);
                 }
                 catch (Exception ex)
@@ -1370,13 +1391,14 @@ namespace WOTRMultiplayer.Services.GameInteraction
             {
                 try
                 {
-                    if (_uiAccessor.SkipTimeView.ViewModel == null)
+                    var view = _uiAccessor.SkipTimeView;
+                    if (view?.ViewModel == null)
                     {
                         _logger.LogWarning("Unable to start skip time due to missing UI");
                         return;
                     }
 
-                    _uiAccessor.SkipTimeView.m_SkipTimeButton.OnLeftClick.Invoke();
+                    view.m_SkipTimeButton.OnLeftClick.Invoke();
                     _logger.LogInformation("Skip time has been started");
                 }
                 catch (Exception ex)
@@ -1387,27 +1409,76 @@ namespace WOTRMultiplayer.Services.GameInteraction
             });
         }
 
-        public void UpdateStartRestButtonState(bool isInteractable, int readyPlayersCount, int totalPlayersCount)
+        public void UpdateRestUI(bool isInteractable, int readyPlayersCount, int totalPlayersCount)
         {
             _mainThreadAccessor.Post(() =>
             {
                 try
                 {
-                    if (_uiAccessor.RestView == null)
+                    var view = _uiAccessor.RestView;
+                    if (view?.ViewModel == null)
                     {
                         return;
                     }
 
-                    _logger.LogInformation("Changing rest button state. IsInteractable={IsInteractable}, ReadyPlayers={ReadyPlayers}, TotalPlayers={TotalPlayers}", isInteractable, readyPlayersCount, totalPlayersCount);
+                    view.m_StartRestButton.Interactable = isInteractable;
+                    view.m_HealingToggle.interactable = isInteractable;
+                    view.m_HealingToggle.GetComponent<ObservablePointerClickTrigger>().enabled = isInteractable;
+                    view.m_AutotuneToggle.interactable = isInteractable;
+                    view.m_AutotuneToggle.GetComponent<ObservablePointerClickTrigger>().enabled = isInteractable;
+                    view.m_AutoGroupButton.Interactable = isInteractable;
+                    // non-global map = anyone can cancel
+                    // global-map = ui owner (host) only
+                    // ShowingResults has no close button visible, but Esc press should be denied anyway
+                    var isCloseButtonInteractable = CanCancelRest(isInteractable);
+                    view.m_CloseButton.interactable = isCloseButtonInteractable;
+                    view.m_CloseButton.GetComponent<ObservablePointerClickTrigger>().enabled = isCloseButtonInteractable;
 
-                    _uiAccessor.RestView.m_StartRestButton.Interactable = isInteractable;
-                    _uiSyncCountersService.UpdateButtonTextCounter(_uiAccessor.RestView.m_StartRestButtonText, readyPlayersCount, totalPlayersCount);
+                    view.m_DivineServiceRoles.m_Button.Interactable = isInteractable;
+                    UpdateRestPortraits(view.m_DivineServiceRoles.m_FirstPortraitsView, isInteractable);
+
+                    view.m_CamouflageRoles.m_Button.Interactable = isInteractable;
+                    UpdateRestPortraits(view.m_CamouflageRoles.m_FirstPortraitsView, isInteractable);
+
+                    view.m_GuardRestRoles.m_Button.Interactable = isInteractable;
+                    UpdateRestPortraits(view.m_GuardRestRoles.m_FirstPortraitsView, isInteractable);
+                    UpdateRestPortraits(view.m_GuardRestRoles.m_SecondPortraitsView, isInteractable);
+
+                    view.m_AlchemyRoles.m_Button.Interactable = isInteractable;
+                    view.m_AlchemyRoles.m_BrothIconButton.Interactable = isInteractable;
+                    view.m_AlchemyRoles.m_PotionIconButton.Interactable = isInteractable;
+                    UpdateRestPortraits(view.m_AlchemyRoles.m_FirstPortraitsView, isInteractable);
+
+                    view.m_ScribesRoles.m_Button.Interactable = isInteractable;
+                    view.m_ScribesRoles.m_ScrollsIconButton.Interactable = isInteractable;
+                    UpdateRestPortraits(view.m_ScribesRoles.m_FirstPortraitsView, isInteractable);
+
+                    _uiSyncCountersService.UpdateButtonTextCounter(view.m_StartRestButtonText, readyPlayersCount, totalPlayersCount);
+
+                    _logger.LogInformation("Rest UI has been updated. IsInteractable={IsInteractable}, ReadyPlayers={ReadyPlayers}, TotalPlayers={TotalPlayers}", isInteractable, readyPlayersCount, totalPlayersCount);
                 }
                 catch (Exception ex)
                 {
                     _logger.LogError(ex, "Unable to update start rest button state");
                     throw;
                 }
+            });
+        }
+
+        public void InitiateRest()
+        {
+            _mainThreadAccessor.Post(() =>
+            {
+                if (_uiAccessor.RestView?.ViewModel != null)
+                {
+                    _logger.LogWarning("Rest window is already opened");
+                    return;
+                }
+
+                _uiAccessor.CloseAllWindows();
+
+                var isOk = RestHelper.TryStartRest();
+                _logger.LogInformation("Rest has been initiated. Result={Result}", isOk);
             });
         }
 
@@ -2295,6 +2366,12 @@ namespace WOTRMultiplayer.Services.GameInteraction
             return allMods;
         }
 
+        private void UpdateRestPortraits(RestRolesPortraitsPCView view, bool isInteractable)
+        {
+            view.m_PrimaryUnitButton.Interactable = isInteractable;
+            view.m_SecondaryUnitButton.Interactable = isInteractable;
+        }
+
         private IEnumerable<ItemsCollection> GetLootableEntitiesInventory(NetworkLootableEntity lootableEntity)
         {
             if (lootableEntity == null)
@@ -2400,6 +2477,21 @@ namespace WOTRMultiplayer.Services.GameInteraction
             var spellSlot = spellLevel.FirstOrDefault(s => s.Index == slot.Index && s.Type == slot.Type);
 
             return spellSlot;
+        }
+
+        private bool CanCancelRest(bool isInteractable)
+        {
+            if (Game.Instance.RestController.CurrentPhase == RestPhase.ShowingResults)
+            {
+                return false;
+            }
+
+            if (Game.Instance.Player.CapitalPartyMode || RootUIContext.Instance.IsGlobalMap)
+            {
+                return isInteractable;
+            }
+
+            return true;
         }
 
         private void RefreshSpellbookUI()

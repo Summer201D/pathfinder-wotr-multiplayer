@@ -15,7 +15,7 @@ using WOTRMultiplayer.Entities.GlobalMap;
 namespace WOTRMultiplayer.HarmonyPatches.GlobalMap
 {
     [HarmonyPatch]
-    public class GlobalMagicSpellPatches
+    public class GlobalMapMagicSpellPatches
     {
         [HarmonyPatch(typeof(ArmyTarget), nameof(ArmyTarget.OnSelected))]
         [HarmonyPrefix]
@@ -88,7 +88,7 @@ namespace WOTRMultiplayer.HarmonyPatches.GlobalMap
         [HarmonyPrefix]
         public static bool ActionBarGlobalMagicSpellSlotVM_OnMainClick_Prefix()
         {
-            if (!Main.Multiplayer.IsActive || Main.Multiplayer.CanNavigateOnGlobalMap())
+            if (!Main.Multiplayer.IsActive || Main.Multiplayer.CanControlGlobalMap())
             {
                 return true;
             }
