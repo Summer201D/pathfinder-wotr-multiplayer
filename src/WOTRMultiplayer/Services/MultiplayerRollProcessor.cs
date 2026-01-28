@@ -806,6 +806,50 @@ namespace WOTRMultiplayer.Services
             }
         }
 
+        public int? OnBeforeRuleDealStatDamageRoll(RuleDealStatDamage ruleDealStatDamage, int criticalModifier)
+        {
+            try
+            {
+                if (!ShouldRetrieveRoll(ruleDealStatDamage))
+                {
+                    return null;
+                }
+
+                var roll = CreateDealStatDamageRoll(NetworkDiceRollType.Damage, ruleDealStatDamage, criticalModifier);
+                var d100 = RetrieveRoll<RuleRollD100>(roll, ruleDealStatDamage.Initiator);
+                if (d100 == null)
+                {
+                    return null;
+                }
+
+                return d100.m_Result;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Unable to handle {MethodName}", MethodBase.GetCurrentMethod().Name);
+                throw;
+            }
+        }
+
+        public void OnAfterRuleDealStatDamageRoll(RuleDealStatDamage ruleDealStatDamage, RuleRollD100 damageRoll, int criticalModifier)
+        {
+            try
+            {
+                if (!ShouldStoreRoll(ruleDealStatDamage))
+                {
+                    return;
+                }
+
+                var networkDamageRoll = CreateDealStatDamageRoll(NetworkDiceRollType.Damage, ruleDealStatDamage, criticalModifier);
+                SaveIntRollValue(networkDamageRoll, damageRoll);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Unable to handle {MethodName}", MethodBase.GetCurrentMethod().Name);
+                throw;
+            }
+        }
+
         public bool OnBeforeRuleCastSpellRoll(RuleCastSpell ruleCastSpell, bool isSpellFailure)
         {
             try
@@ -1307,6 +1351,25 @@ namespace WOTRMultiplayer.Services
             {
                 Chance = ruleRollChance.Chance,
                 Type = ruleRollChance.Type.ToString()
+            };
+
+            return roll;
+        }
+
+        private DealStatDamageRoll CreateDealStatDamageRoll(NetworkDiceRollType diceRollType, RuleDealStatDamage ruleDealStatDamage, int criticalModifier)
+        {
+            var roll = new DealStatDamageRoll(ruleDealStatDamage.Initiator.UniqueId, ruleDealStatDamage.GetType().Name, diceRollType, ruleDealStatDamage.Bonus)
+            {
+                DiceRolls = ruleDealStatDamage.Dices.Rolls,
+                DiceFormulaType = ruleDealStatDamage.Dices.Dice.ToString(),
+                HalfBecauseSavingThrow = ruleDealStatDamage.HalfBecauseSavingThrow,
+                CriticalModifierName = ruleDealStatDamage.CriticalModifier?.ToString(),
+                CriticalModifierValue = criticalModifier,
+                Immune = ruleDealStatDamage.Immune,
+                Maximize = ruleDealStatDamage.Maximize,
+                IsDrain = ruleDealStatDamage.IsDrain,
+                Empower = ruleDealStatDamage.Empower,
+                MinStatScoreAfterDamage = ruleDealStatDamage.MinStatScoreAfterDamage
             };
 
             return roll;

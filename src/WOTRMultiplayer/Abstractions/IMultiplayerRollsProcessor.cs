@@ -53,5 +53,8 @@ namespace WOTRMultiplayer.Abstractions
 
         void OnBeforeRuleRollChanceTrigger(RuleRollChance ruleRollChance);
         void OnAfterRuleRollChanceTrigger(RuleRollChance ruleRollChance);
+
+        int? OnBeforeRuleDealStatDamageRoll(RuleDealStatDamage ruleDealStatDamage, int criticalModifier);
+        void OnAfterRuleDealStatDamageRoll(RuleDealStatDamage ruleDealStatDamage, RuleRollD100 damageRoll, int criticalModifier);
     }
 }

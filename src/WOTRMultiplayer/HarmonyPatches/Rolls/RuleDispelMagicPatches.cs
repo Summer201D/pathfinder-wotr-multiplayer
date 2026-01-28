@@ -22,7 +22,7 @@ namespace WOTRMultiplayer.HarmonyPatches.Rolls
         {
             var target = PatchesUtils.GetTranspilerTarget(MethodBase.GetCurrentMethod());
             var matcher = new CodeMatcher(instructions);
-            var replaceWith = AccessTools.Method(typeof(RuleDispelMagicPatches), nameof(DispelMagicRollD20));
+            var replaceWith = AccessTools.Method(typeof(RuleDispelMagicPatches), nameof(RuleDispelMagicPatches.DispelMagicRollD20));
             var lookFor = AccessTools.PropertyGetter(typeof(Dice), nameof(Dice.D20));
             var match = matcher.SearchForward(x => x.Calls(lookFor));
             if (match.IsInvalid)
