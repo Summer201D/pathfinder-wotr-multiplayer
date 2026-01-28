@@ -762,6 +762,50 @@ namespace WOTRMultiplayer.Services
             }
         }
 
+        public void OnBeforeRuleRollChanceTrigger(RuleRollChance ruleRollChance)
+        {
+            try
+            {
+                if (!ShouldRetrieveRoll(ruleRollChance))
+                {
+                    return;
+                }
+
+                var roll = CreateChanceRoll(NetworkDiceRollType.Hit, ruleRollChance);
+                var d20 = RetrieveRoll<RuleRollD20>(roll, ruleRollChance.Initiator);
+                if (d20 == null)
+                {
+                    return;
+                }
+
+                ruleRollChance.m_Result = d20;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Unable to handle {MethodName}", MethodBase.GetCurrentMethod().Name);
+                throw;
+            }
+        }
+
+        public void OnAfterRuleRollChanceTrigger(RuleRollChance ruleRollChance)
+        {
+            try
+            {
+                if (!ShouldStoreRoll(ruleRollChance))
+                {
+                    return;
+                }
+
+                var roll = CreateChanceRoll(NetworkDiceRollType.Hit, ruleRollChance);
+                SaveIntRollValue(roll, ruleRollChance);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Unable to handle {MethodName}", MethodBase.GetCurrentMethod().Name);
+                throw;
+            }
+        }
+
         public bool OnBeforeRuleCastSpellRoll(RuleCastSpell ruleCastSpell, bool isSpellFailure)
         {
             try
@@ -1252,6 +1296,17 @@ namespace WOTRMultiplayer.Services
             {
                 IsFullSpeed = ruleEnterStealth.FullSpeed,
                 ResultOverride = ruleEnterStealth.D20.ResultOverride
+            };
+
+            return roll;
+        }
+
+        private ChanceRoll CreateChanceRoll(NetworkDiceRollType diceRollType, RuleRollChance ruleRollChance)
+        {
+            var roll = new ChanceRoll(ruleRollChance.Initiator.UniqueId, ruleRollChance.GetType().Name, diceRollType, 0)
+            {
+                Chance = ruleRollChance.Chance,
+                Type = ruleRollChance.Type.ToString()
             };
 
             return roll;

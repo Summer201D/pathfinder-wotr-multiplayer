@@ -50,5 +50,8 @@ namespace WOTRMultiplayer.Abstractions
 
         bool OnBeforeRuleEnterStealthRoll(RuleEnterStealth ruleEnterStealth);
         void OnAfterRuleEnterStealthTrigger(RuleEnterStealth ruleEnterStealth);
+
+        void OnBeforeRuleRollChanceTrigger(RuleRollChance ruleRollChance);
+        void OnAfterRuleRollChanceTrigger(RuleRollChance ruleRollChance);
     }
 }
