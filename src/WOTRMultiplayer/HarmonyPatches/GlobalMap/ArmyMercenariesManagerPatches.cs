@@ -67,7 +67,7 @@ namespace WOTRMultiplayer.HarmonyPatches.GlobalMap
                 {
                     var mercenaryPoolInfo = list.WeightedRandom(random);
                     ArmyRoot armyRoot = BlueprintRoot.Instance.ArmyRoot;
-                    float count = armyRoot.MercenaryDefaultCountBonus + (float)armyRoot.MercenaryDefaultCountFormula.Run(random) / armyRoot.MercenaryDefaultCountDivider;
+                    float count = armyRoot.MercenaryDefaultCountBonus + armyRoot.MercenaryDefaultCountFormula.Roll(random) / armyRoot.MercenaryDefaultCountDivider;
                     var baseGrowth = mercenaryPoolInfo.Unit.GetArmyData().MercenariesBaseGrowths;
                     var recruitCount = Mathf.RoundToInt(baseGrowth * count);
                     var mercenaryRecruits = new MercenaryRecruits(mercenaryPoolInfo.Unit, recruitCount);

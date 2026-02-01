@@ -575,7 +575,6 @@ namespace WOTRMultiplayer.Services.GameInteraction
                 }
 
                 UpdateCombatUnitState(unitsToUpdate);
-
                 _logger.LogInformation("Combat state has been updated. RoundNumber={RoundNumber}, UnitsCount={UnitsCount}, IsFullUpdate={IsFullUpdate}", networkCombatState.RoundNumber, networkCombatState.Units.Count, requiresFullUpdate);
             }
             catch (Exception ex)
@@ -706,9 +705,9 @@ namespace WOTRMultiplayer.Services.GameInteraction
 
             foreach (var (networkUnit, unit) in unitsToUpdate)
             {
-                if (unit?.CombatState == null || networkUnit.CombatState == null)
+                if (networkUnit.CombatState == null)
                 {
-                    _logger.LogInformation("Unable to update missing combat unit state. UnitId={UnitId}", networkUnit.Id);
+                    _logger.LogWarning("Unable to update missing combat unit state. UnitId={UnitId}", networkUnit.Id);
                     continue;
                 }
 
@@ -717,12 +716,14 @@ namespace WOTRMultiplayer.Services.GameInteraction
                     var engageTarget = _gameStateLookupService.GetUnitEntity(engageTargetId);
                     if (engageTarget == null)
                     {
-                        _logger.LogInformation("Unable to engage missing unit. UnitId={UnitId}, EngageTargetId={EngageTargetId}", unit.UniqueId, engageTargetId);
+                        _logger.LogError("Unable to engage missing unit. UnitId={UnitId}, EngageTargetId={EngageTargetId}", unit.UniqueId, engageTargetId);
                         continue;
                     }
 
                     unit.CombatState.Engage(engageTarget);
                 }
+
+                _logger.LogInformation("Unit engagement has been updated. UnitId={UnitId}, EngagedWith={EngagedWith}, EngagedBy={EngagedBy}, HostEngagedWith={HostEngagedWith}, HostEngagedBy={HostEngagedBy}", unit.UniqueId, string.Join(";", unit.CombatState.m_EngagedUnits.Select(x => x.Key.UniqueId)), string.Join(";", unit.CombatState.m_EngagedBy.Select(x => x.Key.UniqueId)), networkUnit.CombatState.EngagedUnits, networkUnit.CombatState.EngagedBy);
             }
         }
 

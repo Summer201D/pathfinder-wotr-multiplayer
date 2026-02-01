@@ -39,7 +39,7 @@ namespace WOTRMultiplayer.HarmonyPatches.Combat
             return matcher.Instructions();
         }
 
-        public static int GetAbsorbedImageCount(int minRange, int maxRange, UnitPartMirrorImage image)
+        private static int GetAbsorbedImageCount(int minRange, int maxRange, UnitPartMirrorImage image)
         {
             if (!Main.Multiplayer.IsActive)
             {

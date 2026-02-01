@@ -20,7 +20,7 @@ namespace WOTRMultiplayer.Extensions
         /// <param name="formula"></param>
         /// <param name="random"></param>
         /// <returns></returns>
-        public static float Run(this DiceFormula formula, Random random)
+        public static int Roll(this DiceFormula formula, Random random)
         {
             var rolls = formula.Rolls;
             var dice = formula.Dice;

@@ -25,7 +25,6 @@ namespace WOTRMultiplayer.HarmonyPatches.Rolls
                 matcher.Instructions();
             }
 
-
             return matcher.Instructions();
         }
 
