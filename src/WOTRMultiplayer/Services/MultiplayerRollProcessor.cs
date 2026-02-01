@@ -173,7 +173,7 @@ namespace WOTRMultiplayer.Services
                 networkRoll.Value.TryGetValue(nameof(ruleHealDamage.Bonus), out var bonusValue);
                 ruleHealDamage.GetType()
                   .GetProperty(nameof(ruleHealDamage.Bonus))
-                  .SetPropertyValue(ruleHealDamage, bonusValue);
+                  .SetPropertyWithPrivateSetter(ruleHealDamage, bonusValue);
 
                 networkRoll.Value.TryGetValue(nameof(ruleHealDamage.RollResult), out var rollResult);
                 ruleHealDamage.RollResult = rollResult;
@@ -596,7 +596,7 @@ namespace WOTRMultiplayer.Services
                 // TODO: cache reflection
                 ruleConcealmentCheck.GetType()
                     .GetProperty(nameof(RuleConcealmentCheck.Roll))
-                    .SetPropertyValue(ruleConcealmentCheck, d100);
+                    .SetPropertyWithPrivateSetter(ruleConcealmentCheck, d100);
 
                 return false;
             }

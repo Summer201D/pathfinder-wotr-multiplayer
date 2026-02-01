@@ -33,7 +33,6 @@ namespace WOTRMultiplayer.HarmonyPatches.Rolls
             };
 
             match = match.RemoveInstructions(1).Insert(newInstructions);
-            PatchesUtils.Dump(matcher);
             Main.GetLogger<RuleDealStatDamagePatches>().LogInformation("Transpiler has been applied. Target={Target}", target);
             return matcher.Instructions();
         }

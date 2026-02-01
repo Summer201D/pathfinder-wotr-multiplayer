@@ -39,14 +39,13 @@ namespace WOTRMultiplayer.HarmonyPatches.Rolls
                 return matcher.Instructions();
             }
 
-            match.RemoveInstruction();
             var newInstructions = new List<CodeInstruction>()
             {
                 new(OpCodes.Ldarg_0),
                 new(OpCodes.Call, replaceWith)
             };
 
-            match.Insert(newInstructions);
+            match = match.RemoveInstruction().Insert(newInstructions);
             Main.GetLogger<RuleCheckConcentrationPatches>().LogInformation("Transpiler has been applied. Target={Target}", target);
 
             return matcher.Instructions();

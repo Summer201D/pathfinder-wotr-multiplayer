@@ -249,7 +249,8 @@ namespace WOTRMultiplayer.Services
             {
                 Ability = Mapper.Map<Networking.Messages.Contracts.NetworkActivatableAbility>(activatableAbilityUse)
             };
-            Logger.LogInformation("Sending {MessageType}. CasterId={CasterId}, TargetId={TargetId}, AbilityId={AbilityId}, IsActive={IsActive}", nameof(NotifyToggleActivatableAbility), message.Ability.CasterId, message.Ability.TargetId, message.Ability.Id, message.Ability.IsActive);
+            Logger.LogInformation("Sending {MessageType}. CasterId={CasterId}, TargetId={TargetId}, AbilityId={AbilityId}, IsActive={IsActive}",
+                nameof(NotifyToggleActivatableAbility), message.Ability.CasterId, message.Ability.TargetId, message.Ability.Id, message.Ability.IsActive);
 
             Send(message);
         }
@@ -585,7 +586,7 @@ namespace WOTRMultiplayer.Services
             {
                 if (!string.Equals(Game.Combat.Turn.UnitId, unitId, StringComparison.OrdinalIgnoreCase))
                 {
-                    Logger.LogError("Invalid unit turn start detected. ExpectedUnitId={ExpectedUnitId}, ActualUnitId={ActualUnitId}", Game.Combat.Turn.UnitId, unitId);
+                    Logger.LogWarning("Invalid unit turn start detected. ExpectedUnitId={ExpectedUnitId}, ActualUnitId={ActualUnitId}", Game.Combat.Turn.UnitId, unitId);
                     InitializeNewTurn(unitId, actingInSurpriseRound);
                     return false;
                 }

@@ -37,7 +37,7 @@ namespace WOTRMultiplayer.Services
                 {
                     if (claimableValue.ClaimingList.TryRemove(playerId, out _))
                     {
-                        _logger.LogInformation("Claimed roll value. RollId={RollId}, PlayerId={PlayerId}, OrderId={OrderId}, RollType={RollType}", rollId, playerId, claimableValue.OrderId, claimableValue.Roll.GetType().Name);
+                        _logger.LogDebug("Claimed roll value. RollId={RollId}, PlayerId={PlayerId}, OrderId={OrderId}, RollType={RollType}", rollId, playerId, claimableValue.OrderId, claimableValue.Roll.GetType().Name);
                         return (TValue)claimableValue.Roll;
                     }
                 }

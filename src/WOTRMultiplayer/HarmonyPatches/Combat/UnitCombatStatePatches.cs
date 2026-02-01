@@ -20,5 +20,29 @@ namespace WOTRMultiplayer.HarmonyPatches.Combat
             Main.GetLogger<UnitCombatStatePatches>().LogWarning("AoO: UnitId={UnitId}, TargetUnitId={TargetUnitId}, Result={Result}, TricksterAttack={TricksterAttack}, Disengaging={Disengaging}, AfterDefensivelyFail={AfterDefensivelyFail}, UnitPreventAoO={UnitPreventAoO}, TargetPreventAoO={TargetPreventAoO}",
                 __instance.Unit.UniqueId, target?.UniqueId, __result, tricksterAttack, disengaging, afterDefensivelyFail, __instance.PreventAttacksOfOpporunityNextFrame, target.CombatState.PreventAttacksOfOpporunityNextFrame);
         }
+
+        [HarmonyPatch(typeof(UnitCombatEngagementController), nameof(UnitCombatEngagementController.ProvokeAttackOfOpportunityAfterDefensivelyFail))]
+        [HarmonyPrefix]
+        public static void UnitCombatEngagementController_ProvokeAttackOfOpportunityAfterDefensivelyFail_Postfix(UnitCombatEngagementController __instance, UnitEntityData unit)
+        {
+            if (!Main.Multiplayer.IsActive)
+            {
+                return;
+            }
+
+            Main.GetLogger<UnitCombatStatePatches>().LogWarning("AoO (Def Casting failed): UnitId={UnitId}, DefQueue={UnitsInQueue}, RangedQueue={RangedQueue}", unit.UniqueId, __instance.m_UnitsProvokeAttackOfOpportunityAfterDefensivelyFail.Count, __instance.m_UnitsProvokeAttackOfOpportunity.Count);
+        }
+
+        [HarmonyPatch(typeof(UnitCombatEngagementController), nameof(UnitCombatEngagementController.ProvokeAttackOfOpportunity))]
+        [HarmonyPrefix]
+        public static void UnitCombatEngagementController_ProvokeAttackOfOpportunity_Postfix(UnitCombatEngagementController __instance, UnitEntityData unit)
+        {
+            if (!Main.Multiplayer.IsActive)
+            {
+                return;
+            }
+
+            Main.GetLogger<UnitCombatStatePatches>().LogWarning("AoO (Ranged Attack): UnitId={UnitId}, DefQueue={UnitsInQueue}, RangedQueue={RangedQueue}", unit.UniqueId, __instance.m_UnitsProvokeAttackOfOpportunityAfterDefensivelyFail.Count, __instance.m_UnitsProvokeAttackOfOpportunity.Count);
+        }
     }
 }

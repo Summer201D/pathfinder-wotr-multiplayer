@@ -56,13 +56,13 @@ namespace WOTRMultiplayer.HarmonyPatches.Rolls
                 return instructions;
             }
 
-            var arcaneFailureReplacement = AccessTools.Method(typeof(RuleCastSpellPatches), nameof(RuleCastSpellPatches.RollSpellFailure));
+            var arcaneFailureReplacement = AccessTools.Method(typeof(RuleCastSpellPatches), nameof(RuleCastSpellPatches.RollArcaneFailure));
             var arcaneFailureInstructions = new List<CodeInstruction>()
             {
                 new(OpCodes.Ldarg_0),
-                new(OpCodes.Call, spellFailureReplacement)
+                new(OpCodes.Call, arcaneFailureReplacement)
             };
-            match = match.RemoveInstruction().Insert(spellFailureInstructions);
+            match = match.RemoveInstruction().Insert(arcaneFailureInstructions);
 
             Main.GetLogger<RuleCastSpellPatches>().LogInformation("Transpiler has been applied. Target={Target}", target);
             return matcher.Instructions();

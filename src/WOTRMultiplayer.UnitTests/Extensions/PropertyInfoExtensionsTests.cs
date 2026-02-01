@@ -35,7 +35,7 @@ namespace WOTRMultiplayer.UnitTests.Extensions
 
         [TestCase(nameof(TestSubject.ReferenceNoSetterProperty), 100)]
         [TestCase(nameof(TestSubject.ReferenceSetterProperty), 101)]
-        public void SetPropertyValue_ReferenceType_SetterIsSet(string propertyName, int expectedValue)
+        public void SetPropertyWithPrivateSetter_ReferenceType_SetterIsSet(string propertyName, int expectedValue)
         {
             // Arrange
             var testSubject = new TestSubject();
@@ -43,7 +43,7 @@ namespace WOTRMultiplayer.UnitTests.Extensions
             var expected = new TestReferenceProperty { Value = expectedValue };
 
             // Act
-            propertyInfo.SetPropertyValue(testSubject, expected);
+            propertyInfo.SetPropertyWithPrivateSetter(testSubject, expected);
 
             // Assert
             Assert.That(((TestReferenceProperty)propertyInfo.GetValue(testSubject)).Value, Is.EqualTo(expectedValue));
@@ -52,14 +52,14 @@ namespace WOTRMultiplayer.UnitTests.Extensions
 
         [TestCase(nameof(TestSubject.ValueNoSetterProperty), 102)]
         [TestCase(nameof(TestSubject.ValueSetterProperty), 103)]
-        public void SetPropertyValue_ValueType_SetterIsSet(string propertyName, int expectedValue)
+        public void SetPropertyWithPrivateSetter_ValueType_SetterIsSet(string propertyName, int expectedValue)
         {
             // Arrange
             var testSubject = new TestSubject();
             var propertyInfo = testSubject.GetType().GetProperty(propertyName);
 
             // Act
-            propertyInfo.SetPropertyValue(testSubject, expectedValue);
+            propertyInfo.SetPropertyWithPrivateSetter(testSubject, expectedValue);
 
             // Assert
             Assert.That(propertyInfo.GetValue(testSubject), Is.EqualTo(expectedValue));

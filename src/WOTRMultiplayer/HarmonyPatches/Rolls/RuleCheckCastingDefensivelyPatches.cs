@@ -36,7 +36,6 @@ namespace WOTRMultiplayer.HarmonyPatches.Rolls
 
             match.Insert(newInstructions);
             Main.GetLogger<RuleCheckCastingDefensivelyPatches>().LogInformation("Transpiler has been applied. Target={Target}", target);
-
             return matcher.Instructions();
         }
 
