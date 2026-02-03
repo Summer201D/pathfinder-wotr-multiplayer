@@ -1,5 +1,6 @@
 ﻿using System;
 using HarmonyLib;
+using Kingmaker.PubSubSystem;
 using Kingmaker.UI.MVVM._PCView.MainMenu;
 using Microsoft.Extensions.Logging;
 using WOTRMultiplayer.Entities;
@@ -37,6 +38,16 @@ namespace WOTRMultiplayer.HarmonyPatches.MenuPatches
             {
                 Main.GetLogger<MainMenuSideBarPCViewPatches>().LogError(ex, "Unable to apply MainMenuSideBarPCView patch");
                 throw;
+            }
+        }
+
+        [HarmonyPatch(typeof(MainMenuSideBarPCView), nameof(MainMenuSideBarPCView.BindViewImplementation))]
+        [HarmonyPostfix]
+        public static void MainMenuSideBarPCView_BindViewImplementation_Postfix()
+        {
+            if (BlueprintesCachePatches.LastInitError != null)
+            {
+                EventBus.RaiseEvent<IMessageModalUIHandler>(x => x.HandleOpen(BlueprintesCachePatches.LastInitError), true);
             }
         }
     }
