@@ -3702,7 +3702,7 @@ namespace WOTRMultiplayer.Services
 
         private void OnNotifyToggleActivatableAbility(long receivedFrom, NotifyToggleActivatableAbility activatableAbility)
         {
-            Logger.LogInformation("Received {MessageType}. ReceivedFrom={ReceivedFrom}, AbilityId={AbilityId}, IsActive={IsActive}", nameof(NotifyToggleActivatableAbility), receivedFrom, activatableAbility.Ability.Id, activatableAbility.Ability.IsActive);
+            Logger.LogInformation("Received {MessageType}. ReceivedFrom={ReceivedFrom}, CasterId={CasterId}, AbilityId={AbilityId}, IsActive={IsActive}", nameof(NotifyToggleActivatableAbility), receivedFrom, activatableAbility.Ability.CasterId, activatableAbility.Ability.Id, activatableAbility.Ability.IsActive);
 
             var ability = Mapper.Map<NetworkActivatableAbility>(activatableAbility.Ability);
             GameInteraction.ToggleActivatableAbility(ability);

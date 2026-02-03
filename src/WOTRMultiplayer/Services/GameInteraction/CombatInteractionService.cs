@@ -146,7 +146,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
             {
                 var turnStatus = Game.Instance.TurnBasedCombatController.CurrentTurn?.Status ?? null;
                 _logger.LogInformation("Ending combat turn if it's not ending yet. TurnStatus={TurnStatus}", turnStatus);
-                if (turnStatus != TurnBased.Controllers.TurnController.TurnStatus.Ending && turnStatus != TurnBased.Controllers.TurnController.TurnStatus.Ended)
+                if (turnStatus != TurnBased.Controllers.TurnController.TurnStatus.Ending && turnStatus != TurnBased.Controllers.TurnController.TurnStatus.Ended && turnStatus != TurnBased.Controllers.TurnController.TurnStatus.None)
                 {
                     Game.Instance.TurnBasedCombatController.CurrentTurn?.End();
                 }

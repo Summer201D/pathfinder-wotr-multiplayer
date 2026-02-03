@@ -593,11 +593,7 @@ namespace WOTRMultiplayer.Services
                     return true;
                 }
 
-                // TODO: cache reflection
-                ruleConcealmentCheck.GetType()
-                    .GetProperty(nameof(RuleConcealmentCheck.Roll))
-                    .SetPropertyWithPrivateSetter(ruleConcealmentCheck, d100);
-
+                ruleConcealmentCheck.Roll.m_Result = d100.m_Result;
                 return false;
             }
             catch (Exception ex)
