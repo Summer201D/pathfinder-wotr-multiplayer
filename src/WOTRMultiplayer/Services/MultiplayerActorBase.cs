@@ -823,7 +823,7 @@ namespace WOTRMultiplayer.Services
             Send(message);
         }
 
-        public void OnLevelingClassSelected(string classId)
+        public void OnLevelingClassSelected(NetworkLevelingClass levelingClass)
         {
             if (!CanMakeLevelingDecisions())
             {
@@ -832,13 +832,13 @@ namespace WOTRMultiplayer.Services
 
             var message = new NotifyLevelingClassSelected
             {
-                ClassId = classId
+                Class = Mapper.Map<Networking.Messages.Contracts.NetworkLevelingClass>(levelingClass)
             };
-            Logger.LogInformation("Sending {MessageType}. ClassId={ClassId}", nameof(NotifyLevelingClassSelected), classId);
+            Logger.LogInformation("Sending {MessageType}. Id={Id}, Name={Name}", nameof(NotifyLevelingClassSelected), message.Class.Id, message.Class.Name);
             Send(message);
         }
 
-        public void OnLevelingClassArchetypeSelected(string archetypeId)
+        public void OnLevelingClassArchetypeSelected(NetworkLevelingArchetype archetype)
         {
             if (!CanMakeLevelingDecisions())
             {
@@ -847,9 +847,9 @@ namespace WOTRMultiplayer.Services
 
             var message = new NotifyLevelingClassArchetypeSelected
             {
-                ArchetypeId = archetypeId
+                Archetype = Mapper.Map<Networking.Messages.Contracts.NetworkLevelingArchetype>(archetype)
             };
-            Logger.LogInformation("Sending {MessageType}. ArchetypeId={ArchetypeId}", nameof(NotifyLevelingClassArchetypeSelected), archetypeId);
+            Logger.LogInformation("Sending {MessageType}. Id={Id}, Name={Name}", nameof(NotifyLevelingClassArchetypeSelected), message.Archetype?.Id, message.Archetype?.Name);
             Send(message);
         }
 
@@ -4041,12 +4041,14 @@ namespace WOTRMultiplayer.Services
             OnAfterNetworkMessageHandled(receivedFrom, levelingPhaseWitnessed);
         }
 
-        private void OnNotifyLevelingClassArchetypeSelected(long receivedFrom, NotifyLevelingClassArchetypeSelected classArchetypeSelected)
+        private void OnNotifyLevelingClassArchetypeSelected(long receivedFrom, NotifyLevelingClassArchetypeSelected message)
         {
-            Logger.LogInformation("Received {MessageType}. ReceivedFrom={ReceivedFrom}, ArchetypeId={ArchetypeId}", nameof(NotifyLevelingClassArchetypeSelected), receivedFrom, classArchetypeSelected.ArchetypeId);
-            LevelingInteraction.SelectLevelingClassArchetype(classArchetypeSelected.ArchetypeId);
+            Logger.LogInformation("Received {MessageType}. ReceivedFrom={ReceivedFrom}, Id={Id}, Name={Name}", nameof(NotifyLevelingClassArchetypeSelected), receivedFrom, message.Archetype?.Id, message.Archetype?.Name);
 
-            OnAfterNetworkMessageHandled(receivedFrom, classArchetypeSelected);
+            var archetype = Mapper.Map<NetworkLevelingArchetype>(message.Archetype);
+            LevelingInteraction.SelectLevelingClassArchetype(archetype);
+
+            OnAfterNetworkMessageHandled(receivedFrom, message);
         }
 
 
@@ -4058,12 +4060,14 @@ namespace WOTRMultiplayer.Services
             OnAfterNetworkMessageHandled(receivedFrom, mythicClassSelected);
         }
 
-        private void OnNotifyLevelingClassSelected(long receivedFrom, NotifyLevelingClassSelected classSelected)
+        private void OnNotifyLevelingClassSelected(long receivedFrom, NotifyLevelingClassSelected message)
         {
-            Logger.LogInformation("Received {MessageType}. ReceivedFrom={ReceivedFrom}, ClassId={ClassId}", nameof(NotifyLevelingClassSelected), receivedFrom, classSelected.ClassId);
-            LevelingInteraction.SelectLevelingClass(classSelected.ClassId);
+            Logger.LogInformation("Received {MessageType}. ReceivedFrom={ReceivedFrom}, ClassId={ClassId}", nameof(NotifyLevelingClassSelected), receivedFrom, message.Class.Id, message.Class.Name);
 
-            OnAfterNetworkMessageHandled(receivedFrom, classSelected);
+            var levelingClass = Mapper.Map<NetworkLevelingClass>(message.Class);
+            LevelingInteraction.SelectLevelingClass(levelingClass);
+
+            OnAfterNetworkMessageHandled(receivedFrom, message);
         }
 
         private bool IsControlledByLocalPlayer(List<string> units)

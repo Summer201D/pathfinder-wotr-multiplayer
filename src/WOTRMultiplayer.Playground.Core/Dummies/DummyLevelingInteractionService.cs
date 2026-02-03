@@ -70,11 +70,11 @@ namespace WOTRMultiplayer.Playground.Core.Dummies
         {
         }
 
-        public void SelectLevelingClass(string classId)
+        public void SelectLevelingClass(NetworkLevelingClass levelingClass)
         {
         }
 
-        public void SelectLevelingClassArchetype(string archetypeId)
+        public void SelectLevelingClassArchetype(NetworkLevelingArchetype levelingArchetype)
         {
         }
 

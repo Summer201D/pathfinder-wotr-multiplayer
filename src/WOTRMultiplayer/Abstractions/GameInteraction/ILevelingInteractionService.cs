@@ -6,9 +6,9 @@ namespace WOTRMultiplayer.Abstractions.GameInteraction
     {
         void StartLeveling(string unitId, NetworkLevelingType levelingType);
 
-        void SelectLevelingClassArchetype(string archetypeId);
+        void SelectLevelingClassArchetype(NetworkLevelingArchetype levelingArchetype);
 
-        void SelectLevelingClass(string classId);
+        void SelectLevelingClass(NetworkLevelingClass levelingClass);
 
         void SelectMythicLevelingClass(string mythicClassId);
 

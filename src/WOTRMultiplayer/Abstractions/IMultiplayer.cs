@@ -146,9 +146,9 @@ namespace WOTRMultiplayer.Abstractions
 
         void ForceLevelingUI(string unitId, NetworkLevelingType levelingType);
 
-        void OnLevelingClassArchetypeSelected(string archetypeId);
+        void OnLevelingClassArchetypeSelected(NetworkLevelingArchetype levelingArchetype);
 
-        void OnLevelingClassSelected(string classId);
+        void OnLevelingClassSelected(NetworkLevelingClass levelingClass);
 
         void OnLevelingMythicClassSelected(string mythicClassId);
 

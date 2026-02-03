@@ -702,8 +702,20 @@ public static class WellKnownKeys
                 public static string Key { get; set; }
             }
 
-            [Description("archetypeContentMismatch")]
-            public static class ArchetypeContentMismatch
+            [Description("classMismatch")]
+            public static class ClassMismatch
+            {
+                public static string Key { get; set; }
+            }
+
+            [Description("archetypeMismatch")]
+            public static class ArchetypeMismatch
+            {
+                public static string Key { get; set; }
+            }
+
+            [Description("featureMismatch")]
+            public static class FeatureMismatch
             {
                 public static string Key { get; set; }
             }

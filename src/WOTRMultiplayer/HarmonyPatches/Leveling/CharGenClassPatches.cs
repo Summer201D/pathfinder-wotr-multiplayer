@@ -2,6 +2,7 @@
 using Kingmaker.Blueprints.Classes;
 using Kingmaker.UI.MVVM._PCView.CharGen.Phases.Class;
 using Kingmaker.UI.MVVM._VM.CharGen.Phases.Class;
+using WOTRMultiplayer.Entities.Leveling;
 
 namespace WOTRMultiplayer.HarmonyPatches.Leveling
 {
@@ -30,8 +31,8 @@ namespace WOTRMultiplayer.HarmonyPatches.Leveling
                 return;
             }
 
-            var archetypeId = archetypeVM?.Archetype.AssetGuid.ToString();
-            Main.Multiplayer.OnLevelingClassArchetypeSelected(archetypeId);
+            var archetype = archetypeVM == null ? null : new NetworkLevelingArchetype { Id = archetypeVM.Archetype.AssetGuid.ToString(), Name = archetypeVM.Archetype.name };
+            Main.Multiplayer.OnLevelingClassArchetypeSelected(archetype);
         }
 
         [HarmonyPatch(typeof(CharGenClassPhaseVM), nameof(CharGenClassPhaseVM.OnMechanicClassSelected))]
@@ -43,8 +44,12 @@ namespace WOTRMultiplayer.HarmonyPatches.Leveling
                 return;
             }
 
-            var classId = selectedClass.AssetGuid.ToString();
-            Main.Multiplayer.OnLevelingClassSelected(classId);
+            var levelingClass = new NetworkLevelingClass
+            {
+                Id = selectedClass.AssetGuid.ToString(),
+                Name = selectedClass.name
+            };
+            Main.Multiplayer.OnLevelingClassSelected(levelingClass);
         }
     }
 }

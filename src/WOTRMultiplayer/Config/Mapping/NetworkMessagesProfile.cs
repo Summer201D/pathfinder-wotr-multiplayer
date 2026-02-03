@@ -152,6 +152,12 @@ namespace WOTRMultiplayer.Config.Mapping
             CreateMap<NetworkSpellSlot, Networking.Messages.Contracts.NetworkSpellSlot>()
                 .ReverseMap();
 
+            CreateMap<NetworkLevelingClass, Networking.Messages.Contracts.NetworkLevelingClass>()
+                .ReverseMap();
+
+            CreateMap<NetworkLevelingArchetype, Networking.Messages.Contracts.NetworkLevelingArchetype>()
+                .ReverseMap();
+
             CreateMap<NetworkLevelingPhase, Networking.Messages.Contracts.NetworkLevelingPhase>()
                 .ReverseMap();
 

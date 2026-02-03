@@ -1197,7 +1197,7 @@ namespace WOTRMultiplayer.Services
             }
         }
 
-        public void OnLevelingClassArchetypeSelected(string archetypeId)
+        public void OnLevelingClassArchetypeSelected(NetworkLevelingArchetype archetype)
         {
             try
             {
@@ -1206,16 +1206,16 @@ namespace WOTRMultiplayer.Services
                     return;
                 }
 
-                _multiplayerActorAccessor.Current.OnLevelingClassArchetypeSelected(archetypeId);
+                _multiplayerActorAccessor.Current.OnLevelingClassArchetypeSelected(archetype);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error while processing leveling class archetype selection. ArchetypeId={ArchetypeId}", archetypeId);
+                _logger.LogError(ex, "Error while processing leveling class archetype selection. ArchetypeId={ArchetypeId}", archetype?.Id);
                 throw;
             }
         }
 
-        public void OnLevelingClassSelected(string classId)
+        public void OnLevelingClassSelected(NetworkLevelingClass levelingClass)
         {
             try
             {
@@ -1224,11 +1224,11 @@ namespace WOTRMultiplayer.Services
                     return;
                 }
 
-                _multiplayerActorAccessor.Current.OnLevelingClassSelected(classId);
+                _multiplayerActorAccessor.Current.OnLevelingClassSelected(levelingClass);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error while processing leveling class selection. ClassId={ClassId}", classId);
+                _logger.LogError(ex, "Error while processing leveling class selection. ClassId={ClassId}", levelingClass.Id);
                 throw;
             }
         }

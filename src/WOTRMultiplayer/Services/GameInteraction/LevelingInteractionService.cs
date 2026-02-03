@@ -86,29 +86,24 @@ namespace WOTRMultiplayer.Services.GameInteraction
             });
         }
 
-        public void SelectLevelingClassArchetype(string archetypeId)
+        public void SelectLevelingClassArchetype(NetworkLevelingArchetype levelingArchetype)
         {
             _mainThreadAccessor.Post(() =>
             {
                 try
                 {
-                    if (_uiAccessor.CharGenView == null)
-                    {
-                        _logger.LogWarning("Can't select class archetype due to missing CharGenView");
-                        return;
-                    }
-
                     var viewModel = GetLevelingPhaseViewModel();
                     if (viewModel == null)
                     {
-                        _logger.LogError("Unable to get leveling phase viewmodel");
+                        _logger.LogWarning("Unable to select leveling class archetype due to missing viewmodel");
                         return;
                     }
 
-                    if (string.IsNullOrEmpty(archetypeId))
+                    if (levelingArchetype == null)
                     {
                         viewModel.SelectedClassVM.Value.TryUnselectArchetypes();
                         viewModel.OnSelectorArchetypeChanged(null);
+                        _logger.LogInformation("Leveling archetype has been deselected");
                         return;
                     }
 
@@ -119,10 +114,10 @@ namespace WOTRMultiplayer.Services.GameInteraction
                     }
 
                     var archetypes = viewModel.SelectedClassVM.Value.GetArchetypesList(viewModel.SelectedClassVM.Value.Class).Cast<CharGenClassSelectorItemVM>().ToList();
-                    var archetype = archetypes.FirstOrDefault(c => string.Equals(c.Archetype.AssetGuid.ToString(), archetypeId, StringComparison.OrdinalIgnoreCase));
+                    var archetype = archetypes.FirstOrDefault(c => string.Equals(c.Archetype.AssetGuid.ToString(), levelingArchetype.Id, StringComparison.OrdinalIgnoreCase));
                     if (archetype == null)
                     {
-                        _playerNotificationService.ShowWarningNotification(WellKnownKeys.GameNotifications.Leveling.ArchetypeContentMismatch.Key);
+                        _playerNotificationService.ShowWarningNotification(WellKnownKeys.GameNotifications.Leveling.ArchetypeMismatch.Key, args: levelingArchetype.Name);
                         return;
                     }
 
@@ -135,7 +130,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "Error while selecting leveling class archetype. ArchetypeId={ArchetypeId}", archetypeId);
+                    _logger.LogError(ex, "Error while selecting leveling class archetype. ArchetypeId={ArchetypeId}", levelingArchetype?.Id);
                     throw;
                 }
             });
@@ -609,7 +604,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
                     }
 
                     viewModel.SelectedAlignmentVM.Value = alignment;
-                    _logger.LogInformation("Leveling alignment has been selected. AlignmentId={AlignmentId}", viewModel.SelectedAlignmentVM.Value);
+                    _logger.LogInformation("Leveling alignment has been selected. AlignmentId={AlignmentId}", viewModel.SelectedAlignmentVM.Value.Alignment);
                 }
                 catch (Exception ex)
                 {
@@ -619,31 +614,31 @@ namespace WOTRMultiplayer.Services.GameInteraction
             });
         }
 
-        public void SelectLevelingClass(string classId)
+        public void SelectLevelingClass(NetworkLevelingClass levelingClass)
         {
             _mainThreadAccessor.Post(() =>
             {
                 try
                 {
-                    if (_uiAccessor.CharGenView?.ViewModel == null)
-                    {
-                        _logger.LogWarning("Can't select class due to missing CharGenView");
-                        return;
-                    }
-
                     var viewModel = GetLevelingPhaseViewModel();
                     if (viewModel == null)
                     {
-                        _logger.LogError("Can't select class due to missing due to missing leveling phase viewmodel");
+                        _logger.LogWarning("Unable to select leveling class due to missing viewmodel");
                         return;
                     }
 
-                    var selectedClass = viewModel.m_ClassesVMs.FirstOrDefault(c => string.Equals(c.Class.AssetGuid.ToString(), classId, StringComparison.OrdinalIgnoreCase));
+                    var selectedClass = viewModel.m_ClassesVMs.FirstOrDefault(c => string.Equals(c.Class.AssetGuid.ToString(), levelingClass.Id, StringComparison.OrdinalIgnoreCase));
+                    if (selectedClass == null)
+                    {
+                        _playerNotificationService.ShowWarningNotification(WellKnownKeys.GameNotifications.Leveling.ClassMismatch.Key, args: levelingClass.Name);
+                        return;
+                    }
+
                     viewModel.SelectedClassVM.Value = selectedClass;
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "Error while selecting leveling class. ClassId={ClassId}", classId);
+                    _logger.LogError(ex, "Error while selecting leveling class. ClassId={ClassId}", levelingClass.Id);
                     throw;
                 }
             });
@@ -673,6 +668,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
                          && string.Equals(featureItem.Feature.Feature.AssetGuid.ToString(), networkLevelingFeature.Id, StringComparison.OrdinalIgnoreCase));
                     if (featureToSelect == null)
                     {
+                        _playerNotificationService.ShowWarningNotification(WellKnownKeys.GameNotifications.Leveling.FeatureMismatch.Key, args: networkLevelingFeature.Name);
                         _logger.LogError("Unable to find requested feature in the list. FeatureName={FeatureName}, FeatureId={FeatureId}", networkLevelingFeature.Name, networkLevelingFeature.Id);
                         return;
                     }

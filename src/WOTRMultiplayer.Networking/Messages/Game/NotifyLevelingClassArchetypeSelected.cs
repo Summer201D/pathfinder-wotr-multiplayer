@@ -1,4 +1,5 @@
 ﻿using ProtoBuf;
+using WOTRMultiplayer.Networking.Messages.Contracts;
 
 namespace WOTRMultiplayer.Networking.Messages.Game
 {
@@ -7,6 +8,6 @@ namespace WOTRMultiplayer.Networking.Messages.Game
     public class NotifyLevelingClassArchetypeSelected
     {
         [ProtoMember(1)]
-        public string ArchetypeId { get; set; }
+        public NetworkLevelingArchetype Archetype { get; set; }
     }
 }
