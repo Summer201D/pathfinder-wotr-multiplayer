@@ -519,12 +519,12 @@ namespace WOTRMultiplayer.Services
             lock (ActionLock)
             {
                 InitiateLeveling(unitId, levelingType);
-                var message = new NotifyCharacterLevelingStarted
+                var message = new NotifyLevelingStarted
                 {
                     UnitId = unitId,
                     Type = levelingType.ToString()
                 };
-                Logger.LogInformation("Sending {MessageType}. UnitId={UnitId}, Type={Type}", nameof(NotifyCharacterLevelingStarted), message.UnitId, message.Type);
+                Logger.LogInformation("Sending {MessageType}. UnitId={UnitId}, Type={Type}", nameof(NotifyLevelingStarted), message.UnitId, message.Type);
                 Send(message);
             }
 
@@ -1585,7 +1585,7 @@ namespace WOTRMultiplayer.Services
                 if (Game.Leveling != null)
                 {
                     Logger.LogWarning("Leveling is already in progress. UnitId={UnitId}, RequestedUnitId={RequestedUnitId}, Type={Type}", Game.Leveling.UnitId, characterLevelingRequested.UnitId, Game.Leveling.Type);
-                    var message = new NotifyCharacterLevelingStarted
+                    var message = new NotifyLevelingStarted
                     {
                         UnitId = Game.Leveling.UnitId,
                         Type = Game.Leveling.Type.ToString()

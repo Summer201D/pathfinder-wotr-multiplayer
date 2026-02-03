@@ -21,6 +21,7 @@ using Kingmaker.UI.MVVM._VM.CharGen.Phases.Common;
 using Kingmaker.UI.MVVM._VM.CharGen.Phases.FeatureSelector;
 using Kingmaker.UI.MVVM._VM.CharGen.Phases.Portrait;
 using Kingmaker.UI.MVVM._VM.CharGen.Phases.Spells;
+using Kingmaker.UnitLogic.Class.LevelUp;
 using Microsoft.Extensions.Logging;
 using Owlcat.Runtime.UI.SelectionGroup;
 using WOTRMultiplayer.Abstractions.GameInteraction;
@@ -35,6 +36,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
         private readonly IMainThreadAccessor _mainThreadAccessor;
         private readonly IUIAccessor _uiAccessor;
         private readonly IPlayerNotificationService _playerNotificationService;
+        private readonly IGameStateLookupService _gameStateLookupService;
         private readonly IUISyncCountersService _uiSyncCountersService;
 
         public LevelingInteractionService(
@@ -42,12 +44,14 @@ namespace WOTRMultiplayer.Services.GameInteraction
             IMainThreadAccessor mainThreadAccessor,
             IUIAccessor uiAccessor,
             IPlayerNotificationService playerNotificationService,
+            IGameStateLookupService gameStateLookupService,
             IUISyncCountersService uiSyncCountersService)
         {
             _logger = logger;
             _mainThreadAccessor = mainThreadAccessor;
             _uiAccessor = uiAccessor;
             _playerNotificationService = playerNotificationService;
+            _gameStateLookupService = gameStateLookupService;
             _uiSyncCountersService = uiSyncCountersService;
         }
 
@@ -57,27 +61,22 @@ namespace WOTRMultiplayer.Services.GameInteraction
             {
                 try
                 {
-                    var partyView = _uiAccessor.PartyPCView?.m_Characters?.FirstOrDefault(p => string.Equals(p.UnitEntityData.UniqueId, unitId, StringComparison.OrdinalIgnoreCase));
-                    if (partyView?.ViewModel == null)
+                    var unit = _gameStateLookupService.GetUnitEntity(unitId);
+                    if (unit == null)
                     {
-                        _logger.LogError("Unable to start leveling due to missing party character vm. UnitId={UnitId}, Type={Type}", unitId, levelingType);
+                        _logger.LogError("Unable to start leveling due to missing unit. UnitId={UnitId}, Type={Type}", unitId, levelingType);
                         return;
                     }
 
-                    switch (levelingType)
+                    var mode = levelingType switch
                     {
-                        case NetworkLevelingType.Leveling:
-                            _logger.LogInformation("Starting leveling process. UnitId={UnitId}", unitId);
-                            partyView.ViewModel.LevelUp();
-                            break;
-                        case NetworkLevelingType.MythicLeveling:
-                            _logger.LogError("Starting mythic leveling. UnitId={UnitId}", unitId);
-                            partyView.ViewModel.MythicLevelUp();
-                            break;
-                        default:
-                            _logger.LogError("Not supported leveling type. UnitId={UnitId}, Type={Type}", unitId, levelingType);
-                            break;
-                    }
+                        NetworkLevelingType.Leveling when unit.Progression.CharacterLevel <= 0 => LevelUpState.CharBuildMode.CharGen,
+                        NetworkLevelingType.Leveling => LevelUpState.CharBuildMode.LevelUp,
+                        _ or NetworkLevelingType.MythicLeveling => LevelUpState.CharBuildMode.Mythic,
+                    };
+
+                    LevelUpConfig.Create(unit, mode).OpenUI();
+                    _logger.LogError("Started leveling. UnitId={UnitId}, Mode={Mode}, LevelingType={LevelingType}", unitId, mode, levelingType);
                 }
                 catch (Exception ex)
                 {

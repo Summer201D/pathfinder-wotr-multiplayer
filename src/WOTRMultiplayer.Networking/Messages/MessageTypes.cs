@@ -41,7 +41,7 @@
             NotifyCampingStateChanged,
             NotifyCampingUnitsRoleChanged,
             NotifyCampingUseHealingSpellsChanged,
-            NotifyCharacterLevelingStarted,
+            NotifyLevelingStarted,
             NotifyCharacterMove,
             NotifyCombatInitialized,
             NotifyCombatTurnStarted,

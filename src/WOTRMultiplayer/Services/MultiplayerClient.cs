@@ -449,7 +449,7 @@ namespace WOTRMultiplayer.Services
                .On<NotifyPartyAreaTransitioned>(OnNotifyPartyAreaTransitioned)
 
                // leveling
-               .On<NotifyCharacterLevelingStarted>(OnNotifyCharacterLevelingStarted)
+               .On<NotifyLevelingStarted>(OnNotifyLevelingStarted)
 
                // character selection window
                .On<NotifyCharacterSelectionToggleChanged>(OnNotifyCharacterSelectionToggleChanged)
@@ -1214,9 +1214,9 @@ namespace WOTRMultiplayer.Services
             GameInteraction.SetPause(true);
         }
 
-        private void OnNotifyCharacterLevelingStarted(long playerId, NotifyCharacterLevelingStarted characterLevelingStarted)
+        private void OnNotifyLevelingStarted(long playerId, NotifyLevelingStarted characterLevelingStarted)
         {
-            Logger.LogInformation("Received {MessageType}. UnitId={unitId}, Type={Type}", nameof(NotifyCharacterLevelingStarted), characterLevelingStarted.UnitId, characterLevelingStarted.Type);
+            Logger.LogInformation("Received {MessageType}. UnitId={unitId}, Type={Type}", nameof(NotifyLevelingStarted), characterLevelingStarted.UnitId, characterLevelingStarted.Type);
 
             if (!Enum.TryParse<NetworkLevelingType>(characterLevelingStarted.Type, true, out var levelingType))
             {

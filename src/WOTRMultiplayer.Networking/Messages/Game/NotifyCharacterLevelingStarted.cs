@@ -3,8 +3,8 @@
 namespace WOTRMultiplayer.Networking.Messages.Game
 {
     [ProtoContract]
-    [BeetleX.Packets.MessageType((int)MessageTypes.Game.NotifyCharacterLevelingStarted)]
-    public class NotifyCharacterLevelingStarted
+    [BeetleX.Packets.MessageType((int)MessageTypes.Game.NotifyLevelingStarted)]
+    public class NotifyLevelingStarted
     {
         [ProtoMember(1)]
         public string UnitId { get; set; }

@@ -4060,7 +4060,7 @@ namespace WOTRMultiplayer.Services
 
         private void OnNotifyLevelingClassSelected(long receivedFrom, NotifyLevelingClassSelected classSelected)
         {
-            Logger.LogInformation("Received {MessageType}. ReceivedFrom={ReceivedFrom}, ClassId={ClassId}", nameof(NotifyCharacterLevelingStarted), receivedFrom, classSelected.ClassId);
+            Logger.LogInformation("Received {MessageType}. ReceivedFrom={ReceivedFrom}, ClassId={ClassId}", nameof(NotifyLevelingClassSelected), receivedFrom, classSelected.ClassId);
             LevelingInteraction.SelectLevelingClass(classSelected.ClassId);
 
             OnAfterNetworkMessageHandled(receivedFrom, classSelected);
