@@ -2751,7 +2751,7 @@ namespace WOTRMultiplayer.Services
         {
             lock (ActionLock)
             {
-                return Game.Players.FirstOrDefault(p => p.Id == playerId);
+                return Game?.Players.FirstOrDefault(p => p.Id == playerId);
             }
         }
 
