@@ -518,17 +518,16 @@ namespace WOTRMultiplayer.Services
         {
             lock (ActionLock)
             {
-                InitiateLeveling(unitId, levelingType);
-                var message = new NotifyLevelingStarted
+                if (Game.Leveling == null)
                 {
-                    UnitId = unitId,
-                    Type = levelingType.ToString()
-                };
-                Logger.LogInformation("Sending {MessageType}. UnitId={UnitId}, Type={Type}", nameof(NotifyLevelingStarted), message.UnitId, message.Type);
-                Send(message);
-            }
+                    InitiateLeveling(unitId, levelingType);
+                    SendLevelingStartedConfirmation();
+                    return true;
+                }
 
-            return true;
+                Logger.LogWarning("New leveling has been denied as another one is progress. UnitId={UnitId}, Type={Type}", Game.Leveling.UnitId, Game.Leveling.Type);
+                return false;
+            }
         }
 
         public bool TogglePause(bool isPaused)
@@ -1582,19 +1581,17 @@ namespace WOTRMultiplayer.Services
 
             lock (ActionLock)
             {
-                if (Game.Leveling != null)
+                if (Game.Leveling == null)
                 {
-                    Logger.LogWarning("Leveling is already in progress. UnitId={UnitId}, RequestedUnitId={RequestedUnitId}, Type={Type}", Game.Leveling.UnitId, characterLevelingRequested.UnitId, Game.Leveling.Type);
-                    var message = new NotifyLevelingStarted
-                    {
-                        UnitId = Game.Leveling.UnitId,
-                        Type = Game.Leveling.Type.ToString()
-                    };
-                    Send(message);
+                    InitiateLeveling(characterLevelingRequested.UnitId, levelingType);
+                    LevelingInteraction.StartLeveling(characterLevelingRequested.UnitId, levelingType);
+                    SendLevelingStartedConfirmation();
                     return;
                 }
 
-                LevelingInteraction.StartLeveling(characterLevelingRequested.UnitId, levelingType);
+                // force specific player to open correct leveling ui
+                Logger.LogWarning("Leveling is already in progress. PlayerId={PlayerId}, UnitId={UnitId}, LevelingType={LevelingType}, RequestedUnitId={RequestedUnitId}, RequestedLevelingType={RequestedLevelingType}", playerId, Game.Leveling.UnitId, Game.Leveling.Type, characterLevelingRequested.UnitId, characterLevelingRequested.Type);
+                SendLevelingStartedConfirmation(playerId);
             }
         }
 
@@ -2260,6 +2257,24 @@ namespace WOTRMultiplayer.Services
 
             var messageKey = pause.IsLifting ? WellKnownKeys.GameNotifications.ForcedPause.IsLifting.Key : pause.Reason;
             PlayerNotification.ShowWarningNotification(messageKey);
+        }
+
+        private void SendLevelingStartedConfirmation(long? playerId = null)
+        {
+            var message = new NotifyLevelingStarted
+            {
+                UnitId = Game.Leveling.UnitId,
+                Type = Game.Leveling.Type.ToString()
+            };
+            Logger.LogInformation("Sending {MessageType}. PlayerId={PlayerId}, UnitId={UnitId}, Type={Type}", nameof(NotifyLevelingStarted), playerId, message.UnitId, message.Type);
+
+            if (playerId.HasValue)
+            {
+                Send(playerId.Value, message);
+                return;
+            }
+
+            Send(message);
         }
 
         private bool TryGetSaveGameContent(out byte[] content)

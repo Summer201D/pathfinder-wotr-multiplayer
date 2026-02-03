@@ -1,4 +1,5 @@
-﻿using HarmonyLib;
+﻿using System.Linq;
+using HarmonyLib;
 using Kingmaker.UI.MVVM._PCView.CharGen;
 using Kingmaker.UI.MVVM._VM.CharGen;
 
@@ -21,7 +22,7 @@ namespace WOTRMultiplayer.HarmonyPatches.Leveling
 
         [HarmonyPatch(typeof(CharGenVM), nameof(CharGenVM.Complete))]
         [HarmonyPostfix]
-        public static void CharGenVM_Complete_Postfix()
+        public static void CharGenVM_Complete_Postfix(CharGenVM __instance)
         {
             if (!Main.Multiplayer.IsActive)
             {
@@ -29,6 +30,14 @@ namespace WOTRMultiplayer.HarmonyPatches.Leveling
             }
 
             Main.Multiplayer.OnLevelingCompleted();
+
+            // base game has a bug where pet ui frames are not updated after leveling
+            var leveledUnit = __instance.LevelUpConfig?.Unit;
+            if (leveledUnit != null && leveledUnit.IsPet)
+            {
+                var petPartyView = Main.UIAccessor.PartyPCView?.m_Characters.FirstOrDefault(x => x.ViewModel != null && string.Equals(x.ViewModel.UnitEntityData.UniqueId, leveledUnit.UniqueId, System.StringComparison.OrdinalIgnoreCase));
+                petPartyView?.ViewModel?.UpdateLevelUpField(leveledUnit);
+            }
         }
 
         [HarmonyPatch(typeof(CharGenView), nameof(CharGenView.CloseCharGen))]

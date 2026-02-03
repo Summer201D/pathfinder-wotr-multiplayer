@@ -76,7 +76,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
                     };
 
                     LevelUpConfig.Create(unit, mode).OpenUI();
-                    _logger.LogError("Started leveling. UnitId={UnitId}, Mode={Mode}, LevelingType={LevelingType}", unitId, mode, levelingType);
+                    _logger.LogInformation("Started leveling. UnitId={UnitId}, Mode={Mode}, LevelingType={LevelingType}", unitId, mode, levelingType);
                 }
                 catch (Exception ex)
                 {
