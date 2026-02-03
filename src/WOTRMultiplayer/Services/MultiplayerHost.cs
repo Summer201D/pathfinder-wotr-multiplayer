@@ -1808,7 +1808,7 @@ namespace WOTRMultiplayer.Services
                 return (false, null);
             }
 
-            var turn = SelectValidTurn(diceRollValueRequest.UnitId);
+            var turn = SelectValidTurn(diceRollValueRequest.CombatTurnUnitId);
             var characterTurn = GetPartyCharacter(turn?.UnitId);
             var shouldRollBeProxied = (Game.Combat == null || Game.Combat.IsInitialized) && turn != null && !turn.IsLocalPlayer && !turn.IsAI && characterTurn != null && characterTurn.Owner.Id != playerId && characterTurn.Owner.Id != Game.LocalPlayerId;
             return (shouldRollBeProxied, characterTurn?.Owner?.Id);
