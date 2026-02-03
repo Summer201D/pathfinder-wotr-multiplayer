@@ -2509,7 +2509,8 @@ namespace WOTRMultiplayer.Services.GameInteraction
         private void AddItemToVendorSellCollection(NetworkVendorItemTransfer transfer)
         {
             var possibleItems = Game.Instance.Player.Inventory.Where(i => IsSameItem(i, transfer.Item) &&
-                (string.IsNullOrEmpty(transfer.Item.HoldingSlotOwnerId) || string.Equals(i.HoldingSlot?.Owner?.Unit.UniqueId, transfer.Item.HoldingSlotOwnerId, StringComparison.OrdinalIgnoreCase)))
+                (string.IsNullOrEmpty(transfer.Item.HoldingSlotOwnerId) && i.HoldingSlot == null ||
+                    !string.IsNullOrEmpty(transfer.Item.HoldingSlotOwnerId) && string.Equals(i.HoldingSlot?.Owner?.Unit.UniqueId, transfer.Item.HoldingSlotOwnerId, StringComparison.OrdinalIgnoreCase)))
                 .OrderBy(x => x.Count)
                 .ToList();
 
