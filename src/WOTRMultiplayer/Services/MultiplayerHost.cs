@@ -1322,7 +1322,7 @@ namespace WOTRMultiplayer.Services
                     if (desyncedPlayers.Count > 0)
                     {
                         var players = desyncedPlayers.SelectMany(x => x.Value).Distinct().ToList();
-                        Logger.LogWarning("Players have started different turn. Initiating recovering. Players={Players}", players);
+                        Logger.LogWarning("Players have started different turn. Initiating recovering. Players={Players}", desyncedPlayers.ToDictionary(x => x.Key, x => x.Value.ToList()));
                         foreach (var playerId in players)
                         {
                             var player = GetPlayer(playerId);
