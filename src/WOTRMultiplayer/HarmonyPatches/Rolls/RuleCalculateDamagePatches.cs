@@ -1,5 +1,10 @@
-﻿using HarmonyLib;
+﻿using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
+using System.Reflection.Emit;
+using HarmonyLib;
 using Kingmaker.RuleSystem.Rules.Damage;
+using Microsoft.Extensions.Logging;
 
 namespace WOTRMultiplayer.HarmonyPatches.Rolls
 {
@@ -19,16 +24,42 @@ namespace WOTRMultiplayer.HarmonyPatches.Rolls
         }
 
         [HarmonyPatch(typeof(RuleCalculateDamage), nameof(RuleCalculateDamage.OnTrigger))]
-        [HarmonyPrefix]
-        public static bool RuleCalculateDamage_OnTrigger_Prefix(RuleCalculateDamage __instance)
+        [HarmonyTranspiler]
+        public static IEnumerable<CodeInstruction> RuleCalculateDamage_OnTrigger_Transpiler(IEnumerable<CodeInstruction> instructions)
         {
-            if (!Main.Multiplayer.IsActive || PatchesUtils.IsHelperUnit(__instance.Target.UniqueId))
+            var target = PatchesUtils.GetTranspilerTarget(MethodBase.GetCurrentMethod());
+            var matcher = new CodeMatcher(instructions);
+            var replaceWith = AccessTools.Method(typeof(RuleCalculateDamagePatches), nameof(RuleCalculateDamagePatches.OnCalculateDamage));
+            var lookFor = AccessTools.Field(typeof(RuleCalculateDamage), nameof(RuleCalculateDamage.CalculatedDamage));
+            var match = matcher.SearchForward(x => x.LoadsField(lookFor));
+            if (match.IsInvalid)
             {
-                return true;
+                Main.GetLogger<RuleCalculateDamagePatches>().LogError("Transpiler has not been applied. Target={Target}", target);
+                matcher.Instructions();
             }
 
-            var shouldRunOriginal = Main.Rolls.OnBeforeRuleCalculateDamageTrigger(__instance);
-            return shouldRunOriginal;
+            var newInstructions = new List<CodeInstruction>()
+            {
+                new(OpCodes.Ldarg_0),
+                new(OpCodes.Call, replaceWith)
+            };
+            match = match.Advance(-1).RemoveInstructions(10).Insert(newInstructions);
+            Main.GetLogger<RuleCalculateDamagePatches>().LogInformation("Transpiler has been applied. Target={Target}", target);
+            return matcher.Instructions();
+        }
+
+        private static void OnCalculateDamage(RuleCalculateDamage ruleCalculateDamage)
+        {
+            if (Main.Multiplayer.IsActive)
+            {
+                var shouldRunOriginalLogic = Main.Rolls.OnBeforeRuleCalculateDamageTrigger(ruleCalculateDamage);
+                if (!shouldRunOriginalLogic)
+                {
+                    return;
+                }
+            }
+
+            ruleCalculateDamage.CalculatedDamage.InsertRange(0, ruleCalculateDamage.DamageBundle.Select(ruleCalculateDamage.CalculateDamageValue));
         }
     }
 }

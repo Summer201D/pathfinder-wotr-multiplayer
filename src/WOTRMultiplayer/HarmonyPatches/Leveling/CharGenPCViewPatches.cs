@@ -29,8 +29,8 @@ namespace WOTRMultiplayer.HarmonyPatches.Leveling
         }
 
         [HarmonyPatch(typeof(CharGenVM), nameof(CharGenVM.Complete))]
-        [HarmonyPrefix]
-        public static void CharGenVM_Complete_Prefix(CharGenVM __instance)
+        [HarmonyPostfix]
+        public static void CharGenVM_Complete_Postfix(CharGenVM __instance)
         {
             if (!Main.Multiplayer.IsActive)
             {

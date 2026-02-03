@@ -12,7 +12,6 @@ namespace WOTRMultiplayer.HarmonyPatches.Rolls
     [HarmonyPatch]
     public class RuleAttackRollPatches
     {
-
         [HarmonyPatch(typeof(RuleAttackRoll), nameof(RuleAttackRoll.OnTrigger))]
         [HarmonyPostfix]
         public static void RuleAttackRoll_OnTrigger_Postfix(RuleAttackRoll __instance)
