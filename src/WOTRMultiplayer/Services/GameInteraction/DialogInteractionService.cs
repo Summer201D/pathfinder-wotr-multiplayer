@@ -16,6 +16,7 @@ using Owlcat.Runtime.Core.Utils;
 using Owlcat.Runtime.UI.Controls.Button;
 using UnityEngine;
 using WOTRMultiplayer.Abstractions.GameInteraction;
+using WOTRMultiplayer.Abstractions.Settings;
 using WOTRMultiplayer.Abstractions.UI;
 using WOTRMultiplayer.Abstractions.Unity;
 using WOTRMultiplayer.Entities.Dialogs;
@@ -34,6 +35,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
         private readonly IUISyncCountersService _uiSyncCountersService;
         private readonly IUIAccessor _uiAccessor;
         private readonly IGameStateLookupService _gameStateLookupService;
+        private readonly IMultiplayerSettingsService _multiplayerSettingsService;
         private readonly IResourceProvider _resourceProvider;
 
         public DialogInteractionService(
@@ -42,7 +44,8 @@ namespace WOTRMultiplayer.Services.GameInteraction
             IUISyncCountersService uiSyncCountersService,
             IResourceProvider resourceProvider,
             IUIAccessor uiAccessor,
-            IGameStateLookupService gameStateLookupService)
+            IGameStateLookupService gameStateLookupService,
+            IMultiplayerSettingsService multiplayerSettingsService)
         {
             _logger = logger;
             _mainThreadAccessor = mainThreadAccessor;
@@ -50,6 +53,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
             _resourceProvider = resourceProvider;
             _uiAccessor = uiAccessor;
             _gameStateLookupService = gameStateLookupService;
+            _multiplayerSettingsService = multiplayerSettingsService;
         }
 
         public void MarkSuggestedDialogAnswers(List<NetworkDialogAnswerSuggestion> networkDialogAnswerSuggestions)
@@ -70,12 +74,13 @@ namespace WOTRMultiplayer.Services.GameInteraction
             _mainThreadAccessor.Post(() =>
             {
                 var answers = GetAnswers()?.Children() ?? [];
+                var settings = _multiplayerSettingsService.GetSettings();
                 foreach (var answer in answers)
                 {
                     if (string.Equals(answer.gameObject.GetComponent<DialogAnswerPCView>()?.ViewModel?.Answer.Value.name, answerName, StringComparison.OrdinalIgnoreCase))
                     {
                         var selectedAnswerBehavior = answer.gameObject.AddComponent<SelectedDialogAnswerBehavior>();
-                        selectedAnswerBehavior.Begin(duration: 0.8f, onExpired: null);
+                        selectedAnswerBehavior.Begin(settings.DialogBlockedAnswerAnimationDuration, onExpired: null);
                         break;
                     }
                 }
@@ -103,6 +108,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
                         return;
                     }
 
+                    var settings = _multiplayerSettingsService.GetSettings();
                     foreach (var answer in answers)
                     {
                         var view = answer.gameObject.GetComponent<DialogAnswerPCView>();
@@ -115,12 +121,12 @@ namespace WOTRMultiplayer.Services.GameInteraction
                         if (string.Equals(view.ViewModel.Answer.Value.name, answerName, StringComparison.OrdinalIgnoreCase))
                         {
                             var selectedAnswerBehavior = answer.gameObject.AddComponent<SelectedDialogAnswerBehavior>();
-                            selectedAnswerBehavior.Begin(duration: 0.5f, () => DoSelectAnswer(answerBlueprint, manualUnitSelectionId));
+                            selectedAnswerBehavior.Begin(settings.DialogSelectedAnswerAnimationDuration, () => DoSelectAnswer(answerBlueprint, manualUnitSelectionId));
                             continue;
                         }
 
                         var nonSelectedAnswerBehavior = answer.gameObject.AddComponent<NotSelectedDialogAnswerBehavior>();
-                        nonSelectedAnswerBehavior.Begin(duration: 0.5f, onExpired: null);
+                        nonSelectedAnswerBehavior.Begin(settings.DialogNonSelectedAnswerAnimationDuration, onExpired: null);
                     }
                 }
                 catch (Exception ex)

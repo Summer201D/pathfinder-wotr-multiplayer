@@ -27,5 +27,11 @@ namespace WOTRMultiplayer.Entities.Settings
         public TimeSpan RestEncounterSyncTimeout { get; set; }
 
         public bool HideServerAddress { get; set; }
+
+        public float DialogSelectedAnswerAnimationDuration { get; set; }
+
+        public float DialogNonSelectedAnswerAnimationDuration { get; set; }
+
+        public float DialogBlockedAnswerAnimationDuration { get; set; }
     }
 }

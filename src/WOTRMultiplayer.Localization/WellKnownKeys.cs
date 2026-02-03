@@ -323,6 +323,64 @@ public static class WellKnownKeys
             }
         }
 
+        [Description("dialogs")]
+        public static class Dialogs
+        {
+            [Description("title")]
+            public static class Title
+            {
+                public static string Key { get; set; }
+            }
+
+            [Description("selectedAnswerAnimationDuration")]
+            public static class SelectedAnswerAnimationDuration
+            {
+                [Description("title")]
+                public static class Title
+                {
+                    public static string Key { get; set; }
+                }
+
+                [Description("tooltip")]
+                public static class Tooltip
+                {
+                    public static string Key { get; set; }
+                }
+            }
+
+            [Description("nonSelectedAnswerAnimationDuration")]
+            public static class NonSelectedAnswerAnimationDuration
+            {
+                [Description("title")]
+                public static class Title
+                {
+                    public static string Key { get; set; }
+                }
+
+                [Description("tooltip")]
+                public static class Tooltip
+                {
+                    public static string Key { get; set; }
+                }
+            }
+
+            [Description("blockedAnswerAnimationDuration")]
+            public static class BlockedAnswerAnimationDuration
+            {
+                [Description("title")]
+                public static class Title
+                {
+                    public static string Key { get; set; }
+                }
+
+                [Description("tooltip")]
+                public static class Tooltip
+                {
+                    public static string Key { get; set; }
+                }
+            }
+        }
+
         [Description("combat")]
         public static class Combat
         {

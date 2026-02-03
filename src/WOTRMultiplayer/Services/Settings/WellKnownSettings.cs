@@ -41,6 +41,19 @@ namespace WOTRMultiplayer.Services.Settings
             public static WellKnownSettingKey<string> PlayerName { get; } = new(Environment.UserName);
         }
 
+        [Description("dialogs")]
+        public static class Dialogs
+        {
+            [Description("selected-answer-animation-duration")]
+            public static WellKnownSettingKey<float> SelectedAnswerAnimationDuration { get; } = new(0.8f);
+
+            [Description("nonselected-answer-animation-duration")]
+            public static WellKnownSettingKey<float> NonSelectedAnswerAnimationDuration { get; } = new(0.8f);
+
+            [Description("blocked-answer-animation-duration")]
+            public static WellKnownSettingKey<float> BlockedAnswerAnimationDuration { get; } = new(0.8f);
+        }
+
         [Description("combat")]
         public static class Combat
         {

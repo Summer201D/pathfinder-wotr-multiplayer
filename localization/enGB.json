@@ -88,6 +88,21 @@
                     "tooltip": "Represents player name within multiplayer session. Limited to 24 characters"
                 }
             },
+            "dialogs": {
+                "title": "Dialogs",
+                "selectedAnswerAnimationDuration": {
+                    "title": "Selected answer animation duration",
+                    "tooltip": "Duration of the animation for the selected answer (seconds).\nDialog will continue once this animation ends"
+                },
+                "nonSelectedAnswerAnimationDuration": {
+                    "title": "Non-Selected answer animation duration",
+                    "tooltip": "Duration of the animation for all non-selected answers (seconds)"
+                },
+                "blockedAnswerAnimationDuration": {
+                    "title": "Blocked answer animation duration",
+                    "tooltip": "It happens when dialog owner is not allowed to select answer yet (not everyone is loaded)"
+                }
+            },
             "combat": {
                 "title": "Combat",
                 "syncAI": {

@@ -602,6 +602,20 @@ namespace WOTRMultiplayer.UI
                 new PlayerNameValidator(),
                 PlayerNameValidator.MaxLength);
 
+            // dialogs
+            const float defaultMinAnimationDuration = 0.5f;
+            const float defaultMaxAnimationDuration = 2f;
+            yield return new SettingsEntityHeaderVM(new LocalizedString { Key = WellKnownKeys.Settings.Dialogs.Title.Key });
+            yield return CreateSliderSetting(WellKnownKeys.Settings.Dialogs.SelectedAnswerAnimationDuration.Title.Key,
+                WellKnownKeys.Settings.Dialogs.SelectedAnswerAnimationDuration.Tooltip.Key,
+                WellKnownSettings.Dialogs.SelectedAnswerAnimationDuration, defaultMinAnimationDuration, defaultMaxAnimationDuration);
+            yield return CreateSliderSetting(WellKnownKeys.Settings.Dialogs.NonSelectedAnswerAnimationDuration.Title.Key,
+                WellKnownKeys.Settings.Dialogs.NonSelectedAnswerAnimationDuration.Tooltip.Key,
+                WellKnownSettings.Dialogs.NonSelectedAnswerAnimationDuration, defaultMinAnimationDuration, defaultMaxAnimationDuration);
+            yield return CreateSliderSetting(WellKnownKeys.Settings.Dialogs.BlockedAnswerAnimationDuration.Title.Key,
+                WellKnownKeys.Settings.Dialogs.BlockedAnswerAnimationDuration.Tooltip.Key,
+                WellKnownSettings.Dialogs.BlockedAnswerAnimationDuration, defaultMinAnimationDuration, defaultMaxAnimationDuration);
+
             // combat
             yield return new SettingsEntityHeaderVM(new LocalizedString { Key = WellKnownKeys.Settings.Combat.Title.Key });
             yield return CreateBoolSetting(WellKnownKeys.Settings.Combat.SyncAI.Title.Key, WellKnownKeys.Settings.Combat.SyncAI.Tooltip.Key, WellKnownSettings.Combat.AISync);
@@ -679,6 +693,23 @@ namespace WOTRMultiplayer.UI
             keyBindingSetting.LinkSetting(setting);
 
             var viewModel = new SettingEntityKeyBindingVM(keyBindingSetting);
+            return viewModel;
+        }
+
+        private SettingsEntitySliderVM CreateSliderSetting(string titleKey, string tooltipKey, WellKnownSettingKey<float> settingKey, float minValue, float maxValue)
+        {
+            var floatSetting = ScriptableObject.CreateInstance<UISettingsEntitySliderFloat>();
+            floatSetting.m_MinValue = minValue;
+            floatSetting.m_MaxValue = maxValue;
+            floatSetting.m_ShowValueText = true;
+            floatSetting.m_DecimalPlaces = 1;
+            floatSetting.m_Step = 0.1f;
+            ConfigureSetting(floatSetting, titleKey, tooltipKey);
+            var setting = new SettingsEntityFloat(settingKey.Key, settingKey.DefaultValue);
+            floatSetting.LinkSetting(setting);
+            ConfigureSettingModification(floatSetting);
+
+            var viewModel = new SettingsEntitySliderVM(floatSetting);
             return viewModel;
         }
 
