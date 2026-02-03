@@ -4,6 +4,7 @@ using HarmonyLib;
 using Kingmaker;
 using Kingmaker.EntitySystem.Entities;
 using Kingmaker.TurnBasedMode;
+using Kingmaker.UnitLogic.Class.Kineticist;
 using Kingmaker.UnitLogic.Commands;
 using Kingmaker.UnitLogic.Commands.Base;
 using Microsoft.Extensions.Logging;
@@ -121,6 +122,12 @@ namespace WOTRMultiplayer.HarmonyPatches.Combat
                     return;
                 }
 
+                if (IsKineticistAutousedAbility(__instance))
+                {
+                    Main.GetLogger<UnitCommandsPatches>().LogWarning("Skipping ability use as it's a part of kineticist autouse. UnitId={UnitId}, AbilityName={AbilityName}, AbilityId={AbilityId}", __instance.Executor.UniqueId, __instance.Ability.Name, __instance.Ability.UniqueId);
+                    return;
+                }
+
                 OnAbilityUse(__instance);
             }
             catch (Exception ex)
@@ -130,10 +137,18 @@ namespace WOTRMultiplayer.HarmonyPatches.Combat
             }
         }
 
+        private static bool IsKineticistAutousedAbility(UnitUseAbility instance)
+        {
+            var kineticistParty = instance.Executor.Get<UnitPartKineticist>();
+            var shouldSkip = kineticistParty != null && kineticistParty.GatherPowerAbility.Data == instance.Ability;
+            return shouldSkip;
+        }
+
         private static void OnAbilityUse(UnitUseAbility command)
         {
             var path = PathVisualizer.Instance?.CurrentPathForUnit(command.Executor.View);
             var networkPath = path?.vectorPath.Select(v => v.ToNetworkVector3()).ToList();
+            var movementLimit = Game.Instance.TurnBasedCombatController.CurrentTurn?.CurrentMovementLimit;
             var networkAbility = new NetworkAbility
             {
                 Id = command.Ability.UniqueId,
@@ -146,7 +161,8 @@ namespace WOTRMultiplayer.HarmonyPatches.Combat
                     command.Target.Orientation,
                     command.Target.Unit?.UniqueId),
                 CommandType = command.Type.ToString(),
-                ConvertedFromId = command.Ability.ConvertedFrom?.UniqueId
+                ConvertedFromId = command.Ability.ConvertedFrom?.UniqueId,
+                MovementLimit = movementLimit?.ToString()
             };
 
             Main.Multiplayer.OnAbilityUse(networkAbility);

@@ -199,18 +199,17 @@ namespace WOTRMultiplayer.Services
 
         public void OnAbilityUse(NetworkAbility ability)
         {
-            if (!ShouldNotifyAboutAbilityUse(ability.CasterId))
+            if (!IsCasterControlledByLocalPlayer(ability.CasterId))
             {
                 return;
             }
-
-            Logger.LogInformation("Sending ability use. CasterId={CasterId}, TargetUnitId={TargetUnitId}, TargetPoint={TargetPoint}, AbilityId={AbilityId}, SpellbookId={SpellbookId}, VectorPathCount={VectorPathCount}",
-              ability.CasterId, ability.Target.UnitId, ability.Target.Point, ability.Id, ability.SpellbookId, ability.VectorPath?.Count);
 
             var message = new NotifyAbilityUsed
             {
                 Ability = Mapper.Map<Networking.Messages.Contracts.NetworkAbility>(ability)
             };
+            Logger.LogInformation("Sending {MessageType}. CasterId={CasterId}, TargetUnitId={TargetUnitId}, TargetPoint={TargetPoint}, AbilityId={AbilityId}, SpellbookId={SpellbookId}, VectorPathCount={VectorPathCount}, MovementLimit={MovementLimit}",
+                nameof(NotifyAbilityUsed), message.Ability.CasterId, message.Ability.Target.UnitId, message.Ability.Target.Point, message.Ability.Id, message.Ability.SpellbookId, message.Ability.VectorPath?.Count, message.Ability.MovementLimit);
 
             Send(message);
         }
@@ -241,7 +240,7 @@ namespace WOTRMultiplayer.Services
 
         public void OnToggleActivatableAbility(NetworkActivatableAbility activatableAbilityUse)
         {
-            if (!ShouldNotifyAboutAbilityUse(activatableAbilityUse.CasterId))
+            if (!IsCasterControlledByLocalPlayer(activatableAbilityUse.CasterId))
             {
                 return;
             }
@@ -295,11 +294,11 @@ namespace WOTRMultiplayer.Services
                 return;
             }
 
-            Logger.LogInformation("Sending ground click. WorldPosition={WorldPosition}, SelectedUnits={SelectedUnits}", click.WorldPosition, click.SelectedUnits);
             var message = new NotifyGroundClicked
             {
                 Click = Mapper.Map<Networking.Messages.Contracts.NetworkClick>(click)
             };
+            Logger.LogInformation("Sending {MessageType}. WorldPosition={WorldPosition}, SelectedUnits={SelectedUnits}, MovementLimit={MovementLimit}", nameof(NotifyGroundClicked), click.WorldPosition, click.SelectedUnits, click.MovementLimit);
 
             Send(message);
         }
@@ -2613,7 +2612,7 @@ namespace WOTRMultiplayer.Services
             return savePath;
         }
 
-        protected bool ShouldNotifyAboutAbilityUse(string sourceUnitId)
+        protected bool IsCasterControlledByLocalPlayer(string sourceUnitId)
         {
             if (Game.Combat == null)
             {
@@ -3658,7 +3657,7 @@ namespace WOTRMultiplayer.Services
 
         private void OnNotifyGroundClicked(long receivedFrom, NotifyGroundClicked clicked)
         {
-            Logger.LogInformation("Received {MessageType}. ReceivedFrom={ReceivedFrom}, SelectedUnits={SelectedUnits}, WorldPosition={WorldPosition}", nameof(NotifyGroundClicked), receivedFrom, clicked.Click.SelectedUnits.Count, clicked.Click.WorldPosition);
+            Logger.LogInformation("Received {MessageType}. ReceivedFrom={ReceivedFrom}, SelectedUnits={SelectedUnits}, WorldPosition={WorldPosition}, MovementLimit={MovementLimit}", nameof(NotifyGroundClicked), receivedFrom, clicked.Click.SelectedUnits.Count, clicked.Click.WorldPosition, clicked.Click.MovementLimit);
             if (Game.Combat == null)
             {
                 Logger.LogWarning($"{nameof(NotifyGroundClicked)} is ignored out of combat");
@@ -3713,7 +3712,7 @@ namespace WOTRMultiplayer.Services
 
         private void OnNotifyAbilityUsed(long receivedFrom, NotifyAbilityUsed abilityUse)
         {
-            Logger.LogInformation("Received {MessageType}. ReceivedFrom={ReceivedFrom}, CasterId={CasterId}, AbilityId={AbilityId}, TargetUnitId={TargetUnitId}, TargetPoint={TargetPoint}", nameof(NotifyAbilityUsed), receivedFrom, abilityUse.Ability.CasterId, abilityUse.Ability.Id, abilityUse.Ability.Target.UnitId, abilityUse.Ability.Target.Point);
+            Logger.LogInformation("Received {MessageType}. ReceivedFrom={ReceivedFrom}, CasterId={CasterId}, AbilityId={AbilityId}, TargetUnitId={TargetUnitId}, TargetPoint={TargetPoint}, MovementLimit={MovementLimit}", nameof(NotifyAbilityUsed), receivedFrom, abilityUse.Ability.CasterId, abilityUse.Ability.Id, abilityUse.Ability.Target.UnitId, abilityUse.Ability.Target.Point, abilityUse.Ability.MovementLimit);
 
             var ability = Mapper.Map<NetworkAbility>(abilityUse.Ability);
             CombatInteraction.UseAbility(ability);
