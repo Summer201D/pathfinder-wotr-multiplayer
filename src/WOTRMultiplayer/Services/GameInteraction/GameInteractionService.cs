@@ -437,7 +437,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
 
         public string GetPetOwnerId(string unitId)
         {
-            var unit = Game.Instance.State.Units.FirstOrDefault(u => string.Equals(u.UniqueId, unitId));
+            var unit = _gameStateLookupService.GetUnitEntity(unitId);
             if (unit == null)
             {
                 return null;

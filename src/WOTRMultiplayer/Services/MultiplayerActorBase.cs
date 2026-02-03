@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using AutoMapper;
 using Kingmaker.Controllers.Rest;
 using Kingmaker.GameModes;
+using Kingmaker.Utility;
 using Microsoft.Extensions.Logging;
 using UniRx;
 using WOTRMultiplayer.Abstractions;
@@ -4121,7 +4122,12 @@ namespace WOTRMultiplayer.Services
 
         private bool WasControlledByCurrentPlayer(string unitId)
         {
-            if (string.IsNullOrEmpty(unitId) || !Game.CharactersOwnershipHistory.TryGetValue(unitId, out var playerId) || GetPlayer(playerId) == null)
+            // could be horse leveling
+            var realCharacterUnitId = GameInteraction.GetPetOwnerId(unitId) ?? unitId;
+
+            if (string.IsNullOrEmpty(realCharacterUnitId)
+                || !Game.CharactersOwnershipHistory.TryGetValue(realCharacterUnitId, out var playerId)
+                || GetPlayer(playerId) == null)
             {
                 return HasControlOverUI;
             }
