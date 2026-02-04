@@ -649,8 +649,8 @@ namespace WOTRMultiplayer.Services.GameInteraction
                     return;
                 }
 
+                _playerNotificationService.ShowWarningNotification(WellKnownKeys.GameNotifications.Combat.UnitAutokilled.Key, args: [unitToKill.CharacterName, unitToKill.UniqueId]);
                 // TODO: get units from everyone and kill at the same time?
-                // _playerNotificationService.ShowWarningNotification(WellKnownKeys.GameNotifications.Combat.UnitAutokilled.Key, addToLog: true, unitToKill.CharacterName, unitToKill.UniqueId);
                 // GameHelper.KillUnit(unitToKill);
             }
         }

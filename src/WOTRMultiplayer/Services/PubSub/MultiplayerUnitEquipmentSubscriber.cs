@@ -31,39 +31,52 @@ namespace WOTRMultiplayer.Services.PubSub
 
         public void HandleEquipmentSlotUpdated(ItemSlot slot, ItemEntity previousItem)
         {
-            if (ActorAccessor.Current == null || _gameInteractionService.CurrentGameMode == GameModeType.None)
+            try
             {
-                return;
+                // ignoring when:
+                // - multiplayer is not active
+                // - game is loading new game
+                // - previousItem exists, but has no collection = either used by player (potion) or some scripted action
+                if (ActorAccessor.Current == null
+                        || _gameInteractionService.CurrentGameMode == GameModeType.None
+                        || (previousItem != null && previousItem.Collection == null))
+                {
+                    return;
+                }
+
+                var position = _gameInteractionService.GetEquipmentSlotPosition(slot);
+                if (position == null || position.Index == -1)
+                {
+                    return;
+                }
+
+                var swapContext = ContextData<ItemsCollection.SwapItems>.Current;
+                var equipmentSwapContext = swapContext == null ? null : new NetworkEquipmentSwapContext
+                {
+                    From = _gameInteractionService.GetEquipmentSlotPosition(swapContext.From),
+                    To = _gameInteractionService.GetEquipmentSlotPosition(swapContext.To)
+                };
+
+                var networkSlot = new NetworkEquipmentSlot
+                {
+                    Item = slot.HasItem ? NetworkItem.FromItemEntity(slot.Item) : null,
+                    SwapContext = equipmentSwapContext,
+                    OwnerId = slot.Owner.Unit.UniqueId,
+                    Position = position
+                };
+
+                var equipmentContext = _gameInteractionService.RemoteContext?.Equipment;
+                if (equipmentContext != null && equipmentContext.Position.Type == position.Type && equipmentContext.Position.Index == position.Index)
+                {
+                    return;
+                }
+
+                ActorAccessor.Current.OnEquipmentSlotChanged(networkSlot);
             }
-
-            var position = _gameInteractionService.GetEquipmentSlotPosition(slot);
-            if (position == null || position.Index == -1)
+            catch (Exception ex)
             {
-                return;
+                Logger.LogError(ex, "Unable to handle equipment change");
             }
-
-            var swapContext = ContextData<ItemsCollection.SwapItems>.Current;
-            var equipmentSwapContext = swapContext == null ? null : new NetworkEquipmentSwapContext
-            {
-                From = _gameInteractionService.GetEquipmentSlotPosition(swapContext.From),
-                To = _gameInteractionService.GetEquipmentSlotPosition(swapContext.To)
-            };
-
-            var networkSlot = new NetworkEquipmentSlot
-            {
-                Item = slot.HasItem ? NetworkItem.FromItemEntity(slot.Item) : null,
-                SwapContext = equipmentSwapContext,
-                OwnerId = slot.Owner.Unit.UniqueId,
-                Position = position
-            };
-
-            var equipmentContext = _gameInteractionService.RemoteContext?.Equipment;
-            if (equipmentContext != null && equipmentContext.Position.Type == position.Type && equipmentContext.Position.Index == position.Index)
-            {
-                return;
-            }
-
-            ActorAccessor.Current.OnEquipmentSlotChanged(networkSlot);
         }
 
         public void HandleUnitChangeActiveEquipmentSet(UnitDescriptor unit)

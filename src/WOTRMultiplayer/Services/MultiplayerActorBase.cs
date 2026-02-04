@@ -3142,7 +3142,7 @@ namespace WOTRMultiplayer.Services
 
         private async void OnNotifyCombatStarted(long receivedFrom, NotifyCombatStarted combatStarted)
         {
-            Logger.LogInformation("Received {MessageType}. ReceivedFrom={ReceivedFrom}, PlayerId={PlayerId}, UnitsCount={UnitsCount}", nameof(NotifyCombatStarted), receivedFrom, combatStarted.PlayerId, combatStarted.State.Units);
+            Logger.LogInformation("Received {MessageType}. ReceivedFrom={ReceivedFrom}, PlayerId={PlayerId}, UnitsCount={UnitsCount}", nameof(NotifyCombatStarted), receivedFrom, combatStarted.PlayerId, combatStarted.State.Units.Count);
 
             OnAfterNetworkMessageHandled(receivedFrom, combatStarted);
 
