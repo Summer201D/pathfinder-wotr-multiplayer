@@ -448,7 +448,6 @@ namespace WOTRMultiplayer.Services.GameInteraction
             }
 
             var units = new List<NetworkUnit>();
-
             foreach (var combatUnit in unitsInCombat)
             {
                 var unit = new NetworkUnit
@@ -460,12 +459,22 @@ namespace WOTRMultiplayer.Services.GameInteraction
                     CombatState = GetUnitCombatState(combatUnit),
                     CurrentAbility = GetUnitAbilityCommand(combatUnit),
                     CurrentAttack = GetUnitAttackCommand(combatUnit),
+                    Descriptor = GetUnitDescriptor(combatUnit)
                 };
 
                 units.Add(unit);
             }
 
             return units;
+        }
+
+        private NetworkUnitDescriptor GetUnitDescriptor(UnitEntityData combatUnit)
+        {
+            var descriptor = new NetworkUnitDescriptor
+            {
+                Damage = combatUnit.Descriptor.Damage
+            };
+            return descriptor;
         }
 
         private NetworkUnitAttack GetUnitAttackCommand(UnitEntityData combatUnit)
@@ -566,6 +575,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
                     }
 
                     UpdateUnitPosition(unit, networkUnit);
+                    UpdateUnitHealth(unit, networkUnit);
 
                     if (requiresFullUpdate)
                     {
@@ -574,7 +584,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
                     }
                 }
 
-                UpdateCombatUnitState(unitsToUpdate);
+                UpdateEngagements(unitsToUpdate);
                 _logger.LogInformation("Combat state has been updated. RoundNumber={RoundNumber}, UnitsCount={UnitsCount}, IsFullUpdate={IsFullUpdate}", networkCombatState.RoundNumber, networkCombatState.Units.Count, requiresFullUpdate);
             }
             catch (Exception ex)
@@ -582,6 +592,11 @@ namespace WOTRMultiplayer.Services.GameInteraction
                 _logger.LogError(ex, "Unable to update combat state. RoundNumber={RoundNumber}, UnitsCount={UnitsCount}, IsFullUpdate={IsFullUpdate}", networkCombatState.RoundNumber, networkCombatState.Units.Count, requiresFullUpdate);
                 throw;
             }
+        }
+
+        private void UpdateUnitHealth(UnitEntityData unit, NetworkUnit networkUnit)
+        {
+            unit.Damage = networkUnit.Descriptor.Damage;
         }
 
         private void OverrideUnitOffensiveCommands(UnitEntityData unit, NetworkUnit networkUnit)
@@ -688,7 +703,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
             return wrapper;
         }
 
-        private void UpdateCombatUnitState(Dictionary<NetworkUnit, UnitEntityData> unitsToUpdate)
+        private void UpdateEngagements(Dictionary<NetworkUnit, UnitEntityData> unitsToUpdate)
         {
             // engagement is configured for units pair so we need to clear existing lists before syncing
             // also EngagedX lists could contain units that are not in combat right now - therefore not present in the base list

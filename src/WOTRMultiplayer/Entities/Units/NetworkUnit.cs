@@ -17,5 +17,7 @@ namespace WOTRMultiplayer.Entities.Units
         public NetworkUnitAttack CurrentAttack { get; set; }
 
         public NetworkAbility CurrentAbility { get; set; }
+
+        public NetworkUnitDescriptor Descriptor { get; set; }
     }
 }
