@@ -272,17 +272,17 @@ namespace WOTRMultiplayer.Services
 
         public void OnClickUnit(NetworkClick click)
         {
-            if (Game.Combat == null && !IsControlledByLocalPlayer(click.SelectedUnits)
+            if (Game.Combat == null && IsControlledByPlayers(click.TargetUnitId)
                 || Game.Combat != null && (!(Game.Combat.Turn?.IsLocalPlayer ?? false) || CombatInteraction.IsCombatTurnFinished()))
             {
                 return;
             }
 
-            Logger.LogInformation("Sending {MessageType}. TargetUnitId={TargetUnitId}", nameof(NotifyUnitClicked), click.TargetUnitId);
             var message = new NotifyUnitClicked
             {
                 Click = Mapper.Map<Networking.Messages.Contracts.NetworkClick>(click)
             };
+            Logger.LogInformation("Sending {MessageType}. TargetUnitId={TargetUnitId}, SelectedUnits={SelectedUnits}", nameof(NotifyUnitClicked), message.Click.TargetUnitId, message.Click.SelectedUnits);
 
             Send(message);
         }
