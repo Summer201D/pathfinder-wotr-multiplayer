@@ -25,5 +25,8 @@ namespace WOTRMultiplayer.Networking.Messages.Contracts
 
         [ProtoMember(7)]
         public NetworkAbility CurrentAbility { get; set; }
+
+        [ProtoMember(8)]
+        public NetworkUnitDescriptor Descriptor { get; set; }
     }
 }

@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using Kingmaker.EntitySystem.Entities;
 using WOTRMultiplayer.Entities.Equipment;
-using WOTRMultiplayer.Entities.Inspect;
 using WOTRMultiplayer.Entities.Items;
 
 namespace WOTRMultiplayer.Services.GameInteraction.Contexts
@@ -10,8 +9,6 @@ namespace WOTRMultiplayer.Services.GameInteraction.Contexts
     public class RemoteExecutionContext : IDisposable
     {
         public List<UnitEntityData> SelectedUnits { get; set; }
-
-        public PerceptionCheckContext PerceptionCheck { get; set; }
 
         public DropItemContext DropItem { get; set; }
 
@@ -34,7 +31,6 @@ namespace WOTRMultiplayer.Services.GameInteraction.Contexts
         public void Dispose()
         {
             SelectedUnits = null;
-            PerceptionCheck = null;
             DropItem = null;
             UseInventoryItem = null;
             Equipment = null;
@@ -90,14 +86,6 @@ namespace WOTRMultiplayer.Services.GameInteraction.Contexts
                     UnitId = set.UnitId,
                     Index = set.Index
                 }
-            };
-        }
-
-        public static RemoteExecutionContext Create(NetworkPerceptionCheck check)
-        {
-            return new RemoteExecutionContext
-            {
-                PerceptionCheck = new PerceptionCheckContext(check.UnitId, check.MapObject.Id)
             };
         }
 

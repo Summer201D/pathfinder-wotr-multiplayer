@@ -11,7 +11,6 @@ using Kingmaker.Blueprints.Root;
 using Kingmaker.Controllers;
 using Kingmaker.Controllers.Clicks;
 using Kingmaker.Controllers.Clicks.Handlers;
-using Kingmaker.Controllers.MapObjects;
 using Kingmaker.Controllers.Rest;
 using Kingmaker.Controllers.Rest.State;
 using Kingmaker.Controllers.Units;
@@ -843,9 +842,32 @@ namespace WOTRMultiplayer.Services.GameInteraction
 
             _mainThreadAccessor.Post(() =>
             {
-                _logger.LogInformation("Trigerring perception check. MapObjectId={MapObjectId}", networkPerceptionCheck.MapObject.Id);
-                using var context = _networkExecutionContext.Value = RemoteExecutionContext.Create(networkPerceptionCheck);
-                PartyPerceptionController.RollPerception(unit, mapObject);
+                // based on PartyPerceptionController.RollPerception
+                var perceptionCheckComponent = mapObject.View.PerceptionCheckComponent;
+                var rule = new RuleSkillCheck(unit, perceptionCheckComponent.StatType, perceptionCheckComponent.DC)
+                {
+                    Reason = mapObject,
+                    D20 = RuleRollD20.FromInt(unit, networkPerceptionCheck.Roll)
+                };
+                rule.m_Success = rule.IsSuccessRoll(rule.D20, rule.RequiresSuccessBonus ? rule.SuccessBonus : 0);
+                rule.m_Triggered = true;
+                _playerNotificationService.AddCombatText(rule);
+
+                var modifiableValue = unit.Stats.AllStats.FirstOrDefault(x => x.Type == perceptionCheckComponent.StatType);
+                if (modifiableValue == null)
+                {
+                    _logger.LogError("Unable to do perception check due to missing character stat. UnitId={UnitId}, StatType={StatType}", unit.UniqueId, perceptionCheckComponent.StatType);
+                    return;
+                }
+
+                mapObject.LastPerceptionRollRank[unit] = modifiableValue.BaseValue;
+                mapObject.IsPerceptionCheckPassed = rule.Success;
+                if (rule.Success)
+                {
+                    EventBus.RaiseEvent<IPerceptionHandler>(x => x.OnEntityNoticed(mapObject, unit));
+                }
+
+                _logger.LogInformation("Perception check has been triggered. UnitId={UnitId}, MapObjectId={MapObjectId}, Roll={Roll}, IsSuccess={IsSuccess}", unit.UniqueId, mapObject.UniqueId, networkPerceptionCheck.Roll, rule.Success);
             });
         }
 

@@ -635,27 +635,7 @@ namespace WOTRMultiplayer.Services
 
         public bool CanMakePerceptionCheck(string unitId, string mapObjectId)
         {
-            try
-            {
-                if (!_multiplayerActorAccessor.Client.IsActive)
-                {
-                    return true;
-                }
-
-                var perceptionCheck = _gameInteractionService.RemoteContext?.PerceptionCheck;
-                if (perceptionCheck == null)
-                {
-                    return false;
-                }
-
-                return string.Equals(unitId, perceptionCheck.UnitId, StringComparison.OrdinalIgnoreCase)
-                    && string.Equals(mapObjectId, perceptionCheck.MapObjectId, StringComparison.OrdinalIgnoreCase);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error while checking perception check permissions. UnitId={UnitId}", unitId);
-                throw;
-            }
+            return _multiplayerActorAccessor.Current != null && _multiplayerActorAccessor.Host.IsActive;
         }
 
         public bool CanMakeStealthPerceptionCheck()

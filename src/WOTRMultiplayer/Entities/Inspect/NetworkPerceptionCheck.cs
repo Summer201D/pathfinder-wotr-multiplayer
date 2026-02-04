@@ -7,5 +7,7 @@ namespace WOTRMultiplayer.Entities.Inspect
         public string UnitId { get; set; }
 
         public NetworkMapObject MapObject { get; set; }
+
+        public int Roll { get; set; }
     }
 }

@@ -379,7 +379,7 @@ namespace WOTRMultiplayer.Services
             {
                 Check = Mapper.Map<Networking.Messages.Contracts.NetworkPerceptionCheck>(check)
             };
-            Logger.LogInformation("Sending {MessageType}. UnitId={UnitId}, MapObjectId={MapObjectId}, Result={Result}", nameof(NotifyPerceptionCheckRolled), message.Check.UnitId, message.Check.MapObject.Id);
+            Logger.LogInformation("Sending {MessageType}. UnitId={UnitId}, MapObjectId={MapObjectId}, Roll={Roll}", nameof(NotifyPerceptionCheckRolled), message.Check.UnitId, message.Check.MapObject.Id, check.Roll);
 
             Send(message);
         }

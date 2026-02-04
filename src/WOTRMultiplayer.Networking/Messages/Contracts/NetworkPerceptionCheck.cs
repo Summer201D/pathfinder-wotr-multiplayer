@@ -10,5 +10,8 @@ namespace WOTRMultiplayer.Networking.Messages.Contracts
 
         [ProtoMember(2)]
         public NetworkMapObject MapObject { get; set; }
+
+        [ProtoMember(3)]
+        public int Roll { get; set; }
     }
 }
