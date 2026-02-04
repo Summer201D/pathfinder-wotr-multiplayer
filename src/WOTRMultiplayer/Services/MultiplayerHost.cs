@@ -345,14 +345,14 @@ namespace WOTRMultiplayer.Services
                 var combatState = CombatInteraction.GetCombatState();
                 var message = new NotifyCombatInitialized
                 {
-                    CombatState = Mapper.Map<Networking.Messages.Contracts.NetworkCombatState>(combatState),
+                    State = Mapper.Map<Networking.Messages.Contracts.NetworkCombatState>(combatState),
                     Seed = Game.Combat.Seed
                 };
 
                 Send(message);
                 Game.Combat.IsInitialized = true;
                 Game.Combat.PlayersCombatInitialization.TryAdd(Game.LocalPlayerId, true);
-                Logger.LogInformation("Sending {MessageType}. Seed={Seed}, RoundNumber={RoundNumber}, HasSurprisingRound={HasSurprisingRound}, UnitsInCombat={UnitsInCombat}", nameof(NotifyCombatInitialized), message.Seed, message.CombatState.RoundNumber, message.CombatState.HasSurpriseRound, message.CombatState.Units.Count);
+                Logger.LogInformation("Sending {MessageType}. Seed={Seed}, RoundNumber={RoundNumber}, HasSurprisingRound={HasSurprisingRound}, UnitsInCombat={UnitsInCombat}", nameof(NotifyCombatInitialized), message.Seed, message.State.RoundNumber, message.State.HasSurpriseRound, message.State.Units.Count);
             }
 
             var canContinue = Game.Combat.PlayersCombatInitialization.Count >= GetSyncedPlayersCount();

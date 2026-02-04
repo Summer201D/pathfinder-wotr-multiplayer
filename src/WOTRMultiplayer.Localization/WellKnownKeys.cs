@@ -883,6 +883,12 @@ public static class WellKnownKeys
             {
                 public static string Key { get; set; }
             }
+
+            [Description("forcedToStart")]
+            public static class ForcedToStart
+            {
+                public static string Key { get; set; }
+            }
         }
 
         [Description("tacticalCombat")]

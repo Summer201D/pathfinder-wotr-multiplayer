@@ -8,7 +8,7 @@ namespace WOTRMultiplayer.Networking.Messages.Game
     public class NotifyCombatInitialized
     {
         [ProtoMember(1)]
-        public NetworkCombatState CombatState { get; set; }
+        public NetworkCombatState State { get; set; }
 
         [ProtoMember(2)]
         public int Seed { get; set; }

@@ -1,7 +1,9 @@
-﻿using System.Threading.Tasks;
+﻿using System.Collections.Generic;
+using System.Threading.Tasks;
 using WOTRMultiplayer.Abstractions.GameInteraction;
 using WOTRMultiplayer.Entities.Combat;
 using WOTRMultiplayer.Entities.Combat.Crusades;
+using WOTRMultiplayer.Entities.Units;
 
 namespace WOTRMultiplayer.Playground.Core.Dummies
 {
@@ -87,6 +89,11 @@ namespace WOTRMultiplayer.Playground.Core.Dummies
 
         public void UseAbility(NetworkAbility networkAbility)
         {
+        }
+
+        public Task<bool> StartCombatAsync(NetworkCombatState networkCombatState)
+        {
+            return Task.FromResult(false);
         }
     }
 }

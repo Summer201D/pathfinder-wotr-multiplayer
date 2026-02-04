@@ -1361,14 +1361,14 @@ namespace WOTRMultiplayer.Services
 
         private async void OnNotifyCombatInitialized(long playerId, NotifyCombatInitialized combatInitialized)
         {
-            Logger.LogInformation("Received {MessageType}. Seed={Seed}, Units={Units}", nameof(NotifyCombatInitialized), combatInitialized.Seed, combatInitialized.CombatState.Units.Count);
+            Logger.LogInformation("Received {MessageType}. Seed={Seed}, Units={Units}", nameof(NotifyCombatInitialized), combatInitialized.Seed, combatInitialized.State.Units.Count);
 
             await WaitWhileTrue(() => Game.Combat == null, "Combat has not been started on client yet. Waiting until start");
 
             Game.Combat.Seed = combatInitialized.Seed;
             Logger.LogInformation("Combat seed has been configured. Seed={Seed}", Game.Combat.Seed);
 
-            var combatState = Mapper.Map<NetworkCombatState>(combatInitialized.CombatState);
+            var combatState = Mapper.Map<NetworkCombatState>(combatInitialized.State);
             await CombatInteraction.UpdateCombatStateAsync(combatState, true);
 
             Logger.LogInformation("Sending {MessageType}", nameof(ClientCombatInitialized));

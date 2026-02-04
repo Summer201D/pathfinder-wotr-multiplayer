@@ -409,6 +409,46 @@ namespace WOTRMultiplayer.Services.GameInteraction
             }
         }
 
+        public Task<bool> StartCombatAsync(NetworkCombatState networkCombatState)
+        {
+            var taskCompletion = new TaskCompletionSource<bool>();
+
+            _mainThreadAccessor.Post(() =>
+            {
+                try
+                {
+                    if (Game.Instance.Player.IsInCombat)
+                    {
+                        taskCompletion.SetResult(false);
+                        return;
+                    }
+
+                    var unitsInCombat = networkCombatState.Units.Select(u => _gameStateLookupService.GetUnitEntity(u.Id)).ToList();
+                    foreach (UnitEntityData unitEntityData in unitsInCombat)
+                    {
+                        if (!unitEntityData.IsPlayerFaction && unitEntityData.IsPlayersEnemy)
+                        {
+                            foreach (UnitEntityData unitEntityData2 in Game.Instance.Player.PartyAndPets)
+                            {
+                                Game.Instance.UnitMemoryController.AddToMemory(unitEntityData, unitEntityData2);
+                            }
+                        }
+                    }
+
+                    taskCompletion.SetResult(true);
+                    _logger.LogInformation("Combat has been forced to start");
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Unable to force combat start. UnitsCount={UnitsCount}", networkCombatState.Units.Count);
+                    taskCompletion.SetResult(false);
+                    throw;
+                }
+            });
+
+            return taskCompletion.Task;
+        }
+
         private void SetTurnMovementLimit(string rawMovementLimit, UnitEntityData executor)
         {
             var turn = Game.Instance.TurnBasedCombatController.CurrentTurn;

@@ -224,7 +224,8 @@
             NotifyGlobalMapCrusadeArmyLeaderLevelingSkillSelected,
             NotifyRestWindowClosed,
             NotifyGlobalMapGroupChangerOpened,
-            NotifyCapitalModeRestInitiated
+            NotifyCapitalModeRestInitiated,
+            NotifyCombatStarted
         }
 
         public enum Request

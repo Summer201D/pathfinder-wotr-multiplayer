@@ -548,6 +548,15 @@ namespace WOTRMultiplayer.Services
 
             Game.Combat = new NetworkCombat();
             Game.LastCombatTurn = null;
+
+            var unitsInCombat = CombatInteraction.GetCombatState();
+            var message = new NotifyCombatStarted
+            {
+                PlayerId = Game.LocalPlayerId,
+                State = Mapper.Map<Networking.Messages.Contracts.NetworkCombatState>(unitsInCombat),
+            };
+            Logger.LogInformation("Sending {MessageType}. UnitsCount={UnitsCount}", nameof(NotifyCombatStarted), message.State.Units.Count);
+            Send(message);
         }
 
         public void CombatEnded()
@@ -2991,6 +3000,9 @@ namespace WOTRMultiplayer.Services
                 .On<NotifyGameForceLoaded>(OnNotifyGameForceLoaded)
                 .On<NotifyPlayerReadyStatusChanged>(OnNotifyPlayerReadyStatusChanged)
 
+                // combat
+                .On<NotifyCombatStarted>(OnNotifyCombatStarted)
+
                 // leveling
                 .On<NotifyLevelingClassArchetypeSelected>(OnNotifyLevelingClassArchetypeSelected)
                 .On<NotifyLevelingMythicClassSelected>(OnNotifyLevelingMythicClassSelected)
@@ -3126,6 +3138,32 @@ namespace WOTRMultiplayer.Services
                 // cutscenes
                 .On<NotifyCutsceneSkipped>(OnNotifyCutsceneSkipped)
                 ;
+        }
+
+        private async void OnNotifyCombatStarted(long receivedFrom, NotifyCombatStarted combatStarted)
+        {
+            Logger.LogInformation("Received {MessageType}. ReceivedFrom={ReceivedFrom}, PlayerId={PlayerId}, UnitsCount={UnitsCount}", nameof(NotifyCombatStarted), receivedFrom, combatStarted.PlayerId, combatStarted.State.Units);
+
+            OnAfterNetworkMessageHandled(receivedFrom, combatStarted);
+
+            if (Game.Combat != null)
+            {
+                return;
+            }
+
+            var player = GetPlayer(combatStarted.PlayerId);
+            if (player == null)
+            {
+                Logger.LogWarning("Combat has been started by missing player. PlayerId={PlayerId}", combatStarted.PlayerId);
+                return;
+            }
+
+            var combatState = Mapper.Map<NetworkCombatState>(combatStarted.State);
+            var hasBeenForcedToStart = await CombatInteraction.StartCombatAsync(combatState);
+            if (hasBeenForcedToStart)
+            {
+                PlayerNotification.ShowWarningNotification(WellKnownKeys.GameNotifications.Combat.ForcedToStart.Key, args: player.Name);
+            }
         }
 
         private void OnNotifyCapitalModeRestInitiated(long receivedFrom, NotifyCapitalModeRestInitiated message)
