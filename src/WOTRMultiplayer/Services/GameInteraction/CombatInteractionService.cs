@@ -412,10 +412,14 @@ namespace WOTRMultiplayer.Services.GameInteraction
             return canGetUp;
         }
 
-        public bool HasAnyRunningCombatCommands()
+        public bool IsRiderActive()
         {
-            var hasAnyCommmands = Game.Instance.TurnBasedCombatController.CurrentTurn?.m_RunningCommands.Count > 0;
-            return hasAnyCommmands;
+            var rider = Game.Instance.TurnBasedCombatController.CurrentTurn?.Rider;
+            var mount = Game.Instance.TurnBasedCombatController.CurrentTurn?.Mount;
+            var isRiderActing = Game.Instance.TurnBasedCombatController.CurrentTurn?.m_RunningCommands.Count > 0
+                || Game.Instance.ProjectileController.HasLaunchedProjectile(rider, mount);
+
+            return isRiderActing;
         }
 
         public void KillUnit(NetworkPlayer player, string unitId)

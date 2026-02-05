@@ -2070,10 +2070,10 @@ namespace WOTRMultiplayer.Services.GameInteraction
             });
         }
 
-        public bool UnitIsBusy(string unitId)
+        public bool IsUnitBusy(string unitId)
         {
             var unit = _gameStateLookupService.GetUnitEntity(unitId);
-            return unit.Commands.IsRunning();
+            return unit?.Commands.IsRunning() ?? false;
         }
 
         public void ApplyTrapDisarm(NetworkTrapDisarm trapDisarm)

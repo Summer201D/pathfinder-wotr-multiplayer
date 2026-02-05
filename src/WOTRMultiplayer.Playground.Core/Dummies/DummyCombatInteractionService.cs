@@ -104,7 +104,7 @@ namespace WOTRMultiplayer.Playground.Core.Dummies
             return false;
         }
 
-        public bool HasAnyRunningCombatCommands()
+        public bool IsRiderActive()
         {
             return false;
         }

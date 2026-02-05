@@ -3172,7 +3172,7 @@ namespace WOTRMultiplayer.Services
 
             OnAfterNetworkMessageHandled(receivedFrom, trapDisarmRolled);
 
-            await WaitWhileTrue(() => GameInteraction.UnitIsBusy(trapDisarmRolled.TrapDisarm.UnitId), "Waiting for unit to finish actions before applying trap disarm roll");
+            await WaitWhileTrue(() => GameInteraction.IsUnitBusy(trapDisarmRolled.TrapDisarm.UnitId), "Waiting for unit to finish actions before applying trap disarm roll");
 
             var trapDisarm = Mapper.Map<NetworkTrapDisarm>(trapDisarmRolled.TrapDisarm);
             GameInteraction.ApplyTrapDisarm(trapDisarm);
@@ -3189,7 +3189,7 @@ namespace WOTRMultiplayer.Services
                 return;
             }
 
-            await WaitWhileTrue(CombatInteraction.HasAnyRunningCombatCommands, "Waiting for active commands to finish before checking if unit should be killed");
+            await WaitWhileTrue(CombatInteraction.IsRiderActive, "Waiting for active commands to finish before checking if unit should be killed");
 
             var player = GetPlayer(combatUnitKilled.PlayerId);
             if (player == null)
@@ -3836,15 +3836,15 @@ namespace WOTRMultiplayer.Services
             OnAfterNetworkMessageHandled(receivedFrom, unitAttacked);
         }
 
-        private async void OnNotifyPlayerCombatTurnEnded(long receivedFrom, NotifyPlayerCombatTurnEnded ended)
+        private async void OnNotifyPlayerCombatTurnEnded(long receivedFrom, NotifyPlayerCombatTurnEnded combatTurnEnded)
         {
-            Logger.LogInformation("Received {MessageType}. ReceivedFrom={ReceivedFrom}, PlayerId={PlayerId}, UnitId={UnitId}", nameof(NotifyPlayerCombatTurnEnded), receivedFrom, ended.PlayerId, ended.UnitId);
+            Logger.LogInformation("Received {MessageType}. ReceivedFrom={ReceivedFrom}, PlayerId={PlayerId}, UnitId={UnitId}", nameof(NotifyPlayerCombatTurnEnded), receivedFrom, combatTurnEnded.PlayerId, combatTurnEnded.UnitId);
 
-            await WaitWhileTrue(CombatInteraction.HasAnyRunningCombatCommands, "Waiting for all combat commands to finish before ending turn");
+            await WaitWhileTrue(CombatInteraction.IsRiderActive, "Waiting for all combat commands to finish before ending turn");
 
             EndLocalTurn();
 
-            OnAfterNetworkMessageHandled(receivedFrom, ended);
+            OnAfterNetworkMessageHandled(receivedFrom, combatTurnEnded);
         }
 
         private void OnNotifyActiveHandEquipmentSetChanged(long receivedFrom, NotifyActiveHandEquipmentSetChanged changed)

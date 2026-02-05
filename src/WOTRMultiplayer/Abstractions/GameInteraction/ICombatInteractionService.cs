@@ -51,6 +51,6 @@ namespace WOTRMultiplayer.Abstractions.GameInteraction
 
         bool CanRiderGetUp();
 
-        bool HasAnyRunningCombatCommands();
+        bool IsRiderActive();
     }
 }

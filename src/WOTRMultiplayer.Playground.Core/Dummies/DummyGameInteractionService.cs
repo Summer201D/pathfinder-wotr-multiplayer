@@ -413,7 +413,7 @@ namespace WOTRMultiplayer.Playground.Core.Dummies
         {
         }
 
-        public bool UnitIsBusy(string unitId)
+        public bool IsUnitBusy(string unitId)
         {
             return false;
         }
