@@ -818,6 +818,7 @@ namespace WOTRMultiplayer.Services
                     return true;
                 }
 
+                ruleRollDice.RollHistory = d100.RollHistory;
                 ruleRollDice.m_Result = d100.m_Result;
                 return false;
             }
@@ -881,8 +882,8 @@ namespace WOTRMultiplayer.Services
                     return;
                 }
 
-                var networkDamageRoll = CreateDealStatDamageRoll(NetworkDiceRollType.Damage, ruleDealStatDamage, criticalModifier);
-                SaveIntRollValue(networkDamageRoll, damageRoll);
+                var statDamageRoll = CreateDealStatDamageRoll(NetworkDiceRollType.Damage, ruleDealStatDamage, criticalModifier);
+                SaveIntRollValue(statDamageRoll, damageRoll);
             }
             catch (Exception ex)
             {
@@ -1021,7 +1022,7 @@ namespace WOTRMultiplayer.Services
             var gameMode = _gameInteractionService.CurrentGameMode;
             if (gameMode == GameModeType.Dialog)
             {
-                return rule is RuleSkillCheck or RuleSavingThrow;
+                return rule is RuleSkillCheck or RuleSavingThrow or RuleCalculateDamage;
             }
 
             if (gameMode == GameModeType.Cutscene || gameMode == GameModeType.CutsceneGlobalMap)
@@ -1037,10 +1038,8 @@ namespace WOTRMultiplayer.Services
                     case RuleHealDamage:
                     case RuleDealDamage:
                         var targetEvent = (RulebookTargetEvent)rule;
-                        var initiator = targetEvent.Initiator?.UniqueId;
-                        var target = targetEvent.Target?.UniqueId;
-                        var affectsControlledCharacters = _combatInteractionService.IsInCombat() || _multiplayerActorAccessor.Current.IsControlledByPlayers(initiator) || _multiplayerActorAccessor.Current.IsControlledByPlayers(target);
-                        return affectsControlledCharacters;
+                        var isMeaningful = IsControlledCharacterTargeted(targetEvent);
+                        return isMeaningful;
                     // this one is used to detect stealth units. It's always rolled on the host and sent to the client as separate info to prevent sync issues (similar to other perception/inspection checks)
                     case RuleCachedPerceptionCheck:
                         return false;
@@ -1056,6 +1055,16 @@ namespace WOTRMultiplayer.Services
                 RuleCalculateDamage calculateDamage when calculateDamage.ParentRule is RuleDealDamage dealDamage => !dealDamage.IsFake,
                 _ => true,
             };
+        }
+
+        private bool IsControlledCharacterTargeted(RulebookTargetEvent rulebookTargetEvent)
+        {
+            var initiator = rulebookTargetEvent.Initiator?.UniqueId;
+            var target = rulebookTargetEvent.Target?.UniqueId;
+            var affectsControlledCharacters = _combatInteractionService.IsInCombat()
+                || _multiplayerActorAccessor.Current.IsControlledByPlayers(initiator)
+                || _multiplayerActorAccessor.Current.IsControlledByPlayers(target);
+            return affectsControlledCharacters;
         }
 
         private int? GetDiceRollId(NetworkDiceRollBase roll)

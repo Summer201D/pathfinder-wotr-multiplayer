@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Reflection;
 using System.Reflection.Emit;
 using HarmonyLib;
@@ -32,7 +33,7 @@ namespace WOTRMultiplayer.HarmonyPatches.Rolls
                 new(OpCodes.Call, replaceWith),
             };
 
-            match = match.RemoveInstructions(1).Insert(newInstructions);
+            match = match.RemoveInstruction().Insert(newInstructions);
             Main.GetLogger<RuleDealStatDamagePatches>().LogInformation("Transpiler has been applied. Target={Target}", target);
             return matcher.Instructions();
         }
@@ -47,36 +48,45 @@ namespace WOTRMultiplayer.HarmonyPatches.Rolls
         /// <returns></returns>
         private static int RollDamage(DiceFormula damageFormula, int criticalModifier, bool maximized, RuleDealStatDamage ruleDealStatDamage)
         {
-            if (damageFormula == DiceFormula.Zero)
+            try
             {
-                return 0;
-            }
-            if (damageFormula == DiceFormula.One)
-            {
-                return 1;
-            }
-            if (maximized)
-            {
-                return damageFormula.Rolls * damageFormula.Dice.Sides() * criticalModifier;
-            }
-
-            if (Main.Multiplayer.IsActive)
-            {
-                var rollOverride = Main.Rolls.OnBeforeRuleDealStatDamageRoll(ruleDealStatDamage, criticalModifier);
-                if (rollOverride.HasValue)
+                if (damageFormula == DiceFormula.Zero)
                 {
-                    return rollOverride.Value;
+                    return 0;
                 }
+                if (damageFormula == DiceFormula.One)
+                {
+                    return 1;
+                }
+                if (maximized)
+                {
+                    return damageFormula.Rolls * damageFormula.Dice.Sides() * criticalModifier;
+                }
+
+                if (Main.Multiplayer.IsActive)
+                {
+                    var rollOverride = Main.Rolls.OnBeforeRuleDealStatDamageRoll(ruleDealStatDamage, criticalModifier);
+                    if (rollOverride.HasValue)
+                    {
+                        return rollOverride.Value;
+                    }
+                }
+
+                var damage = RollCriticalDamage(damageFormula, criticalModifier);
+
+                if (Main.Multiplayer.IsActive)
+                {
+                    var damageRoll = RuleRollD100.FromInt(ruleDealStatDamage.Initiator, damage);
+                    Main.Rolls.OnAfterRuleDealStatDamageRoll(ruleDealStatDamage, damageRoll, criticalModifier);
+                }
+
+                return damage;
             }
-
-            var damage = RollCriticalDamage(damageFormula, criticalModifier);
-
-            if (Main.Multiplayer.IsActive)
+            catch (Exception ex)
             {
-                Main.Rolls.OnAfterRuleDealStatDamageRoll(ruleDealStatDamage, RuleRollD100.FromInt(ruleDealStatDamage.Initiator, damage), criticalModifier);
+                Main.GetLogger<RuleDealStatDamagePatches>().LogError(ex, "Error while calculating stat damage");
+                throw;
             }
-
-            return damage;
         }
 
         private static int RollCriticalDamage(DiceFormula damageFormula, int criticalModifier)

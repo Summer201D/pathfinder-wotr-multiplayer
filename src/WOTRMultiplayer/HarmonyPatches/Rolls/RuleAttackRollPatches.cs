@@ -178,8 +178,8 @@ namespace WOTRMultiplayer.HarmonyPatches.Rolls
                 return ruleAttackRoll.MissChanceRoll;
             }
 
-            var roll = RulebookEvent.Dice.D100;
-            return roll;
+            ruleAttackRoll.MissChanceRoll = RulebookEvent.Dice.D100;
+            return ruleAttackRoll.MissChanceRoll;
         }
     }
 }
