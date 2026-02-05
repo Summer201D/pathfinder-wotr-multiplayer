@@ -7,5 +7,8 @@ namespace WOTRMultiplayer.Networking.Messages.Contracts
     {
         [ProtoMember(1)]
         public int Damage { get; set; }
+
+        [ProtoMember(2)]
+        public NetworkUnitState State { get; set; }
     }
 }

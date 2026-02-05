@@ -23,5 +23,8 @@ namespace WOTRMultiplayer.Networking.Messages.Contracts
 
         [ProtoMember(6)]
         public string MovementLimit { get; set; }
+
+        [ProtoMember(7)]
+        public bool IsCharge { get; set; }
     }
 }

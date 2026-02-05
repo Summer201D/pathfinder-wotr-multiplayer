@@ -116,7 +116,7 @@ namespace WOTRMultiplayer.HarmonyPatches.Combat
                     return;
                 }
 
-                if (DoesMountMakeSameAction(__instance.Executor))
+                if (DoesRiderMakeSameAction(__instance.Executor))
                 {
                     Main.GetLogger<UnitCommandsPatches>().LogWarning("Skipping ability use as it's a part of mounted combat unit command. UnitId={UnitId}, AbilityName={AbilityName}, AbilityId={AbilityId}", __instance.Executor.UniqueId, __instance.Ability.Name, __instance.Ability.UniqueId);
                     return;
@@ -175,17 +175,18 @@ namespace WOTRMultiplayer.HarmonyPatches.Combat
             var executor = forceMount ? command.Executor.RiderPart.SaddledUnit.UniqueId : command.Executor.UniqueId;
             var movementLimit = Game.Instance.TurnBasedCombatController.CurrentTurn?.CurrentMovementLimit;
 
-            var networkAbility = new NetworkUnitAttack
+            var unitAttack = new NetworkUnitAttack
             {
                 ExecutorUnitId = executor,
                 TargetUnitId = command.TargetUnit?.UniqueId,
                 IsFullAttack = command.IsAttackFull,
                 IsSingleAttack = command.IsSingleAttack,
+                IsCharge = command.IsCharge,
                 VectorPath = networkPath,
                 MovementLimit = movementLimit?.ToString()
             };
 
-            Main.Multiplayer.OnUnitAttackCommandStarted(networkAbility);
+            Main.Multiplayer.OnUnitAttackCommandStarted(unitAttack);
         }
 
         private static bool DoesMountMakeSameAction(UnitEntityData unitEntity)
@@ -197,6 +198,17 @@ namespace WOTRMultiplayer.HarmonyPatches.Combat
 
             var mount = unitEntity.RiderPart.SaddledUnit;
             return mount.Commands.Attack != null && unitEntity.Commands.Attack != null || mount.Commands.UnitUseAbility != null && unitEntity.Commands.UnitUseAbility != null;
+        }
+
+        private static bool DoesRiderMakeSameAction(UnitEntityData unitEntity)
+        {
+            if (unitEntity.SaddledPart == null)
+            {
+                return false;
+            }
+
+            var rider = unitEntity.SaddledPart.Rider;
+            return rider.Commands.Attack != null && unitEntity.Commands.Attack != null || rider.Commands.UnitUseAbility != null && unitEntity.Commands.UnitUseAbility != null;
         }
     }
 }

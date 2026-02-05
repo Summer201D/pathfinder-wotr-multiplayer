@@ -3,5 +3,7 @@
     public class NetworkUnitDescriptor
     {
         public int Damage { get; set; }
+
+        public NetworkUnitState State { get; set; }
     }
 }

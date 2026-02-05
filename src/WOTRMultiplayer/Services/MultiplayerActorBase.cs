@@ -3158,6 +3158,9 @@ namespace WOTRMultiplayer.Services
                 return;
             }
 
+            // TODO: configurable
+            await Task.Delay(TimeSpan.FromSeconds(0.5));
+
             var combatState = Mapper.Map<NetworkCombatState>(combatStarted.State);
             var hasBeenForcedToStart = await CombatInteraction.StartCombatAsync(combatState);
             if (hasBeenForcedToStart)

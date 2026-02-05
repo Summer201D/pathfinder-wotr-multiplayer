@@ -9,7 +9,7 @@ namespace WOTRMultiplayer.HarmonyPatches.Combat
     {
         [HarmonyPatch(typeof(UnitLifeController), nameof(UnitLifeController.OnUnitDeath))]
         [HarmonyPostfix]
-        public static void UnitLifeController_OnUnitDeath_Postfix(UnitEntityData unit, bool alreadyDead)
+        public static void UnitLifeController_OnUnitDeath_Postfix(UnitEntityData unit)
         {
             if (!Main.Multiplayer.IsActive || !unit.State.IsFinallyDead)
             {

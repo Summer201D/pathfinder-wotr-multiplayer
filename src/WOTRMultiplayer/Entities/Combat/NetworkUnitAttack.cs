@@ -15,5 +15,7 @@ namespace WOTRMultiplayer.Entities.Combat
         public bool IsSingleAttack { get; set; }
 
         public string MovementLimit { get; set; }
+
+        public bool IsCharge { get; set; }
     }
 }

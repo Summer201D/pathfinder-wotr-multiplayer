@@ -7,11 +7,15 @@ using Kingmaker.Armies.TacticalCombat;
 using Kingmaker.Armies.TacticalCombat.Blueprints;
 using Kingmaker.Armies.TacticalCombat.Commands;
 using Kingmaker.Armies.TacticalCombat.Controllers;
+using Kingmaker.Blueprints;
+using Kingmaker.Designers.Mechanics.Facts;
 using Kingmaker.EntitySystem.Entities;
 using Kingmaker.GameModes;
 using Kingmaker.Pathfinding;
 using Kingmaker.PubSubSystem;
 using Kingmaker.TurnBasedMode;
+using Kingmaker.UnitLogic.Abilities;
+using Kingmaker.UnitLogic.Abilities.Components;
 using Kingmaker.UnitLogic.Commands;
 using Kingmaker.UnitLogic.Commands.Base;
 using Kingmaker.Utility;
@@ -392,14 +396,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
                         return;
                     }
 
-
-                    if (!Enum.TryParse<UnitCommand.CommandType>(networkAbility.CommandType, true, out var commandType))
-                    {
-                        _logger.LogWarning("Unable to parse command type. Type={Type}", networkAbility.CommandType);
-                        commandType = UnitCommand.CommandType.Standard;
-                    }
-
-                    RunUnitAbilityCommand(executor, networkAbility, commandType);
+                    RunUnitAbilityCommand(executor, networkAbility);
                 });
             }
             catch (Exception ex)
@@ -515,7 +512,11 @@ namespace WOTRMultiplayer.Services.GameInteraction
         {
             var descriptor = new NetworkUnitDescriptor
             {
-                Damage = combatUnit.Descriptor.Damage
+                Damage = combatUnit.Descriptor.Damage,
+                State = new NetworkUnitState
+                {
+                    IsCharging = combatUnit.Descriptor.State.IsCharging
+                }
             };
             return descriptor;
         }
@@ -536,6 +537,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
                 TargetUnitId = attackCommand.TargetUnit?.UniqueId,
                 IsFullAttack = attackCommand.IsAttackFull,
                 IsSingleAttack = attackCommand.IsSingleAttack,
+                IsCharge = attackCommand.IsCharge,
                 VectorPath = networkPath
             };
 
@@ -624,7 +626,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
 
                     if (requiresFullUpdate)
                     {
-                        OverrideUnitOffensiveCommands(unit, networkUnit);
+                        UpdateUnitState(unit, networkUnit.Descriptor.State);
                         UpdateUnitTurnBasedInfo(unit, networkUnit.TurnBasedInfo);
                     }
                 }
@@ -637,6 +639,11 @@ namespace WOTRMultiplayer.Services.GameInteraction
                 _logger.LogError(ex, "Unable to update combat state. RoundNumber={RoundNumber}, UnitsCount={UnitsCount}, IsFullUpdate={IsFullUpdate}", networkCombatState.RoundNumber, networkCombatState.Units.Count, requiresFullUpdate);
                 throw;
             }
+        }
+
+        private void UpdateUnitState(UnitEntityData unit, NetworkUnitState state)
+        {
+            unit.State.IsCharging = state.IsCharging;
         }
 
         private void KillUnits(List<string> killedUnits)
@@ -660,20 +667,6 @@ namespace WOTRMultiplayer.Services.GameInteraction
             unit.Damage = networkUnit.Descriptor.Damage;
         }
 
-        private void OverrideUnitOffensiveCommands(UnitEntityData unit, NetworkUnit networkUnit)
-        {
-            unit.Commands.InterruptAll(raiseEvent: true);
-
-            if (networkUnit.CurrentAttack != null)
-            {
-                RunUnitAttackCommand(unit, networkUnit.CurrentAttack);
-            }
-            else if (networkUnit.CurrentAbility != null)
-            {
-                RunUnitAbilityCommand(unit, networkUnit.CurrentAbility);
-            }
-        }
-
         private void RunUnitAttackCommand(UnitEntityData executorUnit, NetworkUnitAttack networkUnitAttack)
         {
             var target = _gameStateLookupService.GetUnitEntity(networkUnitAttack.TargetUnitId);
@@ -686,6 +679,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
             var command = UnitAttack.CreateAttackCommand(executorUnit, target) as UnitAttack;
             command.ForceFullAttack = !networkUnitAttack.IsSingleAttack && networkUnitAttack.IsFullAttack;
             command.IsSingleAttack = networkUnitAttack.IsSingleAttack;
+            command.IsCharge = networkUnitAttack.IsCharge;
 
             var turn = Game.Instance.TurnBasedCombatController.CurrentTurn;
             if (turn != null)
@@ -698,6 +692,37 @@ namespace WOTRMultiplayer.Services.GameInteraction
 
             _logger.LogInformation("Unit Attack command has been initiated. UnitId={UnitId}, TargetUnitId={TargetUnitId}, ForceFullAttack={ForceFullAttack}, Path={Path}, AttackMode={AttackMode}, MovementLimit={MovementLimit}",
                 executorUnit.UniqueId, networkUnitAttack.TargetUnitId, command.ForceFullAttack, command.ForcedPath?.vectorPath, turn?.m_AttackMode, turn?.CurrentMovementLimit);
+            executorUnit.Commands.Run(command);
+        }
+
+        private void RunUnitAbilityCommand(UnitEntityData executorUnit, NetworkAbility networkAbility)
+        {
+            var abilityData = _gameStateLookupService.FindAbility(executorUnit, networkAbility);
+            if (abilityData == null)
+            {
+                _logger.LogError("Unable to run unit ability command due to missing ability. UnitId={UnitId}, AbilityId={AbilityId}, SpellbookBlueprintId={SpellbookBlueprintId}", executorUnit.UniqueId, networkAbility.Id, networkAbility.SpellbookId);
+                return;
+            }
+
+            if (!Enum.TryParse<UnitCommand.CommandType>(networkAbility.CommandType, true, out var commandType))
+            {
+                _logger.LogWarning("Unable to parse command type. Type={Type}", networkAbility.CommandType);
+                commandType = UnitCommand.CommandType.Standard;
+            }
+            var target = CreateTargetWrapper(networkAbility.Target);
+
+            RunUnitAbilityCommand(executorUnit, abilityData, target, networkAbility.VectorPath, commandType, networkAbility.MovementLimit);
+        }
+
+        private void RunUnitAbilityCommand(UnitEntityData executorUnit, AbilityData abilityData, TargetWrapper targetWrapper, List<NetworkVector3> vectorPath, UnitCommand.CommandType commandType, string rawMovementLimit)
+        {
+            var command = UnitUseAbility.CreateCastCommand(abilityData, targetWrapper, commandType);
+            command.CreatedByPlayer = true;
+
+            SetCommandPath(vectorPath, command);
+            SetTurnMovementLimit(rawMovementLimit, executorUnit);
+
+            _logger.LogInformation("Unit UseAbility command has been initiated. UnitId={UnitId}, TargetUnitId={TargetUnitId}, TargetPoint={TargetPoint}, AbilityId={AbilityId}, AbilityName={AbilityName}", executorUnit.UniqueId, targetWrapper.Point, targetWrapper.Unit?.UniqueId, abilityData.UniqueId, abilityData.NameForAcronym);
             executorUnit.Commands.Run(command);
         }
 
@@ -715,25 +740,6 @@ namespace WOTRMultiplayer.Services.GameInteraction
                 PathVisualizer.Instance.m_CurrentPath = command.ForcedPath;
                 PathVisualizer.Instance.m_CurrentPath.Claim(PathVisualizer.Instance);
             }
-        }
-
-        private void RunUnitAbilityCommand(UnitEntityData executorUnit, NetworkAbility networkAbility, UnitCommand.CommandType? commandType = null)
-        {
-            var abilityData = _gameStateLookupService.FindAbility(executorUnit, networkAbility);
-            if (abilityData == null)
-            {
-                _logger.LogError("Unable to run unit ability command due to missing ability. UnitId={UnitId}, AbilityId={AbilityId}, SpellbookBlueprintId={SpellbookBlueprintId}", executorUnit.UniqueId, networkAbility.Id, networkAbility.SpellbookId);
-                return;
-            }
-
-            var target = CreateTargetWrapper(networkAbility.Target);
-            var command = UnitUseAbility.CreateCastCommand(abilityData, target, commandType ?? abilityData.RuntimeActionType);
-            command.CreatedByPlayer = true;
-            SetCommandPath(networkAbility.VectorPath, command);
-            SetTurnMovementLimit(networkAbility.MovementLimit, executorUnit);
-
-            _logger.LogInformation("Unit UseAbility command has been initiated. UnitId={UnitId}, TargetUnitId={TargetUnitId}, TargetPoint={TargetPoint}, AbilityId={AbilityId}, AbilityName={AbilityName}", executorUnit.UniqueId, networkAbility.Target.Point, networkAbility.Target.UnitId, networkAbility.Id, networkAbility.Name);
-            executorUnit.Commands.Run(command);
         }
 
         private void UpdateUnitTurnBasedInfo(UnitEntityData unit, NetworkUnitTurnBasedInfo networkUnitTurnBasedInfo)
@@ -820,6 +826,12 @@ namespace WOTRMultiplayer.Services.GameInteraction
 
         private void UpdateUnitPosition(UnitEntityData unit, NetworkUnit networkUnit)
         {
+            if (unit.Commands.UnitUseAbility?.Ability?.Blueprint.GetComponent<AbilityCustomCharge>() != null || (unit.Commands.Attack?.IsCharge ?? false))
+            {
+                _logger.LogWarning("Skipping position update for unit who tries to charge. UnitId={UnitId}", unit.UniqueId);
+                return;
+            }
+
             if (!unit.IsInCombat)
             {
                 _logger.LogWarning("Updating unit outside of the combat. UnitId={UnitId}", networkUnit.Id);
