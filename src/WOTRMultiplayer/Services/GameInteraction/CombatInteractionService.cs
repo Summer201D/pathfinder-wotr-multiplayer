@@ -8,7 +8,7 @@ using Kingmaker.Armies.TacticalCombat.Blueprints;
 using Kingmaker.Armies.TacticalCombat.Commands;
 using Kingmaker.Armies.TacticalCombat.Controllers;
 using Kingmaker.Blueprints;
-using Kingmaker.Designers.Mechanics.Facts;
+using Kingmaker.Designers;
 using Kingmaker.EntitySystem.Entities;
 using Kingmaker.GameModes;
 using Kingmaker.Pathfinding;
@@ -658,7 +658,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
 
                 _playerNotificationService.ShowWarningNotification(WellKnownKeys.GameNotifications.Combat.UnitAutokilled.Key, args: [unitToKill.CharacterName, unitToKill.UniqueId]);
                 // TODO: get units from everyone and kill at the same time?
-                // GameHelper.KillUnit(unitToKill);
+                GameHelper.KillUnit(unitToKill);
             }
         }
 
