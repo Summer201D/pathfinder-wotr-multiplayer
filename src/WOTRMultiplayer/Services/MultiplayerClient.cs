@@ -1327,6 +1327,9 @@ namespace WOTRMultiplayer.Services
                 var combatState = Mapper.Map<NetworkCombatState>(combatTurnSynchronization.CombatState);
                 await CombatInteraction.UpdateCombatStateAsync(combatState, false);
 
+                DiceRollStorage.Reset();
+                Logger.LogInformation("Dice roll storage has been reset at after syncing turn units");
+
                 var confirmationMessage = new ClientCombatTurnSynchronized { UnitId = Game.Combat.Turn.UnitId };
                 Logger.LogInformation("Sending {MessageType}. UnitId={UnitId}", nameof(ClientCombatTurnSynchronized), confirmationMessage.UnitId);
                 Send(confirmationMessage);

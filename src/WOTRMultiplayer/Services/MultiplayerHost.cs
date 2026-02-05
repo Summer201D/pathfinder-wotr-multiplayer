@@ -1367,6 +1367,9 @@ namespace WOTRMultiplayer.Services
                         Game.Combat.Turn.RequiresTurnEntitiesSynchronization = false;
                         var combatState = CombatInteraction.GetCombatState();
 
+                        DiceRollStorage.Reset();
+                        Logger.LogInformation("Dice roll storage has been reset at turn entites sync stage");
+
                         var syncMessage = new NotifyCombatTurnSynchronizationRequired
                         {
                             CombatState = Mapper.Map<Networking.Messages.Contracts.NetworkCombatState>(combatState)
