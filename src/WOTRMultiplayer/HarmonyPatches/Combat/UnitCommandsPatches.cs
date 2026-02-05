@@ -4,9 +4,11 @@ using HarmonyLib;
 using Kingmaker;
 using Kingmaker.EntitySystem.Entities;
 using Kingmaker.TurnBasedMode;
+using Kingmaker.UnitLogic;
 using Kingmaker.UnitLogic.Class.Kineticist;
 using Kingmaker.UnitLogic.Commands;
 using Kingmaker.UnitLogic.Commands.Base;
+using Kingmaker.UnitLogic.Parts;
 using Microsoft.Extensions.Logging;
 using WOTRMultiplayer.Entities;
 using WOTRMultiplayer.Entities.Combat;
@@ -46,6 +48,26 @@ namespace WOTRMultiplayer.HarmonyPatches.Combat
                 {
                     Main.GetLogger<UnitCommandsPatches>().LogWarning("Skipping attack command use as it's a part of mounted combat unit command. UnitId={UnitId}, TargetUnitId={TargetUnitId}", __instance.Executor.UniqueId, __instance.Target.UniqueId);
                     return;
+                }
+
+                var turnTouchAbility = Game.Instance.TurnBasedCombatController?.m_CurrentTurn?.TouchAbility;
+                if (turnTouchAbility != null)
+                {
+                    var unitPartMagus = __instance.Executor.Get<UnitPartMagus>();
+                    var unitPartTouch = __instance.Executor.Get<UnitPartTouch>();
+                    if (unitPartMagus != null
+                        && __instance.TargetUnit != null
+                        && !unitPartMagus.EldritchArcher
+                        && unitPartTouch != null
+                        && unitPartTouch.Ability.Data == turnTouchAbility.Data
+                        && unitPartMagus.Spellstrike.Active
+                        && unitPartMagus.IsSpellFromMagusSpellList(unitPartTouch.Ability.Data)
+                        && __instance.Executor.IsEnemy(__instance.TargetUnit)
+                        && __instance.Executor.GetThreatHand() != null)
+                    {
+                        Main.GetLogger<UnitCommandsPatches>().LogWarning("Skipping attack command use as it's a part of magus combat. UnitId={UnitId}, TargetUnitId={TargetUnitId}", __instance.Executor.UniqueId, __instance.Target.UniqueId);
+                        return;
+                    }
                 }
 
                 var cd = __instance.Executor.CombatState.Cooldown;
