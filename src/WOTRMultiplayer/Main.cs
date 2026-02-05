@@ -61,7 +61,6 @@ namespace WOTRMultiplayer
             try
             {
                 Subscribe();
-
                 WellKnownKeysInitializer.Run();
                 WellKnownSettings.Initialize();
 

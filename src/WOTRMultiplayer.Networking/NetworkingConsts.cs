@@ -3,5 +3,7 @@
     public class NetworkingConsts
     {
         public const long HostPlayerId = -1;
+
+        public const int BufferSize = 8192;
     }
 }
