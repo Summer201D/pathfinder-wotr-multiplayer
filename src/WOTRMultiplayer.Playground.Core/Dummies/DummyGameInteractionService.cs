@@ -59,15 +59,6 @@ namespace WOTRMultiplayer.Playground.Core.Dummies
         {
         }
 
-        public void AvoidGlobalMapEncounter()
-        {
-        }
-
-        public bool CanRiderGetUp()
-        {
-            return false;
-        }
-
         public void ChangeUnitStealth(string unitId, bool isEnabled, bool isForced)
         {
         }
@@ -411,6 +402,10 @@ namespace WOTRMultiplayer.Playground.Core.Dummies
         }
 
         public void InitiateRest()
+        {
+        }
+
+        public void LeaveZoneLoot()
         {
         }
     }

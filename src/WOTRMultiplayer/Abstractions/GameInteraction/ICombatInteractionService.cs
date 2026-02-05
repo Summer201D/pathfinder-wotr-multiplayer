@@ -1,4 +1,5 @@
 ﻿using System.Threading.Tasks;
+using WOTRMultiplayer.Entities;
 using WOTRMultiplayer.Entities.Combat;
 using WOTRMultiplayer.Entities.Combat.Crusades;
 
@@ -45,5 +46,11 @@ namespace WOTRMultiplayer.Abstractions.GameInteraction
         void UseAbility(NetworkAbility networkAbility);
 
         Task<bool> StartCombatAsync(NetworkCombatState networkCombatState);
+
+        void KillUnit(NetworkPlayer player, string unitId);
+
+        bool CanRiderGetUp();
+
+        bool HasAnyRunningCombatCommands();
     }
 }

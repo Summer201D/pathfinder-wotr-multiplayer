@@ -88,6 +88,8 @@ namespace WOTRMultiplayer.Abstractions
 
         void OnZoneLootCompleted();
 
+        void OnZoneLootLeft();
+
         void OnDialogPopupClosed(NetworkDialogPopup networkDialogPopup);
 
         void OnCharacterSelectionWindowAccepted();

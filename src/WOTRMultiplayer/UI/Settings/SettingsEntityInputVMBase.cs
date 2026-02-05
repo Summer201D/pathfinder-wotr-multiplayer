@@ -1,4 +1,5 @@
-﻿using Kingmaker.UI.MVVM._VM.Settings.Entities;
+﻿using Kingmaker.Settings;
+using Kingmaker.UI.MVVM._VM.Settings.Entities;
 using Kingmaker.UI.SettingsUI;
 using UniRx;
 
@@ -12,7 +13,20 @@ namespace WOTRMultiplayer.UI.Settings
 
         bool ISettingsEntityInputVM.IsValid => IsValid.Value;
 
-        public string Value => m_UISettingsEntity.SettingsEntity.GetStringValue();
+        public string Value
+        {
+            get
+            {
+                // this interface doesn't expose temp value for some reason
+                if (m_UISettingsEntity.SettingsEntity is not SettingsEntityString stringSettting)
+                {
+                    return m_UISettingsEntity.SettingsEntity.GetStringValue();
+                }
+
+                var value = stringSettting.TempValueIsConfirmed ? stringSettting.GetValue() : stringSettting.GetTempValue();
+                return value;
+            }
+        }
 
         public bool IsModificationAllowed => m_UISettingsEntity.ModificationAllowed;
 

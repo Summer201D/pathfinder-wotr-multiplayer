@@ -560,6 +560,7 @@ namespace WOTRMultiplayer.Services
 
                // zone loot
                .On<NotifyZoneLootCompleted>(OnNotifyZoneLootCompleted)
+               .On<NotifyZoneLootLeft>(OnNotifyZoneLootLeft)
                .On<NotifyZoneLootRemoveToggleChanged>(OnNotifyZoneLootRemoveToggleChanged)
 
                // inventory
@@ -1065,9 +1066,16 @@ namespace WOTRMultiplayer.Services
             GameInteraction.UpdateZoneLootRemoveToggle(zoneLootRemoveToggleChanged.RemoveLoot);
         }
 
+        private void OnNotifyZoneLootLeft(long receivedFrom, NotifyZoneLootLeft zoneLootLeft)
+        {
+            Logger.LogInformation("Received {MessageType}", nameof(NotifyZoneLootLeft));
+
+            GameInteraction.LeaveZoneLoot();
+        }
+
         private void OnNotifyZoneLootCompleted(long receivedFrom, NotifyZoneLootCompleted zoneLootCompleted)
         {
-            Logger.LogInformation("Received {MessageType}. RemoveLoot={RemoveLoot}", nameof(NotifyZoneLootCompleted));
+            Logger.LogInformation("Received {MessageType}", nameof(NotifyZoneLootCompleted));
 
             GameInteraction.CompleteZoneLoot();
         }
@@ -1310,7 +1318,7 @@ namespace WOTRMultiplayer.Services
 
         private async void OnNotifyCombatTurnSynchronizationRequired(long playerId, NotifyCombatTurnSynchronizationRequired combatTurnSynchronization)
         {
-            Logger.LogInformation("Received {MessageType}. Units={Units}, KilledUnits={KilledUnits}", nameof(NotifyCombatTurnSynchronizationRequired), combatTurnSynchronization.CombatState.Units.Count, combatTurnSynchronization.CombatState.KilledUnits);
+            Logger.LogInformation("Received {MessageType}. Units={Units}", nameof(NotifyCombatTurnSynchronizationRequired), combatTurnSynchronization.CombatState.Units.Count);
 
             try
             {

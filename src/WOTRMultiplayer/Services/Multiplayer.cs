@@ -2680,6 +2680,24 @@ namespace WOTRMultiplayer.Services
             }
         }
 
+        public void OnZoneLootLeft()
+        {
+            try
+            {
+                if (_multiplayerActorAccessor.Current == null || _multiplayerActorAccessor.Client.IsActive)
+                {
+                    return;
+                }
+
+                _multiplayerActorAccessor.Host.OnZoneLootLeft();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while completing zone loot");
+                throw;
+            }
+        }
+
         public void OnZoneLootCollectorButtonsUpdated()
         {
             try
@@ -3974,7 +3992,7 @@ namespace WOTRMultiplayer.Services
         {
             try
             {
-                if (_multiplayerActorAccessor.Current == null || _multiplayerActorAccessor.Client.IsActive)
+                if (_multiplayerActorAccessor.Current == null)
                 {
                     return;
                 }

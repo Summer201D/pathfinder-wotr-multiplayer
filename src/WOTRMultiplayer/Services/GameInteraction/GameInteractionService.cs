@@ -630,7 +630,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
 
             if (possibleItemsToDrop.Count == 0)
             {
-                _logger.LogError("Unable to find item to drop. EntityId={EntityId}, ItemId={ItemId}", networkDropItem.OwnerEntityId, networkDropItem.Item.UniqueId);
+                _logger.LogError("Unable to find item to drop. EntityId={EntityId}, ItemId={ItemId}, ItemName={ItemName}", networkDropItem.OwnerEntityId, networkDropItem.Item.UniqueId, networkDropItem.Item.Name);
                 return;
             }
 
@@ -2049,11 +2049,23 @@ namespace WOTRMultiplayer.Services.GameInteraction
                     return;
                 }
 
-                // looks like we can just leave zone since item collection is synced anyway
-                // however, let's keep collect all just in case
                 _uiAccessor.LootPCView.ViewModel.CollectAll();
-
                 _logger.LogError("ZoneLoot has been completed");
+            });
+        }
+
+        public void LeaveZoneLoot()
+        {
+            _mainThreadAccessor.Post(() =>
+            {
+                if (_uiAccessor.LootPCView?.ViewModel == null)
+                {
+                    _logger.LogWarning("Unable to update closed zone loot ui");
+                    return;
+                }
+
+                _uiAccessor.LootPCView.ViewModel.LeaveZone();
+                _logger.LogError("ZoneLoot has been left");
             });
         }
 
@@ -2067,18 +2079,6 @@ namespace WOTRMultiplayer.Services.GameInteraction
             };
 
             return state;
-        }
-
-        public bool CanRiderGetUp()
-        {
-            var canGetUp = Game.Instance.TurnBasedCombatController.CurrentTurn?.UnitCanGetUpOnCommand.Value ?? false;
-            return canGetUp;
-        }
-
-        public bool HasAnyRunningCombatCommands()
-        {
-            var hasAnyCommmands = Game.Instance.TurnBasedCombatController.CurrentTurn?.m_RunningCommands.Count > 0;
-            return hasAnyCommmands;
         }
 
         public int GetCurrentChapter()

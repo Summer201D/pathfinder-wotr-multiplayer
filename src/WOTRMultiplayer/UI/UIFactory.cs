@@ -71,7 +71,13 @@ namespace WOTRMultiplayer.UI
         private readonly IMultiplayerActorAccessor _multiplayerActorAccessor;
 
         private readonly HashSet<string> _editableMultiplayerSettingsInGame = new([
-            WellKnownSettings.Miscellaneous.HideServerAddress.Key
+            WellKnownSettings.Dialogs.SelectedAnswerAnimationDuration.Key,
+            WellKnownSettings.Dialogs.NonSelectedAnswerAnimationDuration.Key,
+            WellKnownSettings.Dialogs.BlockedAnswerAnimationDuration.Key,
+            WellKnownSettings.Miscellaneous.HideServerAddress.Key,
+            WellKnownSettings.Networking.HostPortRangeStart.Key,
+            WellKnownSettings.Networking.HostPortRangeEnd.Key,
+            WellKnownSettings.DangerZone.EnforcedCombatStartDelay.Key,
             ], StringComparer.OrdinalIgnoreCase);
 
         public UIFactory(
@@ -682,6 +688,9 @@ namespace WOTRMultiplayer.UI
                 WellKnownSettings.DangerZone.AISyncTimeout,
                 new TimeSpanValidator(),
                 TimeSpanValidator.MaxLength);
+            yield return CreateSliderSetting(WellKnownKeys.Settings.DangerZone.EnforcedCombatStartDelay.Title.Key,
+                WellKnownKeys.Settings.DangerZone.EnforcedCombatStartDelay.Tooltip.Key,
+                WellKnownSettings.DangerZone.EnforcedCombatStartDelay, 0f, 2f);
         }
 
         private SettingEntityKeyBindingVM CreateKeyBindingSetting(string titleKey, string tooltipKey, WellKnownSettingKey<KeyBindingPair> settingKey)

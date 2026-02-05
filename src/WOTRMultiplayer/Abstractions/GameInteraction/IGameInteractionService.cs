@@ -148,10 +148,6 @@ namespace WOTRMultiplayer.Abstractions.GameInteraction
 
         NetworkContentState GetInstalledContent();
 
-        bool CanRiderGetUp();
-
-        bool HasAnyRunningCombatCommands();
-
         void UseInventoryItem(NetworkUseInventoryItem useInventoryItem);
 
         string GetUnitCharacterName(string unitId);
@@ -190,5 +186,7 @@ namespace WOTRMultiplayer.Abstractions.GameInteraction
         void SkipCutscene(string playerName);
 
         void ReselectSelectedCharacters();
+
+        void LeaveZoneLoot();
     }
 }

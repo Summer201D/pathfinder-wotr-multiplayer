@@ -9,8 +9,8 @@ namespace WOTRMultiplayer.UI.Settings
     public class SettingsEntityInputView : SettingsEntityWithValueView<SettingsEntityInputVMBase>
     {
         private GameObject _inputObject;
-        private Color _invalidFormatColor = Color.red;
-        private Color _validFormatColor;
+        private static readonly Color _invalidFormatColor = Color.red;
+        private static readonly Color _validFormatColor = new(0.192f, 0.204f, 0.259f, 1.000f);
 
         private TMP_InputField InputField => _inputObject.GetComponent<TMP_InputField>();
 
@@ -27,11 +27,8 @@ namespace WOTRMultiplayer.UI.Settings
             _inputObject = this.gameObject.transform.Find("MultiButton").GetChild(0).gameObject;
 
             m_Title.text = ViewModel.Title;
-            _validFormatColor = m_Title.color;
-
             AddDisposable(ViewModel.IsValid.Subscribe(OnIsValidChanged));
             AddDisposable(ViewModel.OnResetTempValue.Subscribe(OnResetTempValue));
-
 
             var placeholder = _inputObject.transform.Find(UIFactory.InputPlaceholderObjectName);
             var placeholderText = placeholder.GetComponent<TextMeshProUGUI>();
@@ -57,11 +54,6 @@ namespace WOTRMultiplayer.UI.Settings
         public override void DestroyViewImplementation()
         {
             InputField.onValueChanged.RemoveAllListeners();
-
-            ViewModel.IsValid?.Dispose();
-            ViewModel.OnResetTempValue?.Dispose();
-            ViewModel.Dispose();
-            ViewModel = null;
         }
 
         public override void OnModificationChanged(bool allowed)

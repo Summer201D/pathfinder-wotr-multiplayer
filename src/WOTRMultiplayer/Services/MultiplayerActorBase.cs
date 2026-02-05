@@ -1708,6 +1708,22 @@ namespace WOTRMultiplayer.Services
             UpdateGlobalMapUIState();
         }
 
+        public void OnUnitDeath(string unitId)
+        {
+            if (Game.Combat?.Turn == null)
+            {
+                return;
+            }
+
+            var message = new NotifyCombatUnitKilled
+            {
+                PlayerId = Game.LocalPlayerId,
+                UnitId = unitId
+            };
+            Send(message);
+            Logger.LogInformation("Sending {MessageType}. PlayerId={PlayerId}, UnitId={UnitId}", nameof(NotifyCombatUnitKilled), message.PlayerId, message.UnitId);
+        }
+
         public void OnZoneLootCollectorButtonsUpdated()
         {
             UpdateZoneLootUIState();
@@ -1736,13 +1752,6 @@ namespace WOTRMultiplayer.Services
                 PlayerId = Game.LocalPlayerId
             };
             Logger.LogInformation("Sending {MessageType}. PlayerId={PlayerId}", nameof(NotifyZoneLootClosed), message.PlayerId);
-            Send(message);
-        }
-
-        public void OnZoneLootCompleted()
-        {
-            var message = new NotifyZoneLootCompleted();
-            Logger.LogInformation("Sending {MessageType}. PlayerId={PlayerId}", nameof(NotifyZoneLootCompleted));
             Send(message);
         }
 
@@ -3071,6 +3080,7 @@ namespace WOTRMultiplayer.Services
                 .On<NotifyPlayerCombatTurnEnded>(OnNotifyPlayerCombatTurnEnded)
                 .On<NotifyUnitAttacked>(OnNotifyUnitAttacked)
                 .On<NotifyCombatTurnDelayed>(OnNotifyCombatTurnDelayed)
+                .On<NotifyCombatUnitKilled>(OnNotifyCombatUnitKilled)
 
                 // global map & crusade combat
                 .On<NotifyGlobalMapLocationMessageShown>(OnNotifyGlobalMapLocationMessageShown)
@@ -3140,6 +3150,29 @@ namespace WOTRMultiplayer.Services
                 ;
         }
 
+        private async void OnNotifyCombatUnitKilled(long receivedFrom, NotifyCombatUnitKilled combatUnitKilled)
+        {
+            Logger.LogInformation("Received {MessageType}. ReceivedFrom={ReceivedFrom}, PlayerId={PlayerId}, UnitId={UnitId}", nameof(NotifyCombatUnitKilled), receivedFrom, combatUnitKilled.PlayerId, combatUnitKilled.UnitId);
+
+            OnAfterNetworkMessageHandled(receivedFrom, combatUnitKilled);
+
+            if (Game.Combat == null)
+            {
+                return;
+            }
+
+            await WaitWhileTrue(CombatInteraction.HasAnyRunningCombatCommands, "Waiting for active commands to finish before checking if unit should be killed");
+
+            var player = GetPlayer(combatUnitKilled.PlayerId);
+            if (player == null)
+            {
+                Logger.LogWarning("Received unit killed event from a missing player. PlayerId={PlayerId}", combatUnitKilled.PlayerId);
+                return;
+            }
+
+            CombatInteraction.KillUnit(player, combatUnitKilled.UnitId);
+        }
+
         private async void OnNotifyCombatStarted(long receivedFrom, NotifyCombatStarted combatStarted)
         {
             Logger.LogInformation("Received {MessageType}. ReceivedFrom={ReceivedFrom}, PlayerId={PlayerId}, UnitsCount={UnitsCount}", nameof(NotifyCombatStarted), receivedFrom, combatStarted.PlayerId, combatStarted.State.Units.Count);
@@ -3158,8 +3191,9 @@ namespace WOTRMultiplayer.Services
                 return;
             }
 
-            // TODO: configurable
-            await Task.Delay(TimeSpan.FromSeconds(0.5));
+            var settings = SettingsService.GetSettings();
+            var delay = TimeSpan.FromSeconds(settings.EnforcedCombatStartDelay);
+            await Task.Delay(delay);
 
             var combatState = Mapper.Map<NetworkCombatState>(combatStarted.State);
             var hasBeenForcedToStart = await CombatInteraction.StartCombatAsync(combatState);
@@ -3718,7 +3752,7 @@ namespace WOTRMultiplayer.Services
             // Combat Unit clicks are usually followed up with UnitAttack command
             // UnitAttack commands are synced separately as we can enforce specific rules like fullattack
             // so this must be skiped to avoid command duplication
-            var canGetUp = GameInteraction.CanRiderGetUp();
+            var canGetUp = CombatInteraction.CanRiderGetUp();
             if (Game.Combat != null && !canGetUp)
             {
                 Logger.LogInformation("Ignoring {MessageType} in combat", nameof(NotifyUnitClicked));
@@ -3776,7 +3810,7 @@ namespace WOTRMultiplayer.Services
         {
             Logger.LogInformation("Received {MessageType}. ReceivedFrom={ReceivedFrom}, PlayerId={PlayerId}, UnitId={UnitId}", nameof(NotifyPlayerCombatTurnEnded), receivedFrom, ended.PlayerId, ended.UnitId);
 
-            await WaitWhileTrue(GameInteraction.HasAnyRunningCombatCommands, "Waiting for all combat commands to finish before ending turn");
+            await WaitWhileTrue(CombatInteraction.HasAnyRunningCombatCommands, "Waiting for all combat commands to finish before ending turn");
 
             EndLocalTurn();
 

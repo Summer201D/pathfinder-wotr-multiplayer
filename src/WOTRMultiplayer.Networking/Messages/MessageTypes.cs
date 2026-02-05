@@ -225,7 +225,9 @@
             NotifyRestWindowClosed,
             NotifyGlobalMapGroupChangerOpened,
             NotifyCapitalModeRestInitiated,
-            NotifyCombatStarted
+            NotifyCombatStarted,
+            NotifyZoneLootLeft,
+            NotifyCombatUnitKilled
         }
 
         public enum Request

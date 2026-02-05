@@ -177,7 +177,7 @@ namespace WOTRMultiplayer.UnitTests.Services
             var handler = FakeUtils.GetNetworkReceiverHandler<NotifyUnitClicked>(_networkClient);
             var request = new NotifyUnitClicked { Click = new Networking.Messages.Contracts.NetworkClick { } };
             _multiplayerClient.Game = new NetworkGame(new NetworkGameStartUp("hehe")) { Combat = new NetworkCombat() };
-            A.CallTo(() => _gameInteractionService.CanRiderGetUp()).Returns(false);
+            A.CallTo(() => _combatInteractionService.CanRiderGetUp()).Returns(false);
 
             // Act
             handler.Invoke(1, request);
@@ -200,7 +200,7 @@ namespace WOTRMultiplayer.UnitTests.Services
             var handler = FakeUtils.GetNetworkReceiverHandler<NotifyUnitClicked>(_networkClient);
             var request = new NotifyUnitClicked { Click = new Networking.Messages.Contracts.NetworkClick { } };
             _multiplayerClient.Game = new NetworkGame(new NetworkGameStartUp("hehe")) { Combat = new NetworkCombat() };
-            A.CallTo(() => _gameInteractionService.CanRiderGetUp()).Returns(true);
+            A.CallTo(() => _combatInteractionService.CanRiderGetUp()).Returns(true);
 
             // Act
             handler.Invoke(1, request);

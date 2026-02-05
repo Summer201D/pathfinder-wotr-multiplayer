@@ -292,6 +292,8 @@ namespace WOTRMultiplayer.Abstractions
 
         void OnZoneLootCompleted();
 
+        void OnZoneLootLeft();
+
         void OnZoneLootCollectorButtonsUpdated();
 
         void OnDialogPopupShown(NetworkDialogPopup networkDialogPopup);

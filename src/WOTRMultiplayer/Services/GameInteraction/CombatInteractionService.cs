@@ -406,6 +406,33 @@ namespace WOTRMultiplayer.Services.GameInteraction
             }
         }
 
+        public bool CanRiderGetUp()
+        {
+            var canGetUp = Game.Instance.TurnBasedCombatController.CurrentTurn?.UnitCanGetUpOnCommand.Value ?? false;
+            return canGetUp;
+        }
+
+        public bool HasAnyRunningCombatCommands()
+        {
+            var hasAnyCommmands = Game.Instance.TurnBasedCombatController.CurrentTurn?.m_RunningCommands.Count > 0;
+            return hasAnyCommmands;
+        }
+
+        public void KillUnit(NetworkPlayer player, string unitId)
+        {
+            _mainThreadAccessor.Post(() =>
+            {
+                var unit = _gameStateLookupService.GetUnitEntity(unitId);
+                if (unit == null || unit.State.IsFinallyDead)
+                {
+                    return;
+                }
+
+                _playerNotificationService.ShowWarningNotification(WellKnownKeys.GameNotifications.Combat.UnitAutokilled.Key, args: [unit.CharacterName, unit.UniqueId, player.Name]);
+                GameHelper.KillUnit(unit);
+            });
+        }
+
         public Task<bool> StartCombatAsync(NetworkCombatState networkCombatState)
         {
             var taskCompletion = new TaskCompletionSource<bool>();
@@ -610,8 +637,6 @@ namespace WOTRMultiplayer.Services.GameInteraction
         {
             try
             {
-                KillUnits(networkCombatState.KilledUnits);
-
                 var unitsToUpdate = networkCombatState.Units.ToDictionary(x => x, x => _gameStateLookupService.GetUnitEntity(x.Id));
                 foreach (var (networkUnit, unit) in unitsToUpdate)
                 {
@@ -644,22 +669,6 @@ namespace WOTRMultiplayer.Services.GameInteraction
         private void UpdateUnitState(UnitEntityData unit, NetworkUnitState state)
         {
             unit.State.IsCharging = state.IsCharging;
-        }
-
-        private void KillUnits(List<string> killedUnits)
-        {
-            foreach (var unitId in killedUnits)
-            {
-                var unitToKill = _gameStateLookupService.GetUnitEntity(unitId);
-                if (unitToKill == null || unitToKill.State.IsFinallyDead)
-                {
-                    return;
-                }
-
-                _playerNotificationService.ShowWarningNotification(WellKnownKeys.GameNotifications.Combat.UnitAutokilled.Key, args: [unitToKill.CharacterName, unitToKill.UniqueId]);
-                // TODO: get units from everyone and kill at the same time?
-                GameHelper.KillUnit(unitToKill);
-            }
         }
 
         private void UpdateUnitHealth(UnitEntityData unit, NetworkUnit networkUnit)

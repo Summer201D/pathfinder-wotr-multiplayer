@@ -92,22 +92,25 @@ namespace WOTRMultiplayer.Services.Settings
         public static class DangerZone
         {
             [Description("default-forced-pause-timeout")]
-            public static WellKnownSettingKey<TimeSpan> DefaultForcedPauseTimeout { get; } = new(TimeSpan.FromSeconds(2));
+            public static WellKnownSettingKey<TimeSpan> DefaultForcedPauseTimeout { get; } = new(TimeSpan.FromSeconds(3));
 
             [Description("rest-encounter-forced-pause-timeout")]
             public static WellKnownSettingKey<TimeSpan> RestEncounterForcedPauseTimeout { get; } = new(TimeSpan.FromSeconds(8));
 
             [Description("remote-roll-retrieval-timeout")]
-            public static WellKnownSettingKey<TimeSpan> RemoteRollRetrievalTimeout { get; } = new(TimeSpan.FromSeconds(10));
+            public static WellKnownSettingKey<TimeSpan> RemoteRollRetrievalTimeout { get; } = new(TimeSpan.FromSeconds(5));
 
             [Description("network-awaiter-timeout")]
             public static WellKnownSettingKey<TimeSpan> NetworkAwaiterTimeout { get; } = new(TimeSpan.FromMinutes(1));
 
             [Description("ai-sync-timeout")]
-            public static WellKnownSettingKey<TimeSpan> AISyncTimeout { get; } = new(TimeSpan.FromSeconds(5));
+            public static WellKnownSettingKey<TimeSpan> AISyncTimeout { get; } = new(TimeSpan.FromSeconds(3));
 
             [Description("rest-encounter-sync-timeout")]
-            public static WellKnownSettingKey<TimeSpan> RestEncounterSyncTimeout { get; } = new(TimeSpan.FromSeconds(45));
+            public static WellKnownSettingKey<TimeSpan> RestEncounterSyncTimeout { get; } = new(TimeSpan.FromSeconds(30));
+
+            [Description("enforced-combat-start-delay")]
+            public static WellKnownSettingKey<float> EnforcedCombatStartDelay { get; } = new(0.5f);
         }
     }
 }

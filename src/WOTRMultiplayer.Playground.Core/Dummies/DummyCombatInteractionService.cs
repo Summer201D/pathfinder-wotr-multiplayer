@@ -1,9 +1,8 @@
-﻿using System.Collections.Generic;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using WOTRMultiplayer.Abstractions.GameInteraction;
+using WOTRMultiplayer.Entities;
 using WOTRMultiplayer.Entities.Combat;
 using WOTRMultiplayer.Entities.Combat.Crusades;
-using WOTRMultiplayer.Entities.Units;
 
 namespace WOTRMultiplayer.Playground.Core.Dummies
 {
@@ -94,6 +93,20 @@ namespace WOTRMultiplayer.Playground.Core.Dummies
         public Task<bool> StartCombatAsync(NetworkCombatState networkCombatState)
         {
             return Task.FromResult(false);
+        }
+
+        public void KillUnit(NetworkPlayer player, string unitId)
+        {
+        }
+
+        public bool CanRiderGetUp()
+        {
+            return false;
+        }
+
+        public bool HasAnyRunningCombatCommands()
+        {
+            return false;
         }
     }
 }

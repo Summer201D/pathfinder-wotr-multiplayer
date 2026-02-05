@@ -164,6 +164,10 @@
                 "restEncounterSyncTimeout": {
                     "title": "Rest Encounter synchronization timeout",
                     "tooltip": "Client must wait for host to generate random rest encounter data (if any).\nBanter skips are synchronized for everyone, so this (generation on host, retrieval on client) should happen around the same time"
+                },
+                "enforcedCombatStartDelay": {
+                    "title": "Enforced combat start delay",
+                    "tooltip": "Combat will be started automatically after a specified delay (in seconds) if it's already started for someone else"
                 }
             }
         },
@@ -225,7 +229,7 @@
             "combat": {
                 "clientTurnOrderDesync": "Turn order has been overriden by Host due to detected desync",
                 "hostTurnOrderDesync": "Player {0} is trying to start different character turn, forcing to start the same one",
-                "unitAutokilled": "Auto-killing unit '{0}' ({1}) as it's dead at host",
+                "unitAutokilled": "Auto-killing unit '{0}' ({1}) as it's been killed at {2}",
                 "forcedToStart": "Combat has been forced to start by {0}"
             },
             "tacticalCombat": {

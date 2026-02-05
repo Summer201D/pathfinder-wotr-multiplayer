@@ -70,6 +70,18 @@ namespace WOTRMultiplayer.HarmonyPatches.Items
             Main.Multiplayer.OnZoneLootRemoveToggleChanged(removeUncollectedLoot);
         }
 
+        [HarmonyPatch(typeof(LootVM), nameof(LootVM.CollectAll))]
+        [HarmonyPrefix]
+        public static void LootVM_CollectAll_Prefix()
+        {
+            if (!Main.Multiplayer.IsActive)
+            {
+                return;
+            }
+
+            Main.Multiplayer.OnZoneLootCompleted();
+
+        }
         [HarmonyPatch(typeof(LootVM), nameof(LootVM.LeaveZone))]
         [HarmonyPrefix]
         public static void LootVM_LeaveZone_Prefix()
@@ -79,7 +91,7 @@ namespace WOTRMultiplayer.HarmonyPatches.Items
                 return;
             }
 
-            Main.Multiplayer.OnZoneLootCompleted();
+            Main.Multiplayer.OnZoneLootLeft();
         }
 
         [HarmonyPatch(typeof(LootContextVM), nameof(LootContextVM.HandleLootInterraction))]
