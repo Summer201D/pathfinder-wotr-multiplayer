@@ -40,7 +40,7 @@ namespace WOTRMultiplayer.HarmonyPatches.Combat
             return matcher.Instructions();
         }
 
-        public static IDisposable TryCatchedSubscription(PredictionPanelVM predictionPanelVM)
+        private static IDisposable TryCatchedSubscription(PredictionPanelVM predictionPanelVM)
         {
             return (MainThreadDispatcher.UpdateAsObservable().Subscribe(delegate (Unit _)
             {
