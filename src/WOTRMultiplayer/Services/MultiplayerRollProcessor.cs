@@ -593,7 +593,7 @@ namespace WOTRMultiplayer.Services
                     return true;
                 }
 
-                ruleConcealmentCheck.Roll.m_Result = d100.m_Result;
+                ruleConcealmentCheck.Roll.m_Result = d100;
                 return false;
             }
             catch (Exception ex)
@@ -819,7 +819,7 @@ namespace WOTRMultiplayer.Services
                 }
 
                 ruleRollDice.RollHistory = d100.RollHistory;
-                ruleRollDice.m_Result = d100.m_Result;
+                ruleRollDice.m_Result = d100;
                 return false;
             }
             catch (Exception ex)
@@ -864,7 +864,7 @@ namespace WOTRMultiplayer.Services
                     return null;
                 }
 
-                return d100.m_Result;
+                return d100;
             }
             catch (Exception ex)
             {

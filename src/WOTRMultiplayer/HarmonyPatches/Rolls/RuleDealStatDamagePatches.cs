@@ -77,6 +77,7 @@ namespace WOTRMultiplayer.HarmonyPatches.Rolls
                 if (Main.Multiplayer.IsActive)
                 {
                     var damageRoll = RuleRollD100.FromInt(ruleDealStatDamage.Initiator, damage);
+                    damageRoll.m_Result = damage;
                     Main.Rolls.OnAfterRuleDealStatDamageRoll(ruleDealStatDamage, damageRoll, criticalModifier);
                 }
 
