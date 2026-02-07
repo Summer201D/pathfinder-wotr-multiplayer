@@ -279,7 +279,7 @@ namespace WOTRMultiplayer.UnitTests.Services
             Assert.That(player.ContentState.DiscrepantMods, Has.Count.EqualTo(testCase.ExpectedDiscrepantMods.Count));
             foreach (var expectedDiscrepantMod in testCase.ExpectedDiscrepantMods)
             {
-                var actualDiscrepantMod = player.ContentState.DiscrepantMods.FirstOrDefault(p => p.Mod.Id == expectedDiscrepantMod.Mod.Id);
+                var actualDiscrepantMod = player.ContentState.DiscrepantMods.FirstOrDefault(p => p.Id == expectedDiscrepantMod.Id);
                 Assert.That(actualDiscrepantMod, Is.Not.Null);
                 Assert.That(actualDiscrepantMod.Reason, Is.EqualTo(expectedDiscrepantMod.Reason));
             }
@@ -371,21 +371,21 @@ namespace WOTRMultiplayer.UnitTests.Services
             {
                 HostMods = [new NetworkMod { Id = modId1, IsEnabled = true }],
                 PlayerMods = [new Networking.Messages.Contracts.NetworkMod { Id = modId1, IsEnabled = false }],
-                ExpectedDiscrepantMods = [new NetworkDiscrepantMod { Mod = new NetworkMod { Id = modId1 }, Reason = NetworkDiscrepancyReason.Disabled }]
+                ExpectedDiscrepantMods = [new NetworkDiscrepantMod(modId1, NetworkModType.UnityModManager, null, null, NetworkDiscrepancyReason.Disabled)]
             };
 
             yield return new ContentStateTestCase("mod is disabled on host, but enabled at player")
             {
                 HostMods = [new NetworkMod { Id = modId1, IsEnabled = false }],
                 PlayerMods = [new Networking.Messages.Contracts.NetworkMod { Id = modId1, IsEnabled = true }],
-                ExpectedDiscrepantMods = [new NetworkDiscrepantMod { Mod = new NetworkMod { Id = modId1 }, Reason = NetworkDiscrepancyReason.Extra }]
+                ExpectedDiscrepantMods = [new NetworkDiscrepantMod(modId1, NetworkModType.UnityModManager, null, null, NetworkDiscrepancyReason.Extra)]
             };
 
             yield return new ContentStateTestCase("mod is installed and enabled on host, but it's not installed at player")
             {
                 HostMods = [new NetworkMod { Id = modId1, IsEnabled = true }],
                 PlayerMods = [],
-                ExpectedDiscrepantMods = [new NetworkDiscrepantMod { Mod = new NetworkMod { Id = modId1 }, Reason = NetworkDiscrepancyReason.Missing }]
+                ExpectedDiscrepantMods = [new NetworkDiscrepantMod(modId1, NetworkModType.UnityModManager, null, null, NetworkDiscrepancyReason.Missing)]
             };
 
             yield return new ContentStateTestCase("mod is disabled for both")
@@ -420,7 +420,7 @@ namespace WOTRMultiplayer.UnitTests.Services
             {
                 HostMods = [new NetworkMod { Id = modId1, IsEnabled = true, Version = "1111" }],
                 PlayerMods = [new Networking.Messages.Contracts.NetworkMod { Id = modId1, IsEnabled = true, Version = "2222" }],
-                ExpectedDiscrepantMods = [new NetworkDiscrepantMod { Mod = new NetworkMod { Id = modId1 }, Reason = NetworkDiscrepancyReason.VersionMismatch }]
+                ExpectedDiscrepantMods = [new NetworkDiscrepantMod(modId1, NetworkModType.UnityModManager, "2222", "1111", NetworkDiscrepancyReason.VersionMismatch)]
             };
         }
     }

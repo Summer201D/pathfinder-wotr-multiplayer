@@ -52,12 +52,23 @@ namespace WOTRMultiplayer.UI.Tooltips
                 foreach (var reasonGroup in byReason)
                 {
                     yield return new TooltipBrickTitle(GetModDiscrepancyReasonText(reasonGroup.Key), TooltipTitleType.H4);
-                    foreach (var discrepancy in reasonGroup.OrderBy(x => x.Mod.Id))
+                    foreach (var discrepancy in reasonGroup.OrderBy(x => x.Id))
                     {
-                        yield return new TooltipBrickText(discrepancy.Mod.FullName);
+                        var text = GetDiscrepantModText(discrepancy);
+                        yield return new TooltipBrickText(text);
                     }
                 }
             }
+        }
+
+        private string GetDiscrepantModText(NetworkDiscrepantMod networkDiscrepantMod)
+        {
+            return networkDiscrepantMod.Reason switch
+            {
+                NetworkDiscrepancyReason.VersionMismatch => $"{networkDiscrepantMod.Id} - {networkDiscrepantMod.HostVersion}/<color=#976c20>{networkDiscrepantMod.Version}</color> - {networkDiscrepantMod.Type}",
+                NetworkDiscrepancyReason.Extra => $"{networkDiscrepantMod.Id} - {networkDiscrepantMod.Version} - {networkDiscrepantMod.Type}",
+                _ => $"{networkDiscrepantMod.Id} - {networkDiscrepantMod.HostVersion} - {networkDiscrepantMod.Type}",
+            };
         }
 
         private string GetDLCDiscrepancyReasonText(NetworkDiscrepancyReason reason)

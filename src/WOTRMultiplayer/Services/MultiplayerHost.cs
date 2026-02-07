@@ -2074,7 +2074,7 @@ namespace WOTRMultiplayer.Services
 
                 if (reason != null)
                 {
-                    discrepantMods.Add(new NetworkDiscrepantMod(hostMod, reason.Value));
+                    discrepantMods.Add(new NetworkDiscrepantMod(hostMod.Id, hostMod.Type, clientMod?.Version, hostMod.Version, reason.Value));
                 }
 
                 if (clientMod != null)
@@ -2083,7 +2083,7 @@ namespace WOTRMultiplayer.Services
                 }
             }
 
-            var enabledLeftovers = clientMods.Where(x => x.IsEnabled).Select(x => new NetworkDiscrepantMod(x, NetworkDiscrepancyReason.Extra)).ToList();
+            var enabledLeftovers = clientMods.Where(x => x.IsEnabled).Select(x => new NetworkDiscrepantMod(x.Id, x.Type, x.Version, null, NetworkDiscrepancyReason.Extra)).ToList();
             discrepantMods.AddRange(enabledLeftovers);
 
             return discrepantMods;

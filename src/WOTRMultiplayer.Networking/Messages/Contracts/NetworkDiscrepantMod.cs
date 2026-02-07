@@ -6,9 +6,18 @@ namespace WOTRMultiplayer.Networking.Messages.Contracts
     public class NetworkDiscrepantMod
     {
         [ProtoMember(1)]
-        public NetworkMod Mod { get; set; }
+        public string Id { get; set; }
 
         [ProtoMember(2)]
+        public string Type { get; set; }
+
+        [ProtoMember(3)]
+        public string HostVersion { get; set; }
+
+        [ProtoMember(4)]
+        public string Version { get; set; }
+
+        [ProtoMember(5)]
         public string Reason { get; set; }
     }
 }
