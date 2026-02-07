@@ -175,14 +175,8 @@ namespace WOTRMultiplayer.HarmonyPatches.GameInstance
         {
             // known issues:
             // combat log is not closed during vendor UI
-            var combatLogView = Main.UIAccessor.CombatLogPCView;
-            if (combatLogView == null)
-            {
-                Main.GetLogger<GamePatches>().LogError("Unable to fix full screen game mode sideeffects due to missing combat log view");
-                return;
-            }
-
-
+            // party frames display all characters after trading
+            // action bar is available during trading
             // FullScreenUI has a separate 'selectedFullScreenCharacter' property, but it's not reliable due to skipped game modes.
             // applying a generic fix for everything (with a hope not to cause extra problems smile) to make sure SelectedUnit is always set if we control atlease 1 character
             if (Game.Instance.SelectionCharacter.SelectedUnits?.Count > 0 && !Game.Instance.Vendor.IsTrading)
@@ -192,13 +186,20 @@ namespace WOTRMultiplayer.HarmonyPatches.GameInstance
                 Game.Instance.SelectionCharacter.m_FullScreenSelectedUnit = selectedCharacter;
             }
 
+            var combatLogView = Main.UIAccessor.CombatLogPCView?.ViewModel == null ? null : Main.UIAccessor.CombatLogPCView;
             if (isStart)
             {
-                combatLogView.Hide();
+                combatLogView?.Hide();
                 return;
             }
 
-            combatLogView.Show();
+            combatLogView?.Show();
+
+            if (Main.UIAccessor.PartyPCView?.ViewModel != null
+                && Main.UIAccessor.PartyPCView.m_FullScreenUIType == Kingmaker.UI.FullScreenUITypes.FullScreenUIType.Vendor)
+            {
+                Game.Instance.SelectionCharacter.m_NeedUpdate = true;
+            }
         }
     }
 }
