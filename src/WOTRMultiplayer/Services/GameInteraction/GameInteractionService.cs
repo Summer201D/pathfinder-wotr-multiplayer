@@ -2080,7 +2080,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
         {
             _mainThreadAccessor.Post(() =>
             {
-                var mapObject = _gameStateLookupService.GetMapObject(trapDisarm.UnitId);
+                var mapObject = _gameStateLookupService.GetMapObject(trapDisarm.MapObject.Id);
                 if (mapObject == null)
                 {
                     _logger.LogWarning("Unable to find trap to apply disarm check. It's either already disabled or invalid id. TrapId={TrapId}", trapDisarm.MapObject.Id);

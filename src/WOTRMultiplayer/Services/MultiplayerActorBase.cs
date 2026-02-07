@@ -3168,7 +3168,7 @@ namespace WOTRMultiplayer.Services
         private async void OnNotifyTrapDisarmRolled(long receivedFrom, NotifyTrapDisarmRolled trapDisarmRolled)
         {
             Logger.LogInformation("Received {MessageType}. ReceivedFrom={ReceivedFrom}, TrapId={TrapId}, Position={Position}, Roll={Roll}, IsSuccess={IsSuccess}, UnitId={UnitId}",
-                nameof(NotifyTrapDisarmRolled), trapDisarmRolled.TrapDisarm.MapObject.Id, trapDisarmRolled.TrapDisarm.MapObject.Position, trapDisarmRolled.TrapDisarm.Roll, trapDisarmRolled.TrapDisarm.IsSuccess, trapDisarmRolled.TrapDisarm.UnitId);
+                nameof(NotifyTrapDisarmRolled), receivedFrom, trapDisarmRolled.TrapDisarm.MapObject.Id, trapDisarmRolled.TrapDisarm.MapObject.Position, trapDisarmRolled.TrapDisarm.Roll, trapDisarmRolled.TrapDisarm.IsSuccess, trapDisarmRolled.TrapDisarm.UnitId);
 
             OnAfterNetworkMessageHandled(receivedFrom, trapDisarmRolled);
 
