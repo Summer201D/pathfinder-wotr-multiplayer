@@ -17,9 +17,6 @@ using static Kingmaker.UnitLogic.Commands.Base.UnitCommand;
 
 namespace WOTRMultiplayer.HarmonyPatches.Combat
 {
-    /// <summary>
-    /// Mounted combat difference - game creates x2 commands (one for rider, one for mount). Rider commands should not be synced since they are created by game automatically
-    /// </summary>
     [HarmonyPatch]
     public class UnitCommandsPatches
     {

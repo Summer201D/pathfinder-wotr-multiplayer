@@ -5,7 +5,7 @@ namespace WOTRMultiplayer.Entities
 {
     public class NetworkForcedPause
     {
-        public string Reason { get; set; }
+        public NetworkForcedPauseReason Reason { get; set; }
 
         public HashSet<long> ReadyPlayers { get; set; } = [];
 

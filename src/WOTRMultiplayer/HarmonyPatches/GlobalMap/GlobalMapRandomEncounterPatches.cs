@@ -1,7 +1,14 @@
-﻿using HarmonyLib;
+﻿using System.Collections.Generic;
+using System.Reflection;
+using System.Reflection.Emit;
+using HarmonyLib;
 using Kingmaker.Assets.Controllers.GlobalMap;
+using Kingmaker.UI;
+using Kingmaker.UI.MVVM._PCView.Crusade.LeaderLevelUp;
 using Kingmaker.UI.MVVM._PCView.GlobalMap.Message;
 using Kingmaker.UI.MVVM._VM.GlobalMap.Message;
+using Kingmaker.Utility;
+using Microsoft.Extensions.Logging;
 using WOTRMultiplayer.Entities.GlobalMap;
 using WOTRMultiplayer.Extensions;
 
@@ -10,6 +17,40 @@ namespace WOTRMultiplayer.HarmonyPatches.GlobalMap
     [HarmonyPatch]
     public class GlobalMapRandomEncounterPatches
     {
+        [HarmonyPatch(typeof(GlobalMapRandomEncounterView), nameof(GlobalMapRandomEncounterView.BindViewImplementation))]
+        [HarmonyTranspiler]
+        public static IEnumerable<CodeInstruction> GlobalMapRandomEncounterView_BindViewImplementation_Transpiler(IEnumerable<CodeInstruction> instructions)
+        {
+            var target = PatchesUtils.GetTranspilerTarget(MethodBase.GetCurrentMethod());
+            var lookFor = AccessTools.Method(typeof(GlobalMapRandomEncounterView), nameof(GlobalMapRandomEncounterView.EnterEncounterAfterDelayCoroutine));
+            var replaceWith = AccessTools.Method(typeof(GlobalMapRandomEncounterPatches), nameof(GlobalMapRandomEncounterPatches.SetupAutoEnterEncounter));
+            var matcher = new CodeMatcher(instructions);
+
+            var match = matcher.SearchForward(x => x.Calls(lookFor));
+            if (match.IsInvalid)
+            {
+                Main.GetLogger<LeaderLevelUpPatches>().LogError("Transpiler has not been applied. Target={Target}", target);
+                return instructions;
+            }
+
+            var newInstructions = new List<CodeInstruction>()
+            {
+                new(OpCodes.Ldarg_0),
+                new(OpCodes.Call, replaceWith),
+            };
+            match = match.Advance(-2).RemoveInstructions(5).Insert(newInstructions);
+            Main.GetLogger<LeaderLevelUpPatches>().LogInformation("Transpiler has been applied. Target={Target}", target);
+            return matcher.Instructions();
+        }
+
+        private static void SetupAutoEnterEncounter(GlobalMapRandomEncounterView view)
+        {
+            if (!Main.Multiplayer.IsActive)
+            {
+                view.m_AutoAcceptCoroutine = CoroutineRunner.Start(view.EnterEncounterAfterDelayCoroutine());
+            }
+        }
+
         [HarmonyPatch(typeof(GlobalMapRandomEncounterPCView), nameof(GlobalMapRandomEncounterPCView.BindViewImplementation))]
         [HarmonyPostfix]
         public static void GlobalMapRandomEncounterPCView_BindViewImplementation_Postfix()

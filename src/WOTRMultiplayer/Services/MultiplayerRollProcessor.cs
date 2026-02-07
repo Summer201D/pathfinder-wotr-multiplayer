@@ -1108,6 +1108,7 @@ namespace WOTRMultiplayer.Services
         {
             var claimingList = _multiplayerActorAccessor.Current.GetOtherPlayers().Select(i => i.Id).ToList();
             _diceRollStorage.Add(rollId, claimingList, rollValue);
+
         }
 
         private int? GetDamageRollId(RuleCalculateDamage ruleCalculateDamage)
@@ -1115,6 +1116,7 @@ namespace WOTRMultiplayer.Services
             NetworkDiceRollBase roll = ruleCalculateDamage.Reason.Rule switch
             {
                 RuleAttackWithWeapon ruleAttackWithWeapon => CreateAttackWithWeaponRoll(NetworkDiceRollType.Damage, ruleAttackWithWeapon),
+                RuleDealDamage ruleDealDamage => CreateUnspecifiedDamage(NetworkDiceRollType.Damage, ruleDealDamage.Calculate),
                 null => CreateAbilityUse(NetworkDiceRollType.Damage, ruleCalculateDamage),
                 _ => null,
             };
@@ -1297,9 +1299,18 @@ namespace WOTRMultiplayer.Services
             return roll;
         }
 
+        private UnspecifiedDamageRoll CreateUnspecifiedDamage(NetworkDiceRollType diceRollType, RuleCalculateDamage ruleCalculateDamage)
+        {
+            var roll = new UnspecifiedDamageRoll(ruleCalculateDamage.Initiator.UniqueId, ruleCalculateDamage.ParentRule?.GetType().Name, diceRollType, ruleCalculateDamage.TotalBonusValue)
+            {
+                TargetId = ruleCalculateDamage.Target?.UniqueId
+            };
+
+            return roll;
+        }
+
         private SavingThrowRoll CreateSavingThrowRoll(NetworkDiceRollType diceRollType, RuleSavingThrow ruleSavingThrow)
         {
-            // totalbonus is not calculated before roll so it can't be used to generate unique id
             var roll = new SavingThrowRoll(ruleSavingThrow.Initiator.UniqueId, ruleSavingThrow.GetType().Name, diceRollType, totalModifierBonus: 0)
             {
                 StatType = ruleSavingThrow.StatType.ToString(),

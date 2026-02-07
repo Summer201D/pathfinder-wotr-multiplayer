@@ -930,12 +930,6 @@ public static class WellKnownKeys
         [Description("forcedPause")]
         public static class ForcedPause
         {
-            [Description("noPermission")]
-            public static class NoPermission
-            {
-                public static string Key { get; set; }
-            }
-
             [Description("areaLoading")]
             public static class AreaLoading
             {
@@ -948,14 +942,14 @@ public static class WellKnownKeys
                 public static string Key { get; set; }
             }
 
-            [Description("notSyncedPauseYet")]
-            public static class NotSyncedPauseYet
+            [Description("manualPause")]
+            public static class ManualPause
             {
                 public static string Key { get; set; }
             }
 
-            [Description("noTrapDetectedYet")]
-            public static class NoTrapDetectedYet
+            [Description("trapDetected")]
+            public static class TrapDetected
             {
                 public static string Key { get; set; }
             }

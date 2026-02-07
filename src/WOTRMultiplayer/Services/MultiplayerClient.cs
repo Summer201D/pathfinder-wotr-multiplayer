@@ -237,7 +237,7 @@ namespace WOTRMultiplayer.Services
 
                 if (context.PreRecorded.RandomUnitSeed.HasValue)
                 {
-                    EnsureForcePaused(WellKnownKeys.GameNotifications.ForcedPause.RestRandomEncounterLoading.Key);
+                    EnsureForcePaused(NetworkForcedPauseReason.RestEncounterLoading);
                     GameInteraction.SetPause(true);
                 }
             }
@@ -313,24 +313,15 @@ namespace WOTRMultiplayer.Services
             return false;
         }
 
-        public bool TogglePause(bool isPaused)
-        {
-            if (Game.ForcedPause != null && isPaused)
-            {
-                var warningText = string.IsNullOrEmpty(Game.ForcedPause.Reason) ? WellKnownKeys.GameNotifications.ForcedPause.NoPermission.Key : Game.ForcedPause.Reason;
-                PlayerNotification.ShowWarningNotification(warningText);
-            }
-
-            // client has no control over manual pausing at all
-            return false;
-        }
-
         public void OnAutoPausedByTrapDetection()
         {
-            var message = new ClientGameAutoPaused();
+            EnsureForcePaused(NetworkForcedPauseReason.TrapDetected, removalDelay: null);
+            var message = new ClientGameAutoPaused
+            {
+                Pause = Mapper.Map<Networking.Messages.Contracts.NetworkForcedPause>(Game.ForcedPause)
+            };
+            Logger.LogInformation("Sending {MessageType}. Reason={Reason}, RemovalDelay={RemovalDelay}", nameof(ClientGameAutoPaused), message.Pause.Reason, message.Pause.RemovalDelay);
             Send(message);
-            // client doesn't care about exact reason because of no permissions to unpause it anyway
-            EnsureForcePaused(reason: null, removalDelay: null);
         }
 
         public bool OnClickGroupChangerUnit(string unitId)
@@ -415,6 +406,16 @@ namespace WOTRMultiplayer.Services
             Send(message);
         }
 
+        protected override bool OnToggleOffPause(out bool showReason)
+        {
+            showReason = false;
+
+            var message = new ClientTogglePauseOff { PlayerId = Game.LocalPlayerId };
+            Send(message);
+            Logger.LogInformation("Sending {MessageType}. PlayerId={PlayerId}", nameof(ClientTogglePauseOff), message.PlayerId);
+            return false;
+        }
+
         protected override void SetupNetworkMessageHandlers()
         {
             _networkClient.OnError = OnNetworkClientError;
@@ -442,7 +443,6 @@ namespace WOTRMultiplayer.Services
                .On<NotifyNewGameSequenceTerminated>(OnNotifyNewGameSequenceTerminated)
 
                // pausing
-               .On<NotifyGamePauseStarted>(OnNotifyGamePauseStarted)
                .On<NotifyGamePauseEnded>(OnNotifyGamePauseEnded)
 
                // area transitioning
@@ -1213,13 +1213,6 @@ namespace WOTRMultiplayer.Services
 
             var status = Mapper.Map<NetworkLobbySyncStatus>(lobbySyncStatusChanged.Status);
             UpdateLobbySyncStatus(lobbySyncStatusChanged.PlayerId, status);
-        }
-
-        private void OnNotifyGamePauseStarted(long playerId, NotifyGamePauseStarted pauseStarted)
-        {
-            Logger.LogInformation("Received {MessageType}", nameof(NotifyGamePauseStarted));
-            EnsureForcePaused(null);
-            GameInteraction.SetPause(true);
         }
 
         private void OnNotifyLevelingStarted(long playerId, NotifyLevelingStarted characterLevelingStarted)

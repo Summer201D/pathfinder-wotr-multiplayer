@@ -258,7 +258,12 @@ namespace WOTRMultiplayer.Services.GameInteraction
 
         public void SetPause(bool isPaused)
         {
-            _logger.LogInformation("Pause game. IsPaused={IsPaused}", isPaused);
+            _logger.LogInformation("Pause game. RequestedIsPaused={IsPaused}, GameIsPaused={GameIsPaused}", isPaused, Game.Instance.IsPaused);
+            if (Game.Instance.IsPaused == isPaused)
+            {
+                return;
+            }
+
             if (isPaused)
             {
                 Game.Instance.IsPaused = true;

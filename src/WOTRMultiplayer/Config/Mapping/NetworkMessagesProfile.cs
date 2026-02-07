@@ -34,6 +34,9 @@ namespace WOTRMultiplayer.Config.Mapping
             CreateMap<NetworkVector2Int, Networking.Messages.Contracts.NetworkVector2Int>()
                 .ReverseMap();
 
+            CreateMap<NetworkForcedPause, Networking.Messages.Contracts.NetworkForcedPause>()
+                .ReverseMap();
+
             CreateMap<NetworkTargetWrapper, Networking.Messages.Contracts.NetworkTargetWrapper>()
                 .ReverseMap();
 

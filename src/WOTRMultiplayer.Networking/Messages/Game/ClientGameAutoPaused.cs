@@ -1,4 +1,5 @@
 ﻿using ProtoBuf;
+using WOTRMultiplayer.Networking.Messages.Contracts;
 
 namespace WOTRMultiplayer.Networking.Messages.Game
 {
@@ -6,6 +7,7 @@ namespace WOTRMultiplayer.Networking.Messages.Game
     [BeetleX.Packets.MessageType((int)MessageTypes.Game.ClientGameAutoPaused)]
     public class ClientGameAutoPaused
     {
-        // autopause reason?
+        [ProtoMember(1)]
+        public NetworkForcedPause Pause { get; set; }
     }
 }

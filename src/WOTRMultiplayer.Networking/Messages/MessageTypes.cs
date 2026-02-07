@@ -228,7 +228,8 @@
             NotifyCombatStarted,
             NotifyZoneLootLeft,
             NotifyCombatUnitKilled,
-            NotifyTrapDisarmRolled
+            NotifyTrapDisarmRolled,
+            ClientTogglePauseOff
         }
 
         public enum Request

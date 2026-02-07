@@ -430,7 +430,7 @@ namespace WOTRMultiplayer.Services
 
             lock (ActionLock)
             {
-                EnsureForcePaused(WellKnownKeys.GameNotifications.ForcedPause.AreaLoading.Key);
+                EnsureForcePaused(NetworkForcedPauseReason.AreaLoading);
                 Game.ForcedPause.ReadyPlayers.Add(Game.LocalPlayerId);
                 GameInteraction.SetPause(true);
             }
@@ -692,6 +692,15 @@ namespace WOTRMultiplayer.Services
             if (type == GameModeType.Rest)
             {
                 UpdateRestUIState();
+            }
+
+            // pause has been initiated by someone else
+            if (type == GameModeType.Pause && Game.ForcedPause != null)
+            {
+                lock (ActionLock)
+                {
+                    Game.ForcedPause.ReadyPlayers.Add(Game.LocalPlayerId);
+                }
             }
 
             var message = new NotifyGameModeTypeStarted { PlayerId = Game.LocalPlayerId, Type = type.Name };
@@ -1887,6 +1896,44 @@ namespace WOTRMultiplayer.Services
             UpdateGlobalMapCrusadeArmyBuyLeaderUIState();
         }
 
+        public bool TogglePause(bool isPaused)
+        {
+            lock (ActionLock)
+            {
+                if (isPaused)
+                {
+                    var canContinue = OnToggleOffPause(out var showReason);
+                    if (canContinue)
+                    {
+                        return true;
+                    }
+
+                    if (showReason)
+                    {
+                        ShowForcedPauseReason();
+                    }
+                    return false;
+                }
+
+                if (Game.ForcedPause == null)
+                {
+                    EnsureForcePaused(NetworkForcedPauseReason.Manual, removalDelay: null);
+                    Game.ForcedPause.ReadyPlayers.Add(Game.LocalPlayerId);
+
+                    var pauseStarted = new NotifyGamePauseStarted
+                    {
+                        PlayerId = Game.LocalPlayerId,
+                        Pause = Mapper.Map<Networking.Messages.Contracts.NetworkForcedPause>(Game.ForcedPause)
+                    };
+                    Logger.LogInformation("Sending {MessageType}. PlayerId={PlayerId}, Reason={Reason}, Delay={Delay}", nameof(NotifyGamePauseStarted), pauseStarted.PlayerId, pauseStarted.Pause.Reason, pauseStarted.Pause.RemovalDelay);
+                    Send(pauseStarted);
+                    return true;
+                }
+
+                return false;
+            }
+        }
+
         public void OnGlobalMapCrusadeArmyBuyLeaderClosed()
         {
             RemovePlayerFromTracker(Game.PlayersInGlobalMapCrusadeArmyBuyLeader, Game.LocalPlayerId);
@@ -1985,6 +2032,31 @@ namespace WOTRMultiplayer.Services
         protected abstract void Send(object message);
 
         protected abstract void Send(long playerId, object message);
+
+        protected abstract bool OnToggleOffPause(out bool showReason);
+
+        protected void ShowForcedPauseReason()
+        {
+            var pause = Game.ForcedPause;
+            if (pause == null)
+            {
+                return;
+            }
+
+            var messageKey = pause.IsLifting ? WellKnownKeys.GameNotifications.ForcedPause.IsLifting.Key : pause.Reason switch
+            {
+                NetworkForcedPauseReason.Manual => WellKnownKeys.GameNotifications.ForcedPause.ManualPause.Key,
+                NetworkForcedPauseReason.AreaLoading => WellKnownKeys.GameNotifications.ForcedPause.AreaLoading.Key,
+                NetworkForcedPauseReason.RestEncounterLoading => WellKnownKeys.GameNotifications.ForcedPause.RestRandomEncounterLoading.Key,
+                NetworkForcedPauseReason.TrapDetected => WellKnownKeys.GameNotifications.ForcedPause.TrapDetected.Key,
+                _ => null
+            };
+
+            if (!string.IsNullOrEmpty(messageKey))
+            {
+                PlayerNotification.ShowWarningNotification(messageKey);
+            }
+        }
 
         protected List<NetworkAIAction> GetAIActions()
         {
@@ -2376,7 +2448,7 @@ namespace WOTRMultiplayer.Services
             Logger.LogInformation("Lobby stage has been changed. Stage={Stage}", lobbyStage);
         }
 
-        protected void EnsureForcePaused(string reason, TimeSpan? removalDelay)
+        protected void EnsureForcePaused(NetworkForcedPauseReason reason, TimeSpan? removalDelay)
         {
             if (Game.ForcedPause == null)
             {
@@ -2389,7 +2461,7 @@ namespace WOTRMultiplayer.Services
             }
         }
 
-        protected void EnsureForcePaused(string reason)
+        protected void EnsureForcePaused(NetworkForcedPauseReason reason)
         {
             EnsureForcePaused(reason, SettingsService.GetSettings().ForcedPauseDefaultTerminationDelay);
         }
@@ -3137,6 +3209,9 @@ namespace WOTRMultiplayer.Services
                 // movement
                 .On<NotifyCharacterMove>(OnNotifyCharacterMove)
 
+                // pausing
+                .On<NotifyGamePauseStarted>(OnNotifyGamePauseStarted)
+
                 // action bar
                 .On<NotifyActionBarSlotCleared>(OnNotifyActionBarSlotCleared)
                 .On<NotifyActionBarSlotMoved>(OnNotifyActionBarSlotMoved)
@@ -3163,6 +3238,15 @@ namespace WOTRMultiplayer.Services
                 // cutscenes
                 .On<NotifyCutsceneSkipped>(OnNotifyCutsceneSkipped)
                 ;
+        }
+
+        private void OnNotifyGamePauseStarted(long receivedFrom, NotifyGamePauseStarted pauseStarted)
+        {
+            Logger.LogInformation("Received {MessageType}. ReceivedFrom={ReceivedFrom}, PlayerId={PlayerId}, Reason={Reason}, RemovalDelay={RemovalDelay}", nameof(NotifyGamePauseStarted), receivedFrom, pauseStarted.PlayerId, pauseStarted.Pause.Reason, pauseStarted.Pause.RemovalDelay);
+
+            var pause = Mapper.Map<NetworkForcedPause>(pauseStarted.Pause);
+            EnsureForcePaused(pause.Reason, pause.RemovalDelay);
+            GameInteraction.SetPause(true);
         }
 
         private async void OnNotifyTrapDisarmRolled(long receivedFrom, NotifyTrapDisarmRolled trapDisarmRolled)
@@ -3227,6 +3311,7 @@ namespace WOTRMultiplayer.Services
             var hasBeenForcedToStart = await CombatInteraction.StartCombatAsync(combatState);
             if (hasBeenForcedToStart)
             {
+                GameInteraction.SetPause(false);
                 PlayerNotification.ShowWarningNotification(WellKnownKeys.GameNotifications.Combat.ForcedToStart.Key, args: player.Name);
             }
         }
