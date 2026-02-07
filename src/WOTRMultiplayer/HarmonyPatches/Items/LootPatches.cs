@@ -131,6 +131,11 @@ namespace WOTRMultiplayer.HarmonyPatches.Items
             }
 
             var items = __instance.ItemsCollection.Where(i => i.IsLootable && !i.NeedSkinningForCollect).ToList();
+            if (items.Count == 0)
+            {
+                return;
+            }
+
             var transfer = CreateItemsTransfer(__instance.ItemsCollection, items, null);
 
             Main.Multiplayer.OnTransferInventoryItems(transfer);

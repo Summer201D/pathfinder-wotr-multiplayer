@@ -3247,6 +3247,8 @@ namespace WOTRMultiplayer.Services
             var pause = Mapper.Map<NetworkForcedPause>(pauseStarted.Pause);
             EnsureForcePaused(pause.Reason, pause.RemovalDelay);
             GameInteraction.SetPause(true);
+
+            OnAfterNetworkMessageHandled(receivedFrom, pauseStarted);
         }
 
         private async void OnNotifyTrapDisarmRolled(long receivedFrom, NotifyTrapDisarmRolled trapDisarmRolled)
