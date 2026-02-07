@@ -161,8 +161,8 @@ namespace WOTRMultiplayer.HarmonyPatches.Combat
 
         private static bool IsKineticistAutousedAbility(UnitUseAbility instance)
         {
-            var kineticistParty = instance.Executor.Get<UnitPartKineticist>();
-            var shouldSkip = kineticistParty != null && kineticistParty.GatherPowerAbility.Data == instance.Ability;
+            var kineticistPart = instance.Executor.Get<UnitPartKineticist>();
+            var shouldSkip = kineticistPart != null && kineticistPart.GatherPowerAbility?.Data == instance.Ability;
             return shouldSkip;
         }
 
