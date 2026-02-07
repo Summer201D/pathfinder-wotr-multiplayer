@@ -987,6 +987,22 @@ public static class WellKnownKeys
             {
                 public static string Key { get; set; }
             }
+
+            [Description("buffs")]
+            public static class Buffs
+            {
+                [Description("removedBuffs")]
+                public static class RemovedBuffs
+                {
+                    public static string Key { get; set; }
+                }
+
+                [Description("addedBuffs")]
+                public static class AddedBuffs
+                {
+                    public static string Key { get; set; }
+                }
+            }
         }
 
         [Description("tacticalCombat")]

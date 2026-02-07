@@ -1,4 +1,5 @@
-﻿using WOTRMultiplayer.Entities.Combat;
+﻿using System.Collections.Generic;
+using WOTRMultiplayer.Entities.Combat;
 
 namespace WOTRMultiplayer.Entities.Units
 {
@@ -19,5 +20,7 @@ namespace WOTRMultiplayer.Entities.Units
         public NetworkAbility CurrentAbility { get; set; }
 
         public NetworkUnitDescriptor Descriptor { get; set; }
+
+        public List<NetworkBuff> Buffs { get; set; } = [];
     }
 }

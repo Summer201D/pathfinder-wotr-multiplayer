@@ -16,6 +16,7 @@ using Kingmaker.PubSubSystem;
 using Kingmaker.TurnBasedMode;
 using Kingmaker.UnitLogic.Abilities;
 using Kingmaker.UnitLogic.Abilities.Components;
+using Kingmaker.UnitLogic.Buffs.Blueprints;
 using Kingmaker.UnitLogic.Commands;
 using Kingmaker.UnitLogic.Commands.Base;
 using Kingmaker.Utility;
@@ -530,13 +531,31 @@ namespace WOTRMultiplayer.Services.GameInteraction
                     CombatState = GetUnitCombatState(combatUnit),
                     CurrentAbility = GetUnitAbilityCommand(combatUnit),
                     CurrentAttack = GetUnitAttackCommand(combatUnit),
-                    Descriptor = GetUnitDescriptor(combatUnit)
+                    Descriptor = GetUnitDescriptor(combatUnit),
+                    Buffs = GetUnitBuffs(combatUnit)
                 };
 
                 units.Add(unit);
             }
 
             return units;
+        }
+
+        private List<NetworkBuff> GetUnitBuffs(UnitEntityData combatUnit)
+        {
+            var buffs = combatUnit.Buffs.Enumerable.Select(x => new NetworkBuff
+            {
+                Id = x.UniqueId,
+                BlueprintId = x.Blueprint.AssetGuid.ToString(),
+                Name = x.NameForAcronym,
+                IsPermanent = x.IsPermanent,
+                TimeLeft = x.TimeLeft,
+                NextResourceSpendingTime = x.NextResourceSpendingTime - Game.Instance.TimeController.GameTime,
+                NextTickTime = x.NextTickTime - Game.Instance.TimeController.GameTime,
+                CasterId = x.Context?.MaybeCaster?.UniqueId
+            }).ToList();
+
+            return buffs;
         }
 
         private NetworkUnitDescriptor GetUnitDescriptor(UnitEntityData combatUnit)
@@ -652,6 +671,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
 
                     UpdateUnitPosition(unit, networkUnit);
                     UpdateUnitHealth(unit, networkUnit);
+                    UpdateUnitBuffs(unit, networkUnit);
 
                     if (requiresFullUpdate)
                     {
@@ -667,6 +687,65 @@ namespace WOTRMultiplayer.Services.GameInteraction
             {
                 _logger.LogError(ex, "Unable to update combat state. RoundNumber={RoundNumber}, UnitsCount={UnitsCount}, IsFullUpdate={IsFullUpdate}", networkCombatState.RoundNumber, networkCombatState.Units.Count, requiresFullUpdate);
                 throw;
+            }
+        }
+
+        private void UpdateUnitBuffs(UnitEntityData unit, NetworkUnit networkUnit)
+        {
+            var localUnitBuffs = unit.Buffs.Enumerable.ToList();
+            var remoteUnitBuffs = networkUnit.Buffs.ToList();
+
+            for (int i = remoteUnitBuffs.Count - 1; i >= 0; i--)
+            {
+                var networkBuff = remoteUnitBuffs[i];
+                var buff = unit.Buffs.Enumerable.FirstOrDefault(x => string.Equals(x.UniqueId, networkBuff.Id, StringComparison.OrdinalIgnoreCase)
+                    || string.Equals(x.Blueprint.AssetGuid.ToString(), networkBuff.BlueprintId, StringComparison.OrdinalIgnoreCase));
+
+                if (buff == null)
+                {
+                    _logger.LogWarning("Unable to find buff to update. UnitId={UnitId}, Id={Id}, BlueprintId={BlueprintId}, Name={Name}, Duration={Duration}", unit.UniqueId, networkBuff.Id, networkBuff.BlueprintId, networkBuff.Name, networkBuff.TimeLeft);
+                    continue;
+                }
+
+                if (!buff.IsPermanent)
+                {
+                    buff.NextResourceSpendingTime = Game.Instance.TimeController.GameTime + networkBuff.NextResourceSpendingTime;
+                    buff.NextTickTime = Game.Instance.TimeController.GameTime + networkBuff.NextTickTime;
+                    buff.SetDuration(networkBuff.TimeLeft);
+                    _logger.LogInformation("Updated buff. UnitId={UnitId}, Id={Id}, Name={Name}, Duration={Duration}, NextResourceSpendingTime={NextResourceSpendingTime}, NextTickTime={NextTickTime}",
+                        unit.UniqueId, buff.UniqueId, buff.NameForAcronym, networkBuff.TimeLeft, buff.NextResourceSpendingTime, buff.NextTickTime);
+                }
+
+                remoteUnitBuffs.Remove(networkBuff);
+                localUnitBuffs.Remove(buff);
+            }
+
+            if (remoteUnitBuffs.Count > 0)
+            {
+                _playerNotificationService.ShowWarningNotification(WellKnownKeys.GameNotifications.Combat.Buffs.AddedBuffs.Key, args: [unit.CharacterName, unit.UniqueId, string.Join(", ", remoteUnitBuffs.Select(x => x.Name))]);
+                foreach (var buffToAdd in remoteUnitBuffs)
+                {
+                    var caster = _gameStateLookupService.GetUnitEntity(buffToAdd.CasterId) ?? unit;
+                    var buff = ResourcesLibrary.TryGetBlueprint<BlueprintBuff>(buffToAdd.BlueprintId);
+                    if (buff == null)
+                    {
+                        _logger.LogError("Unable to find buff to add. BlueprintId={BlueprintId}", buffToAdd.BlueprintId);
+                        continue;
+                    }
+
+                    var newBuff = unit.Buffs.AddBuff(buff, caster, buffToAdd.IsPermanent ? null : buffToAdd.TimeLeft);
+                    _logger.LogInformation("Buff has been added. UnitId={UnitId}, Id={Id}, Name={Name}, IsPermanent={IsPermanent}, PlannedDuration={PlannedDuration}", unit.UniqueId, newBuff.UniqueId, newBuff.NameForAcronym, newBuff.IsPermanent, newBuff.PlannedDuration);
+                }
+            }
+
+            if (localUnitBuffs.Count > 0)
+            {
+                _playerNotificationService.ShowWarningNotification(WellKnownKeys.GameNotifications.Combat.Buffs.RemovedBuffs.Key, args: [unit.CharacterName, unit.UniqueId, string.Join(", ", localUnitBuffs.Select(x => x.NameForAcronym))]);
+                foreach (var buffToRemove in localUnitBuffs)
+                {
+                    GameHelper.RemoveBuff(unit, buffToRemove.Blueprint);
+                    _logger.LogInformation("Buff has been removed. UnitId={UnitId}, Id={Id}, Name={Name}", unit.UniqueId, buffToRemove.UniqueId, buffToRemove.NameForAcronym);
+                }
             }
         }
 

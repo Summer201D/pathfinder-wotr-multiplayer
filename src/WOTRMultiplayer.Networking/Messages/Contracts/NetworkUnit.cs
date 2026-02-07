@@ -1,4 +1,5 @@
-﻿using ProtoBuf;
+﻿using System.Collections.Generic;
+using ProtoBuf;
 
 namespace WOTRMultiplayer.Networking.Messages.Contracts
 {
@@ -28,5 +29,8 @@ namespace WOTRMultiplayer.Networking.Messages.Contracts
 
         [ProtoMember(8)]
         public NetworkUnitDescriptor Descriptor { get; set; }
+
+        [ProtoMember(9)]
+        public List<NetworkBuff> Buffs { get; set; } = [];
     }
 }

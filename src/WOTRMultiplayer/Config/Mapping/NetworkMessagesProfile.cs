@@ -304,6 +304,9 @@ namespace WOTRMultiplayer.Config.Mapping
 
             CreateMap<NetworkTrapDisarm, Networking.Messages.Contracts.NetworkTrapDisarm>()
                 .ReverseMap();
+
+            CreateMap<NetworkBuff, Networking.Messages.Contracts.NetworkBuff>()
+                .ReverseMap();
         }
     }
 }
