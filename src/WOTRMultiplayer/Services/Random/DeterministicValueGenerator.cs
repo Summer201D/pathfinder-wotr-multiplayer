@@ -3,9 +3,11 @@ using System.Collections.Concurrent;
 using System.ComponentModel;
 using System.Linq;
 using Microsoft.Extensions.Logging;
+using UnityEngine;
 using WOTRMultiplayer.Abstractions.GameInteraction;
 using WOTRMultiplayer.Abstractions.Hashing;
 using WOTRMultiplayer.Abstractions.Random;
+using WOTRMultiplayer.Entities;
 using WOTRMultiplayer.Extensions;
 
 namespace WOTRMultiplayer.Services.Random
@@ -36,6 +38,21 @@ namespace WOTRMultiplayer.Services.Random
             generator.Random.NextBytes(guidBytes);
             var guid = new Guid(guidBytes);
             return guid;
+        }
+
+        public NetworkVector2 GetRandomUnitCircle(SeedLifetime seedLifetime, string seed)
+        {
+            var actualSeed = _hashService.Murmur3(seed);
+            var generator = GetSeed(seedLifetime, actualSeed);
+
+            float angle = generator.Random.NextFloat(0, 1f) * Mathf.PI * 2f;
+            float radius = Mathf.Sqrt(generator.Random.NextFloat(0, 1f));
+
+            var x = Mathf.Cos(angle) * radius;
+            var y = Mathf.Sin(angle) * radius;
+
+            var point = new NetworkVector2(x, y);
+            return point;
         }
 
         public System.Random GetRandom(SeedLifetime seedLifetime, string seed)

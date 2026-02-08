@@ -1,4 +1,5 @@
 ﻿using System;
+using WOTRMultiplayer.Entities;
 using WOTRMultiplayer.Services.Random;
 
 namespace WOTRMultiplayer.Abstractions.Random
@@ -20,5 +21,7 @@ namespace WOTRMultiplayer.Abstractions.Random
         Guid CreateGuid(SeedLifetime area, string seed);
 
         System.Random GetRandom(SeedLifetime seedLifetime, string seed);
+
+        NetworkVector2 GetRandomUnitCircle(SeedLifetime seedLifetime, string seed);
     }
 }
