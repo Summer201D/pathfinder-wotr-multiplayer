@@ -13,6 +13,7 @@ namespace WOTRMultiplayer.HarmonyPatches.MenuPatches
             [
                 "GameMainSettingsGroup.AcceleratedMove",
                 "GameMainSettingsGroup.AllowLootingInCombat",
+                "GameMainSettingsGroup.AutofillActionbarSlots",
                 "TurnBased.EnableTurnBased",
                 "TurnBased.AutoEndTurn",
                 "TurnBased.AutoStopAfterFirstMoveAction",

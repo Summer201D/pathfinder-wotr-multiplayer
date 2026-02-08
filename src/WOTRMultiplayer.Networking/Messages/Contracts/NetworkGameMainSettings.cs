@@ -10,5 +10,8 @@ namespace WOTRMultiplayer.Networking.Messages.Contracts
 
         [ProtoMember(2)]
         public bool QuickMovement { get; set; }
+
+        [ProtoMember(3)]
+        public bool? AutofillActionbarSlots { get; set; }
     }
 }

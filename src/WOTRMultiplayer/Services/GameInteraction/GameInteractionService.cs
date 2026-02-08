@@ -996,6 +996,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
                 {
                     LootInCombat = SettingsRoot.Game.Main.LootInCombat.GetValue(),
                     QuickMovement = SettingsRoot.Game.Main.AcceleratedMove.GetValue(),
+                    AutofillActionbarSlots = SettingsRoot.Game.Main.AutofillActionbarSlots.GetValue(),
                 },
                 Autopause = new NetworkAutopauseSettings
                 {
@@ -1063,6 +1064,10 @@ namespace WOTRMultiplayer.Services.GameInteraction
                 {
                     SettingsRoot.Game.Main.LootInCombat.SetValueAndConfirm(networkGameSettings.Main.LootInCombat);
                     SettingsRoot.Game.Main.AcceleratedMove.SetValueAndConfirm(networkGameSettings.Main.QuickMovement);
+                    if (networkGameSettings.Main.AutofillActionbarSlots.HasValue)
+                    {
+                        SettingsRoot.Game.Main.AutofillActionbarSlots.SetValueAndConfirm(networkGameSettings.Main.AutofillActionbarSlots.Value);
+                    }
                 }
 
                 if (networkGameSettings.Autopause != null)

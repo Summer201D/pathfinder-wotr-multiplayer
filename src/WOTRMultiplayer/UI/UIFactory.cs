@@ -76,6 +76,8 @@ namespace WOTRMultiplayer.UI
             WellKnownSettings.Dialogs.NonSelectedAnswerAnimationDuration.Key,
             WellKnownSettings.Dialogs.BlockedAnswerAnimationDuration.Key,
             WellKnownSettings.Miscellaneous.HideServerAddress.Key,
+            WellKnownSettings.Miscellaneous.TrackConnectionHistory.Key,
+            WellKnownSettings.Miscellaneous.MaxConnectionHistoryRecords.Key,
             WellKnownSettings.Networking.HostPortRangeStart.Key,
             WellKnownSettings.Networking.HostPortRangeEnd.Key,
             WellKnownSettings.DangerZone.EnforcedCombatStartDelay.Key,

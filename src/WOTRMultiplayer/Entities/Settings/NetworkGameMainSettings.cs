@@ -5,5 +5,7 @@
         public bool LootInCombat { get; set; }
 
         public bool QuickMovement { get; set; }
+
+        public bool? AutofillActionbarSlots { get; set; }
     }
 }
