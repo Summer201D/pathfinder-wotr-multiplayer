@@ -3047,9 +3047,15 @@ namespace WOTRMultiplayer.Services
             if (condition())
             {
                 Logger.LogWarning(warningMessage);
+                var timeout = Task.Delay(TimeSpan.FromMinutes(1));
                 while (condition())
                 {
                     await Task.Delay(delay);
+
+                    if (timeout.IsCompleted)
+                    {
+                        throw new InvalidOperationException($"Awaiter failed due to timeout. WarningText={warningMessage}");
+                    }
                 }
             }
         }

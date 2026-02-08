@@ -691,6 +691,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
                 throw;
             }
         }
+
         private List<Buff> GetSyncableUnitBuffs(UnitEntityData unit)
         {
             var buffs = unit.Buffs.Enumerable.Where(x => !x.Hidden).ToList();
