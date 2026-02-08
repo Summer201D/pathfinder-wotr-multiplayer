@@ -720,7 +720,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
                     if (!buff.IsPermanent)
                     {
                         buff.NextResourceSpendingTime = Game.Instance.TimeController.GameTime + networkBuff.NextResourceSpendingTime;
-                        buff.NextTickTime = Game.Instance.TimeController.GameTime + networkBuff.NextTickTime;
+                        buff.NextTickTime = networkBuff.NextTickTime == TimeSpan.MaxValue ? TimeSpan.MaxValue : Game.Instance.TimeController.GameTime + networkBuff.NextTickTime;
                         buff.SetDuration(networkBuff.TimeLeft);
                         _logger.LogInformation("Updated buff. UnitId={UnitId}, Id={Id}, Name={Name}, Duration={Duration}, NextResourceSpendingTime={NextResourceSpendingTime}, NextTickTime={NextTickTime}",
                             unit.UniqueId, buff.UniqueId, buff.NameForAcronym, networkBuff.TimeLeft, buff.NextResourceSpendingTime, buff.NextTickTime);
