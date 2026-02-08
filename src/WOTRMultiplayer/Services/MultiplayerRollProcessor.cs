@@ -27,6 +27,9 @@ namespace WOTRMultiplayer.Services
         private readonly IDiceRollStorage _diceRollStorage;
         private readonly IHashService _hashService;
         private readonly IMultiplayerActorAccessor _multiplayerActorAccessor;
+        private readonly HashSet<string> _importantCutsceneAreas = new([
+            "EstrodTower" // - using columns to damage enemies
+            ], StringComparer.OrdinalIgnoreCase);
 
         public MultiplayerRollProcessor(
             ILogger<MultiplayerRollProcessor> logger,
@@ -1033,7 +1036,8 @@ namespace WOTRMultiplayer.Services
 
             if (gameMode == GameModeType.Cutscene || gameMode == GameModeType.CutsceneGlobalMap)
             {
-                return false;
+                // EstrodTower - using columns to damage enemies
+                return rule is RuleCalculateDamage && _importantCutsceneAreas.Contains(_gameInteractionService.GetCurrentAreaName());
             }
 
             if (!_combatInteractionService.IsInCrusadeTacticalCombat())
