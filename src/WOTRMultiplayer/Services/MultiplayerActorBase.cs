@@ -2909,6 +2909,17 @@ namespace WOTRMultiplayer.Services
 
             GameInteraction.ReselectSelectedCharacters();
             PlayerNotification.AddCombatText(WellKnownKeys.GameNotifications.Session.CharacterOwnerChanged.Key, networkCharacter.Owner.Name, networkCharacter.Name);
+
+            if (Game.Combat?.Turn != null)
+            {
+                lock (ActionLock)
+                {
+                    if (Game.Combat?.Turn != null)
+                    {
+                        Game.Combat.Turn.IsLocalPlayer = IsControlledByLocalPlayer(Game.Combat.Turn.UnitId);
+                    }
+                }
+            }
         }
 
         protected void UpdateLobbySyncStatus(long playerId, NetworkLobbySyncStatus syncStatus)
@@ -4357,7 +4368,7 @@ namespace WOTRMultiplayer.Services
                 };
             }
 
-            Logger.LogInformation("OnTurnStart. UnitId={UnitId}, IsLocalPlayer={IsLocalPlayer}, IsAI={IsAI}, IsActingInSurpriseRound={IsActingInSurpriseRound}, IsInProgress={IsInProgress}",
+            Logger.LogInformation("Turn has been initialized. UnitId={UnitId}, IsLocalPlayer={IsLocalPlayer}, IsAI={IsAI}, IsActingInSurpriseRound={IsActingInSurpriseRound}, IsInProgress={IsInProgress}",
                 unitId, Game.Combat.Turn.IsLocalPlayer, Game.Combat.Turn.IsAI, Game.Combat.Turn.IsActingInSurpriseRound, Game.Combat.Turn.IsInProgress);
 
             OnLocalPlayerTurnStart();

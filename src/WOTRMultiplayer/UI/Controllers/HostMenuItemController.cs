@@ -359,11 +359,12 @@ namespace WOTRMultiplayer.UI.Controllers
             var canStart = lobbyStage == NetworkLobbyStage.Lobby && players.All(p => p.IsReady);
             MainThreadAccessor.Post(() =>
             {
-                StartButton.Interactable = canStart;
-                if (canStart)
+                if (canStart && !StartButton.Interactable && canStart)
                 {
                     OnEveryoneIsReady();
                 }
+
+                StartButton.Interactable = canStart;
             });
         }
 

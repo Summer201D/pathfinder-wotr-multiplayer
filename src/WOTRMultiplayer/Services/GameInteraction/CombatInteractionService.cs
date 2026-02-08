@@ -16,6 +16,7 @@ using Kingmaker.PubSubSystem;
 using Kingmaker.TurnBasedMode;
 using Kingmaker.UnitLogic.Abilities;
 using Kingmaker.UnitLogic.Abilities.Components;
+using Kingmaker.UnitLogic.Buffs;
 using Kingmaker.UnitLogic.Buffs.Blueprints;
 using Kingmaker.UnitLogic.Commands;
 using Kingmaker.UnitLogic.Commands.Base;
@@ -543,7 +544,8 @@ namespace WOTRMultiplayer.Services.GameInteraction
 
         private List<NetworkBuff> GetUnitBuffs(UnitEntityData combatUnit)
         {
-            var buffs = combatUnit.Buffs.Enumerable.Select(x => new NetworkBuff
+            var syncableBuffs = GetSyncableUnitBuffs(combatUnit);
+            var buffs = syncableBuffs.Select(x => new NetworkBuff
             {
                 Id = x.UniqueId,
                 BlueprintId = x.Blueprint.AssetGuid.ToString(),
@@ -689,10 +691,15 @@ namespace WOTRMultiplayer.Services.GameInteraction
                 throw;
             }
         }
+        private List<Buff> GetSyncableUnitBuffs(UnitEntityData unit)
+        {
+            var buffs = unit.Buffs.Enumerable.Where(x => !x.Hidden).ToList();
+            return buffs;
+        }
 
         private void UpdateUnitBuffs(UnitEntityData unit, NetworkUnit networkUnit)
         {
-            var localUnitBuffs = unit.Buffs.Enumerable.ToList();
+            var localUnitBuffs = GetSyncableUnitBuffs(unit);
             var remoteUnitBuffs = networkUnit.Buffs.ToList();
 
             for (int i = remoteUnitBuffs.Count - 1; i >= 0; i--)
