@@ -1,10 +1,13 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Reflection;
 using System.Reflection.Emit;
 using HarmonyLib;
 using Kingmaker.RuleSystem.Rules;
 using Kingmaker.UnitLogic.Mechanics;
 using Microsoft.Extensions.Logging;
+using WOTRMultiplayer.Extensions;
+using WOTRMultiplayer.Services.Random;
 
 namespace WOTRMultiplayer.HarmonyPatches.Combat
 {
@@ -37,13 +40,33 @@ namespace WOTRMultiplayer.HarmonyPatches.Combat
 
         private static int RollDice(MechanicsContext context, RuleRollDice ruleRollDice)
         {
-            if (Main.Multiplayer.IsActive && Main.Multiplayer.IsInCombat && ruleRollDice.DiceFormula.Rolls != 0 && ruleRollDice.DiceFormula.Dice != Kingmaker.RuleSystem.DiceType.Zero)
+            if (!Main.Multiplayer.IsActive || ruleRollDice.DiceFormula.Rolls == 0 || ruleRollDice.DiceFormula.Dice == Kingmaker.RuleSystem.DiceType.Zero)
             {
-                Main.GetLogger<ContextValueHelperPatches>().LogWarning("Name={Name}, UnitId={UnitId}, TargetUnitId={TargetUnitId}, TargetPoint={TargetPoint}, AbilityBlueprintId={AbilityBlueprintId}, AbilityName={AbilityName}, ItemName={ItemName}, DiceRolls={DiceRolls}, Dice={Dice}",
-                    context.NameForAcronym, context.MaybeOwner?.UniqueId, context.MainTarget?.Unit, context.MainTarget?.Point, context.SourceAbility?.AssetGuid.ToString(), context.SourceAbility?.NameForAcronym, context.SourceItem?.NameForAcronym, ruleRollDice.DiceFormula.Rolls, ruleRollDice.DiceFormula.Dice);
+                return context.TriggerRule(ruleRollDice).Result;
             }
 
-            return context.TriggerRule(ruleRollDice).Result;
+            var unitId = context.MaybeOwner?.UniqueId;
+            var targetUnitId = context.MainTarget?.Unit.UniqueId;
+            try
+            {
+                var sessionSeed = Main.Multiplayer.GetSessionSeed();
+                var combatSeed = Main.Multiplayer.GetCombatSeed();
+                var combatTurnSeed = Main.Multiplayer.GetCombatTurnSeed();
+                var loadedSaveSeed = Main.Multiplayer.GetLoadedSaveSeed();
+
+                var abilityName = context.SourceAbility?.NameForAcronym;
+                var itemName = context.SourceItem?.NameForAcronym;
+                var identifier = $"{nameof(ContextValueHelper)}:{nameof(RollDice)}:{context.NameForAcronym}:{unitId}:{targetUnitId}:{context.SourceAbility?.AssetGuid.ToString()}:{abilityName}:{itemName}:{ruleRollDice.DiceFormula.Rolls}:{ruleRollDice.DiceFormula.Dice}_{sessionSeed}:{loadedSaveSeed}:{combatSeed}:{combatTurnSeed}";
+                var random = Main.Multiplayer.ValueGenerator.GetRandom(SeedLifetime.CombatTurn, identifier);
+                var result = ruleRollDice.DiceFormula.Roll(random);
+                Main.GetLogger<ContextValueHelperPatches>().LogInformation("Ability/Item random value has been rolled. Name={Name}, Result={Result}, UnitId={UnitId}, TargetUnitId={TargetUnitId}, AbilityName={AbilityName}, ItemName={ItemName}, DiceRolls={DiceRolls}, Dice={Dice}, Identifier={Identifier}", context.NameForAcronym, result, unitId, targetUnitId, abilityName, itemName, ruleRollDice.DiceFormula.Rolls, ruleRollDice.DiceFormula.Dice, identifier);
+                return result;
+            }
+            catch (Exception ex)
+            {
+                Main.GetLogger<ContextValueHelperPatches>().LogError(ex, "Error while rolling context value. Name={Name}, UnitId={UnitId}, TargetUnitId={TargetUnitId}", context.NameForAcronym, unitId, targetUnitId);
+                throw;
+            }
         }
     }
 }
