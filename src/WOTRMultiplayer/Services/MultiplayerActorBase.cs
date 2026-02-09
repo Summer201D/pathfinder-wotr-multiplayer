@@ -643,7 +643,7 @@ namespace WOTRMultiplayer.Services
             try
             {
                 // tavern defense
-                if (Game.Combat == null || string.Equals(GameInteraction.GetCurrentAreaName(), "DefendersHeart", StringComparison.OrdinalIgnoreCase))
+                if (Game.Combat == null)
                 {
                     return true;
                 }
@@ -660,7 +660,7 @@ namespace WOTRMultiplayer.Services
                     return true;
                 }
 
-                var isFirstJoinEvent = !IsPlayerReady(PlayerTurnReadinessType.UnitJoinedMidCombat, Game.LocalPlayerId, unitId);
+                var isFirstJoinEvent = !ConfirmReadiness(PlayerTurnReadinessType.UnitJoinedMidCombat, Game.LocalPlayerId, unitId);
                 if (isFirstJoinEvent)
                 {
                     Logger.LogInformation("Sending {MessageType}. UnitId={UnitId}", nameof(NotifyUnitJoinedMidCombat), unitId);
@@ -2761,7 +2761,7 @@ namespace WOTRMultiplayer.Services
             if (Game.Combat.Turn == null)
             {
                 Logger.LogWarning("Midfight action. UnitId={UnitId}", sourceUnitId);
-                return HasControlOverUI;
+                return false;
             }
 
             return Game.Combat.Turn.IsLocalPlayer && !CombatInteraction.IsCombatTurnFinished();
@@ -2857,7 +2857,7 @@ namespace WOTRMultiplayer.Services
             return notReadyPlayers;
         }
 
-        protected bool IsPlayerReady(PlayerTurnReadinessType playerTurnReadinessType, long playerId, string unitId)
+        protected bool ConfirmReadiness(PlayerTurnReadinessType playerTurnReadinessType, long playerId, string unitId)
         {
             var tracker = GetPlayerTurnReadinessTracker(playerTurnReadinessType);
             var missingPlayers = GetMissingPlayers(unitId, tracker);
