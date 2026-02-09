@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using FluentValidation;
 using Kingmaker;
 using Kingmaker.Armies.TacticalCombat;
 using Kingmaker.Armies.TacticalCombat.Blueprints;
@@ -22,6 +23,7 @@ using Kingmaker.UnitLogic.Commands;
 using Kingmaker.UnitLogic.Commands.Base;
 using Kingmaker.Utility;
 using Microsoft.Extensions.Logging;
+using TurnBased.Controllers;
 using UniRx;
 using WOTRMultiplayer.Abstractions.GameInteraction;
 using WOTRMultiplayer.Abstractions.Unity;
@@ -120,9 +122,9 @@ namespace WOTRMultiplayer.Services.GameInteraction
         public bool IsCombatTurnFinished()
         {
             var turnStatus = Game.Instance.TurnBasedCombatController.CurrentTurn?.Status ?? TurnBased.Controllers.TurnController.TurnStatus.None;
-            return turnStatus == TurnBased.Controllers.TurnController.TurnStatus.None
-                || turnStatus == TurnBased.Controllers.TurnController.TurnStatus.Ended
-                || turnStatus == TurnBased.Controllers.TurnController.TurnStatus.Ending;
+            return turnStatus == TurnController.TurnStatus.None
+                || turnStatus == TurnController.TurnStatus.Ended
+                || turnStatus == TurnController.TurnStatus.Ending;
         }
 
         public void StartTurnBasedCombatTurn(string unitId)
@@ -521,6 +523,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
             }
 
             var units = new List<NetworkUnit>();
+            var buffBaseTime = GetBuffBaseTime();
             foreach (var combatUnit in unitsInCombat)
             {
                 var unit = new NetworkUnit
@@ -531,7 +534,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
                     TurnBasedInfo = GetUnitTurnBasedInfo(combatUnit),
                     CombatState = GetUnitCombatState(combatUnit),
                     Descriptor = GetUnitDescriptor(combatUnit),
-                    Buffs = GetUnitBuffs(combatUnit)
+                    Buffs = GetUnitBuffs(combatUnit, buffBaseTime)
                 };
 
                 units.Add(unit);
@@ -540,7 +543,13 @@ namespace WOTRMultiplayer.Services.GameInteraction
             return units;
         }
 
-        private List<NetworkBuff> GetUnitBuffs(UnitEntityData combatUnit)
+        private TimeSpan GetBuffBaseTime()
+        {
+            var baseTime = CombatController.IsInTurnBasedCombat() ? Game.Instance.TurnBasedCombatController.TurnStartTime : Game.Instance.TimeController.GameTime;
+            return baseTime;
+        }
+
+        private List<NetworkBuff> GetUnitBuffs(UnitEntityData combatUnit, TimeSpan buffBaseTime)
         {
             var syncableBuffs = GetSyncableUnitBuffs(combatUnit);
             var buffs = syncableBuffs.Select(x => new NetworkBuff
@@ -550,8 +559,8 @@ namespace WOTRMultiplayer.Services.GameInteraction
                 Name = x.NameForAcronym,
                 IsPermanent = x.IsPermanent,
                 TimeLeft = x.TimeLeft,
-                NextResourceSpendingTime = x.NextResourceSpendingTime - Game.Instance.TimeController.GameTime,
-                NextTickTime = x.NextTickTime - Game.Instance.TimeController.GameTime,
+                NextResourceSpendingTime = x.NextResourceSpendingTime - buffBaseTime,
+                NextTickTime = x.NextTickTime - buffBaseTime,
                 CasterId = x.Context?.MaybeCaster?.UniqueId
             }).ToList();
 
@@ -610,6 +619,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
             try
             {
                 var unitsToUpdate = networkCombatState.Units.ToDictionary(x => x, x => _gameStateLookupService.GetUnitEntity(x.Id));
+                var buffBaseTime = GetBuffBaseTime();
                 foreach (var (networkUnit, unit) in unitsToUpdate)
                 {
                     if (unit == null)
@@ -620,7 +630,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
 
                     UpdateUnitPosition(unit, networkUnit);
                     UpdateUnitHealth(unit, networkUnit);
-                    UpdateUnitBuffs(unit, networkUnit);
+                    UpdateUnitBuffs(unit, networkUnit, buffBaseTime);
 
                     if (requiresFullUpdate)
                     {
@@ -645,7 +655,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
             return buffs;
         }
 
-        private void UpdateUnitBuffs(UnitEntityData unit, NetworkUnit networkUnit)
+        private void UpdateUnitBuffs(UnitEntityData unit, NetworkUnit networkUnit, TimeSpan baseBuffTime)
         {
             var localUnitBuffs = GetSyncableUnitBuffs(unit);
             var remoteUnitBuffs = networkUnit.Buffs.ToList();
@@ -666,8 +676,8 @@ namespace WOTRMultiplayer.Services.GameInteraction
                 {
                     if (!buff.IsPermanent)
                     {
-                        buff.NextResourceSpendingTime = Game.Instance.TimeController.GameTime.SafeAdd(networkBuff.NextResourceSpendingTime);
-                        buff.NextTickTime = Game.Instance.TimeController.GameTime.SafeAdd(networkBuff.NextTickTime);
+                        buff.NextResourceSpendingTime = baseBuffTime.SafeAdd(networkBuff.NextResourceSpendingTime);
+                        buff.NextTickTime = baseBuffTime.SafeAdd(networkBuff.NextTickTime);
 
                         buff.SetDuration(networkBuff.TimeLeft);
                         _logger.LogInformation("Updated buff. UnitId={UnitId}, Id={Id}, Name={Name}, Duration={Duration}, NextResourceSpendingTime={NextResourceSpendingTime}, NextTickTime={NextTickTime}",

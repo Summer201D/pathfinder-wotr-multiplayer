@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
@@ -57,15 +58,23 @@ namespace WOTRMultiplayer.HarmonyPatches.Combat
                 return points.ElementAt(UnityEngine.Random.Range(minInclusive, maxExclusive));
             }
 
-            var sessionSeed = Main.Multiplayer.GetSessionSeed();
-            var combatSeed = Main.Multiplayer.GetCombatSeed();
-            var combatTurnSeed = Main.Multiplayer.GetCombatTurnSeed();
-            var identifier = $"{nameof(UnitFearController)}:{nameof(SelectPointToMove)}:{movementData.unit.UniqueId}:{sessionSeed}:{combatSeed}:{combatTurnSeed}";
+            try
+            {
+                var sessionSeed = Main.Multiplayer.GetSessionSeed();
+                var combatSeed = Main.Multiplayer.GetCombatSeed();
+                var combatTurnSeed = Main.Multiplayer.GetCombatTurnSeed();
+                var identifier = $"{nameof(UnitFearController)}:{nameof(SelectPointToMove)}:{movementData.unit.UniqueId}:{sessionSeed}:{combatSeed}:{combatTurnSeed}";
 
-            var index = Main.Multiplayer.ValueGenerator.Range(SeedLifetime.CombatTurn, identifier, minInclusive, maxExclusive);
-            var point = points.ElementAt(index);
-            Main.GetLogger<UnitFearControllerPatches>().LogInformation("Fear move point has been selected. UnitId={UnitId}, Point={Point}, Index={Index}, TurnSeed={TurnSeed}", movementData.unit.UniqueId, point, index, combatTurnSeed);
-            return point;
+                var index = Main.Multiplayer.ValueGenerator.Range(SeedLifetime.CombatTurn, identifier, minInclusive, maxExclusive);
+                var point = points.ElementAt(index);
+                Main.GetLogger<UnitFearControllerPatches>().LogInformation("Fear move point has been selected. UnitId={UnitId}, Point={Point}, Index={Index}, TurnSeed={TurnSeed}", movementData.unit.UniqueId, point, index, combatTurnSeed);
+                return point;
+            }
+            catch (Exception ex)
+            {
+                Main.GetLogger<UnitFearControllerPatches>().LogError(ex, "Error during fear move point selection. UnitId={UnitId}", movementData.unit.UniqueId);
+                throw;
+            }
         }
     }
 }

@@ -112,6 +112,7 @@ namespace WOTRMultiplayer.HarmonyPatches.Combat
             {
                 // creating fake turn to restrict rechoosing unit / starting new turn before all the confirmations
                 __instance.CurrentTurn = new TurnController((JsonConstructorMark)default);
+                __instance.TurnStartTime = Game.Instance.TimeController.GameTime;
             }
 
             return canContinue;

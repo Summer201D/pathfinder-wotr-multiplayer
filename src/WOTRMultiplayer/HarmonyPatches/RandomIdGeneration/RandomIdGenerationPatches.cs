@@ -466,7 +466,7 @@ namespace WOTRMultiplayer.HarmonyPatches.RandomIdGeneration
         {
             try
             {
-                var rawIdentifier = $"{GetCommonIdPart()}:{prefab.name}:{unit?.CharacterName}";
+                var rawIdentifier = $"{GetCommonIdPart()}:{unit.AssetGuid}:{prefab.name}:{unit?.CharacterName}";
                 var id = Main.Multiplayer.ValueGenerator.GenerateUniqueId(UniqueIdType.Unit, Game.Instance.Player.GameId, rawIdentifier);
                 Main.GetLogger<RandomIdGenerationPatches>().LogDebug("UnitId has been generated. GameId={GameId}, RawIdentifier={RawIdentifier}, Id={Id}", Game.Instance.Player.GameId, rawIdentifier, id);
                 return id;
