@@ -51,7 +51,7 @@ namespace WOTRMultiplayer.Abstractions.GameInteraction
 
         Task<bool> StartCombatAsync(NetworkCombatState networkCombatState);
 
-        Task EnsureUnitsInCombatAsync(List<NetworkUnit> units);
+        Task<bool> EnsureUnitsInCombatAsync(List<NetworkUnit> units);
 
         void KillUnit(NetworkPlayer player, string unitId);
 

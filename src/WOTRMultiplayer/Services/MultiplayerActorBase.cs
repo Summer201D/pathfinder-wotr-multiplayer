@@ -2760,17 +2760,18 @@ namespace WOTRMultiplayer.Services
             return savePath;
         }
 
-        protected Task FixCombatUnitDiscrepancyAsync(NetworkCombatUnitDiscrepancy unitDiscrepancy)
+        protected async Task<bool> FixCombatUnitDiscrepancyAsync(NetworkCombatUnitDiscrepancy unitDiscrepancy)
         {
             var localPlayerDiscrepancy = unitDiscrepancy.Units.Where(x => x.Key != Game.LocalPlayerId).SelectMany(x => x.Value).ToList();
             if (localPlayerDiscrepancy.Count == 0)
             {
                 Logger.LogInformation("Local player doesn't require any combat unit discrepancy fixes");
-                return Task.CompletedTask;
+                return true;
             }
 
             Logger.LogInformation("Discrepant units will be added to combat. Units={Units}", localPlayerDiscrepancy.Select(x => x.Id));
-            return CombatInteraction.EnsureUnitsInCombatAsync(localPlayerDiscrepancy);
+            var result = await CombatInteraction.EnsureUnitsInCombatAsync(localPlayerDiscrepancy);
+            return result;
         }
 
         protected bool IsCasterControlledByLocalPlayer(string sourceUnitId)

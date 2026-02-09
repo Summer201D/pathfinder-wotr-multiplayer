@@ -116,9 +116,9 @@ namespace WOTRMultiplayer.Playground.Core.Dummies
             return [];
         }
 
-        public Task EnsureUnitsInCombatAsync(List<NetworkUnit> units)
+        public Task<bool> EnsureUnitsInCombatAsync(List<NetworkUnit> units)
         {
-            return Task.CompletedTask;
+            return Task.FromResult(false);
         }
     }
 }

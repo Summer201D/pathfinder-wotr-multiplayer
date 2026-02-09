@@ -488,7 +488,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
             return taskCompletion.Task;
         }
 
-        public async Task EnsureUnitsInCombatAsync(List<NetworkUnit> units)
+        public Task<bool> EnsureUnitsInCombatAsync(List<NetworkUnit> units)
         {
             var taskCompletion = new TaskCompletionSource<bool>();
 
@@ -502,6 +502,13 @@ namespace WOTRMultiplayer.Services.GameInteraction
                     localUnits = [.. units.Select(u => _gameStateLookupService.GetUnitEntity(u.Id)).Where(x => x != null)];
                 }
             }
+
+            if (timeout.IsCancellationRequested)
+            {
+                taskCompletion.SetResult(false);
+                return taskCompletion.Task;
+            }
+
             timeout.Cancel();
 
             _mainThreadAccessor.Post(() =>
@@ -522,7 +529,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
                 taskCompletion.SetResult(true);
             });
 
-            await taskCompletion.Task;
+            return taskCompletion.Task;
         }
 
         public List<NetworkUnit> GetUnitsInCombat()

@@ -594,7 +594,12 @@ namespace WOTRMultiplayer.Services
             SetCombatStage(NetworkCombatStage.Preparing);
 
             var discrepancy = Mapper.Map<NetworkCombatUnitDiscrepancy>(message.Discrepancy);
-            await FixCombatUnitDiscrepancyAsync(discrepancy);
+            var isFixed = await FixCombatUnitDiscrepancyAsync(discrepancy);
+            if (!isFixed)
+            {
+                Logger.LogError("Discrepancy in combat start has not been fixed. DiscrepantUnits={DiscrepantUnits}", message.Discrepancy.Units);
+                return;
+            }
 
             var units = CombatInteraction.GetUnitsInCombat();
             var confirmation = new ClientCombatPreparationCompleted
