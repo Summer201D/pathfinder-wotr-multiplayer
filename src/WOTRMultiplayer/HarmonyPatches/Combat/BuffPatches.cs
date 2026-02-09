@@ -19,11 +19,12 @@ namespace WOTRMultiplayer.HarmonyPatches.Combat
 
             if (__instance.NextTickTime < TimeSpan.MaxValue)
             {
-                __instance.NextTickTime.SafeAdd(time);
+                __instance.NextTickTime = __instance.NextTickTime.SafeAdd(time);
             }
+
             if (__instance.EndTime < TimeSpan.MaxValue)
             {
-                __instance.EndTime.SafeAdd(time);
+                __instance.EndTime = __instance.EndTime.SafeAdd(time);
             }
 
             return false;
