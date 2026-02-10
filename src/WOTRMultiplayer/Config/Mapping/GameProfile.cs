@@ -3,6 +3,7 @@ using AutoMapper;
 using Kingmaker.UnitLogic;
 using Kingmaker.UnitLogic.Abilities;
 using Kingmaker.UnitLogic.Buffs;
+using Kingmaker.UnitLogic.Parts;
 using Kingmaker.Utility;
 using WOTRMultiplayer.Entities;
 using WOTRMultiplayer.Entities.Combat;
@@ -35,6 +36,28 @@ namespace WOTRMultiplayer.Config.Mapping
 
             CreateMap<Buff, NetworkBuff>().ConstructUsing(Create)
                 .ForAllMembers(x => x.Ignore());
+
+            CreateMap<UnitPartNegativeLevels.Data, NetworkUnitNegativeLevelsData>().ConstructUsing(Create)
+                .ForAllMembers(x => x.Ignore());
+        }
+
+        private NetworkUnitNegativeLevelsData Create(UnitPartNegativeLevels.Data negativeLevels, ResolutionContext context)
+        {
+            if (negativeLevels == null)
+            {
+                return null;
+            }
+
+            var buffBaseTime = (TimeSpan)context.Items[BuffBaseTimeItem];
+            var part = new NetworkUnitNegativeLevelsData
+            {
+                Count = negativeLevels.Count,
+                Duration = negativeLevels.EndTime.HasValue ? buffBaseTime - negativeLevels.EndTime.Value : null,
+                EnergyDrainType = negativeLevels.Type,
+                SavingThrowType = negativeLevels.SavingThrowType
+            };
+
+            return part;
         }
 
         private NetworkBuff Create(Buff buff, ResolutionContext context)

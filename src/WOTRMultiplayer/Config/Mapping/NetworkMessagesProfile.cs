@@ -326,6 +326,12 @@ namespace WOTRMultiplayer.Config.Mapping
             CreateMap<NetworkUnitProneState, Networking.Messages.Contracts.NetworkUnitProneState>()
                 .ReverseMap();
 
+            CreateMap<NetworkUnitBuffCollection, Networking.Messages.Contracts.NetworkUnitBuffCollection>()
+                .ReverseMap();
+
+            CreateMap<NetworkUnitNegativeLevelsData, Networking.Messages.Contracts.NetworkUnitNegativeLevelsData>()
+                .ReverseMap();
+
             CreateMap<NetworkAbilityParams, Networking.Messages.Contracts.NetworkAbilityParams>()
                 .ReverseMap();
         }

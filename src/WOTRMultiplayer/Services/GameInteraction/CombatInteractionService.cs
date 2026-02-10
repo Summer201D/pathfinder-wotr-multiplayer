@@ -20,8 +20,6 @@ using Kingmaker.PubSubSystem;
 using Kingmaker.TurnBasedMode;
 using Kingmaker.UnitLogic.Abilities;
 using Kingmaker.UnitLogic.Abilities.Components;
-using Kingmaker.UnitLogic.Buffs;
-using Kingmaker.UnitLogic.Buffs.Blueprints;
 using Kingmaker.UnitLogic.Commands;
 using Kingmaker.UnitLogic.Commands.Base;
 using Kingmaker.Utility;
@@ -30,7 +28,6 @@ using TurnBased.Controllers;
 using UniRx;
 using WOTRMultiplayer.Abstractions.GameInteraction;
 using WOTRMultiplayer.Abstractions.Unity;
-using WOTRMultiplayer.Config.Mapping;
 using WOTRMultiplayer.Entities;
 using WOTRMultiplayer.Entities.Combat;
 using WOTRMultiplayer.Entities.Combat.Crusades;
@@ -45,12 +42,14 @@ namespace WOTRMultiplayer.Services.GameInteraction
         private readonly IGameStateLookupService _gameStateLookupService;
         private readonly IMainThreadAccessor _mainThreadAccessor;
         private readonly IPlayerNotificationService _playerNotificationService;
+        private readonly IBuffInteractionService _buffInteractionService;
         private readonly IMapper _mapper;
 
         public CombatInteractionService(
             ILogger<CombatInteractionService> logger,
             IGameStateLookupService gameStateLookupService,
             IPlayerNotificationService playerNotificationService,
+            IBuffInteractionService buffInteractionService,
             IMainThreadAccessor mainThreadAccessor,
             IMapper mapper)
         {
@@ -58,6 +57,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
             _gameStateLookupService = gameStateLookupService;
             _mainThreadAccessor = mainThreadAccessor;
             _playerNotificationService = playerNotificationService;
+            _buffInteractionService = buffInteractionService;
             _mapper = mapper;
         }
 
@@ -549,7 +549,6 @@ namespace WOTRMultiplayer.Services.GameInteraction
                         var anevia = Game.Instance.State.Units.FirstOrDefault(u => string.Equals(u.CharacterName, "Anevia", StringComparison.OrdinalIgnoreCase));
                         if (anevia != null)
                         {
-                            // Anevia, constantly joins midfight
                             unitsInCombat.Add(anevia);
                         }
                         break;
@@ -558,7 +557,6 @@ namespace WOTRMultiplayer.Services.GameInteraction
                 }
 
                 var units = new List<NetworkUnit>();
-                var buffBaseTime = Game.Instance.TimeController.GameTime;
                 foreach (var combatUnit in unitsInCombat)
                 {
                     var unit = new NetworkUnit
@@ -569,7 +567,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
                         TurnBasedInfo = GetUnitTurnBasedInfo(combatUnit),
                         CombatState = GetUnitCombatState(combatUnit),
                         Descriptor = GetUnitDescriptor(combatUnit),
-                        Buffs = GetUnitBuffs(combatUnit, buffBaseTime)
+                        BuffCollection = _buffInteractionService.GetUnitBuffs(combatUnit)
                     };
 
                     units.Add(unit);
@@ -589,7 +587,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
             var turn = Game.Instance.TurnBasedCombatController.CurrentTurn;
             if (!string.IsNullOrEmpty(rawMovementLimit) && turn != null)
             {
-                Enum.TryParse<TurnBased.Controllers.TurnController.MovementLimit>(rawMovementLimit, true, out var movementLimit);
+                Enum.TryParse<TurnController.MovementLimit>(rawMovementLimit, true, out var movementLimit);
                 turn.CurrentMovementLimit = movementLimit;
                 _logger.LogInformation("Unit movement limit has been updated. ExecutorUnitId={ExecutorUnitId}, Limit={Limit}", executor.UniqueId, movementLimit);
             }
@@ -605,13 +603,6 @@ namespace WOTRMultiplayer.Services.GameInteraction
             var vectorPath = path.Select(v => v.ToUnityVector3()).ToList();
             var forcedPath = new ForcedPath(vectorPath);
             return forcedPath;
-        }
-
-        private List<NetworkBuff> GetUnitBuffs(UnitEntityData combatUnit, TimeSpan buffBaseTime)
-        {
-            var syncableBuffs = GetSyncableUnitBuffs(combatUnit);
-            var buffs = _mapper.Map<List<NetworkBuff>>(syncableBuffs, x => x.Items[GameProfile.BuffBaseTimeItem] = buffBaseTime);
-            return buffs;
         }
 
         private NetworkUnitDescriptor GetUnitDescriptor(UnitEntityData combatUnit)
@@ -666,7 +657,6 @@ namespace WOTRMultiplayer.Services.GameInteraction
             try
             {
                 var unitsToUpdate = networkCombatState.Units.ToDictionary(x => x, x => _gameStateLookupService.GetUnitEntity(x.Id));
-                var buffBaseTime = Game.Instance.TimeController.GameTime;
                 foreach (var (networkUnit, unit) in unitsToUpdate)
                 {
                     if (unit == null)
@@ -680,7 +670,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
 
                     if (!requiresFullUpdate)
                     {
-                        UpdateUnitBuffs(unit, networkUnit, buffBaseTime);
+                        _buffInteractionService.UpdateUnitBuffs(unit, networkUnit.BuffCollection);
                     }
 
                     if (requiresFullUpdate)
@@ -698,88 +688,6 @@ namespace WOTRMultiplayer.Services.GameInteraction
                 _logger.LogError(ex, "Unable to update combat state. RoundNumber={RoundNumber}, UnitsCount={UnitsCount}, IsFullUpdate={IsFullUpdate}", networkCombatState.RoundNumber, networkCombatState.Units.Count, requiresFullUpdate);
                 throw;
             }
-        }
-
-        private List<Buff> GetSyncableUnitBuffs(UnitEntityData unit)
-        {
-            // negative levels are handled separately
-            var buffs = unit.Buffs.Enumerable.Where(x => !x.Hidden).ToList();
-            return buffs;
-        }
-
-        private void UpdateUnitBuffs(UnitEntityData unit, NetworkUnit networkUnit, TimeSpan baseBuffTime)
-        {
-            var localUnitBuffs = GetSyncableUnitBuffs(unit);
-            var remoteUnitBuffs = networkUnit.Buffs.ToList();
-
-            for (int i = remoteUnitBuffs.Count - 1; i >= 0; i--)
-            {
-                var networkBuff = remoteUnitBuffs[i];
-                var buff = localUnitBuffs.FirstOrDefault(x => (string.Equals(x.UniqueId, networkBuff.Id, StringComparison.OrdinalIgnoreCase) || string.Equals(x.Blueprint.AssetGuid.ToString(), networkBuff.BlueprintId, StringComparison.OrdinalIgnoreCase))
-                    && x.Rank == networkBuff.Rank);
-
-                if (buff == null)
-                {
-                    _logger.LogWarning("Unable to find buff to update. UnitId={UnitId}, Id={Id}, Rank={Rank}, BlueprintId={BlueprintId}, Name={Name}, Duration={Duration}", unit.UniqueId, networkBuff.Id, networkBuff.Rank, networkBuff.BlueprintId, networkBuff.Name, networkBuff.TimeLeft);
-                    continue;
-                }
-
-                try
-                {
-                    if (!buff.IsPermanent)
-                    {
-                        buff.NextResourceSpendingTime = networkBuff.NextResourceSpendingTime == TimeSpan.MaxValue ? TimeSpan.MaxValue : baseBuffTime.SafeAdd(networkBuff.NextResourceSpendingTime);
-                        buff.NextTickTime = networkBuff.NextTickTime == TimeSpan.MaxValue ? TimeSpan.MaxValue : baseBuffTime.SafeAdd(networkBuff.NextTickTime);
-
-                        buff.SetDuration(networkBuff.TimeLeft);
-                        _logger.LogInformation("Updated buff. UnitId={UnitId}, Id={Id}, Name={Name}, Duration={Duration}, NextResourceSpendingTime={NextResourceSpendingTime}, NextTickTime={NextTickTime}, BaseBuffTime={BaseBuffTime} NetworkNextTickTime={NetworkNextTickTime}, NetworkNextPendingTime={NetworkNextPendingTime}",
-                            unit.UniqueId, buff.UniqueId, buff.NameForAcronym, networkBuff.TimeLeft, buff.NextResourceSpendingTime, buff.NextTickTime, baseBuffTime, networkBuff.NextTickTime, networkBuff.NextResourceSpendingTime);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Error while updating buff. UnitId={UnitId}, Id={Id}, Name={Name}, Duration={Duration}, NextResourceSpendingTime={NextResourceSpendingTime}, NextTickTime={NextTickTime}",
-                        unit.UniqueId, buff.UniqueId, buff.NameForAcronym, networkBuff.TimeLeft, buff.NextResourceSpendingTime, buff.NextTickTime);
-                }
-                finally
-                {
-                    remoteUnitBuffs.Remove(networkBuff);
-                    localUnitBuffs.Remove(buff);
-                }
-            }
-
-            if (remoteUnitBuffs.Count > 0)
-            {
-                _playerNotificationService.ShowWarningNotification(WellKnownKeys.GameNotifications.Combat.Buffs.AddedBuffs.Key, args: [unit.CharacterName, unit.UniqueId, string.Join(", ", remoteUnitBuffs.Select(x => x.Name))]);
-                foreach (var buffToAdd in remoteUnitBuffs)
-                {
-                    var caster = _gameStateLookupService.GetUnitEntity(buffToAdd.CasterId) ?? unit;
-                    var buff = ResourcesLibrary.TryGetBlueprint<BlueprintBuff>(buffToAdd.BlueprintId);
-                    if (buff == null)
-                    {
-                        _logger.LogError("Missing blueprint for a buff. BlueprintId={BlueprintId}", buffToAdd.BlueprintId);
-                        continue;
-                    }
-
-                    var abilityParams = _mapper.Map<AbilityParams>(buffToAdd.AbilityParams);
-                    var duration = buffToAdd.IsPermanent ? TimeSpan.MaxValue : buffToAdd.TimeLeft;
-                    var newBuff = unit.Buffs.AddBuff(buff, caster, duration, abilityParams);
-                    _logger.LogInformation("Buff has been added. UnitId={UnitId}, Id={Id}, Rank={Rank}, BlueprintId={BlueprintId}, Name={Name}, IsPermanent={IsPermanent}, PlannedDuration={PlannedDuration}", unit.UniqueId, newBuff.UniqueId, newBuff.Rank, buffToAdd.BlueprintId, newBuff.NameForAcronym, newBuff.IsPermanent, newBuff.PlannedDuration);
-                }
-            }
-
-            if (localUnitBuffs.Count > 0)
-            {
-                _playerNotificationService.ShowWarningNotification(WellKnownKeys.GameNotifications.Combat.Buffs.RemovedBuffs.Key, args: [unit.CharacterName, unit.UniqueId, string.Join(", ", localUnitBuffs.Select(x => x.NameForAcronym))]);
-                foreach (var buffToRemove in localUnitBuffs)
-                {
-                    GameHelper.RemoveBuff(unit, buffToRemove.Blueprint);
-                    _logger.LogInformation("Buff has been removed. UnitId={UnitId}, Id={Id}, Name={Name}", unit.UniqueId, buffToRemove.UniqueId, buffToRemove.NameForAcronym);
-                }
-            }
-
-            unit.Buffs.UpdateNextEvent();
-            _logger.LogInformation("Next buff event has been updated. UnitId={UnitId}", unit.UniqueId);
         }
 
         private void UpdateUnitState(UnitEntityData unit, NetworkUnitState state)

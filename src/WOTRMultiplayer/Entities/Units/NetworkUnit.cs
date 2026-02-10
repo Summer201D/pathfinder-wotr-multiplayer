@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-
-namespace WOTRMultiplayer.Entities.Units
+﻿namespace WOTRMultiplayer.Entities.Units
 {
     public class NetworkUnit
     {
@@ -16,7 +14,7 @@ namespace WOTRMultiplayer.Entities.Units
 
         public NetworkUnitDescriptor Descriptor { get; set; }
 
-        public List<NetworkBuff> Buffs { get; set; } = [];
+        public NetworkUnitBuffCollection BuffCollection { get; set; }
 
         public override bool Equals(object obj)
         {

@@ -20,7 +20,7 @@ namespace WOTRMultiplayer.Logging
 
             logConfig
                 .WriteTo.Console(outputTemplate: template, restrictedToMinimumLevel: consoleMinLevel)
-                .WriteTo.File($"{baseFolder}/logs/wotr-multiplayer.log", restrictedToMinimumLevel: fileMinLevel, outputTemplate: template, rollingInterval: RollingInterval.Day)
+                .WriteTo.File($"{baseFolder}/logs/wotr-multiplayer-.log", restrictedToMinimumLevel: fileMinLevel, outputTemplate: template, rollingInterval: RollingInterval.Day)
                 .Enrich.FromLogContext()
                 .Enrich.With(new ClassNameEnricher())
                 ;
