@@ -13,7 +13,7 @@ namespace WOTRMultiplayer.Services.Localization
 {
     public class LocalizationService : ILocalizationService
     {
-        public const string LocalizationFolderName = "Localization";
+        public const string LocalizationFolderName = "localization";
         public const string FallbackLocale = "enGB";
 
         private readonly ILogger<LocalizationService> _logger;

@@ -8,6 +8,14 @@ namespace WOTRMultiplayer.HarmonyPatches.Leveling
     [HarmonyPatch]
     public class CharGenPCViewPatches
     {
+        [HarmonyPatch(typeof(CharGenVM), nameof(CharGenVM.IsOpenNextWindow))]
+        [HarmonyPrefix]
+        public static bool CharGenVM_IsOpenNextWindow_Prefix()
+        {
+            // auto-opening next leveling is not supported yet
+            return !Main.Multiplayer.IsActive;
+        }
+
         [HarmonyPatch(typeof(CharGenVM), nameof(CharGenVM.Close))]
         [HarmonyPostfix]
         public static void CharGenVM_Close_Postfix()
@@ -24,7 +32,7 @@ namespace WOTRMultiplayer.HarmonyPatches.Leveling
         [HarmonyPrefix]
         public static bool CharGenContextVM_TryGetPetNeedChargen_Prefix()
         {
-            // autopening pet leveling is not needed
+            // auto-opening pet leveling is not supported yet
             return !Main.Multiplayer.IsActive;
         }
 

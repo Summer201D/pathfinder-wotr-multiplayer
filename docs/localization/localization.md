@@ -1,6 +1,6 @@
 ## Basics
 
-All localization files (like `enGB.json`) live in the `./Localization` folder. The mod always falls back to `enGB.json` if it can't find a file for your current language.
+All localization files (like `enGB.json`) live in the `./localization` folder. The mod always falls back to `enGB.json` if it can't find a file for your current language.
 
 Here is what the filenames should look like for each supported game locale (case-insensitive):
 

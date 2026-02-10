@@ -49,7 +49,7 @@
 
 			xcopy /q /y ".\FluentValidation.dll" "$(WOTR_PATH)\Mods\WOTRMultiplayer\*"
 
-			xcopy /q /y "..\..\..\..\..\localization\*.json" "$(WOTR_PATH)\Mods\WOTRMultiplayer\Localization\*"
+			xcopy /q /y "..\..\..\..\..\localization\*.json" "$(WOTR_PATH)\Mods\WOTRMultiplayer\localization\*"
 		</PostBuildEvent>
 	</PropertyGroup>
 

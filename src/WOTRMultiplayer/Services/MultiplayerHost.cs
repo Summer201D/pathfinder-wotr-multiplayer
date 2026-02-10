@@ -365,9 +365,7 @@ namespace WOTRMultiplayer.Services
                         Logger.LogInformation("Sending {MessageType}. DiscrepantUnits={DiscrepantUnits}", nameof(NotifyCombatPreparationRequired), preparationRequiredMessage.Discrepancy.Units);
                         Send(preparationRequiredMessage);
                         Game.Combat.IsPrepared = true;
-                        FixCombatUnitDiscrepancyAsync(discrepantUnits)
-                            .ContinueWith(a => OnFixedCombatUnitDiscrepancy(a.Result))
-                            .ConfigureAwait(false);
+                        _ = FixCombatUnitDiscrepancyAsync(discrepantUnits);
                     }
 
                     var isPrepared = Game.Combat.PlayersCombatPreparation.Count == 0;
@@ -379,17 +377,6 @@ namespace WOTRMultiplayer.Services
                 default:
                     return true;
             }
-        }
-
-        private void OnFixedCombatUnitDiscrepancy(bool result)
-        {
-            if (!result)
-            {
-                Logger.LogError("Combat unit discrepancy has not been fixed");
-                return;
-            }
-
-            Game.Combat.PlayersCombatPreparation.TryRemove(Game.LocalPlayerId, out _);
         }
 
         /// <summary>

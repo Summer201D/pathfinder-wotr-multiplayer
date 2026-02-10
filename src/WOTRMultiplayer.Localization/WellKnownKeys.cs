@@ -1003,6 +1003,12 @@ public static class WellKnownKeys
                     public static string Key { get; set; }
                 }
             }
+
+            [Description("desyncedCombatUnits")]
+            public static class DesyncedCombatUnits
+            {
+                public static string Key { get; set; }
+            }
         }
 
         [Description("tacticalCombat")]

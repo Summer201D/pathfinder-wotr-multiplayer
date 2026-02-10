@@ -110,7 +110,7 @@ jobs:
 
           xcopy /q /y "${{ env.BUILD_PATH }}\FluentValidation.dll" "${{ env.RELEASE_OUTPUT_PATH }}\*"
 
-          xcopy /q /y "${{ env.LOCALIZATION_PATH }}\*.json" "${{ env.RELEASE_OUTPUT_PATH }}\Localization\*"
+          xcopy /q /y "${{ env.LOCALIZATION_PATH }}\*.json" "${{ env.RELEASE_OUTPUT_PATH }}\localization\*"
 
       - name: Upload Release
         uses: actions/upload-artifact@v4
