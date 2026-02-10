@@ -5,6 +5,7 @@ using Kingmaker.Utility;
 using WOTRMultiplayer.Entities;
 using WOTRMultiplayer.Entities.Combat;
 using WOTRMultiplayer.Entities.Spells;
+using WOTRMultiplayer.Entities.Units;
 using WOTRMultiplayer.Extensions;
 
 namespace WOTRMultiplayer.Config.Mapping
@@ -24,6 +25,8 @@ namespace WOTRMultiplayer.Config.Mapping
 
             CreateMap<TargetWrapper, NetworkTargetWrapper>().ConstructUsing(x => Create(x))
                 .ForAllMembers(x => x.Ignore());
+
+            CreateMap<AbilityParams, NetworkAbilityParams>().ReverseMap();
         }
 
         private NetworkSpellSlot Create(SpellSlot spellSlot)

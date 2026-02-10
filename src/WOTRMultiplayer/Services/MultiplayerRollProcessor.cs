@@ -815,7 +815,7 @@ namespace WOTRMultiplayer.Services
         {
             try
             {
-                if (!ShouldRetrieveRoll(ruleDrainEnergy))
+                if (!ShouldRetrieveRoll(ruleDrainEnergy) || ruleRollDice.DiceFormula.Rolls == 0 && ruleRollDice.DiceFormula.Dice == DiceType.Zero)
                 {
                     return true;
                 }
@@ -842,7 +842,7 @@ namespace WOTRMultiplayer.Services
         {
             try
             {
-                if (!ShouldStoreRoll(ruleDrainEnergy))
+                if (!ShouldStoreRoll(ruleDrainEnergy) || ruleRollDice.DiceFormula.Rolls == 0 && ruleRollDice.DiceFormula.Dice == DiceType.Zero)
                 {
                     return;
                 }

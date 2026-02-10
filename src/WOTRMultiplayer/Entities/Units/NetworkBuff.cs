@@ -19,5 +19,9 @@ namespace WOTRMultiplayer.Entities.Units
         public TimeSpan NextResourceSpendingTime { get; set; }
 
         public string CasterId { get; set; }
+
+        public int Rank { get; set; }
+
+        public NetworkAbilityParams AbilityParams { get; set; }
     }
 }

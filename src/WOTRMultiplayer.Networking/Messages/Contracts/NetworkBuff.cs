@@ -29,5 +29,11 @@ namespace WOTRMultiplayer.Networking.Messages.Contracts
 
         [ProtoMember(8)]
         public string CasterId { get; set; }
+
+        [ProtoMember(9)]
+        public int Rank { get; set; }
+
+        [ProtoMember(10)]
+        public NetworkAbilityParams AbilityParams { get; set; }
     }
 }

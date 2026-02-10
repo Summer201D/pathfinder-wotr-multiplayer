@@ -40,8 +40,8 @@ namespace WOTRMultiplayer.HarmonyPatches.Rolls
 
             var newInstructions = new List<CodeInstruction>()
             {
-                new(OpCodes.Call, replaceWith),
                 new(OpCodes.Ldarg_0),
+                new(OpCodes.Call, replaceWith),
             };
 
             match = match.RemoveInstruction().Insert(newInstructions);
