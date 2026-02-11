@@ -1092,10 +1092,9 @@ namespace WOTRMultiplayer.Services
                 {
                     case RuleEnterStealth:
                         var rulebookEvent = (RulebookEvent)rule;
-                        var areaName = _multiplayerActorAccessor.Current.CurrentArea?.Name;
-                        var isMeaningfulEvent = !_combatInteractionService.IsInCombat()
-                            || areaName != null && areaName.StartsWith("GrayGarrison", StringComparison.OrdinalIgnoreCase)
-                                && _combatInteractionService.IsInCombat(rulebookEvent.Initiator.UniqueId);
+                        var areaName = _multiplayerActorAccessor.Current.CurrentArea.Name;
+                        var isMeaningfulEvent = !_combatInteractionService.IsInCombat() || !areaName.StartsWith("GrayGarrison", StringComparison.OrdinalIgnoreCase)
+                            || _combatInteractionService.IsInCombat(rulebookEvent.Initiator.UniqueId);
                         return isMeaningfulEvent;
                     case RuleCalculateDamage:
                     case RuleHealDamage:
