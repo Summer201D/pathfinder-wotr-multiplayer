@@ -11,6 +11,8 @@ namespace WOTRMultiplayer.Abstractions.GameInteraction
     {
         bool IsInCombat();
 
+        bool IsInCombat(string unitId);
+
         bool IsInCrusadeTacticalCombat();
 
         void UpdateIsInCombatStatus();

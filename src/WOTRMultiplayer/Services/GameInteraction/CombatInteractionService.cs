@@ -71,6 +71,12 @@ namespace WOTRMultiplayer.Services.GameInteraction
             return Game.Instance.Player.IsInCombat;
         }
 
+        public bool IsInCombat(string unitId)
+        {
+            var unit = _gameStateLookupService.GetUnitEntity(unitId);
+            return unit != null && unit.IsInCombat;
+        }
+
         public bool IsInCrusadeTacticalCombat()
         {
             return TacticalCombatHelper.IsActive;

@@ -120,5 +120,10 @@ namespace WOTRMultiplayer.Playground.Core.Dummies
         {
             return Task.FromResult(false);
         }
+
+        public bool IsInCombat(string unitId)
+        {
+            return false;
+        }
     }
 }

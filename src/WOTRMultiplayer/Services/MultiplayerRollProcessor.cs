@@ -1117,9 +1117,10 @@ namespace WOTRMultiplayer.Services
         {
             var initiator = rulebookTargetEvent.Initiator?.UniqueId;
             var target = rulebookTargetEvent.Target?.UniqueId;
-            var affectsControlledCharacters = _combatInteractionService.IsInCombat()
+            var affectsControlledCharacters = (_combatInteractionService.IsInCombat() && (_combatInteractionService.IsInCombat(initiator) || _combatInteractionService.IsInCombat(target)))
                 || _multiplayerActorAccessor.Current.IsControlledByPlayers(initiator)
                 || _multiplayerActorAccessor.Current.IsControlledByPlayers(target);
+
             return affectsControlledCharacters;
         }
 
