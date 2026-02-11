@@ -141,7 +141,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
             _mainThreadAccessor.Post(() =>
             {
                 UpdateTraveler(travaler);
-                GlobalMapUI.Instance.OnContinue();
+                Game.Instance.GlobalMapController?.StartTravels();
             });
         }
 
