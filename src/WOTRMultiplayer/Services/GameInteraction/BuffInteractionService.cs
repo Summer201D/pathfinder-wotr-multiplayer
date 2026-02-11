@@ -159,9 +159,14 @@ namespace WOTRMultiplayer.Services.GameInteraction
 
             buff.NextResourceSpendingTime = networkBuff.NextResourceSpendingTime == TimeSpan.MaxValue ? TimeSpan.MaxValue : buffBaseTime.SafeAdd(networkBuff.NextResourceSpendingTime);
             buff.NextTickTime = networkBuff.NextTickTime == TimeSpan.MaxValue ? TimeSpan.MaxValue : buffBaseTime.SafeAdd(networkBuff.NextTickTime);
-
             buff.SetDuration(networkBuff.TimeLeft);
-            _logger.LogInformation("Updated buff. UnitId={UnitId}, Id={Id}, Name={Name}, Duration={Duration}, NextResourceSpendingTime={NextResourceSpendingTime}, NextTickTime={NextTickTime}, BuffBaseTime={BuffBaseTime} NetworkNextTickTime={NetworkNextTickTime}, NetworkNextPendingTime={NetworkNextPendingTime}",
+
+            if (buff.Rank != networkBuff.Rank)
+            {
+                buff.SetRank(networkBuff.Rank);
+            }
+
+            _logger.LogInformation("Updated buff. UnitId={UnitId}, Id={Id}, Name={Name}, Duration={Duration}, Rank={Rank}, NextResourceSpendingTime={NextResourceSpendingTime}, NextTickTime={NextTickTime}, BuffBaseTime={BuffBaseTime} NetworkNextTickTime={NetworkNextTickTime}, NetworkNextPendingTime={NetworkNextPendingTime}",
                 unit.UniqueId, buff.UniqueId, buff.NameForAcronym, networkBuff.TimeLeft, buff.NextResourceSpendingTime, buff.NextTickTime, buffBaseTime, networkBuff.NextTickTime, networkBuff.NextResourceSpendingTime);
         }
     }

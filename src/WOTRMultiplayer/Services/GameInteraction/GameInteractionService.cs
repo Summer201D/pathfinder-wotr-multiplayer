@@ -51,6 +51,7 @@ using Kingmaker.UnitLogic.Commands;
 using Kingmaker.Utility;
 using Kingmaker.View.MapObjects;
 using Kingmaker.View.MapObjects.Traps;
+using Kingmaker.View.MapObjects.Traps.Simple;
 using Microsoft.Extensions.Logging;
 using Owlcat.Runtime.UI.Controls.Button;
 using TMPro;
@@ -849,31 +850,53 @@ namespace WOTRMultiplayer.Services.GameInteraction
             _mainThreadAccessor.Post(() =>
             {
                 // based on PartyPerceptionController.RollPerception
-                var perceptionCheckComponent = mapObject.View.PerceptionCheckComponent;
-                var rule = new RuleSkillCheck(unit, perceptionCheckComponent.StatType, perceptionCheckComponent.DC)
+                try
                 {
-                    Reason = mapObject,
-                    D20 = RuleRollD20.FromInt(unit, networkPerceptionCheck.Roll)
-                };
-                rule.m_Success = rule.IsSuccessRoll(rule.D20, rule.RequiresSuccessBonus ? rule.SuccessBonus : 0);
-                rule.m_Triggered = true;
-                _playerNotificationService.AddCombatText(rule);
+                    var perceptionCheckComponent = mapObject.View.PerceptionCheckComponent;
+                    var rule = new RuleSkillCheck(unit, perceptionCheckComponent.StatType, perceptionCheckComponent.DC)
+                    {
+                        Reason = mapObject,
+                        D20 = RuleRollD20.FromInt(unit, networkPerceptionCheck.Roll)
+                    };
+                    rule.m_Success = rule.IsSuccessRoll(rule.D20, rule.RequiresSuccessBonus ? rule.SuccessBonus : 0);
+                    rule.m_Triggered = true;
+                    _playerNotificationService.AddCombatText(rule);
 
-                var modifiableValue = unit.Stats.AllStats.FirstOrDefault(x => x.Type == perceptionCheckComponent.StatType);
-                if (modifiableValue == null)
-                {
-                    _logger.LogError("Unable to do perception check due to missing character stat. UnitId={UnitId}, StatType={StatType}", unit.UniqueId, perceptionCheckComponent.StatType);
-                    return;
+                    var modifiableValue = unit.Stats.AllStats.FirstOrDefault(x => x.Type == perceptionCheckComponent.StatType);
+                    if (modifiableValue == null)
+                    {
+                        _logger.LogError("Unable to do perception check due to missing character stat. UnitId={UnitId}, StatType={StatType}", unit.UniqueId, perceptionCheckComponent.StatType);
+                        return;
+                    }
+
+                    mapObject.LastPerceptionRollRank[unit] = modifiableValue.BaseValue;
+                    mapObject.IsPerceptionCheckPassed = rule.Success;
+
+                    if (mapObject is SimpleTrapObjectData simpleTrap)
+                    {
+                        if (simpleTrap.LinkedTrap != null)
+                        {
+                            simpleTrap.LinkedTrap.IsPerceptionCheckPassed = rule.Success;
+                        }
+
+                        if (simpleTrap.Device != null)
+                        {
+                            simpleTrap.Device.IsPerceptionCheckPassed = rule.Success;
+                        }
+                    }
+
+                    if (rule.Success)
+                    {
+                        EventBus.RaiseEvent<IPerceptionHandler>(x => x.OnEntityNoticed(mapObject, unit));
+                    }
+
+                    _logger.LogInformation("Perception check has been triggered. UnitId={UnitId}, MapObjectId={MapObjectId}, Roll={Roll}, IsSuccess={IsSuccess}", unit.UniqueId, mapObject.UniqueId, networkPerceptionCheck.Roll, rule.Success);
                 }
-
-                mapObject.LastPerceptionRollRank[unit] = modifiableValue.BaseValue;
-                mapObject.IsPerceptionCheckPassed = rule.Success;
-                if (rule.Success)
+                catch (Exception ex)
                 {
-                    EventBus.RaiseEvent<IPerceptionHandler>(x => x.OnEntityNoticed(mapObject, unit));
+                    _logger.LogError(ex, "Error applying perception check");
+                    throw;
                 }
-
-                _logger.LogInformation("Perception check has been triggered. UnitId={UnitId}, MapObjectId={MapObjectId}, Roll={Roll}, IsSuccess={IsSuccess}", unit.UniqueId, mapObject.UniqueId, networkPerceptionCheck.Roll, rule.Success);
             });
         }
 
@@ -2083,7 +2106,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
         public bool IsUnitBusy(string unitId)
         {
             var unit = _gameStateLookupService.GetUnitEntity(unitId);
-            return unit?.Commands.IsRunning() ?? false;
+            return (unit?.Commands.IsRunning() ?? false) || (unit?.AreHandsBusyWithAnimation ?? false);
         }
 
         public void SetUnitAutoUseAbility(NetworkAutoUseAbility autoUseAbility)

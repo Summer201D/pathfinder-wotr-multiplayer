@@ -22,13 +22,13 @@ namespace WOTRMultiplayer.Services.GameInteraction
         private string GetButtonTextWithoutCounter(TextMeshProUGUI buttonText)
         {
             var baseText = buttonText.text;
-            if (baseText.EndsWith(")"))
+            if (baseText != null && baseText.EndsWith(")"))
             {
                 var parts = baseText.Split(' ');
                 baseText = string.Join(" ", parts.Take(parts.Length - 1));
             }
 
-            return baseText;
+            return baseText ?? string.Empty;
         }
     }
 }
