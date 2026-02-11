@@ -57,11 +57,11 @@ namespace WOTRMultiplayer.Services.GameInteraction
             var localUnitBuffs = GetSyncableUnitBuffs(unit);
             var remoteUnitBuffs = unitBuffCollection.Buffs.ToList();
 
+            _logger.LogInformation("Updating unit buffs. LocalBuffs={LocalBuffs}, RemoveBuffs={RemoteBuffs}", localUnitBuffs.Count, remoteUnitBuffs.Count);
             for (int i = remoteUnitBuffs.Count - 1; i >= 0; i--)
             {
                 var networkBuff = remoteUnitBuffs[i];
-                var buff = localUnitBuffs.FirstOrDefault(x => (string.Equals(x.UniqueId, networkBuff.Id, StringComparison.OrdinalIgnoreCase) || string.Equals(x.Blueprint.AssetGuid.ToString(), networkBuff.BlueprintId, StringComparison.OrdinalIgnoreCase))
-                    && x.Rank == networkBuff.Rank);
+                var buff = localUnitBuffs.FirstOrDefault(x => (string.Equals(x.UniqueId, networkBuff.Id, StringComparison.OrdinalIgnoreCase) || string.Equals(x.Blueprint.AssetGuid.ToString(), networkBuff.BlueprintId, StringComparison.OrdinalIgnoreCase)));
 
                 if (buff == null)
                 {
@@ -124,6 +124,11 @@ namespace WOTRMultiplayer.Services.GameInteraction
                 var abilityParams = _mapper.Map<AbilityParams>(buffToAdd.AbilityParams);
                 var duration = buffToAdd.IsPermanent ? TimeSpan.MaxValue : buffToAdd.TimeLeft;
                 var newBuff = unit.Buffs.AddBuff(buff, caster, duration, abilityParams);
+                if (buffToAdd.Rank > 0)
+                {
+                    newBuff.SetRank(buffToAdd.Rank);
+                }
+
                 _logger.LogInformation("Buff has been added. UnitId={UnitId}, Id={Id}, Rank={Rank}, BlueprintId={BlueprintId}, Name={Name}, IsPermanent={IsPermanent}, PlannedDuration={PlannedDuration}", unit.UniqueId, newBuff.UniqueId, newBuff.Rank, buffToAdd.BlueprintId, newBuff.NameForAcronym, newBuff.IsPermanent, newBuff.PlannedDuration);
             }
         }
@@ -167,7 +172,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
             }
 
             _logger.LogInformation("Updated buff. UnitId={UnitId}, Id={Id}, Name={Name}, Duration={Duration}, Rank={Rank}, NextResourceSpendingTime={NextResourceSpendingTime}, NextTickTime={NextTickTime}, BuffBaseTime={BuffBaseTime} NetworkNextTickTime={NetworkNextTickTime}, NetworkNextPendingTime={NetworkNextPendingTime}",
-                unit.UniqueId, buff.UniqueId, buff.NameForAcronym, networkBuff.TimeLeft, buff.NextResourceSpendingTime, buff.NextTickTime, buffBaseTime, networkBuff.NextTickTime, networkBuff.NextResourceSpendingTime);
+                unit.UniqueId, buff.UniqueId, buff.NameForAcronym, networkBuff.TimeLeft, networkBuff.Rank, buff.NextResourceSpendingTime, buff.NextTickTime, buffBaseTime, networkBuff.NextTickTime, networkBuff.NextResourceSpendingTime);
         }
     }
 }
