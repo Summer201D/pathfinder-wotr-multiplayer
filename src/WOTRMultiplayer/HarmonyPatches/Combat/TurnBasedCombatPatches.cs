@@ -33,6 +33,25 @@ namespace WOTRMultiplayer.HarmonyPatches.Combat
             return !Main.Multiplayer.IsActive;
         }
 
+        [HarmonyPatch(typeof(TurnController), nameof(TurnController.TryScrollToUnit))]
+        [HarmonyPrefix]
+        public static bool TurnController_TryScrollToUnit_Prefix(TurnController __instance, ref bool __result)
+        {
+            if (!Main.Multiplayer.IsActive)
+            {
+                return true;
+            }
+
+            // fails with NRE anyway
+            if (__instance.Rider == null)
+            {
+                __result = false;
+                return false;
+            }
+
+            return true;
+        }
+
         [HarmonyPatch(typeof(TurnController), nameof(TurnController.CanEndTurn))]
         [HarmonyTranspiler]
         public static IEnumerable<CodeInstruction> TurnController_CanEndTurn_Transpiler(IEnumerable<CodeInstruction> instructions)
