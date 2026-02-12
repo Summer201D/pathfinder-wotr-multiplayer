@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 using WOTRMultiplayer.Entities;
+using WOTRMultiplayer.Entities.AreaEffects;
 using WOTRMultiplayer.Entities.Combat;
 using WOTRMultiplayer.Entities.Combat.Crusades;
 using WOTRMultiplayer.Entities.Units;
@@ -29,7 +30,7 @@ namespace WOTRMultiplayer.Abstractions.GameInteraction
 
         void DelayCombatTurn(string unitId, string targetUnitId);
 
-        Task UpdateCombatStateAsync(NetworkCombatState networkCombatState, bool requiresFullUpdate);
+        Task UpdateCombatStateAsync(NetworkCombatState networkCombatState, List<NetworkAreaEffect> areaEffects, bool requiresFullUpdate);
 
         void InitializeCrusadeArmyCombat();
 

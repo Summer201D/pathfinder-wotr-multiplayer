@@ -8,11 +8,13 @@ using Kingmaker.Utility;
 using Microsoft.Extensions.Logging;
 using WOTRMultiplayer.Abstractions;
 using WOTRMultiplayer.Abstractions.GameInteraction;
+using WOTRMultiplayer.Abstractions.GameInteraction.CombatLog;
 using WOTRMultiplayer.Abstractions.IO;
 using WOTRMultiplayer.Abstractions.Random;
 using WOTRMultiplayer.Abstractions.Settings;
 using WOTRMultiplayer.Entities;
 using WOTRMultiplayer.Entities.Area;
+using WOTRMultiplayer.Entities.AreaEffects;
 using WOTRMultiplayer.Entities.Combat;
 using WOTRMultiplayer.Entities.Combat.Crusades;
 using WOTRMultiplayer.Entities.Dialogs;
@@ -348,6 +350,28 @@ namespace WOTRMultiplayer.Services
             return false;
         }
 
+        public bool OnAreaEffectTriggered(NetworkAreaEffect areaEffect)
+        {
+            if (Game.Combat == null)
+            {
+                return true;
+            }
+
+            if (Game.Combat.TriggeredAreaEffects.Remove(areaEffect))
+            {
+                Logger.LogWarning("Area effect trigger has been allowed by host. Id={Id}, Name={Name}", areaEffect.Id, areaEffect.Name);
+                return true;
+            }
+
+            var canTrigger = Game.Combat.Turn != null;
+            if (!canTrigger)
+            {
+                Logger.LogWarning("Area effect trigger has been denied. Id={Id}, Name={Name}", areaEffect.Id, areaEffect.Name);
+            }
+
+            return canTrigger;
+        }
+
         public bool OnGlobalMapSelectLocation(NetworkGlobalMapLocation globalMapLocation)
         {
             var canSelectLocation = GlobalMapInteraction.IsAtLocation(globalMapLocation);
@@ -592,26 +616,34 @@ namespace WOTRMultiplayer.Services
         {
             Logger.LogInformation("Received {MessageType}. DiscrepantUnits={DiscrepantUnits}", nameof(NotifyCombatPreparationRequired), message.Discrepancy.Units);
 
-            SetCombatStage(NetworkCombatStage.Preparing);
-
-            var discrepancy = Mapper.Map<NetworkCombatUnitDiscrepancy>(message.Discrepancy);
-            var isFixed = await FixCombatUnitDiscrepancyAsync(discrepancy);
-            if (!isFixed)
+            try
             {
-                Logger.LogError("Discrepancy in combat start has not been fixed. DiscrepantUnits={DiscrepantUnits}", message.Discrepancy.Units);
-                return;
+                SetCombatStage(NetworkCombatStage.Preparing);
+
+                var discrepancy = Mapper.Map<NetworkCombatUnitDiscrepancy>(message.Discrepancy);
+                var isFixed = await FixCombatUnitDiscrepancyAsync(discrepancy);
+                if (!isFixed)
+                {
+                    Logger.LogError("Discrepancy in combat start has not been fixed. DiscrepantUnits={DiscrepantUnits}", message.Discrepancy.Units);
+                    return;
+                }
+
+                var units = CombatInteraction.GetUnitsInCombat();
+                var confirmation = new ClientCombatPreparationCompleted
+                {
+                    PlayerId = Game.LocalPlayerId,
+                    Units = Mapper.Map<List<Networking.Messages.Contracts.NetworkUnit>>(units)
+                };
+                Logger.LogInformation("Sending {MessageType}. PlayerId={PlayerId}, UnitsCount={UnitsCount}, Units={Units}", nameof(ClientCombatPreparationCompleted), confirmation.PlayerId, confirmation.Units.Count, confirmation.Units.Select(x => x.Id));
+                Send(confirmation);
+
+                SetCombatStage(NetworkCombatStage.Initialization);
             }
-
-            var units = CombatInteraction.GetUnitsInCombat();
-            var confirmation = new ClientCombatPreparationCompleted
+            catch (Exception ex)
             {
-                PlayerId = Game.LocalPlayerId,
-                Units = Mapper.Map<List<Networking.Messages.Contracts.NetworkUnit>>(units)
-            };
-            Logger.LogInformation("Sending {MessageType}. PlayerId={PlayerId}, UnitsCount={UnitsCount}, Units={Units}", nameof(ClientCombatPreparationCompleted), confirmation.PlayerId, confirmation.Units.Count, confirmation.Units.Select(x => x.Id));
-            Send(confirmation);
-
-            SetCombatStage(NetworkCombatStage.Initialization);
+                Logger.LogError(ex, "Error while preparing for the combat");
+                throw;
+            }
         }
 
         private void OnNotifyGlobalMapCrusadeArmyLeaderLevelingSkillSelected(long receivedFrom, NotifyGlobalMapCrusadeArmyLeaderLevelingSkillSelected message)
@@ -1285,12 +1317,13 @@ namespace WOTRMultiplayer.Services
             GameInteraction.MakeVendorDeal();
         }
 
-        private void OnNotifyInvalidCombatTurnStarted(long playerId, NotifyInvalidCombatTurnStarted started)
+        private void OnNotifyInvalidCombatTurnStarted(long playerId, NotifyInvalidCombatTurnStarted message)
         {
-            Logger.LogInformation("Received {MessageType}. UnitId={UnitId}", nameof(NotifyInvalidCombatTurnStarted), started.UnitId);
-            PlayerNotification.AddCombatText(WellKnownKeys.GameNotifications.Combat.ClientTurnOrderDesync.Key);
+            Logger.LogInformation("Received {MessageType}. UnitId={UnitId}", nameof(NotifyInvalidCombatTurnStarted), message.UnitId);
+            var characterName = GameInteraction.GetUnitCharacterName(message.UnitId);
+            PlayerNotification.AddCombatText(WellKnownKeys.GameNotifications.Combat.Turn.ClientOrderDesync.Key, CombatTextSeverity.Debug, new UnitEntityLog(message.UnitId));
             ResetCombatTurn();
-            CombatInteraction.StartTurnBasedCombatTurn(started.UnitId);
+            CombatInteraction.StartTurnBasedCombatTurn(message.UnitId);
         }
 
         private void OnNotifyRestStarted(long playerId, NotifyRestStarted started)
@@ -1355,16 +1388,19 @@ namespace WOTRMultiplayer.Services
 
         private async void OnNotifyCombatTurnSynchronizationRequired(long playerId, NotifyCombatTurnSynchronizationRequired message)
         {
-            Logger.LogInformation("Received {MessageType}. Units={Units}, TurnSeed={TurnSeed}", nameof(NotifyCombatTurnSynchronizationRequired), message.CombatState.Units.Count, message.Seed);
+            Logger.LogInformation("Received {MessageType}. Units={Units}, TurnSeed={TurnSeed}, TriggeredAreaEffects={TriggeredAreaEffects}", nameof(NotifyCombatTurnSynchronizationRequired), message.CombatState.Units.Count, message.TurnSeed, message.TriggeredAreaEffects);
 
             try
             {
                 await WaitWhileTrue(() => Game.Combat?.Turn == null, "Turn has not been initialized yet");
 
                 var combatState = Mapper.Map<NetworkCombatState>(message.CombatState);
-                await CombatInteraction.UpdateCombatStateAsync(combatState, false);
+                var areaEffects = Mapper.Map<List<NetworkAreaEffect>>(message.TriggeredAreaEffects);
+                Game.Combat.TriggeredAreaEffects.AddRange(areaEffects);
 
-                Game.Combat.Turn.Seed = message.Seed;
+                await CombatInteraction.UpdateCombatStateAsync(combatState, areaEffects, false);
+
+                Game.Combat.Turn.Seed = message.TurnSeed;
 
                 DiceRollStorage.Reset();
                 Logger.LogInformation("Dice roll storage has been reset at after syncing turn units");
@@ -1414,15 +1450,18 @@ namespace WOTRMultiplayer.Services
 
         private async void OnNotifyCombatInitializationRequired(long playerId, NotifyCombatInitializationRequired message)
         {
-            Logger.LogInformation("Received {MessageType}. Seed={Seed}, UnitsCount={UnitsCount}, Units={Units}", nameof(NotifyCombatInitializationRequired), message.Seed, message.State.Units.Count, message.State.Units.Select(x => x.Id));
+            Logger.LogInformation("Received {MessageType}. CombatSeed={CombatSeed}, UnitsCount={UnitsCount}, Units={Units}", nameof(NotifyCombatInitializationRequired), message.CombatSeed, message.State.Units.Count, message.State.Units.Select(x => x.Id));
 
             await WaitWhileTrue(() => Game.Combat == null, "Combat has not been started on client yet. Waiting until start");
 
-            Game.Combat.Seed = message.Seed;
+            Game.Combat.Seed = message.CombatSeed;
             Logger.LogInformation("Combat seed has been configured. Seed={Seed}", Game.Combat.Seed);
 
             var combatState = Mapper.Map<NetworkCombatState>(message.State);
-            await CombatInteraction.UpdateCombatStateAsync(combatState, true);
+            var areaEffects = Mapper.Map<List<NetworkAreaEffect>>(message.TriggeredAreaEffects);
+            Game.Combat.TriggeredAreaEffects.AddRange(areaEffects);
+
+            await CombatInteraction.UpdateCombatStateAsync(combatState, areaEffects, true);
 
             var confirmation = new ClientCombatInitializationCompleted();
             Logger.LogInformation("Sending {MessageType}", nameof(ClientCombatInitializationCompleted));

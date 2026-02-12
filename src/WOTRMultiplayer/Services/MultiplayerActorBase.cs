@@ -14,6 +14,7 @@ using Microsoft.Extensions.Logging;
 using UniRx;
 using WOTRMultiplayer.Abstractions;
 using WOTRMultiplayer.Abstractions.GameInteraction;
+using WOTRMultiplayer.Abstractions.GameInteraction.CombatLog;
 using WOTRMultiplayer.Abstractions.IO;
 using WOTRMultiplayer.Abstractions.Random;
 using WOTRMultiplayer.Abstractions.Settings;
@@ -219,8 +220,8 @@ namespace WOTRMultiplayer.Services
             {
                 AbilityUse = Mapper.Map<Networking.Messages.Contracts.NetworkAbilityUse>(abilityUse)
             };
-            Logger.LogInformation("Sending {MessageType}. CasterId={CasterId}, TargetUnitId={TargetUnitId}, TargetPoint={TargetPoint}, AbilityId={AbilityId}, SpellbookId={SpellbookId}, VectorPathCount={VectorPathCount}, MovementLimit={MovementLimit}",
-                nameof(NotifyAbilityUsed), message.AbilityUse.InitiatorUnitId, message.AbilityUse.Target?.UnitId, message.AbilityUse.Target?.Point, message.AbilityUse.Ability.Id, message.AbilityUse.Ability.SpellbookId, message.AbilityUse.VectorPath, message.AbilityUse.MovementLimit);
+            Logger.LogInformation("Sending {MessageType}. CasterId={CasterId}, TargetUnitId={TargetUnitId}, TargetPoint={TargetPoint}, AbilityId={AbilityId}, AbilityName={AbilityName}, SpellbookId={SpellbookId}, VectorPathCount={VectorPathCount}, MovementLimit={MovementLimit}",
+                nameof(NotifyAbilityUsed), message.AbilityUse.InitiatorUnitId, message.AbilityUse.Target?.UnitId, message.AbilityUse.Target?.Point, message.AbilityUse.Ability.Id, message.AbilityUse.Ability.Name, message.AbilityUse.Ability.SpellbookId, message.AbilityUse.VectorPath, message.AbilityUse.MovementLimit);
 
             Send(message);
         }
@@ -497,7 +498,7 @@ namespace WOTRMultiplayer.Services
         public void OnGameLoaded()
         {
             Logger.LogInformation("OnGameLoaded");
-            // Tutorial settings are save dependant, so it must be overriden if save was created without a mod
+            // Tutorial settings are save dependant, so it must be overridden if save was created without a mod
             var settings = new NetworkGameSettings { Tutorial = new NetworkTutorialSettings() };
             GameInteraction.ApplyGameSettings(settings);
         }
@@ -616,6 +617,7 @@ namespace WOTRMultiplayer.Services
 
                 UpdateConfirmedMidCombatUnits();
                 Game.Combat.AIActions.Clear();
+                PlayerNotification.AddCombatText(WellKnownKeys.GameNotifications.Combat.Turn.Started.Key, CombatTextSeverity.Common, new UnitEntityLog(unitId));
                 Logger.LogInformation("Turn start is allowed. UnitId={UnitId}, IsActingInSurpiseRound={IsActingInSurpiseRound}, TurnUnitId={TurnUnitId}, TurnSeed={TurnSeed}", unitId, actingInSurpriseRound, Game.Combat.Turn.UnitId, Game.Combat.Turn.Seed);
                 return true;
             }
@@ -631,6 +633,8 @@ namespace WOTRMultiplayer.Services
             {
                 Logger.LogInformation("Turn end is allowed. Round={Round}, TurnUnitId={TurnUnitId}, IsAI={IsAI}, UnitId={UnitId}", Game.Combat.Round, Game.Combat.Turn.UnitId, Game.Combat.Turn.IsAI, unitId);
                 ResetCombatTurn();
+                Game.Combat.TriggeredAreaEffects.Clear();
+                PlayerNotification.AddCombatText(WellKnownKeys.GameNotifications.Combat.Turn.Ended.Key, CombatTextSeverity.Common, new UnitEntityLog(unitId));
                 return true;
             }
 
@@ -1526,7 +1530,6 @@ namespace WOTRMultiplayer.Services
                 Send(message);
             }
 
-            var characterName = GameInteraction.GetUnitCharacterName(Game.Leveling.UnitId);
             var messageKey = Game.Leveling.Type switch
             {
                 NetworkLevelingType.MythicLeveling => WellKnownKeys.GameNotifications.Leveling.MythicLeveling.Completed.Key,
@@ -1537,7 +1540,7 @@ namespace WOTRMultiplayer.Services
 
             if (!string.IsNullOrEmpty(messageKey))
             {
-                PlayerNotification.AddCombatText(messageKey, characterName);
+                PlayerNotification.AddCombatText(messageKey, CombatTextSeverity.Common, new UnitEntityLog(Game.Leveling.UnitId));
             }
 
             Game.Leveling = null;
@@ -2948,7 +2951,7 @@ namespace WOTRMultiplayer.Services
             }
 
             GameInteraction.ReselectSelectedCharacters();
-            PlayerNotification.AddCombatText(WellKnownKeys.GameNotifications.Session.CharacterOwnerChanged.Key, networkCharacter.Owner.Name, networkCharacter.Name);
+            PlayerNotification.AddCombatText(WellKnownKeys.GameNotifications.Session.CharacterOwnerChanged.Key, CombatTextSeverity.Common, networkCharacter.Owner.Name, new UnitEntityLog(networkCharacter.UnitId));
 
             if (Game.Combat?.Turn != null)
             {
@@ -4012,8 +4015,8 @@ namespace WOTRMultiplayer.Services
 
         private void OnNotifyAbilityUsed(long receivedFrom, NotifyAbilityUsed message)
         {
-            Logger.LogInformation("Received {MessageType}. ReceivedFrom={ReceivedFrom}, CasterId={CasterId}, AbilityId={AbilityId}, TargetUnitId={TargetUnitId}, TargetPoint={TargetPoint}, MovementLimit={MovementLimit}",
-                nameof(NotifyAbilityUsed), receivedFrom, message.AbilityUse.InitiatorUnitId, message.AbilityUse.Ability.Id, message.AbilityUse.Target?.UnitId, message.AbilityUse.Target?.Point, message.AbilityUse.MovementLimit);
+            Logger.LogInformation("Received {MessageType}. ReceivedFrom={ReceivedFrom}, CasterId={CasterId}, AbilityId={AbilityId}, AbilityName={AbilityName}, TargetUnitId={TargetUnitId}, TargetPoint={TargetPoint}, MovementLimit={MovementLimit}",
+                nameof(NotifyAbilityUsed), receivedFrom, message.AbilityUse.InitiatorUnitId, message.AbilityUse.Ability.Id, message.AbilityUse.Ability.Name, message.AbilityUse.Target?.UnitId, message.AbilityUse.Target?.Point, message.AbilityUse.MovementLimit);
 
             var ability = Mapper.Map<NetworkAbilityUse>(message.AbilityUse);
             CombatInteraction.UseAbility(ability);

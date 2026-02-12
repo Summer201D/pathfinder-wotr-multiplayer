@@ -1,5 +1,6 @@
 ﻿using System.Collections.Concurrent;
 using System.Collections.Generic;
+using WOTRMultiplayer.Entities.AreaEffects;
 using WOTRMultiplayer.Entities.Units;
 
 namespace WOTRMultiplayer.Entities.Combat
@@ -36,5 +37,7 @@ namespace WOTRMultiplayer.Entities.Combat
         public HashSet<string> ConfirmedMidCombatUnits { get; set; } = [];
 
         public List<NetworkAIAction> AIActions { get; set; } = [];
+
+        public HashSet<NetworkAreaEffect> TriggeredAreaEffects { get; set; } = [];
     }
 }

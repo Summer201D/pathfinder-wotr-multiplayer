@@ -22,16 +22,20 @@ using Kingmaker.UnitLogic.Abilities;
 using Kingmaker.UnitLogic.Abilities.Components;
 using Kingmaker.UnitLogic.Commands;
 using Kingmaker.UnitLogic.Commands.Base;
+using Kingmaker.UnitLogic.Parts;
 using Kingmaker.Utility;
 using Microsoft.Extensions.Logging;
 using TurnBased.Controllers;
 using UniRx;
 using WOTRMultiplayer.Abstractions.GameInteraction;
+using WOTRMultiplayer.Abstractions.GameInteraction.CombatLog;
 using WOTRMultiplayer.Abstractions.Unity;
 using WOTRMultiplayer.Entities;
+using WOTRMultiplayer.Entities.AreaEffects;
 using WOTRMultiplayer.Entities.Combat;
 using WOTRMultiplayer.Entities.Combat.Crusades;
 using WOTRMultiplayer.Entities.Units;
+using WOTRMultiplayer.Entities.Units.Parts;
 using WOTRMultiplayer.Extensions;
 
 namespace WOTRMultiplayer.Services.GameInteraction
@@ -179,17 +183,19 @@ namespace WOTRMultiplayer.Services.GameInteraction
 
         public NetworkCombatState GetCombatState()
         {
+            var areaEffects = _gameStateLookupService.GetAreaEffects();
             var state = new NetworkCombatState
             {
                 RoundNumber = Game.Instance.TurnBasedCombatController.RoundNumber,
                 HasSurpriseRound = Game.Instance.TurnBasedCombatController.m_HasSurpriseRound,
-                Units = GetUnitsInCombat()
+                Units = GetUnitsInCombat(),
+                AreaEffects = _mapper.Map<List<NetworkAreaEffect>>(areaEffects)
             };
 
             return state;
         }
 
-        public Task UpdateCombatStateAsync(NetworkCombatState networkCombatState, bool requiresFullUpdate)
+        public Task UpdateCombatStateAsync(NetworkCombatState networkCombatState, List<NetworkAreaEffect> networkAreaEffects, bool requiresFullUpdate)
         {
             var taskCompletion = new TaskCompletionSource<bool>();
             _mainThreadAccessor.Post(() =>
@@ -213,6 +219,8 @@ namespace WOTRMultiplayer.Services.GameInteraction
                     }
 
                     UpdateCombatState(networkCombatState, requiresFullUpdate);
+
+                    TriggerAreaEffects(networkAreaEffects);
 
                     if (requiresExtraLog)
                     {
@@ -573,8 +581,14 @@ namespace WOTRMultiplayer.Services.GameInteraction
                         TurnBasedInfo = GetUnitTurnBasedInfo(combatUnit),
                         CombatState = GetUnitCombatState(combatUnit),
                         Descriptor = GetUnitDescriptor(combatUnit),
-                        BuffCollection = _buffInteractionService.GetUnitBuffs(combatUnit)
+                        BuffCollection = _buffInteractionService.GetUnitBuffs(combatUnit),
                     };
+
+                    var pitPart = combatUnit.Get<UnitPartInPit>();
+                    if (pitPart != null)
+                    {
+                        unit.UnitPartInPit = new NetworkUnitPartInPit { CurrentRoundSeconds = pitPart.CurrentRoundSeconds };
+                    }
 
                     units.Add(unit);
                 }
@@ -585,6 +599,62 @@ namespace WOTRMultiplayer.Services.GameInteraction
             {
                 _logger.LogError(ex, "Unable to get units in combat");
                 throw;
+            }
+        }
+
+        private void UpdateAreaEffects(List<NetworkAreaEffect> areaEffects)
+        {
+            _logger.LogInformation("Updating area effects. AreaEffects={AreaEffects}", areaEffects);
+            foreach (var areaEffect in areaEffects)
+            {
+                var localAreaEffect = _gameStateLookupService.GetAreaEffect(areaEffect);
+                if (localAreaEffect == null)
+                {
+                    _logger.LogWarning("Unable to find area effect to update. Id={Id}, Name={Name}", areaEffect.Id, areaEffect.Name);
+                    continue;
+                }
+
+                if (localAreaEffect.View == null)
+                {
+                    _logger.LogWarning("Skipping update for an area effect without view. Id={Id}", areaEffect.Id, areaEffect.Name);
+                    continue;
+                }
+
+                var units = areaEffect.UnitsInside
+                    .Select(x => new AreaEffectEntityData.UnitInfo
+                    {
+                        Reference = _gameStateLookupService.GetUnitEntity(x),
+                        InsideThisTick = true
+                    })
+                    .ToList();
+                localAreaEffect.m_UnitsInside = units;
+
+                var position = areaEffect.Position.ToUnityVector3();
+                localAreaEffect.View.transform.position = position;
+                localAreaEffect.m_Position = position;
+
+                localAreaEffect.UpdateViewAndUnits();
+                _logger.LogInformation("Area effect has been updated. Id={Id}, Name={Name}, Position={Position}, UnitsUnside={UnitsUnside}", localAreaEffect.UniqueId, localAreaEffect.Blueprint.name, localAreaEffect.Position, localAreaEffect.m_UnitsInside.Select(x => x.Reference.UniqueId));
+            }
+        }
+
+        private void TriggerAreaEffects(List<NetworkAreaEffect> triggeredAreaEffects)
+        {
+            _logger.LogInformation("Triggering area effects. AreaEffects={AreaEffects}", triggeredAreaEffects);
+
+            foreach (var triggered in triggeredAreaEffects)
+            {
+                var areaEffect = _gameStateLookupService.GetAreaEffect(triggered);
+                if (areaEffect == null)
+                {
+                    _playerNotificationService.AddCombatText(WellKnownKeys.GameNotifications.Combat.AreaEffects.Missing.Key, CombatTextSeverity.Debug, triggered.Name, triggered.Id);
+                    _logger.LogWarning("Unable to find area effect to trigger. Id={Id}", triggered.Id);
+                    continue;
+                }
+
+                areaEffect.Blueprint.HandleRound(areaEffect.m_Context, areaEffect);
+                _playerNotificationService.AddCombatText(WellKnownKeys.GameNotifications.Combat.AreaEffects.Triggered.Key, CombatTextSeverity.Debug, triggered.Name, triggered.Id);
+                _logger.LogInformation("Area effect has been triggered. Id={Id}, Name={Name}", areaEffect.UniqueId, areaEffect.Blueprint.name);
             }
         }
 
@@ -671,6 +741,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
                         continue;
                     }
 
+                    UpdateUnitParts(unit, networkUnit);
                     UpdateUnitPosition(unit, networkUnit);
                     UpdateUnitHealth(unit, networkUnit);
 
@@ -687,12 +758,31 @@ namespace WOTRMultiplayer.Services.GameInteraction
                 }
 
                 UpdateEngagements(unitsToUpdate);
+
+                UpdateAreaEffects(networkCombatState.AreaEffects);
+
                 _logger.LogInformation("Combat state has been updated. RoundNumber={RoundNumber}, UnitsCount={UnitsCount}, IsFullUpdate={IsFullUpdate}", networkCombatState.RoundNumber, networkCombatState.Units.Count, requiresFullUpdate);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Unable to update combat state. RoundNumber={RoundNumber}, UnitsCount={UnitsCount}, IsFullUpdate={IsFullUpdate}", networkCombatState.RoundNumber, networkCombatState.Units.Count, requiresFullUpdate);
                 throw;
+            }
+        }
+
+        private void UpdateUnitParts(UnitEntityData unit, NetworkUnit networkUnit)
+        {
+            if (networkUnit.UnitPartInPit == null)
+            {
+                return;
+            }
+
+            var unitPart = unit.Get<UnitPartInPit>();
+            if (unitPart != null)
+            {
+                unitPart.CurrentRoundSeconds = networkUnit.UnitPartInPit.CurrentRoundSeconds;
+                unitPart.State = networkUnit.UnitPartInPit.State;
+                _logger.LogInformation("UnitPartInPit has been updated. UnitId={UnitId}, State={State}, CurrentRoundSeconds={CurrentRoundSeconds}", unit.UniqueId, unitPart.State, unitPart.CurrentRoundSeconds);
             }
         }
 

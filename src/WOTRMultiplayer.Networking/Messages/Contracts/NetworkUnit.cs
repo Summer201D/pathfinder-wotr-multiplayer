@@ -26,6 +26,9 @@ namespace WOTRMultiplayer.Networking.Messages.Contracts
         [ProtoMember(7)]
         public NetworkUnitBuffCollection BuffCollection { get; set; }
 
+        [ProtoMember(8)]
+        public NetworkUnitPartInPit UnitPartInPit { get; set; }
+
         public override string ToString()
         {
             return Id?.ToString();

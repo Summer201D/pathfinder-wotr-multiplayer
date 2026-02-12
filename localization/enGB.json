@@ -215,15 +215,15 @@
             },
             "leveling": {
                 "mythicLeveling": {
-                    "completed": "{0}'s Mythic level has been increased",
-                    "terminated": "{0}'s Mythic leveling has been terminated"
+                    "completed": "{0} - mythic level has been increased",
+                    "terminated": "{0} - mythic leveling has been terminated"
                 },
                 "mercenary": {
                     "completed": "Mercenary has been hired",
                     "terminated": "Mercenary hiring has been terminated"
                 },
-                "completed": "{0}'s level has been increased",
-                "terminated": "{0}'s leveling has been terminated",
+                "completed": "{0} - level has been increased",
+                "terminated": "{0} - leveling has been terminated",
                 "classMismatch": "Selected {0} class is missing.\nMake sure game content (DLCs/mods) is the same",
                 "archetypeMismatch": "Selected {0} archetype is missing.\nMake sure game content (DLCs/mods) is the same",
                 "featureMismatch": "Selected {0} feature is missing.\nMake sure game content (DLCs/mods) is the same"
@@ -235,8 +235,8 @@
             },
             "spellBook": {
                 "noSpellSlotPermission": "Changing spells is restricted to character owner only",
-                "memorizedSpell": "{0} has been memorized by {1}",
-                "forgottenSpell": "{0} has been forgotten by {1}"
+                "memorizedSpell": "'{0}' has been memorized by {1}",
+                "forgottenSpell": "'{0}' has been forgotten by {1}"
             },
             "forcedPause": {
                 "areaLoading": "Please wait for other players to finish loading the area",
@@ -246,15 +246,23 @@
                 "isLifting": "Pause is about to be lifted"
             },
             "combat": {
-                "clientTurnOrderDesync": "Turn order has been overriden by Host due to detected desync",
-                "hostTurnOrderDesync": "Player {0} is trying to start different character turn, forcing to start the same one",
                 "unitAutokilled": "Auto-killing unit '{0}' ({1}) as it's been killed at {2}",
                 "forcedToStart": "Combat has been forced to start by {0}",
                 "buffs": {
                     "removedBuffs": "Unit '{0}' ({1}) lost the following buffs: {2}",
                     "addedBuffs": "Unit '{0}' ({1}) gained the following buffs: {2}"
                 },
-                "desyncedCombatUnits": "Some units did not spawn locally, but did spawn for other players. This causes combat and turn order to desync, preventing progression.\nPlease load your last save"
+                "desyncedCombatUnits": "Some units did not spawn locally, but did spawn for other players. This causes combat and turn order to desync, preventing progression.\nPlease load your last save",
+                "turn": {
+                    "started": "Turn Started: {0}",
+                    "ended": "Turn Ended: {0}",
+                    "hostOrderDesync": "Next turn for player {0} has been overridden",
+                    "clientOrderDesync": "Next unit turn has been overridden to '{0}'"
+                },
+                "areaEffects": {
+                    "triggered": "Area effect '{0}' ({1}) has been triggered",
+                    "missing": "Missing area effect '{0}' ({1}) was not triggered"
+                }
             },
             "tacticalCombat": {
                 "disabledAutoCombat": "Auto combat is disabled within multiplayer session"

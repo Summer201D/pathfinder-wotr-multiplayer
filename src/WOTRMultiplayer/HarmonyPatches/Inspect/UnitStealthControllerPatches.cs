@@ -64,7 +64,7 @@ namespace WOTRMultiplayer.HarmonyPatches.Inspect
             {
                 // rule resets CachedPerceptionRoll to 0 if it was success, so I see two options here
                 // 1. use base.D20 to get roll -
-                //    it doesn't look very stable, some code paths don't use overriden RollD20 to 'pre-roll' it based on CachedPerceptionRoll
+                //    it doesn't look very stable, some code paths don't use overridden RollD20 to 'pre-roll' it based on CachedPerceptionRoll
                 //    also I'm lacking understanding if those code paths are actually used in this RuleCachedPerceptionCheck case
                 // 2. force success by using a big number as a roll (e.g. 999)
                 //    looks most promising option as actual value doesn't not really matter if it was a success,

@@ -2,6 +2,7 @@
 using WOTRMultiplayer.Entities;
 using WOTRMultiplayer.Entities.ActionBar;
 using WOTRMultiplayer.Entities.Area;
+using WOTRMultiplayer.Entities.AreaEffects;
 using WOTRMultiplayer.Entities.Combat;
 using WOTRMultiplayer.Entities.Combat.Crusades;
 using WOTRMultiplayer.Entities.Content;
@@ -20,6 +21,7 @@ using WOTRMultiplayer.Entities.Rolls.Claiming.Values;
 using WOTRMultiplayer.Entities.Settings;
 using WOTRMultiplayer.Entities.Spells;
 using WOTRMultiplayer.Entities.Units;
+using WOTRMultiplayer.Entities.Units.Parts;
 using WOTRMultiplayer.Entities.Vendor;
 
 namespace WOTRMultiplayer.Config.Mapping
@@ -333,6 +335,12 @@ namespace WOTRMultiplayer.Config.Mapping
                 .ReverseMap();
 
             CreateMap<NetworkAbilityParams, Networking.Messages.Contracts.NetworkAbilityParams>()
+                .ReverseMap();
+
+            CreateMap<NetworkAreaEffect, Networking.Messages.Contracts.NetworkAreaEffect>()
+                .ReverseMap();
+
+            CreateMap<NetworkUnitPartInPit, Networking.Messages.Contracts.NetworkUnitPartInPit>()
                 .ReverseMap();
         }
     }

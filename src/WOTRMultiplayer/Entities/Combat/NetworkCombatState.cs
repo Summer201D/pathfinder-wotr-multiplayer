@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using WOTRMultiplayer.Entities.AreaEffects;
 using WOTRMultiplayer.Entities.Units;
 
 namespace WOTRMultiplayer.Entities.Combat
@@ -10,5 +11,7 @@ namespace WOTRMultiplayer.Entities.Combat
         public bool HasSurpriseRound { get; set; }
 
         public List<NetworkUnit> Units { get; set; } = [];
+
+        public List<NetworkAreaEffect> AreaEffects { get; set; } = [];
     }
 }

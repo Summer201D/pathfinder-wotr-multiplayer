@@ -83,7 +83,7 @@ namespace WOTRMultiplayer.HarmonyPatches.Combat.Crusades
             }
 
             var multiplayerSeed = Main.Multiplayer.GetCrusadeArmyCombatAreaSeed() ?? seed;
-            Main.GetLogger<TacticalCombatControllerPatches>().LogInformation("Crusade Army Combat seed has been overriden. OldValue={OldValue}, NewValue={NewValue}", seed, multiplayerSeed);
+            Main.GetLogger<TacticalCombatControllerPatches>().LogInformation("Crusade Army Combat seed has been overridden. OldValue={OldValue}, NewValue={NewValue}", seed, multiplayerSeed);
             data.Seed = multiplayerSeed;
         }
     }

@@ -1,11 +1,14 @@
 ﻿using System;
+using System.Linq;
 using AutoMapper;
+using Kingmaker.EntitySystem.Entities;
 using Kingmaker.UnitLogic;
 using Kingmaker.UnitLogic.Abilities;
 using Kingmaker.UnitLogic.Buffs;
 using Kingmaker.UnitLogic.Parts;
 using Kingmaker.Utility;
 using WOTRMultiplayer.Entities;
+using WOTRMultiplayer.Entities.AreaEffects;
 using WOTRMultiplayer.Entities.Combat;
 using WOTRMultiplayer.Entities.Spells;
 using WOTRMultiplayer.Entities.Units;
@@ -39,6 +42,27 @@ namespace WOTRMultiplayer.Config.Mapping
 
             CreateMap<UnitPartNegativeLevels.Data, NetworkUnitNegativeLevelsData>().ConstructUsing(Create)
                 .ForAllMembers(x => x.Ignore());
+
+            CreateMap<AreaEffectEntityData, NetworkAreaEffect>().ConstructUsing(x => Create(x))
+                .ForAllMembers(x => x.Ignore());
+        }
+
+        private NetworkAreaEffect Create(AreaEffectEntityData areaEffectEntityData)
+        {
+            if (areaEffectEntityData == null)
+            {
+                return null;
+            }
+
+            var areaEffect = new NetworkAreaEffect
+            {
+                Id = areaEffectEntityData.UniqueId,
+                Name = areaEffectEntityData.Blueprint.name,
+                Position = areaEffectEntityData.m_Position.ToNetworkVector3(),
+                UnitsInside = [.. areaEffectEntityData.m_UnitsInside.Select(x => x.Reference.UniqueId)]
+            };
+
+            return areaEffect;
         }
 
         private NetworkUnitNegativeLevelsData Create(UnitPartNegativeLevels.Data negativeLevels, ResolutionContext context)

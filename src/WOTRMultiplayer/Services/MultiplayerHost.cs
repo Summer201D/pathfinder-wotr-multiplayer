@@ -8,11 +8,13 @@ using Kingmaker.Utility;
 using Microsoft.Extensions.Logging;
 using WOTRMultiplayer.Abstractions;
 using WOTRMultiplayer.Abstractions.GameInteraction;
+using WOTRMultiplayer.Abstractions.GameInteraction.CombatLog;
 using WOTRMultiplayer.Abstractions.IO;
 using WOTRMultiplayer.Abstractions.Random;
 using WOTRMultiplayer.Abstractions.Settings;
 using WOTRMultiplayer.Entities;
 using WOTRMultiplayer.Entities.Area;
+using WOTRMultiplayer.Entities.AreaEffects;
 using WOTRMultiplayer.Entities.Combat;
 using WOTRMultiplayer.Entities.Combat.Crusades;
 using WOTRMultiplayer.Entities.Content;
@@ -402,10 +404,12 @@ namespace WOTRMultiplayer.Services
                         var message = new NotifyCombatInitializationRequired
                         {
                             State = Mapper.Map<Networking.Messages.Contracts.NetworkCombatState>(combatState),
-                            Seed = Game.Combat.Seed
+                            CombatSeed = Game.Combat.Seed,
+                            TriggeredAreaEffects = Mapper.Map<List<Networking.Messages.Contracts.NetworkAreaEffect>>(Game.Combat.TriggeredAreaEffects)
                         };
-                        Logger.LogInformation("Sending {MessageType}. Seed={Seed}, RoundNumber={RoundNumber}, HasSurprisingRound={HasSurprisingRound}, UnitsInCombat={UnitsInCombat}",
-                            nameof(NotifyCombatInitializationRequired), message.Seed, message.State.RoundNumber, message.State.HasSurpriseRound, message.State.Units.Count);
+                        Game.Combat.TriggeredAreaEffects.Clear();
+                        Logger.LogInformation("Sending {MessageType}. CombatSeed={CombatSeed}, RoundNumber={RoundNumber}, HasSurprisingRound={HasSurprisingRound}, UnitsInCombat={UnitsInCombat}, TriggeredAreaEffects={TriggeredAreaEffects}",
+                            nameof(NotifyCombatInitializationRequired), message.CombatSeed, message.State.RoundNumber, message.State.HasSurpriseRound, message.State.Units.Count);
                         Send(message);
 
                         Game.Combat.IsInitialized = true;
@@ -1313,6 +1317,18 @@ namespace WOTRMultiplayer.Services
             Send(message);
         }
 
+        public bool OnAreaEffectTriggered(NetworkAreaEffect areaEffect)
+        {
+            if (Game.Combat != null && Game.Combat.Turn == null)
+            {
+                Game.Combat.TriggeredAreaEffects.Add(areaEffect);
+                Logger.LogWarning("Area effect has been triggered in combat mid turn. Id={Id}, Name={Name}", areaEffect.Id, areaEffect.Name);
+                PlayerNotification.AddCombatText(WellKnownKeys.GameNotifications.Combat.AreaEffects.Triggered.Key, Abstractions.GameInteraction.CombatLog.CombatTextSeverity.Debug, areaEffect.Name, areaEffect.Id);
+            }
+
+            return true;
+        }
+
         protected override bool OnToggleOffPause(out bool showReason)
         {
             showReason = true;
@@ -1359,7 +1375,7 @@ namespace WOTRMultiplayer.Services
             TryStartTurn();
         }
 
-        protected void TryStartTurn()
+        private void TryStartTurn()
         {
             try
             {
@@ -1387,7 +1403,12 @@ namespace WOTRMultiplayer.Services
                         foreach (var playerId in players)
                         {
                             var player = GetPlayer(playerId);
-                            PlayerNotification.AddCombatText(WellKnownKeys.GameNotifications.Combat.HostTurnOrderDesync.Key, player?.Name);
+                            if (player == null)
+                            {
+                                continue;
+                            }
+
+                            PlayerNotification.AddCombatText(WellKnownKeys.GameNotifications.Combat.Turn.HostOrderDesync.Key, CombatTextSeverity.Debug, player.Name);
 
                             var desyncedTurnStartMessage = new NotifyInvalidCombatTurnStarted
                             {
@@ -1416,9 +1437,12 @@ namespace WOTRMultiplayer.Services
 
                         var syncMessage = new NotifyCombatTurnSynchronizationRequired
                         {
-                            Seed = Game.Combat.Turn.Seed,
-                            CombatState = Mapper.Map<Networking.Messages.Contracts.NetworkCombatState>(combatState)
+                            TurnSeed = Game.Combat.Turn.Seed,
+                            CombatState = Mapper.Map<Networking.Messages.Contracts.NetworkCombatState>(combatState),
+                            TriggeredAreaEffects = Mapper.Map<List<Networking.Messages.Contracts.NetworkAreaEffect>>(Game.Combat.TriggeredAreaEffects)
                         };
+                        Game.Combat.TriggeredAreaEffects.Clear();
+                        Logger.LogInformation("Sending {MessageType}. TurnSeed={TurnSeed}, TriggeredAreaEffects={TriggeredAreaEffects}", syncMessage.TurnSeed, syncMessage.TriggeredAreaEffects);
                         Send(syncMessage);
                     }
 

@@ -12,7 +12,7 @@ namespace WOTRMultiplayer.HarmonyPatches.Rolls
     public class RuleDispelMagicPatches
     {
         /// <summary>
-        /// RuleDispelMagic.CheckType.None => this.CheckRoll = Rulebook.Trigger<RuleRollD20>(ruleRollD); is kept intact since roll is overriden by 20 anyway
+        /// RuleDispelMagic.CheckType.None => this.CheckRoll = Rulebook.Trigger<RuleRollD20>(ruleRollD); is kept intact since roll is overridden by 20 anyway
         /// </summary>
         /// <param name="instructions"></param>
         /// <returns></returns>

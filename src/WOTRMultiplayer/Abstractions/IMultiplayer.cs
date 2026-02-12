@@ -6,6 +6,7 @@ using WOTRMultiplayer.Abstractions.UI;
 using WOTRMultiplayer.Entities;
 using WOTRMultiplayer.Entities.ActionBar;
 using WOTRMultiplayer.Entities.Area;
+using WOTRMultiplayer.Entities.AreaEffects;
 using WOTRMultiplayer.Entities.Combat;
 using WOTRMultiplayer.Entities.Combat.Crusades;
 using WOTRMultiplayer.Entities.Dialogs;
@@ -489,5 +490,7 @@ namespace WOTRMultiplayer.Abstractions
         void OnUnitAutoUseAbilityChanged(NetworkAutoUseAbility networkAutoUseAbility);
 
         void OnCopyInventoryItem(NetworkItemCopy itemCopy);
+
+        bool OnAreaEffectTriggered(NetworkAreaEffect areaEffect);
     }
 }

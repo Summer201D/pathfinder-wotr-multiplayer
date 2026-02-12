@@ -14,6 +14,7 @@ using WOTRMultiplayer.Abstractions.UI.Windows;
 using WOTRMultiplayer.Entities;
 using WOTRMultiplayer.Entities.ActionBar;
 using WOTRMultiplayer.Entities.Area;
+using WOTRMultiplayer.Entities.AreaEffects;
 using WOTRMultiplayer.Entities.Combat;
 using WOTRMultiplayer.Entities.Combat.Crusades;
 using WOTRMultiplayer.Entities.Dialogs;
@@ -4051,6 +4052,25 @@ namespace WOTRMultiplayer.Services
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error while copying inventory item. UnitId={UnitId}, ItemName={ItemName}", itemCopy.UnitId, itemCopy.Item.Name);
+                throw;
+            }
+        }
+
+        public bool OnAreaEffectTriggered(NetworkAreaEffect areaEffect)
+        {
+            try
+            {
+                if (_multiplayerActorAccessor.Current == null)
+                {
+                    return true;
+                }
+
+                var canTrigger = _multiplayerActorAccessor.Current.OnAreaEffectTriggered(areaEffect);
+                return canTrigger;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while triggering area effect. Id={Id}", areaEffect.Id);
                 throw;
             }
         }

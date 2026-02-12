@@ -59,6 +59,8 @@ using UniRx;
 using UniRx.Triggers;
 using UnityModManagerNet;
 using WOTRMultiplayer.Abstractions.GameInteraction;
+using WOTRMultiplayer.Abstractions.GameInteraction.CombatLog;
+using WOTRMultiplayer.Abstractions.GameInteraction.CombatLog.Tooltips;
 using WOTRMultiplayer.Abstractions.Unity;
 using WOTRMultiplayer.Entities;
 using WOTRMultiplayer.Entities.ActionBar;
@@ -1664,7 +1666,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
                     return;
                 }
 
-                _playerNotificationService.AddCombatText(WellKnownKeys.GameNotifications.SpellBook.ForgottenSpell.Key, spellSlot.SpellShell?.Name, unit.CharacterName);
+                _playerNotificationService.AddCombatText(WellKnownKeys.GameNotifications.SpellBook.ForgottenSpell.Key, CombatTextSeverity.Common, new AbilityTooltipLog(spellSlot.SpellShell), spellSlot.SpellShell.Name, new UnitEntityLog(unit.UniqueId));
                 spellbook.ForgetMemorized(spellSlot);
                 RefreshSpellbookUI();
             });
@@ -1691,7 +1693,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
                 var spellSlot = _gameStateLookupService.GetSpellSlot(spellbook, networkSpellSlot, networkAbility.SpellLevel);
                 var spell = _gameStateLookupService.GetKnownSpell(spellbook, networkAbility);
                 spellbook.Memorize(spell, spellSlot);
-                _playerNotificationService.AddCombatText(WellKnownKeys.GameNotifications.SpellBook.MemorizedSpell.Key, spell.Name, unit.CharacterName);
+                _playerNotificationService.AddCombatText(WellKnownKeys.GameNotifications.SpellBook.MemorizedSpell.Key, CombatTextSeverity.Common, new AbilityTooltipLog(spell), spell.Name, new UnitEntityLog(unit.UniqueId));
                 RefreshSpellbookUI();
             });
         }

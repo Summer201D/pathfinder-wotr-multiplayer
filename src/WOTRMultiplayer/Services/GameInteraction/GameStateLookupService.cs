@@ -12,6 +12,7 @@ using Kingmaker.View.MapObjects;
 using Microsoft.Extensions.Logging;
 using WOTRMultiplayer.Abstractions.GameInteraction;
 using WOTRMultiplayer.Entities;
+using WOTRMultiplayer.Entities.AreaEffects;
 using WOTRMultiplayer.Entities.Combat;
 using WOTRMultiplayer.Entities.GlobalMap;
 using WOTRMultiplayer.Entities.Spells;
@@ -165,6 +166,17 @@ namespace WOTRMultiplayer.Services.GameInteraction
         public AbilityData GetKnownSpell(Spellbook spellbook, NetworkAbility ability)
         {
             return GetKnownSpell(spellbook, ability.Id, ability.BlueprintId, ability.SpellLevel, ability.Metamagic);
+        }
+
+        public List<AreaEffectEntityData> GetAreaEffects()
+        {
+            return [.. Game.Instance.State.AreaEffects];
+        }
+
+        public AreaEffectEntityData GetAreaEffect(NetworkAreaEffect networkAreaEffect)
+        {
+            var areaEffect = Game.Instance.State.AreaEffects.FirstOrDefault(a => string.Equals(a.UniqueId, networkAreaEffect.Id, StringComparison.OrdinalIgnoreCase));
+            return areaEffect;
         }
 
         private AbilityData GetMemorizedSpell(Spellbook spellbook, NetworkAbility ability)

@@ -90,7 +90,7 @@ namespace WOTRMultiplayer.UnitTests.Services.Localization
                                 ""settings"": {
                                     ""general"": {
                                         ""playerName"": {
-                                            ""description"": ""should be overriden"",
+                                            ""description"": ""should be overridden"",
                                         }
                                     }
                                 }
@@ -100,7 +100,7 @@ namespace WOTRMultiplayer.UnitTests.Services.Localization
 
             var expectedKeys = new List<KeyValuePair<string, string>>()
             {
-               new("wotrmultiplayer.settings.general.playerName.description", "should be overriden"),
+               new("wotrmultiplayer.settings.general.playerName.description", "should be overridden"),
                new("wotrmultiplayer.settings.general.playerName.tooltip", "tooltip tooltip"),
             };
 

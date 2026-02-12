@@ -1,4 +1,6 @@
 ﻿using Kingmaker.RuleSystem;
+using WOTRMultiplayer.Abstractions.GameInteraction.CombatLog;
+using WOTRMultiplayer.Abstractions.GameInteraction.CombatLog.Tooltips;
 
 namespace WOTRMultiplayer.Abstractions.GameInteraction
 {
@@ -8,7 +10,9 @@ namespace WOTRMultiplayer.Abstractions.GameInteraction
 
         void ShowWarningNotification(string messageKey, bool addToLog = true, params object[] args);
 
-        void AddCombatText(string messageKey, params object[] args);
+        void AddCombatText(string messageKey, CombatTextSeverity combatTextSeverity, params object[] args);
+
+        void AddCombatText(string messageKey, CombatTextSeverity combatTextSeverity, AbilityTooltipLog abilityTooltipLog, params object[] args);
 
         void AddCombatText(RulebookEvent rulebookEvent);
     }

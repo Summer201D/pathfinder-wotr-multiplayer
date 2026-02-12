@@ -1,4 +1,5 @@
-﻿using ProtoBuf;
+﻿using System.Collections.Generic;
+using ProtoBuf;
 using WOTRMultiplayer.Networking.Messages.Contracts;
 
 namespace WOTRMultiplayer.Networking.Messages.Game
@@ -11,6 +12,9 @@ namespace WOTRMultiplayer.Networking.Messages.Game
         public NetworkCombatState State { get; set; }
 
         [ProtoMember(2)]
-        public int Seed { get; set; }
+        public int CombatSeed { get; set; }
+
+        [ProtoMember(3)]
+        public List<NetworkAreaEffect> TriggeredAreaEffects { get; set; } = [];
     }
 }

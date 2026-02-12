@@ -1,4 +1,6 @@
-﻿namespace WOTRMultiplayer.Entities.Units
+﻿using WOTRMultiplayer.Entities.Units.Parts;
+
+namespace WOTRMultiplayer.Entities.Units
 {
     public class NetworkUnit
     {
@@ -15,6 +17,8 @@
         public NetworkUnitDescriptor Descriptor { get; set; }
 
         public NetworkUnitBuffCollection BuffCollection { get; set; }
+
+        public NetworkUnitPartInPit UnitPartInPit { get; set; }
 
         public override bool Equals(object obj)
         {

@@ -2,6 +2,7 @@
 using System.Threading.Tasks;
 using WOTRMultiplayer.Abstractions.GameInteraction;
 using WOTRMultiplayer.Entities;
+using WOTRMultiplayer.Entities.AreaEffects;
 using WOTRMultiplayer.Entities.Combat;
 using WOTRMultiplayer.Entities.Combat.Crusades;
 using WOTRMultiplayer.Entities.Units;
@@ -30,11 +31,6 @@ namespace WOTRMultiplayer.Playground.Core.Dummies
 
         public void StartTurnBasedCombatTurn(string unitId)
         {
-        }
-
-        public Task UpdateCombatStateAsync(NetworkCombatState networkCombatState, bool requiresFullUpdate)
-        {
-            return Task.CompletedTask;
         }
 
         public void InitializeCrusadeArmyCombat()
@@ -124,6 +120,11 @@ namespace WOTRMultiplayer.Playground.Core.Dummies
         public bool IsInCombat(string unitId)
         {
             return false;
+        }
+
+        public Task UpdateCombatStateAsync(NetworkCombatState networkCombatState, List<NetworkAreaEffect> areaEffects, bool requiresFullUpdate)
+        {
+            return Task.CompletedTask;
         }
     }
 }

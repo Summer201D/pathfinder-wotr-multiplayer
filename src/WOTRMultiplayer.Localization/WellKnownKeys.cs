@@ -964,18 +964,6 @@ public static class WellKnownKeys
         [Description("combat")]
         public static class Combat
         {
-            [Description("clientTurnOrderDesync")]
-            public static class ClientTurnOrderDesync
-            {
-                public static string Key { get; set; }
-            }
-
-            [Description("hostTurnOrderDesync")]
-            public static class HostTurnOrderDesync
-            {
-                public static string Key { get; set; }
-            }
-
             [Description("unitAutokilled")]
             public static class UnitAutokilled
             {
@@ -1008,6 +996,50 @@ public static class WellKnownKeys
             public static class DesyncedCombatUnits
             {
                 public static string Key { get; set; }
+            }
+
+            [Description("turn")]
+            public static class Turn
+            {
+                [Description("started")]
+                public static class Started
+                {
+                    public static string Key { get; set; }
+                }
+
+                [Description("ended")]
+                public static class Ended
+                {
+                    public static string Key { get; set; }
+                }
+
+                [Description("hostOrderDesync")]
+                public static class HostOrderDesync
+                {
+                    public static string Key { get; set; }
+                }
+
+                [Description("clientOrderDesync")]
+                public static class ClientOrderDesync
+                {
+                    public static string Key { get; set; }
+                }
+            }
+
+            [Description("areaEffects")]
+            public static class AreaEffects
+            {
+                [Description("triggered")]
+                public static class Triggered
+                {
+                    public static string Key { get; set; }
+                }
+
+                [Description("missing")]
+                public static class Missing
+                {
+                    public static string Key { get; set; }
+                }
             }
         }
 

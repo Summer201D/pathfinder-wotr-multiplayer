@@ -105,7 +105,7 @@ namespace WOTRMultiplayer.Services.PubSub
             OnCampingUnitsRoleChanged(Game.Instance.Player.Camping);
         }
 
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0031:Use null propagation", Justification = "UnitReference is a struct, but == operator is overriden within UnitReference")]
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0031:Use null propagation", Justification = "UnitReference is a struct, but == operator is overridden within UnitReference")]
         private static void OnCampingUnitsRoleChanged(CampingState state)
         {
             var roles = state.CurrentCampingRoles.Select(x => new NetworkCampingRole
