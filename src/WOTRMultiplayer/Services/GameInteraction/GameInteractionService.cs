@@ -1746,7 +1746,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
                     }
 
                     _uiAccessor.NewGamePCView.ViewModel.OnClose();
-                    _logger.LogError("New game sequence has been terminted");
+                    _logger.LogInformation("New game sequence has been terminated");
                 }
                 catch (Exception ex)
                 {

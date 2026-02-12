@@ -813,7 +813,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
             var turn = Game.Instance.TurnBasedCombatController.CurrentTurn;
             if (turn != null)
             {
-                turn.m_AttackMode = command.IsSingleAttack ? TurnBased.Controllers.TurnController.AttackMode.SingleAttack : TurnBased.Controllers.TurnController.AttackMode.FullAttack;
+                turn.m_AttackMode = command.ForceFullAttack ? TurnController.AttackMode.FullAttack : TurnController.AttackMode.SingleAttack;
             }
 
             SetCommandPath(networkUnitAttack.VectorPath, command);

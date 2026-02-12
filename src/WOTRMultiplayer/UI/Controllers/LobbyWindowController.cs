@@ -162,11 +162,6 @@ namespace WOTRMultiplayer.UI.Controllers
         {
             _mainThreadAccessor.Post(() =>
             {
-                if (_activeOwner != LobbyWindowOwner.EscMenu)
-                {
-                    return;
-                }
-
                 var characterContainer = FindCharacterContainer(character);
                 if (characterContainer == null)
                 {
