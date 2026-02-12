@@ -208,8 +208,10 @@ namespace WOTRMultiplayer.Services
             return true;
         }
 
-        public void OnAreaLoadingComplete()
+        public override void OnAreaLoadingComplete()
         {
+            base.OnAreaLoadingComplete();
+
             var areaSeed = CreateRandomSeed();
             SetAreaSeed(areaSeed);
 

@@ -119,8 +119,10 @@ namespace WOTRMultiplayer.Services
             _networkClient?.Reset();
         }
 
-        public void OnAreaLoadingComplete()
+        public override void OnAreaLoadingComplete()
         {
+            base.OnAreaLoadingComplete();
+
             var message = new ClientAreaLoaded();
             Logger.LogInformation("Sending {MessageType}", nameof(ClientAreaLoaded));
             Send(message);

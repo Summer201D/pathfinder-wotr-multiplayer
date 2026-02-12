@@ -426,6 +426,14 @@ namespace WOTRMultiplayer.Services
             Send(message);
         }
 
+        public virtual void OnAreaLoadingComplete()
+        {
+            if (Game.ForcedPause != null)
+            {
+                Game.ForcedPause.ReadyPlayers.Add(Game.LocalPlayerId);
+            }
+        }
+
         public void OnAreaScenesLoaded()
         {
             Game.CurrentArea = GameInteraction.GetCurrentArea();
@@ -441,7 +449,6 @@ namespace WOTRMultiplayer.Services
             lock (ActionLock)
             {
                 EnsureForcePaused(NetworkForcedPauseReason.AreaLoading);
-                Game.ForcedPause.ReadyPlayers.Add(Game.LocalPlayerId);
                 GameInteraction.SetPause(true);
             }
 
