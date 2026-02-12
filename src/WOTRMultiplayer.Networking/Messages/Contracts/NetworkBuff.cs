@@ -34,6 +34,12 @@ namespace WOTRMultiplayer.Networking.Messages.Contracts
         public int Rank { get; set; }
 
         [ProtoMember(10)]
-        public NetworkAbilityParams AbilityParams { get; set; }
+        public string SourceAbilityCasterId { get; set; }
+
+        [ProtoMember(11)]
+        public NetworkAbility SourceAbility { get; set; }
+
+        [ProtoMember(12)]
+        public NetworkAbilityParams SourceAbilityParams { get; set; }
     }
 }

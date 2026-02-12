@@ -10,9 +10,11 @@ using Kingmaker.EntitySystem.Entities;
 using Kingmaker.UnitLogic.Abilities;
 using Kingmaker.UnitLogic.Buffs;
 using Kingmaker.UnitLogic.Buffs.Blueprints;
+using Kingmaker.UnitLogic.Mechanics;
 using Kingmaker.UnitLogic.Parts;
 using Microsoft.Extensions.Logging;
 using WOTRMultiplayer.Abstractions.GameInteraction;
+using WOTRMultiplayer.Abstractions.GameInteraction.CombatLog;
 using WOTRMultiplayer.Config.Mapping;
 using WOTRMultiplayer.Entities.Units;
 using WOTRMultiplayer.Extensions;
@@ -86,7 +88,8 @@ namespace WOTRMultiplayer.Services.GameInteraction
             }
 
             RemoveUnitBuffs(unit, localUnitBuffs);
-            CreateUnitBuffs(unit, remoteUnitBuffs);
+
+            CreateUnitBuffs(unit, remoteUnitBuffs, buffBaseTime);
 
             UpdateNegativeLevels(unit, unitBuffCollection.NegativeLevels);
 
@@ -103,14 +106,14 @@ namespace WOTRMultiplayer.Services.GameInteraction
             }
         }
 
-        private void CreateUnitBuffs(UnitEntityData unit, List<NetworkBuff> remoteUnitBuffs)
+        private void CreateUnitBuffs(UnitEntityData unit, List<NetworkBuff> remoteUnitBuffs, TimeSpan buffBaseTime)
         {
             if (remoteUnitBuffs.Count == 0)
             {
                 return;
             }
 
-            _playerNotificationService.ShowWarningNotification(WellKnownKeys.GameNotifications.Combat.Buffs.AddedBuffs.Key, args: [unit.CharacterName, unit.UniqueId, string.Join(", ", remoteUnitBuffs.Select(x => x.Name))]);
+            _playerNotificationService.AddCombatText(WellKnownKeys.GameNotifications.Combat.Buffs.AddedBuffs.Key, CombatTextSeverity.Debug, new UnitEntityLog(unit.UniqueId), string.Join(", ", remoteUnitBuffs.Select(x => x.Name)));
             foreach (var buffToAdd in remoteUnitBuffs)
             {
                 var caster = _gameStateLookupService.GetUnitEntity(buffToAdd.CasterId) ?? unit;
@@ -121,16 +124,45 @@ namespace WOTRMultiplayer.Services.GameInteraction
                     continue;
                 }
 
-                var abilityParams = _mapper.Map<AbilityParams>(buffToAdd.AbilityParams);
+                MechanicsContext parent = GetBuffParentContext(unit, buffToAdd);
+                var context = new MechanicsContext(caster, unit, buff, parent);
+
                 var duration = buffToAdd.IsPermanent ? TimeSpan.MaxValue : buffToAdd.TimeLeft;
-                var newBuff = unit.Buffs.AddBuff(buff, caster, duration, abilityParams);
-                if (buffToAdd.Rank > 0)
+                var newBuff = unit.Buffs.AddBuff(buff, context, duration);
+                newBuff.NextTickTime = buffToAdd.NextTickTime == TimeSpan.MaxValue ? TimeSpan.MaxValue : buffBaseTime.SafeAdd(buffToAdd.NextTickTime);
+                if (buffToAdd.Rank > 0 && newBuff.Rank != buffToAdd.Rank)
                 {
                     newBuff.SetRank(buffToAdd.Rank);
                 }
 
                 _logger.LogInformation("Buff has been added. UnitId={UnitId}, Id={Id}, Rank={Rank}, BlueprintId={BlueprintId}, Name={Name}, IsPermanent={IsPermanent}, PlannedDuration={PlannedDuration}", unit.UniqueId, newBuff.UniqueId, newBuff.Rank, buffToAdd.BlueprintId, newBuff.NameForAcronym, newBuff.IsPermanent, newBuff.PlannedDuration);
             }
+        }
+
+        private MechanicsContext GetBuffParentContext(UnitEntityData unit, NetworkBuff buffToAdd)
+        {
+            if (buffToAdd.SourceAbility == null)
+            {
+                return null;
+            }
+
+            var abilityCaster = _gameStateLookupService.GetUnitEntity(buffToAdd.SourceAbilityCasterId);
+            if (abilityCaster == null)
+            {
+                _logger.LogError("Unable to find caster unit for buff context. UnitId={UnitId}", buffToAdd.SourceAbilityCasterId);
+                return null;
+            }
+
+            var ability = _gameStateLookupService.FindAbility(abilityCaster, buffToAdd.SourceAbility);
+            if (ability == null)
+            {
+                _logger.LogError("Unable to find ability for buff context. UnitId={UnitId}, AbilityBlueprintId={AbilityBlueprintId}, AbilityName={AbilityName}", buffToAdd.SourceAbilityCasterId, buffToAdd.SourceAbility.BlueprintId, buffToAdd.SourceAbility.Name);
+                return null;
+            }
+
+            var abilityParams = _mapper.Map<AbilityParams>(buffToAdd.SourceAbilityParams);
+            var context = new AbilityExecutionContext(ability, abilityParams, new Kingmaker.Utility.TargetWrapper(unit));
+            return context;
         }
 
         private List<Buff> GetSyncableUnitBuffs(UnitEntityData unit)
@@ -147,7 +179,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
                 return;
             }
 
-            _playerNotificationService.ShowWarningNotification(WellKnownKeys.GameNotifications.Combat.Buffs.RemovedBuffs.Key, args: [unit.CharacterName, unit.UniqueId, string.Join(", ", unitBuffs.Select(x => x.NameForAcronym))]);
+            _playerNotificationService.AddCombatText(WellKnownKeys.GameNotifications.Combat.Buffs.RemovedBuffs.Key, CombatTextSeverity.Debug, new UnitEntityLog(unit.UniqueId), string.Join(", ", unitBuffs.Select(x => x.NameForAcronym)));
             foreach (var buffToRemove in unitBuffs)
             {
                 GameHelper.RemoveBuff(unit, buffToRemove.Blueprint);

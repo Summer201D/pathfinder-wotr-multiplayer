@@ -428,10 +428,7 @@ namespace WOTRMultiplayer.Services
 
         public virtual void OnAreaLoadingComplete()
         {
-            if (Game.ForcedPause != null)
-            {
-                Game.ForcedPause.ReadyPlayers.Add(Game.LocalPlayerId);
-            }
+            Game.ForcedPause?.ReadyPlayers.Add(Game.LocalPlayerId);
         }
 
         public void OnAreaScenesLoaded()

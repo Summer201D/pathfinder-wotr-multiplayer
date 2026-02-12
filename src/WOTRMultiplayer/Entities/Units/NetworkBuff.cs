@@ -1,4 +1,5 @@
 ﻿using System;
+using WOTRMultiplayer.Entities.Combat;
 
 namespace WOTRMultiplayer.Entities.Units
 {
@@ -22,6 +23,10 @@ namespace WOTRMultiplayer.Entities.Units
 
         public int Rank { get; set; }
 
-        public NetworkAbilityParams AbilityParams { get; set; }
+        public string SourceAbilityCasterId { get; set; }
+
+        public NetworkAbility SourceAbility { get; set; }
+
+        public NetworkAbilityParams SourceAbilityParams { get; set; }
     }
 }

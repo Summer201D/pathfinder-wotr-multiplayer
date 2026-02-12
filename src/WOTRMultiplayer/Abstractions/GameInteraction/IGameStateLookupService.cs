@@ -4,7 +4,6 @@ using Kingmaker.Globalmap.State;
 using Kingmaker.Globalmap.View;
 using Kingmaker.UnitLogic;
 using Kingmaker.UnitLogic.Abilities;
-using WOTRMultiplayer.Abstractions.GameInteraction.CombatLog.Tooltips;
 using WOTRMultiplayer.Entities;
 using WOTRMultiplayer.Entities.AreaEffects;
 using WOTRMultiplayer.Entities.Combat;

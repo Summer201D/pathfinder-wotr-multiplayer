@@ -103,9 +103,15 @@ namespace WOTRMultiplayer.Config.Mapping
                 NextResourceSpendingTime = buff.NextResourceSpendingTime == TimeSpan.MaxValue ? TimeSpan.MaxValue : buff.NextResourceSpendingTime - buffBaseTime,
                 NextTickTime = buff.NextTickTime == TimeSpan.MaxValue ? TimeSpan.MaxValue : buff.NextTickTime - buffBaseTime,
                 CasterId = buff.Context?.MaybeCaster?.UniqueId,
-                Rank = buff.Rank,
-                AbilityParams = context.Mapper.Map<NetworkAbilityParams>(buff.Context.Params)
+                Rank = buff.Rank
             };
+
+            if (buff.Context.ParentContext is AbilityExecutionContext abilityContext)
+            {
+                networkBuff.SourceAbility = context.Mapper.Map<NetworkAbility>(abilityContext.Ability);
+                networkBuff.SourceAbilityParams = context.Mapper.Map<NetworkAbilityParams>(abilityContext.m_Params);
+                networkBuff.SourceAbilityCasterId = abilityContext.Ability?.Caster?.Unit.UniqueId;
+            }
 
             return networkBuff;
         }
