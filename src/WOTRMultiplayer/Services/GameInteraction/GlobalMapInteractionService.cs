@@ -358,6 +358,12 @@ namespace WOTRMultiplayer.Services.GameInteraction
                     }
                 }
 
+                var kingdomInfo = globalMapView.m_KingdomInfoPCView;
+                if (kingdomInfo != null)
+                {
+                    kingdomInfo.m_BuyResourcesButton.Interactable = isInteractable;
+                }
+
                 var menuView = globalMapView.m_GlobalMapMenuPCView;
                 if (menuView?.ViewModel != null)
                 {
@@ -919,6 +925,11 @@ namespace WOTRMultiplayer.Services.GameInteraction
                 changes.Apply(null, true);
                 UISoundController.Instance.Play(UISoundType.ArmyManagementBuyResourcesPlay);
                 EventBus.RaiseEvent<IKingdomResourcesHandler>(x => x.OnResourcesChanged(delta));
+
+                if (_uiAccessor.GlobalMapPCView.m_RecruitPCView?.ViewModel != null)
+                {
+                    DisableRecruitUI(_uiAccessor.GlobalMapPCView.m_RecruitPCView);
+                }
             });
         }
 
@@ -966,13 +977,18 @@ namespace WOTRMultiplayer.Services.GameInteraction
                         }
 
                         UISoundController.Instance.Play(UISoundType.ArmyManagementHireTroopsPlay);
-                        view.ViewModel.m_MercShop.ForEach(mercVM => mercVM.UpdateMercenarySlot());
+                        foreach (var mercVM in view.ViewModel.m_MercShop)
+                        {
+                            mercVM.UpdateMercenarySlot();
+                            mercVM.CanBuy.Value = false;
+                        }
                         break;
                     default:
                         _logger.LogError("Unsupported unit recruitment type. Type={Type}", globalMapUnitRecruitmentOrder.Type);
                         return;
                 }
 
+                DisableRecruitUI(view);
                 _logger.LogInformation("Mercenaries have been bought. ArmyId={ArmyId}, UnitId={UnitId}, Count={Count}", globalMapUnitRecruitmentOrder.ArmyId, globalMapUnitRecruitmentOrder.BlueprintId, globalMapUnitRecruitmentOrder.Count);
             });
         }
@@ -1391,6 +1407,26 @@ namespace WOTRMultiplayer.Services.GameInteraction
                 view.ViewModel.SelectedSkill.Value = skill.Skill;
                 _logger.LogInformation("Army Leader leveling skill has been selected. Id={Id}, Name={Name}", view.ViewModel.SelectedSkill.Value.AssetGuid.ToString(), view.ViewModel.SelectedSkill.Value.name);
             });
+        }
+
+        private void DisableRecruitUI(RecruitPCView view)
+        {
+            foreach (var recruitVM in view.ViewModel.m_Shop)
+            {
+                recruitVM.CanBuy.Value = false;
+            }
+
+            foreach (var mercVM in view.ViewModel.m_MercShop)
+            {
+                mercVM.CanBuy.Value = false;
+            }
+
+            var leaderView = view.m_ArmyView.m_LeaderInfoView;
+            if (leaderView?.ViewModel != null)
+            {
+                leaderView.m_EmptyButton.Interactable = false;
+                leaderView.m_Button.Interactable = false;
+            }
         }
 
         private void UseSpell(BlueprintGlobalMagicSpell.GlobalMagicData context, BlueprintGlobalMagicSpell spell, GlobalMapArmyState armyState, GlobalMapPointState pointState)

@@ -1014,7 +1014,7 @@ namespace WOTRMultiplayer.Services
         {
             Logger.LogInformation("Received {MessageType}. ReceivedFrom={ReceivedFrom}, AreaSeed={AreaSeed}, Seed={Seed}", nameof(NotifyTacticalCombatInitialized), receivedFrom, tacticalCombatInitialized.AreaSeed, tacticalCombatInitialized.Seed);
 
-            await WaitWhileTrue(() => Game.ArmyCombat == null, "Crusade army combat has not been started yet");
+            await WaitWhileTrue(() => Game.ArmyCombat == null || !CombatInteraction.IsInCrusadeTacticalCombat(), "Crusade army combat has not been started yet");
 
             Game.ArmyCombat.AreaSeed = tacticalCombatInitialized.AreaSeed;
             Game.ArmyCombat.Seed = tacticalCombatInitialized.Seed;

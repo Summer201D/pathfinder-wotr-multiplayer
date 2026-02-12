@@ -44,7 +44,7 @@ namespace WOTRMultiplayer.HarmonyPatches.RandomIdGeneration
         {
             var target = PatchesUtils.GetTranspilerTarget(MethodBase.GetCurrentMethod());
             var lookFor = AccessTools.Method(typeof(Guid), nameof(Guid.NewGuid));
-            var replaceWith = AccessTools.Method(typeof(RandomIdGenerationPatches), nameof(RandomIdGenerationPatches.GetNewArmyUnitId));
+            var replaceWith = AccessTools.Method(typeof(RandomIdGenerationPatches), nameof(RandomIdGenerationPatches.CreateCombatUnitId));
             var matcher = new CodeMatcher(instructions);
             var match = matcher.SearchForward(x => x.Calls(lookFor));
             if (match.IsInvalid)
@@ -59,6 +59,33 @@ namespace WOTRMultiplayer.HarmonyPatches.RandomIdGeneration
                 new(OpCodes.Ldarg_2),
                 new(OpCodes.Ldarg_S, 4),
                 new(OpCodes.Ldloc_1),
+                new(OpCodes.Call, replaceWith)
+            };
+            match = match.RemoveInstructions(5).Insert(newInstructions);
+            Main.GetLogger<RandomIdGenerationPatches>().LogInformation("Transpiler has been applied. Target={Target}", target);
+            return matcher.Instructions();
+        }
+
+        [HarmonyPatch(typeof(TacticalCombatController), nameof(TacticalCombatController.SetupLeader))]
+        [HarmonyTranspiler]
+        public static IEnumerable<CodeInstruction> TacticalCombatController_SetupLeader_Transpiler(IEnumerable<CodeInstruction> instructions)
+        {
+            var target = PatchesUtils.GetTranspilerTarget(MethodBase.GetCurrentMethod());
+            var lookFor = AccessTools.Method(typeof(Guid), nameof(Guid.NewGuid));
+            var replaceWith = AccessTools.Method(typeof(RandomIdGenerationPatches), nameof(RandomIdGenerationPatches.CreateCombatLeaderId));
+            var matcher = new CodeMatcher(instructions);
+            var match = matcher.SearchForward(x => x.Calls(lookFor));
+            if (match.IsInvalid)
+            {
+                Main.GetLogger<RandomIdGenerationPatches>().LogError("Unable to find Guid.NewGuid() call. Target={Target}", target);
+                return matcher.Instructions();
+            }
+
+            var newInstructions = new List<CodeInstruction>
+            {
+                new(OpCodes.Ldarg_1),
+                new(OpCodes.Ldarg_2),
+                new(OpCodes.Ldarg_S, 4),
                 new(OpCodes.Call, replaceWith)
             };
             match = match.RemoveInstructions(5).Insert(newInstructions);
@@ -282,7 +309,7 @@ namespace WOTRMultiplayer.HarmonyPatches.RandomIdGeneration
             return matcher.Instructions();
         }
 
-        public static BlueprintUnitAsksList SelectUnitVoice(BlueprintUnit blueprintUnit, Gender gender)
+        private static BlueprintUnitAsksList SelectUnitVoice(BlueprintUnit blueprintUnit, Gender gender)
         {
             if (!Main.Multiplayer.IsActive)
             {
@@ -312,7 +339,7 @@ namespace WOTRMultiplayer.HarmonyPatches.RandomIdGeneration
             }
         }
 
-        public static bool SelectLeftHanded(BlueprintUnit blueprintUnit)
+        private static bool SelectLeftHanded(BlueprintUnit blueprintUnit)
         {
             if (!Main.Multiplayer.IsActive)
             {
@@ -409,7 +436,7 @@ namespace WOTRMultiplayer.HarmonyPatches.RandomIdGeneration
             return matcher.Instructions();
         }
 
-        public static UnitEntityData CreateCompanionUnit(BlueprintUnit blueprintUnit)
+        private static UnitEntityData CreateCompanionUnit(BlueprintUnit blueprintUnit)
         {
             if (!Main.Multiplayer.IsActive)
             {
@@ -431,7 +458,7 @@ namespace WOTRMultiplayer.HarmonyPatches.RandomIdGeneration
             }
         }
 
-        public static string GetNewAreaEffectUniqueId(AreaEffectView areaEffectView)
+        private static string GetNewAreaEffectUniqueId(AreaEffectView areaEffectView)
         {
             try
             {
@@ -446,7 +473,7 @@ namespace WOTRMultiplayer.HarmonyPatches.RandomIdGeneration
             }
         }
 
-        public static string GetNewEntityUniqueId(EntityViewBase prefab)
+        private static string GetNewEntityUniqueId(EntityViewBase prefab)
         {
             try
             {
@@ -461,7 +488,7 @@ namespace WOTRMultiplayer.HarmonyPatches.RandomIdGeneration
             }
         }
 
-        public static string GetNewUnitUniqueId(BlueprintUnit unit, UnitEntityView prefab)
+        private static string GetNewUnitUniqueId(BlueprintUnit unit, UnitEntityView prefab)
         {
             try
             {
@@ -477,7 +504,7 @@ namespace WOTRMultiplayer.HarmonyPatches.RandomIdGeneration
             }
         }
 
-        public static string GetNewEntityFactUniqueId(EntityFact fact)
+        private static string GetNewEntityFactUniqueId(EntityFact fact)
         {
             try
             {
@@ -492,7 +519,7 @@ namespace WOTRMultiplayer.HarmonyPatches.RandomIdGeneration
             }
         }
 
-        public static string GetNewChangeBlueprintUniqueId(UnitEntityData unitEntityData, BlueprintUnit blueprintUnit)
+        private static string GetNewChangeBlueprintUniqueId(UnitEntityData unitEntityData, BlueprintUnit blueprintUnit)
         {
             try
             {
@@ -507,7 +534,7 @@ namespace WOTRMultiplayer.HarmonyPatches.RandomIdGeneration
             }
         }
 
-        public static string GetNewItemEntityId(BlueprintItem blueprintItem)
+        private static string GetNewItemEntityId(BlueprintItem blueprintItem)
         {
             try
             {
@@ -522,7 +549,32 @@ namespace WOTRMultiplayer.HarmonyPatches.RandomIdGeneration
             }
         }
 
-        public static string GetNewArmyUnitId(GlobalMapArmyState globalMapArmyState, SquadState squadState, RegionId regionId, BlueprintFaction faction)
+        private static string CreateCombatLeaderId(GlobalMapArmyState globalMapArmyState, bool attacker, BlueprintFaction faction)
+        {
+            if (!Main.Multiplayer.IsActive)
+            {
+                return Guid.NewGuid().ToString();
+            }
+
+            try
+            {
+                var crusadeArmyCombatSeed = Game.Instance.TacticalCombat.Data.Seed;
+                var leader = globalMapArmyState.Data.Leader;
+                var armyName = globalMapArmyState.Data.ArmyName;
+                var rawIdentifier = $"{GetCommonIdPart()}:{globalMapArmyState.Id}:{globalMapArmyState.ArmyType}:{armyName?.ArmyName}:{armyName?.ArmyIndex}:{attacker}:{leader?.Blueprint.name}:{faction.name}:{crusadeArmyCombatSeed}";
+                var id = Main.Multiplayer.ValueGenerator.CreateGuid(IdentifierLifetime.Area, rawIdentifier);
+                Main.GetLogger<RandomIdGenerationPatches>().LogInformation("Leader UnitId has been generated. Id={Id}, Seed={Seed}, RawIdentifier={RawIdentifier}", id, crusadeArmyCombatSeed, rawIdentifier);
+                return id.ToString();
+            }
+            catch (Exception ex)
+            {
+                Main.GetLogger<RandomIdGenerationPatches>().LogError(ex, "Error while generating new army leader unit Id");
+                throw;
+            }
+
+        }
+
+        private static string CreateCombatUnitId(GlobalMapArmyState globalMapArmyState, SquadState squadState, RegionId regionId, BlueprintFaction faction)
         {
             if (!Main.Multiplayer.IsActive)
             {
@@ -536,7 +588,7 @@ namespace WOTRMultiplayer.HarmonyPatches.RandomIdGeneration
                 var armyName = globalMapArmyState.Data.ArmyName;
                 var rawIdentifier = $"{GetCommonIdPart()}:{globalMapArmyState.Id}:{globalMapArmyState.ArmyType}:{armyName?.ArmyName}:{armyName?.ArmyIndex}:{squadState.Size}:{squadState.Unit.name}:{regionId}:{leader?.Blueprint.name}:{faction.name}:{crusadeArmyCombatSeed}";
                 var id = Main.Multiplayer.ValueGenerator.CreateGuid(IdentifierLifetime.Area, rawIdentifier);
-                Main.GetLogger<RandomIdGenerationPatches>().LogInformation("Army UnitId has been generated. Seed={Seed}, RawIdentifier={RawIdentifier}, Id={Id}", crusadeArmyCombatSeed, rawIdentifier, id);
+                Main.GetLogger<RandomIdGenerationPatches>().LogInformation("Army UnitId has been generated. Id={Id}, Seed={Seed}, RawIdentifier={RawIdentifier}", id, crusadeArmyCombatSeed, rawIdentifier);
                 return id.ToString();
             }
             catch (Exception ex)
@@ -546,7 +598,7 @@ namespace WOTRMultiplayer.HarmonyPatches.RandomIdGeneration
             }
         }
 
-        public static string GetNewArmyLeaderId(BlueprintArmyLeader blueprint, ArmyFaction faction)
+        private static string GetNewArmyLeaderId(BlueprintArmyLeader blueprint, ArmyFaction faction)
         {
             if (!Main.Multiplayer.IsActive)
             {
@@ -581,7 +633,7 @@ namespace WOTRMultiplayer.HarmonyPatches.RandomIdGeneration
             }
         }
 
-        public static string GetNewArmyId(ArmyNameWithIndex armyNameWithIndex, ArmyFaction armyFaction, BlueprintArmyPreset armyPreset, GlobalMapPosition position, bool isGarrison, bool isTraveling)
+        private static string GetNewArmyId(ArmyNameWithIndex armyNameWithIndex, ArmyFaction armyFaction, BlueprintArmyPreset armyPreset, GlobalMapPosition position, bool isGarrison, bool isTraveling)
         {
             if (!Main.Multiplayer.IsActive)
             {
@@ -617,7 +669,7 @@ namespace WOTRMultiplayer.HarmonyPatches.RandomIdGeneration
             }
         }
 
-        public static string GetAbilityDataEntityId(BlueprintAbility blueprint, UnitDescriptor caster, Ability fact, BlueprintSpellbook blueprintSpellbook)
+        private static string GetAbilityDataEntityId(BlueprintAbility blueprint, UnitDescriptor caster, Ability fact, BlueprintSpellbook blueprintSpellbook)
         {
             try
             {

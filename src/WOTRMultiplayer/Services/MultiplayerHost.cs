@@ -1130,7 +1130,7 @@ namespace WOTRMultiplayer.Services
             {
                 Order = Mapper.Map<Networking.Messages.Contracts.NetworkGlobalMapUnitRecruitmentOrder>(globalMapUnitRecruitmentOrder)
             };
-            Logger.LogInformation("Sending {MessageType}. UnitBlueprintId={UnitBlueprintId}, Count={Count}, ArmyId={ArmyId}, Type={Type}", nameof(NetworkGlobalMapUnitRecruitmentOrder), message.Order.BlueprintId, message.Order.Count, message.Order.ArmyId, message.Order.Type);
+            Logger.LogInformation("Sending {MessageType}. UnitBlueprintId={UnitBlueprintId}, Count={Count}, ArmyId={ArmyId}, Type={Type}", nameof(NotifyGlobalMapUnitsRecruited), message.Order.BlueprintId, message.Order.Count, message.Order.ArmyId, message.Order.Type);
             Send(message);
         }
 

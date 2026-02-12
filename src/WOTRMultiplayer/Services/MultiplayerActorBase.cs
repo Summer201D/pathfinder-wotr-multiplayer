@@ -3496,15 +3496,15 @@ namespace WOTRMultiplayer.Services
             OnAfterNetworkMessageHandled(receivedFrom, crusadeArmyBattleResultsShown);
         }
 
-        private async void OnNotifyTacticalCombatTurnInitialized(long receivedFrom, NotifyTacticalCombatTurnInitialized tacticalCombatTurnInitialized)
+        private async void OnNotifyTacticalCombatTurnInitialized(long receivedFrom, NotifyTacticalCombatTurnInitialized message)
         {
-            Logger.LogInformation("Received {MessageType}. ReceivedFrom={ReceivedFrom}, PlayerId={PlayerId}, TurnNumber={TurnNumber}", nameof(NotifyTacticalCombatTurnInitialized), receivedFrom, tacticalCombatTurnInitialized.PlayerId, tacticalCombatTurnInitialized.TurnNumber);
+            Logger.LogInformation("Received {MessageType}. ReceivedFrom={ReceivedFrom}, PlayerId={PlayerId}, TurnNumber={TurnNumber}", nameof(NotifyTacticalCombatTurnInitialized), receivedFrom, message.PlayerId, message.TurnNumber);
 
-            await WaitWhileTrue(() => Game.ArmyCombat == null, "Crusade army combat has not been started yet");
+            await WaitWhileTrue(() => Game.ArmyCombat == null || Game.ArmyCombat.Seed == 0 || !CombatInteraction.IsInCrusadeTacticalCombat(), "Crusade army combat has not been started yet");
 
-            AddPlayerCrusadeArmyCombatTurnInitialization(tacticalCombatTurnInitialized.TurnNumber, tacticalCombatTurnInitialized.PlayerId);
+            AddPlayerCrusadeArmyCombatTurnInitialization(message.TurnNumber, message.PlayerId);
 
-            OnAfterNetworkMessageHandled(receivedFrom, tacticalCombatTurnInitialized);
+            OnAfterNetworkMessageHandled(receivedFrom, message);
         }
 
         private void OnNotifyPlayerReadyStatusChanged(long receivedFrom, NotifyPlayerReadyStatusChanged readyStatusChanged)
