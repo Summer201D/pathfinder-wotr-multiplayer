@@ -385,7 +385,7 @@ namespace WOTRMultiplayer.Services
 
         public void OnChangeActiveHandEquipmentSet(NetworkActiveHandEquipmentSet set)
         {
-            if (!IsControlledByPlayers(set.UnitId))
+            if (!IsControlledByPlayers(set.UnitId) && !GameInteraction.IsUnitInParty(set.UnitId))
             {
                 return;
             }
@@ -401,7 +401,7 @@ namespace WOTRMultiplayer.Services
 
         public void OnEquipmentSlotChanged(NetworkEquipmentSlot equipmentSlot)
         {
-            if (!IsControlledByPlayers(equipmentSlot.OwnerId))
+            if (!IsControlledByPlayers(equipmentSlot.OwnerId) && !GameInteraction.IsUnitInParty(equipmentSlot.OwnerId))
             {
                 return;
             }

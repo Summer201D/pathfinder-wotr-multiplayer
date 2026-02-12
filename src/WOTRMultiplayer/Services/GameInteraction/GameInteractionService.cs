@@ -294,7 +294,8 @@ namespace WOTRMultiplayer.Services.GameInteraction
 
         public bool IsUnitInParty(string unitId)
         {
-            var unit = Game.Instance.Player.PartyAndPets.FirstOrDefault(p => string.Equals(p.UniqueId, unitId, StringComparison.OrdinalIgnoreCase));
+            var groupToSearch = Game.Instance.Player.CapitalPartyMode ? Game.Instance.Player.AllCharacters : Game.Instance.Player.PartyAndPets;
+            var unit = groupToSearch.FirstOrDefault(p => string.Equals(p.UniqueId, unitId, StringComparison.OrdinalIgnoreCase));
             return unit != null;
         }
 

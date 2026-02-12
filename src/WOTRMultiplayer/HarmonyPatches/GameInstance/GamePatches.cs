@@ -6,6 +6,7 @@ using System.Reflection.Emit;
 using HarmonyLib;
 using Kingmaker;
 using Kingmaker.Blueprints.Area;
+using Kingmaker.Controllers;
 using Kingmaker.EntitySystem.Persistence;
 using Kingmaker.GameModes;
 using Kingmaker.UI.MVVM;
@@ -179,26 +180,49 @@ namespace WOTRMultiplayer.HarmonyPatches.GameInstance
             // action bar is available during trading
             // FullScreenUI has a separate 'selectedFullScreenCharacter' property, but it's not reliable due to skipped game modes.
             // applying a generic fix for everything (with a hope not to cause extra problems smile) to make sure SelectedUnit is always set if we control atlease 1 character
+            var combatLogView = Main.UIAccessor.CombatLogPCView?.ViewModel == null ? null : Main.UIAccessor.CombatLogPCView;
+            if (isStart)
+            {
+                combatLogView?.Hide();
+
+                // capital mode + inventory/etc should show every character
+                if (Game.Instance.Player.CapitalPartyMode && !Game.Instance.Vendor.IsTrading)
+                {
+                    switch (Game.Instance.RootUiContext.InGameVM.StaticPartVM.ServiceWindowsVM.m_FullScreenUIType)
+                    {
+                        case Kingmaker.UI.FullScreenUITypes.FullScreenUIType.Inventory:
+                        case Kingmaker.UI.FullScreenUITypes.FullScreenUIType.SpellBook:
+                        case Kingmaker.UI.FullScreenUITypes.FullScreenUIType.Encyclopedia:
+                        case Kingmaker.UI.FullScreenUITypes.FullScreenUIType.Journal:
+                        case Kingmaker.UI.FullScreenUITypes.FullScreenUIType.CharacterScreen:
+                        case Kingmaker.UI.FullScreenUITypes.FullScreenUIType.MythicScreen:
+                            Game.Instance.SelectionCharacter.m_ActualGroup = SelectionCharacterController.GetGroup(true, false);
+                            Game.Instance.SelectionCharacter.SelectionCharacterUpdated.Execute();
+                            break;
+                    }
+                }
+
+                UpdateSelectedCharacter();
+
+                return;
+            }
+
+            combatLogView?.Show();
+            UpdateSelectedCharacter();
+
+            if (Game.Instance.Player.CapitalPartyMode)
+            {
+                Game.Instance.SelectionCharacter.m_NeedUpdate = true;
+            }
+        }
+
+        private static void UpdateSelectedCharacter()
+        {
             if (Game.Instance.SelectionCharacter.SelectedUnits?.Count > 0 && !Game.Instance.Vendor.IsTrading)
             {
                 var selectedCharacter = Game.Instance.SelectionCharacter.SelectedUnits.FirstOrDefault();
                 Game.Instance.SelectionCharacter.SelectedUnit.Value = selectedCharacter;
                 Game.Instance.SelectionCharacter.m_FullScreenSelectedUnit = selectedCharacter;
-            }
-
-            var combatLogView = Main.UIAccessor.CombatLogPCView?.ViewModel == null ? null : Main.UIAccessor.CombatLogPCView;
-            if (isStart)
-            {
-                combatLogView?.Hide();
-                return;
-            }
-
-            combatLogView?.Show();
-
-            if (Main.UIAccessor.PartyPCView?.ViewModel != null
-                && Main.UIAccessor.PartyPCView.m_FullScreenUIType == Kingmaker.UI.FullScreenUITypes.FullScreenUIType.Vendor)
-            {
-                Game.Instance.SelectionCharacter.m_NeedUpdate = true;
             }
         }
     }

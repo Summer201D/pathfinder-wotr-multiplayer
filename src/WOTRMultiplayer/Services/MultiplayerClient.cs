@@ -386,7 +386,7 @@ namespace WOTRMultiplayer.Services
 
         public bool OnCreateAndEquipPolymorphInSlot(NetworkPolymorphicItem polymorphicItem)
         {
-            var isInParty = IsControlledByPlayers(polymorphicItem.UnitId);
+            var isInParty = IsControlledByPlayers(polymorphicItem.UnitId) || GameInteraction.IsUnitInParty(polymorphicItem.UnitId);
             if (!isInParty)
             {
                 return true;
