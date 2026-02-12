@@ -53,8 +53,14 @@ namespace WOTRMultiplayer.HarmonyPatches.Combat
 
         private static Vector3 SelectPointToMove(List<Vector3> points, int minInclusive, int maxExclusive, CompilerGeneratedMovementData movementData)
         {
-            if (!Main.Multiplayer.IsActive || !movementData.IsValid())
+            if (!Main.Multiplayer.IsActive)
             {
+                return points.ElementAt(UnityEngine.Random.Range(minInclusive, maxExclusive));
+            }
+
+            if (movementData == null || !movementData.IsValid())
+            {
+                Main.GetLogger<UnitFearControllerPatches>().LogError("Invalid movement data");
                 return points.ElementAt(UnityEngine.Random.Range(minInclusive, maxExclusive));
             }
 
@@ -72,7 +78,7 @@ namespace WOTRMultiplayer.HarmonyPatches.Combat
             }
             catch (Exception ex)
             {
-                Main.GetLogger<UnitFearControllerPatches>().LogError(ex, "Error during fear move point selection. UnitId={UnitId}", movementData.unit.UniqueId);
+                Main.GetLogger<UnitFearControllerPatches>().LogError(ex, "Error during fear move point selection. UnitId={UnitId}", movementData?.unit?.UniqueId);
                 throw;
             }
         }

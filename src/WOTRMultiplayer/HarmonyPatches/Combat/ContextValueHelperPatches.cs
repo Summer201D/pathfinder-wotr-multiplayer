@@ -46,7 +46,7 @@ namespace WOTRMultiplayer.HarmonyPatches.Combat
             }
 
             var unitId = context.MaybeOwner?.UniqueId;
-            var targetUnitId = context.MainTarget?.Unit.UniqueId;
+            var targetUnitId = context?.MainTarget?.Unit?.UniqueId;
             try
             {
                 var sessionSeed = Main.Multiplayer.GetSessionSeed();
