@@ -391,6 +391,7 @@ namespace WOTRMultiplayer.Services
                 var d20 = RetrieveRoll<RuleRollD20>(savingThrow, ruleSavingThrow.Initiator);
                 if (d20 == null)
                 {
+                    _logger.LogInformation("Roll retrieving context={StackTrace}", Environment.StackTrace);
                     return;
                 }
 
