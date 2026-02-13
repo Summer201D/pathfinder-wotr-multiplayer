@@ -2342,6 +2342,24 @@ namespace WOTRMultiplayer.Services
             }
         }
 
+        public void OnGlobalMapLocationMessageAccepted()
+        {
+            try
+            {
+                if (_multiplayerActorAccessor.Current == null || _multiplayerActorAccessor.Client.IsActive)
+                {
+                    return;
+                }
+
+                _multiplayerActorAccessor.Host.OnGlobalMapLocationMessageAccepted();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while accepting global map message box");
+                throw;
+            }
+
+        }
         public void OnGlobalMapLocationMessageClosed()
         {
             try
@@ -2410,24 +2428,6 @@ namespace WOTRMultiplayer.Services
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error while accepting global map ingredient collection");
-                throw;
-            }
-        }
-
-        public void OnGlobalMapEnterLocation(NetworkGlobalMapLocation globalMapLocation)
-        {
-            try
-            {
-                if (_multiplayerActorAccessor.Current == null || _multiplayerActorAccessor.Client.IsActive)
-                {
-                    return;
-                }
-
-                _multiplayerActorAccessor.Host.OnGlobalMapEnterLocation(globalMapLocation);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error while entering global map location. LocationId={LocationId}, LocationName={LocationName}", globalMapLocation.Id, globalMapLocation.Name);
                 throw;
             }
         }

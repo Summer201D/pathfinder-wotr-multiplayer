@@ -110,7 +110,6 @@
             NotifyGlobalMapCommonPopupShown,
             NotifyGlobalMapCommonPopupDeclined,
             NotifyGlobalMapCommonPopupAccepted,
-            NotifyGlobalMapLocationEntered,
             NotifyGlobalMapEncounterMessageShown,
             NotifyGlobalMapEncounterAccepted,
             NotifyGlobalMapEncounterAvoided,
@@ -236,7 +235,8 @@
             ClientCombatPreparationCompleted,
             ClientCombatPreparationStarted,
             NotifyCombatInitializationCompleted,
-            NotifyGlobalMapCrusadeArmyLeaderLevelingStarted
+            NotifyGlobalMapCrusadeArmyLeaderLevelingStarted,
+            NotifyGlobalMapLocationMessageAccepted
         }
 
         public enum Request

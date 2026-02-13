@@ -40,6 +40,8 @@ namespace WOTRMultiplayer.Abstractions.GameInteraction
 
         void CloseLocationMessageBox();
 
+        void AcceptLocationMessageBox();
+
         void SkipDay();
 
         void SetSelectedArmy(NetworkGlobalMapArmy globalMapArmy);

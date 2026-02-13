@@ -227,6 +227,18 @@ namespace WOTRMultiplayer.HarmonyPatches.GlobalMap
             return matcher.Instructions();
         }
 
+        [HarmonyPatch(typeof(GlobalMapEnterMessageVM), nameof(GlobalMapEnterMessageVM.Accept))]
+        [HarmonyPrefix]
+        public static void GlobalMapEnterMessageVM_Accept_Prefix(GlobalMapEnterMessageVM __instance)
+        {
+            if (!Main.Multiplayer.IsActive || !__instance.IsCurrentLocation)
+            {
+                return;
+            }
+
+            Main.Multiplayer.OnGlobalMapLocationMessageAccepted();
+        }
+
         [HarmonyPatch(typeof(NavigationArrowView), nameof(NavigationArrowView.OnClick))]
         [HarmonyPrefix]
         public static void NavigationArrowsController_OnClick_Prefix(NavigationArrowView __instance)
@@ -238,19 +250,6 @@ namespace WOTRMultiplayer.HarmonyPatches.GlobalMap
 
             var travel = CreateGlobalMapTravel(NetworkGlobalMapPathType.Direction, __instance.m_DirLoc.Blueprint, fromClick: true);
             Main.Multiplayer.OnGlobalMapTravelStarted(travel);
-        }
-
-        [HarmonyPatch(typeof(GlobalMapView), nameof(GlobalMapView.EnterLocation))]
-        [HarmonyPrefix]
-        public static void GlobalMapView_EnterLocation_Prefix(GlobalMapView __instance)
-        {
-            if (!Main.Multiplayer.IsActive || __instance.State.Player.Location == null)
-            {
-                return;
-            }
-
-            var location = GetNetworkGlobalMapLocation(__instance.State.Player.Location);
-            Main.Multiplayer.OnGlobalMapEnterLocation(location);
         }
 
         [HarmonyPatch(typeof(GlobalMapEnterMessagePCView), nameof(GlobalMapEnterMessagePCView.BindViewImplementation))]

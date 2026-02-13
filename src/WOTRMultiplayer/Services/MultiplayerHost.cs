@@ -805,16 +805,6 @@ namespace WOTRMultiplayer.Services
             Send(message);
         }
 
-        public void OnGlobalMapEnterLocation(NetworkGlobalMapLocation globalMapLocation)
-        {
-            var message = new NotifyGlobalMapLocationEntered
-            {
-                Location = Mapper.Map<Networking.Messages.Contracts.NetworkGlobalMapLocation>(globalMapLocation)
-            };
-            Logger.LogInformation("Sending {MessageType}. LocationId={LocationId}, LocationName={LocationName}", nameof(NotifyGlobalMapLocationEntered), message.Location.Id, message.Location.Name);
-            Send(message);
-        }
-
         public void OnGlobalMapEncounterAccepted()
         {
             var message = new NotifyGlobalMapEncounterAccepted();
@@ -940,6 +930,14 @@ namespace WOTRMultiplayer.Services
             ResetPlayersTracker(Game.PlayersInGlobalMapCrusadeArmyBattleResults);
             var message = new NotifyCrusadeArmyBattleResultsManualCombatStarted();
             Logger.LogInformation("Sending {MessageType}", nameof(NotifyCrusadeArmyBattleResultsManualCombatStarted));
+            Send(message);
+        }
+
+        public void OnGlobalMapLocationMessageAccepted()
+        {
+            ResetPlayersTracker(Game.PlayersInGlobalMapLocationMessage);
+            var message = new NotifyGlobalMapLocationMessageAccepted();
+            Logger.LogInformation("Sending {MessageType}", nameof(NotifyGlobalMapLocationMessageAccepted));
             Send(message);
         }
 

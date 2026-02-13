@@ -412,6 +412,22 @@ namespace WOTRMultiplayer.Services.GameInteraction
             });
         }
 
+        public void AcceptLocationMessageBox()
+        {
+            _mainThreadAccessor.Post(() =>
+            {
+                var messageBoxView = _uiAccessor.GlobalMapPCView.m_GlobalMapEnterMessagePCView;
+                if (messageBoxView?.ViewModel == null)
+                {
+                    _logger.LogError("Unable to accept missing global map message box");
+                    return;
+                }
+
+                messageBoxView.ViewModel.Accept();
+                _logger.LogInformation("Global map message box has been accepted");
+            });
+        }
+
         public void CloseLocationMessageBox()
         {
             _mainThreadAccessor.Post(() =>

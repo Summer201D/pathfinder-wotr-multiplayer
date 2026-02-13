@@ -251,6 +251,8 @@ namespace WOTRMultiplayer.Abstractions
 
         void OnGlobalMapMessageBoxShown();
 
+        void OnGlobalMapLocationMessageAccepted();
+
         void OnGlobalMapLocationMessageClosed();
 
         void OnGlobalMapCommonPopupShown(NetworkGlobalMapCommonPopup globalMapCommonPopup);
@@ -258,8 +260,6 @@ namespace WOTRMultiplayer.Abstractions
         void OnGlobalMapCommonPopupDeclined(NetworkGlobalMapCommonPopup globalMapCommonPopup);
 
         void OnGlobalMapCommonPopupAccepted(NetworkGlobalMapCommonPopup globalMapCommonPopup);
-
-        void OnGlobalMapEnterLocation(NetworkGlobalMapLocation globalMapLocation);
 
         void OnGlobalMapEncounterMessageShown();
 

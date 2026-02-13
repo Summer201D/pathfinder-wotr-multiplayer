@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
 using WOTRMultiplayer.Entities;
 using WOTRMultiplayer.Entities.Area;
-using WOTRMultiplayer.Entities.AreaEffects;
 using WOTRMultiplayer.Entities.Combat.Crusades;
 using WOTRMultiplayer.Entities.Dialogs;
 using WOTRMultiplayer.Entities.GlobalMap;
@@ -47,6 +46,8 @@ namespace WOTRMultiplayer.Abstractions
 
         void OnCloseGroupChangerPartyUI();
 
+        void OnGlobalMapLocationMessageAccepted();
+
         void OnGlobalMapLocationMessageClosed();
 
         void OnGlobalMapCommonPopupDeclined(NetworkGlobalMapCommonPopup globalMapCommonPopup);
@@ -70,8 +71,6 @@ namespace WOTRMultiplayer.Abstractions
         void OnGlobalMapStopTravel(NetworkGlobalMapTraveler globalMapTraveler);
 
         void OnGlobalMapCommonPopupAccepted(NetworkGlobalMapCommonPopup globalMapCommonPopup);
-
-        void OnGlobalMapEnterLocation(NetworkGlobalMapLocation globalMapLocation);
 
         void OnGlobalMapEncounterAccepted();
 

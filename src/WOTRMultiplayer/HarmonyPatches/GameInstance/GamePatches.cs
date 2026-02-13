@@ -197,7 +197,6 @@ namespace WOTRMultiplayer.HarmonyPatches.GameInstance
                         case Kingmaker.UI.FullScreenUITypes.FullScreenUIType.CharacterScreen:
                         case Kingmaker.UI.FullScreenUITypes.FullScreenUIType.MythicScreen:
                             Game.Instance.SelectionCharacter.m_ActualGroup = SelectionCharacterController.GetGroup(true, false);
-                            Game.Instance.SelectionCharacter.SelectionCharacterUpdated.Execute();
                             break;
                     }
                 }
@@ -218,12 +217,15 @@ namespace WOTRMultiplayer.HarmonyPatches.GameInstance
 
         private static void UpdateSelectedCharacter()
         {
-            if (Game.Instance.SelectionCharacter.SelectedUnits?.Count > 0 && !Game.Instance.Vendor.IsTrading)
+            if (Game.Instance.Vendor.IsTrading)
             {
-                var selectedCharacter = Game.Instance.SelectionCharacter.SelectedUnits.FirstOrDefault();
-                Game.Instance.SelectionCharacter.SelectedUnit.Value = selectedCharacter;
-                Game.Instance.SelectionCharacter.m_FullScreenSelectedUnit = selectedCharacter;
+                return;
             }
+
+            var selectedCharacter = Game.Instance.Player.CapitalPartyMode || Game.Instance.SelectionCharacter.SelectedUnits?.Count == 0 ? Game.Instance.Player.MainCharacter.Value : Game.Instance.SelectionCharacter.SelectedUnits.FirstOrDefault();
+            Game.Instance.SelectionCharacter.SelectedUnit.Value = selectedCharacter;
+            Game.Instance.SelectionCharacter.m_FullScreenSelectedUnit = selectedCharacter;
+            Game.Instance.SelectionCharacter.SelectionCharacterUpdated.Execute();
         }
     }
 }

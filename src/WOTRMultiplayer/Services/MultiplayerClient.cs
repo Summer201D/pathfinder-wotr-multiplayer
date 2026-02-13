@@ -523,11 +523,11 @@ namespace WOTRMultiplayer.Services
                .On<NotifyGlobalMapTravelStopped>(OnNotifyGlobalMapTravelStopped)
                .On<NotifyGlobalMapTravelContinued>(OnNotifyGlobalMapTravelContinued)
                .On<NotifyGlobalMapCommonPopupAccepted>(OnNotifyGlobalMapIngredientCollectionAccepted)
-               .On<NotifyGlobalMapLocationEntered>(OnNotifyGlobalMapLocationEntered)
                .On<NotifyGlobalMapEncounterAccepted>(OnNotifyGlobalMapEncounterAccepted)
                .On<NotifyGlobalMapEncounterAvoided>(OnNotifyGlobalMapEncounterAvoided)
                .On<NotifyGlobalMapEncounterRolled>(OnNotifyGlobalMapEncounterRolled)
                .On<NotifyGlobalMapLocationMessageClosed>(OnNotifyGlobalMapLocationMessageClosed)
+               .On<NotifyGlobalMapLocationMessageAccepted>(OnNotifyGlobalMapLocationMessageAccepted)
                .On<NotifyGlobalMapCommonPopupDeclined>(OnNotifyGlobalMapCommonPopupDeclined)
                .On<NotifyGlobalMapDaySkipped>(OnNotifyGlobalMapDaySkipped)
                .On<NotifyGlobalMapTravelerModeChanged>(OnNotifyGlobalMapTravelerModeChanged)
@@ -1069,6 +1069,16 @@ namespace WOTRMultiplayer.Services
             GlobalMapInteraction.DeclineCommonPopup();
         }
 
+
+        private void OnNotifyGlobalMapLocationMessageAccepted(long playerId, NotifyGlobalMapLocationMessageAccepted message)
+        {
+            Logger.LogInformation("Received {MessageType}", nameof(NotifyGlobalMapLocationMessageClosed));
+
+            ResetPlayersTracker(Game.PlayersInGlobalMapLocationMessage);
+
+            GlobalMapInteraction.AcceptLocationMessageBox();
+        }
+
         private void OnNotifyGlobalMapLocationMessageClosed(long playerId, NotifyGlobalMapLocationMessageClosed globalMapLocationMessageClosed)
         {
             Logger.LogInformation("Received {MessageType}. PlayerId={PlayerId}", nameof(NotifyGlobalMapLocationMessageClosed), globalMapLocationMessageClosed.PlayerId);
@@ -1168,7 +1178,7 @@ namespace WOTRMultiplayer.Services
 
         private void OnNotifyGlobalMapEncounterAvoided(long receivedFrom, NotifyGlobalMapEncounterAvoided globalMapEncounterAvoided)
         {
-            Logger.LogInformation("Received {MessageType}", nameof(NotifyGlobalMapLocationEntered));
+            Logger.LogInformation("Received {MessageType}", nameof(NotifyGlobalMapEncounterAvoided));
             GlobalMapInteraction.AvoidEncounter();
 
             ResetPlayersTracker(Game.PlayersInGlobalMapEncounterMessage);
@@ -1180,16 +1190,6 @@ namespace WOTRMultiplayer.Services
             GlobalMapInteraction.AcceptEncounter();
 
             ResetPlayersTracker(Game.PlayersInGlobalMapEncounterMessage);
-        }
-
-        private void OnNotifyGlobalMapLocationEntered(long receivedFrom, NotifyGlobalMapLocationEntered globalMapLocationEntered)
-        {
-            Logger.LogInformation("Received {MessageType}. LocationId={LocationId}, LocationName={LocationName}", nameof(NotifyGlobalMapLocationEntered), globalMapLocationEntered.Location.Id, globalMapLocationEntered.Location.Name);
-
-            var location = Mapper.Map<NetworkGlobalMapLocation>(globalMapLocationEntered.Location);
-            GlobalMapInteraction.EnterLocation(location);
-
-            ResetPlayersTracker(Game.PlayersInGlobalMapLocationMessage);
         }
 
         private void OnNotifyGlobalMapIngredientCollectionAccepted(long receivedFrom, NotifyGlobalMapCommonPopupAccepted globalMapCommonPopupAccepted)

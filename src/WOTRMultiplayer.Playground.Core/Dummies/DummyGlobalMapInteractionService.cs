@@ -265,5 +265,9 @@ namespace WOTRMultiplayer.Playground.Core.Dummies
         public void StartCrusadeArmyLeaderLeveling(NetworkGlobalMapArmy globalMapArmy)
         {
         }
+
+        public void AcceptLocationMessageBox()
+        {
+        }
     }
 }

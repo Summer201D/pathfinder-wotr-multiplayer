@@ -82,7 +82,8 @@ namespace WOTRMultiplayer.Services
                 var bundles = ruleCalculateDamage.DamageBundle.ToList();
                 if (networkRoll.Value.Count != bundles.Count)
                 {
-                    _logger.LogCritical("Network damage contains invalid number of damage values. RollId={RollId}, ExpectedCount={ExpectedCount}, ActualCount={ActualCount}", rollId.Value, bundles.Count, networkRoll.Value.Count);
+                    _logger.LogCritical("Network damage contains invalid number of damage values. RollId={RollId}, ExpectedCount={ExpectedCount}, ActualCount={ActualCount}, Bundles={Bundles}",
+                        rollId.Value, bundles.Count, networkRoll.Value.Count, bundles.Select(x => x.SourceFact?.NameForAcronym));
                     _playerNotificationService.ShowModalMessage(WellKnownKeys.GameNotifications.Rolls.InvalidRemoteDamageRoll.Key);
                     return true;
                 }
