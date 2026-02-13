@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using Kingmaker;
 using Kingmaker.Assets.Controllers.GlobalMap;
 using Kingmaker.Blueprints;
+using Kingmaker.Blueprints.Root.Strings;
 using Kingmaker.Crusade.GlobalMagic;
 using Kingmaker.ElementsSystem;
 using Kingmaker.Globalmap;
@@ -15,6 +17,7 @@ using Kingmaker.PubSubSystem;
 using Kingmaker.RandomEncounters;
 using Kingmaker.RandomEncounters.Settings;
 using Kingmaker.UI;
+using Kingmaker.UI.Common;
 using Kingmaker.UI.MVVM._PCView.Crusade.Armies;
 using Kingmaker.UI.MVVM._PCView.Crusade.ArmyInfo;
 using Kingmaker.UI.MVVM._PCView.Crusade.Recruit;
@@ -192,7 +195,8 @@ namespace WOTRMultiplayer.Services.GameInteraction
         {
             _mainThreadAccessor.Post(() =>
             {
-                if (_uiAccessor.GlobalMapPCView?.ViewModel == null)
+                var globalMapView = _uiAccessor.GlobalMapPCView;
+                if (globalMapView?.ViewModel == null)
                 {
                     return;
                 }
@@ -1439,6 +1443,44 @@ namespace WOTRMultiplayer.Services.GameInteraction
                 EventBus.RaiseEvent<ILeaderLevelupHandler>(x => x.ShowLeaderLevelUp(army.Data.Leader));
                 _logger.LogInformation("Army leader leveling has been started. ArmyId={ArmyId}", globalMapArmy.Id);
             });
+        }
+
+        public Task<bool> ShowCommonPopupAsync(NetworkGlobalMapCommonPopup popup)
+        {
+            var tcs = new TaskCompletionSource<bool>();
+            _mainThreadAccessor.Post(() =>
+            {
+                try
+                {
+                    var view = _uiAccessor.GlobalMapPCView;
+                    if (view?.ViewModel == null)
+                    {
+                        _logger.LogError("Unable to show common popup due to missing global map view. Type={Type}", popup?.Type);
+                        return;
+                    }
+
+                    switch (popup.Type)
+                    {
+                        case NetworkGlobalMapCommonPopupType.Fatigue:
+                            UIUtility.ShowMessageBox(UIStrings.Instance.GlobalMap.PartyIsFatigue, MessageModalBase.ModalType.Dialog, view.ViewModel.OnFatigueClose);
+                            tcs.SetResult(true);
+                            return;
+                        case NetworkGlobalMapCommonPopupType.Exhaust:
+                            UIUtility.ShowMessageBox(UIStrings.Instance.GlobalMap.PartyIsExhausted, MessageModalBase.ModalType.Dialog, view.ViewModel.OnFatigueClose);
+                            tcs.SetResult(true);
+                            return;
+                    }
+
+                    tcs.SetResult(false);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error while showing popup");
+                    tcs.SetResult(false);
+                }
+            });
+
+            return tcs.Task;
         }
 
         private void DisableRecruitUI(RecruitPCView view)

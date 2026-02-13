@@ -703,9 +703,11 @@ namespace WOTRMultiplayer.Services
 
         public void OnGlobalMapTravelStarted(NetworkGlobalMapTravel globalMapTravel)
         {
+            var party = CombatInteraction.GetParty();
             var message = new NotifyGlobalMapTravelStarted
             {
-                Travel = Mapper.Map<Networking.Messages.Contracts.NetworkGlobalMapTravel>(globalMapTravel)
+                Travel = Mapper.Map<Networking.Messages.Contracts.NetworkGlobalMapTravel>(globalMapTravel),
+                Party = Mapper.Map<List<Networking.Messages.Contracts.NetworkUnit>>(party)
             };
             Logger.LogInformation("Sending {MessageType}. Type={Type}, MovementPoints={MovementPoints}, FromClick={FromClick}, DestinationId={DestinationId}, DestinationName={DestinationName}", nameof(NotifyGlobalMapTravelStarted), message.Travel.Type, message.Travel.Traveler.MovementPoints, message.Travel.FromClick, message.Travel.Destination.Id, message.Travel.Destination.Name);
             Send(message);
@@ -766,7 +768,7 @@ namespace WOTRMultiplayer.Services
                 return false;
             }
 
-            var canSelect = Game.ForcedPause == null && readyPlayers.Value >= GetSyncedPlayersCount();
+            var canSelect = readyPlayers.Value >= GetSyncedPlayersCount();
             if (!canSelect)
             {
                 PlayerNotification.ShowWarningNotification(WellKnownKeys.GameNotifications.ForcedPause.AreaLoading.Key);
@@ -777,9 +779,11 @@ namespace WOTRMultiplayer.Services
 
         public void OnGlobalMapContinueTravel(NetworkGlobalMapTraveler globalMapTraveler)
         {
+            var party = CombatInteraction.GetParty();
             var message = new NotifyGlobalMapTravelContinued
             {
-                Traveler = Mapper.Map<Networking.Messages.Contracts.NetworkGlobalMapTraveler>(globalMapTraveler)
+                Traveler = Mapper.Map<Networking.Messages.Contracts.NetworkGlobalMapTraveler>(globalMapTraveler),
+                Party = Mapper.Map<List<Networking.Messages.Contracts.NetworkUnit>>(party)
             };
             Logger.LogInformation("Sending {MessageType}. EdgePosition={EdgePosition}", nameof(NotifyGlobalMapTravelContinued), message.Traveler.Position?.EdgePosition);
             Send(message);
@@ -787,9 +791,11 @@ namespace WOTRMultiplayer.Services
 
         public void OnGlobalMapStopTravel(NetworkGlobalMapTraveler globalMapTraveler)
         {
+            var party = CombatInteraction.GetParty();
             var message = new NotifyGlobalMapTravelStopped
             {
-                Traveler = Mapper.Map<Networking.Messages.Contracts.NetworkGlobalMapTraveler>(globalMapTraveler)
+                Traveler = Mapper.Map<Networking.Messages.Contracts.NetworkGlobalMapTraveler>(globalMapTraveler),
+                Party = Mapper.Map<List<Networking.Messages.Contracts.NetworkUnit>>(party)
             };
             Logger.LogInformation("Sending {MessageType}. EdgePosition={EdgePosition}", nameof(NotifyGlobalMapTravelStopped), message.Traveler.Position?.EdgePosition);
             Send(message);
@@ -1564,6 +1570,7 @@ namespace WOTRMultiplayer.Services
                .On<NotifyGlobalMapCrusadeArmyBuyLeaderClosed>(OnNotifyGlobalMapCrusadeArmyBuyLeaderClosed)
                .On<NotifyGlobalMapRecruitmentShown>(OnNotifyGlobalMapRecruitmentShown)
                .On<NotifyGlobalMapRecruitmentClosed>(OnNotifyGlobalMapRecruitmentClosed)
+               .On<NotifyGlobalMapCommonPopupShown>(OnNotifyGlobalMapCommonPopupShown)
 
                // dialogs
                .On<ClientDialogCueAnswerSuggested>(OnClientDialogCueAnswerSuggested)
@@ -1576,6 +1583,17 @@ namespace WOTRMultiplayer.Services
                // inventory
                .On<NotifyPolymorphicItemCreationRequested>(OnNotifyPolymorphicItemCreationRequested)
                ;
+        }
+
+        private void OnNotifyGlobalMapCommonPopupShown(long receivedFrom, NotifyGlobalMapCommonPopupShown globalMapCommonPopupShown)
+        {
+            Logger.LogInformation("Received {MessageType}. ReceivedFrom={ReceivedFrom}, PlayerId={PlayerId}, Type={Type}, LocationId={LocationId}, LocationName={LocationName}", nameof(NotifyGlobalMapCommonPopupShown), receivedFrom, globalMapCommonPopupShown.PlayerId, globalMapCommonPopupShown.Popup.Type, globalMapCommonPopupShown.Popup.Location?.Id.Length, globalMapCommonPopupShown.Popup.Location?.Name);
+
+            AddPlayerToTracker(Game.PlayersInGlobalMapCommonPopup, globalMapCommonPopupShown.PlayerId);
+            var popup = Mapper.Map<NetworkGlobalMapCommonPopup>(globalMapCommonPopupShown.Popup);
+            UpdateGlobalMapCommonPopupUIState(popup);
+
+            OnAfterNetworkMessageHandled(receivedFrom, globalMapCommonPopupShown);
         }
 
         private async void OnClientCombatPreparationStarted(long receivedFrom, ClientCombatPreparationStarted message)
@@ -2331,9 +2349,16 @@ namespace WOTRMultiplayer.Services
                     {
                         var message = new NotifyGamePauseEnded
                         {
-                            AreaSeed = Game.ForcedPause.Reason == NetworkForcedPauseReason.AreaLoading ? Game.CurrentArea.Seed : null
+                            AreaSeed = Game.ForcedPause.Reason == NetworkForcedPauseReason.AreaLoading ? Game.CurrentArea.Seed : null,
                         };
-                        Logger.LogInformation("Sending {MessageType}. AreaSeed={AreaSeed}", nameof(NotifyGamePauseEnded), message.AreaSeed);
+
+                        if (GameInteraction.IsPaused)
+                        {
+                            var party = CombatInteraction.GetParty();
+                            message.Party = Mapper.Map<List<Networking.Messages.Contracts.NetworkUnit>>(party);
+                        }
+
+                        Logger.LogInformation("Sending {MessageType}. AreaSeed={AreaSeed}. Party={Party}", nameof(NotifyGamePauseEnded), message.AreaSeed, message.Party);
                         Send(message);
 
                         Game.ForcedPause = null;

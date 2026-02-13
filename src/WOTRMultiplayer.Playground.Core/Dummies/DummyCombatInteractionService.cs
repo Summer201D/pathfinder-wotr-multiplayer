@@ -126,5 +126,14 @@ namespace WOTRMultiplayer.Playground.Core.Dummies
         {
             return Task.CompletedTask;
         }
+
+        public void UpdateUnits(List<NetworkUnit> networkUnits)
+        {
+        }
+
+        public List<NetworkUnit> GetParty()
+        {
+            return [];
+        }
     }
 }

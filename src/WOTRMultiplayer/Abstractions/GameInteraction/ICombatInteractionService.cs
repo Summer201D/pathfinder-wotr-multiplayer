@@ -22,6 +22,10 @@ namespace WOTRMultiplayer.Abstractions.GameInteraction
 
         List<NetworkUnit> GetUnitsInCombat();
 
+        List<NetworkUnit> GetParty();
+
+        void UpdateUnits(List<NetworkUnit> networkUnits);
+
         void StartTurnBasedCombatTurn(string unitId);
 
         void EndTurnBasedCombatTurn();

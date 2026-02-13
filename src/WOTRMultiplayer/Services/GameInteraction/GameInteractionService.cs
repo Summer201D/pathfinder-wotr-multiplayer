@@ -99,6 +99,8 @@ namespace WOTRMultiplayer.Services.GameInteraction
 
         public GameModeType CurrentGameMode => Game.Instance.CurrentMode;
 
+        public bool IsPaused => Game.Instance.IsPaused;
+
         public GameInteractionService(
             ILogger<GameInteractionService> logger,
             IUIAccessor uiAccessor,
@@ -294,7 +296,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
 
         public bool IsUnitInParty(string unitId)
         {
-            var groupToSearch = Game.Instance.Player.CapitalPartyMode ? Game.Instance.Player.AllCharacters : Game.Instance.Player.PartyAndPets;
+            var groupToSearch = _gameStateLookupService.GetActualParty();
             var unit = groupToSearch.FirstOrDefault(p => string.Equals(p.UniqueId, unitId, StringComparison.OrdinalIgnoreCase));
             return unit != null;
         }
@@ -2232,6 +2234,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
             {
                 Id = currentArea.AssetGuid.ToString(),
                 Name = currentArea.name,
+                IsGlobalMap = currentArea.IsGlobalMap,
                 Chapter = Game.Instance.Player?.Chapter ?? -1
             };
 

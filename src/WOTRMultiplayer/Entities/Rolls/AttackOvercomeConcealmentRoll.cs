@@ -13,9 +13,9 @@ namespace WOTRMultiplayer.Entities.Rolls
         {
         }
 
-        public override IEnumerable<string> GetUniquinessIdentifiers()
+        protected override IEnumerable<string> GetRollIdentifier()
         {
-            var attackIdentifier = AttackRoll == null ? null : string.Join(IdSeparator, AttackRoll.GetUniquinessIdentifiers());
+            var attackIdentifier = AttackRoll == null ? null : string.Join(IdSeparator, AttackRoll.GetIdentifier());
 
             return ["@", MissChance.ToString(), "@", attackIdentifier];
         }

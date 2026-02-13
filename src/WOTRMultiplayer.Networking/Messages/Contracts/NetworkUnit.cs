@@ -29,6 +29,9 @@ namespace WOTRMultiplayer.Networking.Messages.Contracts
         [ProtoMember(8)]
         public NetworkUnitPartInPit UnitPartInPit { get; set; }
 
+        [ProtoMember(9)]
+        public NetworkUnitPartKineticist UnitPartKineticist { get; set; }
+
         public override string ToString()
         {
             return Id?.ToString();

@@ -19,7 +19,7 @@ namespace WOTRMultiplayer.Entities.Rolls
         {
         }
 
-        public override IEnumerable<string> GetUniquinessIdentifiers()
+        protected override IEnumerable<string> GetRollIdentifier()
         {
             return [IncreasedDuration.ToString(), TargetCMD.ToString(), Type, WeaponName, TargetUnitId];
         }

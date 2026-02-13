@@ -13,7 +13,7 @@ namespace WOTRMultiplayer.Entities.Rolls
         {
         }
 
-        public override IEnumerable<string> GetUniquinessIdentifiers()
+        protected override IEnumerable<string> GetRollIdentifier()
         {
             return [IsFullSpeed.ToString(), ResultOverride?.ToString()];
         }

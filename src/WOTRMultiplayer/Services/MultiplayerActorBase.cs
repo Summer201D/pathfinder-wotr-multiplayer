@@ -429,6 +429,16 @@ namespace WOTRMultiplayer.Services
         public virtual void OnAreaLoadingComplete()
         {
             Game.ForcedPause?.ReadyPlayers.Add(Game.LocalPlayerId);
+
+            if (Game.CurrentArea.IsGlobalMap)
+            {
+                if (!Game.PlayersInGlobalMapMode.TryGetValue(Game.LocalPlayerId, out var mode))
+                {
+                    mode = NetworkGlobalMapTravelerMode.Player;
+                }
+
+                OnGlobalMapTravelerModeChanged(mode);
+            }
         }
 
         public void OnAreaScenesLoaded()
@@ -1732,6 +1742,12 @@ namespace WOTRMultiplayer.Services
         public void OnGlobalMapTravelerModeChanged(NetworkGlobalMapTravelerMode travelerMode)
         {
             RegisterGlobalMapMode(Game.LocalPlayerId, travelerMode);
+
+            if (Game.CurrentArea == null || !Game.CurrentArea.IsGlobalMap)
+            {
+                UpdateGlobalMapUIState();
+                return;
+            }
 
             var message = new NotifyGlobalMapTravelerModeChanged
             {
@@ -3270,7 +3286,6 @@ namespace WOTRMultiplayer.Services
 
                 // global map & crusade combat
                 .On<NotifyGlobalMapLocationMessageShown>(OnNotifyGlobalMapLocationMessageShown)
-                .On<NotifyGlobalMapCommonPopupShown>(OnNotifyGlobalMapCommonPopupShown)
                 .On<NotifyGlobalMapEncounterMessageShown>(OnNotifyGlobalMapEncounterMessageShown)
                 .On<NotifyGlobalMapCombatResultsShown>(OnNotifyGlobalMapCombatResultsShown)
                 .On<NotifyTacticalCombatTurnInitialized>(OnNotifyTacticalCombatTurnInitialized)
@@ -3877,17 +3892,6 @@ namespace WOTRMultiplayer.Services
             UpdateGlobalMapEncounterMessageUIState();
 
             OnAfterNetworkMessageHandled(receivedFrom, globalMapEncounterMessageShown);
-        }
-
-        private void OnNotifyGlobalMapCommonPopupShown(long receivedFrom, NotifyGlobalMapCommonPopupShown globalMapCommonPopupShown)
-        {
-            Logger.LogInformation("Received {MessageType}. ReceivedFrom={ReceivedFrom}, PlayerId={PlayerId}, Type={Type}, LocationId={LocationId}, LocationName={LocationName}", nameof(NotifyGlobalMapCommonPopupShown), receivedFrom, globalMapCommonPopupShown.PlayerId, globalMapCommonPopupShown.Popup.Type, globalMapCommonPopupShown.Popup.Location?.Id.Length, globalMapCommonPopupShown.Popup.Location?.Name);
-
-            AddPlayerToTracker(Game.PlayersInGlobalMapCommonPopup, globalMapCommonPopupShown.PlayerId);
-            var popup = Mapper.Map<NetworkGlobalMapCommonPopup>(globalMapCommonPopupShown.Popup);
-            UpdateGlobalMapCommonPopupUIState(popup);
-
-            OnAfterNetworkMessageHandled(receivedFrom, globalMapCommonPopupShown);
         }
 
         private void OnNotifyGroupChangerOpened(long receivedFrom, NotifyGroupChangerOpened groupChangerVisible)

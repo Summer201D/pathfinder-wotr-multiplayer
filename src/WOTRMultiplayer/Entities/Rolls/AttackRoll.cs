@@ -17,9 +17,14 @@ namespace WOTRMultiplayer.Entities.Rolls
         {
         }
 
-        public override IEnumerable<string> GetUniquinessIdentifiers()
+        public IEnumerable<string> GetIdentifier()
         {
-            var attackWithWeaponIdentifier = AttackWithWeapon == null ? null : string.Join(IdSeparator, AttackWithWeapon.GetUniquinessIdentifiers());
+            return GetRollIdentifier();
+        }
+
+        protected override IEnumerable<string> GetRollIdentifier()
+        {
+            var attackWithWeaponIdentifier = AttackWithWeapon == null ? null : string.Join(IdSeparator, AttackWithWeapon.GetIdentifier());
 
             return ["@", AttackType, TargetId, IsCriticalRoll.ToString(), "@", attackWithWeaponIdentifier];
         }

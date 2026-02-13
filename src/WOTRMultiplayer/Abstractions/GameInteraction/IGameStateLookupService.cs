@@ -42,5 +42,7 @@ namespace WOTRMultiplayer.Abstractions.GameInteraction
         List<AreaEffectEntityData> GetAreaEffects();
 
         AreaEffectEntityData GetAreaEffect(NetworkAreaEffect networkAreaEffect);
+
+        List<UnitEntityData> GetActualParty();
     }
 }

@@ -25,7 +25,7 @@ namespace WOTRMultiplayer.Entities.Rolls
         {
         }
 
-        public override IEnumerable<string> GetUniquinessIdentifiers()
+        protected override IEnumerable<string> GetRollIdentifier()
         {
             return [TargetId, AbilityName, AbilitySchoolId, UnitsCount.ToString(), EmpowerModifier.ToString(), IsTacticalCombat.ToString(), AdditionalBonus.ToString(), HealResistance.ToString()];
         }

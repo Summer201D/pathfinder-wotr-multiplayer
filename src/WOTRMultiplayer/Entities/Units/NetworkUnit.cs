@@ -20,6 +20,8 @@ namespace WOTRMultiplayer.Entities.Units
 
         public NetworkUnitPartInPit UnitPartInPit { get; set; }
 
+        public NetworkUnitPartKineticist UnitPartKineticist { get; set; }
+
         public override bool Equals(object obj)
         {
             return obj is NetworkUnit other && string.Equals(this.Id, other.Id, System.StringComparison.OrdinalIgnoreCase);

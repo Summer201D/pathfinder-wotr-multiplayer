@@ -2,10 +2,9 @@
 
 namespace WOTRMultiplayer.Entities.Rolls
 {
-
     public abstract class NetworkDiceRollBase
     {
-        protected const string IdSeparator = "::";
+        protected const string IdSeparator = ":";
 
         public string InitiatorId { get; private set; }
 
@@ -25,15 +24,15 @@ namespace WOTRMultiplayer.Entities.Rolls
 
         public string GetIdString()
         {
-            var baseId = string.Join(IdSeparator, GetBaseUniquinessIdentifiers());
-            var id = string.Join(IdSeparator, GetUniquinessIdentifiers());
+            var baseId = string.Join(IdSeparator, GetBaseRollIdentifier());
+            var id = string.Join(IdSeparator, GetRollIdentifier());
             var fullId = string.Join(IdSeparator, baseId, id);
             return fullId;
         }
 
-        public abstract IEnumerable<string> GetUniquinessIdentifiers();
+        protected abstract IEnumerable<string> GetRollIdentifier();
 
-        private IEnumerable<string> GetBaseUniquinessIdentifiers()
+        private IEnumerable<string> GetBaseRollIdentifier()
         {
             return [GetType().Name, RollType.ToString(), InitiatorId, RuleName, TotalModifiersBonus.ToString()];
         }

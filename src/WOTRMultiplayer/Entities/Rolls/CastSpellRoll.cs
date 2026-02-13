@@ -15,7 +15,7 @@ namespace WOTRMultiplayer.Entities.Rolls
         {
         }
 
-        public override IEnumerable<string> GetUniquinessIdentifiers()
+        protected override IEnumerable<string> GetRollIdentifier()
         {
             return [ArcaneSpellFailureChance.ToString(), SpellFailureChance.ToString(), IsSpellFailure.ToString()];
         }

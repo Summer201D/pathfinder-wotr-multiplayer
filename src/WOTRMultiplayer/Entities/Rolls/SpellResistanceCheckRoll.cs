@@ -23,7 +23,7 @@ namespace WOTRMultiplayer.Entities.Rolls
 
         public string ActionType { get; set; }
 
-        public override IEnumerable<string> GetUniquinessIdentifiers()
+        protected override IEnumerable<string> GetRollIdentifier()
         {
             return [SpellPenetration.ToString(), SpellResistance.ToString(), SchoolType, AbilityType, TargetId, AbilityType, ActionType];
         }

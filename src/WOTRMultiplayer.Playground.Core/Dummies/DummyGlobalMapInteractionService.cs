@@ -1,4 +1,5 @@
-﻿using WOTRMultiplayer.Abstractions.GameInteraction;
+﻿using System.Threading.Tasks;
+using WOTRMultiplayer.Abstractions.GameInteraction;
 using WOTRMultiplayer.Entities.GlobalMap;
 
 namespace WOTRMultiplayer.Playground.Core.Dummies
@@ -268,6 +269,11 @@ namespace WOTRMultiplayer.Playground.Core.Dummies
 
         public void AcceptLocationMessageBox()
         {
+        }
+
+        public Task<bool> ShowCommonPopupAsync(NetworkGlobalMapCommonPopup popup)
+        {
+            return Task.FromResult(false);
         }
     }
 }

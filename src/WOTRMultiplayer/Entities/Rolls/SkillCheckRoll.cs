@@ -21,7 +21,7 @@ namespace WOTRMultiplayer.Entities.Rolls
         {
         }
 
-        public override IEnumerable<string> GetUniquinessIdentifiers()
+        protected override IEnumerable<string> GetRollIdentifier()
         {
             return [EnsureSuccess?.ToString(), DifficultyCheck.ToString(), RequireSuccessBonus.ToString(), Take10ForSuccess.ToString(), StatType, SourceEntityId];
         }

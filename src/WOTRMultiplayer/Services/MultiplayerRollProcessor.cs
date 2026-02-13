@@ -12,9 +12,11 @@ using Microsoft.Extensions.Logging;
 using WOTRMultiplayer.Abstractions;
 using WOTRMultiplayer.Abstractions.GameInteraction;
 using WOTRMultiplayer.Abstractions.Hashing;
+using WOTRMultiplayer.Abstractions.Random;
 using WOTRMultiplayer.Entities.Rolls;
 using WOTRMultiplayer.Entities.Rolls.Claiming.Values;
 using WOTRMultiplayer.Extensions;
+using WOTRMultiplayer.Services.Random;
 
 namespace WOTRMultiplayer.Services
 {
@@ -27,6 +29,7 @@ namespace WOTRMultiplayer.Services
         private readonly IDiceRollStorage _diceRollStorage;
         private readonly IHashService _hashService;
         private readonly IMultiplayerActorAccessor _multiplayerActorAccessor;
+        private readonly IValueGenerator _valueGenerator;
         private readonly HashSet<string> _importantCutsceneAreas = new([
             "EstrodTower" // - using columns to damage enemies
             ], StringComparer.OrdinalIgnoreCase);
@@ -38,7 +41,8 @@ namespace WOTRMultiplayer.Services
             IPlayerNotificationService playerNotificationService,
             IDiceRollStorage diceRollStorage,
             IHashService hashService,
-            IMultiplayerActorAccessor multiplayerActorAccessor)
+            IMultiplayerActorAccessor multiplayerActorAccessor,
+            IValueGenerator valueGenerator)
         {
             _logger = logger;
             _gameInteractionService = gameInteractionService;
@@ -47,6 +51,7 @@ namespace WOTRMultiplayer.Services
             _diceRollStorage = diceRollStorage;
             _hashService = hashService;
             _multiplayerActorAccessor = multiplayerActorAccessor;
+            _valueGenerator = valueGenerator;
         }
 
         public bool OnBeforeRuleCalculateDamageTrigger(RuleCalculateDamage ruleCalculateDamage)
@@ -364,7 +369,7 @@ namespace WOTRMultiplayer.Services
         {
             try
             {
-                if (!ShouldStoreRoll(ruleSavingThrow))
+                if (!ShouldStoreRoll(ruleSavingThrow) || IsRolledDeterministically(ruleSavingThrow))
                 {
                     return;
                 }
@@ -379,30 +384,76 @@ namespace WOTRMultiplayer.Services
             }
         }
 
-        public void OnBeforeRuleSavingThrowRoll(RuleSavingThrow ruleSavingThrow)
+        public bool OnBeforeRuleSavingThrowRoll(RuleSavingThrow ruleSavingThrow)
         {
             try
             {
-                if (!ShouldRetrieveRoll(ruleSavingThrow))
+                if (!ShouldRetrieveRoll(ruleSavingThrow) && !IsRolledDeterministically(ruleSavingThrow))
                 {
-                    return;
+                    return true;
                 }
 
-                var savingThrow = CreateSavingThrowRoll(NetworkDiceRollType.Hit, ruleSavingThrow);
-                var d20 = RetrieveRoll<RuleRollD20>(savingThrow, ruleSavingThrow.Initiator);
+                var d20 = IsRolledDeterministically(ruleSavingThrow) ? RollSavingThrow(ruleSavingThrow) : RetrieveSavingThrow(ruleSavingThrow);
                 if (d20 == null)
                 {
-                    _logger.LogInformation("Roll retrieving context={StackTrace}", Environment.StackTrace);
-                    return;
+                    return true;
                 }
 
                 ruleSavingThrow.D20 = d20;
+                return false;
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Unable to handle {MethodName}", MethodBase.GetCurrentMethod().Name);
                 throw;
             }
+        }
+
+        private RuleRollD20 RollSavingThrow(RuleSavingThrow ruleSavingThrow)
+        {
+            var savingThrow = CreateSavingThrowRoll(NetworkDiceRollType.Hit, ruleSavingThrow);
+            var rollIdentifier = savingThrow.GetIdString();
+
+            var sessionSeed = _multiplayerActorAccessor.Current.SessionSeed;
+            var loadedSaveSeed = _multiplayerActorAccessor.Current.LoadedSaveSeed;
+
+            var identifier = $"{rollIdentifier}_{sessionSeed}:{loadedSaveSeed}";
+            var (history, result) = RollDice(IdentifierLifetime.Area, identifier, ruleSavingThrow.D20);
+            var rollId = _hashService.Murmur3(identifier);
+            _logger.LogInformation("RuleSavingThrow has been rolled deterministicaly. UnitId={UnitId}, Result={Result}, History={History}, RollId={RollId}, Identifier={Identifier}",
+                ruleSavingThrow.Initiator.UniqueId, result, history, rollId, identifier);
+
+            var d20 = RuleRollD20.FromInt(ruleSavingThrow.Initiator, result);
+            d20.RollHistory = history;
+            return d20;
+        }
+
+        private (List<int> history, int result) RollDice(IdentifierLifetime lifetime, string identifier, RuleRollDice ruleRollDice)
+        {
+            var random = _valueGenerator.GetRandom(lifetime, identifier);
+            var history = new List<int>();
+            var result = 0;
+            var rerolls = ruleRollDice.m_RerollAmount;
+            while (rerolls >= 0)
+            {
+                result = ruleRollDice.DiceFormula.Roll(random);
+                history.Add(result);
+                rerolls--;
+            }
+
+            return (history, result);
+        }
+
+        private RuleRollD20 RetrieveSavingThrow(RuleSavingThrow ruleSavingThrow)
+        {
+            var savingThrow = CreateSavingThrowRoll(NetworkDiceRollType.Hit, ruleSavingThrow);
+            var d20 = RetrieveRoll<RuleRollD20>(savingThrow, ruleSavingThrow.Initiator);
+            if (d20 == null)
+            {
+                _logger.LogInformation("Roll retrieving context={StackTrace}", Environment.StackTrace);
+            }
+
+            return d20;
         }
 
         public bool OnBeforeRuleSpellResistanceCheckRoll(RuleSpellResistanceCheck ruleSpellResistanceCheck)
@@ -1062,6 +1113,13 @@ namespace WOTRMultiplayer.Services
         private bool ShouldStoreRoll(object rule)
         {
             return _multiplayerActorAccessor.Current != null && IsMeaningfulRoll(rule) && IsRollOwner(rule);
+        }
+
+        private bool IsRolledDeterministically(object rule)
+        {
+            var currentArea = _multiplayerActorAccessor.Current?.CurrentArea;
+
+            return currentArea != null && currentArea.IsGlobalMap && rule is RuleSavingThrow;
         }
 
         private bool IsRollOwner(object rule)

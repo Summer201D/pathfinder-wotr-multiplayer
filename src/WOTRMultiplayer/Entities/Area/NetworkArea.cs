@@ -6,6 +6,8 @@
 
         public string Name { get; set; }
 
+        public bool IsGlobalMap { get; set; }
+
         public int Seed { get; set; }
 
         public int Chapter { get; set; }

@@ -29,7 +29,7 @@ namespace WOTRMultiplayer.Entities.Rolls
         {
         }
 
-        public override IEnumerable<string> GetUniquinessIdentifiers()
+        protected override IEnumerable<string> GetRollIdentifier()
         {
             return [DiceRolls.ToString(), DiceFormulaType, HalfBecauseSavingThrow.ToString(), Immune.ToString(), Maximize.ToString(), IsDrain.ToString(), Empower.ToString(), MinStatScoreAfterDamage?.ToString(), CriticalModifierName, CriticalModifierValue.ToString()];
         }

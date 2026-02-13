@@ -21,7 +21,7 @@ namespace WOTRMultiplayer.Entities.Rolls
         {
         }
 
-        public override IEnumerable<string> GetUniquinessIdentifiers()
+        protected override IEnumerable<string> GetRollIdentifier()
         {
             return [CheckType, DC.ToString(), CasterLevel.ToString(), BuffName, Skill, BuffName, AreaEffectName];
         }

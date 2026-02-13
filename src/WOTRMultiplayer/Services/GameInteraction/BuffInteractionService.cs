@@ -59,7 +59,6 @@ namespace WOTRMultiplayer.Services.GameInteraction
             var localUnitBuffs = GetSyncableUnitBuffs(unit);
             var remoteUnitBuffs = unitBuffCollection.Buffs.ToList();
 
-            _logger.LogInformation("Updating unit buffs. LocalBuffs={LocalBuffs}, RemoveBuffs={RemoteBuffs}", localUnitBuffs.Count, remoteUnitBuffs.Count);
             for (int i = remoteUnitBuffs.Count - 1; i >= 0; i--)
             {
                 var networkBuff = remoteUnitBuffs[i];
@@ -71,20 +70,9 @@ namespace WOTRMultiplayer.Services.GameInteraction
                     continue;
                 }
 
-                try
-                {
-                    UpdateExistingUnitBuff(unit, buff, buffBaseTime, networkBuff);
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Error while updating buff. UnitId={UnitId}, Id={Id}, Name={Name}, Duration={Duration}, NextResourceSpendingTime={NextResourceSpendingTime}, NextTickTime={NextTickTime}",
-                        unit.UniqueId, buff.UniqueId, buff.NameForAcronym, networkBuff.TimeLeft, buff.NextResourceSpendingTime, buff.NextTickTime);
-                }
-                finally
-                {
-                    remoteUnitBuffs.Remove(networkBuff);
-                    localUnitBuffs.Remove(buff);
-                }
+                UpdateExistingUnitBuff(unit, buff, buffBaseTime, networkBuff);
+                remoteUnitBuffs.Remove(networkBuff);
+                localUnitBuffs.Remove(buff);
             }
 
             var buffsToRemove = localUnitBuffs.Where(x => !x.Hidden).ToList();
@@ -96,7 +84,6 @@ namespace WOTRMultiplayer.Services.GameInteraction
             UpdateNegativeLevels(unit, unitBuffCollection.NegativeLevels);
 
             unit.Buffs.UpdateNextEvent();
-            _logger.LogInformation("Next buff event has been updated. UnitId={UnitId}", unit.UniqueId);
         }
 
         private void UpdateNegativeLevels(UnitEntityData unit, List<NetworkUnitNegativeLevelsData> negativeLevels)
@@ -191,20 +178,28 @@ namespace WOTRMultiplayer.Services.GameInteraction
 
         private void UpdateExistingUnitBuff(UnitEntityData unit, Buff buff, TimeSpan buffBaseTime, NetworkBuff networkBuff)
         {
-            if (!buff.IsPermanent)
+            try
             {
-                buff.SetDuration(networkBuff.TimeLeft);
-                if (!buff.Hidden && buff.Rank != networkBuff.Rank)
+                if (!buff.IsPermanent)
                 {
-                    buff.SetRank(networkBuff.Rank);
+                    buff.SetDuration(networkBuff.TimeLeft);
+                    if (!buff.Hidden && buff.Rank != networkBuff.Rank)
+                    {
+                        buff.SetRank(networkBuff.Rank);
+                    }
                 }
+
+                buff.NextResourceSpendingTime = networkBuff.NextResourceSpendingTime == TimeSpan.MaxValue ? TimeSpan.MaxValue : buffBaseTime.SafeAdd(networkBuff.NextResourceSpendingTime);
+                buff.NextTickTime = networkBuff.NextTickTime == TimeSpan.MaxValue ? TimeSpan.MaxValue : buffBaseTime.SafeAdd(networkBuff.NextTickTime);
+
+                _logger.LogInformation("Updated buff. UnitId={UnitId}, Id={Id}, Name={Name}, Duration={Duration}, Rank={Rank}, IsHidden={IsHidden}, NextResourceSpendingTime={NextResourceSpendingTime}, NextTickTime={NextTickTime}, BuffBaseTime={BuffBaseTime} NetworkNextTickTime={NetworkNextTickTime}, NetworkNextPendingTime={NetworkNextPendingTime}",
+                    unit.UniqueId, buff.UniqueId, buff.NameForAcronym, networkBuff.TimeLeft, networkBuff.Rank, networkBuff.IsHidden, buff.NextResourceSpendingTime, buff.NextTickTime, buffBaseTime, networkBuff.NextTickTime, networkBuff.NextResourceSpendingTime);
             }
-
-            buff.NextResourceSpendingTime = networkBuff.NextResourceSpendingTime == TimeSpan.MaxValue ? TimeSpan.MaxValue : buffBaseTime.SafeAdd(networkBuff.NextResourceSpendingTime);
-            buff.NextTickTime = networkBuff.NextTickTime == TimeSpan.MaxValue ? TimeSpan.MaxValue : buffBaseTime.SafeAdd(networkBuff.NextTickTime);
-
-            _logger.LogInformation("Updated buff. UnitId={UnitId}, Id={Id}, Name={Name}, Duration={Duration}, Rank={Rank}, IsHidden={IsHidden}, NextResourceSpendingTime={NextResourceSpendingTime}, NextTickTime={NextTickTime}, BuffBaseTime={BuffBaseTime} NetworkNextTickTime={NetworkNextTickTime}, NetworkNextPendingTime={NetworkNextPendingTime}",
-                unit.UniqueId, buff.UniqueId, buff.NameForAcronym, networkBuff.TimeLeft, networkBuff.Rank, networkBuff.IsHidden, buff.NextResourceSpendingTime, buff.NextTickTime, buffBaseTime, networkBuff.NextTickTime, networkBuff.NextResourceSpendingTime);
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while updating buff. UnitId={UnitId}, Id={Id}, Name={Name}, Duration={Duration}, NextResourceSpendingTime={NextResourceSpendingTime}, NextTickTime={NextTickTime}",
+                    unit.UniqueId, buff.UniqueId, buff.NameForAcronym, networkBuff.TimeLeft, buff.NextResourceSpendingTime, buff.NextTickTime);
+            }
         }
     }
 }

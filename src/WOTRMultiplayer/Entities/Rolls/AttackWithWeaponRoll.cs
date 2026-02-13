@@ -19,7 +19,12 @@ namespace WOTRMultiplayer.Entities.Rolls
         {
         }
 
-        public override IEnumerable<string> GetUniquinessIdentifiers()
+        public IEnumerable<string> GetIdentifier()
+        {
+            return GetRollIdentifier();
+        }
+
+        protected override IEnumerable<string> GetRollIdentifier()
         {
             return [AttackNumber.ToString(), IsAttackOfOpportunity.ToString(), TargetId, ExtraAttack.ToString(), IsFirstAttack.ToString()];
         }

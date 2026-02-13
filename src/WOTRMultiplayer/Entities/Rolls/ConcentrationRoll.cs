@@ -19,7 +19,7 @@ namespace WOTRMultiplayer.Entities.Rolls
         {
         }
 
-        public override IEnumerable<string> GetUniquinessIdentifiers()
+        protected override IEnumerable<string> GetRollIdentifier()
         {
             return [DC.ToString(), Concentration.ToString(), AbilityName, Damage.ToString(), AddTwiceSpellLevel.ToString()];
         }

@@ -1,4 +1,5 @@
-﻿using WOTRMultiplayer.Entities.GlobalMap;
+﻿using System.Threading.Tasks;
+using WOTRMultiplayer.Entities.GlobalMap;
 
 namespace WOTRMultiplayer.Abstractions.GameInteraction
 {
@@ -135,5 +136,7 @@ namespace WOTRMultiplayer.Abstractions.GameInteraction
         void SelectLeaderLevelingSkill(string id);
 
         void StartCrusadeArmyLeaderLeveling(NetworkGlobalMapArmy globalMapArmy);
+
+        Task<bool> ShowCommonPopupAsync(NetworkGlobalMapCommonPopup popup);
     }
 }

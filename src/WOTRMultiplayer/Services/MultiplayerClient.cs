@@ -25,6 +25,7 @@ using WOTRMultiplayer.Entities.Leveling;
 using WOTRMultiplayer.Entities.NewGame;
 using WOTRMultiplayer.Entities.Rest;
 using WOTRMultiplayer.Entities.Settings;
+using WOTRMultiplayer.Entities.Units;
 using WOTRMultiplayer.Networking.Abstractions;
 using WOTRMultiplayer.Networking.Messages.Game;
 using WOTRMultiplayer.Networking.Messages.Lobby;
@@ -376,6 +377,11 @@ namespace WOTRMultiplayer.Services
 
         public bool OnGlobalMapSelectLocation(NetworkGlobalMapLocation globalMapLocation)
         {
+            if (globalMapLocation == null)
+            {
+                return false;
+            }
+
             var canSelectLocation = GlobalMapInteraction.IsAtLocation(globalMapLocation);
             return canSelectLocation;
         }
@@ -578,6 +584,7 @@ namespace WOTRMultiplayer.Services
                .On<NotifyGlobalMapCrusadeArmyLeaderLevelingClosed>(OnNotifyGlobalMapCrusadeArmyLeaderLevelingClosed)
                .On<NotifyGlobalMapCrusadeArmyLeaderLevelingConfirmed>(OnNotifyGlobalMapCrusadeArmyLeaderLevelingConfirmed)
                .On<NotifyGlobalMapCrusadeArmyLeaderLevelingSkillSelected>(OnNotifyGlobalMapCrusadeArmyLeaderLevelingSkillSelected)
+               .On<NotifyGlobalMapCommonPopupShown>(OnNotifyGlobalMapCommonPopupShown)
 
                // dialogs
                .On<NotifyDialogStarted>(OnNotifyDialogStarted)
@@ -612,6 +619,23 @@ namespace WOTRMultiplayer.Services
                // inventory
                .On<NotifyPolymorphicItemCreated>(OnNotifyPolymorphicItemCreated)
                ;
+        }
+
+        private async void OnNotifyGlobalMapCommonPopupShown(long receivedFrom, NotifyGlobalMapCommonPopupShown globalMapCommonPopupShown)
+        {
+            Logger.LogInformation("Received {MessageType}. ReceivedFrom={ReceivedFrom}, PlayerId={PlayerId}, Type={Type}, LocationId={LocationId}, LocationName={LocationName}", nameof(NotifyGlobalMapCommonPopupShown), receivedFrom, globalMapCommonPopupShown.PlayerId, globalMapCommonPopupShown.Popup.Type, globalMapCommonPopupShown.Popup.Location?.Id.Length, globalMapCommonPopupShown.Popup.Location?.Name);
+            AddPlayerToTracker(Game.PlayersInGlobalMapCommonPopup, globalMapCommonPopupShown.PlayerId);
+
+            var popup = Mapper.Map<NetworkGlobalMapCommonPopup>(globalMapCommonPopupShown.Popup);
+
+            var isShown = await GlobalMapInteraction.ShowCommonPopupAsync(popup);
+            if (isShown)
+            {
+                OnGlobalMapCommonPopupShown(popup);
+                return;
+            }
+
+            UpdateGlobalMapCommonPopupUIState(popup);
         }
 
         private async void OnNotifyCombatPreparationRequired(long receivedFrom, NotifyCombatPreparationRequired message)
@@ -1573,11 +1597,15 @@ namespace WOTRMultiplayer.Services
 
         private void OnNotifyGamePauseEnded(long playerId, NotifyGamePauseEnded message)
         {
-            Logger.LogInformation("Received {MessageType}. AreaSeed={AreaSeed}", nameof(NotifyGamePauseEnded), message.AreaSeed);
+            Logger.LogInformation("Received {MessageType}. AreaSeed={AreaSeed}, Party={Party}", nameof(NotifyGamePauseEnded), message.AreaSeed, message.Party);
             if (message.AreaSeed.HasValue)
             {
                 SetAreaSeed(message.AreaSeed.Value);
             }
+
+            var party = Mapper.Map<List<NetworkUnit>>(message.Party);
+            CombatInteraction.UpdateUnits(party);
+            Logger.LogInformation("Party units have been updated");
 
             Game.ForcedPause = null;
             GameInteraction.SetPause(false);

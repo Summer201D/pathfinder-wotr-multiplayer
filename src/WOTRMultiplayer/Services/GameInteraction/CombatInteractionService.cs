@@ -19,6 +19,7 @@ using Kingmaker.PubSubSystem;
 using Kingmaker.TurnBasedMode;
 using Kingmaker.UnitLogic.Abilities;
 using Kingmaker.UnitLogic.Abilities.Components;
+using Kingmaker.UnitLogic.Class.Kineticist;
 using Kingmaker.UnitLogic.Commands;
 using Kingmaker.UnitLogic.Commands.Base;
 using Kingmaker.UnitLogic.Parts;
@@ -550,6 +551,29 @@ namespace WOTRMultiplayer.Services.GameInteraction
             return taskCompletion.Task;
         }
 
+        public List<NetworkUnit> GetParty()
+        {
+            var party = _gameStateLookupService.GetActualParty();
+            var units = GetUnitState(party);
+            return units;
+        }
+
+        public void UpdateUnits(List<NetworkUnit> networkUnits)
+        {
+            foreach (var networkUnit in networkUnits)
+            {
+                try
+                {
+                    var unit = _gameStateLookupService.GetUnitEntity(networkUnit.Id);
+                    UpdateUnit(unit, networkUnit, updatePosition: false);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error while updating unit. UnitId={UnitId}", networkUnit.Id);
+                }
+            }
+        }
+
         public List<NetworkUnit> GetUnitsInCombat()
         {
             try
@@ -569,36 +593,49 @@ namespace WOTRMultiplayer.Services.GameInteraction
                         break;
                 }
 
-                var units = new List<NetworkUnit>();
-                foreach (var combatUnit in unitsInCombat)
-                {
-                    var unit = new NetworkUnit
-                    {
-                        Id = combatUnit.UniqueId,
-                        Position = combatUnit.Position.ToNetworkVector3(),
-                        Orientation = combatUnit.Orientation,
-                        TurnBasedInfo = GetUnitTurnBasedInfo(combatUnit),
-                        CombatState = GetUnitCombatState(combatUnit),
-                        Descriptor = GetUnitDescriptor(combatUnit),
-                        BuffCollection = _buffInteractionService.GetUnitBuffs(combatUnit),
-                    };
-
-                    var pitPart = combatUnit.Get<UnitPartInPit>();
-                    if (pitPart != null)
-                    {
-                        unit.UnitPartInPit = new NetworkUnitPartInPit { CurrentRoundSeconds = pitPart.CurrentRoundSeconds };
-                    }
-
-                    units.Add(unit);
-                }
-
+                var units = GetUnitState(unitsInCombat);
                 return units;
+
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Unable to get units in combat");
                 throw;
             }
+        }
+
+        private List<NetworkUnit> GetUnitState(List<UnitEntityData> unitEntities)
+        {
+            var units = new List<NetworkUnit>();
+            foreach (var unitEntity in unitEntities)
+            {
+                var unit = new NetworkUnit
+                {
+                    Id = unitEntity.UniqueId,
+                    Position = unitEntity.Position.ToNetworkVector3(),
+                    Orientation = unitEntity.Orientation,
+                    TurnBasedInfo = GetUnitTurnBasedInfo(unitEntity),
+                    CombatState = GetUnitCombatState(unitEntity),
+                    Descriptor = GetUnitDescriptor(unitEntity),
+                    BuffCollection = _buffInteractionService.GetUnitBuffs(unitEntity),
+                };
+
+                var pitPart = unitEntity.Get<UnitPartInPit>();
+                if (pitPart != null)
+                {
+                    unit.UnitPartInPit = new NetworkUnitPartInPit { CurrentRoundSeconds = pitPart.CurrentRoundSeconds };
+                }
+
+                var kineticist = unitEntity.Get<UnitPartKineticist>();
+                if (kineticist != null)
+                {
+                    unit.UnitPartKineticist = new NetworkUnitPartKineticist { AcceptedBurn = kineticist.AcceptedBurn };
+                }
+
+                units.Add(unit);
+            }
+
+            return units;
         }
 
         private void UpdateAreaEffects(List<NetworkAreaEffect> areaEffects)
@@ -685,6 +722,9 @@ namespace WOTRMultiplayer.Services.GameInteraction
             var descriptor = new NetworkUnitDescriptor
             {
                 Damage = combatUnit.Descriptor.Damage,
+                Stats = new NetworkCharacterStats
+                {
+                },
                 State = new NetworkUnitState
                 {
                     IsCharging = combatUnit.Descriptor.State.IsCharging
@@ -740,9 +780,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
                         continue;
                     }
 
-                    UpdateUnitParts(unit, networkUnit);
-                    UpdateUnitPosition(unit, networkUnit);
-                    UpdateUnitHealth(unit, networkUnit);
+                    UpdateUnit(unit, networkUnit, updatePosition: true);
 
                     if (!requiresFullUpdate)
                     {
@@ -769,7 +807,55 @@ namespace WOTRMultiplayer.Services.GameInteraction
             }
         }
 
+        private void UpdateUnit(UnitEntityData unit, NetworkUnit remoteUnit, bool updatePosition)
+        {
+            if (unit == null || remoteUnit == null)
+            {
+                _logger.LogWarning("Unable to update missing unit. UnitId={UnitId}, NetworkUnitId={NetworkUnitId}", unit.UniqueId, remoteUnit.Id);
+                return;
+            }
+
+            UpdateUnitParts(unit, remoteUnit);
+            UpdateUnitHealth(unit, remoteUnit);
+
+            if (updatePosition)
+            {
+                UpdateUnitPosition(unit, remoteUnit);
+            }
+        }
+
         private void UpdateUnitParts(UnitEntityData unit, NetworkUnit networkUnit)
+        {
+            UpdateUnitPartKineticist(unit, networkUnit);
+            UpdateUnitPartInPit(unit, networkUnit);
+        }
+
+        private void UpdateUnitPartKineticist(UnitEntityData unit, NetworkUnit networkUnit)
+        {
+            if (networkUnit.UnitPartKineticist == null)
+            {
+                return;
+            }
+
+            var unitPart = unit.Get<UnitPartKineticist>();
+            if (unitPart == null)
+            {
+                _logger.LogError("UnitPartKineticist doesn't exist on the unit. UnitId={UnitId}", unit.UniqueId);
+                return;
+            }
+
+            if (unitPart.AcceptedBurn != networkUnit.UnitPartKineticist.AcceptedBurn)
+            {
+                var previousValue = unitPart.AcceptedBurn;
+                unitPart.AcceptedBurn = networkUnit.UnitPartKineticist.AcceptedBurn;
+
+                EventBus.RaiseEvent<IKineticistBurnValueHandler>(unit, x => x.HandleKineticistBurnValueChanged(unitPart, previousValue, null));
+                EventBus.RaiseEvent<IKineticistGlobalHandler>(x => x.HandleKineticistBurnValueChanged(unitPart, previousValue, null));
+                _logger.LogInformation("UnitPartKineticist burn has been updated. UnitId={UnitId}, AcceptedBurn={AcceptedBurn}", unit.UniqueId, unitPart.AcceptedBurn);
+            }
+        }
+
+        private void UpdateUnitPartInPit(UnitEntityData unit, NetworkUnit networkUnit)
         {
             if (networkUnit.UnitPartInPit == null)
             {

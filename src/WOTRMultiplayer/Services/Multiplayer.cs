@@ -2283,7 +2283,7 @@ namespace WOTRMultiplayer.Services
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error while selecting global map location. LocationId={LocationId}, LocationName={LocationName}", globalMapLocation.Id, globalMapLocation.Name);
+                _logger.LogError(ex, "Error while selecting global map location. LocationId={LocationId}, LocationName={LocationName}", globalMapLocation?.Id, globalMapLocation?.Name);
                 throw;
             }
         }

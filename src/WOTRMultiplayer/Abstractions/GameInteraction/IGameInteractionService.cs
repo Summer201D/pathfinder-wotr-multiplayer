@@ -28,6 +28,8 @@ namespace WOTRMultiplayer.Abstractions.GameInteraction
 
         GameModeType CurrentGameMode { get; }
 
+        bool IsPaused { get; }
+
         void LeaveArea(NetworkAreaTransition areaTransition);
 
         void MoveNonCombatCharacter(NetworkCharacterMove networkCharacterMove);

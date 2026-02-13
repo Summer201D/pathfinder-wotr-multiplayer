@@ -1,4 +1,5 @@
-﻿using ProtoBuf;
+﻿using System.Collections.Generic;
+using ProtoBuf;
 using WOTRMultiplayer.Networking.Messages.Contracts;
 
 namespace WOTRMultiplayer.Networking.Messages.Game
@@ -9,5 +10,8 @@ namespace WOTRMultiplayer.Networking.Messages.Game
     {
         [ProtoMember(1)]
         public NetworkGlobalMapTravel Travel { get; set; }
+
+        [ProtoMember(2)]
+        public List<NetworkUnit> Party { get; set; } = [];
     }
 }

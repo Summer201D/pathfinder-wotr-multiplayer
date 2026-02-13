@@ -52,6 +52,18 @@ namespace WOTRMultiplayer.HarmonyPatches.Combat
             return true;
         }
 
+        [HarmonyPatch(typeof(TurnController), nameof(TurnController.CalculatePathForSurprisecommand))]
+        [HarmonyPrefix]
+        public static void TurnController_CalculatePathForSurprisecommand_Prefix(TurnController __instance)
+        {
+            if (!Main.Multiplayer.IsActive)
+            {
+                return;
+            }
+
+            Main.GetLogger<TurnBasedCombatPatches>().LogInformation("Calculating path for surprise command. UnitId={UnitId}", __instance.Rider?.UniqueId);
+        }
+
         [HarmonyPatch(typeof(TurnController), nameof(TurnController.CanEndTurn))]
         [HarmonyTranspiler]
         public static IEnumerable<CodeInstruction> TurnController_CanEndTurn_Transpiler(IEnumerable<CodeInstruction> instructions)

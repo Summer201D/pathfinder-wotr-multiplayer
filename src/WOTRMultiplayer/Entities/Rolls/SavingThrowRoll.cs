@@ -17,7 +17,7 @@ namespace WOTRMultiplayer.Entities.Rolls
         {
         }
 
-        public override IEnumerable<string> GetUniquinessIdentifiers()
+        protected override IEnumerable<string> GetRollIdentifier()
         {
             return [StatType, ReasonAbilityName, ReasonCasterId, DifficultyClass.ToString()];
         }

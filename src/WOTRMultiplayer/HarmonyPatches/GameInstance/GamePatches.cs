@@ -9,8 +9,11 @@ using Kingmaker.Blueprints.Area;
 using Kingmaker.Controllers;
 using Kingmaker.EntitySystem.Persistence;
 using Kingmaker.GameModes;
+using Kingmaker.Globalmap;
+using Kingmaker.UI.Common;
 using Kingmaker.UI.MVVM;
 using Microsoft.Extensions.Logging;
+using Owlcat.Runtime.UI.Controls.Button;
 
 namespace WOTRMultiplayer.HarmonyPatches.GameInstance
 {
@@ -94,27 +97,45 @@ namespace WOTRMultiplayer.HarmonyPatches.GameInstance
 
         [HarmonyPatch(typeof(Game), nameof(Game.PauseBind))]
         [HarmonyTranspiler]
-        public static IEnumerable<CodeInstruction> Game_PauseBind_Transpiler(IEnumerable<CodeInstruction> instructions)
+        public static IEnumerable<CodeInstruction> Game_PauseBind_Transpiler(IEnumerable<CodeInstruction> instructions, ILGenerator generator)
         {
             var target = PatchesUtils.GetTranspilerTarget(MethodBase.GetCurrentMethod());
-            var replaceWith = AccessTools.Method(typeof(GamePatches), nameof(GamePatches.TogglePause));
-            var lookFor = AccessTools.PropertyGetter(typeof(Game), nameof(Game.IsPaused));
-            var matcher = new CodeMatcher(instructions);
-            var match = matcher.SearchForward(x => x.Calls(lookFor));
+
+            var lookForGlobalMap = AccessTools.Method(typeof(UIUtility), nameof(UIUtility.IsGlobalMap));
+            var breakGlobalMapCall = AccessTools.Method(typeof(GamePatches), nameof(GamePatches.BreakGlobalMap));
+            var matcher = new CodeMatcher(instructions, generator);
+            matcher.End().CreateLabel(out var endLabel);
+            var match = matcher.Start().SearchForward(x => x.Calls(lookForGlobalMap));
             if (match.IsInvalid)
             {
-                Main.GetLogger<GamePatches>().LogError("Transpiler has not been applied. Target={Target}", target);
+                Main.GetLogger<GamePatches>().LogError("Transpiler has not been applied (BreakGlobalMap). Target={Target}", target);
+                return instructions;
+            }
+
+            var globalMapInstructions = new List<CodeInstruction>()
+            {
+                new (OpCodes.Call, breakGlobalMapCall),
+                new (OpCodes.Brfalse_S, endLabel),
+            };
+            match = match.Advance(2).Insert(globalMapInstructions);
+
+            var pauseToggleCall = AccessTools.Method(typeof(GamePatches), nameof(GamePatches.TogglePause));
+            var lookForPause = AccessTools.PropertyGetter(typeof(Game), nameof(Game.IsPaused));
+            match = matcher.SearchForward(x => x.Calls(lookForPause));
+            if (match.IsInvalid)
+            {
+                Main.GetLogger<GamePatches>().LogError("Transpiler has not been applied (TogglePause). Target={Target}", target);
                 return instructions;
             }
 
             match = match.Advance(-2).RemoveInstructions(6);
-            var newInstructions = new List<CodeInstruction>()
+            var pauseInstructions = new List<CodeInstruction>()
             {
                 new (OpCodes.Ldarg_0),
-                new (OpCodes.Call, replaceWith),
+                new (OpCodes.Call, pauseToggleCall),
             };
-            match.Insert(newInstructions);
-            Main.GetLogger<GamePatches>().LogInformation("Transpiler has been applied. Target={Target}", target);
+            match.Insert(pauseInstructions);
+            Main.GetLogger<GamePatches>().LogInformation("Transpiler has been applied (TogglePause + BreakGlobalMap). Target={Target}", target);
             return matcher.Instructions();
         }
 
@@ -141,6 +162,20 @@ namespace WOTRMultiplayer.HarmonyPatches.GameInstance
             match.Insert(newInstructions);
             Main.GetLogger<GamePatches>().LogInformation("Transpiler has been applied. Target={Target}", target);
             return matcher.Instructions();
+        }
+
+        private static bool BreakGlobalMap()
+        {
+            if (!Main.Multiplayer.IsActive)
+            {
+                return true;
+            }
+
+            var canContinue = GlobalMapUI.Instance != null
+                && ((GlobalMapUI.Instance.m_BtnContinue.GetComponentInChildren<OwlcatButton>()?.Interactable ?? false)
+                || (GlobalMapUI.Instance.m_BtnStop.GetComponentInChildren<OwlcatButton>()?.Interactable ?? false));
+
+            return canContinue;
         }
 
         private static string GetGameId()

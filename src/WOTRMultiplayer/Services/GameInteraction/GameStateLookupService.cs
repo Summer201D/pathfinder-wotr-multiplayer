@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using Kingmaker;
-using Kingmaker.Armies;
 using Kingmaker.EntitySystem.Entities;
 using Kingmaker.Globalmap;
 using Kingmaker.Globalmap.State;
@@ -28,6 +27,12 @@ namespace WOTRMultiplayer.Services.GameInteraction
         public GameStateLookupService(ILogger<GameStateLookupService> logger)
         {
             _logger = logger;
+        }
+
+        public List<UnitEntityData> GetActualParty()
+        {
+            var party = Game.Instance.Player.CapitalPartyMode ? Game.Instance.Player.AllCharacters : Game.Instance.Player.PartyAndPets;
+            return party;
         }
 
         public MapObjectEntityData GetMapObject(string uniqueId)

@@ -31,6 +31,8 @@ namespace WOTRMultiplayer.Playground.Core.Dummies
 
         public GameModeType CurrentGameMode => GameModeType.None;
 
+        public bool IsPaused => false;
+
         public void AcceptCharacterSelectionWindow()
         {
         }

@@ -5,6 +5,7 @@
         Ingredients,
         Flee,
         Fatigue,
+        Exhaust,
         ClearLeader,
         BuyLeader,
         DismissArmy

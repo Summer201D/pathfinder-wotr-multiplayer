@@ -49,6 +49,7 @@ namespace WOTRMultiplayer.HarmonyPatches.GlobalMap
 
             var newInstruction = new List<CodeInstruction>()
             {
+                new(OpCodes.Ldloc_0),
                 new(OpCodes.Call, extraCall),
             };
             match = match.Advance(1).Insert(newInstruction);
@@ -66,6 +67,19 @@ namespace WOTRMultiplayer.HarmonyPatches.GlobalMap
             }
 
             OnFatigueMessageActionChoosen(btn);
+        }
+
+        [HarmonyPatch(typeof(GlobalMapVM), nameof(GlobalMapVM.OnUpdateFatigueHandler))]
+        [HarmonyPrefix]
+        public static bool GlobalMapVM_OnUpdateFatigueHandler_Prefix()
+        {
+            if (!Main.Multiplayer.IsActive)
+            {
+                return true;
+            }
+
+            var canContinue = Main.Multiplayer.CanControlGlobalMap();
+            return canContinue;
         }
 
         [HarmonyPatch(typeof(GlobalMapVM), nameof(GlobalMapVM.OnUpdateFatigueHandler))]
@@ -87,6 +101,7 @@ namespace WOTRMultiplayer.HarmonyPatches.GlobalMap
 
             var newInstruction = new List<CodeInstruction>()
             {
+                new(OpCodes.Ldloc_0),
                 new(OpCodes.Call, extraCall),
             };
             match = match.Advance(1).Insert(newInstruction);
@@ -241,15 +256,24 @@ namespace WOTRMultiplayer.HarmonyPatches.GlobalMap
 
         [HarmonyPatch(typeof(NavigationArrowView), nameof(NavigationArrowView.OnClick))]
         [HarmonyPrefix]
-        public static void NavigationArrowsController_OnClick_Prefix(NavigationArrowView __instance)
+        public static bool NavigationArrowsController_OnClick_Prefix(NavigationArrowView __instance)
         {
-            if (!Main.Multiplayer.IsActive || Game.Instance.CutsceneLock.Active || Game.Instance.CurrentMode == GameModeType.Rest)
+            if (!Main.Multiplayer.IsActive
+                || Game.Instance.CutsceneLock.Active
+                || Game.Instance.CurrentMode == GameModeType.Rest)
             {
-                return;
+                return true;
+            }
+
+            // cutting corners to disable navigation arrows if someone is not loaded yet
+            if (!GlobalMapUI.Instance.m_BtnContinue.GetComponentInChildren<OwlcatButton>().Interactable || !Main.Multiplayer.OnGlobalMapSelectLocation(null))
+            {
+                return false;
             }
 
             var travel = CreateGlobalMapTravel(NetworkGlobalMapPathType.Direction, __instance.m_DirLoc.Blueprint, fromClick: true);
             Main.Multiplayer.OnGlobalMapTravelStarted(travel);
+            return true;
         }
 
         [HarmonyPatch(typeof(GlobalMapEnterMessagePCView), nameof(GlobalMapEnterMessagePCView.BindViewImplementation))]
@@ -320,21 +344,6 @@ namespace WOTRMultiplayer.HarmonyPatches.GlobalMap
             var location = GetNetworkGlobalMapLocation(locationView.Blueprint);
             var canSelectLocation = Main.Multiplayer.OnGlobalMapSelectLocation(location);
             __result = __result && canSelectLocation;
-        }
-
-        [HarmonyPatch(typeof(GlobalMapView), nameof(GlobalMapView.OnBreak))]
-        [HarmonyPrefix]
-        public static bool GlobalMapView_OnBreak_Prefix()
-        {
-            if (!Main.Multiplayer.IsActive)
-            {
-                return true;
-            }
-
-            var canContinue = GlobalMapUI.Instance != null
-                 && ((GlobalMapUI.Instance.m_BtnContinue.GetComponentInChildren<OwlcatButton>()?.Interactable ?? false)
-                     || (GlobalMapUI.Instance.m_BtnStop.GetComponentInChildren<OwlcatButton>()?.Interactable ?? false));
-            return canContinue;
         }
 
         [HarmonyPatch(typeof(GlobalMapView), nameof(GlobalMapView.OnBreak))]
@@ -568,14 +577,17 @@ namespace WOTRMultiplayer.HarmonyPatches.GlobalMap
             Main.Multiplayer.OnGlobalMapCommonPopupDeclined(popup);
         }
 
-        private static void OnFatiguePopupShown()
+        private static void OnFatiguePopupShown(bool isExhaust)
         {
             if (!Main.Multiplayer.IsActive)
             {
                 return;
             }
 
-            var popup = new NetworkGlobalMapCommonPopup { Type = NetworkGlobalMapCommonPopupType.Fatigue };
+            var popup = new NetworkGlobalMapCommonPopup
+            {
+                Type = isExhaust ? NetworkGlobalMapCommonPopupType.Exhaust : NetworkGlobalMapCommonPopupType.Fatigue
+            };
             Main.Multiplayer.OnGlobalMapCommonPopupShown(popup);
         }
 
