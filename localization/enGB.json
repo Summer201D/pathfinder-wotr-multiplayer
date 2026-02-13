@@ -249,8 +249,8 @@
                 "unitAutokilled": "Auto-killing unit '{0}' ({1}) as it's been killed at {2}",
                 "forcedToStart": "Combat has been forced to start by {0}",
                 "buffs": {
-                    "removedBuffs": "Unit {0} lost the following buffs: {2}",
-                    "addedBuffs": "Unit {0} gained the following buffs: {2}"
+                    "removedBuffs": "Unit {0} lost the following buffs: {1}",
+                    "addedBuffs": "Unit {0} gained the following buffs: {1}"
                 },
                 "desyncedCombatUnits": "Some units did not spawn locally, but did spawn for other players. This causes combat and turn order to desync, preventing progression.\nPlease load your last save",
                 "turn": {

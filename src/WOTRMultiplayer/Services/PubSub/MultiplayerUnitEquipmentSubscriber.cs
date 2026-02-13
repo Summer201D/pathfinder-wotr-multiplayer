@@ -39,7 +39,7 @@ namespace WOTRMultiplayer.Services.PubSub
                 // - previousItem exists, but has no collection = either used by player (potion) or some scripted action
                 if (ActorAccessor.Current == null
                         || _gameInteractionService.CurrentGameMode == GameModeType.None
-                        || (previousItem != null && previousItem.Collection == null))
+                        || (previousItem != null && previousItem.Collection == null && !slot.HasItem))
                 {
                     return;
                 }
