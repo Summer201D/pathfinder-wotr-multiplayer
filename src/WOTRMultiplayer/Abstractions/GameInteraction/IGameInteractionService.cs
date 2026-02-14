@@ -196,5 +196,7 @@ namespace WOTRMultiplayer.Abstractions.GameInteraction
         void SetUnitAutoUseAbility(NetworkAutoUseAbility autoUseAbility);
 
         void CopyInventoryItem(NetworkItemCopy itemCopy);
+
+        bool IsDeadOrMissing(string unitId);
     }
 }

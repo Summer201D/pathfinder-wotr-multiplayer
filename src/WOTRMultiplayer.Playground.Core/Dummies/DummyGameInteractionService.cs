@@ -422,5 +422,10 @@ namespace WOTRMultiplayer.Playground.Core.Dummies
         {
             return null;
         }
+
+        public bool IsDeadOrMissing(string unitId)
+        {
+            return false;
+        }
     }
 }

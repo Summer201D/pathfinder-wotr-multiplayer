@@ -2131,6 +2131,13 @@ namespace WOTRMultiplayer.Services.GameInteraction
             });
         }
 
+        public bool IsDeadOrMissing(string unitId)
+        {
+            var unit = _gameStateLookupService.GetUnitEntity(unitId);
+
+            return unit == null || unit.Descriptor.State.IsFinallyDead;
+        }
+
         public void CopyInventoryItem(NetworkItemCopy itemCopy)
         {
             _mainThreadAccessor.Post(() =>

@@ -11,6 +11,7 @@ using Kingmaker.EntitySystem.Persistence;
 using Kingmaker.GameModes;
 using Kingmaker.Globalmap;
 using Kingmaker.UI.Common;
+using Kingmaker.UI.FullScreenUITypes;
 using Kingmaker.UI.MVVM;
 using Microsoft.Extensions.Logging;
 using Owlcat.Runtime.UI.Controls.Button;
@@ -219,24 +220,32 @@ namespace WOTRMultiplayer.HarmonyPatches.GameInstance
             if (isStart)
             {
                 combatLogView?.Hide();
-
+                var needsUpdate = false;
                 // capital mode + inventory/etc should show every character
                 if (Game.Instance.Player.CapitalPartyMode && !Game.Instance.Vendor.IsTrading)
                 {
                     switch (Game.Instance.RootUiContext.InGameVM.StaticPartVM.ServiceWindowsVM.m_FullScreenUIType)
                     {
-                        case Kingmaker.UI.FullScreenUITypes.FullScreenUIType.Inventory:
-                        case Kingmaker.UI.FullScreenUITypes.FullScreenUIType.SpellBook:
-                        case Kingmaker.UI.FullScreenUITypes.FullScreenUIType.Encyclopedia:
-                        case Kingmaker.UI.FullScreenUITypes.FullScreenUIType.Journal:
-                        case Kingmaker.UI.FullScreenUITypes.FullScreenUIType.CharacterScreen:
-                        case Kingmaker.UI.FullScreenUITypes.FullScreenUIType.MythicScreen:
-                            Game.Instance.SelectionCharacter.m_ActualGroup = SelectionCharacterController.GetGroup(true, false);
+                        case FullScreenUIType.Inventory:
+                        case FullScreenUIType.SpellBook:
+                        case FullScreenUIType.Encyclopedia:
+                        case FullScreenUIType.Journal:
+                        case FullScreenUIType.CharacterScreen:
+                        case FullScreenUIType.MythicScreen:
+                            var group = SelectionCharacterController.GetGroup(true, false);
+                            if (Game.Instance.SelectionCharacter.m_ActualGroup.Count != group.Count)
+                            {
+                                Game.Instance.SelectionCharacter.m_ActualGroup = group;
+                                needsUpdate = true;
+                            }
                             break;
                     }
                 }
 
-                UpdateSelectedCharacter();
+                if (needsUpdate)
+                {
+                    UpdateSelectedCharacter();
+                }
 
                 return;
             }

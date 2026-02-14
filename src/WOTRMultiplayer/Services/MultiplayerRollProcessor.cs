@@ -1122,7 +1122,16 @@ namespace WOTRMultiplayer.Services
         {
             var currentArea = _multiplayerActorAccessor.Current?.CurrentArea;
 
-            return currentArea != null && currentArea.IsGlobalMap && rule is RuleSavingThrow;
+            switch (rule)
+            {
+                case RuleSavingThrow savingThrow:
+                    var isRolled = currentArea != null
+                        && currentArea.IsGlobalMap
+                        || _combatInteractionService.IsInCombat() && _gameInteractionService.IsDeadOrMissing(savingThrow.Initiator.UniqueId);
+                    return isRolled;
+                default:
+                    return false;
+            }
         }
 
         private bool IsRollOwner(object rule)
