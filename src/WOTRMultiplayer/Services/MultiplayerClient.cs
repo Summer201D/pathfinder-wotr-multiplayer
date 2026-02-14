@@ -1614,9 +1614,12 @@ namespace WOTRMultiplayer.Services
                 SetAreaSeed(message.AreaSeed.Value);
             }
 
-            var party = Mapper.Map<List<NetworkUnit>>(message.Party);
-            CombatInteraction.UpdateUnits(party);
-            Logger.LogInformation("Party units have been updated");
+            if (message.Party.Count > 0)
+            {
+                var party = Mapper.Map<List<NetworkUnit>>(message.Party);
+                CombatInteraction.UpdateUnits(party);
+                Logger.LogInformation("Party units have been updated");
+            }
 
             Game.ForcedPause = null;
             GameInteraction.SetPause(false);
