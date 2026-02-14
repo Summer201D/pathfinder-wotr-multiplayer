@@ -2356,7 +2356,7 @@ namespace WOTRMultiplayer.Services
                             AreaSeed = Game.ForcedPause.Reason == NetworkForcedPauseReason.AreaLoading ? Game.CurrentArea.Seed : null,
                         };
 
-                        if (GameInteraction.IsPaused)
+                        if (GameInteraction.IsPaused && Game.ForcedPause.Reason == NetworkForcedPauseReason.AreaLoading)
                         {
                             var party = CombatInteraction.GetParty();
                             message.Party = Mapper.Map<List<Networking.Messages.Contracts.NetworkUnit>>(party);
