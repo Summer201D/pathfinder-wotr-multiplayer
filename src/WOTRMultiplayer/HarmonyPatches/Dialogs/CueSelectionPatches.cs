@@ -6,7 +6,6 @@ using Kingmaker;
 using Kingmaker.DialogSystem;
 using Kingmaker.DialogSystem.Blueprints;
 using Microsoft.Extensions.Logging;
-using WOTRMultiplayer.HarmonyPatches.Combat.Crusades;
 using WOTRMultiplayer.Services.Random;
 
 namespace WOTRMultiplayer.HarmonyPatches.Dialogs
@@ -25,7 +24,7 @@ namespace WOTRMultiplayer.HarmonyPatches.Dialogs
             var match = matcher.SearchForward(x => x.Calls(lookFor));
             if (match.IsInvalid)
             {
-                Main.GetLogger<UnitPartTacticalMoralePatches>().LogError("Transpiler has not been applied. Target={Target}", target);
+                Main.GetLogger<CueSelectionPatches>().LogError("Transpiler has not been applied. Target={Target}", target);
                 return instructions;
             }
 
@@ -35,7 +34,7 @@ namespace WOTRMultiplayer.HarmonyPatches.Dialogs
                 new(OpCodes.Call, replaceWith),
             };
             match = match.RemoveInstruction().Insert(newInstructions);
-            Main.GetLogger<UnitPartTacticalMoralePatches>().LogInformation("Transpiler has been applied. Target={Target}", target);
+            Main.GetLogger<CueSelectionPatches>().LogInformation("Transpiler has been applied. Target={Target}", target);
             return matcher.Instructions();
         }
 
