@@ -505,6 +505,15 @@ namespace WOTRMultiplayer.Services.GameInteraction
             return taskCompletion.Task;
         }
 
+        public void AddUnitsToCombat(List<string> units)
+        {
+            _mainThreadAccessor.Post(() =>
+            {
+                var combatUnits = units.Select(_gameStateLookupService.GetUnitEntity).ToList();
+                AddUnitsToCombat(combatUnits);
+            });
+        }
+
         public Task<bool> EnsureUnitsInCombatAsync(List<NetworkUnit> units)
         {
             var taskCompletion = new TaskCompletionSource<bool>();
@@ -530,19 +539,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
 
             _mainThreadAccessor.Post(() =>
             {
-                foreach (UnitEntityData unit in localUnits)
-                {
-                    if (unit.IsInCombat)
-                    {
-                        _logger.LogWarning("Unit is already in combat. UnitId={UnitId}", unit.UniqueId);
-                        continue;
-                    }
-
-                    var notSurprised = UnitCombatJoinController.CalculateIsNotSurprised(unit);
-                    unit.JoinCombat(notSurprised);
-                }
-
-                _logger.LogInformation("Units have been added to combat. Units={Units}", localUnits.Select(x => x.UniqueId));
+                AddUnitsToCombat(localUnits);
                 taskCompletion.SetResult(true);
             });
 
@@ -634,6 +631,23 @@ namespace WOTRMultiplayer.Services.GameInteraction
             }
 
             return units;
+        }
+
+        private void AddUnitsToCombat(List<UnitEntityData> units)
+        {
+            foreach (UnitEntityData unit in units)
+            {
+                if (unit.IsInCombat)
+                {
+                    _logger.LogWarning("Unit is already in combat. UnitId={UnitId}", unit.UniqueId);
+                    continue;
+                }
+
+                var notSurprised = UnitCombatJoinController.CalculateIsNotSurprised(unit);
+                unit.JoinCombat(notSurprised);
+            }
+
+            _logger.LogInformation("Units have been added to combat. Units={Units}", units.Select(x => x.UniqueId));
         }
 
         private void UpdateAreaEffects(List<NetworkAreaEffect> areaEffects)

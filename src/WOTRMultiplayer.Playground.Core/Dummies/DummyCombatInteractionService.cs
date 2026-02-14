@@ -135,5 +135,9 @@ namespace WOTRMultiplayer.Playground.Core.Dummies
         {
             return [];
         }
+
+        public void AddUnitsToCombat(List<string> units)
+        {
+        }
     }
 }
