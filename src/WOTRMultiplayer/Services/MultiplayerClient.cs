@@ -1017,7 +1017,7 @@ namespace WOTRMultiplayer.Services
             CombatInteraction.RunTacticalUnitUseAbilityCommand(command);
         }
 
-        private async Task OnNotifyTacticalUnitAttackCommandExecuted(long receivedFrom, NotifyTacticalUnitAttackCommandExecuted message)
+        private async void OnNotifyTacticalUnitAttackCommandExecuted(long receivedFrom, NotifyTacticalUnitAttackCommandExecuted message)
         {
             Logger.LogInformation("Received {MessageType}. UnitId={UnitId}, TargetId={TargetId}, Path={Path}", nameof(NotifyTacticalUnitAttackCommandExecuted), message.Command.UnitId, message.Command.TargetUnitId, message.Command.Path);
             var command = Mapper.Map<NetworkTacticalUnitAttackCommand>(message.Command);
