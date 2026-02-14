@@ -1600,10 +1600,10 @@ namespace WOTRMultiplayer.Services
 
         private async void OnClientCombatPreparationStarted(long receivedFrom, ClientCombatPreparationStarted message)
         {
-            Logger.LogInformation("Received {MessageType}. ReceivedFrom={ReceivedFrom}, UnitsCount={UnitsCount}", nameof(ClientCombatPreparationCompleted), receivedFrom, message.Units.Count);
+            Logger.LogInformation("Received {MessageType}. ReceivedFrom={ReceivedFrom}, UnitsCount={UnitsCount}", nameof(ClientCombatPreparationStarted), receivedFrom, message.Units.Count);
             var units = Mapper.Map<List<NetworkUnit>>(message.Units);
 
-            await WaitWhileTrue(() => Game.Combat == null, $"Waiting for combat to start to add preparation. PlayerId={receivedFrom}");
+            await WaitWhileTrue(() => Game.Combat == null || Game.Combat.Stage != NetworkCombatStage.Idle, $"Waiting for combat to start to add preparation. PlayerId={receivedFrom}");
             Game.Combat.PlayersCombatPreparation.TryAdd(receivedFrom, units);
         }
 
