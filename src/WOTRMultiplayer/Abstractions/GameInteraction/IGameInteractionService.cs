@@ -198,5 +198,7 @@ namespace WOTRMultiplayer.Abstractions.GameInteraction
         void CopyInventoryItem(NetworkItemCopy itemCopy);
 
         bool IsDeadOrMissing(string unitId);
+
+        bool IsDirectlyControllable(string unitId);
     }
 }

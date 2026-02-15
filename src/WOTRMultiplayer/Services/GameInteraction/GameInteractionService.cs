@@ -2135,6 +2135,12 @@ namespace WOTRMultiplayer.Services.GameInteraction
             return unit == null || unit.Descriptor.State.IsFinallyDead;
         }
 
+        public bool IsDirectlyControllable(string unitId)
+        {
+            var unit = _gameStateLookupService.GetUnitEntity(unitId);
+            return unit != null && unit.IsDirectlyControllable;
+        }
+
         public void CopyInventoryItem(NetworkItemCopy itemCopy)
         {
             _mainThreadAccessor.Post(() =>

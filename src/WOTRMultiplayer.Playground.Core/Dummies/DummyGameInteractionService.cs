@@ -427,5 +427,10 @@ namespace WOTRMultiplayer.Playground.Core.Dummies
         {
             return false;
         }
+
+        public bool IsDirectlyControllable(string unitId)
+        {
+            return false;
+        }
     }
 }

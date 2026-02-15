@@ -656,9 +656,9 @@ namespace WOTRMultiplayer.Services
                 return true;
             }
 
-            if (Game.Combat.Turn.IsLocalPlayer)
+            if (Game.Combat.Turn.IsLocalPlayer || EndingAIControlledPlayerCharacter())
             {
-                Logger.LogInformation("Ending local player turn. Round={Round}, UnitId={UnitId}", Game.Combat.Round, Game.Combat.Turn.UnitId);
+                Logger.LogInformation("Ending player turn. Round={Round}, UnitId={UnitId}", Game.Combat.Round, Game.Combat.Turn.UnitId);
                 var message = new NotifyPlayerCombatTurnEnded { UnitId = Game.Combat.Turn.UnitId, PlayerId = Game.LocalPlayerId };
                 Send(message);
             }
@@ -2118,6 +2118,11 @@ namespace WOTRMultiplayer.Services
         protected abstract void Send(long playerId, object message);
 
         protected abstract bool OnToggleOffPause(out bool showReason);
+
+        protected virtual bool EndingAIControlledPlayerCharacter()
+        {
+            return false;
+        }
 
         protected void ShowForcedPauseReason()
         {
