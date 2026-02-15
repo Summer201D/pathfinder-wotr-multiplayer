@@ -584,7 +584,7 @@ namespace WOTRMultiplayer.Services
             await _queuedActionsRunner.RunAsync(
                  () => CombatInteraction.EndTurnBasedCombatTurn(Game.Combat.Turn.IsAI),
                  () => WaitWhileTrue(CombatInteraction.IsRiderActive, "Waiting for AI to be inactive before ending turn"),
-                 null);
+                 TimeSpan.FromMilliseconds(300));
         }
 
         private async void OnNotifyAIActionSelected(long receivedFrom, NotifyAIActionSelected message)
