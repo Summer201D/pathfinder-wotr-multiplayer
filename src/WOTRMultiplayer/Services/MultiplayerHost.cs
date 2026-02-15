@@ -1159,8 +1159,8 @@ namespace WOTRMultiplayer.Services
             {
                 Action = Mapper.Map<Networking.Messages.Contracts.NetworkAIAction>(aiAction)
             };
-            Logger.LogInformation("Sending {MessageType}. UnitId={UnitId}, Id={Id}, Name={Name}, Type={Type}, TargetUnitId={TargetUnitId}, UseCommand={UseCommand}, VectorPath={VectorPath}",
-                nameof(NotifyAIActionSelected), message.Action.UnitId, message.Action.Id, message.Action.Name, message.Action.ActionType, message.Action.TargetId, message.Action.UseCommand, message.Action.DecisionContext.VectorPath);
+            Logger.LogInformation("Sending {MessageType}. UnitId={UnitId}, Id={Id}, Name={Name}, Type={Type}, TargetUnitId={TargetUnitId}, UseCommand={UseCommand}, VectorPath={VectorPath}, BestEnableFiveFootStep={BestEnableFiveFootStep}, BestDestinationPoint={BestDestinationPoint}, DestinationPoint={DestinationPoint}, BestScore={BestScore}",
+                nameof(NotifyAIActionSelected), message.Action.UnitId, message.Action.Id, message.Action.Name, message.Action.ActionType, message.Action.TargetId, message.Action.UseCommand, message.Action.DecisionContext.VectorPath, message.Action.DecisionContext.BestEnableFiveFootStep, message.Action.DecisionContext.BestDestinationPoint, message.Action.DecisionContext.DestinationPoint, message.Action.DecisionContext.BestScore);
             Send(message);
         }
 

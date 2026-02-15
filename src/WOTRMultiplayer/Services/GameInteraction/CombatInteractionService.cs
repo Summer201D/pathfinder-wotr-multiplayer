@@ -513,6 +513,10 @@ namespace WOTRMultiplayer.Services.GameInteraction
                 var path = networkAIAction.DecisionContext.VectorPath.Select(x => x.ToUnityVector3()).ToList();
                 AiBrainController.Context.BestPath = new ForcedPath(path);
                 AiBrainController.Context.BestEnableFiveFootStep = networkAIAction.DecisionContext.BestEnableFiveFootStep;
+                AiBrainController.Context.BestDestinationPoint = networkAIAction.DecisionContext.BestDestinationPoint.ToUnityVector3();
+                AiBrainController.Context.DestinationPoint = networkAIAction.DecisionContext.DestinationPoint.ToUnityVector3();
+                AiBrainController.Context.CreateTargetInfo(targetUnit);
+                AiBrainController.Context.BestScore = networkAIAction.DecisionContext.BestScore;
 
                 try
                 {
@@ -522,13 +526,15 @@ namespace WOTRMultiplayer.Services.GameInteraction
                     {
                         UnitCommand unitCommand = aiAction.CreateCommand(AiBrainController.Context, targetUnit);
                         unitCommand.ForcedPath ??= AiBrainController.Context.BestPath;
+                        AiBrainController.Context.BestPath = null;
                         unitCommand.AiAction = aiAction;
                         unitCommand.AiEnableFiveFootStep = AiBrainController.Context.BestEnableFiveFootStep;
                         unit.Commands.Run(unitCommand);
                     }
-                    if (aiAction.Blueprint is BlueprintAiAction blueprintAiAction)
+
+                    if (aiAction.Blueprint is BlueprintAiAction blueprintAIAction)
                     {
-                        ActionList actions = blueprintAiAction.Actions;
+                        ActionList actions = blueprintAIAction.Actions;
                         actions?.Run();
                     }
                 }

@@ -140,7 +140,10 @@ namespace WOTRMultiplayer.HarmonyPatches.Combat
                     {
                         BestEnableFiveFootStep = decisionContext.BestEnableFiveFootStep,
                         VectorPath = decisionContext.BestPath?.vectorPath.Select(v => v.ToNetworkVector3()).ToList() ?? [],
-                        ExpendedActions = [.. decisionContext.ExpendedActions?.Select(x => x.Blueprint.AssetGuid.ToString()) ?? []]
+                        ExpendedActions = [.. decisionContext.ExpendedActions?.Select(x => x.Blueprint.AssetGuid.ToString()) ?? []],
+                        BestDestinationPoint = decisionContext.BestDestinationPoint.ToNetworkVector3(),
+                        DestinationPoint = decisionContext.DestinationPoint.ToNetworkVector3(),
+                        BestScore = decisionContext.BestScore,
                     },
                     UseCommand = aiAction.UseCommand
                 };
