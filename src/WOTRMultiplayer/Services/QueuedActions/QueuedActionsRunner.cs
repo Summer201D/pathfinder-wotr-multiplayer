@@ -9,12 +9,17 @@ namespace WOTRMultiplayer.Services.QueuedActions
     {
         private readonly SemaphoreSlim _semaphore = new(1, 1);
 
-        public async Task RunAsync(Action action, Func<Task> waitForNext)
+        public async Task RunAsync(Action action, Func<Task> waitForNext, TimeSpan? flatDelay)
         {
             await _semaphore.WaitAsync();
             try
             {
                 await waitForNext();
+
+                if (flatDelay != null)
+                {
+                    await Task.Delay(flatDelay.Value);
+                }
 
                 action();
             }

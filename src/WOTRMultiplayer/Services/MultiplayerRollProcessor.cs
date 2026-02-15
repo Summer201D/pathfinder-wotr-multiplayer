@@ -432,6 +432,29 @@ namespace WOTRMultiplayer.Services
             return result;
         }
 
+        private RuleRollD20 RollCastingDefensively(RuleCheckCastingDefensively ruleCheckCastingDefensively)
+        {
+            var savingThrow = CreateCastingDefensivelyRoll(NetworkDiceRollType.Hit, ruleCheckCastingDefensively);
+            var rollIdentifier = savingThrow.GetIdString();
+
+            var sessionSeed = _multiplayerActorAccessor.Current.SessionSeed;
+            var loadedSaveSeed = _multiplayerActorAccessor.Current.LoadedSaveSeed;
+            var areaSeed = _multiplayerActorAccessor.Current.AreaSeed;
+            var combatSeed = _multiplayerActorAccessor.Current.CombatSeed;
+            var combatTurnSeed = _multiplayerActorAccessor.Current.CombatTurnSeed;
+
+            var identifier = $"{rollIdentifier}_{sessionSeed}:{loadedSaveSeed}:{areaSeed}:{combatSeed}:{combatTurnSeed}";
+            var lifetime = combatTurnSeed == null ? IdentifierLifetime.Area : IdentifierLifetime.CombatTurn;
+            var (history, result) = RollDice(lifetime, identifier, ruleCheckCastingDefensively.D20);
+            var rollId = _hashService.Murmur3(identifier);
+            _logger.LogInformation("RuleCheckCastingDefensively has been rolled deterministicaly. UnitId={UnitId}, Result={Result}, History={History}, RollId={RollId}, Lifetime={Lifetime}, Identifier={Identifier}",
+                ruleCheckCastingDefensively.Initiator.UniqueId, result, history, rollId, lifetime, identifier);
+
+            var d20 = RuleRollD20.FromInt(ruleCheckCastingDefensively.Initiator, result);
+            d20.RollHistory = history;
+            return d20;
+        }
+
         private RuleRollD20 RollSavingThrow(RuleSavingThrow ruleSavingThrow)
         {
             var savingThrow = CreateSavingThrowRoll(NetworkDiceRollType.Hit, ruleSavingThrow);
@@ -471,6 +494,13 @@ namespace WOTRMultiplayer.Services
             }
 
             return (history, result);
+        }
+
+        private RuleRollD20 RetrieveCheckCastingDefensivelyRoll(RuleCheckCastingDefensively ruleCheckCastingDefensively)
+        {
+            var roll = CreateCastingDefensivelyRoll(NetworkDiceRollType.Hit, ruleCheckCastingDefensively);
+            var d20 = RetrieveRoll<RuleRollD20>(roll, ruleCheckCastingDefensively.Initiator);
+            return d20;
         }
 
         private RuleRollD20 RetrieveSavingThrow(RuleSavingThrow ruleSavingThrow)
@@ -1093,13 +1123,13 @@ namespace WOTRMultiplayer.Services
         {
             try
             {
-                if (!ShouldRetrieveRoll(ruleCheckCastingDefensively))
+                var isRolledDeterministically = IsRolledDeterministically(ruleCheckCastingDefensively);
+                if (!ShouldRetrieveRoll(ruleCheckCastingDefensively) && !isRolledDeterministically)
                 {
                     return true;
                 }
 
-                var roll = CreateCastingDefensivelyRoll(NetworkDiceRollType.Hit, ruleCheckCastingDefensively);
-                var d20 = RetrieveRoll<RuleRollD20>(roll, ruleCheckCastingDefensively.Initiator);
+                var d20 = isRolledDeterministically ? RollCastingDefensively(ruleCheckCastingDefensively) : RetrieveCheckCastingDefensivelyRoll(ruleCheckCastingDefensively);
                 if (d20 == null)
                 {
                     return true;
@@ -1119,7 +1149,7 @@ namespace WOTRMultiplayer.Services
         {
             try
             {
-                if (!ShouldStoreRoll(ruleCheckCastingDefensively) || ruleCheckCastingDefensively.AutoFail)
+                if ((!ShouldStoreRoll(ruleCheckCastingDefensively) && !IsRolledDeterministically(ruleCheckCastingDefensively)) || ruleCheckCastingDefensively.AutoFail)
                 {
                     return;
                 }
@@ -1157,6 +1187,8 @@ namespace WOTRMultiplayer.Services
                 case RuleHealDamage:
                     var isHealDamageRolled = currentArea != null && currentArea.IsGlobalMap || !_combatInteractionService.IsInCombat();
                     return isHealDamageRolled;
+                case RuleCheckCastingDefensively:
+                    return true;
                 default:
                     return false;
             }

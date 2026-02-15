@@ -583,7 +583,8 @@ namespace WOTRMultiplayer.Services
 
             await _queuedActionsRunner.RunAsync(
                  () => CombatInteraction.EndTurnBasedCombatTurn(Game.Combat.Turn.IsAI),
-                 () => WaitWhileTrue(CombatInteraction.IsRiderActive, "Waiting for AI to be inactive before ending turn"));
+                 () => WaitWhileTrue(CombatInteraction.IsRiderActive, "Waiting for AI to be inactive before ending turn"),
+                 null);
         }
 
         private async void OnNotifyAIActionSelected(long receivedFrom, NotifyAIActionSelected message)
@@ -594,7 +595,8 @@ namespace WOTRMultiplayer.Services
             var aiAction = Mapper.Map<NetworkAIAction>(message.Action);
             await _queuedActionsRunner.RunAsync(
                  () => CombatInteraction.ExecuteAIAction(aiAction),
-                 () => WaitWhileTrue(CombatInteraction.IsRiderActive, "Waiting for AI to be inactive before scheduling another action"));
+                 () => WaitWhileTrue(CombatInteraction.IsRiderActive, "Waiting for AI to be inactive before scheduling another action"),
+                 TimeSpan.FromMilliseconds(100));
         }
 
         private async void OnNotifyGlobalMapCommonPopupShown(long receivedFrom, NotifyGlobalMapCommonPopupShown message)

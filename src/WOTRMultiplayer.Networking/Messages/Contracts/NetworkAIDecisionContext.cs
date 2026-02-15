@@ -11,5 +11,8 @@ namespace WOTRMultiplayer.Networking.Messages.Contracts
 
         [ProtoMember(2)]
         public bool BestEnableFiveFootStep { get; set; }
+
+        [ProtoMember(3)]
+        public List<string> ExpendedActions { get; set; } = [];
     }
 }

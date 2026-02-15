@@ -460,6 +460,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
 
             return isRiderActing;
         }
+
         public void ExecuteAIAction(NetworkAIAction networkAIAction)
         {
             _mainThreadAccessor.Post(() =>
@@ -469,6 +470,11 @@ namespace WOTRMultiplayer.Services.GameInteraction
                 {
                     _logger.LogError("Unable to execute ai action due to missing unit. UnitId={UnitId}", networkAIAction.UnitId);
                     return;
+                }
+
+                foreach (var expended in networkAIAction.DecisionContext.ExpendedActions)
+                {
+                    unit.Brain.AvailableActions.Remove(x => string.Equals(x.Blueprint.AssetGuid.ToString(), expended, StringComparison.OrdinalIgnoreCase));
                 }
 
                 var aiAction = _gameStateLookupService.FindAIAction(unit, networkAIAction);

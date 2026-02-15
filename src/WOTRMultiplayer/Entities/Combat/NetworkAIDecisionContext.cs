@@ -7,5 +7,7 @@ namespace WOTRMultiplayer.Entities.Combat
         public List<NetworkVector3> VectorPath { get; set; } = [];
 
         public bool BestEnableFiveFootStep { get; set; }
+
+        public List<string> ExpendedActions { get; set; } = [];
     }
 }

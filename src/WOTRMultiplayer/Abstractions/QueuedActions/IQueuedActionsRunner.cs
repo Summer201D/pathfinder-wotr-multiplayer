@@ -5,6 +5,6 @@ namespace WOTRMultiplayer.Abstractions.QueuedActions
 {
     public interface IQueuedActionsRunner
     {
-        Task RunAsync(Action action, Func<Task> waitForNext);
+        Task RunAsync(Action action, Func<Task> waitForNext, TimeSpan? flatDelay);
     }
 }
