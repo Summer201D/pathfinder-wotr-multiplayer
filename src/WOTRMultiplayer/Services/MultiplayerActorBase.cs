@@ -760,7 +760,7 @@ namespace WOTRMultiplayer.Services
             }
             else if (type == GameModeType.Dialog)
             {
-                Game.Dialog = null;
+                Game.DialogState = null;
             }
 
             var message = new NotifyGameModeTypeEnded { PlayerId = Game.LocalPlayerId, Type = type.Name };
@@ -2701,7 +2701,7 @@ namespace WOTRMultiplayer.Services
         {
             ResetGameIdGenerator();
             Game.ForcedPause = null;
-            Game.Dialog = null;
+            Game.DialogState = null;
 
             // it's important to use different loading method for players who joined mid-game
             if (Game.Stage == NetworkLobbyStage.Playing)

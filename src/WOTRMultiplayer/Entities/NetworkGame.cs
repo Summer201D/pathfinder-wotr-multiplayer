@@ -46,7 +46,7 @@ namespace WOTRMultiplayer.Entities
 
         public NetworkCombatTurn LastCombatTurn { get; set; }
 
-        public NetworkDialog Dialog { get; set; }
+        public NetworkDialogState DialogState { get; set; }
 
         public NetworkForcedPause ForcedPause { get; set; }
 

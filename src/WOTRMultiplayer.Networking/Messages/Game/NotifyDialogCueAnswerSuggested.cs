@@ -9,7 +9,7 @@ namespace WOTRMultiplayer.Networking.Messages.Game
     public class NotifyDialogCueAnswerSuggested
     {
         [ProtoMember(1)]
-        public string DialogName { get; set; }
+        public NetworkDialog Dialog { get; set; }
 
         [ProtoMember(2)]
         public string CueName { get; set; }

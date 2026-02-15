@@ -9,7 +9,6 @@ using WOTRMultiplayer.Abstractions.Random;
 using WOTRMultiplayer.Config.DI;
 using WOTRMultiplayer.Entities;
 using WOTRMultiplayer.Entities.Area;
-using WOTRMultiplayer.Entities.Dialogs;
 using WOTRMultiplayer.Entities.Movement;
 using WOTRMultiplayer.Entities.Rolls.Claiming.Values;
 using WOTRMultiplayer.Networking.Abstractions;
@@ -89,8 +88,6 @@ namespace WOTRMultiplayer.Playground.Host
             combat-started - send initialization message
             {Environment.NewLine}");
 
-            const string DialogName = "MeetSeelahAnevia_Dialogue";
-
             while ((input = Console.ReadLine()) != "exit")
             {
                 switch (input)
@@ -123,72 +120,6 @@ namespace WOTRMultiplayer.Playground.Host
                     case "leave-area":
                         var transition = new NetworkAreaTransition { AreaExitId = "1b018b52-c1be-40bf-8937-1f2a77b96049" };
                         host.OnAreaTransition(transition);
-                        break;
-                    case "dialog-answer_continue0001":
-                        host.Game.Dialog = new NetworkDialog(DialogName)
-                        {
-                            Answer = new NetworkDialogAnswer
-                            {
-                                AnswerName = "DefaultContinue",
-                                CueName = "Cue_0001",
-                                ManualUnitSelectionId = null
-                            }
-                        };
-                        host.SendSelectedAnswer();
-                        break;
-                    case "dialog-answer_continue0002":
-                        host.Game.Dialog = new NetworkDialog(DialogName)
-                        {
-                            Answer = new NetworkDialogAnswer
-                            {
-                                AnswerName = "DefaultContinue",
-                                CueName = "Cue_0002",
-                                ManualUnitSelectionId = null
-                            }
-                        };
-                        host.SendSelectedAnswer();
-                        break;
-                    case "dialog-answer_continue0003":
-                        host.Game.Dialog = new NetworkDialog(DialogName)
-                        {
-                            Answer = new NetworkDialogAnswer
-                            {
-                                AnswerName = "DefaultContinue",
-                                CueName = "Cue_0003",
-                                ManualUnitSelectionId = null
-                            }
-                        };
-                        host.SendSelectedAnswer();
-                        break;
-                    case "dialog-answer_continue0004":
-                        host.Game.Dialog = new NetworkDialog(DialogName)
-                        {
-                            Answer = new NetworkDialogAnswer
-                            {
-                                AnswerName = "Answer_0042",
-                                CueName = "Cue_0004",
-                                ManualUnitSelectionId = null
-                            }
-                        };
-                        host.SendSelectedAnswer();
-                        break;
-                    case "dialog-answer_continue0005":
-                        host.Game.Dialog = new NetworkDialog(DialogName)
-                        {
-                            Answer = new NetworkDialogAnswer
-                            {
-                                AnswerName = "DefaultContinue",
-                                CueName = "Cue_0044",
-                                ManualUnitSelectionId = null
-                            }
-                        };
-                        host.SendSelectedAnswer();
-                        break;
-                    case "start-unit-dialog":
-                        host.StartDialog("Vendor_Quartermaster_Dialogue", "2C1EE7", "98fd05f4-4458-4d2d-97f6-752be49667c0", null, null);
-                        break;
-                    case "start-dialog":
-                        host.StartDialog("MeetSeelahAnevia_Dialogue", null, null, null, null);
                         break;
                     case "combat-started":
                         host.CombatStarted();

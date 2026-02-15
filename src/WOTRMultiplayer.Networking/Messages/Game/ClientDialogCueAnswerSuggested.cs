@@ -1,4 +1,5 @@
 ﻿using ProtoBuf;
+using WOTRMultiplayer.Networking.Messages.Contracts;
 
 namespace WOTRMultiplayer.Networking.Messages.Game
 {
@@ -10,7 +11,7 @@ namespace WOTRMultiplayer.Networking.Messages.Game
         public string CueName { get; set; }
 
         [ProtoMember(2)]
-        public string DialogName { get; set; }
+        public NetworkDialog Dialog { get; set; }
 
         [ProtoMember(3)]
         public string AnswerName { get; set; }

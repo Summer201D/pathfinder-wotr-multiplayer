@@ -1,4 +1,5 @@
-﻿using HarmonyLib;
+﻿using System;
+using HarmonyLib;
 using Kingmaker;
 using Kingmaker.Blueprints.Root;
 using Kingmaker.Controllers.Dialog;
@@ -7,6 +8,7 @@ using Kingmaker.EntitySystem.Entities;
 using Kingmaker.Localization;
 using Kingmaker.UI.MVVM._VM.Dialog.Dialog;
 using Kingmaker.View.MapObjects;
+using WOTRMultiplayer.Entities.Dialogs;
 
 namespace WOTRMultiplayer.HarmonyPatches.Dialogs
 {
@@ -22,8 +24,18 @@ namespace WOTRMultiplayer.HarmonyPatches.Dialogs
                 return true;
             }
 
-            var canContinue = Main.Multiplayer.StartDialog(dialog?.name, unit?.UniqueId, initiator?.UniqueId, mapObject?.UniqueId, customSpeakerName?.Key);
-            if (!canContinue)
+            var networkDialog = new NetworkDialog
+            {
+                Id = dialog.AssetGuid.ToString(),
+                Name = dialog.name,
+                InitiatorUnitId = initiator?.UniqueId,
+                MapObjectId = mapObject?.UniqueId,
+                SpeakerKey = customSpeakerName?.Key,
+                TargetUnitId = unit.UniqueId
+            };
+            var canContinue = Main.Multiplayer.StartDialog(networkDialog);
+            if (!canContinue
+                || Game.Instance.Player.Dialog.Scheduled != null && string.Equals(dialog.AssetGuid.ToString(), Game.Instance.Player.Dialog.Scheduled.Dialog.AssetGuid.ToString(), StringComparison.OrdinalIgnoreCase))
             {
                 Game.Instance.Player.Dialog.Scheduled = null;
             }
@@ -41,7 +53,12 @@ namespace WOTRMultiplayer.HarmonyPatches.Dialogs
             }
 
             var isLastAnswer = answer.IsExit() || answer.NextCue.Cues.Count == 0;
-            var canContinue = Main.Multiplayer.OnBeforeSelectDialogAnswer(__instance.Dialog.name, __instance.CurrentCue.name, answer.name, isLastAnswer, manualUnitSelection?.UniqueId);
+            var networkDialog = new NetworkDialog
+            {
+                Id = __instance.Dialog.AssetGuid.ToString(),
+                Name = __instance.Dialog.name
+            };
+            var canContinue = Main.Multiplayer.OnBeforeSelectDialogAnswer(networkDialog, __instance.CurrentCue.name, answer.name, isLastAnswer, manualUnitSelection?.UniqueId);
             return canContinue;
         }
 
@@ -56,8 +73,13 @@ namespace WOTRMultiplayer.HarmonyPatches.Dialogs
 
             if (__instance.PlayingBookPage)
             {
-                var dialogName = Game.Instance.DialogController.Dialog?.name;
-                Main.Multiplayer.OnAfterCueShow(dialogName, cue.name, false);
+                var dialog = Game.Instance.DialogController.Dialog;
+                var networkDialog = new NetworkDialog
+                {
+                    Id = dialog.AssetGuid.ToString(),
+                    Name = dialog.name
+                };
+                Main.Multiplayer.OnAfterCueShow(networkDialog, cue.name, false);
                 return;
             }
 
@@ -73,8 +95,13 @@ namespace WOTRMultiplayer.HarmonyPatches.Dialogs
                 return;
             }
 
-            var dialogName = Game.Instance.DialogController.Dialog?.name;
-            Main.Multiplayer.OnAfterCueShow(dialogName, data.Cue.name, __instance.SystemAnswer.Value != null);
+            var dialog = Game.Instance.DialogController.Dialog;
+            var networkDialog = new NetworkDialog
+            {
+                Id = dialog.AssetGuid.ToString(),
+                Name = dialog.name
+            };
+            Main.Multiplayer.OnAfterCueShow(networkDialog, data.Cue.name, __instance.SystemAnswer.Value != null);
         }
     }
 }

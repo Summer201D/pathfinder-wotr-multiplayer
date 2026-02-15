@@ -161,7 +161,7 @@ namespace WOTRMultiplayer.Services
         {
             try
             {
-                if (!ShouldRetrieveRoll(ruleHealDamage) && !IsRolledDeterministically(ruleHealDamage))
+                if (!ShouldRetrieveRoll(ruleHealDamage) && !IsRolledDeterministically(ruleHealDamage) || diceFormula.Rolls == 0 && diceFormula.Dice == DiceType.Zero)
                 {
                     return true;
                 }
@@ -186,7 +186,7 @@ namespace WOTRMultiplayer.Services
         {
             try
             {
-                if (!ShouldStoreRoll(ruleHealDamage) || IsRolledDeterministically(ruleHealDamage))
+                if (!ShouldStoreRoll(ruleHealDamage) || IsRolledDeterministically(ruleHealDamage) || ruleHealDamage.HealFormula.ModifiedValue.Rolls == 0 && ruleHealDamage.HealFormula.ModifiedValue.Dice == DiceType.Zero)
                 {
                     return;
                 }

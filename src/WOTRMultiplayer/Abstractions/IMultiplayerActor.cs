@@ -74,11 +74,11 @@ namespace WOTRMultiplayer.Abstractions
 
         bool IsControlledByPlayers(string unitId);
 
-        void OnAfterCueShow(string dialogName, string cueName, bool hasSystemAnswer);
+        void OnAfterCueShow(NetworkDialog networkDialog, string cueName, bool hasSystemAnswer);
 
-        bool OnBeforeSelectDialogAnswer(string dialogName, string cueName, string answerName, bool isExitAnswer, string manualUnitSelectionId);
+        bool OnBeforeSelectDialogAnswer(NetworkDialog networkDialog, string cueName, string answerName, bool isExitAnswer, string manualUnitSelectionId);
 
-        bool StartDialog(string dialogName, string targetUnitId, string initiatorUnitId, string mapObjectId, string speakerKey);
+        bool StartDialog(NetworkDialog networkDialog);
 
         void UpdateCharactersOwnership();
 

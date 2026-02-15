@@ -14,7 +14,7 @@ namespace WOTRMultiplayer.Abstractions.GameInteraction
 
         void SetDialogContinueButtonState(bool isEnabled);
 
-        Task<bool> StartDialogAsync(string dialogName, string targetUnitId, string initiatorUnitId, string mapObjectId, string speakerKey);
+        Task<bool> StartDialogAsync(NetworkDialog networkDialog);
 
         void UpdateDialogPopupUI(bool isInteractable, int readyPlayersCount, int totalPlayersCount);
 

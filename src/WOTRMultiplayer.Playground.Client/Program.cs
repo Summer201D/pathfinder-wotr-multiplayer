@@ -10,7 +10,6 @@ using WOTRMultiplayer.Abstractions.QueuedActions;
 using WOTRMultiplayer.Abstractions.Random;
 using WOTRMultiplayer.Config.DI;
 using WOTRMultiplayer.Entities;
-using WOTRMultiplayer.Entities.Dialogs;
 using WOTRMultiplayer.Entities.Equipment;
 using WOTRMultiplayer.Entities.Leveling;
 using WOTRMultiplayer.Entities.Rolls.Claiming.Values;
@@ -89,19 +88,6 @@ namespace WOTRMultiplayer.Playground.Client
                     break;
                 case CommandVerbs.ExitCommandVerb:
                     Environment.Exit(0);
-                    break;
-                case CommandVerbs.DialogWitnessCueCommandVerb dialog:
-                    client.OnAfterCueShow(dialog.DialogName, dialog.Cue, dialog.HasSystemAnswer);
-                    break;
-                case CommandVerbs.DialogSuggestCueCommandVerb dialog:
-                    client.Game.Dialog = new NetworkDialog(dialog.DialogName)
-                    {
-                        CurrentCueName = dialog.Cue
-                    };
-                    client.OnBeforeSelectDialogAnswer(dialog.DialogName, dialog.Cue, dialog.Answer, dialog.IsExitAnswer, dialog.ManualUnitSelectionId);
-                    break;
-                case CommandVerbs.DialogStartCommandVerb dialog:
-                    client.StartDialog(dialog.DialogName, dialog.TargetUnitId, dialog.InitiatorUnitId, dialog.MapObjectId, dialog.SpeakerKey);
                     break;
                 case CommandVerbs.CombatStartedCommandVerb:
                     client.CombatStarted();

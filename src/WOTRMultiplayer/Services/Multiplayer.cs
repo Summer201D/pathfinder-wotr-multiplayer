@@ -232,7 +232,7 @@ namespace WOTRMultiplayer.Services
             return _multiplayerActorAccessor.Current != null && _multiplayerActorAccessor.Host.IsActive;
         }
 
-        public void OnAfterCueShow(string dialogName, string cueName, bool hasSystemAnswer)
+        public void OnAfterCueShow(NetworkDialog networkDialog, string cueName, bool hasSystemAnswer)
         {
             try
             {
@@ -241,16 +241,16 @@ namespace WOTRMultiplayer.Services
                     return;
                 }
 
-                _multiplayerActorAccessor.Current.OnAfterCueShow(dialogName, cueName, hasSystemAnswer);
+                _multiplayerActorAccessor.Current.OnAfterCueShow(networkDialog, cueName, hasSystemAnswer);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error after cue show. DialogName={DialogName}, CueName={CueName}, HasSystemAnswer={HasSystemAnswer}", dialogName, cueName, hasSystemAnswer);
+                _logger.LogError(ex, "Error after cue show. DialogId={DialogId}, DialogName={DialogName}, CueName={CueName}, HasSystemAnswer={HasSystemAnswer}", networkDialog.Id, networkDialog.Name, cueName, hasSystemAnswer);
                 throw;
             }
         }
 
-        public bool OnBeforeSelectDialogAnswer(string dialogName, string cueName, string answerName, bool isExitAnswer, string manualUnitSelectionId)
+        public bool OnBeforeSelectDialogAnswer(NetworkDialog networkDialog, string cueName, string answerName, bool isExitAnswer, string manualUnitSelectionId)
         {
             try
             {
@@ -259,12 +259,12 @@ namespace WOTRMultiplayer.Services
                     return true;
                 }
 
-                var shouldContinueExecution = _multiplayerActorAccessor.Current.OnBeforeSelectDialogAnswer(dialogName, cueName, answerName, isExitAnswer, manualUnitSelectionId);
+                var shouldContinueExecution = _multiplayerActorAccessor.Current.OnBeforeSelectDialogAnswer(networkDialog, cueName, answerName, isExitAnswer, manualUnitSelectionId);
                 return shouldContinueExecution;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error before selecting dialog answer. DialogName={DialogName}, CueName={CueName}", dialogName, cueName);
+                _logger.LogError(ex, "Error before selecting dialog answer. DialogId={DialogId}, DialogNam={DialogName}, CueName={CueName}, AnswerName={AnswerName}", networkDialog.Id, networkDialog.Name, cueName, answerName);
                 throw;
             }
         }
@@ -287,7 +287,7 @@ namespace WOTRMultiplayer.Services
             }
         }
 
-        public bool StartDialog(string dialogName, string targetUnitId, string initiatorUnitId, string mapObjectId, string speakerKey)
+        public bool StartDialog(NetworkDialog networkDialog)
         {
             try
             {
@@ -296,11 +296,11 @@ namespace WOTRMultiplayer.Services
                     return true;
                 }
 
-                return _multiplayerActorAccessor.Current.StartDialog(dialogName, targetUnitId, initiatorUnitId, mapObjectId, speakerKey);
+                return _multiplayerActorAccessor.Current.StartDialog(networkDialog);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error while starting dialog. DialogName={DialogName}", dialogName);
+                _logger.LogError(ex, "Error while starting dialog. Id={Id}, Name={Name}", networkDialog.Id, networkDialog.Name);
                 throw;
             }
         }

@@ -31,7 +31,7 @@ namespace WOTRMultiplayer.Playground.Core.Dummies
         {
         }
 
-        public Task<bool> StartDialogAsync(string dialogName, string targetUnitId, string initiatorUnitId, string mapObjectId, string speakerKey)
+        public Task<bool> StartDialogAsync(NetworkDialog networkDialog)
         {
             return Task.FromResult(false);
         }

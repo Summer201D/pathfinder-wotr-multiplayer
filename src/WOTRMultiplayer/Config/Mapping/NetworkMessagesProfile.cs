@@ -351,6 +351,9 @@ namespace WOTRMultiplayer.Config.Mapping
 
             CreateMap<NetworkAIDecisionContext, Networking.Messages.Contracts.NetworkAIDecisionContext>()
                 .ReverseMap();
+
+            CreateMap<NetworkDialog, Networking.Messages.Contracts.NetworkDialog>()
+                .ReverseMap();
         }
     }
 }

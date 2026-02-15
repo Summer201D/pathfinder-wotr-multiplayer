@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Kingmaker;
-using Kingmaker.Cheats;
+using Kingmaker.Blueprints;
 using Kingmaker.DialogSystem.Blueprints;
 using Kingmaker.EntitySystem.Entities;
 using Kingmaker.Localization;
@@ -188,7 +188,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
             });
         }
 
-        public Task<bool> StartDialogAsync(string dialogName, string targetUnitId, string initiatorUnitId, string mapObjectId, string speakerKey)
+        public Task<bool> StartDialogAsync(NetworkDialog networkDialog)
         {
             // this is kinda sketchy, but we need to really know if dialog is already in progress
             // starting dialog is really important as it's required to send `NotifyDialogStarted` to clients
@@ -197,18 +197,20 @@ namespace WOTRMultiplayer.Services.GameInteraction
             var hasStartedDialogTask = new TaskCompletionSource<bool>();
             _mainThreadAccessor.Post(() =>
             {
-                _logger.LogInformation("Start dialog. DialogName={DialogName}, TargetUnitId={TargetUnitId}, InitiatorUnitId={InitiatorUnitId}, MapObjectId={MapObjectId}, SpeakerKey={SpeakerKey}",
-                    dialogName, targetUnitId, initiatorUnitId, mapObjectId, speakerKey);
-                var dialogBlueprint = Utilities.GetBlueprint<BlueprintDialog>(dialogName);
-                var target = _gameStateLookupService.GetUnitEntity(targetUnitId);
-                var initiator = _gameStateLookupService.GetUnitEntity(initiatorUnitId);
-                var mapObject = _gameStateLookupService.GetMapObject(mapObjectId);
-                var speaker = speakerKey == null ? null : new LocalizedString { Key = speakerKey };
+                _logger.LogInformation("Start dialog. Id={Id}, Name={Name}, TargetUnitId={TargetUnitId}, InitiatorUnitId={InitiatorUnitId}, MapObjectId={MapObjectId}, SpeakerKey={SpeakerKey}",
+                    networkDialog.Id, networkDialog.Name, networkDialog.TargetUnitId, networkDialog.InitiatorUnitId, networkDialog.MapObjectId, networkDialog.SpeakerKey);
+
+                var dialogBlueprint = ResourcesLibrary.TryGetBlueprint<BlueprintDialog>(networkDialog.Id);
                 if (dialogBlueprint == null)
                 {
-                    _logger.LogError("Unable to find dialog. DialogName={DialogName}", dialogName);
+                    _logger.LogError("Unable to find dialog. DialogName={DialogName}", networkDialog.Id);
                     return;
                 }
+
+                var target = _gameStateLookupService.GetUnitEntity(networkDialog.TargetUnitId);
+                var initiator = _gameStateLookupService.GetUnitEntity(networkDialog.InitiatorUnitId);
+                var mapObject = _gameStateLookupService.GetMapObject(networkDialog.MapObjectId);
+                var speaker = networkDialog.SpeakerKey == null ? null : new LocalizedString { Key = networkDialog.SpeakerKey };
 
                 StartDialog(hasStartedDialogTask, dialogBlueprint, initiator, target, mapObject?.View, speaker);
             });
