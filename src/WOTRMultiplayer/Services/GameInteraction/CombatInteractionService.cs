@@ -455,7 +455,8 @@ namespace WOTRMultiplayer.Services.GameInteraction
             var isRiderActing = Game.Instance.TurnBasedCombatController.CurrentTurn.m_RunningCommands.Count > 0
                 || Game.Instance.ProjectileController.HasLaunchedProjectile(rider, mount)
                 || Game.Instance.TurnBasedCombatController.CurrentTurn.IsMoving
-                || rider.Commands.HasAiCommand();
+                || rider.Commands.HasAiCommand()
+                || mount != null && mount.Commands.HasAiCommand();
 
             return isRiderActing;
         }
