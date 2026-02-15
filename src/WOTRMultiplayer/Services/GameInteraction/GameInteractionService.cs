@@ -2876,11 +2876,11 @@ namespace WOTRMultiplayer.Services.GameInteraction
                     using var context = _networkExecutionContext.Value = RemoteExecutionContext.Create(selectedUnits);
                     Game.Instance.SelectionCharacter.SelectedUnit.Value = selectedUnit;
 
-                    if (!string.IsNullOrEmpty(click.MovementLimit) && Game.Instance.TurnBasedCombatController.CurrentTurn != null)
+                    if (!string.IsNullOrEmpty(click.MovementLimit) && Game.Instance.TurnBasedCombatController.CurrentTurn != null && Game.Instance.TurnBasedCombatController.CurrentTurn.Rider != null)
                     {
                         Enum.TryParse<TurnBased.Controllers.TurnController.MovementLimit>(click.MovementLimit, true, out var limit);
                         Game.Instance.TurnBasedCombatController.CurrentTurn.SetMovementLimit(limit);
-                        _logger.LogInformation("Movement limit has been updated. UnitId={UnitId}, Limit={Limit}", Game.Instance.TurnBasedCombatController.CurrentTurn.Rider?.UniqueId, limit);
+                        _logger.LogInformation("Movement limit has been updated. UnitId={UnitId}, Limit={Limit}", Game.Instance.TurnBasedCombatController.CurrentTurn.Rider.UniqueId, limit);
                     }
 
                     if (click.VectorPath != null && click.VectorPath.Count > 0 && PathVisualizer.Instance != null)
