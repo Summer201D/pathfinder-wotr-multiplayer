@@ -642,7 +642,7 @@ namespace WOTRMultiplayer.Services
 
         public bool OnBeforeTurnEnd(string unitId)
         {
-            if (CanEndCombatTurn())
+            if (Game.Combat.Turn.IsAI || !Game.Combat.Turn.IsInProgress)
             {
                 if (Game.Combat.Turn.IsAI)
                 {
@@ -4525,12 +4525,6 @@ namespace WOTRMultiplayer.Services
             {
                 Game.LastCombatTurn = Game.Combat.Turn;
             }
-        }
-
-        private bool CanEndCombatTurn()
-        {
-            var canEnd = Game.Combat.Turn.IsAI || !Game.Combat.Turn.IsInProgress;
-            return canEnd;
         }
     }
 }

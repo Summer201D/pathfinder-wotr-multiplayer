@@ -199,7 +199,6 @@ namespace WOTRMultiplayer.HarmonyPatches.Combat
             {
                 __instance.FramesWaitedForStuckAI = 0;
                 __instance.TimeWaitedForIdleAI = 0;
-                __instance.TimeWaitedToEndTurn = 0;
             }
 
             return __instance.Rider != null;
