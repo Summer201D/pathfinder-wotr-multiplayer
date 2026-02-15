@@ -72,16 +72,16 @@ namespace WOTRMultiplayer.HarmonyPatches.Items
 
         [HarmonyPatch(typeof(LootVM), nameof(LootVM.CollectAll))]
         [HarmonyPrefix]
-        public static void LootVM_CollectAll_Prefix()
+        public static void LootVM_CollectAll_Prefix(LootVM __instance)
         {
-            if (!Main.Multiplayer.IsActive)
+            if (!Main.Multiplayer.IsActive || __instance.Mode != LootContextVM.LootWindowMode.ZoneExit)
             {
                 return;
             }
 
             Main.Multiplayer.OnZoneLootCompleted();
-
         }
+
         [HarmonyPatch(typeof(LootVM), nameof(LootVM.LeaveZone))]
         [HarmonyPrefix]
         public static void LootVM_LeaveZone_Prefix()
