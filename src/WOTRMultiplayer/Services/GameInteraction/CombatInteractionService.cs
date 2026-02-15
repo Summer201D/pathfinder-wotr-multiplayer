@@ -461,10 +461,9 @@ namespace WOTRMultiplayer.Services.GameInteraction
                     || Game.Instance.TurnBasedCombatController.CurrentTurn.IsMoving
                     || rider.Commands.HasAiCommand()
                     || rider.Commands.Queue.Count > 0
-                    || mount != null && (mount.Commands.HasAiCommand() || mount.Commands.Queue.Count > 0)
+                    || mount != null && (mount.Commands.HasAiCommand() || mount.Commands.Queue.Count > 0 || mount.AreHandsBusyWithAnimation)
                     || !(Game.Instance.TurnBasedCombatController.CurrentTurn.SelectedUnit?.Commands.Empty ?? true)
-                    || rider.AreHandsBusyWithAnimation
-                    || mount.AreHandsBusyWithAnimation;
+                    || rider.AreHandsBusyWithAnimation;
 
                 return isRiderActing;
             }
