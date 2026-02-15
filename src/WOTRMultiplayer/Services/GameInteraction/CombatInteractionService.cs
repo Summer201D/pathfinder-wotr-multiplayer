@@ -517,6 +517,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
                 AiBrainController.Context.DestinationPoint = networkAIAction.DecisionContext.DestinationPoint.ToUnityVector3();
                 AiBrainController.Context.CreateTargetInfo(targetUnit);
                 AiBrainController.Context.BestScore = networkAIAction.DecisionContext.BestScore;
+                AiBrainController.Context.Unit = unit;
 
                 try
                 {
