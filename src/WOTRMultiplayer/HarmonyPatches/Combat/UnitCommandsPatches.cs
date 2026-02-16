@@ -41,7 +41,7 @@ namespace WOTRMultiplayer.HarmonyPatches.Combat
                     return;
                 }
 
-                if (DoesMountMakeSameAction(__instance.Executor))
+                if (DoesRiderMakeSameAction(__instance.Executor))
                 {
                     Main.GetLogger<UnitCommandsPatches>().LogWarning("Skipping attack command use as it's a part of mounted combat unit command. UnitId={UnitId}, TargetUnitId={TargetUnitId}", __instance.Executor.UniqueId, __instance.Target.UniqueId);
                     return;
