@@ -9,15 +9,21 @@ namespace WOTRMultiplayer.Networking.Messages.Contracts
         public string Id { get; set; }
 
         [ProtoMember(2)]
-        public string Name { get; set; }
+        public string BlueprintId { get; set; }
 
         [ProtoMember(3)]
-        public string CasterId { get; set; }
+        public int Index { get; set; }
 
         [ProtoMember(4)]
-        public string TargetId { get; set; }
+        public string Name { get; set; }
 
         [ProtoMember(5)]
+        public string CasterId { get; set; }
+
+        [ProtoMember(6)]
+        public string TargetId { get; set; }
+
+        [ProtoMember(7)]
         public bool IsActive { get; set; }
     }
 }

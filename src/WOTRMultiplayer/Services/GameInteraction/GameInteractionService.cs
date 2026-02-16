@@ -2858,6 +2858,19 @@ namespace WOTRMultiplayer.Services.GameInteraction
             var abilities = caster.ActivatableAbilities?.Enumerable ?? [];
             var ability = abilities.FirstOrDefault(a => string.Equals(a.UniqueId, activatableAbility.Id, StringComparison.OrdinalIgnoreCase));
 
+            if (ability == null && activatableAbility.Index >= 0)
+            {
+                var sameBlueprint = abilities.Where(x => string.Equals(x.Blueprint.AssetGuid.ToString(), activatableAbility.BlueprintId)).ToList();
+                if (sameBlueprint.Count > activatableAbility.Index)
+                {
+                    ability = sameBlueprint[activatableAbility.Index];
+                    if (ability.NameForAcronym == activatableAbility.Name)
+                    {
+                        return ability;
+                    }
+                }
+            }
+
             return ability;
         }
 

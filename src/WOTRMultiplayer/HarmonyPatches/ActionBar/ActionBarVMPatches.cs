@@ -1,6 +1,8 @@
-﻿using HarmonyLib;
+﻿using System.Linq;
+using HarmonyLib;
 using Kingmaker.UI.MVVM._VM.ActionBar;
 using Kingmaker.UI.UnitSettings;
+using Kingmaker.Utility;
 using Microsoft.Extensions.Logging;
 using WOTRMultiplayer.Entities.ActionBar;
 using WOTRMultiplayer.Entities.Combat;
@@ -70,7 +72,9 @@ namespace WOTRMultiplayer.HarmonyPatches.ActionBar
                         Id = activatableAbility.ActivatableAbility.UniqueId,
                         Name = activatableAbility.ActivatableAbility.NameForAcronym,
                         CasterId = activatableAbility.Unit.UniqueId,
-                        IsActive = activatableAbility.ActivatableAbility.IsActive
+                        IsActive = activatableAbility.ActivatableAbility.IsActive,
+                        BlueprintId = activatableAbility.ActivatableAbility.Blueprint.AssetGuid.ToString(),
+                        Index = activatableAbility.Unit.ActivatableAbilities.Enumerable.Where(x => x.Blueprint == activatableAbility.ActivatableAbility.Blueprint).IndexOf(activatableAbility.ActivatableAbility)
                     };
                     slot.UnitId = slot.ActivatableAbility.CasterId;
                     break;

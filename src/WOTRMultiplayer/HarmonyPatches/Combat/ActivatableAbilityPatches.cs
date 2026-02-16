@@ -6,6 +6,7 @@ using Kingmaker.EntitySystem.Entities;
 using Kingmaker.GameModes;
 using Kingmaker.UnitLogic.Abilities.Components.TargetCheckers;
 using Kingmaker.UnitLogic.ActivatableAbilities;
+using Kingmaker.Utility;
 using Microsoft.Extensions.Logging;
 using WOTRMultiplayer.Entities.Combat;
 
@@ -30,12 +31,15 @@ namespace WOTRMultiplayer.HarmonyPatches.Combat
                     Main.GetLogger<ActivatableAbilityPatches>().LogInformation("Mount toggle is ignored. IsActive={IsActive}, TargetId={TargetId}", __instance.m_IsOn, target?.UniqueId);
                     return;
                 }
-
+                var caster = __instance.Owner.Unit;
+                var index = caster.ActivatableAbilities.Enumerable.Where(x => x.Blueprint == __instance.Blueprint).IndexOf(__instance);
                 var ability = new NetworkActivatableAbility
                 {
                     Id = __instance.UniqueId,
-                    Name = __instance.NameForAcronym,
-                    CasterId = __instance.Owner.Unit.UniqueId,
+                    BlueprintId = __instance.Blueprint.AssetGuid.ToString(),
+                    Index = index,
+                    Name = __instance.Name,
+                    CasterId = caster.UniqueId,
                     TargetId = target?.UniqueId,
                     IsActive = __instance.m_IsOn
                 };
