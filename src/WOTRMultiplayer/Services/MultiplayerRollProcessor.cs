@@ -445,7 +445,7 @@ namespace WOTRMultiplayer.Services
 
             var identifier = $"{rollIdentifier}_{sessionSeed}:{loadedSaveSeed}:{areaSeed}:{combatSeed}:{combatTurnSeed}";
             var lifetime = combatTurnSeed == null ? IdentifierLifetime.Area : IdentifierLifetime.CombatTurn;
-            var (history, result) = RollDice(lifetime, identifier, ruleCheckCastingDefensively.D20);
+            var (history, result) = RollDice(lifetime, identifier, new DiceFormula(1, DiceType.D20), 0);
             var rollId = _hashService.Murmur3(identifier);
             _logger.LogInformation("RuleCheckCastingDefensively has been rolled deterministicaly. UnitId={UnitId}, Result={Result}, History={History}, RollId={RollId}, Lifetime={Lifetime}, Identifier={Identifier}",
                 ruleCheckCastingDefensively.Initiator.UniqueId, result, history, rollId, lifetime, identifier);
