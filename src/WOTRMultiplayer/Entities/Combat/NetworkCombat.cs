@@ -20,6 +20,8 @@ namespace WOTRMultiplayer.Entities.Combat
 
         public bool IsPlaying { get; set; }
 
+        public bool IsRecovering { get; set; }
+
         public int Round { get; set; }
 
         public NetworkCombatTurn Turn { get; set; }

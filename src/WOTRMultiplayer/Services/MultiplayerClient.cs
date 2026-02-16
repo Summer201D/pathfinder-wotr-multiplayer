@@ -599,6 +599,7 @@ namespace WOTRMultiplayer.Services
             Logger.LogInformation("Received {MessageType}", nameof(NotifyCombatRecoveryRequired));
 
             PlayerNotification.AddCombatText(WellKnownKeys.GameNotifications.Combat.StartupDesync.Client.Key, CombatTextSeverity.Critical);
+
             Game.Combat.IsPrepared = false;
             Game.Combat.IsInitialized = false;
             SetCombatStage(NetworkCombatStage.Idle);
