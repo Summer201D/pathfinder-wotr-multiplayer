@@ -530,24 +530,26 @@ namespace WOTRMultiplayer.Services.GameInteraction
         {
             try
             {
-                var caster = _gameStateLookupService.GetUnitEntity(networkActivatableAbility.CasterId);
-                if (caster == null)
-                {
-                    _logger.LogWarning("Caster of activatable ability doesn't exist. UnitId={UnitId}", networkActivatableAbility.CasterId);
-                    return;
-                }
-
-                var ability = FindActivatableAbility(caster, networkActivatableAbility);
-                if (ability == null)
-                {
-                    _logger.LogError("Unable to find activatable ability. UnitId={UnitId}, AbilityId={AbilityId}", caster.UniqueId, networkActivatableAbility.Id);
-                    return;
-                }
-
-                var target = _gameStateLookupService.GetUnitEntity(networkActivatableAbility.TargetId);
                 _mainThreadAccessor.Post(() =>
                 {
+                    var caster = _gameStateLookupService.GetUnitEntity(networkActivatableAbility.CasterId);
+                    if (caster == null)
+                    {
+                        _logger.LogWarning("Caster of activatable ability doesn't exist. UnitId={UnitId}", networkActivatableAbility.CasterId);
+                        return;
+                    }
+
+                    var ability = FindActivatableAbility(caster, networkActivatableAbility);
+                    if (ability == null)
+                    {
+                        _logger.LogError("Unable to find activatable ability. UnitId={UnitId}, AbilityId={AbilityId}", caster.UniqueId, networkActivatableAbility.Id);
+                        return;
+                    }
+
+                    var target = _gameStateLookupService.GetUnitEntity(networkActivatableAbility.TargetId);
+
                     ability.SetIsOn(networkActivatableAbility.IsActive, target);
+                    _logger.LogInformation("Ability has been toggled. UnitId={UnitId}, AbilityId={AbilityId}, AbilityName={AbilityName}, IsOn={IsOn}", caster.UniqueId, ability.UniqueId, ability.NameForAcronym, ability.m_IsOn);
                 });
             }
             catch (Exception ex)
