@@ -4079,24 +4079,24 @@ namespace WOTRMultiplayer.Services
             }
         }
 
-        public void OnAIActionSelected(NetworkAIAction aiAction)
+        public NetworkAIAction OnAfterAISelectedAction(NetworkAIAction networkAIAction)
         {
             try
             {
-                if (_multiplayerActorAccessor.Current == null || _multiplayerActorAccessor.Client.IsActive)
+                if (_multiplayerActorAccessor == null)
                 {
-                    return;
+                    return null;
                 }
 
-                _multiplayerActorAccessor.Host.OnAIActionSelected(aiAction);
+                var possibleOverride = _multiplayerActorAccessor.Current.OnAfterAISelectedAction(networkAIAction);
+                return possibleOverride;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error while processing ai action. Id={Id}, Name={Name}, UnitId={UnitId}", aiAction.Id, aiAction.Name, aiAction.UnitId);
+                _logger.LogError(ex, "Error after AI selected action. AIUnitId={AIUnitId}", networkAIAction?.UnitId);
                 throw;
             }
         }
-
 
         public void CloseMultiplayerLobbyWindow()
         {

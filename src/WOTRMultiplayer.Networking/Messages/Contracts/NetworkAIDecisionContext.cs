@@ -13,15 +13,6 @@ namespace WOTRMultiplayer.Networking.Messages.Contracts
         public bool BestEnableFiveFootStep { get; set; }
 
         [ProtoMember(3)]
-        public List<string> ExpendedActions { get; set; } = [];
-
-        [ProtoMember(4)]
         public NetworkVector3 BestDestinationPoint { get; set; }
-
-        [ProtoMember(5)]
-        public NetworkVector3 DestinationPoint { get; set; }
-
-        [ProtoMember(6)]
-        public decimal BestScore { get; set; }
     }
 }

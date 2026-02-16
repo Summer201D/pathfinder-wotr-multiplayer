@@ -195,20 +195,6 @@ namespace WOTRMultiplayer.HarmonyPatches.Combat
                 return true;
             }
 
-            var isSourceOfAI = Main.Multiplayer.IsSourceOfAIActions();
-            var isLocalPlayer = Main.Multiplayer.IsControlledByLocalPlayer(__instance.Rider?.UniqueId);
-            var isPlayerControlled = Main.Multiplayer.IsControlledByPlayers(__instance.Rider?.UniqueId);
-
-            var shouldResetCounters = (isSourceOfAI && isPlayerControlled && !isLocalPlayer && __instance.Rider != null && !__instance.Rider.IsDirectlyControllable)
-                || (!isSourceOfAI && (!isPlayerControlled || isLocalPlayer && __instance.Rider != null && __instance.Rider.IsDirectlyControllable));
-
-            if (shouldResetCounters)
-            {
-                __instance.AIForcedTickCount = 0;
-                __instance.FramesWaitedForStuckAI = 0;
-                __instance.TimeWaitedForIdleAI = 0;
-            }
-
             return __instance.Rider != null;
         }
 

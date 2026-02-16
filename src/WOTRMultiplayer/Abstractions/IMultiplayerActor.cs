@@ -348,5 +348,7 @@ namespace WOTRMultiplayer.Abstractions
         void OnCopyInventoryItem(NetworkItemCopy itemCopy);
 
         bool OnAreaEffectTriggered(NetworkAreaEffect areaEffect);
+
+        NetworkAIAction OnAfterAISelectedAction(NetworkAIAction networkAIAction);
     }
 }

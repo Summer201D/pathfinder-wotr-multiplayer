@@ -1153,15 +1153,16 @@ namespace WOTRMultiplayer.Services
             Send(message);
         }
 
-        public void OnAIActionSelected(NetworkAIAction aiAction)
+        public NetworkAIAction OnAfterAISelectedAction(NetworkAIAction aiAction)
         {
             var message = new NotifyAIActionSelected
             {
                 Action = Mapper.Map<Networking.Messages.Contracts.NetworkAIAction>(aiAction)
             };
-            Logger.LogInformation("Sending {MessageType}. UnitId={UnitId}, Id={Id}, Name={Name}, Type={Type}, TargetUnitId={TargetUnitId}, UseCommand={UseCommand}, VectorPath={VectorPath}, BestEnableFiveFootStep={BestEnableFiveFootStep}, BestDestinationPoint={BestDestinationPoint}, DestinationPoint={DestinationPoint}, BestScore={BestScore}",
-                nameof(NotifyAIActionSelected), message.Action.UnitId, message.Action.Id, message.Action.Name, message.Action.ActionType, message.Action.TargetId, message.Action.UseCommand, message.Action.DecisionContext.VectorPath, message.Action.DecisionContext.BestEnableFiveFootStep, message.Action.DecisionContext.BestDestinationPoint, message.Action.DecisionContext.DestinationPoint, message.Action.DecisionContext.BestScore);
+            Logger.LogInformation("Sending {MessageType}. UnitId={UnitId}, Id={Id}, Name={Name}, Type={Type}, TargetUnitId={TargetUnitId}, VectorPath={VectorPath}, BestEnableFiveFootStep={BestEnableFiveFootStep}",
+                nameof(NotifyAIActionSelected), message.Action.UnitId, message.Action.Id, message.Action.Name, message.Action.ActionType, message.Action.TargetId, message.Action.DecisionContext.VectorPath, message.Action.DecisionContext.BestEnableFiveFootStep);
             Send(message);
+            return null;
         }
 
         public void OnGlobalMapMagicSpellUsed(NetworkGlobalMapMagicSpell globalMagicSpell)
@@ -1319,18 +1320,6 @@ namespace WOTRMultiplayer.Services
             }
 
             return true;
-        }
-
-        protected override void OnLocalAITurnEnded()
-        {
-            base.OnLocalAITurnEnded();
-
-            var message = new NotifyAICombatTurnEnded
-            {
-                UnitId = Game.Combat.Turn.UnitId
-            };
-            Logger.LogInformation("Sending {MessageType}", nameof(NotifyAICombatTurnEnded), message.UnitId);
-            Send(message);
         }
 
         protected override bool OnToggleOffPause(out bool showReason)

@@ -178,7 +178,5 @@ namespace WOTRMultiplayer.Abstractions
         void OnGlobalMapCrusadeArmyLeaderLevelingConfirmed();
 
         void OnGlobalMapCrusadeArmyLeaderLevelingSkillSelected(string skillId);
-
-        void OnAIActionSelected(NetworkAIAction aiAction);
     }
 }

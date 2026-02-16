@@ -1,4 +1,6 @@
-﻿namespace WOTRMultiplayer.Entities.Combat
+﻿using System.Collections.Generic;
+
+namespace WOTRMultiplayer.Entities.Combat
 {
     public class NetworkCombatTurn
     {
@@ -15,5 +17,7 @@
         public bool IsInProgress { get; set; }
 
         public bool RequiresTurnEntitiesSynchronization { get; set; }
+
+        public List<NetworkAIAction> AIActions { get; set; } = [];
     }
 }

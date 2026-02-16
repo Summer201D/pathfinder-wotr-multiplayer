@@ -6,15 +6,12 @@ using System.Threading.Tasks;
 using AutoMapper;
 using FluentValidation;
 using Kingmaker;
-using Kingmaker.AI;
-using Kingmaker.AI.Blueprints;
 using Kingmaker.Armies.TacticalCombat;
 using Kingmaker.Armies.TacticalCombat.Blueprints;
 using Kingmaker.Armies.TacticalCombat.Commands;
 using Kingmaker.Armies.TacticalCombat.Controllers;
 using Kingmaker.Controllers.Combat;
 using Kingmaker.Designers;
-using Kingmaker.ElementsSystem;
 using Kingmaker.EntitySystem.Entities;
 using Kingmaker.Pathfinding;
 using Kingmaker.PubSubSystem;
@@ -158,8 +155,8 @@ namespace WOTRMultiplayer.Services.GameInteraction
                         return;
                     }
 
+                    _logger.LogInformation("Starting turn based turn. UnitId={UnitId}", unitId);
                     Game.Instance.TurnBasedCombatController.StartTurn(currentUnit);
-                    _logger.LogInformation("Turn based turn has been started. UnitId={UnitId}", unitId);
                 }
                 catch (Exception ex)
                 {
@@ -173,17 +170,25 @@ namespace WOTRMultiplayer.Services.GameInteraction
         {
             _mainThreadAccessor.Post(() =>
             {
-                var turnStatus = Game.Instance.TurnBasedCombatController.CurrentTurn?.Status ?? null;
-                if ((turnStatus == TurnController.TurnStatus.Ending && !isAI)
-                    || turnStatus == TurnController.TurnStatus.Ended
-                    || turnStatus == TurnController.TurnStatus.None)
+                try
                 {
-                    _logger.LogWarning("Cannot end already finished turn. TurnStatus={TurnStatus}", turnStatus);
-                    return;
-                }
+                    var turnStatus = Game.Instance.TurnBasedCombatController.CurrentTurn?.Status ?? null;
+                    if ((turnStatus == TurnController.TurnStatus.Ending && !isAI)
+                        || turnStatus == TurnController.TurnStatus.Ended
+                        || turnStatus == TurnController.TurnStatus.None)
+                    {
+                        _logger.LogWarning("Cannot end already finished turn. TurnStatus={TurnStatus}", turnStatus);
+                        return;
+                    }
 
-                Game.Instance.TurnBasedCombatController.CurrentTurn?.End();
-                _logger.LogInformation("Turn based turn has been ended. isAI={isAI}, TurnStatus={TurnStatus}", isAI, turnStatus);
+                    _logger.LogInformation("Turn based turn has been ended. isAI={isAI}, TurnStatus={TurnStatus}", isAI, turnStatus);
+                    Game.Instance.TurnBasedCombatController.CurrentTurn?.ToEnd();
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error while ending turn");
+                    throw;
+                }
             });
         }
 
@@ -455,15 +460,11 @@ namespace WOTRMultiplayer.Services.GameInteraction
                 var rider = Game.Instance.TurnBasedCombatController.CurrentTurn.Rider;
                 var mount = Game.Instance.TurnBasedCombatController.CurrentTurn.Mount;
                 var isRiderActing = Game.Instance.TurnBasedCombatController.CurrentTurn.m_RunningCommands.Count > 0
-                    || !Game.Instance.TurnBasedCombatController.CurrentTurn.m_MountCommands.Empty
-                    || !Game.Instance.TurnBasedCombatController.CurrentTurn.m_RiderCommands.Empty
                     || Game.Instance.ProjectileController.HasLaunchedProjectile(rider, mount)
                     || Game.Instance.TurnBasedCombatController.CurrentTurn.IsMoving
                     || rider.Commands.HasAiCommand()
-                    || rider.Commands.Queue.Count > 0
-                    || mount != null && (mount.Commands.HasAiCommand() || mount.Commands.Queue.Count > 0 || mount.AreHandsBusyWithAnimation)
-                    || !(Game.Instance.TurnBasedCombatController.CurrentTurn.SelectedUnit?.Commands.Empty ?? true)
-                    || rider.AreHandsBusyWithAnimation;
+                    || rider.AreHandsBusyWithAnimation
+                    || mount != null && mount.Commands.HasAiCommand();
 
                 return isRiderActing;
             }
@@ -472,80 +473,6 @@ namespace WOTRMultiplayer.Services.GameInteraction
                 _logger.LogError(ex, "Error while checking if rider is active");
                 return false;
             }
-        }
-        public bool IsRiderActiveAndHasActions()
-        {
-            var rider = Game.Instance.TurnBasedCombatController.CurrentTurn.Rider;
-            return IsRiderActive() && rider.HasMoveAction() || rider.HasStandardAction() || rider.HasOffensiveCommand();
-        }
-
-        public void ExecuteAIAction(NetworkAIAction networkAIAction)
-        {
-            _mainThreadAccessor.Post(() =>
-            {
-                var unit = _gameStateLookupService.GetUnitEntity(networkAIAction.UnitId);
-                if (unit == null)
-                {
-                    _logger.LogError("Unable to execute ai action due to missing unit. UnitId={UnitId}", networkAIAction.UnitId);
-                    return;
-                }
-
-                foreach (var expended in networkAIAction.DecisionContext.ExpendedActions)
-                {
-                    unit.Brain.AvailableActions.Remove(x => string.Equals(x.Blueprint.AssetGuid.ToString(), expended, StringComparison.OrdinalIgnoreCase));
-                }
-
-                var aiAction = _gameStateLookupService.FindAIAction(unit, networkAIAction);
-                if (aiAction == null)
-                {
-                    _logger.LogError("Unable to missing ai action due. UnitId={UnitId}, ActionId={ActionId}", networkAIAction.UnitId, networkAIAction.Id);
-                    return;
-                }
-
-                var targetUnit = _gameStateLookupService.GetUnitEntity(networkAIAction.TargetId);
-                if (networkAIAction.TargetId != null && targetUnit == null)
-                {
-                    _logger.LogWarning("AI action target is missing. UnitId={UnitId}, TargetUnitId={TargetUnitId}", networkAIAction.UnitId, networkAIAction.TargetId);
-                }
-
-                AiBrainController.Context.InitUnit(unit);
-                var path = networkAIAction.DecisionContext.VectorPath.Select(x => x.ToUnityVector3()).ToList();
-                AiBrainController.Context.BestPath = new ForcedPath(path);
-                AiBrainController.Context.BestEnableFiveFootStep = networkAIAction.DecisionContext.BestEnableFiveFootStep;
-                AiBrainController.Context.BestDestinationPoint = networkAIAction.DecisionContext.BestDestinationPoint.ToUnityVector3();
-                AiBrainController.Context.DestinationPoint = networkAIAction.DecisionContext.DestinationPoint.ToUnityVector3();
-                AiBrainController.Context.CreateTargetInfo(targetUnit);
-                AiBrainController.Context.BestScore = networkAIAction.DecisionContext.BestScore;
-                AiBrainController.Context.Unit = unit;
-
-                try
-                {
-                    AiBrainController.Context.InitAction(aiAction);
-                    aiAction.ApplyAction();
-                    if (aiAction.UseCommand)
-                    {
-                        UnitCommand unitCommand = aiAction.CreateCommand(AiBrainController.Context, targetUnit);
-                        unitCommand.ForcedPath ??= AiBrainController.Context.BestPath;
-                        AiBrainController.Context.BestPath = null;
-                        unitCommand.AiAction = aiAction;
-                        unitCommand.AiEnableFiveFootStep = AiBrainController.Context.BestEnableFiveFootStep;
-                        unit.Commands.Run(unitCommand);
-                    }
-
-                    if (aiAction.Blueprint is BlueprintAiAction blueprintAIAction)
-                    {
-                        ActionList actions = blueprintAIAction.Actions;
-                        actions?.Run();
-                    }
-                }
-                finally
-                {
-                    AiBrainController.Context.ReleaseUnit();
-                    AiBrainController.Context.ReleaseGroup();
-                }
-
-                _logger.LogInformation("AI action has been executed. UnitId={UnitId}, TargetUnitId={TargetUnitId}, Id={Id}, Name={Name}", networkAIAction.UnitId, networkAIAction.TargetId, networkAIAction.Id, networkAIAction.Name);
-            });
         }
 
         public void KillUnit(NetworkPlayer player, string unitId)
@@ -608,15 +535,6 @@ namespace WOTRMultiplayer.Services.GameInteraction
             return taskCompletion.Task;
         }
 
-        public void AddUnitsToCombat(List<string> units)
-        {
-            _mainThreadAccessor.Post(() =>
-            {
-                var combatUnits = units.Select(_gameStateLookupService.GetUnitEntity).ToList();
-                AddUnitsToCombat(combatUnits);
-            });
-        }
-
         public Task<bool> EnsureUnitsInCombatAsync(List<NetworkUnit> units)
         {
             var taskCompletion = new TaskCompletionSource<bool>();
@@ -652,7 +570,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
         public List<NetworkUnit> GetParty()
         {
             var party = _gameStateLookupService.GetActualParty();
-            var units = GetUnitState(party);
+            var units = GetUnitsState(party);
             return units;
         }
 
@@ -691,7 +609,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
                         break;
                 }
 
-                var units = GetUnitState(unitsInCombat);
+                var units = GetUnitsState(unitsInCombat);
                 return units;
 
             }
@@ -702,7 +620,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
             }
         }
 
-        private List<NetworkUnit> GetUnitState(List<UnitEntityData> unitEntities)
+        private List<NetworkUnit> GetUnitsState(List<UnitEntityData> unitEntities)
         {
             var units = new List<NetworkUnit>();
             foreach (var unitEntity in unitEntities)
@@ -715,7 +633,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
                     TurnBasedInfo = GetUnitTurnBasedInfo(unitEntity),
                     CombatState = GetUnitCombatState(unitEntity),
                     Descriptor = GetUnitDescriptor(unitEntity),
-                    BuffCollection = _buffInteractionService.GetUnitBuffs(unitEntity),
+                    BuffCollection = _buffInteractionService.GetUnitBuffs(unitEntity)
                 };
 
                 var pitPart = unitEntity.Get<UnitPartInPit>();
@@ -873,10 +791,11 @@ namespace WOTRMultiplayer.Services.GameInteraction
                 return null;
             }
 
+            var unitCombatState = combatUnit.CombatState;
             var state = new NetworkUnitCombatState
             {
-                EngagedUnits = [.. combatUnit.CombatState.EngagedUnits.Select(x => x.UniqueId)],
-                EngagedBy = [.. combatUnit.CombatState.EngagedBy.Select(x => x.UniqueId)],
+                EngagedUnits = [.. unitCombatState.EngagedUnits.Select(x => x.UniqueId)],
+                EngagedBy = [.. unitCombatState.EngagedBy.Select(x => x.UniqueId)]
             };
 
             return state;

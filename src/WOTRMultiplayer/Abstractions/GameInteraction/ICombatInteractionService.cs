@@ -60,16 +60,10 @@ namespace WOTRMultiplayer.Abstractions.GameInteraction
 
         Task<bool> EnsureUnitsInCombatAsync(List<NetworkUnit> units);
 
-        void AddUnitsToCombat(List<string> units);
-
         void KillUnit(NetworkPlayer player, string unitId);
 
         bool CanRiderGetUp();
 
         bool IsRiderActive();
-
-        bool IsRiderActiveAndHasActions();
-
-        void ExecuteAIAction(NetworkAIAction aiAction);
     }
 }

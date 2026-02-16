@@ -6,7 +6,6 @@ using Kingmaker.GameModes;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using WOTRMultiplayer.Abstractions.IO;
-using WOTRMultiplayer.Abstractions.QueuedActions;
 using WOTRMultiplayer.Abstractions.Random;
 using WOTRMultiplayer.Config.DI;
 using WOTRMultiplayer.Entities;
@@ -45,7 +44,6 @@ namespace WOTRMultiplayer.Playground.Client
                 serviceProvider.GetService<INetworkClient>(),
                 new DummyDiceRollStorage([new NetworkIntRollValue { Value = 59 }]),
                 serviceProvider.GetService<IValueGenerator>(),
-                serviceProvider.GetService<IQueuedActionsRunner>(),
                 serviceProvider.GetService<IMapper>());
 
             var verbs = CommandLineHelper.LoadVerbs();

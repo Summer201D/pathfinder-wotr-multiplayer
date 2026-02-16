@@ -680,6 +680,12 @@ namespace WOTRMultiplayer.UI
             yield return CreateSliderSetting(WellKnownKeys.Settings.DangerZone.EnforcedCombatStartDelay.Title.Key,
                 WellKnownKeys.Settings.DangerZone.EnforcedCombatStartDelay.Tooltip.Key,
                 WellKnownSettings.DangerZone.EnforcedCombatStartDelay, 0f, 2f);
+            yield return CreateStringInputSetting(
+                WellKnownKeys.Settings.DangerZone.CombatTurnDelayForAI.Title.Key,
+                WellKnownKeys.Settings.DangerZone.CombatTurnDelayForAI.Tooltip.Key,
+                WellKnownSettings.DangerZone.CombatTurnDelayForAI,
+                new TimeSpanValidator(),
+                TimeSpanValidator.MaxLength);
         }
 
         private SettingEntityKeyBindingVM CreateKeyBindingSetting(string titleKey, string tooltipKey, WellKnownSettingKey<KeyBindingPair> settingKey)

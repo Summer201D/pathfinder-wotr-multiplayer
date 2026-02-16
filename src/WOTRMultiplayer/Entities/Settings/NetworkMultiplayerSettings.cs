@@ -33,5 +33,7 @@ namespace WOTRMultiplayer.Entities.Settings
         public float DialogBlockedAnswerAnimationDuration { get; set; }
 
         public float EnforcedCombatStartDelay { get; internal set; }
+
+        public TimeSpan CombatTurnDelayForAI { get; set; }
     }
 }

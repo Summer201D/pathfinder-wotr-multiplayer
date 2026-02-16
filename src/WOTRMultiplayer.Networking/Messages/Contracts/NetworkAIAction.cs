@@ -22,8 +22,5 @@ namespace WOTRMultiplayer.Networking.Messages.Contracts
 
         [ProtoMember(6)]
         public string ActionType { get; set; }
-
-        [ProtoMember(7)]
-        public bool UseCommand { get; set; }
     }
 }

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
+using System.Threading.Tasks;
 using AutoMapper;
 using Kingmaker.Utility;
 using Microsoft.Extensions.Logging;
@@ -10,7 +11,6 @@ using WOTRMultiplayer.Abstractions;
 using WOTRMultiplayer.Abstractions.GameInteraction;
 using WOTRMultiplayer.Abstractions.GameInteraction.CombatLog;
 using WOTRMultiplayer.Abstractions.IO;
-using WOTRMultiplayer.Abstractions.QueuedActions;
 using WOTRMultiplayer.Abstractions.Random;
 using WOTRMultiplayer.Abstractions.Settings;
 using WOTRMultiplayer.Entities;
@@ -39,7 +39,6 @@ namespace WOTRMultiplayer.Services
     {
         private readonly IIPEndPointParser _ipEndPointParser;
         private readonly INetworkClient _networkClient;
-        private readonly IQueuedActionsRunner _queuedActionsRunner;
 
         public Action OnNetworkError { get; set; }
 
@@ -72,7 +71,6 @@ namespace WOTRMultiplayer.Services
             INetworkClient networkClient,
             IDiceRollStorage diceRollStorage,
             IValueGenerator valueGenerator,
-            IQueuedActionsRunner queuedActionsRunner,
             IMapper mapper)
             : base(logger,
                   mapper,
@@ -91,7 +89,6 @@ namespace WOTRMultiplayer.Services
         {
             _ipEndPointParser = ipEndPointParser;
             _networkClient = networkClient;
-            _queuedActionsRunner = queuedActionsRunner;
         }
 
         public AddressParseResult Connect(string address)
@@ -384,6 +381,22 @@ namespace WOTRMultiplayer.Services
             return false;
         }
 
+        public NetworkAIAction OnAfterAISelectedAction(NetworkAIAction networkAIAction)
+        {
+            lock (ActionLock)
+            {
+                var action = Game.Combat.Turn.AIActions.FirstOrDefault(a => string.Equals(a.Id, networkAIAction.Id, StringComparison.OrdinalIgnoreCase)
+                    && string.Equals(a.TargetId, networkAIAction.TargetId, StringComparison.OrdinalIgnoreCase));
+
+                if (action != null)
+                {
+                    Game.Combat.Turn.AIActions.Remove(action);
+                }
+
+                return action;
+            }
+        }
+
         protected override DiceRollValueResponse RetrieveRoll(DiceRollValueRequest rollRequest)
         {
             return _networkClient.SendAndWaitForAsync<DiceRollValueResponse>(rollRequest).Result;
@@ -475,8 +488,7 @@ namespace WOTRMultiplayer.Services
                .On<NotifyInvalidCombatTurnStarted>(OnNotifyInvalidCombatTurnStarted)
                .On<NotifyCombatTurnSynchronizationRequired>(OnNotifyCombatTurnSynchronizationRequired)
                .On<NotifyCombatTurnStarted>(OnNotifyCombatTurnStarted)
-               .On<NotifyAIActionSelected>(OnNotifyAIActionSelected)
-               .On<NotifyAICombatTurnEnded>(OnNotifyAICombatTurnEnded)
+               .On<NotifyAIActionSelected>(OnNotifyAIActionExecuted)
 
                // global map & crusade combat
                .On<NotifyGlobalMapRestOpened>(OnNotifyGlobalMapRestOpened)
@@ -577,26 +589,16 @@ namespace WOTRMultiplayer.Services
                ;
         }
 
-        private async void OnNotifyAICombatTurnEnded(long receivedFrom, NotifyAICombatTurnEnded message)
+        private void OnNotifyAIActionExecuted(long receivedFrom, NotifyAIActionSelected message)
         {
-            Logger.LogInformation("Received {MessageType}. UnitId={PlayerId}", nameof(NotifyAICombatTurnEnded), message.UnitId);
-
-            await _queuedActionsRunner.RunAsync(
-                 () => CombatInteraction.EndTurnBasedCombatTurn(Game.Combat.Turn.IsAI),
-                 () => WaitWhileTrue(CombatInteraction.IsRiderActiveAndHasActions, "Waiting for AI to be inactive before ending turn", TimeSpan.FromSeconds(5)),
-                 TimeSpan.FromMilliseconds(300));
-        }
-
-        private async void OnNotifyAIActionSelected(long receivedFrom, NotifyAIActionSelected message)
-        {
-            Logger.LogInformation("Received {MessageType}. UnitId={UnitId}, Id={Id}, Name={Name}, Type={Type}, TargetUnitId={TargetUnitId}, UseCommand={UseCommand}, VectorPath={VectorPath}, BestEnableFiveFootStep={BestEnableFiveFootStep}, BestDestinationPoint={BestDestinationPoint}, DestinationPoint={DestinationPoint}, BestScore={BestScore}",
-                nameof(NotifyAIActionSelected), message.Action.UnitId, message.Action.Id, message.Action.Name, message.Action.ActionType, message.Action.TargetId, message.Action.UseCommand, message.Action.DecisionContext.VectorPath, message.Action.DecisionContext.BestEnableFiveFootStep, message.Action.DecisionContext.BestDestinationPoint, message.Action.DecisionContext.DestinationPoint, message.Action.DecisionContext.BestScore);
+            Logger.LogInformation("Received {MessageType}. UnitId={UnitId}, Id={Id}, Name={Name}, Type={Type}, TargetUnitId={TargetUnitId}, VectorPath={VectorPath}, BestEnableFiveFootStep={BestEnableFiveFootStep}",
+                nameof(NotifyAIActionSelected), message.Action.UnitId, message.Action.Id, message.Action.Name, message.Action.ActionType, message.Action.TargetId, message.Action.DecisionContext.VectorPath, message.Action.DecisionContext.BestEnableFiveFootStep);
 
             var aiAction = Mapper.Map<NetworkAIAction>(message.Action);
-            await _queuedActionsRunner.RunAsync(
-                 () => CombatInteraction.ExecuteAIAction(aiAction),
-                 () => WaitWhileTrue(CombatInteraction.IsRiderActive, "Waiting for AI to be inactive before scheduling another action"),
-                 TimeSpan.FromMilliseconds(100));
+            lock (ActionLock)
+            {
+                Game.Combat.Turn.AIActions.Add(aiAction);
+            }
         }
 
         private async void OnNotifyGlobalMapCommonPopupShown(long receivedFrom, NotifyGlobalMapCommonPopupShown message)
@@ -1431,7 +1433,7 @@ namespace WOTRMultiplayer.Services
             await SendLocalRollAsync(request.PlayerId, request);
         }
 
-        private void OnNotifyCombatTurnStarted(long playerId, NotifyCombatTurnStarted message)
+        private async void OnNotifyCombatTurnStarted(long playerId, NotifyCombatTurnStarted message)
         {
             Logger.LogInformation("Received {MessageType}. Round={Round}, UnitId={UnitId}", nameof(NotifyCombatTurnStarted), message.Round, message.UnitId);
             if (Game.Combat?.Turn == null)
@@ -1450,7 +1452,14 @@ namespace WOTRMultiplayer.Services
                 Logger.LogWarning("Starting turn with different Round number. LocalRound={LocalRound}, HostRound={HostRound}", Game.Combat.Round, message.Round);
             }
 
-            Logger.LogInformation("Starting combat turn. UnitId={UnitId}, TurnSeed={TurnSeed}", Game.Combat.Turn.Seed, Game.Combat.Turn.Seed);
+            var delay = GetTurnStartDelay();
+            Logger.LogInformation("Starting combat turn. Delay={Delay}, UnitId={UnitId}, IsAI={IsAI}, TurnSeed={TurnSeed}", Game.Combat.Turn.Seed, Game.Combat.Turn.Seed);
+            if (delay > TimeSpan.Zero)
+            {
+                await Task.Delay(delay);
+            }
+
+            Game.Combat.Turn.AIActions.Clear();
             Game.Combat.Turn.IsInProgress = true;
             CombatInteraction.StartTurnBasedCombatTurn(Game.Combat.Turn.UnitId);
         }
@@ -1742,6 +1751,17 @@ namespace WOTRMultiplayer.Services
         {
             OnNetworkError?.Invoke();
             PlayerNotification.ShowModalMessage(error, socketError);
+        }
+
+        private TimeSpan GetTurnStartDelay()
+        {
+            if (!Game.Combat.Turn.IsAI)
+            {
+                return TimeSpan.Zero;
+            }
+
+            var settings = SettingsService.GetSettings();
+            return settings.CombatTurnDelayForAI;
         }
     }
 }

@@ -6,13 +6,13 @@ using System.Reflection.Emit;
 using HarmonyLib;
 using Kingmaker;
 using Kingmaker.AI;
-using Kingmaker.Armies.TacticalCombat;
 using Kingmaker.EntitySystem.Entities;
+using Kingmaker.Pathfinding;
 using Kingmaker.RuleSystem;
 using Kingmaker.UnitLogic;
-using Kingmaker.UnitLogic.Commands;
 using Kingmaker.UnitLogic.Commands.Base;
 using Microsoft.Extensions.Logging;
+using WOTRMultiplayer.Abstractions.GameInteraction.CombatLog;
 using WOTRMultiplayer.Entities.Combat;
 using WOTRMultiplayer.Extensions;
 using WOTRMultiplayer.Services.Random;
@@ -74,86 +74,43 @@ namespace WOTRMultiplayer.HarmonyPatches.Combat
             }
         }
 
-        [HarmonyPatch(typeof(AiBrainController), nameof(AiBrainController.SelectAction))]
-        [HarmonyPrefix]
-        public static bool AiBrainController_SelectAction_Prefix()
+        [HarmonyPatch(typeof(AiBrainController), nameof(AiBrainController.FindBestAction))]
+        [HarmonyPostfix]
+        public static void AiBrainController_FindBestAction_Postfix(UnitEntityData unit, DecisionContext context, ref AiAction bestActionResult, ref UnitEntityData bestTargetResult)
         {
-            if (!Main.Multiplayer.IsActive)
+            if (!Main.Multiplayer.IsActive || bestActionResult == null)
             {
-                return true;
+                return;
             }
 
-            var canContinue = Main.Multiplayer.IsSourceOfAIActions() || TacticalCombatHelper.IsActive;
-            return canContinue;
-        }
-
-        [HarmonyPatch(typeof(AiBrainController), nameof(AiBrainController.SelectAction))]
-        [HarmonyTranspiler]
-        public static IEnumerable<CodeInstruction> AiBrainController_SelectAction_Transpiler(IEnumerable<CodeInstruction> instructions)
-        {
-            var target = PatchesUtils.GetTranspilerTarget(MethodBase.GetCurrentMethod());
-            var lookFor = AccessTools.Method(typeof(UnitCommands), nameof(UnitCommands.InterruptAiCommands));
-            var replaceWith = AccessTools.Method(typeof(AiBrainControllerPatches), nameof(AiBrainControllerPatches.OnAIActionSelected));
-            var matcher = new CodeMatcher(instructions);
-            var match = matcher.SearchForward(x => x.Calls(lookFor));
-            if (match.IsInvalid)
+            var action = new NetworkAIAction
             {
-                Main.GetLogger<ContextValueHelperPatches>().LogError("Transpiler has not been applied. Target={Target}", target);
-                return instructions;
-            }
-
-            match = match.Advance(-4);
-            var label = match.Instruction.ExtractLabels();
-            var newInstructions = new List<CodeInstruction>()
-            {
-                new CodeInstruction(OpCodes.Ldarg_1).WithLabels(label),
-                new(OpCodes.Ldarg_0),
-                new(OpCodes.Ldloc_0),
-                new(OpCodes.Ldloc_1),
-                new(OpCodes.Call, replaceWith),
-            };
-            match = match.Insert(newInstructions);
-            Main.GetLogger<ContextValueHelperPatches>().LogInformation("Transpiler has been applied. Target={Target}", target);
-            return matcher.Instructions();
-        }
-
-        private static void OnAIActionSelected(DecisionContext decisionContext, UnitEntityData aiUnit, AiAction aiAction, UnitEntityData target)
-        {
-            try
-            {
-                if (!Main.Multiplayer.IsActive
-                        || !Game.Instance.Player.IsInCombat
-                        || aiAction == null
-                        || TacticalCombatHelper.IsActive)
+                Id = bestActionResult.Blueprint.AssetGuid.ToString(),
+                Name = bestActionResult.Blueprint.name,
+                ActionType = $"{bestActionResult.GetType().Name}_{bestActionResult.Blueprint.GetType().Name}",
+                UnitId = unit.UniqueId,
+                TargetId = bestTargetResult?.UniqueId,
+                DecisionContext = new NetworkAIDecisionContext
                 {
-                    return;
+                    BestEnableFiveFootStep = context.BestEnableFiveFootStep,
+                    VectorPath = context.BestPath?.vectorPath.Select(v => v.ToNetworkVector3()).ToList() ?? [],
+                    BestDestinationPoint = context.BestDestinationPoint.ToNetworkVector3(),
                 }
+            };
 
-                var action = new NetworkAIAction
-                {
-                    Id = aiAction.Blueprint.AssetGuid.ToString(),
-                    Name = aiAction.Blueprint.name,
-                    ActionType = aiAction.GetType().Name,
-                    UnitId = aiUnit.UniqueId,
-                    TargetId = target?.UniqueId,
-                    DecisionContext = new NetworkAIDecisionContext
-                    {
-                        BestEnableFiveFootStep = decisionContext.BestEnableFiveFootStep,
-                        VectorPath = decisionContext.BestPath?.vectorPath.Select(v => v.ToNetworkVector3()).ToList() ?? [],
-                        ExpendedActions = [.. decisionContext.ExpendedActions?.Select(x => x.Blueprint.AssetGuid.ToString()) ?? []],
-                        BestDestinationPoint = decisionContext.BestDestinationPoint.ToNetworkVector3(),
-                        DestinationPoint = decisionContext.DestinationPoint.ToNetworkVector3(),
-                        BestScore = decisionContext.BestScore,
-                    },
-                    UseCommand = aiAction.UseCommand
-                };
-
-                Main.Multiplayer.OnAIActionSelected(action);
-            }
-            catch (Exception ex)
+            var possibleOverride = Main.Multiplayer.OnAfterAISelectedAction(action);
+            if (possibleOverride == null)
             {
-                Main.GetLogger<AiBrainControllerPatches>().LogError(ex, "Error while selecting AI action");
-                throw;
+                return;
+            }
+
+            if (possibleOverride.TargetId != bestTargetResult.UniqueId)
+            {
+                bestTargetResult = Main.State.GetUnitEntity(possibleOverride.TargetId);
+                var path = new ForcedPath([.. possibleOverride.DecisionContext.VectorPath.Select(x => x.ToUnityVector3())]);
+                context.BestPath = path;
+                Main.GetLogger<AiBrainControllerPatches>().LogWarning("AI action target has been overridden. UnitId={UnitId}, ActionId={ActionId}, ActionName={ActionName}, PreviousTarget={PreviousTarget}, NewTarget={NewTarget}", unit.UniqueId, possibleOverride.Id, possibleOverride.Name, bestTargetResult.UniqueId, possibleOverride.TargetId);
+                Main.PlayerNotification.AddCombatText(WellKnownKeys.GameNotifications.Combat.ActionOverride.Key, CombatTextSeverity.Debug, new UnitEntityLog(unit.UniqueId), possibleOverride.Name, new UnitEntityLog(bestTargetResult.UniqueId), new UnitEntityLog(possibleOverride.TargetId));
             }
         }
     }

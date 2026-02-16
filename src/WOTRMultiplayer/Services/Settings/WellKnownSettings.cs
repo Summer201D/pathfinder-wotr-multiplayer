@@ -104,6 +104,9 @@ namespace WOTRMultiplayer.Services.Settings
 
             [Description("enforced-combat-start-delay")]
             public static WellKnownSettingKey<float> EnforcedCombatStartDelay { get; } = new(0.5f);
+
+            [Description("combat-turn-delay-for-ai")]
+            public static WellKnownSettingKey<TimeSpan> CombatTurnDelayForAI { get; } = new(TimeSpan.FromSeconds(0.3d));
         }
     }
 }

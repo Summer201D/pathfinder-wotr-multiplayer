@@ -644,14 +644,9 @@ namespace WOTRMultiplayer.Services
         {
             if (Game.Combat.Turn.IsAI || !Game.Combat.Turn.IsInProgress)
             {
-                if (Game.Combat.Turn.IsAI)
-                {
-                    OnLocalAITurnEnded();
-                }
-
                 Logger.LogInformation("Turn end is allowed. Round={Round}, TurnUnitId={TurnUnitId}, IsAI={IsAI}, UnitId={UnitId}", Game.Combat.Round, Game.Combat.Turn.UnitId, Game.Combat.Turn.IsAI, unitId);
-                ResetCombatTurn();
                 Game.Combat.TriggeredAreaEffects.Clear();
+                ResetCombatTurn();
                 PlayerNotification.AddCombatText(WellKnownKeys.GameNotifications.Combat.Turn.Ended.Key, CombatTextSeverity.Common, new UnitEntityLog(unitId));
                 return true;
             }
@@ -663,7 +658,12 @@ namespace WOTRMultiplayer.Services
                 Send(message);
             }
 
-            Game.Combat.Turn.IsInProgress = false;
+            if (Game.Combat.Turn.IsInProgress)
+            {
+                Game.Combat.Turn.IsInProgress = false;
+                Logger.LogInformation("Turn has been marked as ended locally");
+            }
+
             return false;
         }
 
@@ -2108,10 +2108,6 @@ namespace WOTRMultiplayer.Services
         protected abstract DiceRollValueResponse RetrieveRoll(DiceRollValueRequest rollRequest);
 
         protected abstract void OnLocalPlayerTurnStart();
-
-        protected virtual void OnLocalAITurnEnded()
-        {
-        }
 
         protected abstract void Send(object message);
 
