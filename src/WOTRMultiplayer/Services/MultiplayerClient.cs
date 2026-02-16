@@ -383,7 +383,7 @@ namespace WOTRMultiplayer.Services
 
         public NetworkAIAction OnAfterAISelectedAction(NetworkAIAction networkAIAction)
         {
-            if (Game.Combat == null)
+            if (Game.Combat?.Turn == null)
             {
                 return null;
             }
@@ -1458,7 +1458,7 @@ namespace WOTRMultiplayer.Services
             }
 
             var delay = GetTurnStartDelay();
-            Logger.LogInformation("Starting combat turn. Delay={Delay}, UnitId={UnitId}, IsAI={IsAI}, TurnSeed={TurnSeed}", Game.Combat.Turn.Seed, Game.Combat.Turn.Seed);
+            Logger.LogInformation("Starting combat turn. Delay={Delay}, UnitId={UnitId}, IsAI={IsAI}, TurnSeed={TurnSeed}", delay, Game.Combat.Turn.UnitId, Game.Combat.Turn.IsAI, Game.Combat.Turn.Seed);
             if (delay > TimeSpan.Zero)
             {
                 await Task.Delay(delay);

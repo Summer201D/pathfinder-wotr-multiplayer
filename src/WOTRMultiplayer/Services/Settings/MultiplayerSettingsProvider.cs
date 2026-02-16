@@ -72,8 +72,7 @@ namespace WOTRMultiplayer.Services.Settings
                 NetworkAwaiterTimeout = _settingsControllerAccessor.GetTimeSpanValue(WellKnownSettings.DangerZone.NetworkAwaiterTimeout),
                 RestEncounterSyncTimeout = _settingsControllerAccessor.GetTimeSpanValue(WellKnownSettings.DangerZone.RestEncounterSyncTimeout),
                 EnforcedCombatStartDelay = _settingsControllerAccessor.GetValue(WellKnownSettings.DangerZone.EnforcedCombatStartDelay),
-                CombatTurnDelayForAI = _settingsControllerAccessor.GetValue(WellKnownSettings.DangerZone.CombatTurnDelayForAI),
-
+                CombatTurnDelayForAI = _settingsControllerAccessor.GetTimeSpanValue(WellKnownSettings.DangerZone.CombatTurnDelayForAI),
             };
 
             return settings;

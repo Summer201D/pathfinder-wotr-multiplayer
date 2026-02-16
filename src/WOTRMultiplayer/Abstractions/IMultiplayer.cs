@@ -267,8 +267,6 @@ namespace WOTRMultiplayer.Abstractions
 
         void OnGlobalMapEncounterRolled(NetworkGlobalMapEncounter globalMapRandomEncounter);
 
-        bool IsSourceOfAIActions();
-
         bool CanControlGlobalMap();
 
         void OnGlobalMapSkipDay();

@@ -2485,10 +2485,6 @@ namespace WOTRMultiplayer.Services
             }
         }
 
-        public bool IsSourceOfAIActions()
-        {
-            return _multiplayerActorAccessor.Current != null && _multiplayerActorAccessor.Host.IsActive;
-        }
 
         public bool CanControlGlobalMap()
         {
