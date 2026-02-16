@@ -452,7 +452,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
         {
             try
             {
-                if (Game.Instance.TurnBasedCombatController.CurrentTurn == null)
+                if (Game.Instance.TurnBasedCombatController.CurrentTurn?.Rider == null)
                 {
                     return false;
                 }

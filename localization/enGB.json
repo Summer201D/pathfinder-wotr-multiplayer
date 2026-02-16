@@ -176,7 +176,7 @@
                 },
                 "combatTurnDelayForAI": {
                     "title": "AI Turn delay",
-                    "tooltip": "AI turn for clients starts a bit later so AI actions can be synced/overridden if needed.\nKeep this somewhere above your network ping"
+                    "tooltip": "AI turn for clients starts a bit later so AI actions can be synced/overridden from host if needed.\nKeep this somewhere above your network ping"
                 }
             }
         },

@@ -383,6 +383,11 @@ namespace WOTRMultiplayer.Services
 
         public NetworkAIAction OnAfterAISelectedAction(NetworkAIAction networkAIAction)
         {
+            if (Game.Combat == null)
+            {
+                return null;
+            }
+
             lock (ActionLock)
             {
                 var action = Game.Combat.Turn.AIActions.FirstOrDefault(a => string.Equals(a.Id, networkAIAction.Id, StringComparison.OrdinalIgnoreCase)
