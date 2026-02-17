@@ -4094,6 +4094,24 @@ namespace WOTRMultiplayer.Services
             }
         }
 
+        public void OnUnitMoveTo(NetworkUnitMoveTo unitMoveTo)
+        {
+            try
+            {
+                if (_multiplayerActorAccessor == null)
+                {
+                    return;
+                }
+
+                _multiplayerActorAccessor.Current.OnUnitMoveTo(unitMoveTo);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error moving unit. UnitId={UnitId}", unitMoveTo.InitiatorUnitId);
+                throw;
+            }
+        }
+
         public void CloseMultiplayerLobbyWindow()
         {
             if (_lobbyWindow != null && _lobbyWindow.IsVisible)

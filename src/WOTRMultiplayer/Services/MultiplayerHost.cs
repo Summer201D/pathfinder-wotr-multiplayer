@@ -1400,6 +1400,11 @@ namespace WOTRMultiplayer.Services
                     var desyncedPlayers = Game.Combat.PlayersNextTurnInitialization.Where(k => !string.Equals(k.Key, Game.Combat.Turn.UnitId, StringComparison.OrdinalIgnoreCase)).ToList();
                     if (desyncedPlayers.Count > 0)
                     {
+                        foreach (var desynced in desyncedPlayers)
+                        {
+                            Game.Combat.PlayersNextTurnInitialization.TryRemove(desynced.Key, out _);
+                        }
+
                         var players = desyncedPlayers.SelectMany(x => x.Value).Distinct().ToList();
                         Logger.LogWarning("Players have started different turn. Initiating recovering. Players={Players}", desyncedPlayers.ToDictionary(x => x.Key, x => x.Value.ToList()));
                         foreach (var playerId in players)
@@ -1417,18 +1422,16 @@ namespace WOTRMultiplayer.Services
                                 UnitId = Game.Combat.Turn.UnitId,
                             };
                             Send(playerId, desyncedTurnStartMessage);
+                            Logger.LogInformation("Sending {MessageType}. PlayerId={PlayerId}, UnitId={UnitId}", nameof(NotifyInvalidCombatTurnStarted), playerId, desyncedTurnStartMessage.UnitId);
                         }
 
-                        foreach (var desynced in desyncedPlayers)
-                        {
-                            Game.Combat.PlayersNextTurnInitialization.TryRemove(desynced.Key, out _);
-                        }
+                        return;
                     }
 
                     var notInitializedPlayers = GetMissingPlayers(Game.Combat.Turn.UnitId, Game.Combat.PlayersNextTurnInitialization);
                     if (notInitializedPlayers.Count > 0)
                     {
-                        Logger.LogInformation("Unable to start turn due to missing players turn initialization. MissingPlayers={MissingPlayers}", string.Join(";", notInitializedPlayers.Select(p => p.Name)));
+                        Logger.LogInformation("Unable to start turn due to missing players turn initialization. MissingPlayersCount={MissingPlayersCount}, MissingPlayers={MissingPlayers}", notInitializedPlayers.Count, string.Join(";", notInitializedPlayers.Select(p => p.Name)));
                         return;
                     }
 

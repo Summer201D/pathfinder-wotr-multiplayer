@@ -65,5 +65,7 @@ namespace WOTRMultiplayer.Abstractions.GameInteraction
         bool CanRiderGetUp();
 
         bool IsRiderActive();
+
+        void MoveUnit(NetworkUnitMoveTo unitMoveTo);
     }
 }

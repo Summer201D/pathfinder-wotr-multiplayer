@@ -10,6 +10,7 @@ using Kingmaker.UnitLogic.Commands;
 using Kingmaker.UnitLogic.Commands.Base;
 using Kingmaker.UnitLogic.Parts;
 using Microsoft.Extensions.Logging;
+using UnityEngine;
 using WOTRMultiplayer.Entities;
 using WOTRMultiplayer.Entities.Combat;
 using WOTRMultiplayer.Extensions;
@@ -41,12 +42,6 @@ namespace WOTRMultiplayer.HarmonyPatches.Combat
                     return;
                 }
 
-                if (DoesRiderMakeSameAction(__instance.Executor))
-                {
-                    Main.GetLogger<UnitCommandsPatches>().LogWarning("Skipping attack command use as it's a part of mounted combat unit command. UnitId={UnitId}, TargetUnitId={TargetUnitId}", __instance.Executor.UniqueId, __instance.Target.UniqueId);
-                    return;
-                }
-
                 var turnTouchAbility = Game.Instance.TurnBasedCombatController?.m_CurrentTurn?.TouchAbility;
                 if (turnTouchAbility != null)
                 {
@@ -67,10 +62,7 @@ namespace WOTRMultiplayer.HarmonyPatches.Combat
                     }
                 }
 
-                var cd = __instance.Executor.CombatState.Cooldown;
-                Main.GetLogger<UnitCommandsPatches>().LogWarning("Starting unit attack command. ExecutorUnitId={ExecutorUnitId}, TargetUnitId={TargetUnitId}, IsFullAttack={IsFullAttack}, ShouldUnitApproach={ShouldUnitApproach}, Limit={limit}, IsIgnoreCooldown={IsIgnoreCooldown}, StandardCD={StandardAction}, MoveCD={MoveAction}, SwiftCD={SwiftAction}, InitiativeCD={Initiative}",
-                    __instance.Executor.UniqueId, __instance.Target.UniqueId, __instance.IsFullAttack(), __instance.ShouldUnitApproach, __instance.IsIgnoreCooldown, cd.StandardAction, cd.MoveAction, cd.SwiftAction, cd.Initiative);
-
+                Main.GetLogger<UnitCommandsPatches>().LogWarning("Starting unit attack command. ExecutorUnitId={ExecutorUnitId}, TargetUnitId={TargetUnitId}, IsFullAttack={IsFullAttack}, ShouldUnitApproach={ShouldUnitApproach}, Limit={limit}, IsIgnoreCooldown={IsIgnoreCooldown}", __instance.Executor.UniqueId, __instance.Target.UniqueId, __instance.IsFullAttack(), __instance.ShouldUnitApproach, __instance.IsIgnoreCooldown);
                 OnUnitAttack(__instance, forceMount: false);
             }
             catch (Exception ex)
@@ -89,25 +81,22 @@ namespace WOTRMultiplayer.HarmonyPatches.Combat
         [HarmonyPrefix]
         public static void UnitCommand_ForceFinishForTurnBased_Prefix(UnitCommand __instance, ResultType result)
         {
-            if (!Main.Multiplayer.IsActive || result != ResultType.Success || __instance.IsStarted || __instance.Executor.SaddledPart != null)
+            if (!Main.Multiplayer.IsActive || result != ResultType.Success || __instance.IsStarted)
             {
                 return;
             }
 
             try
             {
-                var cd = __instance.Executor.CombatState.Cooldown;
                 switch (__instance)
                 {
                     case UnitAttack unitAttack:
-                        Main.GetLogger<UnitCommandsPatches>().LogInformation("Forcefinished unit attack command. ExecutorUnitId={ExecutorUnitId}, TargetUnitId={TargetUnitId}, IsFullAttack={IsFullAttack}, StandardCD={StandardAction}, MoveCD={MoveAction}, SwiftCD={SwiftAction}, InitiativeCD={Initiative}",
-                            unitAttack.Executor.UniqueId, unitAttack.Target.UniqueId, unitAttack.IsFullAttack(), cd.StandardAction, cd.MoveAction, cd.SwiftAction, cd.Initiative);
-                        OnUnitAttack(unitAttack, forceMount: __instance.Executor.RiderPart != null);
+                        Main.GetLogger<UnitCommandsPatches>().LogInformation("Forcefinished unit attack command. ExecutorUnitId={ExecutorUnitId}, TargetUnitId={TargetUnitId}, IsFullAttack={IsFullAttack}", unitAttack.Executor.UniqueId, unitAttack.Target.UniqueId, unitAttack.IsFullAttack());
+                        OnUnitMove(unitAttack.Executor.UniqueId, __instance.Executor.Position);
                         break;
                     case UnitUseAbility unitUseAbility:
-                        Main.GetLogger<UnitCommandsPatches>().LogInformation("Forcefinished unit useability command. ExecutorUnitId={ExecutorUnitId}, TargetUnitId={TargetUnitId}, StandardCD={StandardAction}, MoveCD={MoveAction}, SwiftCD={SwiftAction}, InitiativeCD={Initiative}",
-                            __instance.Executor.UniqueId, unitUseAbility.TargetUnit?.UniqueId, cd.StandardAction, cd.MoveAction, cd.SwiftAction, cd.Initiative);
-                        OnAbilityUse(unitUseAbility);
+                        Main.GetLogger<UnitCommandsPatches>().LogInformation("Forcefinished unit useability command. ExecutorUnitId={ExecutorUnitId}", __instance.Executor.UniqueId, unitUseAbility.TargetUnit?.UniqueId);
+                        OnUnitMove(unitUseAbility.Executor.UniqueId, __instance.Executor.Position);
                         break;
                 }
             }
@@ -202,6 +191,21 @@ namespace WOTRMultiplayer.HarmonyPatches.Combat
             };
 
             Main.Multiplayer.OnAbilityUse(abilityUse);
+        }
+
+        private static void OnUnitMove(string unitId, Vector3 destination)
+        {
+            var movementLimit = Game.Instance.TurnBasedCombatController.CurrentTurn?.CurrentMovementLimit;
+            var path = PathVisualizer.Instance.m_CurrentPath?.vectorPath;
+            var unitMoveTo = new NetworkUnitMoveTo
+            {
+                InitiatorUnitId = unitId,
+                VectorPath = [.. path?.Select(x => x.ToNetworkVector3())],
+                Destination = destination.ToNetworkVector3(),
+                MovementLimit = movementLimit?.ToString()
+            };
+
+            Main.Multiplayer.OnUnitMoveTo(unitMoveTo);
         }
 
         private static void OnUnitAttack(UnitAttack command, bool forceMount)

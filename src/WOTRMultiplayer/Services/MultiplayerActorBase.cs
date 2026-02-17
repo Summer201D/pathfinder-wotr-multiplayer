@@ -1806,6 +1806,21 @@ namespace WOTRMultiplayer.Services
             Send(message);
         }
 
+        public void OnUnitMoveTo(NetworkUnitMoveTo unitMoveTo)
+        {
+            if (!IsControlledByLocalPlayer(unitMoveTo.InitiatorUnitId))
+            {
+                return;
+            }
+
+            var message = new NotifyUnitMovedTo
+            {
+                Movement = Mapper.Map<Networking.Messages.Contracts.NetworkUnitMoveTo>(unitMoveTo)
+            };
+            Logger.LogInformation("Sending {MessageType}. UnitId={UnitId}", nameof(NetworkUnitMoveTo), message.Movement.InitiatorUnitId);
+            Send(message);
+        }
+
         public void OnCopyInventoryItem(NetworkItemCopy itemCopy)
         {
             var message = new NotifyInventoryItemCopied
@@ -2900,13 +2915,14 @@ namespace WOTRMultiplayer.Services
 
         protected List<NetworkPlayer> GetMissingPlayers(string key, ConcurrentDictionary<string, HashSet<long>> playersReadinessTracker)
         {
-            List<NetworkPlayer> notReadyPlayers = GetPlayers();
-            if (playersReadinessTracker.TryGetValue(key, out var players))
+            var players = GetPlayers();
+            if (!playersReadinessTracker.TryGetValue(key, out var readyPlayers))
             {
-                notReadyPlayers.RemoveAll(p => players.Contains(p.Id));
+                return players;
             }
 
-            return notReadyPlayers;
+            var notReady = players.Where(x => !readyPlayers.Contains(x.Id)).ToList();
+            return notReady;
         }
 
         protected bool ConfirmReadiness(PlayerTurnReadinessType playerTurnReadinessType, long playerId, string unitId)
@@ -3349,12 +3365,26 @@ namespace WOTRMultiplayer.Services
 
                 // cutscenes
                 .On<NotifyCutsceneSkipped>(OnNotifyCutsceneSkipped)
+
+                // movement
+                .On<NotifyUnitMovedTo>(OnNotifyUnitMovedTo)
                 ;
+        }
+
+        private void OnNotifyUnitMovedTo(long receivedFrom, NotifyUnitMovedTo message)
+        {
+            Logger.LogInformation("Received {MessageType}. ReceivedFrom={ReceivedFrom}, UnitId={UnitId}", nameof(NotifyUnitMovedTo), receivedFrom, message.Movement.InitiatorUnitId);
+
+            var unitMoveTo = Mapper.Map<NetworkUnitMoveTo>(message.Movement);
+
+            CombatInteraction.MoveUnit(unitMoveTo);
+
+            OnAfterNetworkMessageHandled(receivedFrom, message);
         }
 
         private void OnNotifyInventoryItemCopied(long receivedFrom, NotifyInventoryItemCopied message)
         {
-            Logger.LogInformation("Sending {MessageType}. ReceivedFrom={ReceivedFrom}, UnitId={UnitId}, ItemName={ItemName}", nameof(NotifyInventoryItemCopied), receivedFrom, message.Copy.UnitId, message.Copy.Item.Name);
+            Logger.LogInformation("Received {MessageType}. ReceivedFrom={ReceivedFrom}, UnitId={UnitId}, ItemName={ItemName}", nameof(NotifyInventoryItemCopied), receivedFrom, message.Copy.UnitId, message.Copy.Item.Name);
 
             var itemCopy = Mapper.Map<NetworkItemCopy>(message.Copy);
             GameInteraction.CopyInventoryItem(itemCopy);

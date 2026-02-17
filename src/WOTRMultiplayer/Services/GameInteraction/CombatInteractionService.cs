@@ -156,7 +156,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
                     }
 
                     _logger.LogInformation("Starting turn based turn. UnitId={UnitId}", unitId);
-                    Game.Instance.TurnBasedCombatController.StartTurn(currentUnit);
+                    Game.Instance.TurnBasedCombatController?.StartTurn(currentUnit);
                 }
                 catch (Exception ex)
                 {
@@ -395,6 +395,28 @@ namespace WOTRMultiplayer.Services.GameInteraction
                 _logger.LogInformation("Retreated from tactical combat");
             });
         }
+        public void MoveUnit(NetworkUnitMoveTo unitMoveTo)
+        {
+            _mainThreadAccessor.Post(() =>
+            {
+                try
+                {
+                    var executor = _gameStateLookupService.GetUnitEntity(unitMoveTo.InitiatorUnitId);
+                    if (executor == null)
+                    {
+                        _logger.LogError("Unable to find executor unit to perform unit moveto command. InitiatorUnitId={InitiatorUnitId}", unitMoveTo.InitiatorUnitId);
+                        return;
+                    }
+
+                    RunUnitMoveToCommand(executor, unitMoveTo);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Unable to move unit. InitiatorUnitId={InitiatorUnitId}", unitMoveTo.InitiatorUnitId);
+                    throw;
+                }
+            });
+        }
 
         public void AttackUnit(NetworkUnitAttack attack)
         {
@@ -405,7 +427,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
                     var executor = _gameStateLookupService.GetUnitEntity(attack.InitiatorUnitId);
                     if (executor == null)
                     {
-                        _logger.LogError("Unable to find executor unit to perform unit attack command. ExecutorUnitId={ExecutorUnitId}", attack.InitiatorUnitId);
+                        _logger.LogError("Unable to find executor unit to perform unit attack command. InitiatorUnitId={InitiatorUnitId}", attack.InitiatorUnitId);
                         return;
                     }
 
@@ -413,7 +435,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "Unable to attack unit. ExecutorUnitId={ExecutorUnitId}, TargetUnitId={TargetUnitId}", attack.InitiatorUnitId, attack.TargetUnitId);
+                    _logger.LogError(ex, "Unable to attack unit. InitiatorUnitId={InitiatorUnitId}, TargetUnitId={TargetUnitId}", attack.InitiatorUnitId, attack.TargetUnitId);
                     throw;
                 }
             });
@@ -915,6 +937,18 @@ namespace WOTRMultiplayer.Services.GameInteraction
             unit.Damage = networkUnit.Descriptor.Damage;
         }
 
+        private void RunUnitMoveToCommand(UnitEntityData executorUnit, NetworkUnitMoveTo networkUnitMoveTo)
+        {
+            var destination = networkUnitMoveTo.Destination.ToUnityVector3();
+            var command = new UnitMoveTo(destination);
+            SetCommandPath(networkUnitMoveTo.VectorPath, command);
+            SetTurnMovementLimit(networkUnitMoveTo.MovementLimit, executorUnit);
+
+            executorUnit.Commands.Run(command);
+            _logger.LogInformation("Unit MoveTo command has been initiated. UnitId={UnitId}, Destination={Destination}, Path={Path} MovementLimit={MovementLimit}",
+                networkUnitMoveTo.InitiatorUnitId, networkUnitMoveTo.Destination, networkUnitMoveTo.VectorPath, networkUnitMoveTo.MovementLimit);
+        }
+
         private void RunUnitAttackCommand(UnitEntityData executorUnit, NetworkUnitAttack networkUnitAttack)
         {
             var target = _gameStateLookupService.GetUnitEntity(networkUnitAttack.TargetUnitId);
@@ -928,6 +962,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
             command.ForceFullAttack = !networkUnitAttack.IsSingleAttack && networkUnitAttack.IsFullAttack;
             command.IsSingleAttack = networkUnitAttack.IsSingleAttack;
             command.IsCharge = networkUnitAttack.IsCharge;
+            command.CreatedByPlayer = true;
 
             var turn = Game.Instance.TurnBasedCombatController.CurrentTurn;
             if (turn != null)

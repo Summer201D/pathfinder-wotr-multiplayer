@@ -494,5 +494,7 @@ namespace WOTRMultiplayer.Abstractions
         bool OnAreaEffectTriggered(NetworkAreaEffect areaEffect);
 
         NetworkAIAction OnAfterAISelectedAction(NetworkAIAction action);
+
+        void OnUnitMoveTo(NetworkUnitMoveTo unitMoveTo);
     }
 }
