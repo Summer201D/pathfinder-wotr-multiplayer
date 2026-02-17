@@ -398,12 +398,6 @@ namespace WOTRMultiplayer.Services
             lock (ActionLock)
             {
                 var action = Game.Combat.Turn.AIActions.FirstOrDefault(a => string.Equals(a.Id, networkAIAction.Id, StringComparison.OrdinalIgnoreCase));
-
-                if (action != null)
-                {
-                    Game.Combat.Turn.AIActions.Remove(action);
-                }
-
                 return action;
             }
         }

@@ -82,6 +82,10 @@ namespace WOTRMultiplayer.HarmonyPatches.ActionBar
                     slot.Ability = Main.Mapper.Map<NetworkAbility>(ability.Ability);
                     slot.UnitId = ability.Unit.UniqueId;
                     break;
+                case MechanicActionBarSlotSpontaneusConvertedSpell convertedSpell:
+                    slot.Ability = Main.Mapper.Map<NetworkAbility>(convertedSpell.Spell);
+                    slot.UnitId = convertedSpell.Unit.UniqueId;
+                    break;
                 case MechanicActionBarSlotSpell spell:
                     slot.Ability = Main.Mapper.Map<NetworkAbility>(spell.Spell);
                     slot.UnitId = spell.Unit.UniqueId;
