@@ -62,6 +62,8 @@ namespace WOTRMultiplayer.Entities
 
         public HashSet<long> PlayersInSkipTime { get; set; } = [];
 
+        public HashSet<long> PlayersInGlobalMapKingdom { get; set; } = [];
+
         public HashSet<long> PlayersInGlobalMapLocationMessage { get; set; } = [];
 
         public HashSet<long> PlayersInGlobalMapCommonPopup { get; set; } = [];

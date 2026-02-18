@@ -119,6 +119,30 @@ namespace WOTRMultiplayer.HarmonyPatches.GlobalMap
             Main.Multiplayer.OnGlobalMapSelectedArmyChanged(globalMapArmy);
         }
 
+        [HarmonyPatch(typeof(GlobalMapController), nameof(GlobalMapController.OnKingdomSceneDidLoad))]
+        [HarmonyPrefix]
+        public static void GlobalMapController_OnKingdomSceneDidLoad_Prefix()
+        {
+            if (!Main.Multiplayer.IsActive)
+            {
+                return;
+            }
+
+            Main.Multiplayer.OnKingdomLoaded();
+        }
+
+        [HarmonyPatch(typeof(GlobalMapController), nameof(GlobalMapController.OnKingdomSceneDidUnload))]
+        [HarmonyPrefix]
+        public static void GlobalMapController_OnKingdomSceneDidUnload_Prefix()
+        {
+            if (!Main.Multiplayer.IsActive)
+            {
+                return;
+            }
+
+            Main.Multiplayer.OnKingdomUnloaded();
+        }
+
         private static NetworkGlobalMapTravelerMode GetTravelerMode(bool state)
         {
             if (state)

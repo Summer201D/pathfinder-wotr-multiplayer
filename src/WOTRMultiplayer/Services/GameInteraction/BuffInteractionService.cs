@@ -78,8 +78,9 @@ namespace WOTRMultiplayer.Services.GameInteraction
             var buffsToRemove = localUnitBuffs.Where(x => !x.Hidden).ToList();
             RemoveUnitBuffs(unit, buffsToRemove);
 
-            var buffsToCreate = remoteUnitBuffs.Where(x => !x.IsHidden).ToList();
-            CreateUnitBuffs(unit, buffsToCreate, buffBaseTime);
+            // TODO: straightforward buff creation is unstable af with a lot of caveats. Something like 'Burning' dot is working fine, but most of the buffs have an underlying 'UnitPart' that needs to be synced as well
+            //var buffsToCreate = remoteUnitBuffs.Where(x => !x.IsHidden).ToList();
+            //CreateUnitBuffs(unit, buffsToCreate, buffBaseTime);
 
             UpdateNegativeLevels(unit, unitBuffCollection.NegativeLevels);
 
@@ -103,7 +104,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
                 return;
             }
 
-            _playerNotificationService.AddCombatText(WellKnownKeys.GameNotifications.Combat.Buffs.AddedBuffs.Key, CombatTextSeverity.Debug, new UnitEntityLog(unit.UniqueId), string.Join(", ", remoteUnitBuffs.Select(x => x.Name)));
+            _playerNotificationService.AddCombatText(WellKnownKeys.GameNotifications.Combat.Buffs.AddedBuffs.Key, CombatTextSeverity.Critical, new UnitEntityLog(unit.UniqueId), string.Join(", ", remoteUnitBuffs.Select(x => x.Name)));
             foreach (var buffToAdd in remoteUnitBuffs)
             {
                 var caster = _gameStateLookupService.GetUnitEntity(buffToAdd.CasterId) ?? unit;

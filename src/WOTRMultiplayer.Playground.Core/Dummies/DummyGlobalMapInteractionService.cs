@@ -1,6 +1,7 @@
 ﻿using System.Threading.Tasks;
 using WOTRMultiplayer.Abstractions.GameInteraction;
 using WOTRMultiplayer.Entities.GlobalMap;
+using WOTRMultiplayer.Entities.GlobalMap.Kingdom;
 
 namespace WOTRMultiplayer.Playground.Core.Dummies
 {
@@ -274,6 +275,18 @@ namespace WOTRMultiplayer.Playground.Core.Dummies
         public Task<bool> ShowCommonPopupAsync(NetworkGlobalMapCommonPopup popup)
         {
             return Task.FromResult(false);
+        }
+
+        public void EnterKingdom(NetworkKingdomEntryPoint entryPoint)
+        {
+        }
+
+        public void ExitKingdom()
+        {
+        }
+
+        public void UpdateKingdomUIState(bool isInteractable, int readyPlayersCount, int totalPlayersCount)
+        {
         }
     }
 }

@@ -65,7 +65,7 @@ namespace WOTRMultiplayer.HarmonyPatches.GlobalMap
                 return;
             }
 
-            var armyInfo = Main.UIAccessor.GlobalMapPCView?.m_ArmyInfoPCView;
+            var armyInfo = Main.UIAccessor.ArmyInfoPCView;
             if (armyInfo?.m_MergeArmyCartView == __instance)
             {
                 Main.Multiplayer.OnGlobalMapCrusadeArmyInfoMergeShown();
@@ -81,7 +81,7 @@ namespace WOTRMultiplayer.HarmonyPatches.GlobalMap
                 return;
             }
 
-            var armyInfo = Main.UIAccessor.GlobalMapPCView?.m_ArmyInfoPCView;
+            var armyInfo = Main.UIAccessor.ArmyInfoPCView;
             if (armyInfo?.m_MainArmyCartView?.ViewModel == __instance)
             {
                 Main.Multiplayer.OnGlobalMapCrusadeArmyMainCartClosed();
@@ -90,7 +90,7 @@ namespace WOTRMultiplayer.HarmonyPatches.GlobalMap
             {
                 Main.Multiplayer.OnGlobalMapCrusadeArmyMergeCartClosed();
             }
-            else if (Main.UIAccessor.GlobalMapPCView?.m_RecruitPCView?.m_ArmyView?.ViewModel == __instance)
+            else if (Main.UIAccessor.RecruitPCView?.m_ArmyView?.ViewModel == __instance)
             {
                 Main.Multiplayer.OnGlobalMapCrusadeArmyRecruitCartClosed();
             }

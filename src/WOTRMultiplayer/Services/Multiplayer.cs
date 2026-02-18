@@ -20,6 +20,7 @@ using WOTRMultiplayer.Entities.Combat.Crusades;
 using WOTRMultiplayer.Entities.Dialogs;
 using WOTRMultiplayer.Entities.Equipment;
 using WOTRMultiplayer.Entities.GlobalMap;
+using WOTRMultiplayer.Entities.GlobalMap.Kingdom;
 using WOTRMultiplayer.Entities.Inspect;
 using WOTRMultiplayer.Entities.Items;
 using WOTRMultiplayer.Entities.Leveling;
@@ -4136,6 +4137,78 @@ namespace WOTRMultiplayer.Services
             {
                 _logger.LogInformation("Closing lobby window");
                 _lobbyWindow.Close();
+            }
+        }
+
+        public void OnEnterKingdom(NetworkKingdomEntryPoint kingdomEntryPoint)
+        {
+            try
+            {
+                if (_multiplayerActorAccessor == null)
+                {
+                    return;
+                }
+
+                _multiplayerActorAccessor.Current.OnEnterKingdom(kingdomEntryPoint);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while entering kingdom. EntryPointId={EntryPointId}", kingdomEntryPoint.Id);
+                throw;
+            }
+        }
+
+        public void OnExitKingdom()
+        {
+            try
+            {
+                if (_multiplayerActorAccessor == null)
+                {
+                    return;
+                }
+
+                _multiplayerActorAccessor.Current.OnExitKingdom();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while exiting kingdom");
+                throw;
+            }
+        }
+
+        public void OnKingdomLoaded()
+        {
+            try
+            {
+                if (_multiplayerActorAccessor == null)
+                {
+                    return;
+                }
+
+                _multiplayerActorAccessor.Current.OnKingdomLoaded();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while loading kingdom");
+                throw;
+            }
+        }
+
+        public void OnKingdomUnloaded()
+        {
+            try
+            {
+                if (_multiplayerActorAccessor == null)
+                {
+                    return;
+                }
+
+                _multiplayerActorAccessor.Current.OnKingdomUnloaded();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while unloading kingdom");
+                throw;
             }
         }
 

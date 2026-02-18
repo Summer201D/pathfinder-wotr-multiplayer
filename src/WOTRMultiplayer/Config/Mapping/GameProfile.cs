@@ -2,6 +2,7 @@
 using System.Linq;
 using AutoMapper;
 using Kingmaker.EntitySystem.Entities;
+using Kingmaker.Kingdom.Settlements;
 using Kingmaker.UnitLogic;
 using Kingmaker.UnitLogic.Abilities;
 using Kingmaker.UnitLogic.Buffs;
@@ -10,6 +11,7 @@ using Kingmaker.Utility;
 using WOTRMultiplayer.Entities;
 using WOTRMultiplayer.Entities.AreaEffects;
 using WOTRMultiplayer.Entities.Combat;
+using WOTRMultiplayer.Entities.GlobalMap.Kingdom;
 using WOTRMultiplayer.Entities.Spells;
 using WOTRMultiplayer.Entities.Units;
 using WOTRMultiplayer.Extensions;
@@ -45,6 +47,25 @@ namespace WOTRMultiplayer.Config.Mapping
 
             CreateMap<AreaEffectEntityData, NetworkAreaEffect>().ConstructUsing(x => Create(x))
                 .ForAllMembers(x => x.Ignore());
+
+            CreateMap<SettlementState, NetworkKingdomSettlement>().ConstructUsing(x => Create(x))
+                .ForAllMembers(x => x.Ignore());
+        }
+
+        private NetworkKingdomSettlement Create(SettlementState settlementState)
+        {
+            if (settlementState == null)
+            {
+                return null;
+            }
+
+            var kingdomSettlement = new NetworkKingdomSettlement
+            {
+                Id = settlementState.UniqueId,
+                Name = settlementState.Name,
+            };
+
+            return kingdomSettlement;
         }
 
         private NetworkAreaEffect Create(AreaEffectEntityData areaEffectEntityData)

@@ -240,7 +240,11 @@
             NotifyAIActionSelected,
             NotifyCombatRecoveryInitiated,
             NotifyUnitMovedTo,
-            NotifyDialogPopupAccepted
+            NotifyDialogPopupAccepted,
+            NotifyKingdomExited,
+            NotifyKingdomEntered,
+            NotifyKingdomLoaded,
+            NotifyKingdomUnloaded
         }
 
         public enum Request

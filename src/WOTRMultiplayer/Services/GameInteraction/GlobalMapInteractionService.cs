@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Kingmaker;
 using Kingmaker.Assets.Controllers.GlobalMap;
 using Kingmaker.Blueprints;
+using Kingmaker.Blueprints.Area;
 using Kingmaker.Blueprints.Root.Strings;
 using Kingmaker.Crusade.GlobalMagic;
 using Kingmaker.ElementsSystem;
@@ -13,6 +14,7 @@ using Kingmaker.Globalmap.State;
 using Kingmaker.Globalmap.View;
 using Kingmaker.Kingdom;
 using Kingmaker.Kingdom.Armies;
+using Kingmaker.Kingdom.Settlements;
 using Kingmaker.PubSubSystem;
 using Kingmaker.RandomEncounters;
 using Kingmaker.RandomEncounters.Settings;
@@ -31,6 +33,7 @@ using UnityEngine;
 using WOTRMultiplayer.Abstractions.GameInteraction;
 using WOTRMultiplayer.Abstractions.Unity;
 using WOTRMultiplayer.Entities.GlobalMap;
+using WOTRMultiplayer.Entities.GlobalMap.Kingdom;
 using WOTRMultiplayer.Extensions;
 
 namespace WOTRMultiplayer.Services.GameInteraction
@@ -88,7 +91,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
 
                 var modalMessage = _uiAccessor.CommonPCView?.m_MessageModalPCView;
                 modalMessage.ViewModel?.OnDeclinePressed();
-                var messageBoxView = _uiAccessor.GlobalMapPCView.m_GlobalMapEnterMessagePCView;
+                var messageBoxView = _uiAccessor.GlobalMapEnterMessagePCView;
                 messageBoxView.ViewModel?.Close();
 
                 var traveler = Game.Instance.GlobalMapController.SelectedTraveler;
@@ -161,12 +164,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
         {
             _mainThreadAccessor.Post(() =>
             {
-                if (_uiAccessor.GlobalMapPCView == null)
-                {
-                    return;
-                }
-
-                var messageBoxView = _uiAccessor.GlobalMapPCView.m_GlobalMapEnterMessagePCView;
+                var messageBoxView = _uiAccessor.GlobalMapEnterMessagePCView;
                 if (messageBoxView?.ViewModel == null)
                 {
                     return;
@@ -195,13 +193,12 @@ namespace WOTRMultiplayer.Services.GameInteraction
         {
             _mainThreadAccessor.Post(() =>
             {
-                var globalMapView = _uiAccessor.GlobalMapPCView;
-                if (globalMapView?.ViewModel == null)
+                var modalMessage = _uiAccessor.CommonPCView?.m_MessageModalPCView;
+                if (modalMessage?.ViewModel == null)
                 {
                     return;
                 }
 
-                var modalMessage = _uiAccessor.CommonPCView?.m_MessageModalPCView;
                 modalMessage.m_AcceptButton.Interactable = isInteractable;
                 modalMessage.m_DeclineButton.Interactable = isInteractable;
                 _uiSyncCountersService.UpdateButtonTextCounter(modalMessage.m_AcceptText, readyPlayersCount, totalPlayersCount);
@@ -288,7 +285,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
         {
             _mainThreadAccessor.Post(() =>
             {
-                var view = _uiAccessor.GlobalMapPCView?.m_CombatResultPCView;
+                var view = _uiAccessor.CombatResultPCView;
                 if (view?.ViewModel == null)
                 {
                     _logger.LogWarning("Unable to close combat results UI due to missing view");
@@ -304,7 +301,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
         {
             _mainThreadAccessor.Post(() =>
             {
-                var view = _uiAccessor.GlobalMapPCView?.m_CombatResultPCView;
+                var view = _uiAccessor.CombatResultPCView;
                 if (view?.ViewModel == null)
                 {
                     _logger.LogWarning("Unable to update combat results UI due to missing view");
@@ -325,70 +322,30 @@ namespace WOTRMultiplayer.Services.GameInteraction
                 var globalMapView = _uiAccessor.GlobalMapPCView;
                 if (globalMapView?.ViewModel == null)
                 {
-                    _logger.LogWarning("Unable to update UI due to missing GlobalMapView");
+                    _logger.LogWarning("Unable to update UI due to missing GlobalMapPCView");
                     return;
                 }
 
-                if (GlobalMapUI.Instance != null)
+                UpdateSharedKingdomGlobalMapUI(isInteractable, readyPlayersCount, totalPlayersCount);
+
+                _logger.LogInformation("GlobalMap UI state has been updated. IsInteractable={IsInteractable}, ReadyPlayers={ReadyPlayers}, TotalPlayers={TotalPlayers}", isInteractable, readyPlayersCount, totalPlayersCount);
+            });
+        }
+
+        public void UpdateKingdomUIState(bool isInteractable, int readyPlayersCount, int totalPlayersCount)
+        {
+            _mainThreadAccessor.Post(() =>
+            {
+                var kingdomView = _uiAccessor.KingdomPCView;
+                if (kingdomView?.ViewModel == null)
                 {
-                    GlobalMapUI.Instance.m_BtnContinue.GetComponentInChildren<OwlcatButton>().Interactable = isInteractable;
-                    GlobalMapUI.Instance.m_BtnStop.GetComponentInChildren<OwlcatButton>().Interactable = isInteractable;
+                    _logger.LogWarning("Unable to update UI due to missing GlobalMapPCView/KingdomPCView");
+                    return;
                 }
 
-                var toolbar = globalMapView.m_GlobalMapToolbarPCView;
-                toolbar.m_ArmyModeCharacterButton.Interactable = isInteractable;
-                toolbar.m_ArmyModeCrusadeButton.Interactable = isInteractable;
-                toolbar.m_SkipDay.Interactable = isInteractable;
-                toolbar.m_AddArmyCrusadeButton.Interactable = isInteractable;
-                toolbar.m_AddArmyCrusadePlusButton.Interactable = isInteractable;
-                _uiSyncCountersService.UpdateButtonTextCounter(toolbar.m_SkipDayLabel, readyPlayersCount, totalPlayersCount);
+                UpdateSharedKingdomGlobalMapUI(isInteractable, readyPlayersCount, totalPlayersCount);
 
-                // bottom left list
-                var armies = globalMapView.m_ArmiesPCView.m_ArmiesContainer?.gameObject.GetComponentsInChildren<GlobalMapCrusadeArmyPCView>() ?? [];
-                foreach (var army in armies)
-                {
-                    army.m_SelectButton.Interactable = isInteractable;
-                    army.m_SettingsButton.Interactable = isInteractable;
-                }
-
-                var armyHud = globalMapView.m_ArmyInfoHUDPCView;
-                if (armyHud?.ViewModel != null)
-                {
-                    armyHud.m_InfoButton.Interactable = isInteractable;
-
-                    if (armyHud.m_LeaderView?.ViewModel != null)
-                    {
-                        armyHud.m_LeaderView.m_LevelupButton.Interactable = isInteractable;
-                    }
-                }
-
-                var kingdomInfo = globalMapView.m_KingdomInfoPCView;
-                if (kingdomInfo != null)
-                {
-                    kingdomInfo.m_BuyResourcesButton.Interactable = isInteractable;
-                }
-
-                var menuView = globalMapView.m_GlobalMapMenuPCView;
-                if (menuView?.ViewModel != null)
-                {
-                    menuView.m_KingdomButton.Interactable = isInteractable;
-                    menuView.m_RecruitButton.Interactable = isInteractable;
-
-                    menuView.m_RestButton.Interactable = isInteractable;
-                    menuView.m_GroupManagerButton.Interactable = isInteractable;
-                    menuView.m_SkipTime.Interactable = isInteractable;
-                }
-
-                var markersView = globalMapView.m_GlobalMapArmyPointerMarkerPCView;
-                if (markersView?.m_Items != null)
-                {
-                    foreach (var marker in markersView.m_Items.Values)
-                    {
-                        marker.m_Button.Interactable = isInteractable;
-                    }
-                }
-
-                _logger.LogInformation("UI state has been updated. IsInteractable={IsInteractable}, ReadyPlayers={ReadyPlayers}, TotalPlayers={TotalPlayers}", isInteractable, readyPlayersCount, totalPlayersCount);
+                _logger.LogInformation("Kingdom UI state has been updated. IsInteractable={IsInteractable}, ReadyPlayers={ReadyPlayers}, TotalPlayers={TotalPlayers}", isInteractable, readyPlayersCount, totalPlayersCount);
             });
         }
 
@@ -396,11 +353,6 @@ namespace WOTRMultiplayer.Services.GameInteraction
         {
             _mainThreadAccessor.Post(() =>
             {
-                if (_uiAccessor.GlobalMapPCView == null)
-                {
-                    return;
-                }
-
                 var modalMessage = _uiAccessor.CommonPCView?.m_MessageModalPCView;
                 if (modalMessage?.ViewModel != null)
                 {
@@ -420,7 +372,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
         {
             _mainThreadAccessor.Post(() =>
             {
-                var messageBoxView = _uiAccessor.GlobalMapPCView.m_GlobalMapEnterMessagePCView;
+                var messageBoxView = _uiAccessor.GlobalMapEnterMessagePCView;
                 if (messageBoxView?.ViewModel == null)
                 {
                     _logger.LogError("Unable to accept missing global map message box");
@@ -436,7 +388,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
         {
             _mainThreadAccessor.Post(() =>
             {
-                var messageBoxView = _uiAccessor.GlobalMapPCView.m_GlobalMapEnterMessagePCView;
+                var messageBoxView = _uiAccessor.GlobalMapEnterMessagePCView;
                 if (messageBoxView?.ViewModel == null)
                 {
                     _logger.LogWarning("Unable to close missing global map message box");
@@ -459,7 +411,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
                     return;
                 }
 
-                _uiAccessor.GlobalMapPCView?.m_GlobalMapEnterMessagePCView?.ViewModel?.Close();
+                _uiAccessor.GlobalMapEnterMessagePCView?.ViewModel?.Close();
 
                 GlobalMapView.Instance.EnterLocation();
                 _logger.LogInformation("Global map location has been entered. LocationId={LocationId}, LocationName={LocationName}", globalMapLocation.Id, globalMapLocation.Name);
@@ -541,7 +493,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
         {
             _mainThreadAccessor.Post(() =>
             {
-                var toolbarView = _uiAccessor.GlobalMapPCView?.m_GlobalMapToolbarPCView;
+                var toolbarView = _uiAccessor.GlobalMapToolbarPCView;
                 if (toolbarView?.ViewModel == null)
                 {
                     _logger.LogError("Unable to skip day due to missing global map toolbar view");
@@ -579,7 +531,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
         {
             _mainThreadAccessor.Post(() =>
             {
-                var viewModel = _uiAccessor.GlobalMapPCView?.m_GlobalMapToolbarPCView?.ViewModel;
+                var viewModel = _uiAccessor.GlobalMapToolbarPCView?.ViewModel;
                 if (viewModel == null)
                 {
                     _logger.LogWarning("Unable to change army mode due to missing view model. TravelerMode={TravelerMode}", travelerMode);
@@ -595,7 +547,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
         {
             _mainThreadAccessor.Post(() =>
             {
-                var settingsView = _uiAccessor.GlobalMapPCView?.m_GlobalMapToolbarPCView?.m_SettingsView;
+                var settingsView = _uiAccessor.GlobalMapToolbarPCView?.m_SettingsView;
                 // settings are not opened -> update UI settings directly
                 if (settingsView?.ViewModel == null)
                 {
@@ -732,7 +684,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
         {
             _mainThreadAccessor.Post(() =>
             {
-                var view = _uiAccessor.GlobalMapPCView?.m_ArmyInfoPCView;
+                var view = _uiAccessor.ArmyInfoPCView;
                 if (view?.ViewModel == null)
                 {
                     _logger.LogWarning("Unable to update crusade army info due to missing view");
@@ -762,7 +714,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
         {
             _mainThreadAccessor.Post(() =>
             {
-                var view = _uiAccessor.GlobalMapPCView?.m_ArmyInfoPCView;
+                var view = _uiAccessor.ArmyInfoPCView;
                 if (view?.ViewModel == null)
                 {
                     _logger.LogWarning("Unable to close crusade army info due to missing view");
@@ -778,7 +730,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
         {
             _mainThreadAccessor.Post(() =>
             {
-                var view = _uiAccessor.GlobalMapPCView?.m_ArmyInfoPCView?.m_MainArmyCartView;
+                var view = _uiAccessor.ArmyInfoPCView?.m_MainArmyCartView;
                 if (view?.ViewModel == null)
                 {
                     _logger.LogWarning("Unable to close crusade army main info due to missing view");
@@ -794,10 +746,10 @@ namespace WOTRMultiplayer.Services.GameInteraction
         {
             _mainThreadAccessor.Post(() =>
             {
-                var view = _uiAccessor.GlobalMapPCView?.m_ArmyInfoPCView?.m_SetLeaderView;
+                var view = _uiAccessor.ArmyInfoPCView?.m_SetLeaderView;
                 if (view?.ViewModel == null)
                 {
-                    view = _uiAccessor.GlobalMapPCView?.m_RecruitPCView?.m_LeaderSetView;
+                    view = _uiAccessor.RecruitPCView?.m_LeaderSetView;
                     if (view?.ViewModel == null)
                     {
                         _logger.LogWarning("Unable to close crusade army info set leader due to missing view");
@@ -814,7 +766,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
         {
             _mainThreadAccessor.Post(() =>
             {
-                var view = _uiAccessor.GlobalMapPCView?.m_ArmyInfoPCView?.m_SetLeaderView;
+                var view = _uiAccessor.ArmyInfoPCView?.m_SetLeaderView;
                 if (view?.ViewModel == null)
                 {
                     _logger.LogWarning("Unable to clear leader on crusade army info due to missing view");
@@ -830,10 +782,10 @@ namespace WOTRMultiplayer.Services.GameInteraction
         {
             _mainThreadAccessor.Post(() =>
             {
-                var view = _uiAccessor.GlobalMapPCView?.m_ArmyInfoPCView?.m_SetLeaderView;
+                var view = _uiAccessor.ArmyInfoPCView?.m_SetLeaderView;
                 if (view?.ViewModel == null)
                 {
-                    view = _uiAccessor.GlobalMapPCView?.m_RecruitPCView?.m_LeaderSetView;
+                    view = _uiAccessor.RecruitPCView?.m_LeaderSetView;
                     if (view?.ViewModel == null)
                     {
                         _logger.LogWarning("Unable to open leader recruitment due to missing view");
@@ -850,7 +802,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
         {
             _mainThreadAccessor.Post(() =>
             {
-                var view = _uiAccessor.GlobalMapPCView?.m_BuyLeaderPCView;
+                var view = _uiAccessor.ArmyCartBuyLeaderPCView;
                 if (view?.ViewModel == null)
                 {
                     _logger.LogWarning("Unable to close buy leader screen due to missing view");
@@ -866,11 +818,11 @@ namespace WOTRMultiplayer.Services.GameInteraction
         {
             _mainThreadAccessor.Post(() =>
             {
-                if (_uiAccessor.GlobalMapPCView?.m_ArmyInfoPCView?.ViewModel != null)
+                if (_uiAccessor.ArmyInfoPCView?.ViewModel != null)
                 {
                     UpdateCrusadeArmyInfoUI(isInteractable, readyPlayersCount, totalPlayersCount);
                 }
-                else if (_uiAccessor.GlobalMapPCView?.m_RecruitPCView?.ViewModel != null)
+                else if (_uiAccessor.RecruitPCView?.ViewModel != null)
                 {
                     UpdateRecruitmentUI(isInteractable, readyPlayersCount, totalPlayersCount);
                 }
@@ -881,7 +833,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
         {
             _mainThreadAccessor.Post(() =>
             {
-                var view = _uiAccessor.GlobalMapPCView?.m_RecruitPCView;
+                var view = _uiAccessor.RecruitPCView;
                 if (view?.ViewModel == null)
                 {
                     _logger.LogWarning("Unable to select next recruitment army due to missing view");
@@ -897,7 +849,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
         {
             _mainThreadAccessor.Post(() =>
             {
-                var view = _uiAccessor.GlobalMapPCView?.m_RecruitPCView;
+                var view = _uiAccessor.RecruitPCView;
                 if (view?.ViewModel == null)
                 {
                     _logger.LogWarning("Unable to select prev recruitment army due to missing view");
@@ -913,7 +865,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
         {
             _mainThreadAccessor.Post(() =>
             {
-                var view = _uiAccessor.GlobalMapPCView?.m_RecruitPCView;
+                var view = _uiAccessor.RecruitPCView;
                 if (view?.ViewModel == null)
                 {
                     _logger.LogWarning("Unable to reroll recruitment mercenaries due to missing view");
@@ -946,9 +898,9 @@ namespace WOTRMultiplayer.Services.GameInteraction
                 UISoundController.Instance.Play(UISoundType.ArmyManagementBuyResourcesPlay);
                 EventBus.RaiseEvent<IKingdomResourcesHandler>(x => x.OnResourcesChanged(delta));
 
-                if (_uiAccessor.GlobalMapPCView.m_RecruitPCView?.ViewModel != null)
+                if (_uiAccessor.RecruitPCView?.ViewModel != null)
                 {
-                    DisableRecruitUI(_uiAccessor.GlobalMapPCView.m_RecruitPCView);
+                    DisableRecruitUI(_uiAccessor.RecruitPCView);
                 }
             });
         }
@@ -957,7 +909,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
         {
             _mainThreadAccessor.Post(() =>
             {
-                var view = _uiAccessor.GlobalMapPCView.m_RecruitPCView;
+                var view = _uiAccessor.RecruitPCView;
                 if (view?.ViewModel == null)
                 {
                     _logger.LogError("Unable to buy units due to missing view");
@@ -1017,14 +969,13 @@ namespace WOTRMultiplayer.Services.GameInteraction
         {
             _mainThreadAccessor.Post(() =>
             {
-                var view = _uiAccessor.GlobalMapPCView;
-                if (view?.m_RecruitPCView?.ViewModel != null)
+                if (_uiAccessor.RecruitPCView?.ViewModel != null)
                 {
                     _logger.LogWarning("Recruitments is already opened");
                     return;
                 }
 
-                view.m_GlobalMapMenuPCView.ViewModel.OnRecruitClick();
+                _uiAccessor.GlobalMapMenuPCView.ViewModel.OnRecruitClick();
                 _logger.LogInformation("Recruitment UI has been opened");
             });
         }
@@ -1033,7 +984,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
         {
             _mainThreadAccessor.Post(() =>
             {
-                var view = _uiAccessor.GlobalMapPCView?.m_RecruitPCView;
+                var view = _uiAccessor.RecruitPCView;
                 if (view?.ViewModel == null)
                 {
                     _logger.LogWarning("Recruitments is already closed");
@@ -1049,7 +1000,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
         {
             _mainThreadAccessor.Post(() =>
             {
-                var view = _uiAccessor.GlobalMapPCView?.m_RecruitPCView;
+                var view = _uiAccessor.RecruitPCView;
                 if (view?.ViewModel == null)
                 {
                     _logger.LogWarning("Unable to update recruitment due to missing view");
@@ -1080,7 +1031,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
         {
             _mainThreadAccessor.Post(() =>
             {
-                var view = _uiAccessor.GlobalMapPCView?.m_BuyLeaderPCView;
+                var view = _uiAccessor.ArmyCartBuyLeaderPCView;
                 if (view?.ViewModel == null)
                 {
                     _logger.LogWarning("Unable to update buy leader screen due to missing view");
@@ -1102,7 +1053,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
         {
             _mainThreadAccessor.Post(() =>
             {
-                var view = _uiAccessor.GlobalMapPCView?.m_ArmyInfoPCView?.m_MergeArmyCartView;
+                var view = _uiAccessor.ArmyInfoPCView?.m_MergeArmyCartView;
                 if (view?.ViewModel == null)
                 {
                     _logger.LogWarning("Unable to close crusade army merge info due to missing view");
@@ -1134,14 +1085,14 @@ namespace WOTRMultiplayer.Services.GameInteraction
         {
             _mainThreadAccessor.Post(() =>
             {
-                var view = _uiAccessor.GlobalMapPCView.m_ArmyInfoHUDPCView;
+                var view = _uiAccessor.ArmyInfoHUDPCView;
                 if (view?.ViewModel == null)
                 {
                     _logger.LogWarning("Unable to open crusade army info due to missing view");
                     return;
                 }
 
-                if (_uiAccessor.GlobalMapPCView?.m_ArmyInfoPCView?.ViewModel != null)
+                if (_uiAccessor.ArmyInfoPCView?.ViewModel != null)
                 {
                     _logger.LogWarning("Army info is already opened");
                     return;
@@ -1156,7 +1107,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
         {
             _mainThreadAccessor.Post(() =>
             {
-                var view = _uiAccessor.GlobalMapPCView?.m_ArmyInfoPCView;
+                var view = _uiAccessor.ArmyInfoPCView;
                 if (view?.ViewModel == null)
                 {
                     _logger.LogWarning("Unable to move crusade army squads to main army due to missing view");
@@ -1172,7 +1123,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
         {
             _mainThreadAccessor.Post(() =>
             {
-                var view = _uiAccessor.GlobalMapPCView?.m_ArmyInfoPCView;
+                var view = _uiAccessor.ArmyInfoPCView;
                 if (view?.ViewModel == null)
                 {
                     _logger.LogWarning("Unable to move crusade army squads to second army due to missing view");
@@ -1188,7 +1139,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
         {
             _mainThreadAccessor.Post(() =>
             {
-                var view = _uiAccessor.GlobalMapPCView?.m_ArmyInfoPCView;
+                var view = _uiAccessor.ArmyInfoPCView;
                 if (view?.ViewModel == null)
                 {
                     _logger.LogWarning("Unable to select prev crusade army merge due to missing view");
@@ -1204,7 +1155,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
         {
             _mainThreadAccessor.Post(() =>
             {
-                var view = _uiAccessor.GlobalMapPCView?.m_ArmyInfoPCView;
+                var view = _uiAccessor.ArmyInfoPCView;
                 if (view?.ViewModel == null)
                 {
                     _logger.LogWarning("Unable to select next crusade army merge due to missing view");
@@ -1251,14 +1202,15 @@ namespace WOTRMultiplayer.Services.GameInteraction
         {
             _mainThreadAccessor.Post(() =>
             {
-                var view = _uiAccessor.GlobalMapPCView;
-                if (view?.ViewModel == null)
+
+                var overtipVM = _uiAccessor.GlobalMapPCView?.ViewModel?.GlobalMapArmyOvertipsVM ?? _uiAccessor.KingdomPCView?.ViewModel?.GlobalMapArmyOvertipsVM;
+                if (overtipVM == null)
                 {
-                    _logger.LogWarning("Unable to open merge screen due to missing global map view");
+                    _logger.LogWarning("Unable to open merge screen due to missing overtip viewmodel");
                     return;
                 }
 
-                view.ViewModel.GlobalMapArmyOvertipsVM.MergeArmies();
+                overtipVM.MergeArmies();
                 _logger.LogInformation("Merge armies screen has been opened");
             });
         }
@@ -1283,10 +1235,10 @@ namespace WOTRMultiplayer.Services.GameInteraction
         {
             _mainThreadAccessor.Post(() =>
             {
-                var view = _uiAccessor.GlobalMapPCView?.m_ArmyInfoPCView;
+                var view = _uiAccessor.ArmyInfoPCView;
                 if (view?.ViewModel == null)
                 {
-                    var recruitView = _uiAccessor.GlobalMapPCView?.m_RecruitPCView;
+                    var recruitView = _uiAccessor.RecruitPCView;
                     if (recruitView?.ViewModel == null)
                     {
                         _logger.LogWarning("Unable to create army at crusade info due to missing view");
@@ -1355,7 +1307,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
         {
             _mainThreadAccessor.Post(() =>
             {
-                var view = _uiAccessor.GlobalMapPCView?.m_LeaderLevelUpPCView;
+                var view = _uiAccessor.LeaderLevelUpPCView;
                 if (view?.ViewModel == null)
                 {
                     _logger.LogWarning("Unable to update leader leveling ui due to missing view");
@@ -1378,7 +1330,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
         {
             _mainThreadAccessor.Post(() =>
             {
-                var view = _uiAccessor.GlobalMapPCView?.m_LeaderLevelUpPCView;
+                var view = _uiAccessor.LeaderLevelUpPCView;
                 if (view?.ViewModel == null)
                 {
                     _logger.LogWarning("Unable to close leader leveling due to missing view");
@@ -1394,7 +1346,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
         {
             _mainThreadAccessor.Post(() =>
             {
-                var view = _uiAccessor.GlobalMapPCView?.m_LeaderLevelUpPCView;
+                var view = _uiAccessor.LeaderLevelUpPCView;
                 if (view?.ViewModel == null)
                 {
                     _logger.LogWarning("Unable to confirm leader leveling due to missing view");
@@ -1410,7 +1362,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
         {
             _mainThreadAccessor.Post(() =>
             {
-                var view = _uiAccessor.GlobalMapPCView?.m_LeaderLevelUpPCView;
+                var view = _uiAccessor.LeaderLevelUpPCView;
                 if (view?.ViewModel == null)
                 {
                     _logger.LogWarning("Unable to select leader leveling skll to missing view");
@@ -1452,21 +1404,14 @@ namespace WOTRMultiplayer.Services.GameInteraction
             {
                 try
                 {
-                    var view = _uiAccessor.GlobalMapPCView;
-                    if (view?.ViewModel == null)
-                    {
-                        _logger.LogError("Unable to show common popup due to missing global map view. Type={Type}", popup?.Type);
-                        return;
-                    }
-
                     switch (popup.Type)
                     {
                         case NetworkGlobalMapCommonPopupType.Fatigue:
-                            UIUtility.ShowMessageBox(UIStrings.Instance.GlobalMap.PartyIsFatigue, MessageModalBase.ModalType.Dialog, view.ViewModel.OnFatigueClose);
+                            UIUtility.ShowMessageBox(UIStrings.Instance.GlobalMap.PartyIsFatigue, MessageModalBase.ModalType.Dialog, _uiAccessor.GlobalMapPCView.ViewModel.OnFatigueClose);
                             tcs.SetResult(true);
                             return;
                         case NetworkGlobalMapCommonPopupType.Exhaust:
-                            UIUtility.ShowMessageBox(UIStrings.Instance.GlobalMap.PartyIsExhausted, MessageModalBase.ModalType.Dialog, view.ViewModel.OnFatigueClose);
+                            UIUtility.ShowMessageBox(UIStrings.Instance.GlobalMap.PartyIsExhausted, MessageModalBase.ModalType.Dialog, _uiAccessor.GlobalMapPCView.ViewModel.OnFatigueClose);
                             tcs.SetResult(true);
                             return;
                     }
@@ -1481,6 +1426,162 @@ namespace WOTRMultiplayer.Services.GameInteraction
             });
 
             return tcs.Task;
+        }
+
+        public void EnterKingdom(NetworkKingdomEntryPoint kingdomEntryPoint)
+        {
+            _mainThreadAccessor.Post(() =>
+            {
+                BlueprintAreaEnterPoint point = null;
+                if (!string.IsNullOrEmpty(kingdomEntryPoint.Id))
+                {
+                    point = ResourcesLibrary.TryGetBlueprint<BlueprintAreaEnterPoint>(kingdomEntryPoint.Id);
+                    if (point == null)
+                    {
+                        _logger.LogError("Unable to find kingdom enter point. Id={Id}", kingdomEntryPoint.Id);
+                        return;
+                    }
+                }
+
+                SettlementState settlementState = null;
+                if (kingdomEntryPoint.Settlement != null)
+                {
+                    settlementState = _gameStateLookupService.GetKingdomSettlement(kingdomEntryPoint.Settlement);
+                    if (settlementState == null)
+                    {
+                        _logger.LogError("Unable to find kingdom settlement to focus. Id={Id}, Name={Name}", kingdomEntryPoint.Settlement.Id, kingdomEntryPoint.Settlement.Name);
+                        return;
+                    }
+                }
+
+                Game.Instance.KingdomController.EnterKingdomArea(point, settlementState);
+                _logger.LogInformation("Kingdom has been entered. EnterPointId={EnterPointId}, SettlementId={SettlementId}, SettlementName={SettlementName}", point?.AssetGuid.ToString(), settlementState?.UniqueId, settlementState?.Name);
+            });
+        }
+
+        public void ExitKingdom()
+        {
+            _mainThreadAccessor.Post(() =>
+            {
+                UIUtility.LeaveKingdom();
+                _logger.LogInformation("Kingdom has been exited");
+            });
+        }
+
+        private void UpdateGlobalMapToolbar(bool isInteractable, int readyPlayersCount, int totalPlayersCount)
+        {
+            var toolbar = _uiAccessor.GlobalMapToolbarPCView;
+            if (toolbar?.ViewModel == null)
+            {
+                return;
+            }
+
+            toolbar.m_ArmyModeCharacterButton.Interactable = isInteractable;
+            toolbar.m_ArmyModeCrusadeButton.Interactable = isInteractable;
+            toolbar.m_SkipDay.Interactable = isInteractable;
+            if (toolbar.m_AddArmyCrusadeButton != null)
+            {
+                toolbar.m_AddArmyCrusadeButton.Interactable = isInteractable;
+            }
+            if (toolbar.m_AddArmyCrusadePlusButton != null)
+            {
+                toolbar.m_AddArmyCrusadePlusButton.Interactable = isInteractable;
+            }
+            _uiSyncCountersService.UpdateButtonTextCounter(toolbar.m_SkipDayLabel, readyPlayersCount, totalPlayersCount);
+        }
+
+        private void UpdateGlobalMapKingdomInfo(bool isInteractable)
+        {
+            var kingdomInfoPCView = _uiAccessor.KingdomInfoPCView;
+            if (kingdomInfoPCView?.ViewModel == null)
+            {
+                return;
+            }
+
+            kingdomInfoPCView.m_BuyResourcesButton.Interactable = isInteractable;
+        }
+
+        private void UpdateGlobalMapArmies(bool isInteractable)
+        {
+            var armiesPCView = _uiAccessor.GlobalMapCrusadeArmiesPCView;
+            if (armiesPCView?.ViewModel == null)
+            {
+                return;
+            }
+
+            var armies = armiesPCView.m_ArmiesContainer?.gameObject.GetComponentsInChildren<GlobalMapCrusadeArmyPCView>() ?? [];
+            foreach (var army in armies)
+            {
+                army.m_SelectButton.Interactable = isInteractable;
+                army.m_SettingsButton.Interactable = isInteractable;
+            }
+        }
+
+        private void UpdateSharedKingdomGlobalMapUI(bool isInteractable, int readyPlayersCount, int totalPlayersCount)
+        {
+            UpdateGlobalMapMovementButtons(isInteractable);
+
+            UpdateGlobalMapToolbar(isInteractable, readyPlayersCount, totalPlayersCount);
+            UpdateGlobalMapArmies(isInteractable);
+            UpdateGlobalMapArmyHud(isInteractable);
+
+            UpdateGlobalMapKingdomInfo(isInteractable);
+            UpdateGlobalMapMenuView(isInteractable);
+            UpdateGlobalMapArmyMarkers(isInteractable);
+        }
+
+        private void UpdateGlobalMapArmyHud(bool isInteractable)
+        {
+            var armyInfoHUDPCView = _uiAccessor.ArmyInfoHUDPCView;
+            if (armyInfoHUDPCView?.ViewModel == null)
+            {
+                return;
+            }
+
+            armyInfoHUDPCView.m_InfoButton.Interactable = isInteractable;
+            if (armyInfoHUDPCView.m_LeaderView?.ViewModel != null)
+            {
+                armyInfoHUDPCView.m_LeaderView.m_LevelupButton.Interactable = isInteractable;
+            }
+        }
+
+        private void UpdateGlobalMapMenuView(bool isInteractable)
+        {
+            var globalMapMenuPCView = _uiAccessor.GlobalMapMenuPCView;
+            if (globalMapMenuPCView?.ViewModel == null)
+            {
+                return;
+            }
+
+            globalMapMenuPCView.m_KingdomButton.Interactable = isInteractable;
+            globalMapMenuPCView.m_RecruitButton.Interactable = isInteractable;
+
+            globalMapMenuPCView.m_RestButton.Interactable = isInteractable;
+            globalMapMenuPCView.m_GroupManagerButton.Interactable = isInteractable;
+            globalMapMenuPCView.m_SkipTime.Interactable = isInteractable;
+        }
+
+        private void UpdateGlobalMapArmyMarkers(bool isInteractable)
+        {
+            var markerPCView = _uiAccessor.GlobalMapArmyPointerMarkerPCView;
+            if (markerPCView?.m_Items != null)
+            {
+                foreach (var marker in markerPCView.m_Items.Values)
+                {
+                    marker.m_Button.Interactable = isInteractable;
+                }
+            }
+        }
+
+        private void UpdateGlobalMapMovementButtons(bool isInteractable)
+        {
+            if (GlobalMapUI.Instance == null)
+            {
+                return;
+            }
+
+            GlobalMapUI.Instance.m_BtnContinue.GetComponentInChildren<OwlcatButton>().Interactable = isInteractable;
+            GlobalMapUI.Instance.m_BtnStop.GetComponentInChildren<OwlcatButton>().Interactable = isInteractable;
         }
 
         private void DisableRecruitUI(RecruitPCView view)
@@ -1532,8 +1633,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
 
         private ArmyInfoArmyCartView GetArmyInfoCart(NetworkGlobalMapArmy globalMapArmy)
         {
-            var globalView = _uiAccessor.GlobalMapPCView;
-            List<ArmyInfoArmyCartView> views = [globalView?.m_ArmyInfoPCView?.m_MainArmyCartView, globalView?.m_ArmyInfoPCView?.m_MergeArmyCartView, globalView?.m_RecruitPCView?.m_ArmyView];
+            List<ArmyInfoArmyCartView> views = [_uiAccessor.ArmyInfoPCView?.m_MainArmyCartView, _uiAccessor.ArmyInfoPCView?.m_MergeArmyCartView, _uiAccessor.RecruitPCView?.m_ArmyView];
             var view = views.FirstOrDefault(x => x?.ViewModel != null && string.Equals(x.ViewModel.State.Id, globalMapArmy.Id, StringComparison.OrdinalIgnoreCase));
             return view;
         }
@@ -1616,11 +1716,9 @@ namespace WOTRMultiplayer.Services.GameInteraction
 
         private (ArmySquadsPCView view, ArmyInfoSquadVM) GetArmyInfoSquadVM(NetworkGlobalMapArmySquadSlot mapArmySquadSlot)
         {
-            var globalMapView = _uiAccessor.GlobalMapPCView;
-
-            var squad = GetArmyInfoSquadVM((ArmySquadsPCView)globalMapView.m_ArmyInfoPCView?.m_MainArmyCartView?.m_SquadsView, mapArmySquadSlot)
-                ?? GetArmyInfoSquadVM((ArmySquadsPCView)globalMapView.m_ArmyInfoPCView?.m_MergeArmyCartView?.m_SquadsView, mapArmySquadSlot)
-                ?? GetArmyInfoSquadVM((ArmySquadsPCView)globalMapView.m_ArmyInfoHUDPCView?.m_SquadView, mapArmySquadSlot);
+            var squad = GetArmyInfoSquadVM((ArmySquadsPCView)_uiAccessor.ArmyInfoPCView?.m_MainArmyCartView?.m_SquadsView, mapArmySquadSlot)
+                ?? GetArmyInfoSquadVM((ArmySquadsPCView)_uiAccessor.ArmyInfoPCView?.m_MergeArmyCartView?.m_SquadsView, mapArmySquadSlot)
+                ?? GetArmyInfoSquadVM((ArmySquadsPCView)_uiAccessor.ArmyInfoHUDPCView?.m_SquadView, mapArmySquadSlot);
 
             if (squad == null)
             {
@@ -1637,10 +1735,10 @@ namespace WOTRMultiplayer.Services.GameInteraction
         /// <returns></returns>
         private ArmyLeaderInfoVM GetArmyLeaderView(NetworkGlobalMapArmyLeader globalMapArmyLeader, NetworkGlobalMapArmyLeaderActionType armyLeaderActionType)
         {
-            var armyInfo = _uiAccessor.GlobalMapPCView.m_ArmyInfoPCView;
+            var armyInfo = _uiAccessor.ArmyInfoPCView;
             var mainCartView = armyInfo?.m_MainArmyCartView?.m_LeaderInfoView;
             var mergeCartView = armyInfo?.m_MergeArmyCartView?.m_LeaderInfoView;
-            var recruitmentView = _uiAccessor.GlobalMapPCView.m_RecruitPCView;
+            var recruitmentView = _uiAccessor.RecruitPCView;
             if (globalMapArmyLeader == null)
             {
                 switch (armyLeaderActionType)
@@ -1658,14 +1756,14 @@ namespace WOTRMultiplayer.Services.GameInteraction
             }
 
             // BuyLeaders screen is always on top
-            List<ArmyLeaderInfoView> viewsToSearch = [.. _uiAccessor.GlobalMapPCView.m_BuyLeaderPCView.m_Leaders, mainCartView, mergeCartView, .. armyInfo.m_SetLeaderView.Leaders,
+            List<ArmyLeaderInfoView> viewsToSearch = [.. _uiAccessor.ArmyCartBuyLeaderPCView.m_Leaders, mainCartView, mergeCartView, .. armyInfo.m_SetLeaderView.Leaders,
                 recruitmentView.m_ArmyView.m_LeaderInfoView, .. recruitmentView.m_LeaderSetView.Leaders];
 
             var viewModel = viewsToSearch.FirstOrDefault(v => IsArmyLeaderViewMatched(v, globalMapArmyLeader))?.ViewModel;
 
             if (viewModel == null && armyLeaderActionType == NetworkGlobalMapArmyLeaderActionType.LevelUp)
             {
-                return _uiAccessor.GlobalMapPCView?.m_ArmyInfoHUDPCView?.m_LeaderView?.ViewModel;
+                return _uiAccessor.ArmyInfoHUDPCView?.m_LeaderView?.ViewModel;
             }
 
             return viewModel;

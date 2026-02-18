@@ -7,6 +7,8 @@ using Kingmaker.EntitySystem.Entities;
 using Kingmaker.Globalmap;
 using Kingmaker.Globalmap.State;
 using Kingmaker.Globalmap.View;
+using Kingmaker.Kingdom;
+using Kingmaker.Kingdom.Settlements;
 using Kingmaker.UnitLogic;
 using Kingmaker.UnitLogic.Abilities;
 using Kingmaker.View.MapObjects;
@@ -16,6 +18,7 @@ using WOTRMultiplayer.Entities;
 using WOTRMultiplayer.Entities.AreaEffects;
 using WOTRMultiplayer.Entities.Combat;
 using WOTRMultiplayer.Entities.GlobalMap;
+using WOTRMultiplayer.Entities.GlobalMap.Kingdom;
 using WOTRMultiplayer.Entities.Spells;
 using WOTRMultiplayer.Extensions;
 
@@ -87,6 +90,12 @@ namespace WOTRMultiplayer.Services.GameInteraction
         {
             var armyPawn = GlobalMapView.Instance?.GetArmyView(globalMapArmyPawn.Id);
             return armyPawn;
+        }
+
+        public SettlementState GetKingdomSettlement(NetworkKingdomSettlement kingdomSettlement)
+        {
+            var settlement = KingdomState.Instance?.SettlementsManager.m_SettlementStates.FirstOrDefault(s => string.Equals(s.UniqueId, kingdomSettlement.Id, StringComparison.OrdinalIgnoreCase));
+            return settlement;
         }
 
         public GlobalMapArmyState GetGlobalMapArmy(string id)

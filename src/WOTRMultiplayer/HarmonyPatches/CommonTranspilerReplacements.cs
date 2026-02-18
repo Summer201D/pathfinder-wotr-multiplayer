@@ -1,5 +1,6 @@
 ﻿using System.Reflection.Emit;
 using HarmonyLib;
+using Kingmaker;
 using Kingmaker.Armies.TacticalCombat;
 using Kingmaker.EntitySystem.Entities;
 using Microsoft.Extensions.Logging;
@@ -8,6 +9,13 @@ namespace WOTRMultiplayer.HarmonyPatches
 {
     public class CommonTranspilerReplacements
     {
+        public static string GetSharedIdentifierPart()
+        {
+            var area = Game.Instance.CurrentlyLoadedArea?.name ?? "no-area";
+            var gameId = Game.Instance.Player?.GameId;
+            return $"{area}:{gameId}";
+        }
+
         public static void ReplaceIsDirectlyControllableWithLocalPlayerCheck(CodeMatcher matcher, string target, bool withLabels = false, bool fromEnd = false)
         {
             var replaceWith = AccessTools.Method(typeof(CommonTranspilerReplacements), nameof(CommonTranspilerReplacements.IsControlledByLocalPlayer));

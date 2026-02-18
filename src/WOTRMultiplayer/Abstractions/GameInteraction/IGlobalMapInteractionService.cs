@@ -1,5 +1,6 @@
 ﻿using System.Threading.Tasks;
 using WOTRMultiplayer.Entities.GlobalMap;
+using WOTRMultiplayer.Entities.GlobalMap.Kingdom;
 
 namespace WOTRMultiplayer.Abstractions.GameInteraction
 {
@@ -18,6 +19,8 @@ namespace WOTRMultiplayer.Abstractions.GameInteraction
         void UpdateEncounterMessageUI(bool isInteractable, int readyPlayersCount, int totalPlayersCount);
 
         void UpdateUIState(bool isInteractable, int readyPlayersCount, int totalPlayersCount);
+
+        void UpdateKingdomUIState(bool isInteractable, int readyPlayersCount, int totalPlayersCount);
 
         void UpdateCombatResultsUI(bool isInteractable, int readyPlayersCount, int totalPlayersCount);
 
@@ -138,5 +141,7 @@ namespace WOTRMultiplayer.Abstractions.GameInteraction
         void StartCrusadeArmyLeaderLeveling(NetworkGlobalMapArmy globalMapArmy);
 
         Task<bool> ShowCommonPopupAsync(NetworkGlobalMapCommonPopup popup);
+        void EnterKingdom(NetworkKingdomEntryPoint entryPoint);
+        void ExitKingdom();
     }
 }

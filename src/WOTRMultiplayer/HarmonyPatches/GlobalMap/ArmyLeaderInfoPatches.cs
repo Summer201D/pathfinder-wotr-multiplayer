@@ -43,7 +43,7 @@ namespace WOTRMultiplayer.HarmonyPatches.GlobalMap
                 return;
             }
 
-            var armyInfo = Main.UIAccessor.GlobalMapPCView?.m_ArmyInfoPCView;
+            var armyInfo = Main.UIAccessor.ArmyInfoPCView;
             var actionType = armyInfo?.m_MainArmyCartView?.m_LeaderInfoView?.ViewModel == __instance ? NetworkGlobalMapArmyLeaderActionType.MainLookAtPool : NetworkGlobalMapArmyLeaderActionType.MergeLookAtPool;
             var leader = CreateLeader(__instance.m_Leader);
             Main.Multiplayer.OnGlobalMapCrusadeArmyLeaderAction(leader, actionType);

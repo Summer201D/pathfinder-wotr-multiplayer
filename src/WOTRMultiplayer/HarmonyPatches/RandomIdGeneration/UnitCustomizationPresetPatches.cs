@@ -39,7 +39,7 @@ namespace WOTRMultiplayer.HarmonyPatches.RandomIdGeneration
 
             match = match.RemoveInstruction().Insert(newInstructions);
 
-            Main.GetLogger<RandomIdGenerationPatches>().LogInformation("Transpiler has been applied. Target={Target}", target);
+            Main.GetLogger<EntitiesIdsPatches>().LogInformation("Transpiler has been applied. Target={Target}", target);
             return matcher.Instructions();
         }
 

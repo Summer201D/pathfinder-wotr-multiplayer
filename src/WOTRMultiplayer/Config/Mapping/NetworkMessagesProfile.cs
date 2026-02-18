@@ -9,6 +9,7 @@ using WOTRMultiplayer.Entities.Content;
 using WOTRMultiplayer.Entities.Dialogs;
 using WOTRMultiplayer.Entities.Equipment;
 using WOTRMultiplayer.Entities.GlobalMap;
+using WOTRMultiplayer.Entities.GlobalMap.Kingdom;
 using WOTRMultiplayer.Entities.Inspect;
 using WOTRMultiplayer.Entities.Items;
 using WOTRMultiplayer.Entities.Leveling;
@@ -356,6 +357,12 @@ namespace WOTRMultiplayer.Config.Mapping
                 .ReverseMap();
 
             CreateMap<NetworkUnitMoveTo, Networking.Messages.Contracts.NetworkUnitMoveTo>()
+                .ReverseMap();
+
+            CreateMap<NetworkKingdomEntryPoint, Networking.Messages.Contracts.NetworkKingdomEntryPoint>()
+                .ReverseMap();
+
+            CreateMap<NetworkKingdomSettlement, Networking.Messages.Contracts.NetworkKingdomSettlement>()
                 .ReverseMap();
         }
     }

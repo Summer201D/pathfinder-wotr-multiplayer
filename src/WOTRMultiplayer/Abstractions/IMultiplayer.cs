@@ -12,6 +12,7 @@ using WOTRMultiplayer.Entities.Combat.Crusades;
 using WOTRMultiplayer.Entities.Dialogs;
 using WOTRMultiplayer.Entities.Equipment;
 using WOTRMultiplayer.Entities.GlobalMap;
+using WOTRMultiplayer.Entities.GlobalMap.Kingdom;
 using WOTRMultiplayer.Entities.Inspect;
 using WOTRMultiplayer.Entities.Items;
 using WOTRMultiplayer.Entities.Leveling;
@@ -498,5 +499,10 @@ namespace WOTRMultiplayer.Abstractions
         NetworkAIAction OnAfterAISelectedAction(NetworkAIAction action);
 
         void OnUnitMoveTo(NetworkUnitMoveTo unitMoveTo);
+
+        void OnEnterKingdom(NetworkKingdomEntryPoint kingdomEntryPoint);
+        void OnExitKingdom();
+        void OnKingdomLoaded();
+        void OnKingdomUnloaded();
     }
 }

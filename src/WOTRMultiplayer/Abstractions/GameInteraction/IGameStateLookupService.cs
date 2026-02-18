@@ -3,12 +3,14 @@ using Kingmaker.AI;
 using Kingmaker.EntitySystem.Entities;
 using Kingmaker.Globalmap.State;
 using Kingmaker.Globalmap.View;
+using Kingmaker.Kingdom.Settlements;
 using Kingmaker.UnitLogic;
 using Kingmaker.UnitLogic.Abilities;
 using WOTRMultiplayer.Entities;
 using WOTRMultiplayer.Entities.AreaEffects;
 using WOTRMultiplayer.Entities.Combat;
 using WOTRMultiplayer.Entities.GlobalMap;
+using WOTRMultiplayer.Entities.GlobalMap.Kingdom;
 using WOTRMultiplayer.Entities.Spells;
 
 namespace WOTRMultiplayer.Abstractions.GameInteraction
@@ -46,5 +48,7 @@ namespace WOTRMultiplayer.Abstractions.GameInteraction
         List<UnitEntityData> GetActualParty();
 
         AiAction FindAIAction(UnitEntityData unit, NetworkAIAction networkAIAction);
+
+        SettlementState GetKingdomSettlement(NetworkKingdomSettlement settlement);
     }
 }

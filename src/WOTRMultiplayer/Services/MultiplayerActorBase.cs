@@ -27,6 +27,7 @@ using WOTRMultiplayer.Entities.Content;
 using WOTRMultiplayer.Entities.Dialogs;
 using WOTRMultiplayer.Entities.Equipment;
 using WOTRMultiplayer.Entities.GlobalMap;
+using WOTRMultiplayer.Entities.GlobalMap.Kingdom;
 using WOTRMultiplayer.Entities.Items;
 using WOTRMultiplayer.Entities.Leveling;
 using WOTRMultiplayer.Entities.MapObjects;
@@ -2120,6 +2121,46 @@ namespace WOTRMultiplayer.Services
             Logger.LogInformation("New Crusade Army combat turn started. TurnNumber={TurnNumber}, UnitId={UnitId}, IsAI={IsAI}", Game.ArmyCombat.Turn.Number, Game.ArmyCombat.Turn.UnitId, Game.ArmyCombat.Turn.IsAI);
         }
 
+        public void OnEnterKingdom(NetworkKingdomEntryPoint kingdomEntryPoint)
+        {
+            var message = new NotifyKingdomEntered
+            {
+                EntryPoint = Mapper.Map<Networking.Messages.Contracts.NetworkKingdomEntryPoint>(kingdomEntryPoint)
+            };
+            Logger.LogInformation("Sending {MessageType}. EntryPointId={EntryPointId}, SettlementId={SettlementId}, SettlementName={SettlementName}", nameof(NotifyKingdomEntered), message.EntryPoint.Id, message.EntryPoint.Settlement?.Id, message.EntryPoint.Settlement?.Name);
+            Send(message);
+        }
+
+        public void OnExitKingdom()
+        {
+            var message = new NotifyKingdomExited();
+            Logger.LogInformation("Sending {MessageType}", nameof(NotifyKingdomExited));
+            Send(message);
+        }
+
+        public void OnKingdomLoaded()
+        {
+            AddPlayerToTracker(Game.PlayersInGlobalMapKingdom, Game.LocalPlayerId);
+            var message = new NotifyKingdomLoaded
+            {
+                PlayerId = Game.LocalPlayerId
+            };
+            Logger.LogInformation("Sending {MessageType}. PlayerId={PlayerId}", nameof(NotifyKingdomLoaded), message.PlayerId);
+            Send(message);
+            UpdateGlobalMapKingdomUIState();
+        }
+
+        public void OnKingdomUnloaded()
+        {
+            var message = new NotifyKingdomUnloaded
+            {
+                PlayerId = Game.LocalPlayerId
+            };
+            Logger.LogInformation("Sending {MessageType}. PlayerId={PlayerId}", nameof(NotifyKingdomUnloaded), message.PlayerId);
+            Send(message);
+            ResetPlayersTracker(Game.PlayersInGlobalMapKingdom);
+        }
+
         protected abstract DiceRollValueResponse RetrieveRoll(DiceRollValueRequest rollRequest);
 
         protected abstract void OnLocalPlayerTurnStart();
@@ -2497,6 +2538,14 @@ namespace WOTRMultiplayer.Services
                 var canUse = HasControlOverUI && readyPlayers.Value >= totalPlayers;
                 GlobalMapInteraction.UpdateUIState(canUse, readyPlayers.Value, totalPlayers);
             }
+        }
+
+        protected void UpdateGlobalMapKingdomUIState()
+        {
+            var readyPlayers = Game.PlayersInGlobalMapKingdom.Count;
+            var totalPlayers = GetSyncedPlayersCount();
+            var canUse = HasControlOverUI && readyPlayers >= totalPlayers;
+            GlobalMapInteraction.UpdateKingdomUIState(canUse, readyPlayers, totalPlayers);
         }
 
         protected void ResetPlayersTracker(HashSet<long> tracker)
@@ -3305,6 +3354,10 @@ namespace WOTRMultiplayer.Services
                 .On<NotifyGlobalMapCrusadeArmyBuyLeaderShown>(OnNotifyGlobalMapCrusadeArmyBuyLeaderShown)
                 .On<NotifyGlobalMapCrusadeArmyLeaderLevelingShown>(OnNotifyGlobalMapCrusadeArmyLeaderLevelingShown)
                 .On<NotifyGlobalMapCrusadeArmyLeaderLevelingStarted>(OnNotifyGlobalMapCrusadeArmyLeaderLevelingStarted)
+                .On<NotifyKingdomEntered>(OnNotifyKingdomEntered)
+                .On<NotifyKingdomExited>(OnNotifyKingdomExited)
+                .On<NotifyKingdomLoaded>(OnNotifyKingdomLoaded)
+                .On<NotifyKingdomUnloaded>(OnNotifyKingdomUnloaded)
 
                 // mapobjects
                 .On<NotifyOvertipInteracted>(OnNotifyOvertipInteracted)
@@ -3369,6 +3422,40 @@ namespace WOTRMultiplayer.Services
                 // movement
                 .On<NotifyUnitMovedTo>(OnNotifyUnitMovedTo)
                 ;
+        }
+
+        private void OnNotifyKingdomUnloaded(long receivedFrom, NotifyKingdomUnloaded message)
+        {
+            Logger.LogInformation("Received {MessageType}. ReceivedFrom={ReceivedFrom}", nameof(NotifyKingdomUnloaded), receivedFrom);
+            RemovePlayerFromTracker(Game.PlayersInGlobalMapKingdom, message.PlayerId);
+            UpdateGlobalMapUIState();
+        }
+
+        private void OnNotifyKingdomLoaded(long receivedFrom, NotifyKingdomLoaded message)
+        {
+            Logger.LogInformation("Received {MessageType}. ReceivedFrom={ReceivedFrom}", nameof(NotifyKingdomLoaded), receivedFrom);
+
+            AddPlayerToTracker(Game.PlayersInGlobalMapKingdom, message.PlayerId);
+            UpdateGlobalMapKingdomUIState();
+        }
+
+        private void OnNotifyKingdomExited(long receivedFrom, NotifyKingdomExited message)
+        {
+            Logger.LogInformation("Received {MessageType}. ReceivedFrom={ReceivedFrom}", nameof(NotifyKingdomExited), receivedFrom);
+            ResetPlayersTracker(Game.PlayersInGlobalMapKingdom);
+            ResetGlobalMapCounters();
+
+            GlobalMapInteraction.ExitKingdom();
+        }
+
+        private void OnNotifyKingdomEntered(long receivedFrom, NotifyKingdomEntered message)
+        {
+            Logger.LogInformation("Received {MessageType}. ReceivedFrom={ReceivedFrom}, EntryPointId={EntryPointId}, SettlementId={SettlementId}, SettlementName={SettlementName}", nameof(NotifyKingdomEntered), receivedFrom, message.EntryPoint.Id, message.EntryPoint.Settlement?.Id, message.EntryPoint.Settlement?.Name);
+
+            var entryPoint = Mapper.Map<NetworkKingdomEntryPoint>(message.EntryPoint);
+            ResetGlobalMapCounters();
+
+            GlobalMapInteraction.EnterKingdom(entryPoint);
         }
 
         private void OnNotifyUnitMovedTo(long receivedFrom, NotifyUnitMovedTo message)

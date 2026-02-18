@@ -17,48 +17,6 @@ namespace WOTRMultiplayer.HarmonyPatches.RandomIdGeneration
     [HarmonyPatch]
     public class RandomElementSelectionPatches
     {
-        [HarmonyPatch(typeof(ArmyRoot), nameof(ArmyRoot.SummonTravellingArmy))]
-        [HarmonyTranspiler]
-        public static IEnumerable<CodeInstruction> ArmyRoot_SummonTravellingArmy_Transpiler(IEnumerable<CodeInstruction> instructions)
-        {
-            var target = PatchesUtils.GetTranspilerTarget(MethodBase.GetCurrentMethod());
-            var travelingCountCall = AccessTools.Method(typeof(RandomElementSelectionPatches), nameof(RandomElementSelectionPatches.GetTravelingArmiesCount));
-            var lookFor = AccessTools.Method(typeof(UnityEngine.Random), nameof(UnityEngine.Random.Range), [typeof(int), typeof(int)]);
-            var matcher = new CodeMatcher(instructions);
-            var match = matcher.SearchForward(x => x.Calls(lookFor));
-
-            if (match.IsInvalid)
-            {
-                Main.GetLogger<RandomElementSelectionPatches>().LogError("Transpiler has not been applied (TravelingArmiesCount). Target={Target}", target);
-                return instructions;
-            }
-
-            match = match.RemoveInstruction();
-            var travelingArmiesCountInstructions = new List<CodeInstruction>()
-            {
-                new(OpCodes.Ldloc_1),
-                new(OpCodes.Call, travelingCountCall),
-            };
-            match.Insert(travelingArmiesCountInstructions);
-
-            var randomArmyCall = AccessTools.Method(typeof(RandomElementSelectionPatches), nameof(RandomElementSelectionPatches.GetTravelingArmyRandom));
-            match = match.SearchForward(x => x.Is(OpCodes.Newobj, AccessTools.Constructor(typeof(Random), [typeof(int)])));
-            if (match.IsInvalid)
-            {
-                Main.GetLogger<RandomElementSelectionPatches>().LogError("Transpiler has not been applied (RandomArmySelection). Target={Target}", target);
-                return instructions;
-            }
-            var randomArmyInstructions = new List<CodeInstruction>()
-            {
-                new(OpCodes.Ldloc_1),
-                new(OpCodes.Call, randomArmyCall),
-            };
-
-            match = match.RemoveInstruction().Insert(randomArmyInstructions);
-            Main.GetLogger<RandomElementSelectionPatches>().LogInformation("Transpiler has been applied. Target={Target}", target);
-            return matcher.Instructions();
-        }
-
         [HarmonyPatch(typeof(DublicateSpellComponent), nameof(DublicateSpellComponent.GetNewTarget))]
         [HarmonyTranspiler]
         public static IEnumerable<CodeInstruction> DublicateSpellComponent_GetNewTarget_Transpiler(IEnumerable<CodeInstruction> instructions)
@@ -199,51 +157,6 @@ namespace WOTRMultiplayer.HarmonyPatches.RandomIdGeneration
             catch (Exception ex)
             {
                 Main.GetLogger<RandomElementSelectionPatches>().LogError(ex, "Error while initializing squads action random");
-                throw;
-            }
-        }
-
-        private static Random GetTravelingArmyRandom(int weeks, ArmyRoot.ChapterSpawnInfo chapterSpawnInfo)
-        {
-            if (!Main.Multiplayer.IsActive)
-            {
-                return new Random(weeks);
-            }
-
-            try
-            {
-
-                var sessionSeed = Main.Multiplayer.GetSessionSeed();
-                var identifier = $"{nameof(ArmyRoot)}:{nameof(ArmyRoot.SummonTravellingArmy)}:{nameof(GetTravelingArmyRandom)}:{sessionSeed}:{Game.Instance.Player.GameId}:{chapterSpawnInfo.Chapter}";
-                var random = Main.Multiplayer.ValueGenerator.GetRandom(IdentifierLifetime.Persistent, identifier);
-                Main.GetLogger<RandomElementSelectionPatches>().LogInformation("Leaders for recruit random has been initialized. Identifier={Identifier}");
-                return random;
-            }
-            catch (Exception ex)
-            {
-                Main.GetLogger<RandomElementSelectionPatches>().LogError(ex, "Error while initializing traveling army random");
-                throw;
-            }
-        }
-
-        private static int GetTravelingArmiesCount(int minInclusive, int maxExclusive, ArmyRoot.ChapterSpawnInfo chapterSpawnInfo)
-        {
-            if (!Main.Multiplayer.IsActive)
-            {
-                return UnityEngine.Random.Range(minInclusive, maxExclusive);
-            }
-            try
-            {
-
-                var sessionSeed = Main.Multiplayer.GetSessionSeed();
-                var identifier = $"{nameof(ArmyRoot)}:{nameof(ArmyRoot.SummonTravellingArmy)}:{nameof(GetTravelingArmiesCount)}:{sessionSeed}:{Game.Instance.Player.GameId}:{minInclusive}:{maxExclusive}:{chapterSpawnInfo.Chapter}";
-                var armiesCount = Main.Multiplayer.ValueGenerator.Range(IdentifierLifetime.Persistent, identifier, minInclusive, maxExclusive);
-                Main.GetLogger<RandomElementSelectionPatches>().LogInformation("Travling armies count has been rolled. Count={Count}, MinInclusive={MinInclusive}, MaxExclusive={MaxExclusive}, Identifier={Identifier}", armiesCount, minInclusive, maxExclusive, identifier);
-                return armiesCount;
-            }
-            catch (Exception ex)
-            {
-                Main.GetLogger<RandomElementSelectionPatches>().LogError(ex, "Error while rolling traveling armies count");
                 throw;
             }
         }

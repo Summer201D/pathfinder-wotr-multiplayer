@@ -16,7 +16,7 @@ namespace WOTRMultiplayer.HarmonyPatches.GlobalMap
                 return true;
             }
 
-            var canUse = Main.UIAccessor.GlobalMapPCView?.m_GlobalMapMenuPCView?.m_RestButton.Interactable ?? false;
+            var canUse = Main.UIAccessor.GlobalMapMenuPCView?.m_RestButton.Interactable ?? false;
             if (canUse)
             {
                 Main.Multiplayer.OnGlobalMapRestOpened();
@@ -46,7 +46,7 @@ namespace WOTRMultiplayer.HarmonyPatches.GlobalMap
                 return true;
             }
 
-            var canUse = Main.UIAccessor.GlobalMapPCView?.m_GlobalMapMenuPCView?.m_GroupManagerButton.Interactable ?? false;
+            var canUse = Main.UIAccessor.GlobalMapMenuPCView?.m_GroupManagerButton.Interactable ?? false;
             return canUse;
         }
 
@@ -59,7 +59,7 @@ namespace WOTRMultiplayer.HarmonyPatches.GlobalMap
                 return true;
             }
 
-            var canUse = Main.UIAccessor.GlobalMapPCView?.m_GlobalMapMenuPCView?.m_SkipTime.Interactable ?? false;
+            var canUse = Main.UIAccessor.GlobalMapMenuPCView?.m_SkipTime.Interactable ?? false;
             return canUse;
         }
     }
