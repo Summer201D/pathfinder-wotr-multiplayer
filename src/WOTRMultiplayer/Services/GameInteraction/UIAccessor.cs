@@ -79,7 +79,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
 
         public DialogContextPCView DialogContextPCView => InGamePCView?.m_StaticPartPCView?.m_DialogContextPCView ?? GlobalMapPCView?.m_DialogContextPCView;
 
-        public TacticalCombatResultsPCView TacticalCombatResultsPCView => GlobalMapPCView?.m_AutoCombatResultsPCView ?? TacticalCombatPCView?.m_TacticalCombatResultsPCView ?? KingdomPCView.m_AutoCombatResultsPCView;
+        public TacticalCombatResultsPCView TacticalCombatResultsPCView => GlobalMapPCView?.m_AutoCombatResultsPCView ?? TacticalCombatPCView?.m_TacticalCombatResultsPCView ?? KingdomPCView?.m_AutoCombatResultsPCView;
 
         public GlobalMapToolbarPCView GlobalMapToolbarPCView => GlobalMapPCView?.m_GlobalMapToolbarPCView ?? KingdomPCView?.m_GlobalMapToolbarPCView;
         public GlobalMapCrusadeArmiesPCView GlobalMapCrusadeArmiesPCView => GlobalMapPCView?.m_ArmiesPCView ?? KingdomPCView?.m_ArmiesPCView;
