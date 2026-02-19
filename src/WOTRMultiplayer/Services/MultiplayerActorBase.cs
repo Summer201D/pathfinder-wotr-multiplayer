@@ -587,6 +587,7 @@ namespace WOTRMultiplayer.Services
         {
             try
             {
+                Logger.LogInformation("Trying to start turn. UnitId={UnitId}, ActingInSurpriseRound={ActingInSurpriseRound}", unitId, actingInSurpriseRound);
                 if (Game.Combat.Turn == null)
                 {
                     InitializeNewTurn(unitId, actingInSurpriseRound);
@@ -3055,7 +3056,7 @@ namespace WOTRMultiplayer.Services
             if (condition())
             {
                 Logger.LogWarning(warningMessage);
-                using var timeout = new CancellationTokenSource(awaiterTimeout ?? TimeSpan.FromMinutes(1));
+                using var timeout = new CancellationTokenSource(awaiterTimeout ?? TimeSpan.FromSeconds(30));
                 while (condition())
                 {
                     await Task.Delay(10);

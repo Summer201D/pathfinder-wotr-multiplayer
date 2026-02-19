@@ -231,7 +231,7 @@ namespace WOTRMultiplayer.Services
 
         public bool CanContinueCombat()
         {
-            var canContinueCombat = Game.Combat != null && Game.Combat.IsInitialized;
+            var canContinueCombat = Game.Combat != null && Game.Combat.IsPlaying;
             return canContinueCombat;
         }
 
@@ -387,21 +387,34 @@ namespace WOTRMultiplayer.Services
 
         public NetworkAIAction OnAfterAISelectedAction(NetworkAIAction networkAIAction)
         {
-            // crusade combat is fine as of now
-            if (Game.ArmyCombat != null)
+            try
             {
+                // crusade combat is fine as of now
+                if (Game.ArmyCombat != null)
+                {
+                    return null;
+                }
+
+                if (Game.Combat?.Turn == null)
+                {
+                    return null;
+                }
+
+                var action = Game.Combat.Turn.AIActions.FirstOrDefault(a => string.Equals(a.Id, networkAIAction.Id, StringComparison.OrdinalIgnoreCase));
+                if (action == null && networkAIAction.IsAbility)
+                {
+                    // try to use another action (preferrably ability) if requested ability is not found
+                    var firstDifferentAction = Game.Combat.Turn.AIActions.OrderByDescending(x => x.IsAbility).FirstOrDefault(a => !string.Equals(a.Id, networkAIAction.Id, StringComparison.OrdinalIgnoreCase));
+                    return firstDifferentAction;
+                }
+
+                return action;
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, "Error selected AI action");
                 return null;
             }
-
-            var action = Game.Combat.Turn.AIActions.FirstOrDefault(a => string.Equals(a.Id, networkAIAction.Id, StringComparison.OrdinalIgnoreCase));
-            if (action == null && networkAIAction.IsAbility)
-            {
-                // try to use another action (preferrably ability) if requested ability is not found
-                var firstDifferentAction = Game.Combat.Turn.AIActions.OrderByDescending(x => x.IsAbility).FirstOrDefault(a => !string.Equals(a.Id, networkAIAction.Id, StringComparison.OrdinalIgnoreCase));
-                return firstDifferentAction;
-            }
-
-            return action;
         }
 
         protected override DiceRollValueResponse RetrieveRoll(DiceRollValueRequest rollRequest)
@@ -1372,6 +1385,7 @@ namespace WOTRMultiplayer.Services
             SetCombatStage(NetworkCombatStage.Playing);
             Game.Combat.IsInitialized = true;
             Game.Combat.IsPlaying = true;
+            Logger.LogInformation("Combat is ready to be continued");
         }
 
         private async void OnNotifyDialogStarted(long playerId, NotifyDialogStarted started)
