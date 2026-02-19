@@ -556,16 +556,24 @@ namespace WOTRMultiplayer.Services
 
         public void CombatEnded()
         {
-            Logger.LogInformation("Combat ended");
-            if (Game.Combat == null)
+            try
             {
-                Logger.LogWarning("Combat has not been started correctly");
+                Logger.LogInformation("Combat ended");
+                if (Game.Combat == null)
+                {
+                    Logger.LogWarning("Combat has not been started correctly");
+                }
+
+                SaveLastCombatTurn();
+
+                Game.Combat = null;
+                ValueGenerator.ResetSeededGenerators(IdentifierLifetime.Combat, IdentifierLifetime.CombatTurn);
             }
-
-            SaveLastCombatTurn();
-
-            Game.Combat = null;
-            ValueGenerator.ResetSeededGenerators(IdentifierLifetime.Combat, IdentifierLifetime.CombatTurn);
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, "Error ending combat");
+                throw;
+            }
         }
 
         public void OnHandleDelayCombatTurn(string unitId, string targetUnitId)
@@ -587,7 +595,7 @@ namespace WOTRMultiplayer.Services
         {
             try
             {
-                Logger.LogInformation("Trying to start turn. UnitId={UnitId}, ActingInSurpriseRound={ActingInSurpriseRound}", unitId, actingInSurpriseRound);
+                Logger.LogInformation("Trying to start turn. TurnInitialized={TurnInitialized}, UnitId={UnitId}, ActingInSurpriseRound={ActingInSurpriseRound}", Game.Combat.Turn != null, unitId, actingInSurpriseRound);
                 if (Game.Combat.Turn == null)
                 {
                     InitializeNewTurn(unitId, actingInSurpriseRound);

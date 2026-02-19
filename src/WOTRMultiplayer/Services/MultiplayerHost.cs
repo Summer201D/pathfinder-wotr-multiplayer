@@ -1966,7 +1966,7 @@ namespace WOTRMultiplayer.Services
 
                 InvokeOnPlayersChanged();
                 var playersChanged = CreateNotifyLobbyPlayersChanged();
-                Logger.LogObject(LogLevel.Information, "Sending {MessageType} to all EXCEPT Player {PlayerId}.", playerId, playersChanged);
+                Logger.LogObject(LogLevel.Information, "Sending {MessageType} to all EXCEPT Player {PlayerId}.", playersChanged, playerId);
                 _networkServer.SendAllExcept(playerId, playersChanged);
                 ShowPlayerDisconnectedMessage(removedPlayer);
 

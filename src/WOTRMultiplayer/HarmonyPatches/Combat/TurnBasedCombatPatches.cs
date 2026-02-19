@@ -163,13 +163,7 @@ namespace WOTRMultiplayer.HarmonyPatches.Combat
             try
             {
                 var unitInfo = __instance.FindUnitInfo(unit);
-                if (unitInfo == null)
-                {
-                    Main.GetLogger<TurnBasedCombatPatches>().LogWarning("Requested unit has no combat info. UnitId={UnitId}", unit.UniqueId);
-                    return true;
-                }
-
-                var canContinue = Main.Multiplayer.OnBeforeTurnStart(unit.UniqueId, unitInfo.ActingInSurpriseRound);
+                var canContinue = Main.Multiplayer.OnBeforeTurnStart(unit.UniqueId, unitInfo?.ActingInSurpriseRound ?? false);
                 if (!canContinue)
                 {
                     // creating fake turn to restrict rechoosing unit / starting new turn before all the confirmations
@@ -304,7 +298,7 @@ namespace WOTRMultiplayer.HarmonyPatches.Combat
             }
             catch (Exception ex)
             {
-                Main.GetLogger<CombatController.UnitsOrderComaprer>().LogError(ex, "Error while comparing by unique id. Unit1={unit1}, Unit2={unit2}", xi.UniqueId, yi.UniqueId);
+                Main.GetLogger<CombatController.UnitsOrderComaprer>().LogError(ex, "Error while comparing by unique id. Unit1={unit1}, Unit2={unit2}", xi?.UniqueId, yi?.UniqueId);
                 throw;
             }
         }
