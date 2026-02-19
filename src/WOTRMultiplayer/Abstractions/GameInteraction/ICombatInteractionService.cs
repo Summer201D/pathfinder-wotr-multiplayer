@@ -24,11 +24,13 @@ namespace WOTRMultiplayer.Abstractions.GameInteraction
 
         List<NetworkUnit> GetParty();
 
-        void UpdateUnits(List<NetworkUnit> networkUnits);
+        void UpdateUnits(List<NetworkUnit> networkUnits, bool updatePosition);
+
+        Task<bool> UpdateUnitsAsync(List<NetworkUnit> networkUnits, bool updatePosition);
 
         void StartTurnBasedCombatTurn(string unitId);
 
-        void EndTurnBasedCombatTurn(bool isAI);
+        void EndTurnBasedCombatTurn();
 
         bool IsCombatTurnFinished();
 

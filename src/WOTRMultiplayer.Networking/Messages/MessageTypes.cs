@@ -29,7 +29,7 @@
             ClientCharacterLevelingRequested,
             ClientCombatInitializationCompleted,
             ClientCombatTurnStarted,
-            ClientCombatTurnSynchronized,
+            ClientCombatTurnStartSynchronized,
             ClientDialogStartRequested,
             NotifyGameModeTypeEnded,
             NotifyGameModeTypeStarted,
@@ -45,7 +45,7 @@
             NotifyCharacterMove,
             NotifyCombatInitializationRequired,
             NotifyCombatTurnStarted,
-            NotifyCombatTurnSynchronizationRequired,
+            NotifyCombatTurnStartSynchronizationRequired,
             NotifyDialogCueAnswerSelected,
             NotifyDialogCueAnswerSuggested,
             NotifyDialogStarted,
@@ -83,7 +83,7 @@
             NotifyVendorDealMade,
             NotifyVendorItemTransferred,
             NotifyVendorWindowClosed,
-            PlayerCombatTurnEnded,
+            NotifyCombatLocalTurnEnded,
             NotifyActionBarSlotCleared,
             NotifyActionBarSlotMoved,
             NotifyGamePauseStarted,
@@ -244,7 +244,10 @@
             NotifyKingdomExited,
             NotifyKingdomEntered,
             NotifyKingdomLoaded,
-            NotifyKingdomUnloaded
+            NotifyKingdomUnloaded,
+            NotifyCombatTurnEndSynchronizationRequired,
+            NotifyCombatTurnEnded,
+            ClientCombatTurnEndSynchronized
         }
 
         public enum Request

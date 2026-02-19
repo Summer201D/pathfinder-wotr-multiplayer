@@ -4,8 +4,8 @@ using WOTRMultiplayer.Logging.Attributes;
 namespace WOTRMultiplayer.Networking.Messages.Game
 {
     [ProtoContract]
-    [BeetleX.Packets.MessageType((int)MessageTypes.Game.PlayerCombatTurnEnded)]
-    public class NotifyPlayerCombatTurnEnded
+    [BeetleX.Packets.MessageType((int)MessageTypes.Game.NotifyCombatLocalTurnEnded)]
+    public class NotifyCombatLocalTurnEnded
     {
         [ProtoMember(1)]
         [LogMe]
@@ -14,6 +14,5 @@ namespace WOTRMultiplayer.Networking.Messages.Game
         [ProtoMember(2)]
         [LogMe]
         public string UnitId { get; set; }
-
     }
 }

@@ -14,10 +14,12 @@ namespace WOTRMultiplayer.Entities.Combat
 
         public bool IsActingInSurpriseRound { get; set; }
 
-        public bool IsInProgress { get; set; }
-
-        public bool RequiresTurnEntitiesSynchronization { get; set; }
+        public NetworkCombatTurnStage Stage { get; set; }
 
         public List<NetworkAIAction> AIActions { get; set; } = [];
+
+        public HashSet<long> PlayersEndTurnInitialization { get; set; } = [];
+
+        public HashSet<long> PlayersEndTurnSynchronization { get; set; } = [];
     }
 }

@@ -155,7 +155,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
                         return;
                     }
 
-                    _logger.LogInformation("Starting turn based turn. UnitId={UnitId}", unitId);
+                    _logger.LogInformation("Starting turn. UnitId={UnitId}", unitId);
                     Game.Instance.TurnBasedCombatController?.StartTurn(currentUnit);
                 }
                 catch (Exception ex)
@@ -166,22 +166,21 @@ namespace WOTRMultiplayer.Services.GameInteraction
             });
         }
 
-        public void EndTurnBasedCombatTurn(bool isAI)
+        public void EndTurnBasedCombatTurn()
         {
             _mainThreadAccessor.Post(() =>
             {
                 try
                 {
                     var turnStatus = Game.Instance.TurnBasedCombatController.CurrentTurn?.Status ?? null;
-                    if ((turnStatus == TurnController.TurnStatus.Ending && !isAI)
+                    if ((turnStatus == TurnController.TurnStatus.Ending)
                         || turnStatus == TurnController.TurnStatus.Ended
                         || turnStatus == TurnController.TurnStatus.None)
                     {
-                        _logger.LogWarning("Cannot end already finished turn. TurnStatus={TurnStatus}", turnStatus);
                         return;
                     }
 
-                    _logger.LogInformation("Turn based turn has been ended. isAI={isAI}, TurnStatus={TurnStatus}", isAI, turnStatus);
+                    _logger.LogInformation("Ending turn. TurnStatus={TurnStatus}", turnStatus);
                     Game.Instance.TurnBasedCombatController.CurrentTurn?.ToEnd();
                 }
                 catch (Exception ex)
@@ -596,14 +595,35 @@ namespace WOTRMultiplayer.Services.GameInteraction
             return units;
         }
 
-        public void UpdateUnits(List<NetworkUnit> networkUnits)
+        public Task<bool> UpdateUnitsAsync(List<NetworkUnit> networkUnits, bool updatePosition)
+        {
+            var taskCompletion = new TaskCompletionSource<bool>();
+            _mainThreadAccessor.Post(() =>
+            {
+                try
+                {
+                    UpdateUnits(networkUnits, updatePosition);
+                    taskCompletion.SetResult(true);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error while updating units");
+                    taskCompletion.SetResult(false);
+                    throw;
+                }
+            });
+
+            return taskCompletion.Task;
+        }
+
+        public void UpdateUnits(List<NetworkUnit> networkUnits, bool updatePosition)
         {
             foreach (var networkUnit in networkUnits)
             {
                 try
                 {
                     var unit = _gameStateLookupService.GetUnitEntity(networkUnit.Id);
-                    UpdateUnit(unit, networkUnit, updatePosition: false);
+                    UpdateUnit(unit, networkUnit, updatePosition);
                 }
                 catch (Exception ex)
                 {

@@ -20,7 +20,7 @@ namespace WOTRMultiplayer.Playground.Core.Dummies
         {
         }
 
-        public void EndTurnBasedCombatTurn(bool isAI)
+        public void EndTurnBasedCombatTurn()
         {
         }
 
@@ -127,7 +127,7 @@ namespace WOTRMultiplayer.Playground.Core.Dummies
             return Task.CompletedTask;
         }
 
-        public void UpdateUnits(List<NetworkUnit> networkUnits)
+        public void UpdateUnits(List<NetworkUnit> networkUnits, bool updatePosition)
         {
         }
 
@@ -143,6 +143,11 @@ namespace WOTRMultiplayer.Playground.Core.Dummies
 
         public void MoveUnit(NetworkUnitMoveTo unitMoveTo)
         {
+        }
+
+        public Task<bool> UpdateUnitsAsync(List<NetworkUnit> networkUnits, bool updatePosition)
+        {
+            return Task.FromResult(false);
         }
     }
 }

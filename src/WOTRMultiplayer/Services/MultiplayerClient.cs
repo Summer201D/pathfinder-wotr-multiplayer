@@ -493,10 +493,13 @@ namespace WOTRMultiplayer.Services
                .On<NotifyCombatInitializationRequired>(OnNotifyCombatInitializationRequired)
                .On<NotifyCombatInitializationCompleted>(OnNotifyCombatInitializationCompleted)
                .On<NotifyInvalidCombatTurnStarted>(OnNotifyInvalidCombatTurnStarted)
-               .On<NotifyCombatTurnSynchronizationRequired>(OnNotifyCombatTurnSynchronizationRequired)
+               .On<NotifyCombatTurnStartSynchronizationRequired>(OnNotifyCombatTurnStartSynchronizationRequired)
+               .On<NotifyCombatTurnEndSynchronizationRequired>(OnNotifyCombatTurnEndSynchronizationRequired)
                .On<NotifyCombatTurnStarted>(OnNotifyCombatTurnStarted)
                .On<NotifyAIActionSelected>(OnNotifyAIActionExecuted)
                .On<NotifyCombatRecoveryRequired>(OnNotifyCombatRecoveryRequired)
+               .On<NotifyCombatLocalTurnEnded>(OnNotifyCombatLocalTurnEnded)
+               .On<NotifyCombatTurnEnded>(OnNotifyCombatTurnEnded)
 
                // global map & crusade combat
                .On<NotifyGlobalMapRestOpened>(OnNotifyGlobalMapRestOpened)
@@ -596,6 +599,31 @@ namespace WOTRMultiplayer.Services
                // inventory
                .On<NotifyPolymorphicItemCreated>(OnNotifyPolymorphicItemCreated)
                ;
+        }
+
+        private async void OnNotifyCombatTurnEndSynchronizationRequired(long receivedFrom, NotifyCombatTurnEndSynchronizationRequired message)
+        {
+            var units = Mapper.Map<List<NetworkUnit>>(message.Units);
+            var isSynced = await CombatInteraction.UpdateUnitsAsync(units, updatePosition: true);
+            if (!isSynced)
+            {
+                // TODO: some kind of recovery?
+                Logger.LogError("Failed to synchronize turn end. UnitId={UnitId}", Game.Combat.Turn.UnitId);
+            }
+
+            var confirmationMessage = new ClientCombatTurnEndSynchronized { UnitId = Game.Combat.Turn.UnitId, PlayerId = Game.LocalPlayerId };
+            Send(confirmationMessage);
+        }
+
+        private void OnNotifyCombatTurnEnded(long receivedFrom, NotifyCombatTurnEnded message)
+        {
+            SetCombatTurnStage(NetworkCombatTurnStage.Ended);
+        }
+
+        private async void OnNotifyCombatLocalTurnEnded(long receivedFrom, NotifyCombatLocalTurnEnded message)
+        {
+            await WaitWhileTrue(CombatInteraction.IsRiderActive, "Waiting for all combat commands to finish before ending turn");
+            CombatInteraction.EndTurnBasedCombatTurn();
         }
 
         private void OnNotifyCombatRecoveryRequired(long receivedFrom, NotifyCombatRecoveryRequired message)
@@ -1197,7 +1225,6 @@ namespace WOTRMultiplayer.Services
 
         private void OnNotifyInvalidCombatTurnStarted(long playerId, NotifyInvalidCombatTurnStarted message)
         {
-            var characterName = GameInteraction.GetUnitCharacterName(message.UnitId);
             PlayerNotification.AddCombatText(WellKnownKeys.GameNotifications.Combat.Turn.ClientOrderDesync.Key, CombatTextSeverity.Debug, new UnitEntityLog(message.UnitId));
             ResetCombatTurn();
             CombatInteraction.StartTurnBasedCombatTurn(message.UnitId);
@@ -1249,7 +1276,7 @@ namespace WOTRMultiplayer.Services
             GameInteraction.ApplyStealthPerceptionCheck(check);
         }
 
-        private async void OnNotifyCombatTurnSynchronizationRequired(long playerId, NotifyCombatTurnSynchronizationRequired message)
+        private async void OnNotifyCombatTurnStartSynchronizationRequired(long playerId, NotifyCombatTurnStartSynchronizationRequired message)
         {
             try
             {
@@ -1268,7 +1295,7 @@ namespace WOTRMultiplayer.Services
 
                 ValueGenerator.ResetSeededGenerators(Random.IdentifierLifetime.CombatTurn);
 
-                var confirmationMessage = new ClientCombatTurnSynchronized { UnitId = Game.Combat.Turn.UnitId };
+                var confirmationMessage = new ClientCombatTurnStartSynchronized { UnitId = Game.Combat.Turn.UnitId };
                 Send(confirmationMessage);
             }
             catch (Exception ex)
@@ -1309,7 +1336,7 @@ namespace WOTRMultiplayer.Services
             }
 
             Game.Combat.Turn.AIActions.Clear();
-            Game.Combat.Turn.IsInProgress = true;
+            SetCombatTurnStage(NetworkCombatTurnStage.Playing);
             CombatInteraction.StartTurnBasedCombatTurn(Game.Combat.Turn.UnitId);
         }
 
@@ -1407,7 +1434,7 @@ namespace WOTRMultiplayer.Services
             if (message.Party.Count > 0)
             {
                 var party = Mapper.Map<List<NetworkUnit>>(message.Party);
-                CombatInteraction.UpdateUnits(party);
+                CombatInteraction.UpdateUnits(party, updatePosition: false);
                 Logger.LogInformation("Party units have been updated");
             }
 

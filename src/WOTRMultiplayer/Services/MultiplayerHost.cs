@@ -1270,18 +1270,27 @@ namespace WOTRMultiplayer.Services
 
         protected override void Send(long playerId, object message)
         {
-            Logger.LogObject(LogLevel.Information, "Sending {MessageType} to Player {PlayerId}.", playerId, message);
+            Logger.LogObject(LogLevel.Information, "Sending {MessageType} to Player {PlayerId}.", message, playerId);
             _networkServer.Send(playerId, message);
         }
 
         protected override void OnLocalPlayerTurnStart()
         {
-            Game.Combat.Turn.RequiresTurnEntitiesSynchronization = true;
-
+            SetCombatTurnStage(NetworkCombatTurnStage.Starting);
             AddPlayerReadyStatus(PlayerTurnReadinessType.Start, Game.LocalPlayerId, Game.Combat.Turn.UnitId);
             AddPlayerReadyStatus(PlayerTurnReadinessType.UnitSynchronization, Game.LocalPlayerId, Game.Combat.Turn.UnitId);
 
             TryStartTurn();
+        }
+
+        protected override void OnLocalPlayerTurnEnd()
+        {
+            base.OnLocalPlayerTurnEnd();
+
+            Game.Combat.Turn.PlayersEndTurnInitialization.Add(Game.LocalPlayerId);
+            Game.Combat.Turn.PlayersEndTurnSynchronization.Add(Game.LocalPlayerId);
+
+            TryEndTurn();
         }
 
         private void TryStartTurn()
@@ -1292,15 +1301,10 @@ namespace WOTRMultiplayer.Services
 
                 lock (ActionLock)
                 {
-                    if (Game.Combat.Turn == null)
+                    if (Game.Combat.Turn == null
+                        || (Game.Combat.Turn.Stage != NetworkCombatTurnStage.Starting && Game.Combat.Turn.Stage != NetworkCombatTurnStage.StartSynchronization))
                     {
-                        Logger.LogWarning("Can't start turn because it hasn't been initialized yet");
-                        return;
-                    }
-
-                    if (Game.Combat.Turn.IsInProgress)
-                    {
-                        Logger.LogWarning("Can't start turn because previous turn is still in progress");
+                        Logger.LogWarning("Turn is not ready to be started yet. TurnStatus={TurnStatus}", Game.Combat.Turn?.Stage);
                         return;
                     }
 
@@ -1341,12 +1345,11 @@ namespace WOTRMultiplayer.Services
                         return;
                     }
 
-                    if (Game.Combat.Turn.RequiresTurnEntitiesSynchronization)
+                    if (Game.Combat.Turn.Stage == NetworkCombatTurnStage.Starting)
                     {
-                        Game.Combat.Turn.RequiresTurnEntitiesSynchronization = false;
+                        SetCombatTurnStage(NetworkCombatTurnStage.StartSynchronization);
                         var combatState = CombatInteraction.GetCombatState();
-
-                        var syncMessage = new NotifyCombatTurnSynchronizationRequired
+                        var syncMessage = new NotifyCombatTurnStartSynchronizationRequired
                         {
                             TurnSeed = Game.Combat.Turn.Seed,
                             CombatState = Mapper.Map<Networking.Messages.Contracts.NetworkCombatState>(combatState),
@@ -1378,8 +1381,7 @@ namespace WOTRMultiplayer.Services
                     };
 
                     Send(message);
-
-                    Game.Combat.Turn.IsInProgress = true;
+                    SetCombatTurnStage(NetworkCombatTurnStage.Playing);
                 }
 
                 CombatInteraction.StartTurnBasedCombatTurn(Game.Combat.Turn.UnitId);
@@ -1387,6 +1389,54 @@ namespace WOTRMultiplayer.Services
             catch (Exception ex)
             {
                 Logger.LogError(ex, "Error while trying to start turn");
+                throw;
+            }
+        }
+
+        private void TryEndTurn()
+        {
+            try
+            {
+                Logger.LogInformation("Checking if turn could be ended. Round={Round}, UnitId={UnitId}, IsAI={IsAI}", Game.Combat.Round, Game.Combat.Turn.UnitId, Game.Combat.Turn.IsAI);
+                var allPlayers = GetSyncedPlayersCount();
+                lock (ActionLock)
+                {
+                    var initializedPlayers = Game.Combat.Turn.PlayersEndTurnInitialization.Count;
+                    if (initializedPlayers < allPlayers)
+                    {
+                        Logger.LogInformation("Can't end turn due to missing player turn end initialization. ReadyPlayers={ReadyPlayers}, RequiredPlayers={RequiredPlayers}", initializedPlayers, allPlayers);
+                        return;
+                    }
+
+                    if (Game.Combat.Turn.Stage == NetworkCombatTurnStage.Ending)
+                    {
+                        SetCombatTurnStage(NetworkCombatTurnStage.EndSynchronization);
+                        var units = CombatInteraction.GetUnitsInCombat();
+                        var turnEndSyncMessage = new NotifyCombatTurnEndSynchronizationRequired
+                        {
+                            Units = Mapper.Map<List<Networking.Messages.Contracts.NetworkUnit>>(units)
+                        };
+                        Send(turnEndSyncMessage);
+                    }
+
+                    var turnEndSyncedPlayers = Game.Combat.Turn.PlayersEndTurnSynchronization.Count;
+                    if (turnEndSyncedPlayers < allPlayers)
+                    {
+                        Logger.LogInformation("Can't end turn due to missing player turn end synchronization. ReadyPlayers={ReadyPlayers}, RequiredPlayers={RequiredPlayers}", turnEndSyncedPlayers, allPlayers);
+                        return;
+                    }
+
+                    Logger.LogInformation("Turn has been ended");
+                    var turnEndMessage = new NotifyCombatTurnEnded();
+                    Send(turnEndMessage);
+
+                    // Game calls 'turn end' every tick, no need for extra calls
+                    SetCombatTurnStage(NetworkCombatTurnStage.Ended);
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, "Error while trying to end turn");
                 throw;
             }
         }
@@ -1454,7 +1504,9 @@ namespace WOTRMultiplayer.Services
                .On<ClientCombatPreparationCompleted>(OnClientCombatPreparationCompleted)
                .On<ClientCombatInitializationCompleted>(OnClientCombatInitializationCompleted)
                .On<ClientCombatTurnStarted>(OnClientCombatTurnStarted)
-               .On<ClientCombatTurnSynchronized>(OnClientCombatTurnSynchronized)
+               .On<ClientCombatTurnStartSynchronized>(OnClientCombatTurnSynchronized)
+               .On<ClientCombatTurnEndSynchronized>(OnClientCombatTurnEndSynchronized)
+               .On<NotifyCombatLocalTurnEnded>(OnNotifyCombatLocalTurnEnded)
 
                // global map & crusade combat
                .On<NotifyGlobalMapTravelerModeChanged>(OnNotifyGlobalMapTravelerModeChanged)
@@ -1478,6 +1530,18 @@ namespace WOTRMultiplayer.Services
                // inventory
                .On<NotifyPolymorphicItemCreationRequested>(OnNotifyPolymorphicItemCreationRequested)
                ;
+        }
+
+        private async void OnNotifyCombatLocalTurnEnded(long receivedFrom, NotifyCombatLocalTurnEnded combatTurnEnded)
+        {
+            await WaitWhileTrue(CombatInteraction.IsRiderActive, "Waiting for all combat commands to finish before ending turn");
+
+            Game.Combat.Turn.PlayersEndTurnInitialization.Add(combatTurnEnded.PlayerId);
+            CombatInteraction.EndTurnBasedCombatTurn();
+
+            TryEndTurn();
+
+            OnAfterNetworkMessageHandled(receivedFrom, combatTurnEnded);
         }
 
         private void OnNotifyGlobalMapCommonPopupShown(long receivedFrom, NotifyGlobalMapCommonPopupShown globalMapCommonPopupShown)
@@ -1675,7 +1739,13 @@ namespace WOTRMultiplayer.Services
             Send(receivedFrom, response);
         }
 
-        private void OnClientCombatTurnSynchronized(long playerId, ClientCombatTurnSynchronized synchronized)
+        private void OnClientCombatTurnEndSynchronized(long playerId, ClientCombatTurnEndSynchronized message)
+        {
+            Game.Combat.Turn.PlayersEndTurnSynchronization.Add(playerId);
+            TryEndTurn();
+        }
+
+        private void OnClientCombatTurnSynchronized(long playerId, ClientCombatTurnStartSynchronized synchronized)
         {
             AddPlayerReadyStatus(PlayerTurnReadinessType.UnitSynchronization, playerId, synchronized.UnitId);
             TryStartTurn();

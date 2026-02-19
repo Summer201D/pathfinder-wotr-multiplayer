@@ -587,24 +587,29 @@ namespace WOTRMultiplayer.Services
         {
             try
             {
-                if (Game.Combat.Turn != null && Game.Combat.Turn.IsInProgress)
+                if (Game.Combat.Turn == null)
                 {
-                    if (!string.Equals(Game.Combat.Turn.UnitId, unitId, StringComparison.OrdinalIgnoreCase))
-                    {
-                        Logger.LogWarning("Invalid unit turn start detected. ExpectedUnitId={ExpectedUnitId}, ActualUnitId={ActualUnitId}", Game.Combat.Turn.UnitId, unitId);
-                        InitializeNewTurn(unitId, actingInSurpriseRound);
-                        return false;
-                    }
-
-                    UpdateConfirmedMidCombatUnits();
-                    PlayerNotification.AddCombatText(WellKnownKeys.GameNotifications.Combat.Turn.Started.Key, CombatTextSeverity.Common, new UnitEntityLog(unitId));
-                    Logger.LogInformation("Turn start is allowed. UnitId={UnitId}, IsActingInSurpiseRound={IsActingInSurpiseRound}, TurnUnitId={TurnUnitId}, TurnSeed={TurnSeed}", unitId, actingInSurpriseRound, Game.Combat.Turn.UnitId, Game.Combat.Turn.Seed);
-                    return true;
+                    InitializeNewTurn(unitId, actingInSurpriseRound);
+                    return false;
                 }
 
-                InitializeNewTurn(unitId, actingInSurpriseRound);
+                switch (Game.Combat.Turn.Stage)
+                {
+                    case NetworkCombatTurnStage.Playing:
+                        if (!string.Equals(Game.Combat.Turn.UnitId, unitId, StringComparison.OrdinalIgnoreCase))
+                        {
+                            Logger.LogWarning("Invalid unit turn start detected. ExpectedUnitId={ExpectedUnitId}, ActualUnitId={ActualUnitId}", Game.Combat.Turn.UnitId, unitId);
+                            InitializeNewTurn(unitId, actingInSurpriseRound);
+                            return false;
+                        }
 
-                return false;
+                        UpdateConfirmedMidCombatUnits();
+                        PlayerNotification.AddCombatText(WellKnownKeys.GameNotifications.Combat.Turn.Started.Key, CombatTextSeverity.Common, new UnitEntityLog(unitId));
+                        Logger.LogInformation("Turn start is allowed. UnitId={UnitId}, IsActingInSurpiseRound={IsActingInSurpiseRound}, TurnUnitId={TurnUnitId}, TurnSeed={TurnSeed}", unitId, actingInSurpriseRound, Game.Combat.Turn.UnitId, Game.Combat.Turn.Seed);
+                        return true;
+                    default:
+                        return false;
+                }
             }
             catch (Exception ex)
             {
@@ -615,28 +620,35 @@ namespace WOTRMultiplayer.Services
 
         public bool OnBeforeTurnEnd(string unitId)
         {
-            if (Game.Combat.Turn.IsAI || !Game.Combat.Turn.IsInProgress)
+            try
             {
-                Logger.LogInformation("Turn end is allowed. Round={Round}, TurnUnitId={TurnUnitId}, IsAI={IsAI}, UnitId={UnitId}", Game.Combat.Round, Game.Combat.Turn.UnitId, Game.Combat.Turn.IsAI, unitId);
-                Game.Combat.TriggeredAreaEffects.Clear();
-                ResetCombatTurn();
-                PlayerNotification.AddCombatText(WellKnownKeys.GameNotifications.Combat.Turn.Ended.Key, CombatTextSeverity.Common, new UnitEntityLog(unitId));
-                return true;
+                switch (Game.Combat.Turn.Stage)
+                {
+                    case NetworkCombatTurnStage.Playing:
+                        var message = new NotifyCombatLocalTurnEnded
+                        {
+                            UnitId = Game.Combat.Turn.UnitId,
+                            PlayerId = Game.LocalPlayerId
+                        };
+                        Send(message);
+                        SetCombatTurnStage(NetworkCombatTurnStage.Ending);
+                        OnLocalPlayerTurnEnd();
+                        return false;
+                    case NetworkCombatTurnStage.Ended:
+                        Logger.LogInformation("Turn end is allowed. Round={Round}, TurnUnitId={TurnUnitId}, IsAI={IsAI}, UnitId={UnitId}", Game.Combat.Round, Game.Combat.Turn.UnitId, Game.Combat.Turn.IsAI, unitId);
+                        Game.Combat.TriggeredAreaEffects.Clear();
+                        ResetCombatTurn();
+                        PlayerNotification.AddCombatText(WellKnownKeys.GameNotifications.Combat.Turn.Ended.Key, CombatTextSeverity.Common, new UnitEntityLog(unitId));
+                        return true;
+                    default:
+                        return false;
+                }
             }
-
-            if (Game.Combat.Turn.IsLocalPlayer)
+            catch (Exception ex)
             {
-                var message = new NotifyPlayerCombatTurnEnded { UnitId = Game.Combat.Turn.UnitId, PlayerId = Game.LocalPlayerId };
-                Send(message);
+                Logger.LogError(ex, "Unabel to process turn end");
+                throw;
             }
-
-            if (Game.Combat.Turn.IsInProgress)
-            {
-                Game.Combat.Turn.IsInProgress = false;
-                Logger.LogInformation("Turn has been marked as ended locally");
-            }
-
-            return false;
         }
 
         public bool CanUnitJoinCombat(string unitId)
@@ -2038,6 +2050,10 @@ namespace WOTRMultiplayer.Services
 
         protected abstract bool OnToggleOffPause(out bool showReason);
 
+        protected virtual void OnLocalPlayerTurnEnd()
+        {
+        }
+
         protected void ShowForcedPauseReason()
         {
             var pause = Game.ForcedPause;
@@ -2088,7 +2104,6 @@ namespace WOTRMultiplayer.Services
 
         protected virtual void OnLocalCrusadeArmyCombatTurnInitialized(int turnNumber, long playerId)
         {
-
         }
 
         protected virtual void OnLocalRestGameModeEnded()
@@ -2702,6 +2717,13 @@ namespace WOTRMultiplayer.Services
             PlayerNotification.AddCombatText(WellKnownKeys.GameNotifications.Combat.StageChanged.Key, CombatTextSeverity.Debug, current, combatStage);
         }
 
+        protected void SetCombatTurnStage(NetworkCombatTurnStage combatTurnStage)
+        {
+            var current = Game.Combat.Turn.Stage;
+            Game.Combat.Turn.Stage = combatTurnStage;
+            Logger.LogInformation("Combat turn stage has been changed. From={From}, To={To}", current, combatTurnStage);
+        }
+
         protected string StoreSaveGameContent(byte[] content)
         {
             if (content == null)
@@ -2876,12 +2898,6 @@ namespace WOTRMultiplayer.Services
             {
                 return Game?.Players.FirstOrDefault(p => p.Id == playerId);
             }
-        }
-
-        protected void EndLocalTurn()
-        {
-            Game.Combat.Turn.IsInProgress = false;
-            CombatInteraction.EndTurnBasedCombatTurn(Game.Combat.Turn.IsAI);
         }
 
         protected bool IsGameModeAllowedToRun(GameModeType type)
@@ -3199,7 +3215,6 @@ namespace WOTRMultiplayer.Services
 
                 // combat
                 .On<NotifyUnitJoinedMidCombat>(OnNotifyUnitJoinedMidCombat)
-                .On<NotifyPlayerCombatTurnEnded>(OnNotifyPlayerCombatTurnEnded)
                 .On<NotifyUnitAttacked>(OnNotifyUnitAttacked)
                 .On<NotifyCombatTurnDelayed>(OnNotifyCombatTurnDelayed)
                 .On<NotifyCombatUnitKilled>(OnNotifyCombatUnitKilled)
@@ -3811,7 +3826,6 @@ namespace WOTRMultiplayer.Services
 
         private void OnNotifyCombatTurnDelayed(long receivedFrom, NotifyCombatTurnDelayed combatTurnDelayed)
         {
-            Game.Combat.Turn.IsInProgress = false;
             CombatInteraction.DelayCombatTurn(combatTurnDelayed.UnitId, combatTurnDelayed.TargetUnitId);
 
             OnAfterNetworkMessageHandled(receivedFrom, combatTurnDelayed);
@@ -3915,15 +3929,6 @@ namespace WOTRMultiplayer.Services
             CombatInteraction.AttackUnit(attack);
 
             OnAfterNetworkMessageHandled(receivedFrom, unitAttacked);
-        }
-
-        private async void OnNotifyPlayerCombatTurnEnded(long receivedFrom, NotifyPlayerCombatTurnEnded combatTurnEnded)
-        {
-            await WaitWhileTrue(CombatInteraction.IsRiderActive, "Waiting for all combat commands to finish before ending turn");
-
-            EndLocalTurn();
-
-            OnAfterNetworkMessageHandled(receivedFrom, combatTurnEnded);
         }
 
         private void OnNotifyActiveHandEquipmentSetChanged(long receivedFrom, NotifyActiveHandEquipmentSetChanged changed)
@@ -4261,7 +4266,7 @@ namespace WOTRMultiplayer.Services
                 Game.Combat.Turn = new NetworkCombatTurn
                 {
                     UnitId = unitId,
-                    IsInProgress = false,
+                    Stage = NetworkCombatTurnStage.Initialization,
                     IsActingInSurpriseRound = actingInSurpriseRound,
                     IsLocalPlayer = IsControlledByLocalPlayer(unitId),
                     IsAI = !GameInteraction.IsUnitInParty(unitId),
@@ -4269,8 +4274,8 @@ namespace WOTRMultiplayer.Services
                 };
             }
 
-            Logger.LogInformation("Turn has been initialized. UnitId={UnitId}, IsLocalPlayer={IsLocalPlayer}, IsAI={IsAI}, IsActingInSurpriseRound={IsActingInSurpriseRound}, IsInProgress={IsInProgress}, Seed={Seed}",
-                unitId, Game.Combat.Turn.IsLocalPlayer, Game.Combat.Turn.IsAI, Game.Combat.Turn.IsActingInSurpriseRound, Game.Combat.Turn.IsInProgress, Game.Combat.Turn.Seed);
+            Logger.LogInformation("Turn has been initialized. UnitId={UnitId}, IsLocalPlayer={IsLocalPlayer}, IsAI={IsAI}, IsActingInSurpriseRound={IsActingInSurpriseRound}, Stage={Stage}, Seed={Seed}",
+                unitId, Game.Combat.Turn.IsLocalPlayer, Game.Combat.Turn.IsAI, Game.Combat.Turn.IsActingInSurpriseRound, Game.Combat.Turn.Stage, Game.Combat.Turn.Seed);
 
             OnLocalPlayerTurnStart();
         }
