@@ -4057,6 +4057,24 @@ namespace WOTRMultiplayer.Services
             }
         }
 
+        public void OnItemDescriptionRead(NetworkItem networkItem)
+        {
+            try
+            {
+                if (_multiplayerActorAccessor.Current == null)
+                {
+                    return;
+                }
+
+                _multiplayerActorAccessor.Current.OnItemDescriptionRead(networkItem);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while reading item. ItemId={ItemId}, ItemName={ItemName}", networkItem.UniqueId, networkItem.Name);
+                throw;
+            }
+        }
+
         public void OnCopyInventoryItem(NetworkItemCopy itemCopy)
         {
             try

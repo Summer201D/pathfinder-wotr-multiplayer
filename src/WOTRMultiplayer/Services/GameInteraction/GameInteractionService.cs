@@ -24,6 +24,7 @@ using Kingmaker.GameModes;
 using Kingmaker.Globalmap.Blueprints;
 using Kingmaker.Inspect;
 using Kingmaker.Items;
+using Kingmaker.Items.Parts;
 using Kingmaker.Items.Slots;
 using Kingmaker.Modding;
 using Kingmaker.Pathfinding;
@@ -2152,6 +2153,40 @@ namespace WOTRMultiplayer.Services.GameInteraction
         {
             var unit = _gameStateLookupService.GetUnitEntity(unitId);
             return unit != null && unit.IsDirectlyControllable;
+        }
+
+        public void ReadItem(NetworkItem networkItem)
+        {
+            _mainThreadAccessor.Post(() =>
+            {
+                var owner = EntityService.Instance.GetEntity(networkItem.CollectionOwnerRef);
+                var items = owner switch
+                {
+                    UnitEntityData unit => unit.Inventory,
+                    Player player => player.Inventory,
+                    DroppedLoot.EntityData lootbag => lootbag.Loot,
+                    MapObjectEntityData mapObject => (mapObject.Interactions?.FirstOrDefault(i => i is InteractionLootPart) as InteractionLootPart)?.Loot,
+                    _ => null
+                };
+
+                if (items == null)
+                {
+                    _logger.LogWarning("Unable to find item collection to read item. ItemId={ItemId}, ItemName={ItemName}", networkItem.UniqueId, networkItem.Name);
+
+                    // every 'read' action is tied to main player, so let's use this as a last resort
+                    items = Game.Instance.Player.Inventory;
+                }
+
+                var item = items.FirstOrDefault(i => IsSameUnholdedItem(i, networkItem) && i.Get<ItemPartShowInfoCallback>() != null);
+                if (item == null)
+                {
+                    _logger.LogError("Unable to find item to read. ItemId={ItemId}, ItemName={ItemName}", networkItem.UniqueId, networkItem.Name);
+                    return;
+                }
+
+                item.Get<ItemPartShowInfoCallback>().OnShowInfo();
+                _logger.LogInformation("Item entity has been read. ItemId={ItemId}, ItemName={ItemName}", item.UniqueId, item.NameForAcronym);
+            });
         }
 
         public void CopyInventoryItem(NetworkItemCopy itemCopy)

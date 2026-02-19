@@ -432,5 +432,9 @@ namespace WOTRMultiplayer.Playground.Core.Dummies
         {
             return false;
         }
+
+        public void ReadItem(NetworkItem networkItem)
+        {
+        }
     }
 }

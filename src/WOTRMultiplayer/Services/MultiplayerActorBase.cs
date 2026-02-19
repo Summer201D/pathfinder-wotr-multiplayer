@@ -1734,6 +1734,15 @@ namespace WOTRMultiplayer.Services
             Send(message);
         }
 
+        public void OnItemDescriptionRead(NetworkItem networkItem)
+        {
+            var message = new NotifyItemDescriptionRead
+            {
+                Item = Mapper.Map<Networking.Messages.Contracts.NetworkItem>(networkItem)
+            };
+            Send(message);
+        }
+
         public void OnCopyInventoryItem(NetworkItemCopy itemCopy)
         {
             var message = new NotifyInventoryItemCopied
@@ -3260,6 +3269,7 @@ namespace WOTRMultiplayer.Services
                 .On<NotifyInventoryItemTransferred>(OnNotifyInventoryItemTransferred)
                 .On<NotifyInventoryItemUsed>(OnNotifyInventoryItemUsed)
                 .On<NotifyInventoryItemCopied>(OnNotifyInventoryItemCopied)
+                .On<NotifyItemDescriptionRead>(OnNotifyItemDescriptionRead)
 
                 // lockpick
                 .On<NotifyMapObjectLockpicked>(OnNotifyMapObjectLockpicked)
@@ -3346,6 +3356,12 @@ namespace WOTRMultiplayer.Services
             CombatInteraction.MoveUnit(unitMoveTo);
 
             OnAfterNetworkMessageHandled(receivedFrom, message);
+        }
+
+        private void OnNotifyItemDescriptionRead(long receivedFrom, NotifyItemDescriptionRead message)
+        {
+            var item = Mapper.Map<NetworkItem>(message.Item);
+            GameInteraction.ReadItem(item);
         }
 
         private void OnNotifyInventoryItemCopied(long receivedFrom, NotifyInventoryItemCopied message)

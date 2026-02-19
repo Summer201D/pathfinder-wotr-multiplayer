@@ -494,6 +494,8 @@ namespace WOTRMultiplayer.Abstractions
 
         void OnCopyInventoryItem(NetworkItemCopy itemCopy);
 
+        void OnItemDescriptionRead(NetworkItem networkItem);
+
         bool OnAreaEffectTriggered(NetworkAreaEffect areaEffect);
 
         NetworkAIAction OnAfterAISelectedAction(NetworkAIAction action);
@@ -501,8 +503,11 @@ namespace WOTRMultiplayer.Abstractions
         void OnUnitMoveTo(NetworkUnitMoveTo unitMoveTo);
 
         void OnEnterKingdom(NetworkKingdomEntryPoint kingdomEntryPoint);
+
         void OnExitKingdom();
+
         void OnKingdomLoaded();
+
         void OnKingdomUnloaded();
     }
 }

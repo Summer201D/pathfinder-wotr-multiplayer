@@ -247,7 +247,8 @@
             NotifyKingdomUnloaded,
             NotifyCombatTurnEndSynchronizationRequired,
             NotifyCombatTurnEnded,
-            ClientCombatTurnEndSynchronized
+            ClientCombatTurnEndSynchronized,
+            NotifyItemDescriptionRead
         }
 
         public enum Request

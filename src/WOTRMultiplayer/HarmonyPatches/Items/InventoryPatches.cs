@@ -5,6 +5,7 @@ using HarmonyLib;
 using Kingmaker.Blueprints.Items.Components;
 using Kingmaker.EntitySystem.Entities;
 using Kingmaker.Items;
+using Kingmaker.Items.Parts;
 using Kingmaker.Items.Slots;
 using Kingmaker.RuleSystem.Rules.Abilities;
 using Kingmaker.UI.MVVM._VM.Slots;
@@ -63,6 +64,20 @@ namespace WOTRMultiplayer.HarmonyPatches.Items
             };
 
             Main.Multiplayer.OnCopyInventoryItem(itemCopy);
+        }
+
+
+        [HarmonyPatch(typeof(ItemEntity), nameof(ItemEntity.OnOpenDescription))]
+        [HarmonyPrefix]
+        public static void ItemEntity_OnOpenDescription_Prefix(ItemEntity __instance)
+        {
+            if (!Main.Multiplayer.IsActive || __instance.Get<ItemPartShowInfoCallback>() == null)
+            {
+                return;
+            }
+
+            var item = NetworkItem.FromItemEntity(__instance);
+            Main.Multiplayer.OnItemDescriptionRead(item);
         }
 
         [HarmonyPatch(typeof(ItemsCollection), nameof(ItemsCollection.DropItem))]

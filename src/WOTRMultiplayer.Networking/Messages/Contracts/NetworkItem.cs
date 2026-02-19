@@ -39,5 +39,9 @@ namespace WOTRMultiplayer.Networking.Messages.Contracts
         [ProtoMember(9)]
         [LogMe]
         public string HoldingSlotOwnerId { get; set; }
+
+        [ProtoMember(10)]
+        [LogMe]
+        public string CollectionOwnerRef { get; set; }
     }
 }
