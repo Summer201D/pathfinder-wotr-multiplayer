@@ -4108,7 +4108,7 @@ namespace WOTRMultiplayer.Services
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error after AI selected action. AIUnitId={AIUnitId}", networkAIAction?.UnitId);
+                _logger.LogError(ex, "Error while selecting AI action. AIUnitId={AIUnitId}", networkAIAction?.UnitId);
                 throw;
             }
         }

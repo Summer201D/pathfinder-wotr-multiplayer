@@ -199,7 +199,8 @@ namespace WOTRMultiplayer.Services.GameInteraction
         {
             var action = FindAIAction([unit.Brain.GetAvailableAutoUseAbility()?.DefaultAiAction], networkAIAction)
                 ?? FindAIAction([.. unit.Brain.CustomActions.Cast<AiAction>()], networkAIAction)
-                ?? FindAIAction(unit.Brain.AvailableActions, networkAIAction);
+                ?? FindAIAction(unit.Brain.AvailableActions, networkAIAction)
+                ?? FindAIAction(unit.Brain.Actions, networkAIAction);
 
             return action;
         }
