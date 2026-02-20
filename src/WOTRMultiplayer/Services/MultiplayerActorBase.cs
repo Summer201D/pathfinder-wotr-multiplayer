@@ -679,10 +679,7 @@ namespace WOTRMultiplayer.Services
 
                 if (Game.Combat.ConfirmedMidCombatUnits.Contains(unitId))
                 {
-                    if (Game.Combat.UntargetableUnits.Remove(unitId))
-                    {
-                        CombatInteraction.MakeUnitTargetable(unitId, isTargetable: true);
-                    }
+                    CombatInteraction.MakeUnitTargetable(unitId, isTargetable: true);
 
                     Logger.LogWarning("Unit has been allowed to join mid combat. UnitId={UnitId}", unitId);
                     return true;
@@ -693,13 +690,10 @@ namespace WOTRMultiplayer.Services
                 {
                     var message = new NotifyUnitJoinedMidCombat { UnitId = unitId, PlayerId = Game.LocalPlayerId };
                     Send(message);
+                    CombatInteraction.MakeUnitTargetable(unitId, isTargetable: false);
                 }
 
                 AddPlayerReadyStatus(PlayerTurnReadinessType.UnitJoinedMidCombat, Game.LocalPlayerId, unitId);
-                if (Game.Combat.UntargetableUnits.Add(unitId))
-                {
-                    CombatInteraction.MakeUnitTargetable(unitId, isTargetable: false);
-                }
 
                 return false;
             }
