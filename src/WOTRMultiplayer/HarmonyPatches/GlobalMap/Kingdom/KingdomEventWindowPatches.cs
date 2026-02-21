@@ -78,7 +78,7 @@ namespace WOTRMultiplayer.HarmonyPatches.GlobalMap.Kingdom
             __instance.m_StartEvent.Interactable = __instance.m_StartEvent.Interactable && canControl;
             __instance.m_Cancel.Interactable = __instance.m_Cancel.Interactable && canControl;
             __instance.m_Close.Interactable = __instance.m_Close.Interactable && canControl;
-            __instance.m_Drop.Interactable = __instance.m_Close.Interactable && canControl;
+            __instance.m_Drop.Interactable = __instance.m_Drop.Interactable && canControl;
 
             if (__instance.m_Solutions.m_Solutions.Count == 0)
             {
