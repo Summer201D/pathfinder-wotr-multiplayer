@@ -21,7 +21,7 @@ namespace WOTRMultiplayer.HarmonyPatches.ContextActions
         {
             var target = PatchesUtils.GetTranspilerTarget(MethodBase.GetCurrentMethod());
             var lookForSeed = AccessTools.Field(typeof(ContextActionRandomize), nameof(ContextActionRandomize.Seed));
-            var replaceSeedWith = AccessTools.Method(typeof(ContextActionRandomizePatches), nameof(EvaluateSeed));
+            var replaceSeedWith = AccessTools.Method(typeof(ContextActionRandomizePatches), nameof(ContextActionRandomizePatches.EvaluateSeed));
             var matcher = new CodeMatcher(instructions);
             var match = matcher.SearchForward(x => x.LoadsField(lookForSeed));
             if (match.IsInvalid)
@@ -37,7 +37,7 @@ namespace WOTRMultiplayer.HarmonyPatches.ContextActions
             match.Advance(1).RemoveInstruction().Insert(seedInstructions);
 
             var lookForSalt = AccessTools.Field(typeof(ContextActionRandomize), nameof(ContextActionRandomize.Salt));
-            var replaceSaltWith = AccessTools.Method(typeof(ContextActionRandomizePatches), nameof(EvaluateSalt));
+            var replaceSaltWith = AccessTools.Method(typeof(ContextActionRandomizePatches), nameof(ContextActionRandomizePatches.EvaluateSalt));
             match = match.SearchForward(x => x.LoadsField(lookForSalt));
             if (match.IsInvalid)
             {
@@ -52,7 +52,7 @@ namespace WOTRMultiplayer.HarmonyPatches.ContextActions
             match.Advance(1).RemoveInstruction().Insert(saltInstructions);
 
             var lookForRandom = $"ActionWrapper {nameof(LinqExtensions.Random)}";
-            var replaceRandom = AccessTools.Method(typeof(ContextActionRandomizePatches), nameof(RollRandomActionIndex));
+            var replaceRandom = AccessTools.Method(typeof(ContextActionRandomizePatches), nameof(ContextActionRandomizePatches.RollRandomAction));
             match = match.SearchForward(x => x.opcode == OpCodes.Call && (x.operand?.ToString().Contains(lookForRandom) ?? false));
             if (match.IsInvalid)
             {
@@ -68,7 +68,7 @@ namespace WOTRMultiplayer.HarmonyPatches.ContextActions
             match.RemoveInstruction().Insert(randomInstructions);
 
             var lookForWeightedRandom = AccessTools.Method(typeof(UnityEngine.Random), nameof(UnityEngine.Random.Range), [typeof(int), typeof(int)]);
-            var replaceWeighted = AccessTools.Method(typeof(ContextActionRandomizePatches), nameof(RollRandomWeightedActionIndex));
+            var replaceWeighted = AccessTools.Method(typeof(ContextActionRandomizePatches), nameof(ContextActionRandomizePatches.RollRandomWeightedActionIndex));
             match = match.SearchForward(x => x.Calls(lookForWeightedRandom));
             if (match.IsInvalid)
             {
@@ -86,7 +86,7 @@ namespace WOTRMultiplayer.HarmonyPatches.ContextActions
             return matcher.Instructions();
         }
 
-        private static ContextActionRandomize.ActionWrapper RollRandomActionIndex(IList<ContextActionRandomize.ActionWrapper> actions, ContextActionRandomize contextActionRandomize)
+        private static ContextActionRandomize.ActionWrapper RollRandomAction(IList<ContextActionRandomize.ActionWrapper> actions, ContextActionRandomize contextActionRandomize)
         {
             if (!Main.Multiplayer.IsActive || actions == null || actions.Count == 0)
             {
@@ -107,7 +107,7 @@ namespace WOTRMultiplayer.HarmonyPatches.ContextActions
                 var abilityName = contextActionRandomize.AbilityContext.NameForAcronym;
                 var attackNumber = contextActionRandomize.AbilityContext.AttackRoll?.RuleAttackWithWeapon?.AttackNumber ?? -1;
                 var lifetime = combatSeed == 0 ? IdentifierLifetime.Area : IdentifierLifetime.CombatTurn;
-                var identifier = $"{nameof(ContextActionRandomize)}.{nameof(ContextActionRandomize.ActionWrapper)}:{nameof(RollRandomActionIndex)}:{unitId}:{targetId}:{abilityName}:{attackNumber}_{sessionSeed}:{loadedSave}:{areaSeed}:{combatSeed}:{combatTurnSeed}:{armyCombatSeed}";
+                var identifier = $"{nameof(ContextActionRandomize)}.{nameof(ContextActionRandomize.ActionWrapper)}:{nameof(RollRandomAction)}:{unitId}:{targetId}:{abilityName}:{attackNumber}_{sessionSeed}:{loadedSave}:{areaSeed}:{combatSeed}:{combatTurnSeed}:{armyCombatSeed}";
                 var index = Main.Multiplayer.ValueGenerator.Range(lifetime, identifier, 0, actions.Count);
                 var action = actions[index];
                 var actionsToRun = string.Join(",", action?.Action?.Actions?.Select(x => x.ToString()));

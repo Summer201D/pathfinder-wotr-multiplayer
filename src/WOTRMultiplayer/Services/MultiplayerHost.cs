@@ -289,7 +289,6 @@ namespace WOTRMultiplayer.Services
 
             if (Game.DialogState.Answer == null)
             {
-                Logger.LogWarning("Answer is not set, most likely it's a first dialog cue or cutscene intermission. DialogName={DialogName}", Game.DialogState.Dialog.Name);
                 return;
             }
 
