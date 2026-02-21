@@ -145,7 +145,7 @@
                 "title": "Hotkeys",
                 "ping": {
                     "title": "Ping",
-                    "tooltip": "Ping at specific position/unit/map object/etc..."
+                    "tooltip": "Use it to quickly highlight a specific world position, unit, map object, or other target. Your ping will be visible to other players, helping you communicate important locations or points of interest"
                 },
                 "forceUnpause": {
                     "title": "Force Unpause",

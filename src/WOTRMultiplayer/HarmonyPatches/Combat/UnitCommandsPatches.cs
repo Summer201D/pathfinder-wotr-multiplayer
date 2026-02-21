@@ -165,7 +165,7 @@ namespace WOTRMultiplayer.HarmonyPatches.Combat
 
             if (Game.Instance.TurnBasedCombatController.CurrentTurn == null)
             {
-                return true;
+                return false;
             }
 
             var actionStates = Game.Instance.TurnBasedCombatController.CurrentTurn.GetActionsStates(command.Executor);
