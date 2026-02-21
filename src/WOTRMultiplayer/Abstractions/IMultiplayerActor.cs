@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using Kingmaker.Controllers.Rest;
 using Kingmaker.GameModes;
+using Kingmaker.UI.Kingdom;
 using WOTRMultiplayer.Entities;
 using WOTRMultiplayer.Entities.ActionBar;
 using WOTRMultiplayer.Entities.Area;
@@ -367,5 +368,7 @@ namespace WOTRMultiplayer.Abstractions
         void OnKingdomUnloaded();
 
         void ForceUnpause();
+
+        void OnKingdomNavigationChanged(KingdomNavigationType kingdomNavigationType);
     }
 }

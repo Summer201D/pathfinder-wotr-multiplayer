@@ -3,6 +3,7 @@ using System.Linq;
 using AutoMapper;
 using Kingmaker.EntitySystem.Entities;
 using Kingmaker.Kingdom.Settlements;
+using Kingmaker.Kingdom.UI;
 using Kingmaker.UnitLogic;
 using Kingmaker.UnitLogic.Abilities;
 using Kingmaker.UnitLogic.Abilities.Blueprints;
@@ -51,6 +52,24 @@ namespace WOTRMultiplayer.Config.Mapping
 
             CreateMap<SettlementState, NetworkKingdomSettlement>().ConstructUsing(x => Create(x))
                 .ForAllMembers(x => x.Ignore());
+
+            CreateMap<KingdomEventUIView, NetworkKingdomEvent>().ConstructUsing(x => Create(x))
+                .ForAllMembers(x => x.Ignore());
+        }
+
+        private NetworkKingdomEvent Create(KingdomEventUIView kingdomEventUIView)
+        {
+            if (kingdomEventUIView == null)
+            {
+                return null;
+            }
+
+            var kingdomEvent = new NetworkKingdomEvent
+            {
+                Id = kingdomEventUIView.Event.EventBlueprint.AssetGuid.ToString()
+            };
+
+            return kingdomEvent;
         }
 
         private NetworkKingdomSettlement Create(SettlementState settlementState)

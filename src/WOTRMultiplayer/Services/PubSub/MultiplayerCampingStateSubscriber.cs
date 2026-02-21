@@ -1,4 +1,5 @@
 ﻿using System.Linq;
+using AutoMapper;
 using Kingmaker;
 using Kingmaker.Controllers.Rest.State;
 using Kingmaker.EntitySystem.Entities;
@@ -24,8 +25,9 @@ namespace WOTRMultiplayer.Services.PubSub
         public MultiplayerCampingStateSubscriber(
             ILogger<MultiplayerCampingStateSubscriber> logger,
             IGameInteractionService gameInteractionService,
-            IMultiplayerActorAccessor multiplayerActorAccessor)
-            : base(logger, multiplayerActorAccessor)
+            IMultiplayerActorAccessor multiplayerActorAccessor,
+            IMapper mapper)
+            : base(logger, multiplayerActorAccessor, mapper)
         {
             _gameInteractionService = gameInteractionService;
         }

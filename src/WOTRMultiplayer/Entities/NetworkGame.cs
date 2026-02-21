@@ -1,6 +1,7 @@
 ﻿using System.Collections.Concurrent;
 using System.Collections.Generic;
 using Kingmaker.GameModes;
+using Kingmaker.UI.Kingdom;
 using WOTRMultiplayer.Entities.Area;
 using WOTRMultiplayer.Entities.Combat;
 using WOTRMultiplayer.Entities.Combat.Crusades;
@@ -55,6 +56,8 @@ namespace WOTRMultiplayer.Entities
         public NetworkLeveling Leveling { get; set; }
 
         public ConcurrentDictionary<long, NetworkGlobalMapTravelerMode> PlayersInGlobalMapMode { get; set; } = [];
+
+        public ConcurrentDictionary<long, KingdomNavigationType> PlayersInKingdomNavigationType { get; set; } = [];
 
         public ConcurrentDictionary<GameModeType, HashSet<long>> PlayersInGameMode { get; set; } = [];
 

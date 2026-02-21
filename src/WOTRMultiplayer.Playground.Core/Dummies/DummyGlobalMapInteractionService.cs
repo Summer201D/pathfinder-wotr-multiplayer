@@ -1,4 +1,5 @@
 ﻿using System.Threading.Tasks;
+using Kingmaker.UI.Kingdom;
 using WOTRMultiplayer.Abstractions.GameInteraction;
 using WOTRMultiplayer.Entities.GlobalMap;
 using WOTRMultiplayer.Entities.GlobalMap.Kingdom;
@@ -286,6 +287,30 @@ namespace WOTRMultiplayer.Playground.Core.Dummies
         }
 
         public void UpdateKingdomUIState(bool isInteractable, int readyPlayersCount, int totalPlayersCount)
+        {
+        }
+
+        public void ChangeKingdomNavigation(KingdomNavigationType kingdomNavigationType)
+        {
+        }
+
+        public void SelectKingdomEvent(NetworkKingdomEvent kingdomEvent)
+        {
+        }
+
+        public void SelectKingdomEventSolution(NetworkKingdomEventSolution kingdomEventSolution)
+        {
+        }
+
+        public void StartKingdomEvent()
+        {
+        }
+
+        public void CancelKingdomEvent()
+        {
+        }
+
+        public void DropKingdomEvent(NetworkKingdomEvent kingdomEvent)
         {
         }
     }

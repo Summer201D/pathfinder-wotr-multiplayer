@@ -1,4 +1,5 @@
 ﻿using System.Threading.Tasks;
+using Kingmaker.UI.Kingdom;
 using WOTRMultiplayer.Entities.GlobalMap;
 using WOTRMultiplayer.Entities.GlobalMap.Kingdom;
 
@@ -141,7 +142,21 @@ namespace WOTRMultiplayer.Abstractions.GameInteraction
         void StartCrusadeArmyLeaderLeveling(NetworkGlobalMapArmy globalMapArmy);
 
         Task<bool> ShowCommonPopupAsync(NetworkGlobalMapCommonPopup popup);
+
         void EnterKingdom(NetworkKingdomEntryPoint entryPoint);
+
         void ExitKingdom();
+
+        void ChangeKingdomNavigation(KingdomNavigationType kingdomNavigationType);
+
+        void SelectKingdomEvent(NetworkKingdomEvent kingdomEvent);
+
+        void SelectKingdomEventSolution(NetworkKingdomEventSolution kingdomEventSolution);
+
+        void StartKingdomEvent();
+
+        void CancelKingdomEvent();
+
+        void DropKingdomEvent(NetworkKingdomEvent kingdomEvent);
     }
 }

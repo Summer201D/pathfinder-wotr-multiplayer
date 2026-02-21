@@ -5,6 +5,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Threading.Tasks;
 using AutoMapper;
+using Kingmaker.UI.Kingdom;
 using Kingmaker.Utility;
 using Microsoft.Extensions.Logging;
 using WOTRMultiplayer.Abstractions;
@@ -20,6 +21,7 @@ using WOTRMultiplayer.Entities.Combat;
 using WOTRMultiplayer.Entities.Combat.Crusades;
 using WOTRMultiplayer.Entities.Dialogs;
 using WOTRMultiplayer.Entities.GlobalMap;
+using WOTRMultiplayer.Entities.GlobalMap.Kingdom;
 using WOTRMultiplayer.Entities.Inspect;
 using WOTRMultiplayer.Entities.Items;
 using WOTRMultiplayer.Entities.Leveling;
@@ -595,6 +597,14 @@ namespace WOTRMultiplayer.Services
                .On<NotifyGlobalMapCrusadeArmyLeaderLevelingSkillSelected>(OnNotifyGlobalMapCrusadeArmyLeaderLevelingSkillSelected)
                .On<NotifyGlobalMapCommonPopupShown>(OnNotifyGlobalMapCommonPopupShown)
 
+               // kingdom
+               .On<NotifyKingdomNavigationChanged>(OnNotifyKingdomNavigationChanged)
+               .On<NotifyKingdomEventSelected>(OnNotifyKingdomEventSelected)
+               .On<NotifyKingdomEventSolutionSelected>(OnNotifyKingdomEventSolutionSelected)
+               .On<NotifyKingdomEventStarted>(OnNotifyKingdomEventStarted)
+               .On<NotifyKingdomEventCancelled>(OnNotifyKingdomEventCancelled)
+               .On<NotifyKingdomEventDropped>(OnNotifyKingdomEventDropped)
+
                // dialogs
                .On<NotifyDialogStarted>(OnNotifyDialogStarted)
                .On<NotifyDialogCueAnswerSuggested>(OnNotifyDialogCueAnswerSuggested)
@@ -629,6 +639,40 @@ namespace WOTRMultiplayer.Services
                // inventory
                .On<NotifyPolymorphicItemCreated>(OnNotifyPolymorphicItemCreated)
                ;
+        }
+
+        private void OnNotifyKingdomEventDropped(long receivedFrom, NotifyKingdomEventDropped message)
+        {
+            var kingdomEvent = Mapper.Map<NetworkKingdomEvent>(message.Event);
+            GlobalMapInteraction.DropKingdomEvent(kingdomEvent);
+        }
+
+        private void OnNotifyKingdomEventCancelled(long receivedFrom, NotifyKingdomEventCancelled message)
+        {
+            GlobalMapInteraction.CancelKingdomEvent();
+        }
+
+        private void OnNotifyKingdomEventStarted(long receivedFrom, NotifyKingdomEventStarted message)
+        {
+            GlobalMapInteraction.StartKingdomEvent();
+        }
+
+        private void OnNotifyKingdomEventSolutionSelected(long receivedFrom, NotifyKingdomEventSolutionSelected message)
+        {
+            var solution = Mapper.Map<NetworkKingdomEventSolution>(message.Solution);
+            GlobalMapInteraction.SelectKingdomEventSolution(solution);
+        }
+
+        private void OnNotifyKingdomEventSelected(long receivedFrom, NotifyKingdomEventSelected message)
+        {
+            var kingdomEvent = Mapper.Map<NetworkKingdomEvent>(message.Event);
+            GlobalMapInteraction.SelectKingdomEvent(kingdomEvent);
+        }
+
+        private void OnNotifyKingdomNavigationChanged(long receivedFrom, NotifyKingdomNavigationChanged message)
+        {
+            var navigation = Mapper.Map<KingdomNavigationType>(message.Type);
+            GlobalMapInteraction.ChangeKingdomNavigation(navigation);
         }
 
         private async void OnNotifyCombatTurnEndSynchronizationRequired(long receivedFrom, NotifyCombatTurnEndSynchronizationRequired message)

@@ -1,4 +1,5 @@
 ﻿using System;
+using AutoMapper;
 using Kingmaker.ElementsSystem;
 using Kingmaker.GameModes;
 using Kingmaker.Items;
@@ -23,8 +24,9 @@ namespace WOTRMultiplayer.Services.PubSub
         public MultiplayerUnitEquipmentSubscriber(
             ILogger<MultiplayerUnitEquipmentSubscriber> logger,
             IGameInteractionService gameInteractionService,
-            IMultiplayerActorAccessor multiplayerActorAccessor)
-            : base(logger, multiplayerActorAccessor)
+            IMultiplayerActorAccessor multiplayerActorAccessor,
+            IMapper mapper)
+            : base(logger, multiplayerActorAccessor, mapper)
         {
             _gameInteractionService = gameInteractionService;
         }

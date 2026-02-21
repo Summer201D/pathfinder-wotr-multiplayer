@@ -1,8 +1,11 @@
 ﻿using System;
+using AutoMapper;
 using Kingmaker.Blueprints.Area;
 using Kingmaker.EntitySystem.Entities;
+using Kingmaker.Kingdom;
 using Kingmaker.PubSubSystem;
 using Kingmaker.UI;
+using Kingmaker.UI.Kingdom;
 using Kingmaker.View.MapObjects;
 using Microsoft.Extensions.Logging;
 using WOTRMultiplayer.Abstractions;
@@ -21,8 +24,9 @@ namespace WOTRMultiplayer.Services.PubSub
     {
         public MultiplayerSubscriber(
             ILogger<MultiplayerSubscriber> logger,
-            IMultiplayerActorAccessor multiplayerActorAccessor)
-            : base(logger, multiplayerActorAccessor)
+            IMultiplayerActorAccessor multiplayerActorAccessor,
+            IMapper mapper)
+            : base(logger, multiplayerActorAccessor, mapper)
         {
         }
 

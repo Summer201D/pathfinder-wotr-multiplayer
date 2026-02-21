@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using AutoMapper;
+using Microsoft.Extensions.Logging;
 using WOTRMultiplayer.Abstractions;
 
 namespace WOTRMultiplayer.Services.PubSub
@@ -9,10 +10,16 @@ namespace WOTRMultiplayer.Services.PubSub
 
         protected IMultiplayerActorAccessor ActorAccessor { get; private set; }
 
-        public MultiplayerSubscriberBase(ILogger logger, IMultiplayerActorAccessor multiplayerActorAccessor)
+        protected IMapper Mapper { get; private set; }
+
+        public MultiplayerSubscriberBase(
+            ILogger logger,
+            IMultiplayerActorAccessor multiplayerActorAccessor,
+            IMapper mapper)
         {
             Logger = logger;
             ActorAccessor = multiplayerActorAccessor;
+            Mapper = mapper;
         }
     }
 }

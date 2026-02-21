@@ -148,6 +148,9 @@ namespace WOTRMultiplayer
 
             var combatSubscriber = _serviceProvider.GetService<MultiplayerCombatSubscriber>();
             EventBus.Subscribe(combatSubscriber);
+
+            var kingdomSubscriber = _serviceProvider.GetService<MultiplayerKingdomSubscriber>();
+            EventBus.Subscribe(kingdomSubscriber);
         }
 
         private static bool OnUnload(UnityModManager.ModEntry entry)

@@ -513,5 +513,13 @@ namespace WOTRMultiplayer.Abstractions
         bool CanLeaveCombat();
 
         void OnAreaLoaded();
+
+        void OnKingdomEventSolutionSelected(NetworkKingdomEventSolution kingdomEventSolution);
+
+        void OnKingdomEventStarted();
+
+        void OnKingdomEventCancelled();
+
+        void OnKingdomEventDropped(NetworkKingdomEvent kingdomEvent);
     }
 }

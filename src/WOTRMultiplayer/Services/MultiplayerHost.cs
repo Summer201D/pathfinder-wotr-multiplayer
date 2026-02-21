@@ -4,6 +4,7 @@ using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
 using AutoMapper;
+using Kingmaker.UI.Kingdom;
 using Kingmaker.Utility;
 using Microsoft.Extensions.Logging;
 using WOTRMultiplayer.Abstractions;
@@ -20,6 +21,7 @@ using WOTRMultiplayer.Entities.Combat.Crusades;
 using WOTRMultiplayer.Entities.Content;
 using WOTRMultiplayer.Entities.Dialogs;
 using WOTRMultiplayer.Entities.GlobalMap;
+using WOTRMultiplayer.Entities.GlobalMap.Kingdom;
 using WOTRMultiplayer.Entities.Inspect;
 using WOTRMultiplayer.Entities.Items;
 using WOTRMultiplayer.Entities.Leveling;
@@ -1088,6 +1090,45 @@ namespace WOTRMultiplayer.Services
             Send(message);
         }
 
+        public void OnKingdomEventSelected(NetworkKingdomEvent kingdomEvent)
+        {
+            var message = new NotifyKingdomEventSelected
+            {
+                Event = Mapper.Map<Networking.Messages.Contracts.NetworkKingdomEvent>(kingdomEvent)
+            };
+            Send(message);
+        }
+
+        public void OnKingdomEventSolutionSelected(NetworkKingdomEventSolution kingdomEventSolution)
+        {
+            var message = new NotifyKingdomEventSolutionSelected
+            {
+                Solution = Mapper.Map<Networking.Messages.Contracts.NetworkKingdomEventSolution>(kingdomEventSolution)
+            };
+            Send(message);
+        }
+
+        public void OnKingdomEventStarted()
+        {
+            var message = new NotifyKingdomEventStarted();
+            Send(message);
+        }
+
+        public void OnKingdomEventCancelled()
+        {
+            var message = new NotifyKingdomEventCancelled();
+            Send(message);
+        }
+
+        public void OnKingdomEventDropped(NetworkKingdomEvent kingdomEvent)
+        {
+            var message = new NotifyKingdomEventDropped
+            {
+                Event = Mapper.Map<Networking.Messages.Contracts.NetworkKingdomEvent>(kingdomEvent)
+            };
+            Send(message);
+        }
+
         public NetworkAIAction OnAfterAISelectedAction(NetworkAIAction aiAction)
         {
             var message = new NotifyAIActionSelected
@@ -1520,6 +1561,9 @@ namespace WOTRMultiplayer.Services
                .On<NotifyGlobalMapRecruitmentClosed>(OnNotifyGlobalMapRecruitmentClosed)
                .On<NotifyGlobalMapCommonPopupShown>(OnNotifyGlobalMapCommonPopupShown)
 
+               // kingdom
+               .On<NotifyKingdomNavigationChanged>(OnNotifyKingdomNavigationChanged)
+
                // dialogs
                .On<ClientDialogCueAnswerSuggested>(OnClientDialogCueAnswerSuggested)
                .On<ClientDialogStartRequested>(OnClientDialogStartRequested)
@@ -1531,6 +1575,12 @@ namespace WOTRMultiplayer.Services
                // inventory
                .On<NotifyPolymorphicItemCreationRequested>(OnNotifyPolymorphicItemCreationRequested)
                ;
+        }
+
+        private void OnNotifyKingdomNavigationChanged(long receivedFrom, NotifyKingdomNavigationChanged message)
+        {
+            var navigation = Mapper.Map<KingdomNavigationType>(message.Type);
+            Game.PlayersInKingdomNavigationType.AddOrUpdate(receivedFrom, navigation, (key, existing) => navigation);
         }
 
         private async void OnNotifyCombatLocalTurnEnded(long receivedFrom, NotifyCombatLocalTurnEnded combatTurnEnded)
@@ -1894,11 +1944,11 @@ namespace WOTRMultiplayer.Services
             OnAfterNetworkMessageHandled(receivedFrom, lobbySyncStatusChanged);
         }
 
-        private void OnClientAreaLoaded(long receivedFrom, ClientAreaLoaded message)
+        private async void OnClientAreaLoaded(long receivedFrom, ClientAreaLoaded message)
         {
+            await WaitWhileTrue(() => Game.ForcedPause == null, "Waiting for game to finish loading and initialize local force pause");
             lock (ActionLock)
             {
-                EnsureForcePaused(NetworkForcedPauseReason.AreaLoading);
                 Game.ForcedPause.ReadyPlayers.Add(receivedFrom);
             }
 

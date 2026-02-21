@@ -248,7 +248,13 @@
             NotifyCombatTurnEndSynchronizationRequired,
             NotifyCombatTurnEnded,
             ClientCombatTurnEndSynchronized,
-            NotifyItemDescriptionRead
+            NotifyItemDescriptionRead,
+            NotifyKingdomNavigationChanged,
+            NotifyKingdomEventSelected,
+            NotifyKingdomEventSolutionSelected,
+            NotifyKingdomEventStarted,
+            NotifyKingdomEventCancelled,
+            NotifyKingdomEventDropped
         }
 
         public enum Request

@@ -1,9 +1,11 @@
 ﻿using System.Collections.Generic;
+using Kingmaker.UI.Kingdom;
 using WOTRMultiplayer.Entities;
 using WOTRMultiplayer.Entities.Area;
 using WOTRMultiplayer.Entities.Combat.Crusades;
 using WOTRMultiplayer.Entities.Dialogs;
 using WOTRMultiplayer.Entities.GlobalMap;
+using WOTRMultiplayer.Entities.GlobalMap.Kingdom;
 using WOTRMultiplayer.Entities.Inspect;
 using WOTRMultiplayer.Entities.Rest;
 using WOTRMultiplayer.Services.GameInteraction.Contexts;
@@ -179,5 +181,15 @@ namespace WOTRMultiplayer.Abstractions
         void OnGlobalMapCrusadeArmyLeaderLevelingConfirmed();
 
         void OnGlobalMapCrusadeArmyLeaderLevelingSkillSelected(string skillId);
+
+        void OnKingdomEventSelected(NetworkKingdomEvent kingdomEvent);
+
+        void OnKingdomEventSolutionSelected(NetworkKingdomEventSolution kingdomEventSolution);
+
+        void OnKingdomEventStarted();
+
+        void OnKingdomEventCancelled();
+
+        void OnKingdomEventDropped(NetworkKingdomEvent kingdomEvent);
     }
 }

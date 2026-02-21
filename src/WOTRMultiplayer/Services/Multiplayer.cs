@@ -4266,6 +4266,78 @@ namespace WOTRMultiplayer.Services
             }
         }
 
+        public void OnKingdomEventSolutionSelected(NetworkKingdomEventSolution kingdomEventSolution)
+        {
+            try
+            {
+                if (_multiplayerActorAccessor == null || _multiplayerActorAccessor.Client.IsActive)
+                {
+                    return;
+                }
+
+                _multiplayerActorAccessor.Host.OnKingdomEventSolutionSelected(kingdomEventSolution);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while selecting kingdom event solution");
+                throw;
+            }
+        }
+
+        public void OnKingdomEventStarted()
+        {
+            try
+            {
+                if (_multiplayerActorAccessor == null || _multiplayerActorAccessor.Client.IsActive)
+                {
+                    return;
+                }
+
+                _multiplayerActorAccessor.Host.OnKingdomEventStarted();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while starting kingdom event");
+                throw;
+            }
+        }
+
+        public void OnKingdomEventCancelled()
+        {
+            try
+            {
+                if (_multiplayerActorAccessor == null || _multiplayerActorAccessor.Client.IsActive)
+                {
+                    return;
+                }
+
+                _multiplayerActorAccessor.Host.OnKingdomEventCancelled();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while cancelling kingdom event");
+                throw;
+            }
+        }
+
+        public void OnKingdomEventDropped(NetworkKingdomEvent kingdomEvent)
+        {
+            try
+            {
+                if (_multiplayerActorAccessor == null || _multiplayerActorAccessor.Client.IsActive)
+                {
+                    return;
+                }
+
+                _multiplayerActorAccessor.Host.OnKingdomEventDropped(kingdomEvent);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while dropping kingdom event");
+                throw;
+            }
+        }
+
         private void ShowMultiplayerLobbyWindow()
         {
             _logger.LogInformation("Opening lobby window");

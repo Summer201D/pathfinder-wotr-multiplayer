@@ -1,4 +1,5 @@
-﻿using Kingmaker.EntitySystem.Entities;
+﻿using AutoMapper;
+using Kingmaker.EntitySystem.Entities;
 using Kingmaker.PubSubSystem;
 using Kingmaker.RuleSystem.Rules;
 using Microsoft.Extensions.Logging;
@@ -14,8 +15,9 @@ namespace WOTRMultiplayer.Services.PubSub
     {
         public MultiplayerCombatSubscriber(
             ILogger<MultiplayerCombatSubscriber> logger,
-            IMultiplayerActorAccessor multiplayerActorAccessor)
-            : base(logger, multiplayerActorAccessor)
+            IMultiplayerActorAccessor multiplayerActorAccessor,
+            IMapper mapper)
+            : base(logger, multiplayerActorAccessor, mapper)
         {
         }
 

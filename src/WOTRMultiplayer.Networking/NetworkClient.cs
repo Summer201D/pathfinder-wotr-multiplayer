@@ -139,7 +139,7 @@ namespace WOTRMultiplayer.Networking
 
             try
             {
-                _logger.LogObject(LogLevel.Information, "Receiving {MessageType}.", message);
+                _logger.LogObject(LogLevel.Information, "Received {MessageType}.", message);
                 handler(NetworkingConsts.HostPlayerId, message);
             }
             catch (Exception ex)

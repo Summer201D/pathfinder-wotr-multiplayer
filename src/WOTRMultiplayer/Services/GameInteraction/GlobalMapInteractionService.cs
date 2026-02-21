@@ -15,11 +15,13 @@ using Kingmaker.Globalmap.View;
 using Kingmaker.Kingdom;
 using Kingmaker.Kingdom.Armies;
 using Kingmaker.Kingdom.Settlements;
+using Kingmaker.Kingdom.UI;
 using Kingmaker.PubSubSystem;
 using Kingmaker.RandomEncounters;
 using Kingmaker.RandomEncounters.Settings;
 using Kingmaker.UI;
 using Kingmaker.UI.Common;
+using Kingmaker.UI.Kingdom;
 using Kingmaker.UI.MVVM._PCView.Crusade.Armies;
 using Kingmaker.UI.MVVM._PCView.Crusade.ArmyInfo;
 using Kingmaker.UI.MVVM._PCView.Crusade.Recruit;
@@ -1466,6 +1468,159 @@ namespace WOTRMultiplayer.Services.GameInteraction
                 UIUtility.LeaveKingdom();
                 _logger.LogInformation("Kingdom has been exited");
             });
+        }
+
+        public void ChangeKingdomNavigation(KingdomNavigationType kingdomNavigationType)
+        {
+            _mainThreadAccessor.Post(() =>
+            {
+                KingdomState.Instance.NavigationType = kingdomNavigationType;
+                _logger.LogInformation("Kingdom navigation type has been changed. NavigationType={NavigationType}", kingdomNavigationType);
+            });
+        }
+
+        public void SelectKingdomEvent(NetworkKingdomEvent kingdomEvent)
+        {
+            _mainThreadAccessor.Post(() =>
+            {
+                if (kingdomEvent == null)
+                {
+                    EventBus.RaiseEvent<IKingdomUICloseEventWindow>(x => x.OnClose());
+                    _logger.LogInformation("Kingdom event window has been closed.");
+                    return;
+                }
+
+                var (cart, eventView) = FindEvent(kingdomEvent);
+                if (eventView == null)
+                {
+                    _logger.LogError("Unable to find kingdom event. Id={Id}", kingdomEvent.Id);
+                    return;
+                }
+
+                EventBus.RaiseEvent<IEventSceneHandler>(x => x.OnEventSelected(eventView, cart));
+                _logger.LogInformation("Kingdom event has been selected. Id={Id}, Name={Name}", eventView?.Event.EventBlueprint.AssetGuid.ToString(), eventView?.Event.FullName);
+            });
+        }
+
+        public void SelectKingdomEventSolution(NetworkKingdomEventSolution kingdomEventSolution)
+        {
+            _mainThreadAccessor.Post(() =>
+            {
+                var eventWindowFooter = UnityEngine.Object.FindObjectOfType<KingdomUIEventWindowFooter>();
+                if (eventWindowFooter == null)
+                {
+                    _logger.LogError("Unable to select event solution due to missing KingdomUIEventWindowFooter");
+                    return;
+                }
+
+                if (kingdomEventSolution == null)
+                {
+                    foreach (var solution in eventWindowFooter.m_Solutions.m_Solutions)
+                    {
+                        solution.Toggle.isOn = false;
+                    }
+                    _logger.LogInformation("Kingdom event solution has been reset");
+                    return;
+                }
+
+                if (kingdomEventSolution.Index >= eventWindowFooter.m_Solutions.m_Solutions.Count)
+                {
+                    _logger.LogError("Kingdom event solution index is out of range. Index={Index}, SolutionsCount={SolutionsCount}", kingdomEventSolution.Index, eventWindowFooter.m_Solutions.m_Solutions.Count);
+                    return;
+                }
+
+                var selectedSolution = eventWindowFooter.m_Solutions.m_Solutions[kingdomEventSolution.Index];
+                selectedSolution.SetOn();
+                _logger.LogInformation("Kingdom event solution has been selected. Index={Index}, Name={Name}", kingdomEventSolution.Index, selectedSolution.EventSolution.m_SolutionText);
+            });
+        }
+
+        public void StartKingdomEvent()
+        {
+            _mainThreadAccessor.Post(() =>
+            {
+                var eventWindowFooter = UnityEngine.Object.FindObjectOfType<KingdomUIEventWindowFooter>();
+                if (eventWindowFooter == null)
+                {
+                    _logger.LogError("Unable to start event due to missing KingdomUIEventWindowFooter");
+                    return;
+                }
+
+                eventWindowFooter.OnStart();
+                _logger.LogInformation("Kingdom event has been started. SolutionName={SolutionName}", eventWindowFooter.CurrentEventSolution?.SolutionText);
+            });
+        }
+
+        public void CancelKingdomEvent()
+        {
+            _mainThreadAccessor.Post(() =>
+            {
+                var eventWindowFooter = UnityEngine.Object.FindObjectOfType<KingdomUIEventWindowFooter>();
+                if (eventWindowFooter == null)
+                {
+                    _logger.LogError("Unable to cancel event due to missing KingdomUIEventWindowFooter");
+                    return;
+                }
+
+                _logger.LogInformation("Kingdom event has been cancelled. SolutionName={SolutionName}", eventWindowFooter.CurrentEventSolution?.SolutionText);
+                eventWindowFooter.OnCancelEvent();
+            });
+        }
+
+        public void DropKingdomEvent(NetworkKingdomEvent kingdomEvent)
+        {
+            _mainThreadAccessor.Post(() =>
+            {
+                var eventWindowFooter = UnityEngine.Object.FindObjectOfType<KingdomUIEventWindowFooter>();
+                if (eventWindowFooter == null)
+                {
+                    var (_, eventView) = FindEvent(kingdomEvent);
+                    eventView.DropEvent();
+                    EventBus.RaiseEvent<IKingdomTaskChangedHandler>(x => x.OnTaskChanged());
+                    _logger.LogInformation("Event has been dropped via fallback. EventId={EventId}", kingdomEvent.Id);
+                    return;
+                }
+
+                eventWindowFooter.m_KingdomEventView.DropEvent();
+                _logger.LogInformation("Kingdom event has been dropped. EventId={EventId}", eventWindowFooter.m_KingdomEventView.Event.EventBlueprint.AssetGuid.ToString());
+            });
+        }
+
+        private (KingdomEventHandCartController, KingdomEventUIView) FindEvent(NetworkKingdomEvent networkKingdomEvent)
+        {
+            if (networkKingdomEvent == null)
+            {
+                return (null, null);
+            }
+
+            var eventBarController = UnityEngine.Object.FindObjectOfType<KingdomEventBarController>();
+            if (eventBarController == null)
+            {
+                _logger.LogError("Unable to find KingdomEventBarController");
+                return (null, null);
+            }
+
+            var eventInfo = FindEvent(eventBarController.Available, networkKingdomEvent)
+                ?? FindEvent(eventBarController.InProgress, networkKingdomEvent)
+                ?? FindEvent(eventBarController.Complete, networkKingdomEvent);
+
+            if (eventInfo == null)
+            {
+                return (null, null);
+            }
+
+            return (eventInfo?.Cart, eventInfo?.View);
+        }
+
+        private (KingdomEventHandCartController Cart, KingdomEventUIView View)? FindEvent(KingdomEventHand kingdomEventHand, NetworkKingdomEvent networkKingdomEvent)
+        {
+            var task = kingdomEventHand.m_Tasks.FirstOrDefault(t => string.Equals(t.Event.EventBlueprint.AssetGuid.ToString(), networkKingdomEvent.Id, StringComparison.OrdinalIgnoreCase));
+            if (task == null)
+            {
+                return null;
+            }
+
+            return (kingdomEventHand.Cart, task);
         }
 
         private void UpdateGlobalMapToolbar(bool isInteractable, int readyPlayersCount, int totalPlayersCount)

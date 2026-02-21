@@ -159,7 +159,7 @@ namespace WOTRMultiplayer.Networking
 
             try
             {
-                _logger.LogObject(LogLevel.Information, "Receiving {MessageType}. ReceivedFrom={ReceivedFrom}", args.Message, args.Session.Id);
+                _logger.LogObject(LogLevel.Information, "Received {MessageType}. ReceivedFrom={ReceivedFrom}", args.Message, args.Session.Id);
                 handler(args.NetSession.ID, args.Message);
             }
             catch (Exception ex)

@@ -20,7 +20,6 @@ namespace WOTRMultiplayer.HarmonyPatches.Combat.Crusades
         public static IEnumerable<CodeInstruction> TacticalCombatConfusion_HandleNextTurn_Transpiler(IEnumerable<CodeInstruction> instructions)
         {
             var target = PatchesUtils.GetTranspilerTarget(MethodBase.GetCurrentMethod());
-            var lookFor = AccessTools.PropertyGetter(typeof(UnityEngine.Random), nameof(UnityEngine.Random.value));
             var replaceWith = AccessTools.Method(typeof(TacticalCombatConfusionPatches), nameof(TacticalCombatConfusionPatches.RollConfusionEffect));
             var matcher = new CodeMatcher(instructions);
             var match = matcher.SearchForward(x => x.Is(OpCodes.Newobj, AccessTools.Constructor(typeof(DiceFormula), [typeof(int), typeof(DiceType)])));

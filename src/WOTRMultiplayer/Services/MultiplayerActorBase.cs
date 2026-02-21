@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using AutoMapper;
 using Kingmaker.Controllers.Rest;
 using Kingmaker.GameModes;
+using Kingmaker.UI.Kingdom;
 using Kingmaker.Utility;
 using Microsoft.Extensions.Logging;
 using UniRx;
@@ -2081,6 +2082,17 @@ namespace WOTRMultiplayer.Services
             };
             Send(message);
             ResetPlayersTracker(Game.PlayersInGlobalMapKingdom);
+            Game.PlayersInKingdomNavigationType.Clear();
+        }
+
+        public void OnKingdomNavigationChanged(KingdomNavigationType kingdomNavigationType)
+        {
+            var message = new NotifyKingdomNavigationChanged
+            {
+                Type = kingdomNavigationType.ToString(),
+                PlayerId = Game.LocalPlayerId
+            };
+            Send(message);
         }
 
         protected abstract DiceRollValueResponse RetrieveRoll(DiceRollValueRequest rollRequest);
