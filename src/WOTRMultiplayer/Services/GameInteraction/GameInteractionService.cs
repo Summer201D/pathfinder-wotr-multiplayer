@@ -1244,12 +1244,11 @@ namespace WOTRMultiplayer.Services.GameInteraction
                         return;
                     }
 
-                    _logger.LogInformation("Changing group changer view state. IsInteractable={IsInteractable}, ReadyPlayers={ReadyPlayers}, TotalPlayers={TotalPlayers}", isInteractable, readyPlayersCount, totalPlayersCount);
-
                     _uiAccessor.GroupChangerView.m_AcceptButton.Interactable = isInteractable;
                     _uiAccessor.GroupChangerView.m_CloseButton.Interactable = isInteractable;
                     var acceptButtonText = _uiAccessor.GroupChangerView.m_AcceptButton.GetComponentInChildren<TextMeshProUGUI>();
                     _uiSyncCountersService.UpdateButtonTextCounter(acceptButtonText, readyPlayersCount, totalPlayersCount);
+                    _logger.LogInformation("Group changer UI state has been updated. IsInteractable={IsInteractable}, ReadyPlayers={ReadyPlayers}, TotalPlayers={TotalPlayers}", isInteractable, readyPlayersCount, totalPlayersCount);
                 }
                 catch (Exception ex)
                 {
@@ -2149,10 +2148,71 @@ namespace WOTRMultiplayer.Services.GameInteraction
             return unit == null || unit.Descriptor.State.IsFinallyDead;
         }
 
-        public bool IsDirectlyControllable(string unitId)
+        public void UpdateTransitionMapUIState(bool isInteractable, int readyPlayersCount, int totalPlayersCount)
         {
-            var unit = _gameStateLookupService.GetUnitEntity(unitId);
-            return unit != null && unit.IsDirectlyControllable;
+            _mainThreadAccessor.Post(() =>
+            {
+                var view = _uiAccessor.TransitionPCView;
+                if (view?.ViewModel == null)
+                {
+                    _logger.LogWarning("Unable to update missing TransitionPCView");
+                    return;
+                }
+
+                var part = view.m_Parts.FirstOrDefault(p => p.Map == view.ViewModel.Map);
+                foreach (var entry in part.Entries)
+                {
+                    entry.m_LegendButton.Interactable = isInteractable;
+                    entry.m_MapButton.Interactable = isInteractable;
+                }
+
+                part.Close.Interactable = isInteractable;
+                var pointerTrigger = part.Close.GetComponent<ObservablePointerClickTrigger>();
+                if (pointerTrigger != null)
+                {
+                    pointerTrigger.enabled = isInteractable;
+                }
+
+                _logger.LogInformation("Transition UI state has been updated. Map={Map}, IsInteractable={IsInteractable}, ReadyPlayers={ReadyPlayers}, TotalPlayers={TotalPlayers}", part.Map, isInteractable, readyPlayersCount, totalPlayersCount);
+            });
+        }
+
+        public void ChooseTransitionMapEntry(string entryId)
+        {
+            _mainThreadAccessor.Post(() =>
+            {
+                var view = _uiAccessor.TransitionPCView;
+                if (view?.ViewModel == null)
+                {
+                    _logger.LogWarning("Unable to choose entry due to missing TransitionPCView");
+                    return;
+                }
+                var part = view.m_Parts.FirstOrDefault(x => x.Map == view.ViewModel.Map);
+                var entry = part.Entries.FirstOrDefault(x => string.Equals(x.EntranceEntry.AssetGuid.ToString(), entryId, StringComparison.OrdinalIgnoreCase));
+                if (entry == null)
+                {
+                    _logger.LogError("Unable to find transition entry. EntryId={EntryId}", entryId);
+                    return;
+                }
+
+                entry.m_LegendButton.OnLeftClick.Invoke();
+                _logger.LogInformation("Transition Entry has been chosen. EntryId={EntryId}", entryId);
+            });
+        }
+
+        public void CloseTransitionMap()
+        {
+            _mainThreadAccessor.Post(() =>
+            {
+                var view = _uiAccessor.TransitionPCView;
+                if (view?.ViewModel == null)
+                {
+                    return;
+                }
+
+                view.ViewModel.Close();
+                _logger.LogInformation("Transition Map has been closed");
+            });
         }
 
         public void ReadItem(NetworkItem networkItem)

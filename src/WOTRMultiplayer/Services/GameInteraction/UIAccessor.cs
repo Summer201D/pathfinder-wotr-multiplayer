@@ -28,6 +28,7 @@ using Kingmaker.UI.MVVM._PCView.Party;
 using Kingmaker.UI.MVVM._PCView.Rest;
 using Kingmaker.UI.MVVM._PCView.TacticalCombat;
 using Kingmaker.UI.MVVM._PCView.TacticalCombat.Result;
+using Kingmaker.UI.MVVM._PCView.Transition;
 using Kingmaker.UI.MVVM._VM.ServiceWindows;
 using Kingmaker.UI.MVVM._VM.ServiceWindows.Inventory;
 using Kingmaker.UI.MVVM._VM.ServiceWindows.Spellbook.MemorizingPanel;
@@ -96,6 +97,8 @@ namespace WOTRMultiplayer.Services.GameInteraction
         public RecruitPCView RecruitPCView => GlobalMapPCView?.m_RecruitPCView ?? KingdomPCView?.m_RecruitPCView;
         public CombatResultPCView CombatResultPCView => GlobalMapPCView?.m_CombatResultPCView ?? KingdomPCView?.m_CombatResultPCView;
         public LeaderLevelUpPCView LeaderLevelUpPCView => GlobalMapPCView?.m_LeaderLevelUpPCView ?? KingdomPCView?.m_LeaderLevelUpPCView;
+
+        public TransitionPCView TransitionPCView => InGamePCView?.m_StaticPartPCView?.m_TransitionPCView ?? GlobalMapPCView?.m_TransitionPCView;
 
         public void CloseAllWindows()
         {

@@ -2107,6 +2107,17 @@ namespace WOTRMultiplayer.Services
             UpdateSettlementUIState();
         }
 
+        public void OnTransitionMapShown()
+        {
+            AddPlayerToTracker(Game.PlayersInTransitionMap, Game.LocalPlayerId);
+            var message = new NotifyTransitionMapShown
+            {
+                PlayerId = Game.LocalPlayerId
+            };
+            Send(message);
+            UpdateTransitionMapUIState();
+        }
+
         protected abstract DiceRollValueResponse RetrieveRoll(DiceRollValueRequest rollRequest);
 
         protected abstract void OnLocalPlayerTurnStart();
@@ -2508,6 +2519,17 @@ namespace WOTRMultiplayer.Services
                 var totalPlayers = GetSyncedPlayersCount();
                 var canUse = HasControlOverUI && readyPlayers >= totalPlayers;
                 GlobalMapInteraction.UpdateSettlementUIState(canUse, readyPlayers, totalPlayers);
+            }
+        }
+
+        protected void UpdateTransitionMapUIState()
+        {
+            lock (ActionLock)
+            {
+                var readyPlayers = Game.PlayersInTransitionMap.Count;
+                var totalPlayers = GetSyncedPlayersCount();
+                var canUse = HasControlOverUI && readyPlayers >= totalPlayers;
+                GameInteraction.UpdateTransitionMapUIState(canUse, readyPlayers, totalPlayers);
             }
         }
 
@@ -3332,6 +3354,7 @@ namespace WOTRMultiplayer.Services
                 // mapobjects
                 .On<NotifyOvertipInteracted>(OnNotifyOvertipInteracted)
                 .On<NotifyTrapDisarmRolled>(OnNotifyTrapDisarmRolled)
+                .On<NotifyTransitionMapShown>(OnNotifyTransitionMapShown)
 
                 // items&inventory
                 .On<NotifyLootableEntitySkinned>(OnNotifyContainerSkinned)
@@ -3395,22 +3418,36 @@ namespace WOTRMultiplayer.Services
                 ;
         }
 
+        private void OnNotifyTransitionMapShown(long receivedFrom, NotifyTransitionMapShown message)
+        {
+            AddPlayerToTracker(Game.PlayersInTransitionMap, message.PlayerId);
+            UpdateTransitionMapUIState();
+
+            OnAfterNetworkMessageHandled(receivedFrom, message);
+        }
+
         private void OnNotifyKingdomSettlementLoaded(long receivedFrom, NotifyKingdomSettlementLoaded message)
         {
             AddPlayerToTracker(Game.PlayersInSettlement, message.PlayerId);
             UpdateSettlementUIState();
+
+            OnAfterNetworkMessageHandled(receivedFrom, message);
         }
 
         private void OnNotifyKingdomUnloaded(long receivedFrom, NotifyKingdomUnloaded message)
         {
             RemovePlayerFromTracker(Game.PlayersInGlobalMapKingdom, message.PlayerId);
             UpdateGlobalMapUIState();
+
+            OnAfterNetworkMessageHandled(receivedFrom, message);
         }
 
         private void OnNotifyKingdomLoaded(long receivedFrom, NotifyKingdomLoaded message)
         {
             AddPlayerToTracker(Game.PlayersInGlobalMapKingdom, message.PlayerId);
             UpdateGlobalMapKingdomUIState();
+
+            OnAfterNetworkMessageHandled(receivedFrom, message);
         }
 
         private void OnNotifyKingdomExited(long receivedFrom, NotifyKingdomExited message)
@@ -3419,6 +3456,8 @@ namespace WOTRMultiplayer.Services
             ResetGlobalMapCounters();
 
             GlobalMapInteraction.ExitKingdom();
+
+            OnAfterNetworkMessageHandled(receivedFrom, message);
         }
 
         private void OnNotifyKingdomEntered(long receivedFrom, NotifyKingdomEntered message)
@@ -3427,6 +3466,8 @@ namespace WOTRMultiplayer.Services
             ResetGlobalMapCounters();
 
             GlobalMapInteraction.EnterKingdom(entryPoint);
+
+            OnAfterNetworkMessageHandled(receivedFrom, message);
         }
 
         private void OnNotifyUnitMovedTo(long receivedFrom, NotifyUnitMovedTo message)

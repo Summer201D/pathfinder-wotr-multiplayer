@@ -4392,6 +4392,60 @@ namespace WOTRMultiplayer.Services
             }
         }
 
+        public void OnTransitionMapShown()
+        {
+            try
+            {
+                if (_multiplayerActorAccessor == null)
+                {
+                    return;
+                }
+
+                _multiplayerActorAccessor.Current.OnTransitionMapShown();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while showing transition map");
+                throw;
+            }
+        }
+
+        public void OnTransitionMapEntryChosen(string entryId)
+        {
+            try
+            {
+                if (_multiplayerActorAccessor == null || _multiplayerActorAccessor.Client.IsActive)
+                {
+                    return;
+                }
+
+                _multiplayerActorAccessor.Host.OnTransitionMapEntryChosen(entryId);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while choosing transition map entry. EntryId={EntryId}", entryId);
+                throw;
+            }
+        }
+
+        public void OnTransitionMapClosed()
+        {
+            try
+            {
+                if (_multiplayerActorAccessor == null || _multiplayerActorAccessor.Client.IsActive)
+                {
+                    return;
+                }
+
+                _multiplayerActorAccessor.Host.OnTransitionMapClosed();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while closing transition map");
+                throw;
+            }
+        }
+
         private void ShowMultiplayerLobbyWindow()
         {
             _logger.LogInformation("Opening lobby window");

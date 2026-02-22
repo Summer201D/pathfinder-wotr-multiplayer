@@ -259,7 +259,10 @@
             NotifyKingdomSettlementLeft,
             NotifyKingdomSettlementLoaded,
             NotifyKingdomSettlementBuildingSold,
-            NotifyKingdomSettlementBuildingBuilt
+            NotifyKingdomSettlementBuildingBuilt,
+            NotifyTransitionMapShown,
+            NotifyTransitionMapClosed,
+            NotifyTransitionMapEntryChosen
         }
 
         public enum Request

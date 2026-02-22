@@ -1313,6 +1313,22 @@ namespace WOTRMultiplayer.Services
             return true;
         }
 
+        public void OnTransitionMapEntryChosen(string entryId)
+        {
+            var message = new NotifyTransitionMapEntryChosen
+            {
+                EntryId = entryId
+            };
+            Send(message);
+        }
+
+        public void OnTransitionMapClosed()
+        {
+            ResetPlayersTracker(Game.PlayersInTransitionMap);
+            var message = new NotifyTransitionMapClosed();
+            Send(message);
+        }
+
         protected override bool OnToggleOffPause(out bool showReason)
         {
             showReason = true;

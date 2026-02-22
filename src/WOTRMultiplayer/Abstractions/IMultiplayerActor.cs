@@ -372,5 +372,7 @@ namespace WOTRMultiplayer.Abstractions
         void OnKingdomNavigationChanged(KingdomNavigationType kingdomNavigationType);
 
         void OnKingdomSettlementLoaded();
+
+        void OnTransitionMapShown();
     }
 }

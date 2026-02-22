@@ -63,6 +63,8 @@ namespace WOTRMultiplayer.Entities
 
         public HashSet<long> PlayersInGroupChanger { get; set; } = [];
 
+        public HashSet<long> PlayersInTransitionMap { get; set; } = [];
+
         public HashSet<long> PlayersInSkipTime { get; set; } = [];
 
         public HashSet<long> PlayersInGlobalMapKingdom { get; set; } = [];

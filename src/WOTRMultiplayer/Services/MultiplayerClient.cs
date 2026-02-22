@@ -640,9 +640,25 @@ namespace WOTRMultiplayer.Services
                .On<NotifyZoneLootLeft>(OnNotifyZoneLootLeft)
                .On<NotifyZoneLootRemoveToggleChanged>(OnNotifyZoneLootRemoveToggleChanged)
 
+               // map objects
+               .On<NotifyTransitionMapEntryChosen>(OnNotifyTransitionMapEntryChosen)
+               .On<NotifyTransitionMapClosed>(OnNotifyTransitionMapClosed)
+
                // inventory
                .On<NotifyPolymorphicItemCreated>(OnNotifyPolymorphicItemCreated)
                ;
+        }
+
+        private void OnNotifyTransitionMapEntryChosen(long receivedFrom, NotifyTransitionMapEntryChosen message)
+        {
+            ResetPlayersTracker(Game.PlayersInTransitionMap);
+            GameInteraction.ChooseTransitionMapEntry(message.EntryId);
+        }
+
+        private void OnNotifyTransitionMapClosed(long receivedFrom, NotifyTransitionMapClosed message)
+        {
+            ResetPlayersTracker(Game.PlayersInTransitionMap);
+            GameInteraction.CloseTransitionMap();
         }
 
         private void OnNotifyKingdomSettlementBuildingBuilt(long receivedFrom, NotifyKingdomSettlementBuildingBuilt message)

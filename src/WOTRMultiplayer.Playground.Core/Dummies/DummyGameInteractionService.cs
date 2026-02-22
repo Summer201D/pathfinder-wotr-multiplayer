@@ -428,12 +428,19 @@ namespace WOTRMultiplayer.Playground.Core.Dummies
             return false;
         }
 
-        public bool IsDirectlyControllable(string unitId)
+        public void ReadItem(NetworkItem networkItem)
         {
-            return false;
         }
 
-        public void ReadItem(NetworkItem networkItem)
+        public void UpdateTransitionMapUIState(bool isInteractable, int readyPlayersCount, int totalPlayersCount)
+        {
+        }
+
+        public void ChooseTransitionMapEntry(string entryId)
+        {
+        }
+
+        public void CloseTransitionMap()
         {
         }
     }

@@ -255,8 +255,8 @@
                 },
                 "desyncedCombatUnits": "Some units did not spawn locally, but did spawn for other players. This causes combat and turn order to desync, preventing progression.\nPlease load your last save",
                 "turn": {
-                    "started": "Turn Started: {0}",
-                    "ended": "Turn Ended: {0}",
+                    "started": "----- Turn Started: {0}",
+                    "ended": "----- Turn Ended: {0}",
                     "hostOrderDesync": "Next turn for player {0} has been overridden",
                     "clientOrderDesync": "Next unit turn has been overridden to '{0}'"
                 },

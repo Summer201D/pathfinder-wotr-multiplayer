@@ -66,7 +66,7 @@ namespace WOTRMultiplayer.HarmonyPatches.GlobalMap
                 return;
             }
 
-            OnFatigueMessageActionChoosen(btn);
+            OnFatigueMessageActionChosen(btn);
         }
 
         [HarmonyPatch(typeof(GlobalMapVM), nameof(GlobalMapVM.OnUpdateFatigueHandler))]
@@ -118,7 +118,7 @@ namespace WOTRMultiplayer.HarmonyPatches.GlobalMap
                 return;
             }
 
-            OnFatigueMessageActionChoosen(btn);
+            OnFatigueMessageActionChosen(btn);
         }
 
         [HarmonyPatch(typeof(GlobalMapController), nameof(GlobalMapController.BeginCombat))]
@@ -565,7 +565,7 @@ namespace WOTRMultiplayer.HarmonyPatches.GlobalMap
             return location;
         }
 
-        private static void OnFatigueMessageActionChoosen(MessageModalBase.ButtonType btn)
+        private static void OnFatigueMessageActionChosen(MessageModalBase.ButtonType btn)
         {
             var popup = new NetworkGlobalMapCommonPopup { Type = NetworkGlobalMapCommonPopupType.Fatigue };
             if (btn == MessageModalBase.ButtonType.Yes)

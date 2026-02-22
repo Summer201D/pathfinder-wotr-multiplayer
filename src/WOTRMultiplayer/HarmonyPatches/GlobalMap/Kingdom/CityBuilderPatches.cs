@@ -9,7 +9,7 @@ namespace WOTRMultiplayer.HarmonyPatches.GlobalMap.Kingdom
     public class CityBuilderPatches
     {
         [HarmonyPatch(typeof(CityBuilderPCView), nameof(CityBuilderPCView.BindViewImplementation))]
-        [HarmonyPrefix]
+        [HarmonyPostfix]
         public static void CityBuilderPCView_BindViewImplementation_Postfix()
         {
             if (!Main.Multiplayer.IsActive)

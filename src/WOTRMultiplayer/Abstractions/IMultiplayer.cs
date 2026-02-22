@@ -527,5 +527,11 @@ namespace WOTRMultiplayer.Abstractions
         void OnKingdomLeaveSettlement();
 
         void OnKingdomSettlementLoaded();
+
+        void OnTransitionMapShown();
+
+        void OnTransitionMapEntryChosen(string entryId);
+
+        void OnTransitionMapClosed();
     }
 }

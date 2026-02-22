@@ -2,10 +2,8 @@
 using AutoMapper;
 using Kingmaker.Blueprints.Area;
 using Kingmaker.EntitySystem.Entities;
-using Kingmaker.Kingdom;
 using Kingmaker.PubSubSystem;
 using Kingmaker.UI;
-using Kingmaker.UI.Kingdom;
 using Kingmaker.View.MapObjects;
 using Microsoft.Extensions.Logging;
 using WOTRMultiplayer.Abstractions;
