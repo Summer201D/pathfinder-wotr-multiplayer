@@ -67,10 +67,9 @@ namespace WOTRMultiplayer.HarmonyPatches.GlobalMap.Kingdom
             {
                 var sessionSeed = Main.Multiplayer.GetSessionSeed();
                 var loadedSave = Main.Multiplayer.GetLoadedSaveSeed();
-                var areaSeed = Main.Multiplayer.GetAreaSeed();
 
                 var nextEventStartDay = crusadeEventsTimeline.NextEventStartDay;
-                var identifier = $"{nameof(CrusadeEventsTimeline)}:{nameof(RollRandomEvent)}:{nextEventStartDay}_{sessionSeed}:{loadedSave}:{areaSeed}";
+                var identifier = $"{nameof(CrusadeEventsTimeline)}:{nameof(RollRandomEvent)}:{nextEventStartDay}_{sessionSeed}:{loadedSave}";
                 var index = Main.Multiplayer.ValueGenerator.Range(IdentifierLifetime.Area, identifier, 0, events.Count);
                 var randomEvent = events[index];
                 Main.GetLogger<CrusadeEventsTimelinePatches>().LogInformation("CrusadeEventsTimeline Random event has been rolled. EventId={EventId}, EventName={EventName}, Identifier={Identifier}", randomEvent.AssetGuid.ToString(), randomEvent.name, identifier);
