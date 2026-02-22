@@ -26,12 +26,14 @@ using Kingmaker.UI.MVVM._PCView.MainMenu;
 using Kingmaker.UI.MVVM._PCView.NewGame;
 using Kingmaker.UI.MVVM._PCView.Party;
 using Kingmaker.UI.MVVM._PCView.Rest;
+using Kingmaker.UI.MVVM._PCView.ServiceWindows.Spellbook;
+using Kingmaker.UI.MVVM._PCView.ServiceWindows.Spellbook.MemorizingPanel;
+using Kingmaker.UI.MVVM._PCView.ServiceWindows.Spellbook.Metamagic;
 using Kingmaker.UI.MVVM._PCView.TacticalCombat;
 using Kingmaker.UI.MVVM._PCView.TacticalCombat.Result;
 using Kingmaker.UI.MVVM._PCView.Transition;
 using Kingmaker.UI.MVVM._VM.ServiceWindows;
 using Kingmaker.UI.MVVM._VM.ServiceWindows.Inventory;
-using Kingmaker.UI.MVVM._VM.ServiceWindows.Spellbook.MemorizingPanel;
 using Kingmaker.UI.MVVM._VM.Vendor;
 using WOTRMultiplayer.Abstractions.GameInteraction;
 
@@ -71,7 +73,11 @@ namespace WOTRMultiplayer.Services.GameInteraction
 
         public VendorVM VendorViewVM => InGamePCView?.m_StaticPartPCView?.m_VendorPCView?.ViewModel;
 
-        public SpellbookMemorizingPanelVM SpellbookMemorizingVM => (InGamePCView?.m_StaticPartPCView?.m_ServiceWindowsPCView ?? GlobalMapPCView.m_ServiceWindowsPCView)?.m_SpellbookPCView?.m_MemorizingPanelView?.ViewModel;
+        public SpellbookPCView SpellbookPCView => (InGamePCView?.m_StaticPartPCView?.m_ServiceWindowsPCView ?? GlobalMapPCView.m_ServiceWindowsPCView)?.m_SpellbookPCView;
+
+        public SpellbookMemorizingPanelPCView SpellbookMemorizingPanelPCView => SpellbookPCView?.m_MemorizingPanelView;
+
+        public SpellbookMetamagicMixerPCView SpellbookMetamagicMixerPCView => SpellbookPCView?.m_MetamagicMixerView;
 
         public CharGenPCView CharGenView => (InGamePCView?.m_StaticPartPCView?.m_CharGenContextPCView ?? GlobalMapPCView?.m_CharGenContextPCView ?? MainMenuPCView?.m_CharGenContextPCView)?.m_CharGenPCView;
 

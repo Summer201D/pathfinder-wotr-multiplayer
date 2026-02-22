@@ -38,6 +38,7 @@ using WOTRMultiplayer.Entities.Ping;
 using WOTRMultiplayer.Entities.Rest;
 using WOTRMultiplayer.Entities.Rolls.Claiming.Values;
 using WOTRMultiplayer.Entities.Settings;
+using WOTRMultiplayer.Entities.SpellbookManagement;
 using WOTRMultiplayer.Entities.Spells;
 using WOTRMultiplayer.Entities.Vendor;
 using WOTRMultiplayer.Networking.Abstractions;
@@ -213,7 +214,7 @@ namespace WOTRMultiplayer.Services
 
         public void OnAbilityUse(NetworkAbilityUse abilityUse)
         {
-            if (!IsCasterControlledByLocalPlayer(abilityUse.InitiatorUnitId))
+            if (!IsAbilityCasterControlledByLocalPlayer(abilityUse.InitiatorUnitId))
             {
                 return;
             }
@@ -249,7 +250,7 @@ namespace WOTRMultiplayer.Services
 
         public void OnToggleActivatableAbility(NetworkActivatableAbility activatableAbilityUse)
         {
-            if (!IsCasterControlledByLocalPlayer(activatableAbilityUse.CasterId))
+            if (!IsAbilityCasterControlledByLocalPlayer(activatableAbilityUse.CasterId))
             {
                 return;
             }
@@ -822,6 +823,7 @@ namespace WOTRMultiplayer.Services
             };
             Send(message);
         }
+
         public void OnMemorizeSpell(string unitId, NetworkSpellSlot networkSpellSlot, NetworkAbility networkAbility)
         {
             var message = new NotifySpellMemorized
@@ -840,6 +842,30 @@ namespace WOTRMultiplayer.Services
                 UnitId = unitId,
                 Slot = Mapper.Map<Networking.Messages.Contracts.NetworkSpellSlot>(networkSpellSlot),
                 Ability = Mapper.Map<Networking.Messages.Contracts.NetworkAbility>(networkAbility),
+            };
+            Send(message);
+        }
+
+        public void OnRemoveCustomSpell(string unitId, NetworkAbility ability)
+        {
+            if (!IsControlledByLocalPlayer(unitId))
+            {
+                return;
+            }
+
+            var message = new NotifyCustomSpellRemoved
+            {
+                Ability = Mapper.Map<Networking.Messages.Contracts.NetworkAbility>(ability),
+                UnitId = unitId
+            };
+            Send(message);
+        }
+
+        public void OnSpellbookMetamagicSpellCreated(NetworkMetamagicSpell metamagicSpell)
+        {
+            var message = new NotifyMetamagicSpellCreated
+            {
+                MetamagicSpell = Mapper.Map<Networking.Messages.Contracts.NetworkMetamagicSpell>(metamagicSpell)
             };
             Send(message);
         }
@@ -2857,7 +2883,7 @@ namespace WOTRMultiplayer.Services
             return isFixed;
         }
 
-        protected bool IsCasterControlledByLocalPlayer(string sourceUnitId)
+        protected bool IsAbilityCasterControlledByLocalPlayer(string sourceUnitId)
         {
             if (Game.ArmyCombat?.Turn != null)
             {
@@ -3317,6 +3343,8 @@ namespace WOTRMultiplayer.Services
                 // spellbook management
                 .On<NotifySpellMemorized>(OnNotifySpellMemorized)
                 .On<NotifySpellForgotten>(OnNotifySpellForgotten)
+                .On<NotifyMetamagicSpellCreated>(OnNotifyMetamagicSpellCreated)
+                .On<NotifyCustomSpellRemoved>(OnNotifyCustomSpellRemoved)
 
                 // vendor interaction
                 .On<NotifyVendorItemTransferred>(OnNotifyVendorItemTransferred)
@@ -3416,6 +3444,18 @@ namespace WOTRMultiplayer.Services
                 // movement
                 .On<NotifyUnitMovedTo>(OnNotifyUnitMovedTo)
                 ;
+        }
+
+        private void OnNotifyCustomSpellRemoved(long receivedFrom, NotifyCustomSpellRemoved message)
+        {
+            var ability = Mapper.Map<NetworkAbility>(message.Ability);
+            GameInteraction.RemoveCustomSpell(message.UnitId, ability);
+        }
+
+        private void OnNotifyMetamagicSpellCreated(long receivedFrom, NotifyMetamagicSpellCreated message)
+        {
+            var metamagicSpell = Mapper.Map<NetworkMetamagicSpell>(message.MetamagicSpell);
+            GameInteraction.CreateMetamagicSpell(metamagicSpell);
         }
 
         private void OnNotifyTransitionMapShown(long receivedFrom, NotifyTransitionMapShown message)
@@ -4451,7 +4491,7 @@ namespace WOTRMultiplayer.Services
         {
             var isOutOfSupport = Game.CurrentArea.Chapter switch
             {
-                <= 2 => false,
+                <= 3 => false,
                 _ => true,
             };
 

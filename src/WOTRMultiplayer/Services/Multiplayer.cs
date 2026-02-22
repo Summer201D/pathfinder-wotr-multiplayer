@@ -28,6 +28,7 @@ using WOTRMultiplayer.Entities.MapObjects;
 using WOTRMultiplayer.Entities.Movement;
 using WOTRMultiplayer.Entities.NewGame;
 using WOTRMultiplayer.Entities.Rest;
+using WOTRMultiplayer.Entities.SpellbookManagement;
 using WOTRMultiplayer.Entities.Spells;
 using WOTRMultiplayer.Entities.Vendor;
 using WOTRMultiplayer.Services.GameInteraction.Contexts;
@@ -4442,6 +4443,48 @@ namespace WOTRMultiplayer.Services
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error while closing transition map");
+                throw;
+            }
+        }
+
+        public void OnSpellbookMetamagicSpellCreated(NetworkMetamagicSpell metamagicSpell)
+        {
+            try
+            {
+                if (_multiplayerActorAccessor == null)
+                {
+                    return;
+                }
+
+                var context = RemoteContext?.MetamagicSpell;
+                if (context != null && context.UnitId == metamagicSpell.UnitId && context.SpellbookId == metamagicSpell.Ability.SpellbookId && context.SpellBlueprintId == metamagicSpell.Ability.BlueprintId)
+                {
+                    return;
+                }
+
+                _multiplayerActorAccessor.Current.OnSpellbookMetamagicSpellCreated(metamagicSpell);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while creating metamagic spell");
+                throw;
+            }
+        }
+
+        public void OnRemoveCustomSpell(string unitId, NetworkAbility ability)
+        {
+            try
+            {
+                if (_multiplayerActorAccessor == null)
+                {
+                    return;
+                }
+
+                _multiplayerActorAccessor.Current.OnRemoveCustomSpell(unitId, ability);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while removing custom spell");
                 throw;
             }
         }

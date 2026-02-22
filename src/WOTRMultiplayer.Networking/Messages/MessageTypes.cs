@@ -262,7 +262,9 @@
             NotifyKingdomSettlementBuildingBuilt,
             NotifyTransitionMapShown,
             NotifyTransitionMapClosed,
-            NotifyTransitionMapEntryChosen
+            NotifyTransitionMapEntryChosen,
+            NotifyMetamagicSpellCreated,
+            NotifyCustomSpellRemoved
         }
 
         public enum Request

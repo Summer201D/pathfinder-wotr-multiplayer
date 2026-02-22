@@ -205,6 +205,11 @@ namespace WOTRMultiplayer.Services.GameInteraction
             return action;
         }
 
+        public AbilityData GetCustomSpell(Spellbook spellbook, NetworkAbility ability)
+        {
+            return GetCustomSpell(spellbook, ability.Id, ability.BlueprintId, ability.SpellLevel, ability.Metamagic);
+        }
+
         private AiAction FindAIAction(List<AiAction> actions, NetworkAIAction networkAIAction)
         {
             var action = actions?.FirstOrDefault(a => a != null && string.Equals(a.Blueprint.AssetGuid.ToString(), networkAIAction.Id, StringComparison.OrdinalIgnoreCase));
@@ -214,11 +219,6 @@ namespace WOTRMultiplayer.Services.GameInteraction
         private AbilityData GetMemorizedSpell(Spellbook spellbook, NetworkAbility ability)
         {
             return GetMemorizedSpell(spellbook, ability.Id, ability.BlueprintId, ability.SpellLevel, ability.Metamagic);
-        }
-
-        private AbilityData GetCustomSpell(Spellbook spellbook, NetworkAbility ability)
-        {
-            return GetCustomSpell(spellbook, ability.Id, ability.BlueprintId, ability.SpellLevel, ability.Metamagic);
         }
 
         private AbilityData GetCustomSpell(Spellbook spellbook, string abilityId, string abilityBlueprintId, int spellLevel, int? metamagic)

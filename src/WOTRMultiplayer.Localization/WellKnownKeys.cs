@@ -899,6 +899,24 @@ public static class WellKnownKeys
             {
                 public static string Key { get; set; }
             }
+
+            [Description("removedCustomSpell")]
+            public static class RemovedCustomSpell
+            {
+                public static string Key { get; set; }
+            }
+
+            [Description("removedDuplicateMetamagicSpell")]
+            public static class RemovedDuplicateMetamagicSpell
+            {
+                public static string Key { get; set; }
+            }
+
+            [Description("newMetamagicSpell")]
+            public static class NewMetamagicSpell
+            {
+                public static string Key { get; set; }
+            }
         }
 
         [Description("forcedPause")]

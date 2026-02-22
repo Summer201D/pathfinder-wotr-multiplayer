@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Kingmaker.EntitySystem.Entities;
 using WOTRMultiplayer.Entities.Equipment;
 using WOTRMultiplayer.Entities.Items;
+using WOTRMultiplayer.Entities.SpellbookManagement;
 
 namespace WOTRMultiplayer.Services.GameInteraction.Contexts
 {
@@ -15,6 +16,8 @@ namespace WOTRMultiplayer.Services.GameInteraction.Contexts
         public UseInventoryItemContext UseInventoryItem { get; set; }
 
         public EquipmentContext Equipment { get; set; }
+
+        public MetamagicSpellContext MetamagicSpell { get; set; }
 
         public HandEquipmentContext HandEquipment { get; set; }
 
@@ -40,6 +43,7 @@ namespace WOTRMultiplayer.Services.GameInteraction.Contexts
             VendorItemTransfer = null;
             Lockpick = null;
             PolymorphicItem = null;
+            MetamagicSpell = null;
         }
 
         public static RemoteExecutionContext CreateDropItem(string itemId, string unitId)
@@ -73,6 +77,19 @@ namespace WOTRMultiplayer.Services.GameInteraction.Contexts
                 Equipment = new EquipmentContext
                 {
                     Position = position
+                }
+            };
+        }
+
+        public static RemoteExecutionContext Create(NetworkMetamagicSpell metamagicSpell)
+        {
+            return new RemoteExecutionContext
+            {
+                MetamagicSpell = new MetamagicSpellContext
+                {
+                    UnitId = metamagicSpell.UnitId,
+                    SpellBlueprintId = metamagicSpell.Ability.BlueprintId,
+                    SpellbookId = metamagicSpell.Ability.SpellbookId
                 }
             };
         }

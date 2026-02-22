@@ -16,6 +16,7 @@ using WOTRMultiplayer.Entities.Movement;
 using WOTRMultiplayer.Entities.NewGame;
 using WOTRMultiplayer.Entities.Rest;
 using WOTRMultiplayer.Entities.Settings;
+using WOTRMultiplayer.Entities.SpellbookManagement;
 using WOTRMultiplayer.Entities.Spells;
 using WOTRMultiplayer.Entities.Vendor;
 using WOTRMultiplayer.Services.GameInteraction.Contexts;
@@ -206,5 +207,9 @@ namespace WOTRMultiplayer.Abstractions.GameInteraction
         void ChooseTransitionMapEntry(string entryId);
 
         void CloseTransitionMap();
+
+        void CreateMetamagicSpell(NetworkMetamagicSpell metamagicSpell);
+
+        void RemoveCustomSpell(string unitId, NetworkAbility ability);
     }
 }

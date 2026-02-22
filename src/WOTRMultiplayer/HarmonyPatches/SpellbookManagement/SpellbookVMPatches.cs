@@ -3,22 +3,52 @@ using System.Collections.Generic;
 using System.Reflection;
 using System.Reflection.Emit;
 using HarmonyLib;
-using Kingmaker.Localization;
-using Kingmaker.PubSubSystem;
+using Kingmaker.UI.MVVM._PCView.ServiceWindows.Spellbook;
 using Kingmaker.UI.MVVM._VM.ServiceWindows.Spellbook;
 using Kingmaker.UI.MVVM._VM.ServiceWindows.Spellbook.KnownSpells;
 using Kingmaker.UI.MVVM._VM.ServiceWindows.Spellbook.MemorizingPanel;
 using Kingmaker.UnitLogic;
+using Kingmaker.UnitLogic.Abilities;
 using Microsoft.Extensions.Logging;
 using WOTRMultiplayer.Entities.Combat;
 using WOTRMultiplayer.Entities.Spells;
 using WOTRMultiplayer.HarmonyPatches.Combat;
 
-namespace WOTRMultiplayer.HarmonyPatches.MemorizingSpells
+namespace WOTRMultiplayer.HarmonyPatches.SpellbookManagement
 {
     [HarmonyPatch]
     public class SpellbookVMPatches
     {
+        [HarmonyPatch(typeof(SpellbookPCView), nameof(SpellbookPCView.BindViewImplementation))]
+        [HarmonyPostfix]
+        public static void SpellbookVM_BindViewImplementation_Postfix(SpellbookPCView __instance)
+        {
+            if (!Main.Multiplayer.IsActive)
+            {
+                return;
+            }
+
+            var unitId = __instance.ViewModel.UnitDescriptor?.Value?.Unit?.UniqueId;
+            if (__instance.m_KnownSpellsView.m_KnownSpellView != null)
+            {
+                __instance.m_KnownSpellsView.m_KnownSpellView.m_RemoveButton.Interactable = Main.Multiplayer.IsControlledByLocalPlayer(unitId);
+            }
+        }
+
+        [HarmonyPatch(typeof(SpellbookVM), nameof(SpellbookVM.RemoveCustom))]
+        [HarmonyPrefix]
+        public static void SpellbookVM_RemoveCustom_Prefix(SpellbookVM __instance, AbilityData abilityData)
+        {
+            if (!Main.Multiplayer.IsActive)
+            {
+                return;
+            }
+
+            var ability = Main.Mapper.Map<NetworkAbility>(abilityData);
+            var unitId = __instance.UnitDescriptor.Value.Unit.UniqueId;
+            Main.Multiplayer.OnRemoveCustomSpell(unitId, ability);
+        }
+
         [HarmonyPatch(typeof(SpellbookVM), nameof(SpellbookVM.TryMemorize))]
         [HarmonyPrefix]
         public static bool SpellbookVM_TryMemorize_Prefix(SpellbookVM __instance)
@@ -31,9 +61,9 @@ namespace WOTRMultiplayer.HarmonyPatches.MemorizingSpells
             var canChangeSlot = Main.Multiplayer.IsControlledByLocalPlayer(__instance.UnitDescriptor.Value.Unit.UniqueId);
             if (!canChangeSlot)
             {
-                var message = new LocalizedString { Key = WellKnownKeys.GameNotifications.SpellBook.NoSpellSlotPermission.Key };
-                EventBus.RaiseEvent<IWarningNotificationUIHandler>(x => x.HandleWarning(message, true));
+                Main.PlayerNotification.ShowWarningNotification(WellKnownKeys.GameNotifications.SpellBook.NoSpellSlotPermission.Key);
             }
+
             return canChangeSlot;
         }
 
@@ -73,9 +103,9 @@ namespace WOTRMultiplayer.HarmonyPatches.MemorizingSpells
             var canChangeSlot = Main.Multiplayer.IsControlledByLocalPlayer(__instance.UnitDescriptor.Value.Unit.UniqueId);
             if (!canChangeSlot)
             {
-                var message = new LocalizedString { Key = WellKnownKeys.GameNotifications.SpellBook.NoSpellSlotPermission.Key };
-                EventBus.RaiseEvent<IWarningNotificationUIHandler>(x => x.HandleWarning(message, true));
+                Main.PlayerNotification.ShowWarningNotification(WellKnownKeys.GameNotifications.SpellBook.NoSpellSlotPermission.Key);
             }
+
             return canChangeSlot;
         }
 

@@ -21,6 +21,7 @@ using WOTRMultiplayer.Entities.NewGame;
 using WOTRMultiplayer.Entities.Ping;
 using WOTRMultiplayer.Entities.Rest;
 using WOTRMultiplayer.Entities.Rolls.Claiming.Values;
+using WOTRMultiplayer.Entities.SpellbookManagement;
 using WOTRMultiplayer.Entities.Spells;
 using WOTRMultiplayer.Entities.Vendor;
 
@@ -374,5 +375,9 @@ namespace WOTRMultiplayer.Abstractions
         void OnKingdomSettlementLoaded();
 
         void OnTransitionMapShown();
+
+        void OnSpellbookMetamagicSpellCreated(NetworkMetamagicSpell metamagicSpell);
+
+        void OnRemoveCustomSpell(string unitId, NetworkAbility ability);
     }
 }

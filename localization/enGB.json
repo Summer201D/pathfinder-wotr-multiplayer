@@ -229,7 +229,10 @@
             "spellBook": {
                 "noSpellSlotPermission": "Changing spells is restricted to character owner only",
                 "memorizedSpell": "'{0}' has been memorized by {1}",
-                "forgottenSpell": "'{0}' has been forgotten by {1}"
+                "forgottenSpell": "'{0}' has been forgotten by {1}",
+                "removedCustomSpell": "Custom spell '{0}' has been removed from {1} spellbook",
+                "removedDuplicateMetamagicSpell": "Duplicate metamagic spell '{0}' has been removed from {1} spellbook.",
+                "newMetamagicSpell": "Metamagic spell '{0}' has been created in {1} spellbook.\nApplied metamagic: {2}"
             },
             "forcedPause": {
                 "areaLoading": "Please wait for other players to finish loading the area",

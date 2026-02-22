@@ -47,8 +47,11 @@ using Kingmaker.UI.MVVM._VM.Settings.Entities;
 using Kingmaker.UI.Selection;
 using Kingmaker.UI.SettingsUI;
 using Kingmaker.UI.UnitSettings;
+using Kingmaker.UnitLogic;
+using Kingmaker.UnitLogic.Abilities;
 using Kingmaker.UnitLogic.ActivatableAbilities;
 using Kingmaker.UnitLogic.Commands;
+using Kingmaker.UnitLogic.FactLogic;
 using Kingmaker.Utility;
 using Kingmaker.View.MapObjects;
 using Kingmaker.View.MapObjects.Traps;
@@ -76,6 +79,7 @@ using WOTRMultiplayer.Entities.Movement;
 using WOTRMultiplayer.Entities.NewGame;
 using WOTRMultiplayer.Entities.Rest;
 using WOTRMultiplayer.Entities.Settings;
+using WOTRMultiplayer.Entities.SpellbookManagement;
 using WOTRMultiplayer.Entities.Spells;
 using WOTRMultiplayer.Entities.Vendor;
 using WOTRMultiplayer.Extensions;
@@ -1711,6 +1715,116 @@ namespace WOTRMultiplayer.Services.GameInteraction
             });
         }
 
+        public void RemoveCustomSpell(string unitId, NetworkAbility ability)
+        {
+            _mainThreadAccessor.Post(() =>
+            {
+                var unit = _gameStateLookupService.GetUnitEntity(unitId);
+                if (unit == null)
+                {
+                    _logger.LogError("Unable to find unit to remove custom spell. UnitId={UnitId}", unitId);
+                    return;
+                }
+
+                var spellbook = _gameStateLookupService.GetSpellbook(unit, ability.SpellbookId);
+                if (spellbook == null)
+                {
+                    _logger.LogError("Unable to find spellbook to remove custom spell. UnitId={UnitId}, SpellbookId={SpellbookId}", unit.UniqueId, ability.SpellbookId);
+                    return;
+                }
+
+                var spell = _gameStateLookupService.GetCustomSpell(spellbook, ability);
+                if (spell == null)
+                {
+                    _logger.LogError("Unable to find remove missing custom spell. UnitId={UnitId}, SpellId={SpellId}, SpellName={SpellName}", unit.UniqueId, ability.Id, ability.Name);
+                    return;
+                }
+
+                spellbook.RemoveCustomSpell(spell);
+                _playerNotificationService.AddCombatText(WellKnownKeys.GameNotifications.SpellBook.RemovedCustomSpell.Key, CombatTextSeverity.Common, new AbilityTooltipLog(spell), spell.Name, new UnitEntityLog(unit.UniqueId));
+                _logger.LogInformation("Custom spell has been removed. UnitId={UnitId}, SpellName={SpellName}", unit.UniqueId, spell.NameForAcronym);
+                RefreshSpellbookUI();
+            });
+        }
+
+        public void CreateMetamagicSpell(NetworkMetamagicSpell metamagicSpell)
+        {
+            _mainThreadAccessor.Post(() =>
+            {
+                try
+                {
+                    var unit = _gameStateLookupService.GetUnitEntity(metamagicSpell.UnitId);
+                    if (unit == null)
+                    {
+                        _logger.LogError("Unable to find unit to create metamagic spell. UnitId={UnitId}", metamagicSpell.UnitId);
+                        return;
+                    }
+
+                    var spellbook = _gameStateLookupService.GetSpellbook(unit, metamagicSpell.Ability.SpellbookId);
+                    if (spellbook == null)
+                    {
+                        _logger.LogError("Unable to find spellbook to create metamagic spell. UnitId={UnitId}, SpellbookId={SpellbookId}", unit.UniqueId, metamagicSpell.Ability.SpellbookId);
+                        return;
+                    }
+
+                    var spell = _gameStateLookupService.GetKnownSpell(spellbook, metamagicSpell.Ability);
+                    if (spell == null)
+                    {
+                        _logger.LogError("Unable to find spell to create metamagic spell. UnitId={UnitId}, SpellId={SpellId}, SpellBlueprintId={SpellBlueprintId}, SpellName={SpellName}, SpellbookId={SpellbookId}", unit.UniqueId, metamagicSpell.Ability.Id, metamagicSpell.Ability.BlueprintId, metamagicSpell.Ability.Name, metamagicSpell.Ability.SpellbookId);
+                        return;
+                    }
+
+                    using var context = _networkExecutionContext.Value = RemoteExecutionContext.Create(metamagicSpell);
+
+                    var metamagicBuilder = new MetamagicBuilder(spellbook, spell);
+                    foreach (var metamagicFeature in metamagicBuilder.KnownMetamagicFeatures)
+                    {
+                        if (metamagicSpell.MetamagicFeatures.Contains((int)metamagicFeature.GetComponent<AddMetamagicFeat>().Metamagic))
+                        {
+                            metamagicBuilder.AddMetamagic(metamagicFeature);
+                        }
+                    }
+                    metamagicBuilder.Apply();
+
+                    var metaSpell = metamagicBuilder.ResultAbilityData;
+                    if (metamagicSpell.BorderNumber.HasValue)
+                    {
+                        metaSpell.DecorationBorderNumber = metamagicSpell.BorderNumber.Value;
+                    }
+
+                    if (metamagicSpell.DecorationColorNumber.HasValue)
+                    {
+                        metaSpell.DecorationColorNumber = metamagicSpell.DecorationColorNumber.Value;
+                    }
+
+                    var duplicate = GetDuplicateCustomSpell(spellbook, metaSpell);
+                    if (duplicate != null)
+                    {
+                        var duplicateSpellMetamagicFlags = duplicate.MetamagicData.MetamagicMask.GetAllFlags();
+                        _logger.LogInformation("Duplicate metamagic spell has been removed. UnitId={UnitId}, SpellName={SpellName}, Metamagic={Metamagic}", unit.UniqueId, duplicate.NameForAcronym, duplicateSpellMetamagicFlags);
+                        _playerNotificationService.AddCombatText(WellKnownKeys.GameNotifications.SpellBook.RemovedDuplicateMetamagicSpell.Key, CombatTextSeverity.Common, new AbilityTooltipLog(duplicate), duplicate.Name, new UnitEntityLog(unit.UniqueId));
+                        spellbook.RemoveCustomSpell(duplicate);
+                    }
+
+                    spellbook.AddCustomSpell(metaSpell);
+                    if (_uiAccessor.SpellbookPCView?.ViewModel != null)
+                    {
+                        _uiAccessor.SpellbookPCView.ViewModel.OnMetamagicComplete();
+                    }
+
+                    var metamagicFlags = metaSpell.MetamagicData.MetamagicMask.GetAllFlags();
+                    _playerNotificationService.AddCombatText(WellKnownKeys.GameNotifications.SpellBook.NewMetamagicSpell.Key, CombatTextSeverity.Common, new AbilityTooltipLog(metaSpell), metaSpell.Name, new UnitEntityLog(unit.UniqueId), string.Join(", ", metamagicFlags));
+                    _logger.LogInformation("Metamagic spell has been created. UnitId={UnitId}, SpellName={SpellName}, MetamagicFeatures={MetamagicFeatures}", unit.UniqueId, metamagicSpell.Ability.Name, metamagicFlags);
+                    RefreshSpellbookUI();
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Unable to create metamagic spell");
+                    throw;
+                }
+            });
+        }
+
         public void SelectNewGameSequencePhase(NetworkNewGameSequencePhase newGameSequencePhase)
         {
             _mainThreadAccessor.Post(() =>
@@ -2758,7 +2872,22 @@ namespace WOTRMultiplayer.Services.GameInteraction
 
         private void RefreshSpellbookUI()
         {
-            _uiAccessor.SpellbookMemorizingVM?.UpdateSlots();
+            _uiAccessor.SpellbookPCView?.ViewModel?.UpdateSpellbook();
+        }
+
+        private AbilityData GetDuplicateCustomSpell(Spellbook spellbook, AbilityData newMetamagicSpell)
+        {
+            var spellLevel = spellbook.GetSpellLevel(newMetamagicSpell);
+            var customSpellLevelSpells = spellbook.GetCustomSpells(spellLevel);
+            foreach (AbilityData customSpell in customSpellLevelSpells)
+            {
+                if (customSpell.Blueprint == newMetamagicSpell.Blueprint && Equals(customSpell.MetamagicData, newMetamagicSpell.MetamagicData))
+                {
+                    return customSpell;
+                }
+            }
+
+            return null;
         }
 
         private void RefreshVendorScreen()

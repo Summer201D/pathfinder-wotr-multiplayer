@@ -20,6 +20,7 @@ using WOTRMultiplayer.Entities.Ping;
 using WOTRMultiplayer.Entities.Rest;
 using WOTRMultiplayer.Entities.Rolls.Claiming.Values;
 using WOTRMultiplayer.Entities.Settings;
+using WOTRMultiplayer.Entities.SpellbookManagement;
 using WOTRMultiplayer.Entities.Spells;
 using WOTRMultiplayer.Entities.Units;
 using WOTRMultiplayer.Entities.Units.Parts;
@@ -375,6 +376,9 @@ namespace WOTRMultiplayer.Config.Mapping
                 .ReverseMap();
 
             CreateMap<NetworkKingdomSettlementSlot, Networking.Messages.Contracts.NetworkKingdomSettlementSlot>()
+                .ReverseMap();
+
+            CreateMap<NetworkMetamagicSpell, Networking.Messages.Contracts.NetworkMetamagicSpell>()
                 .ReverseMap();
         }
     }

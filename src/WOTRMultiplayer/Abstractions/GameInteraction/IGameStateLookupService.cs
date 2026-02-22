@@ -39,6 +39,8 @@ namespace WOTRMultiplayer.Abstractions.GameInteraction
 
         AbilityData GetKnownSpell(Spellbook spellbook, NetworkAbility ability);
 
+        AbilityData GetCustomSpell(Spellbook spellbook, NetworkAbility ability);
+
         SpellSlot GetSpellSlot(Spellbook spellbook, NetworkSpellSlot networkSpellSlot, int spellLevel);
 
         List<AreaEffectEntityData> GetAreaEffects();

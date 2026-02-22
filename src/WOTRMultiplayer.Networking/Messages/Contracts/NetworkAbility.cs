@@ -27,9 +27,11 @@ namespace WOTRMultiplayer.Networking.Messages.Contracts
         public string ConvertedFromId { get; set; }
 
         [ProtoMember(6)]
+        [LogMe]
         public int SpellLevel { get; set; }
 
         [ProtoMember(7)]
+        [LogMe]
         public int? Metamagic { get; set; }
 
         [ProtoMember(8)]

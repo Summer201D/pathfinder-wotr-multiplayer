@@ -19,6 +19,7 @@ using WOTRMultiplayer.Entities.NewGame;
 using WOTRMultiplayer.Entities.Ping;
 using WOTRMultiplayer.Entities.Rest;
 using WOTRMultiplayer.Entities.Settings;
+using WOTRMultiplayer.Entities.SpellbookManagement;
 using WOTRMultiplayer.Entities.Spells;
 using WOTRMultiplayer.Entities.Vendor;
 using WOTRMultiplayer.Services.GameInteraction.Contexts;
@@ -441,6 +442,14 @@ namespace WOTRMultiplayer.Playground.Core.Dummies
         }
 
         public void CloseTransitionMap()
+        {
+        }
+
+        public void CreateMetamagicSpell(NetworkMetamagicSpell metamagicSpell)
+        {
+        }
+
+        public void RemoveCustomSpell(string unitId, NetworkAbility ability)
         {
         }
     }
