@@ -28,6 +28,10 @@ namespace WOTRMultiplayer.Services.GameInteraction
         private readonly IGameStateLookupService _gameStateLookupService;
         private readonly IMapper _mapper;
 
+        private readonly HashSet<string> _canBeCreatedInSimpleWay = [
+            "6ffd93355fb3bcf4592a5d976b1d32a9", // fighting defensively
+            ];
+
         private TimeSpan BuffBaseTime => Game.Instance.TimeController.GameTime;
 
         public BuffInteractionService(
@@ -78,9 +82,10 @@ namespace WOTRMultiplayer.Services.GameInteraction
             var buffsToRemove = localUnitBuffs.Where(x => !x.Hidden).ToList();
             RemoveUnitBuffs(unit, buffsToRemove);
 
-            // TODO: straightforward buff creation is unstable af with a lot of caveats. Something like 'Burning' dot is working fine, but most of the buffs have an underlying 'UnitPart' that needs to be synced as well
-            //var buffsToCreate = remoteUnitBuffs.Where(x => !x.IsHidden).ToList();
-            //CreateUnitBuffs(unit, buffsToCreate, buffBaseTime);
+            // TODO: straightforward buff creation is unstable af with a lot of caveats.
+            // Something like 'Burning' dot or FightingDefensively is working fine, but most of the buffs have an underlying 'UnitPart' that needs to be synced as well
+            var buffsToCreate = remoteUnitBuffs.Where(x => !x.IsHidden && _canBeCreatedInSimpleWay.Contains(x.BlueprintId)).ToList();
+            CreateUnitBuffs(unit, buffsToCreate, buffBaseTime);
 
             UpdateNegativeLevels(unit, unitBuffCollection.NegativeLevels);
 
