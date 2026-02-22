@@ -1661,7 +1661,14 @@ namespace WOTRMultiplayer.Services.GameInteraction
         {
             _mainThreadAccessor.Post(() =>
             {
-                var building = FindSettlementBuilding(kingdomSettlementBuilding);
+                var settlement = KingdomState.Instance.CurrentSettlement;
+                if (settlement == null)
+                {
+                    _logger.LogError("Unable to sell building due to missing settlement");
+                    return;
+                }
+
+                var building = FindSettlementBuilding(settlement, kingdomSettlementBuilding);
                 if (building == null)
                 {
                     _logger.LogError("Unable to find building to sell. BlueprintId={BlueprintId}, Slots={Slots}", kingdomSettlementBuilding.BlueprintId, kingdomSettlementBuilding.Slots);
@@ -1677,11 +1684,22 @@ namespace WOTRMultiplayer.Services.GameInteraction
         {
             _mainThreadAccessor.Post(() =>
             {
+                var settlement = KingdomState.Instance.CurrentSettlement;
+                if (settlement == null)
+                {
+                    _logger.LogError("Unable to build building due to missing settlement");
+                    return;
+                }
+
                 // it looks like you can only build single slot buildings, however, SettlementBuilding contains a reference to array of slots
                 // will see if this needs to be addressed later
                 var slotToBuild = kingdomSettlementBuilding.Slots.FirstOrDefault();
-                var settlement = KingdomState.Instance.CurrentSettlement;
-                var slot = settlement.Topology.m_SlotsByUid.FirstOrDefault(x => IsSameSettlementSlot(x.Value, slotToBuild)).Value;
+                if (!settlement.Topology.m_SlotsByUid.TryGetValue(slotToBuild.Id, out var slot))
+                {
+                    _logger.LogError("Unable to build building due to missing slot. SlotId={SlotId}", slotToBuild.Id);
+                    return;
+                }
+
                 if (slot == null)
                 {
                     _logger.LogError("Unable to find building slot to build. Slot={Slot}", slotToBuild);
@@ -1699,10 +1717,9 @@ namespace WOTRMultiplayer.Services.GameInteraction
             });
         }
 
-        private SettlementBuilding FindSettlementBuilding(NetworkKingdomSettlementBuilding kingdomSettlementBuilding)
+        private SettlementBuilding FindSettlementBuilding(SettlementState settlement, NetworkKingdomSettlementBuilding kingdomSettlementBuilding)
         {
-            var building = KingdomState.Instance.CurrentSettlement.Buildings.FirstOrDefault(b =>
-                            string.Equals(b.Blueprint.AssetGuid.ToString(), kingdomSettlementBuilding.BlueprintId, StringComparison.OrdinalIgnoreCase)
+            var building = settlement.Buildings.FirstOrDefault(b => string.Equals(b.Blueprint.AssetGuid.ToString(), kingdomSettlementBuilding.BlueprintId, StringComparison.OrdinalIgnoreCase)
                             && AreSameSettlementSlots(b.Slots, kingdomSettlementBuilding.Slots));
 
             return building;
