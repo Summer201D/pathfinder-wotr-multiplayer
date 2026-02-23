@@ -1784,6 +1784,8 @@ namespace WOTRMultiplayer.Services.GameInteraction
                             metamagicBuilder.AddMetamagic(metamagicFeature);
                         }
                     }
+
+                    metamagicBuilder.SetHeightenLevel(metamagicSpell.HeightenLevel);
                     metamagicBuilder.Apply();
 
                     var metaSpell = metamagicBuilder.ResultAbilityData;

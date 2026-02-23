@@ -42,8 +42,9 @@ namespace WOTRMultiplayer.Services.GameInteraction
     public class UIAccessor : IUIAccessor
     {
         private TacticalCombatPCView TacticalCombatPCView => Game.Instance.RootUiContext.m_UIView as TacticalCombatPCView;
-        private InGamePCView InGamePCView => Game.Instance.RootUiContext.m_UIView as InGamePCView;
         private MainMenuPCView MainMenuPCView => Game.Instance.RootUiContext.m_UIView as MainMenuPCView;
+
+        public InGamePCView InGamePCView => Game.Instance.RootUiContext.m_UIView as InGamePCView;
 
         public ServiceWindowsVM ServiceWindowsVM => (Game.Instance.RootUiContext.InGameVM?.StaticPartVM?.ServiceWindowsVM ?? Game.Instance.RootUiContext?.GlobalMapVM?.ServiceWindowsVM);
 

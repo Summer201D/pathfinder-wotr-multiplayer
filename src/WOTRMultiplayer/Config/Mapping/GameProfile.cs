@@ -101,7 +101,7 @@ namespace WOTRMultiplayer.Config.Mapping
 
         private NetworkKingdomEvent Create(KingdomEventUIView kingdomEventUIView)
         {
-            if (kingdomEventUIView == null)
+            if (kingdomEventUIView?.Event == null)
             {
                 return null;
             }

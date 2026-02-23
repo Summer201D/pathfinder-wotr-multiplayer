@@ -26,5 +26,9 @@ namespace WOTRMultiplayer.Networking.Messages.Contracts
         [ProtoMember(5)]
         [LogMe]
         public int? DecorationColorNumber { get; set; }
+
+        [ProtoMember(6)]
+        [LogMe]
+        public int HeightenLevel { get; set; }
     }
 }

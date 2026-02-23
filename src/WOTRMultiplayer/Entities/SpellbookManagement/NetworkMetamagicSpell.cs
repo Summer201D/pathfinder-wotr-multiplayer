@@ -9,6 +9,8 @@ namespace WOTRMultiplayer.Entities.SpellbookManagement
 
         public NetworkAbility Ability { get; set; }
 
+        public int HeightenLevel { get; set; }
+
         public List<int> MetamagicFeatures { get; set; } = [];
 
         public int? BorderNumber { get; set; }

@@ -16,6 +16,7 @@ using Kingmaker.UI.MVVM._PCView.GlobalMap.Menu;
 using Kingmaker.UI.MVVM._PCView.GlobalMap.Message;
 using Kingmaker.UI.MVVM._PCView.GlobalMap.Toolbar;
 using Kingmaker.UI.MVVM._PCView.GroupChanger;
+using Kingmaker.UI.MVVM._PCView.InGame;
 using Kingmaker.UI.MVVM._PCView.Kingdom;
 using Kingmaker.UI.MVVM._PCView.Kingdom.KingdomInfo;
 using Kingmaker.UI.MVVM._PCView.Loot;
@@ -35,6 +36,8 @@ namespace WOTRMultiplayer.Abstractions.GameInteraction
 {
     public interface IUIAccessor
     {
+        InGamePCView InGamePCView { get; }
+
         EscMenuPCView EscMenu { get; }
 
         GlobalMapPCView GlobalMapPCView { get; }

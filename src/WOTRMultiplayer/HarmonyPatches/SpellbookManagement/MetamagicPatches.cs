@@ -34,11 +34,11 @@ namespace WOTRMultiplayer.HarmonyPatches.SpellbookManagement
                 {
                     return null;
                 }
-
                 var metamagicSpell = new NetworkMetamagicSpell
                 {
                     Ability = Main.Mapper.Map<NetworkAbility>(currentSpell),
                     MetamagicFeatures = mixerVM.m_MetamagicBuilder.Value.AppliedMetamagics.Cast<int>().ToList() ?? [],
+                    HeightenLevel = mixerVM.m_MetamagicBuilder.Value.HeightenLevel,
                     BorderNumber = mixerVM.SpellbookDecorator.SpellbookDecoratorBorder.BorderSelector.SelectedEntity.Value?.Index,
                     DecorationColorNumber = mixerVM.SpellbookDecorator.SpellbookDecoratorColor.m_CurrentColorVM.Value?.Index,
                     UnitId = mixerVM.m_Unit.Value.Unit.UniqueId

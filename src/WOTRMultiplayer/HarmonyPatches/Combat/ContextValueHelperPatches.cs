@@ -40,7 +40,10 @@ namespace WOTRMultiplayer.HarmonyPatches.Combat
 
         private static int RollDice(MechanicsContext context, RuleRollDice ruleRollDice)
         {
-            if (!Main.Multiplayer.IsActive || ruleRollDice.DiceFormula.Rolls == 0 || ruleRollDice.DiceFormula.Dice == Kingmaker.RuleSystem.DiceType.Zero)
+            if (!Main.Multiplayer.IsActive
+                || ruleRollDice.DiceFormula.Rolls == 0
+                || ruleRollDice.DiceFormula.Dice == Kingmaker.RuleSystem.DiceType.Zero
+                || PatchesUtils.IsHelperUnit(ruleRollDice.Initiator.UniqueId))
             {
                 return context.TriggerRule(ruleRollDice).Result;
             }
