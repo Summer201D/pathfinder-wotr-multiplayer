@@ -13,7 +13,7 @@ namespace WOTRMultiplayer.Abstractions.GameInteraction
 
         void StopTravel(NetworkGlobalMapTraveler travaler);
 
-        void UpdateEnterMessageBoxUI(bool isInteractable, int readyPlayersCount, int totalPlayersCount);
+        void UpdateLocationMessageBoxUI(bool isInteractable, int readyPlayersCount, int totalPlayersCount);
 
         void UpdateCommonPopupUI(NetworkGlobalMapCommonPopup globalMapCommonPopup, bool isInteractable, int readyPlayersCount, int totalPlayersCount);
 

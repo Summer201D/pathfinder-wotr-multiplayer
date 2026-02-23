@@ -2293,7 +2293,7 @@ namespace WOTRMultiplayer.Services
                 var readyPlayers = Game.PlayersInGlobalMapLocationMessage.Count;
                 var totalPlayers = GetSyncedPlayersCount();
                 var canUse = HasControlOverUI && readyPlayers >= totalPlayers;
-                GlobalMapInteraction.UpdateEnterMessageBoxUI(canUse, readyPlayers, totalPlayers);
+                GlobalMapInteraction.UpdateLocationMessageBoxUI(canUse, readyPlayers, totalPlayers);
             }
         }
 

@@ -165,7 +165,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
             });
         }
 
-        public void UpdateEnterMessageBoxUI(bool isInteractable, int readyPlayersCount, int totalPlayersCount)
+        public void UpdateLocationMessageBoxUI(bool isInteractable, int readyPlayersCount, int totalPlayersCount)
         {
             _mainThreadAccessor.Post(() =>
             {
@@ -177,17 +177,20 @@ namespace WOTRMultiplayer.Services.GameInteraction
 
                 messageBoxView.m_AcceptButton.Interactable = !messageBoxView.ViewModel.IsCurrentLocation || isInteractable;
                 messageBoxView.m_DeclineButton.Interactable = !messageBoxView.ViewModel.IsCurrentLocation || isInteractable;
+                messageBoxView.m_MiddleButton.Interactable = !messageBoxView.ViewModel.IsCurrentLocation || isInteractable;
 
                 var buttonText = messageBoxView.m_AcceptButton.GetComponentInChildren<TextMeshProUGUI>();
                 if (messageBoxView.ViewModel.IsCurrentLocation)
                 {
                     _uiSyncCountersService.UpdateButtonTextCounter(messageBoxView.m_AcceptText, readyPlayersCount, totalPlayersCount);
                     _uiSyncCountersService.UpdateButtonTextCounter(messageBoxView.m_DeclineText, readyPlayersCount, totalPlayersCount);
+                    _uiSyncCountersService.UpdateButtonTextCounter(messageBoxView.m_MiddleText, readyPlayersCount, totalPlayersCount);
                 }
                 else
                 {
                     _uiSyncCountersService.RemoveButtonTextCounter(messageBoxView.m_AcceptText);
                     _uiSyncCountersService.RemoveButtonTextCounter(messageBoxView.m_DeclineText);
+                    _uiSyncCountersService.RemoveButtonTextCounter(messageBoxView.m_MiddleText);
                 }
 
                 _logger.LogInformation("Global Map Message box buttons have been updated. IsInteractable={IsInteractable}, ReadyPlayers={ReadyPlayers}, TotalPlayers={TotalPlayers}", isInteractable, readyPlayersCount, totalPlayersCount);

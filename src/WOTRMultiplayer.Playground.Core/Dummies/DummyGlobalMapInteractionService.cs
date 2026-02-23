@@ -77,7 +77,7 @@ namespace WOTRMultiplayer.Playground.Core.Dummies
         {
         }
 
-        public void UpdateEnterMessageBoxUI(bool isInteractable, int readyPlayersCount, int totalPlayersCount)
+        public void UpdateLocationMessageBoxUI(bool isInteractable, int readyPlayersCount, int totalPlayersCount)
         {
         }
 
