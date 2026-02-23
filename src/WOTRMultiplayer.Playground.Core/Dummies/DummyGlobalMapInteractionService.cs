@@ -333,5 +333,9 @@ namespace WOTRMultiplayer.Playground.Core.Dummies
         public void BuildSettlementBuilding(NetworkKingdomSettlementBuilding kingdomSettlementBuilding)
         {
         }
+
+        public void Teleport(NetworkGlobalMapLocation location)
+        {
+        }
     }
 }

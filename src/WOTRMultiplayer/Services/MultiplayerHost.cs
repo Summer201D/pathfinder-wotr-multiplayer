@@ -1328,6 +1328,15 @@ namespace WOTRMultiplayer.Services
             Send(message);
         }
 
+        public void OnGlobalMapTeleport(NetworkGlobalMapLocation globalMapLocation)
+        {
+            var message = new NotifyGlobalMapTeleport
+            {
+                Location = Mapper.Map<Networking.Messages.Contracts.NetworkGlobalMapLocation>(globalMapLocation)
+            };
+            Send(message);
+        }
+
         protected override bool OnToggleOffPause(out bool showReason)
         {
             showReason = true;

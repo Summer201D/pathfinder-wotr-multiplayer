@@ -4495,6 +4495,24 @@ namespace WOTRMultiplayer.Services
             }
         }
 
+        public void OnGlobalMapTeleport(NetworkGlobalMapLocation globalMapLocation)
+        {
+            try
+            {
+                if (_multiplayerActorAccessor == null || _multiplayerActorAccessor.Client.IsActive)
+                {
+                    return;
+                }
+
+                _multiplayerActorAccessor.Host.OnGlobalMapTeleport(globalMapLocation);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while teleporting on global map");
+                throw;
+            }
+        }
+
         private void ShowMultiplayerLobbyWindow()
         {
             _logger.LogInformation("Opening lobby window");

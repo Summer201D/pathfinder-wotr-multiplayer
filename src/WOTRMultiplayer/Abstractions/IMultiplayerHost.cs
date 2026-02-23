@@ -202,5 +202,7 @@ namespace WOTRMultiplayer.Abstractions
         void OnTransitionMapEntryChosen(string entryId);
 
         void OnTransitionMapClosed();
+
+        void OnGlobalMapTeleport(NetworkGlobalMapLocation globalMapLocation);
     }
 }

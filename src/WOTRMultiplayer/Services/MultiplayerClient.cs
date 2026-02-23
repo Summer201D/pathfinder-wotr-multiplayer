@@ -591,6 +591,7 @@ namespace WOTRMultiplayer.Services
                .On<NotifyGlobalMapCrusadeArmyLeaderLevelingConfirmed>(OnNotifyGlobalMapCrusadeArmyLeaderLevelingConfirmed)
                .On<NotifyGlobalMapCrusadeArmyLeaderLevelingSkillSelected>(OnNotifyGlobalMapCrusadeArmyLeaderLevelingSkillSelected)
                .On<NotifyGlobalMapCommonPopupShown>(OnNotifyGlobalMapCommonPopupShown)
+               .On<NotifyGlobalMapTeleport>(OnNotifyGlobalMapTeleport)
 
                // kingdom
                .On<NotifyKingdomNavigationChanged>(OnNotifyKingdomNavigationChanged)
@@ -642,6 +643,12 @@ namespace WOTRMultiplayer.Services
                // inventory
                .On<NotifyPolymorphicItemCreated>(OnNotifyPolymorphicItemCreated)
                ;
+        }
+
+        private void OnNotifyGlobalMapTeleport(long receivedFrom, NotifyGlobalMapTeleport message)
+        {
+            var location = Mapper.Map<NetworkGlobalMapLocation>(message.Location);
+            GlobalMapInteraction.Teleport(location);
         }
 
         private void OnNotifyTransitionMapEntryChosen(long receivedFrom, NotifyTransitionMapEntryChosen message)

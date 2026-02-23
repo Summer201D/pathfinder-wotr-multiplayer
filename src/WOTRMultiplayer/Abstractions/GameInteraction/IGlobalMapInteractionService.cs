@@ -168,5 +168,7 @@ namespace WOTRMultiplayer.Abstractions.GameInteraction
         void SellSettlementBuilding(NetworkKingdomSettlementBuilding kingdomSettlementBuilding);
 
         void BuildSettlementBuilding(NetworkKingdomSettlementBuilding kingdomSettlementBuilding);
+
+        void Teleport(NetworkGlobalMapLocation location);
     }
 }

@@ -1720,6 +1720,23 @@ namespace WOTRMultiplayer.Services.GameInteraction
             });
         }
 
+        public void Teleport(NetworkGlobalMapLocation globalMapLocation)
+        {
+            _mainThreadAccessor.Post(() =>
+            {
+                var point = _gameStateLookupService.GetGlobalMapPoint(globalMapLocation);
+                if (point == null)
+                {
+                    _logger.LogError("Unable to teleport due to missing destination. DestinationId={DestinationId}, DestinationName={DestinationName}", globalMapLocation.Id, globalMapLocation.Name);
+                    return;
+                }
+
+                GlobalMapView.Instance.Teleport.SetDestination(point);
+                GlobalMapView.Instance.Teleport.Go();
+                _logger.LogInformation("Teleport has been used. DestinationId={DestinationId}, DestinationName={DestinationName}", globalMapLocation.Id, globalMapLocation.Name);
+            });
+        }
+
         private SettlementBuilding FindSettlementBuilding(SettlementState settlement, NetworkKingdomSettlementBuilding kingdomSettlementBuilding)
         {
             var building = settlement.Buildings.FirstOrDefault(b => string.Equals(b.Blueprint.AssetGuid.ToString(), kingdomSettlementBuilding.BlueprintId, StringComparison.OrdinalIgnoreCase)

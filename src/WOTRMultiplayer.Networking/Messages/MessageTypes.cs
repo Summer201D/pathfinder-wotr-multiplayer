@@ -264,7 +264,8 @@
             NotifyTransitionMapClosed,
             NotifyTransitionMapEntryChosen,
             NotifyMetamagicSpellCreated,
-            NotifyCustomSpellRemoved
+            NotifyCustomSpellRemoved,
+            NotifyGlobalMapTeleport
         }
 
         public enum Request

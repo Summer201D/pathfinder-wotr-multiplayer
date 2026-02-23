@@ -540,5 +540,7 @@ namespace WOTRMultiplayer.Abstractions
         void OnSpellbookMetamagicSpellCreated(NetworkMetamagicSpell metamagicSpell);
 
         void OnRemoveCustomSpell(string unitId, NetworkAbility ability);
+
+        void OnGlobalMapTeleport(NetworkGlobalMapLocation globalMapLocation);
     }
 }

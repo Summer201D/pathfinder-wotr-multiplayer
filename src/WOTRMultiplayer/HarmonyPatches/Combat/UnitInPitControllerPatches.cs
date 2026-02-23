@@ -99,9 +99,9 @@ namespace WOTRMultiplayer.HarmonyPatches.Combat
                 return unitPartInPit.CurrentRoundSeconds >= 1.Rounds().Seconds.TotalSeconds;
             }
 
-            // 4seconds is always guaranteed to elapse between rounds, making any possible tick time difference between network players irrelevant
+            // 3.5seconds is always guaranteed to elapse between rounds, making any possible tick time difference between network players irrelevant
             // while Act3 GhostOracle works completely fine with this approach, the 'Pit problem' might need to be addressed later to get a proper fix
-            var canTick = unitPartInPit.CurrentRoundSeconds >= 4f;
+            var canTick = unitPartInPit.CurrentRoundSeconds >= 3.5f;
             return canTick;
         }
     }
