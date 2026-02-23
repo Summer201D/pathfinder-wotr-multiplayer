@@ -163,20 +163,13 @@ namespace WOTRMultiplayer.HarmonyPatches.Combat
                 return false;
             }
 
-            if (Game.Instance.TurnBasedCombatController.CurrentTurn == null)
-            {
-                return false;
-            }
-
-            var actionStates = Game.Instance.TurnBasedCombatController.CurrentTurn.GetActionsStates(command.Executor);
-            var isIgnored = command.Type switch
-            {
-                CommandType.Standard => !actionStates.Standard.CanUseAbility,
-                CommandType.Swift => !actionStates.Swift.CanUseAbility,
-                _ => false,
-            };
-
-            return isIgnored;
+            // there are two use cases of sticky touch abilities:
+            // 1. Prepared cast (touch ability has been created previously, but never delivered) - single 'useability touch' command
+            // 2. Unprepared cast - there is a chain of two commands: useability -> (approaching to target) -> useability touch
+            // Second command of the chain must be ignored as it's handled by the game and shouldn't be communicated to other players
+            var touchPart = command.Executor.Get<UnitPartTouch>();
+            var shouldIgnore = touchPart != null && touchPart.AutoCastCommand == command;
+            return shouldIgnore;
         }
 
         private static bool IsKineticistAutousedAbility(UnitUseAbility instance)

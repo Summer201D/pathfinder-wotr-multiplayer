@@ -1694,8 +1694,8 @@ namespace WOTRMultiplayer.Services.GameInteraction
                     return;
                 }
 
-                // it looks like you can only build single slot buildings, however, SettlementBuilding contains a reference to array of slots
-                // will see if this needs to be addressed later
+                // SettlementBuilding contains a reference to an array of slots, but you can only specify a single slot to build for some reason
+                // anyway, it does work fine in multiplayer as of now
                 var slotToBuild = kingdomSettlementBuilding.Slots.FirstOrDefault();
                 if (!settlement.Topology.m_SlotsByUid.TryGetValue(slotToBuild.Id, out var slot))
                 {
