@@ -163,10 +163,13 @@ namespace WOTRMultiplayer.HarmonyPatches.Combat
                 return false;
             }
 
-            // there are two use cases of sticky touch abilities:
-            // 1. Prepared cast (touch ability has been created previously, but never delivered) - single 'useability touch' command
-            // 2. Unprepared cast - there is a chain of two commands: useability -> (approaching to target) -> useability touch
-            // Second command of the chain must be ignored as it's handled by the game and shouldn't be communicated to other players
+            // There are two scenarios for sticky touch abilities:
+            // 1. Prepared cast – the touch ability was created earlier but not yet delivered.
+            //    This results in a single 'useability touch' command.
+            // 2. Unprepared cast – a sequence of two commands:
+            //    useability -> (move towards target) -> 'useability touch'.
+            // The second command in this sequence must be ignored,
+            // since it is processed internally by the game and should not be sent to other players.
             var touchPart = command.Executor.Get<UnitPartTouch>();
             var shouldIgnore = touchPart != null && touchPart.AutoCastCommand == command;
             return shouldIgnore;
