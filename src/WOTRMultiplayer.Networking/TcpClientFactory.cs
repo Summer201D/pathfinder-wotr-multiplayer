@@ -1,4 +1,5 @@
 ﻿using BeetleX;
+using BeetleX.Buffers;
 using WOTRMultiplayer.Networking.Abstractions;
 
 namespace WOTRMultiplayer.Networking
@@ -7,6 +8,7 @@ namespace WOTRMultiplayer.Networking
     {
         public ITcpClient Create(string host, int port)
         {
+            BufferPool.BUFFER_SIZE = 1024 * 8;
             var client = SocketFactory.CreateClient<BeetleTcpClient>(new Messages.ProtobufClientPacket(), host, port);
             return client;
         }
