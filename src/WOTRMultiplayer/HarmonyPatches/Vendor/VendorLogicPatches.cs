@@ -76,7 +76,7 @@ namespace WOTRMultiplayer.HarmonyPatches.Vendor
         {
             return new NetworkVendorItemTransfer
             {
-                Item = NetworkItem.FromItemEntity(item),
+                Item = Main.Mapper.Map<NetworkItem>(item),
                 Count = count,
                 ItemAction = itemAction,
                 ItemActionTarget = actionTarget

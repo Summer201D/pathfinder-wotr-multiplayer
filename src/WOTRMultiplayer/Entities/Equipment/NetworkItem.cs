@@ -1,5 +1,4 @@
-﻿using System.Linq;
-using Kingmaker.Items;
+﻿using System.Collections.Generic;
 
 namespace WOTRMultiplayer.Entities.Equipment
 {
@@ -17,31 +16,10 @@ namespace WOTRMultiplayer.Entities.Equipment
 
         public int EnchantmentValue { get; set; }
 
-        public string FirstEnchantmentName { get; set; }
-
-        public int EnchantmentsCount { get; set; }
+        public List<string> Enchantments { get; set; } = [];
 
         public string HoldingSlotOwnerId { get; set; }
 
         public string CollectionOwnerRef { get; set; }
-
-        public static NetworkItem FromItemEntity(ItemEntity itemEntity)
-        {
-            var item = new NetworkItem
-            {
-                UniqueId = itemEntity.UniqueId,
-                BlueprintId = itemEntity.Blueprint.AssetGuid.ToString(),
-                Name = itemEntity.NameForAcronym,
-                Count = itemEntity.Count,
-                Cost = itemEntity.Cost,
-                EnchantmentValue = itemEntity.EnchantmentValue,
-                EnchantmentsCount = itemEntity.Enchantments.Count,
-                FirstEnchantmentName = itemEntity.Enchantments.FirstOrDefault()?.NameForAcronym,
-                HoldingSlotOwnerId = itemEntity.HoldingSlot?.Owner?.Unit.UniqueId,
-                CollectionOwnerRef = itemEntity.Collection?.OwnerRef.Id
-            };
-
-            return item;
-        }
     }
 }

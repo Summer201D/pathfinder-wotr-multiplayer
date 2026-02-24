@@ -88,7 +88,7 @@ namespace WOTRMultiplayer.HarmonyPatches.ActionBar
                     slot.UnitId = spell.Unit.UniqueId;
                     break;
                 case MechanicActionBarSlotItem item:
-                    slot.Item = NetworkItem.FromItemEntity(item.Item);
+                    slot.Item = Main.Mapper.Map<NetworkItem>(item.Item);
                     slot.UnitId = item.Unit.UniqueId;
                     break;
                 case MechanicActionBarSlotEmpty:

@@ -59,7 +59,7 @@ namespace WOTRMultiplayer.HarmonyPatches.Items
 
             var itemCopy = new NetworkItemCopy
             {
-                Item = NetworkItem.FromItemEntity(slot.Item.Value),
+                Item = Main.Mapper.Map<NetworkItem>(slot.Item.Value),
                 UnitId = unit.UniqueId
             };
 
@@ -76,7 +76,7 @@ namespace WOTRMultiplayer.HarmonyPatches.Items
                 return;
             }
 
-            var item = NetworkItem.FromItemEntity(__instance);
+            var item = Main.Mapper.Map<NetworkItem>(__instance);
             Main.Multiplayer.OnItemDescriptionRead(item);
         }
 
@@ -92,7 +92,7 @@ namespace WOTRMultiplayer.HarmonyPatches.Items
             var dropItem = new NetworkDropItem
             {
                 OwnerEntityId = player.MainCharacter.UniqueId,
-                Item = NetworkItem.FromItemEntity(item)
+                Item = Main.Mapper.Map<NetworkItem>(item)
             };
 
             Main.Multiplayer.OnDropItem(dropItem);
@@ -142,7 +142,7 @@ namespace WOTRMultiplayer.HarmonyPatches.Items
             var unitId = equipTarget.UniqueId;
             var polymorphicItem = new NetworkPolymorphicItem
             {
-                Item = NetworkItem.FromItemEntity(item),
+                Item = Main.Mapper.Map<NetworkItem>(item),
                 Position = slotPosition,
                 UnitId = unitId
             };
@@ -163,7 +163,7 @@ namespace WOTRMultiplayer.HarmonyPatches.Items
                 UserUnitId = user.UniqueId,
                 SlotPosition = Main.Multiplayer.GetEquipmentSlotPosition(item.HoldingSlot),
                 Target = new NetworkTargetWrapper(target.Point.ToNetworkVector3(), target.Orientation, target.Unit?.UniqueId),
-                Item = NetworkItem.FromItemEntity(item)
+                Item = Main.Mapper.Map<NetworkItem>(item)
             };
 
             Main.Multiplayer.OnUseInventoryItem(useInventoryItem);

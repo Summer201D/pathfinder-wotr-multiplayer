@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using AutoMapper;
 using Kingmaker.EntitySystem.Entities;
+using Kingmaker.Items;
 using Kingmaker.Kingdom.Settlements;
 using Kingmaker.Kingdom.UI;
 using Kingmaker.UnitLogic;
@@ -15,6 +16,7 @@ using Kingmaker.Utility;
 using WOTRMultiplayer.Entities;
 using WOTRMultiplayer.Entities.AreaEffects;
 using WOTRMultiplayer.Entities.Combat;
+using WOTRMultiplayer.Entities.Equipment;
 using WOTRMultiplayer.Entities.GlobalMap.Kingdom;
 using WOTRMultiplayer.Entities.Spells;
 using WOTRMultiplayer.Entities.Units;
@@ -63,6 +65,32 @@ namespace WOTRMultiplayer.Config.Mapping
 
             CreateMap<SettlementGridTopology.Slot, NetworkKingdomSettlementSlot>().ConstructUsing(x => Create(x))
                 .ForAllMembers(x => x.Ignore());
+
+            CreateMap<ItemEntity, NetworkItem>().ConstructUsing(x => Create(x))
+                .ForAllMembers(x => x.Ignore());
+        }
+
+        private NetworkItem Create(ItemEntity itemEntity)
+        {
+            if (itemEntity == null)
+            {
+                return null;
+            }
+
+            var item = new NetworkItem
+            {
+                UniqueId = itemEntity.UniqueId,
+                BlueprintId = itemEntity.Blueprint.AssetGuid.ToString(),
+                Name = itemEntity.NameForAcronym,
+                Count = itemEntity.Count,
+                Cost = itemEntity.Cost,
+                EnchantmentValue = itemEntity.EnchantmentValue,
+                Enchantments = [.. itemEntity.Enchantments.Select(x => x.Blueprint.name)],
+                HoldingSlotOwnerId = itemEntity.HoldingSlot?.Owner?.Unit.UniqueId,
+                CollectionOwnerRef = itemEntity.Collection?.OwnerRef.Id
+            };
+
+            return item;
         }
 
         private NetworkKingdomSettlementSlot Create(SettlementGridTopology.Slot slot)

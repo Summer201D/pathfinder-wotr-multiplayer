@@ -183,7 +183,7 @@ namespace WOTRMultiplayer.HarmonyPatches.Items
                 throw new InvalidOperationException(errorMessage);
             }
 
-            var item = NetworkItem.FromItemEntity(itemSlotVM.ItemEntity);
+            var item = Main.Mapper.Map<NetworkItem>(itemSlotVM.ItemEntity);
             item.Count = count;
             var transfer = CreateItemsTransfer(itemSlotVM.ItemEntity.Collection, [item], targetCollection.MechanicCollection);
 
@@ -192,7 +192,7 @@ namespace WOTRMultiplayer.HarmonyPatches.Items
 
         private static NetworkItemsTransfer CreateItemsTransfer(ItemsCollection source, List<ItemEntity> items, ItemsCollection destination)
         {
-            return CreateItemsTransfer(source, [.. items.Select(NetworkItem.FromItemEntity)], destination);
+            return CreateItemsTransfer(source, [.. items.Select(Main.Mapper.Map<NetworkItem>)], destination);
         }
 
         private static NetworkItemsTransfer CreateItemsTransfer(ItemsCollection source, List<NetworkItem> items, ItemsCollection destination)

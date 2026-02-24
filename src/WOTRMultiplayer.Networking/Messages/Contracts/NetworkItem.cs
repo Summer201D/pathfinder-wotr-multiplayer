@@ -1,4 +1,5 @@
-﻿using ProtoBuf;
+﻿using System.Collections.Generic;
+using ProtoBuf;
 using WOTRMultiplayer.Logging.Attributes;
 
 namespace WOTRMultiplayer.Networking.Messages.Contracts
@@ -31,16 +32,14 @@ namespace WOTRMultiplayer.Networking.Messages.Contracts
         public int EnchantmentValue { get; set; }
 
         [ProtoMember(7)]
-        public string FirstEnchantmentName { get; set; }
+        [LogMe]
+        public List<string> Enchantments { get; set; } = [];
 
         [ProtoMember(8)]
-        public int EnchantmentsCount { get; set; }
-
-        [ProtoMember(9)]
         [LogMe]
         public string HoldingSlotOwnerId { get; set; }
 
-        [ProtoMember(10)]
+        [ProtoMember(9)]
         [LogMe]
         public string CollectionOwnerRef { get; set; }
     }

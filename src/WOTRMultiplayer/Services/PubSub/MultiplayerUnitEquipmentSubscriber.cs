@@ -61,7 +61,7 @@ namespace WOTRMultiplayer.Services.PubSub
 
                 var networkSlot = new NetworkEquipmentSlot
                 {
-                    Item = slot.HasItem ? NetworkItem.FromItemEntity(slot.Item) : null,
+                    Item = Main.Mapper.Map<NetworkItem>(slot.MaybeItem),
                     SwapContext = equipmentSwapContext,
                     OwnerId = slot.Owner.Unit.UniqueId,
                     Position = position

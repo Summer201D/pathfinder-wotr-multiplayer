@@ -6,6 +6,7 @@ using Kingmaker;
 using Kingmaker.Blueprints;
 using Kingmaker.Blueprints.Items;
 using Kingmaker.Blueprints.Items.Components;
+using Kingmaker.Blueprints.Items.Ecnchantments;
 using Kingmaker.Blueprints.Items.Equipment;
 using Kingmaker.Blueprints.Root;
 using Kingmaker.Controllers;
@@ -3058,10 +3059,16 @@ namespace WOTRMultiplayer.Services.GameInteraction
                 && itemEntity.Cost == networkLootItem.Cost
                 && itemEntity.IsLootable
                 && itemEntity.EnchantmentValue == networkLootItem.EnchantmentValue
-                && itemEntity.Enchantments.FirstOrDefault()?.NameForAcronym == networkLootItem.FirstEnchantmentName
-                && itemEntity.Enchantments.Count == networkLootItem.EnchantmentsCount;
+                && AreSameEnchantments(itemEntity.Enchantments, networkLootItem.Enchantments);
 
             return sameItemType;
+        }
+
+        private bool AreSameEnchantments(List<ItemEnchantment> itemEnchantments, List<string> enchantments)
+        {
+            var same = itemEnchantments.Count == enchantments.Count
+                && enchantments.All(x => itemEnchantments.Any(i => string.Equals(i.Blueprint.name, x, StringComparison.OrdinalIgnoreCase)));
+            return same;
         }
 
         private void RefreshLootUI()
