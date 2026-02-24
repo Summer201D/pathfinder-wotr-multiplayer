@@ -402,12 +402,13 @@ namespace WOTRMultiplayer.Services
 
                 if (action == null && networkAIAction.IsAbility)
                 {
-                    // try to use another action (preferrably ability) if requested ability is not found
-                    Logger.LogWarning("Requested AI action has not been found within existing AI actions");
                     var firstDifferentAction = Game.Combat.Turn.AIActions
                         .OrderByDescending(x => x.IsAbility)
                         .FirstOrDefault(a => !string.Equals(a.Id, networkAIAction.Id, StringComparison.OrdinalIgnoreCase));
 
+                    // try to use another action (preferrably ability)
+                    Logger.LogWarning("Requested AI action has not been found within existing actions. UnitId={UnitId}, ActionId={ActionId}, ActionName={ActionName}, FallbackActionId={FallbackActionId}, FallbackActionName={FallbackActionName}",
+                        networkAIAction.UnitId, networkAIAction.Id, networkAIAction.Name, firstDifferentAction?.Id, firstDifferentAction?.Name);
                     return firstDifferentAction;
                 }
 

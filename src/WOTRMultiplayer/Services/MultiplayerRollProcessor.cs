@@ -73,7 +73,7 @@ namespace WOTRMultiplayer.Services
             _valueGenerator = valueGenerator;
         }
 
-        public bool OnBeforeRuleCalculateDamageTrigger(RuleCalculateDamage ruleCalculateDamage)
+        public bool OnBeforeRuleCalculateDamageBundle(RuleCalculateDamage ruleCalculateDamage)
         {
             try
             {
@@ -133,7 +133,7 @@ namespace WOTRMultiplayer.Services
             }
         }
 
-        public void OnAfterRuleCalculateDamageTrigger(RuleCalculateDamage ruleCalculateDamage)
+        public void OnAfterRuleCalculateDamageBundle(RuleCalculateDamage ruleCalculateDamage)
         {
             try
             {

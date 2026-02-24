@@ -7,8 +7,8 @@ namespace WOTRMultiplayer.Abstractions
 {
     public interface IMultiplayerRollsProcessor
     {
-        bool OnBeforeRuleCalculateDamageTrigger(RuleCalculateDamage ruleCalculateDamage);
-        void OnAfterRuleCalculateDamageTrigger(RuleCalculateDamage ruleCalculateDamage);
+        bool OnBeforeRuleCalculateDamageBundle(RuleCalculateDamage ruleCalculateDamage);
+        void OnAfterRuleCalculateDamageBundle(RuleCalculateDamage ruleCalculateDamage);
 
         bool OnBeforeRuleAttackOvercomeConcealmentRoll(RuleAttackRoll ruleAttackRoll);
         void OnAfterRuleAttackOvercomeConcealmentRoll(RuleAttackRoll ruleAttackRoll);

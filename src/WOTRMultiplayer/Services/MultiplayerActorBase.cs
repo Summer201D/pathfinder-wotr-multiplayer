@@ -3121,7 +3121,7 @@ namespace WOTRMultiplayer.Services
 
         protected int CreateRandomSeed()
         {
-            var seed = new System.Random().Next(int.MinValue, int.MaxValue);
+            var seed = ValueGenerator.GetRandom(IdentifierLifetime.Area, Guid.NewGuid().ToString()).Next(int.MinValue, int.MaxValue);
             return seed;
         }
 
@@ -3705,8 +3705,14 @@ namespace WOTRMultiplayer.Services
             OnAfterNetworkMessageHandled(receivedFrom, readyStatusChanged);
         }
 
-        private void OnNotifyCutsceneSkipped(long playerId, NotifyCutsceneSkipped cutsceneSkipped)
+        private async void OnNotifyCutsceneSkipped(long playerId, NotifyCutsceneSkipped cutsceneSkipped)
         {
+            var isCutscene = await WaitWhileTrue(() => GameInteraction.CurrentGameMode != GameModeType.Cutscene, "Waiting for cutscene to be played before applying skip");
+            if (!isCutscene)
+            {
+                return;
+            }
+
             var player = GetPlayer(cutsceneSkipped.PlayerId);
             if (player != null)
             {

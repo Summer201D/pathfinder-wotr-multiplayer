@@ -2440,7 +2440,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
 
                 trapData.View.PostSoundEvent(trapData.Settings.DisableFailSound);
                 EventBus.RaiseEvent<IDisarmTrapHandler>(x => x.HandleDisarmTrapFail(unit, trapData.View));
-                _logger.LogWarning("Trap disarm roll has been applied. TrapId={TrapId}, Roll={Roll}", trapDisarm.MapObject.Id, trapDisarm.Roll);
+                _logger.LogWarning("Trap disarm roll has been applied. TrapId={TrapId}, Roll={Roll}, DC={DC}", trapDisarm.MapObject.Id, trapDisarm.Roll, trapData.DisableDC);
             });
         }
 

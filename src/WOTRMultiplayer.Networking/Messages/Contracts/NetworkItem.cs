@@ -42,5 +42,10 @@ namespace WOTRMultiplayer.Networking.Messages.Contracts
         [ProtoMember(9)]
         [LogMe]
         public string CollectionOwnerRef { get; set; }
+
+        public override string ToString()
+        {
+            return UniqueId.ToString();
+        }
     }
 }

@@ -2300,7 +2300,7 @@ namespace WOTRMultiplayer.Services
                 return [];
             }
 
-            if (!Game.DialogState.CueViews.TryGetValue(cueName, out var cueViews))
+            if (!Game.DialogState.CueViews.TryGetValue(cueName ?? string.Empty, out var cueViews))
             {
                 Logger.LogWarning("Specified cue doesn't exist in the views history. CueName={CueName}", cueName);
                 return [];
