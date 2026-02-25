@@ -1,0 +1,113 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Reflection;
+using System.Reflection.Emit;
+using HarmonyLib;
+using Kingmaker.Controllers.Units;
+using Kingmaker.UnitLogic.Parts;
+using Microsoft.Extensions.Logging;
+using UnityEngine;
+using WOTRMultiplayer.Extensions;
+using WOTRMultiplayer.Services.Random;
+
+namespace WOTRMultiplayer.HarmonyPatches.Roaming
+{
+    [HarmonyPatch]
+    public class UnitRoamingControllerPatches
+    {
+        [HarmonyPatch(typeof(UnitRoamingController), nameof(UnitRoamingController.RollNextPoint))]
+        [HarmonyTranspiler]
+        public static IEnumerable<CodeInstruction> Projectile_CalculateMissTarget_Transpiler(IEnumerable<CodeInstruction> instructions)
+        {
+            var target = PatchesUtils.GetTranspilerTarget(MethodBase.GetCurrentMethod());
+            var lookFor = AccessTools.PropertyGetter(typeof(UnityEngine.Random), nameof(UnityEngine.Random.insideUnitCircle));
+            var replaceWith = AccessTools.Method(typeof(UnitRoamingControllerPatches), nameof(UnitRoamingControllerPatches.RollNextRoamingPoint));
+            var matcher = new CodeMatcher(instructions);
+            var match = matcher.SearchForward(x => x.Calls(lookFor));
+            if (match.IsInvalid)
+            {
+                Main.GetLogger<UnitRoamingControllerPatches>().LogError("Transpiler has not been applied. Target={Target}", target);
+                return instructions;
+            }
+
+            var labels = match.Instruction.ExtractLabels();
+            var newInstructions = new List<CodeInstruction>
+            {
+                new (OpCodes.Ldarg_0),
+                new (OpCodes.Call, replaceWith),
+            };
+            match = match.RemoveInstructions(1).Insert(newInstructions);
+
+            var lookForRange = AccessTools.Method(typeof(UnityEngine.Random), nameof(UnityEngine.Random.Range), [typeof(float), typeof(float)]);
+            var replaceRangeWith = AccessTools.Method(typeof(UnitRoamingControllerPatches), nameof(UnitRoamingControllerPatches.RollIdleTime));
+            match = matcher.SearchForward(x => x.Calls(lookForRange));
+            if (match.IsInvalid)
+            {
+                Main.GetLogger<UnitRoamingControllerPatches>().LogError("Transpiler has not been applied. Target={Target}", target);
+                return instructions;
+            }
+
+            var rangeInstructions = new List<CodeInstruction>()
+            {
+                new(OpCodes.Ldarg_0),
+                new(OpCodes.Call, replaceRangeWith),
+            };
+            match = match.RemoveInstruction().Insert(rangeInstructions);
+
+            Main.GetLogger<UnitRoamingControllerPatches>().LogInformation("Transpiler has been applied. Target={Target}", target);
+            return matcher.Instructions();
+        }
+
+        private static float RollIdleTime(float minInclusive, float maxExclusive, UnitPartRoaming roaming)
+        {
+            if (!Main.Multiplayer.IsActive)
+            {
+                return UnityEngine.Random.Range(minInclusive, maxExclusive);
+            }
+
+            try
+            {
+                var sessionSeed = Main.Multiplayer.GetSessionSeed();
+                var loadedSaveSeed = Main.Multiplayer.GetLoadedSaveSeed();
+                var areaSeed = Main.Multiplayer.GetAreaSeed();
+
+                var identifier = $"{nameof(UnitRoamingController)}:{nameof(RollIdleTime)}:{roaming.Owner.UniqueId}:{roaming.OriginalPoint}:{minInclusive}:{maxExclusive}_{sessionSeed}:{loadedSaveSeed}:{areaSeed}";
+
+                var idleTime = Main.Multiplayer.ValueGenerator.Range(IdentifierLifetime.Area, identifier, minInclusive, maxExclusive);
+                Main.GetLogger<UnitRoamingControllerPatches>().LogDebug("Unit idle time has been rolled. UnitId={UnitId}, Time={Time}, Identifier={Identifier}", roaming.Owner.UniqueId, idleTime, identifier);
+                return idleTime;
+            }
+            catch (Exception ex)
+            {
+                Main.GetLogger<UnitRoamingControllerPatches>().LogError(ex, "Error rolling unit idle time. UnitId={UnitId}", roaming.Owner.UniqueId);
+                throw;
+            }
+        }
+
+        private static Vector2 RollNextRoamingPoint(UnitPartRoaming roaming)
+        {
+            if (!Main.Multiplayer.IsActive)
+            {
+                return UnityEngine.Random.insideUnitCircle;
+            }
+
+            try
+            {
+                var sessionSeed = Main.Multiplayer.GetSessionSeed();
+                var loadedSaveSeed = Main.Multiplayer.GetLoadedSaveSeed();
+                var areaSeed = Main.Multiplayer.GetAreaSeed();
+
+                var identifier = $"{nameof(UnitRoamingController)}:{nameof(RollNextRoamingPoint)}:{roaming.Owner.UniqueId}:{roaming.OriginalPoint}_{sessionSeed}:{loadedSaveSeed}:{areaSeed}";
+
+                var pointInCircle = Main.Multiplayer.ValueGenerator.GetRandomUnitCircle(IdentifierLifetime.Area, identifier);
+                Main.GetLogger<UnitRoamingControllerPatches>().LogDebug("Next unit roaming point has been rolled. UnitId={UnitId}, Point={Point}, Identifier={Identifier}", roaming.Owner.UniqueId, pointInCircle, identifier);
+                return pointInCircle.ToUnityVector2();
+            }
+            catch (Exception ex)
+            {
+                Main.GetLogger<UnitRoamingControllerPatches>().LogError(ex, "Error rolling next unit roaming point. UnitId={UnitId}", roaming.Owner.UniqueId);
+                throw;
+            }
+        }
+    }
+}
