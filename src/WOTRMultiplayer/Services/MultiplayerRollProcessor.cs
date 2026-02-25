@@ -1887,7 +1887,7 @@ namespace WOTRMultiplayer.Services
 
                 var lifetime = combatTurnSeed == null ? IdentifierLifetime.Area : IdentifierLifetime.CombatTurn;
 
-                var identifier = $"{rollIdentifier}_{sessionSeed}:{loadedSaveSeed}:{areaSeed}:{combatSeed ?? 0}:{combatTurnSeed ?? 0}:{crusadeCombatSeed ?? 0}";
+                var identifier = $"{rollIdentifier}_ss={sessionSeed}:ls={loadedSaveSeed}:as={areaSeed}:cs={combatSeed ?? 0}:cts={combatTurnSeed ?? 0}:ccs={crusadeCombatSeed ?? 0}";
                 var (history, result) = RollDice(lifetime, identifier, diceFormula, rerollAmount);
                 var outcome = new DeterministicRollOutcome
                 {
