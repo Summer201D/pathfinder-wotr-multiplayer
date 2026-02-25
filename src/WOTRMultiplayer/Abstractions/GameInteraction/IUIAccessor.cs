@@ -20,6 +20,7 @@ using Kingmaker.UI.MVVM._PCView.InGame;
 using Kingmaker.UI.MVVM._PCView.Kingdom;
 using Kingmaker.UI.MVVM._PCView.Kingdom.KingdomInfo;
 using Kingmaker.UI.MVVM._PCView.Loot;
+using Kingmaker.UI.MVVM._PCView.MapIslands;
 using Kingmaker.UI.MVVM._PCView.NewGame;
 using Kingmaker.UI.MVVM._PCView.Party;
 using Kingmaker.UI.MVVM._PCView.Rest;
@@ -85,19 +86,32 @@ namespace WOTRMultiplayer.Abstractions.GameInteraction
         TacticalCombatResultsPCView TacticalCombatResultsPCView { get; }
 
         GlobalMapToolbarPCView GlobalMapToolbarPCView { get; }
+
         GlobalMapCrusadeArmiesPCView GlobalMapCrusadeArmiesPCView { get; }
+
         ArmyCartBuyLeaderPCView ArmyCartBuyLeaderPCView { get; }
+
         ArmyInfoHUDPCView ArmyInfoHUDPCView { get; }
+
         ArmyInfoPCView ArmyInfoPCView { get; }
+
         KingdomInfoPCView KingdomInfoPCView { get; }
+
         GlobalMapMenuPCView GlobalMapMenuPCView { get; }
+
         GlobalMapArmyPointerMarkerPCView GlobalMapArmyPointerMarkerPCView { get; }
+
         GlobalMapEnterMessagePCView GlobalMapEnterMessagePCView { get; }
+
         RecruitPCView RecruitPCView { get; }
+
         CombatResultPCView CombatResultPCView { get; }
+
         LeaderLevelUpPCView LeaderLevelUpPCView { get; }
 
         TransitionPCView TransitionPCView { get; }
+
+        MapIslandsPCView MapIslandsPCView { get; }
 
         void CloseAllWindows();
     }

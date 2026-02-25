@@ -542,5 +542,7 @@ namespace WOTRMultiplayer.Abstractions
         void OnRemoveCustomSpell(string unitId, NetworkAbility ability);
 
         void OnGlobalMapTeleport(NetworkGlobalMapLocation globalMapLocation);
+
+        void OnIslandMapEntryChosen(NetworkIslandMapTransition islandMapTransition);
     }
 }

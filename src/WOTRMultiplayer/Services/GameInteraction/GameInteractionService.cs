@@ -39,10 +39,13 @@ using Kingmaker.UI._ConsoleUI.Overtips;
 using Kingmaker.UI.CharSelect;
 using Kingmaker.UI.Common;
 using Kingmaker.UI.MVVM;
+using Kingmaker.UI.MVVM._PCView.MapIslands;
 using Kingmaker.UI.MVVM._PCView.NewGame.Story;
 using Kingmaker.UI.MVVM._PCView.Rest;
 using Kingmaker.UI.MVVM._PCView.Settings.Entities.Difficulty;
+using Kingmaker.UI.MVVM._PCView.Transition;
 using Kingmaker.UI.MVVM._VM.Lockpick;
+using Kingmaker.UI.MVVM._VM.MapIslands;
 using Kingmaker.UI.MVVM._VM.NewGame;
 using Kingmaker.UI.MVVM._VM.Settings.Entities;
 using Kingmaker.UI.Selection;
@@ -61,6 +64,7 @@ using Owlcat.Runtime.UI.Controls.Button;
 using TMPro;
 using UniRx;
 using UniRx.Triggers;
+using UnityEngine;
 using UnityModManagerNet;
 using WOTRMultiplayer.Abstractions.GameInteraction;
 using WOTRMultiplayer.Abstractions.GameInteraction.CombatLog;
@@ -105,6 +109,8 @@ namespace WOTRMultiplayer.Services.GameInteraction
         public GameModeType CurrentGameMode => Game.Instance.CurrentMode;
 
         public bool IsPaused => Game.Instance.IsPaused;
+
+        public bool IsCapitalPartyMode => Game.Instance.Player.CapitalPartyMode;
 
         public GameInteractionService(
             ILogger<GameInteractionService> logger,
@@ -2268,28 +2274,47 @@ namespace WOTRMultiplayer.Services.GameInteraction
         {
             _mainThreadAccessor.Post(() =>
             {
-                var view = _uiAccessor.TransitionPCView;
-                if (view?.ViewModel == null)
+                if (_uiAccessor.TransitionPCView?.ViewModel != null)
                 {
-                    _logger.LogWarning("Unable to update missing TransitionPCView");
+                    UpdateCapitalCityTransitionMap(_uiAccessor.TransitionPCView, isInteractable, readyPlayersCount, totalPlayersCount);
+                    return;
+                }
+                else if (_uiAccessor.MapIslandsPCView?.ViewModel != null)
+                {
+                    UpdateIslandsTransitionMap(_uiAccessor.MapIslandsPCView, isInteractable, readyPlayersCount, totalPlayersCount);
                     return;
                 }
 
-                var part = view.m_Parts.FirstOrDefault(p => p.Map == view.ViewModel.Map);
-                foreach (var entry in part.Entries)
+                _logger.LogError("Unable to update transition due to missing maps");
+            });
+        }
+
+        public void ChooseIslandMapEntry(NetworkIslandMapTransition islandMapTransition)
+        {
+            _mainThreadAccessor.Post(() =>
+            {
+                var view = _uiAccessor.MapIslandsPCView;
+                if (view?.ViewModel == null)
                 {
-                    entry.m_LegendButton.Interactable = isInteractable;
-                    entry.m_MapButton.Interactable = isInteractable;
+                    _logger.LogWarning("Unable to choose entry due to missing TransitionPCView");
+                    return;
                 }
 
-                part.Close.Interactable = isInteractable;
-                var pointerTrigger = part.Close.GetComponent<ObservablePointerClickTrigger>();
-                if (pointerTrigger != null)
+                var islandPosition = islandMapTransition.Position.ToUnityVector2Int();
+                var island = view.m_IslandsItemViews.FirstOrDefault(x => IsSameIsland(x.ViewModel, islandPosition, islandMapTransition.BlueprintId));
+                if (island == null && IsSameIsland(view.ViewModel.FinalIsland, islandPosition, islandMapTransition.BlueprintId))
                 {
-                    pointerTrigger.enabled = isInteractable;
+                    island = view.m_FinalIslandItemView;
                 }
 
-                _logger.LogInformation("Transition UI state has been updated. Map={Map}, IsInteractable={IsInteractable}, ReadyPlayers={ReadyPlayers}, TotalPlayers={TotalPlayers}", part.Map, isInteractable, readyPlayersCount, totalPlayersCount);
+                if (island?.ViewModel == null)
+                {
+                    _logger.LogError("Unable to find island. Position={Position}, BlueprintId={BlueprintId}", islandMapTransition.Position, islandMapTransition.BlueprintId);
+                    return;
+                }
+
+                island.OnSelect();
+                _logger.LogInformation("Map island has been chosen. Position={Position}, BlueprintId={BlueprintId}", islandMapTransition.Position, islandMapTransition.BlueprintId);
             });
         }
 
@@ -2320,13 +2345,8 @@ namespace WOTRMultiplayer.Services.GameInteraction
         {
             _mainThreadAccessor.Post(() =>
             {
-                var view = _uiAccessor.TransitionPCView;
-                if (view?.ViewModel == null)
-                {
-                    return;
-                }
-
-                view.ViewModel.Close();
+                _uiAccessor.TransitionPCView?.ViewModel?.Close();
+                _uiAccessor.MapIslandsPCView?.ViewModel?.Close();
                 _logger.LogInformation("Transition Map has been closed");
             });
         }
@@ -2599,6 +2619,47 @@ namespace WOTRMultiplayer.Services.GameInteraction
             });
         }
 
+        private void UpdateIslandsTransitionMap(MapIslandsPCView view, bool isInteractable, int readyPlayersCount, int totalPlayersCount)
+        {
+            view.m_CloseButton.Interactable = isInteractable;
+
+            foreach (var island in view.m_IslandsItemViews)
+            {
+                if (island.ViewModel?.m_IslandState == null)
+                {
+                    continue;
+                }
+
+                island.m_IslandButton.Interactable = !view.ViewModel.IsTraveling.Value && island.ViewModel.m_IslandState.MayBeVisitedNow && isInteractable;
+            }
+
+            if (view.m_FinalIslandItemView.ViewModel?.m_IslandState != null)
+            {
+                view.m_FinalIslandItemView.m_IslandButton.Interactable = !view.ViewModel.IsTraveling.Value && view.m_FinalIslandItemView.ViewModel.m_IslandState.MayBeVisitedNow && isInteractable;
+            }
+
+            _logger.LogInformation("Island Map transitikon state has been updated. IsInteractable={IsInteractable}, ReadyPlayers={ReadyPlayers}, TotalPlayers={TotalPlayers}", isInteractable, readyPlayersCount, totalPlayersCount);
+        }
+
+        private void UpdateCapitalCityTransitionMap(TransitionPCView view, bool isInteractable, int readyPlayersCount, int totalPlayersCount)
+        {
+            var part = view.m_Parts.FirstOrDefault(p => p.Map == view.ViewModel.Map);
+            foreach (var entry in part.Entries)
+            {
+                entry.m_LegendButton.Interactable = isInteractable;
+                entry.m_MapButton.Interactable = isInteractable;
+            }
+
+            part.Close.Interactable = isInteractable;
+            var pointerTrigger = part.Close.GetComponent<ObservablePointerClickTrigger>();
+            if (pointerTrigger != null)
+            {
+                pointerTrigger.enabled = isInteractable;
+            }
+
+            _logger.LogInformation("Transition UI state has been updated. Map={Map}, IsInteractable={IsInteractable}, ReadyPlayers={ReadyPlayers}, TotalPlayers={TotalPlayers}", part.Map, isInteractable, readyPlayersCount, totalPlayersCount);
+        }
+
         /// <summary>
         /// raw decompiled code of InventorySmartItemVM.GetPolymorphItems
         /// </summary>
@@ -2755,6 +2816,12 @@ namespace WOTRMultiplayer.Services.GameInteraction
                     onMatched(item);
                 }
             }
+        }
+
+        private bool IsSameIsland(MapIslandItemVM islandsVM, Vector2Int position, string blueprintId)
+        {
+            var same = islandsVM?.m_IslandState != null && islandsVM.m_IslandState.Position == position && string.Equals(islandsVM.m_IslandState.Blueprint.AssetGuid.ToString(), blueprintId, StringComparison.OrdinalIgnoreCase);
+            return same;
         }
 
         private void DropItem(ItemsCollection inventory, ItemEntity itemEntity, string ownerId)

@@ -34,6 +34,8 @@ namespace WOTRMultiplayer.Playground.Core.Dummies
 
         public bool IsPaused => false;
 
+        public bool IsCapitalPartyMode => false;
+
         public void AcceptCharacterSelectionWindow()
         {
         }
@@ -454,6 +456,10 @@ namespace WOTRMultiplayer.Playground.Core.Dummies
         }
 
         public void ActivateTrap(string unitId, NetworkMapObject trapObject)
+        {
+        }
+
+        public void ChooseIslandMapEntry(NetworkIslandMapTransition island)
         {
         }
     }

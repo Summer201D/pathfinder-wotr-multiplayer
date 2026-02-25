@@ -14,10 +14,6 @@ namespace WOTRMultiplayer.Networking.Messages.Game
 
         [ProtoMember(2)]
         [LogMe]
-        public int TurnSeed { get; set; }
-
-        [ProtoMember(3)]
-        [LogMe]
         public List<NetworkAreaEffect> TriggeredAreaEffects { get; set; } = [];
     }
 }

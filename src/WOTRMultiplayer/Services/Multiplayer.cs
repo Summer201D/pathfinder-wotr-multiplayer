@@ -4513,6 +4513,24 @@ namespace WOTRMultiplayer.Services
             }
         }
 
+        public void OnIslandMapEntryChosen(NetworkIslandMapTransition islandMapTransition)
+        {
+            try
+            {
+                if (_multiplayerActorAccessor == null || _multiplayerActorAccessor.Client.IsActive)
+                {
+                    return;
+                }
+
+                _multiplayerActorAccessor.Host.OnIslandMapEntryChosen(islandMapTransition);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while choosing island");
+                throw;
+            }
+        }
+
         private void ShowMultiplayerLobbyWindow()
         {
             _logger.LogInformation("Opening lobby window");

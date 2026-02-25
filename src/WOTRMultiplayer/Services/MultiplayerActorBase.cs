@@ -177,8 +177,14 @@ namespace WOTRMultiplayer.Services
             try
             {
                 var character = GetPartyCharacter(unitId);
+                var isControlled = character?.Owner != null && character.Owner.Id == Game.LocalPlayerId;
 
-                return character?.Owner != null && character.Owner.Id == Game.LocalPlayerId;
+                if (!isControlled && GameInteraction.IsCapitalPartyMode)
+                {
+                    isControlled = WasControlledByCurrentPlayer(unitId);
+                }
+
+                return isControlled;
             }
             catch (Exception ex)
             {
@@ -216,7 +222,7 @@ namespace WOTRMultiplayer.Services
 
         public void OnAbilityUse(NetworkAbilityUse abilityUse)
         {
-            if (!IsAbilityCasterControlledByLocalPlayer(abilityUse.InitiatorUnitId))
+            if (!ShouldNotifyAboutAbility(abilityUse.InitiatorUnitId))
             {
                 return;
             }
@@ -252,7 +258,7 @@ namespace WOTRMultiplayer.Services
 
         public void OnToggleActivatableAbility(NetworkActivatableAbility activatableAbilityUse)
         {
-            if (!IsAbilityCasterControlledByLocalPlayer(activatableAbilityUse.CasterId))
+            if (!ShouldNotifyAboutAbility(activatableAbilityUse.CasterId))
             {
                 return;
             }
@@ -281,7 +287,7 @@ namespace WOTRMultiplayer.Services
 
         public void OnClickUnit(NetworkClick click)
         {
-            if (Game.Combat == null && (IsControlledByPlayers(click.TargetUnitId) || !IsControlledByLocalPlayer(click.SelectedUnits))
+            if (Game.Combat == null && (IsControlledByPlayers(click.TargetUnitId) || !IsControlledByLocalPlayer(click.SelectedUnits.FirstOrDefault()))
                 || Game.Combat != null && (!(Game.Combat.Turn?.IsLocalPlayer ?? false) || CombatInteraction.IsCombatTurnFinished()))
             {
                 return;
@@ -310,7 +316,7 @@ namespace WOTRMultiplayer.Services
 
         public void OnClickMapObject(NetworkClick click)
         {
-            if (!IsControlledByLocalPlayer(click.SelectedUnits))
+            if (!IsControlledByLocalPlayer(click.SelectedUnits.FirstOrDefault()))
             {
                 return;
             }
@@ -538,7 +544,7 @@ namespace WOTRMultiplayer.Services
             Send(message);
         }
 
-        public virtual void CombatStarted()
+        public void CombatStarted()
         {
             Logger.LogInformation("Combat started");
             if (Game.Combat != null)
@@ -2895,27 +2901,21 @@ namespace WOTRMultiplayer.Services
             return isFixed;
         }
 
-        protected bool IsAbilityCasterControlledByLocalPlayer(string sourceUnitId)
+        protected bool ShouldNotifyAboutAbility(string sourceUnitId)
         {
             if (Game.ArmyCombat?.Turn != null)
             {
                 return HasControlOverUI && !Game.ArmyCombat.Turn.IsAI;
             }
 
-            if (Game.Combat == null)
-            {
-                return IsControlledByLocalPlayer(sourceUnitId);
-            }
-
-            // not sure what falls under this category
-            // midfight joins shouldn't have any actions?
-            if (Game.Combat.Turn == null)
+            if (Game.Combat != null && Game.Combat.Turn == null)
             {
                 Logger.LogWarning("Midfight action. UnitId={UnitId}", sourceUnitId);
                 return false;
             }
 
-            return IsControlledByLocalPlayer(sourceUnitId) && !CombatInteraction.IsCombatTurnFinished();
+            var shouldNotify = IsControlledByLocalPlayer(sourceUnitId);
+            return shouldNotify;
         }
 
         protected TRollValue ResponseToRollValue<TRollValue>(DiceRollValueResponse rollResponse)
@@ -4424,11 +4424,6 @@ namespace WOTRMultiplayer.Services
             OnAfterNetworkMessageHandled(receivedFrom, message);
         }
 
-        private bool IsControlledByLocalPlayer(List<string> units)
-        {
-            return IsControlledByLocalPlayer(units?.FirstOrDefault());
-        }
-
         private ConcurrentDictionary<string, HashSet<long>> GetPlayerTurnReadinessTracker(PlayerTurnReadinessType type)
         {
             var tracker = type switch
@@ -4488,19 +4483,17 @@ namespace WOTRMultiplayer.Services
                     IsActingInSurpriseRound = actingInSurpriseRound,
                     IsLocalPlayer = IsControlledByLocalPlayer(unitId),
                     IsAI = !GameInteraction.IsUnitInParty(unitId),
-                    Seed = CreateRandomSeed()
                 };
             }
 
-            Logger.LogInformation("Turn has been initialized. UnitId={UnitId}, IsLocalPlayer={IsLocalPlayer}, IsAI={IsAI}, IsActingInSurpriseRound={IsActingInSurpriseRound}, Stage={Stage}, Seed={Seed}",
-                unitId, Game.Combat.Turn.IsLocalPlayer, Game.Combat.Turn.IsAI, Game.Combat.Turn.IsActingInSurpriseRound, Game.Combat.Turn.Stage, Game.Combat.Turn.Seed);
+            Logger.LogInformation("Turn has been initialized. UnitId={UnitId}, IsLocalPlayer={IsLocalPlayer}, IsAI={IsAI}, IsActingInSurpriseRound={IsActingInSurpriseRound}, Stage={Stage}",
+                unitId, Game.Combat.Turn.IsLocalPlayer, Game.Combat.Turn.IsAI, Game.Combat.Turn.IsActingInSurpriseRound, Game.Combat.Turn.Stage);
 
             OnLocalPlayerTurnStart();
         }
 
         private bool WasControlledByCurrentPlayer(string unitId)
         {
-            // could be horse leveling
             var realCharacterUnitId = GameInteraction.GetPetOwnerId(unitId) ?? unitId;
 
             if (string.IsNullOrEmpty(realCharacterUnitId)

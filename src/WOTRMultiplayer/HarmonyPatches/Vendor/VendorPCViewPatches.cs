@@ -4,6 +4,7 @@ using System.Reflection;
 using System.Reflection.Emit;
 using HarmonyLib;
 using Kingmaker;
+using Kingmaker.Designers.EventConditionActionSystem.Actions;
 using Kingmaker.UI;
 using Kingmaker.UI.MVVM._PCView.Vendor;
 using Kingmaker.UI.MVVM._VM.Vendor;
@@ -15,6 +16,18 @@ namespace WOTRMultiplayer.HarmonyPatches.Vendor
     [HarmonyPatch]
     public class VendorPCViewPatches
     {
+        [HarmonyPatch(typeof(StartTrade), nameof(StartTrade.RunAction))]
+        [HarmonyPrefix]
+        public static void StartTrade_RunAction_Prefix()
+        {
+            if (!Main.Multiplayer.IsActive)
+            {
+                return;
+            }
+
+            Main.UIAccessor.CloseAllWindows();
+        }
+
         [HarmonyPatch(typeof(VendorPCView), nameof(VendorPCView.BindViewImplementation))]
         [HarmonyTranspiler]
         public static IEnumerable<CodeInstruction> VendorPCView_BindViewImplementation_Transpiler(IEnumerable<CodeInstruction> instructions)

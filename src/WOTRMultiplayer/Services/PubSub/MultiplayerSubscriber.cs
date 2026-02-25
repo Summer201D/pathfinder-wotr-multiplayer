@@ -108,7 +108,7 @@ namespace WOTRMultiplayer.Services.PubSub
             }
             catch (Exception ex)
             {
-                Logger.LogError(ex, "Unable to handle OnGameLoaded event");
+                Logger.LogError(ex, "Unable to handle trap activation event");
                 throw;
             }
         }

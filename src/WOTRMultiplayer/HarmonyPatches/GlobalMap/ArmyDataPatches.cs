@@ -10,6 +10,7 @@ using Microsoft.Extensions.Logging;
 using UnityEngine;
 using WOTRMultiplayer.Entities;
 using WOTRMultiplayer.Entities.GlobalMap;
+using WOTRMultiplayer.Extensions;
 
 namespace WOTRMultiplayer.HarmonyPatches.GlobalMap
 {
@@ -203,7 +204,7 @@ namespace WOTRMultiplayer.HarmonyPatches.GlobalMap
             {
                 ArmyId = army.ArmyStateId,
                 SquadId = squad?.Id,
-                Position = new NetworkVector2Int(position.x, position.y)
+                Position = position.ToNetworkVector2Int()
             };
 
             return squadSlot;

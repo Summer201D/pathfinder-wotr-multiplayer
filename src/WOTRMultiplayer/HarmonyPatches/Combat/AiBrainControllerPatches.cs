@@ -88,6 +88,7 @@ namespace WOTRMultiplayer.HarmonyPatches.Combat
                 Id = bestActionResult.Blueprint.AssetGuid.ToString(),
                 Name = bestActionResult.Blueprint.name,
                 IsAbility = bestActionResult.Blueprint is BlueprintAiCastSpell,
+                ActionType = bestActionResult.Blueprint?.GetType().Name,
                 UnitId = unit.UniqueId,
                 TargetId = bestTargetResult?.UniqueId,
                 DecisionContext = new NetworkAIDecisionContext

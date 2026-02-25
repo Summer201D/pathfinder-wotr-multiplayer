@@ -13,5 +13,9 @@
         public NetworkAIDecisionContext DecisionContext { get; set; }
 
         public bool IsAbility { get; set; }
+
+        public string ActionType { get; set; }
+
+        public bool IsUsed { get; set; }
     }
 }

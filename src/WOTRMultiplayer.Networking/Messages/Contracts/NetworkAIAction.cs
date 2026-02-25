@@ -29,5 +29,9 @@ namespace WOTRMultiplayer.Networking.Messages.Contracts
         [ProtoMember(6)]
         [LogMe]
         public bool IsAbility { get; set; }
+
+        [ProtoMember(7)]
+        [LogMe]
+        public string ActionType { get; set; }
     }
 }

@@ -69,5 +69,7 @@ namespace WOTRMultiplayer.Abstractions.GameInteraction
         void MoveUnit(NetworkUnitMoveTo unitMoveTo);
 
         void MakeUnitTargetable(string unitId, bool isTargetable);
+
+        bool IsAnyProjectilesLaunchedByParty();
     }
 }

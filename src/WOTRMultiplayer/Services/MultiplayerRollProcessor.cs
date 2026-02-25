@@ -73,11 +73,30 @@ namespace WOTRMultiplayer.Services
             _valueGenerator = valueGenerator;
         }
 
+        public int? OnBeforeRuleCalculateDamageRoll(RuleCalculateDamage ruleCalculateDamage, DiceFormula diceFormula)
+        {
+            try
+            {
+                if (!IsRolledDeterministically(ruleCalculateDamage) || diceFormula.Rolls == 0 && diceFormula.Dice == DiceType.Zero)
+                {
+                    return null;
+                }
+
+                var roll = RollDamage(ruleCalculateDamage, diceFormula);
+                return roll;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error before damage rule trigger");
+                throw;
+            }
+        }
+
         public bool OnBeforeRuleCalculateDamageBundle(RuleCalculateDamage ruleCalculateDamage)
         {
             try
             {
-                if (!ShouldRetrieveRoll(ruleCalculateDamage))
+                if (!ShouldRetrieveRoll(ruleCalculateDamage) || IsRolledDeterministically(ruleCalculateDamage))
                 {
                     return true;
                 }
@@ -128,7 +147,7 @@ namespace WOTRMultiplayer.Services
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error before damage rule trigger");
+                _logger.LogError(ex, "Error before damage bundle rule trigger");
                 throw;
             }
         }
@@ -137,7 +156,7 @@ namespace WOTRMultiplayer.Services
         {
             try
             {
-                if (!ShouldStoreRoll(ruleCalculateDamage))
+                if (!ShouldStoreRoll(ruleCalculateDamage) || IsRolledDeterministically(ruleCalculateDamage))
                 {
                     return;
                 }
@@ -1103,6 +1122,7 @@ namespace WOTRMultiplayer.Services
                 case RuleCastSpell:
                 case RuleDispelMagic:
                 case RuleAttackRoll.ParryData:
+                case RuleCalculateDamage:
                     return true;
                 default:
                     return false;
@@ -1225,7 +1245,7 @@ namespace WOTRMultiplayer.Services
 
         }
 
-        private int? GetDamageRollId(RuleCalculateDamage ruleCalculateDamage)
+        private NetworkDiceRollBase GetDamageRoll(RuleCalculateDamage ruleCalculateDamage)
         {
             NetworkDiceRollBase roll = ruleCalculateDamage.Reason.Rule switch
             {
@@ -1235,6 +1255,12 @@ namespace WOTRMultiplayer.Services
                 _ => null,
             };
 
+            return roll;
+        }
+
+        private int? GetDamageRollId(RuleCalculateDamage ruleCalculateDamage)
+        {
+            NetworkDiceRollBase roll = GetDamageRoll(ruleCalculateDamage);
             if (roll == null)
             {
                 return null;
@@ -1601,6 +1627,18 @@ namespace WOTRMultiplayer.Services
             return deterministicRoll.Result;
         }
 
+        private int? RollDamage(RuleCalculateDamage ruleCalculateDamage, DiceFormula diceFormula)
+        {
+            var dealDamage = GetDamageRoll(ruleCalculateDamage);
+            if (dealDamage == null)
+            {
+                return null;
+            }
+
+            var deterministicRoll = RollDice(dealDamage, diceFormula, 0);
+            return deterministicRoll.Result;
+        }
+
         private RuleRollD20 RollInitiative(RuleInitiativeRoll ruleInitiativeRoll)
         {
             var initiative = CreateInitiativeRoll(NetworkDiceRollType.Hit, ruleInitiativeRoll);
@@ -1841,6 +1879,11 @@ namespace WOTRMultiplayer.Services
                 var combatSeed = _multiplayerActorAccessor.Current.CombatSeed;
                 var combatTurnSeed = _multiplayerActorAccessor.Current.CombatTurnSeed;
                 var crusadeCombatSeed = _multiplayerActorAccessor.Current.CrusadeArmyCombatSeed;
+                // mid turn damage
+                if (combatSeed != null && combatTurnSeed == null)
+                {
+                    combatTurnSeed = _multiplayerActorAccessor.Current.LastCombatTurnSeed;
+                }
 
                 var lifetime = combatTurnSeed == null ? IdentifierLifetime.Area : IdentifierLifetime.CombatTurn;
 
@@ -1854,8 +1897,8 @@ namespace WOTRMultiplayer.Services
                     RollId = _hashService.Murmur3(identifier)
                 };
 
-                _logger.LogInformation("{RuleName} has been rolled deterministicaly. UnitId={UnitId}, RollId={RollId}, Result={Result}, History={History}, Identifier={Identifier}",
-                    roll.RuleName, roll.InitiatorId, outcome.RollId, outcome.Result, outcome.History, outcome.Identifier);
+                _logger.LogInformation("{RuleName} has been rolled deterministicaly. UnitId={UnitId}, RollId={RollId}, Result={Result}, History={History}, Lifetime={Lifetime}, Identifier={Identifier}",
+                    roll.RuleName, roll.InitiatorId, outcome.RollId, outcome.Result, outcome.History, lifetime, outcome.Identifier);
 
                 return outcome;
             }

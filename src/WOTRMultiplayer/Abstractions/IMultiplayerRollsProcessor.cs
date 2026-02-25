@@ -7,6 +7,7 @@ namespace WOTRMultiplayer.Abstractions
 {
     public interface IMultiplayerRollsProcessor
     {
+        int? OnBeforeRuleCalculateDamageRoll(RuleCalculateDamage ruleCalculateDamage, DiceFormula diceFormula);
         bool OnBeforeRuleCalculateDamageBundle(RuleCalculateDamage ruleCalculateDamage);
         void OnAfterRuleCalculateDamageBundle(RuleCalculateDamage ruleCalculateDamage);
 

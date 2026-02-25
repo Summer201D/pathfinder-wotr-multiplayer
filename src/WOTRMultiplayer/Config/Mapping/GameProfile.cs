@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using AutoMapper;
+using Kingmaker.Dungeon;
 using Kingmaker.EntitySystem;
 using Kingmaker.EntitySystem.Entities;
 using Kingmaker.Items;
@@ -15,6 +16,7 @@ using Kingmaker.UnitLogic.Buffs;
 using Kingmaker.UnitLogic.Parts;
 using Kingmaker.Utility;
 using WOTRMultiplayer.Entities;
+using WOTRMultiplayer.Entities.Area;
 using WOTRMultiplayer.Entities.AreaEffects;
 using WOTRMultiplayer.Entities.Combat;
 using WOTRMultiplayer.Entities.Equipment;
@@ -73,6 +75,25 @@ namespace WOTRMultiplayer.Config.Mapping
 
             CreateMap<EntityDataBase, NetworkMapObject>().ConstructUsing(x => Create(x))
                 .ForAllMembers(x => x.Ignore());
+
+            CreateMap<DungeonIslandState, NetworkIslandMapTransition>().ConstructUsing(x => Create(x))
+                .ForAllMembers(x => x.Ignore());
+        }
+
+        private NetworkIslandMapTransition Create(DungeonIslandState islandState)
+        {
+            if (islandState == null)
+            {
+                return null;
+            }
+
+            var islandMapTransition = new NetworkIslandMapTransition
+            {
+                BlueprintId = islandState.Blueprint.AssetGuid.ToString(),
+                Position = islandState.Position.ToNetworkVector2Int()
+            };
+
+            return islandMapTransition;
         }
 
         private NetworkMapObject Create(EntityDataBase entityDataBase)

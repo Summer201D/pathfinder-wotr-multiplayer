@@ -23,6 +23,7 @@ using Kingmaker.UI.MVVM._PCView.Kingdom;
 using Kingmaker.UI.MVVM._PCView.Kingdom.KingdomInfo;
 using Kingmaker.UI.MVVM._PCView.Loot;
 using Kingmaker.UI.MVVM._PCView.MainMenu;
+using Kingmaker.UI.MVVM._PCView.MapIslands;
 using Kingmaker.UI.MVVM._PCView.NewGame;
 using Kingmaker.UI.MVVM._PCView.Party;
 using Kingmaker.UI.MVVM._PCView.Rest;
@@ -106,6 +107,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
         public LeaderLevelUpPCView LeaderLevelUpPCView => GlobalMapPCView?.m_LeaderLevelUpPCView ?? KingdomPCView?.m_LeaderLevelUpPCView;
 
         public TransitionPCView TransitionPCView => InGamePCView?.m_StaticPartPCView?.m_TransitionPCView ?? GlobalMapPCView?.m_TransitionPCView;
+        public MapIslandsPCView MapIslandsPCView => InGamePCView?.m_StaticPartPCView?.m_CreatedMapIslandsPCView;
 
         public void CloseAllWindows()
         {

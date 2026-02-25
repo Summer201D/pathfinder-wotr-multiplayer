@@ -266,7 +266,8 @@
             NotifyMetamagicSpellCreated,
             NotifyCustomSpellRemoved,
             NotifyGlobalMapTeleport,
-            NotifyTrapActivated
+            NotifyTrapActivated,
+            NotifyIslandMapEntryChosen
         }
 
         public enum Request

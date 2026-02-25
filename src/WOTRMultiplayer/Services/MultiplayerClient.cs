@@ -25,7 +25,6 @@ using WOTRMultiplayer.Entities.GlobalMap.Kingdom;
 using WOTRMultiplayer.Entities.Inspect;
 using WOTRMultiplayer.Entities.Items;
 using WOTRMultiplayer.Entities.Leveling;
-using WOTRMultiplayer.Entities.MapObjects;
 using WOTRMultiplayer.Entities.NewGame;
 using WOTRMultiplayer.Entities.Rest;
 using WOTRMultiplayer.Entities.Settings;
@@ -404,13 +403,19 @@ namespace WOTRMultiplayer.Services
                 if (action == null && networkAIAction.IsAbility)
                 {
                     var firstDifferentAction = Game.Combat.Turn.AIActions
+                        .Where(x => !x.IsUsed)
                         .OrderByDescending(x => x.IsAbility)
                         .FirstOrDefault(a => !string.Equals(a.Id, networkAIAction.Id, StringComparison.OrdinalIgnoreCase));
 
                     // try to use another action (preferrably ability)
-                    Logger.LogWarning("Requested AI action has not been found within existing actions. UnitId={UnitId}, ActionId={ActionId}, ActionName={ActionName}, FallbackActionId={FallbackActionId}, FallbackActionName={FallbackActionName}",
-                        networkAIAction.UnitId, networkAIAction.Id, networkAIAction.Name, firstDifferentAction?.Id, firstDifferentAction?.Name);
-                    return firstDifferentAction;
+                    Logger.LogWarning("Requested AI action has not been found within existing actions. UnitId={UnitId}, ActionId={ActionId}, ActionName={ActionName}, ActionType={ActionType}, FallbackActionId={FallbackActionId}, FallbackActionName={FallbackActionName}, FallbackActionType={FallbackActionType}",
+                        networkAIAction.UnitId, networkAIAction.Id, networkAIAction.Name, networkAIAction.ActionType, firstDifferentAction?.Id, firstDifferentAction?.Name, firstDifferentAction?.ActionType);
+                    action = firstDifferentAction;
+                }
+
+                if (action != null)
+                {
+                    action.IsUsed = true;
                 }
 
                 return action;
@@ -500,6 +505,9 @@ namespace WOTRMultiplayer.Services
 
                // area transitioning
                .On<NotifyPartyAreaTransitioned>(OnNotifyPartyAreaTransitioned)
+               .On<NotifyTransitionMapEntryChosen>(OnNotifyTransitionMapEntryChosen)
+               .On<NotifyTransitionMapClosed>(OnNotifyTransitionMapClosed)
+               .On<NotifyIslandMapEntryChosen>(OnNotifyIslandMapEntryChosen)
 
                // leveling
                .On<NotifyLevelingStarted>(OnNotifyLevelingStarted)
@@ -638,13 +646,15 @@ namespace WOTRMultiplayer.Services
                .On<NotifyZoneLootLeft>(OnNotifyZoneLootLeft)
                .On<NotifyZoneLootRemoveToggleChanged>(OnNotifyZoneLootRemoveToggleChanged)
 
-               // map objects
-               .On<NotifyTransitionMapEntryChosen>(OnNotifyTransitionMapEntryChosen)
-               .On<NotifyTransitionMapClosed>(OnNotifyTransitionMapClosed)
-
                // inventory
                .On<NotifyPolymorphicItemCreated>(OnNotifyPolymorphicItemCreated)
                ;
+        }
+
+        private void OnNotifyIslandMapEntryChosen(long receivedFrom, NotifyIslandMapEntryChosen message)
+        {
+            var island = Mapper.Map<NetworkIslandMapTransition>(message.Island);
+            GameInteraction.ChooseIslandMapEntry(island);
         }
 
         private void OnNotifyGlobalMapTeleport(long receivedFrom, NotifyGlobalMapTeleport message)
@@ -743,6 +753,11 @@ namespace WOTRMultiplayer.Services
 
         private async void OnNotifyCombatLocalTurnEnded(long receivedFrom, NotifyCombatLocalTurnEnded message)
         {
+            if (Game.Combat.Turn.IsAI)
+            {
+                return;
+            }
+
             await WaitWhileTrue(CombatInteraction.IsRiderActive, "Waiting for all combat commands to finish before ending turn");
             CombatInteraction.EndTurnBasedCombatTurn();
         }
@@ -1414,10 +1429,8 @@ namespace WOTRMultiplayer.Services
 
                 await CombatInteraction.UpdateCombatStateAsync(combatState, areaEffects, false);
 
-                Game.Combat.Turn.Seed = message.TurnSeed;
-
                 DiceRollStorage.Reset();
-                Logger.LogInformation("Dice roll storage has been reset at after syncing turn units");
+                Logger.LogInformation("Dice roll storage has been reset after syncing turn units");
 
                 ValueGenerator.ResetSeededGenerators(Random.IdentifierLifetime.CombatTurn);
 
@@ -1453,6 +1466,8 @@ namespace WOTRMultiplayer.Services
             {
                 Logger.LogWarning("Starting turn with different Round number. LocalRound={LocalRound}, HostRound={HostRound}", Game.Combat.Round, message.Round);
             }
+
+            Game.Combat.Turn.Seed = message.Seed;
 
             var delay = GetTurnStartDelay();
             Logger.LogInformation("Starting combat turn. Delay={Delay}, UnitId={UnitId}, IsAI={IsAI}, TurnSeed={TurnSeed}", delay, Game.Combat.Turn.UnitId, Game.Combat.Turn.IsAI, Game.Combat.Turn.Seed);

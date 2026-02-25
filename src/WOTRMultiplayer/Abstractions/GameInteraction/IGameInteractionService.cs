@@ -31,6 +31,8 @@ namespace WOTRMultiplayer.Abstractions.GameInteraction
 
         bool IsPaused { get; }
 
+        bool IsCapitalPartyMode { get; }
+
         void LeaveArea(NetworkAreaTransition areaTransition);
 
         void MoveNonCombatCharacter(NetworkCharacterMove networkCharacterMove);
@@ -213,5 +215,7 @@ namespace WOTRMultiplayer.Abstractions.GameInteraction
         void CreateMetamagicSpell(NetworkMetamagicSpell metamagicSpell);
 
         void RemoveCustomSpell(string unitId, NetworkAbility ability);
+
+        void ChooseIslandMapEntry(NetworkIslandMapTransition island);
     }
 }

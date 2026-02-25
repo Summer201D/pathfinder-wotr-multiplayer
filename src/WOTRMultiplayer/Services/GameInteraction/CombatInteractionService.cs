@@ -389,6 +389,19 @@ namespace WOTRMultiplayer.Services.GameInteraction
             });
         }
 
+        public bool IsAnyProjectilesLaunchedByParty()
+        {
+            foreach (var partyCharacter in Game.Instance.Player.PartyAndPets)
+            {
+                if (Game.Instance.ProjectileController.HasLaunchedProjectile(partyCharacter, null))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
         public void MakeUnitTargetable(string unitId, bool isTargetable)
         {
             _mainThreadAccessor.Post(() =>

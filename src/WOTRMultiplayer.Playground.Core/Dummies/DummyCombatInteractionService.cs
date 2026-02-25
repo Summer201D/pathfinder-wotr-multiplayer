@@ -149,5 +149,10 @@ namespace WOTRMultiplayer.Playground.Core.Dummies
         public void MakeUnitTargetable(string unitId, bool isTargetable)
         {
         }
+
+        public bool IsAnyProjectilesLaunchedByParty()
+        {
+            return false;
+        }
     }
 }

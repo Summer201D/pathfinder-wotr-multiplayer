@@ -377,6 +377,9 @@ namespace WOTRMultiplayer.Config.Mapping
 
             CreateMap<NetworkMetamagicSpell, Networking.Messages.Contracts.NetworkMetamagicSpell>()
                 .ReverseMap();
+
+            CreateMap<NetworkIslandMapTransition, Networking.Messages.Contracts.NetworkIslandMapTransition>()
+                .ReverseMap();
         }
     }
 }

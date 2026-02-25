@@ -27,9 +27,26 @@ namespace WOTRMultiplayer.Extensions
             return vector;
         }
 
+        public static Vector2Int ToUnityVector2Int(this NetworkVector2Int networkVector)
+        {
+            if (networkVector == null)
+            {
+                return default;
+            }
+
+            var vector = new Vector2Int(networkVector.X, networkVector.Y);
+            return vector;
+        }
+
         public static NetworkVector3 ToNetworkVector3(this Vector3 vector)
         {
             var networkVector = new NetworkVector3(vector.x, vector.y, vector.z);
+            return networkVector;
+        }
+
+        public static NetworkVector2Int ToNetworkVector2Int(this Vector2Int vector)
+        {
+            var networkVector = new NetworkVector2Int(vector.x, vector.y);
             return networkVector;
         }
     }

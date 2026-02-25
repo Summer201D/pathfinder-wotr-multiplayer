@@ -14,5 +14,9 @@ namespace WOTRMultiplayer.Networking.Messages.Game
         [ProtoMember(2)]
         [LogMe]
         public int Round { get; set; }
+
+        [ProtoMember(3)]
+        [LogMe]
+        public int Seed { get; set; }
     }
 }

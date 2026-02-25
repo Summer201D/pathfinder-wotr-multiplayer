@@ -361,8 +361,15 @@ namespace WOTRMultiplayer.Services
                     }
                     return false;
                 case NetworkCombatStage.Preparing:
+                    if (CombatInteraction.IsAnyProjectilesLaunchedByParty())
+                    {
+                        return false;
+                    }
+
                     if (!Game.Combat.IsPrepared)
                     {
+                        Game.Combat.Seed = CreateRandomSeed();
+
                         var discrepantUnits = GetDiscrepantCombatUnits();
                         var preparationRequiredMessage = new NotifyCombatPreparationRequired
                         {
@@ -435,15 +442,6 @@ namespace WOTRMultiplayer.Services
                 default:
                     return Game.Combat.IsPlaying;
             }
-        }
-
-        public override void CombatStarted()
-        {
-            base.CombatStarted();
-
-            var combatSeed = CreateRandomSeed();
-            Game.Combat.Seed = combatSeed;
-            Logger.LogInformation("Combat seed has been configured. Seed={Seed}", Game.Combat.Seed);
         }
 
         public bool IsDiceRollOwner()
@@ -1321,6 +1319,15 @@ namespace WOTRMultiplayer.Services
             Send(message);
         }
 
+        public void OnIslandMapEntryChosen(NetworkIslandMapTransition islandMapTransition)
+        {
+            var message = new NotifyIslandMapEntryChosen
+            {
+                Island = Mapper.Map<Networking.Messages.Contracts.NetworkIslandMapTransition>(islandMapTransition)
+            };
+            Send(message);
+        }
+
         public void OnTransitionMapClosed()
         {
             ResetPlayersTracker(Game.PlayersInTransitionMap);
@@ -1452,7 +1459,6 @@ namespace WOTRMultiplayer.Services
                         var combatState = CombatInteraction.GetCombatState();
                         var syncMessage = new NotifyCombatTurnStartSynchronizationRequired
                         {
-                            TurnSeed = Game.Combat.Turn.Seed,
                             CombatState = Mapper.Map<Networking.Messages.Contracts.NetworkCombatState>(combatState),
                             TriggeredAreaEffects = Mapper.Map<List<Networking.Messages.Contracts.NetworkAreaEffect>>(Game.Combat.TriggeredAreaEffects)
                         };
@@ -1474,11 +1480,13 @@ namespace WOTRMultiplayer.Services
                     Logger.LogInformation("Dice roll storage has been reset at turn entites sync stage");
 
                     ValueGenerator.ResetSeededGenerators(IdentifierLifetime.CombatTurn);
+                    Game.Combat.Turn.Seed = CreateRandomSeed();
 
                     var message = new NotifyCombatTurnStarted
                     {
                         Round = Game.Combat.Round,
-                        UnitId = Game.Combat.Turn.UnitId
+                        UnitId = Game.Combat.Turn.UnitId,
+                        Seed = Game.Combat.Turn.Seed,
                     };
 
                     Send(message);

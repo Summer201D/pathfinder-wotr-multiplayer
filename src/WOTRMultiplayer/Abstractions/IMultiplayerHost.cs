@@ -201,6 +201,8 @@ namespace WOTRMultiplayer.Abstractions
 
         void OnTransitionMapEntryChosen(string entryId);
 
+        void OnIslandMapEntryChosen(NetworkIslandMapTransition islandMapTransition);
+
         void OnTransitionMapClosed();
 
         void OnGlobalMapTeleport(NetworkGlobalMapLocation globalMapLocation);
