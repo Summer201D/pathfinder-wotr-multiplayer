@@ -20,7 +20,7 @@ namespace WOTRMultiplayer.HarmonyPatches
 
         [HarmonyPatch(typeof(BlueprintsCache), nameof(BlueprintsCache.Init))]
         [HarmonyPostfix]
-        public static void BlueprintesCachePatches_Init_Postfix()
+        public static void BlueprintsCache_Init_Postfix()
         {
             Main.GetLogger<BlueprintesCachePatches>().LogInformation("Applying patch. MethodName={MethodName}", MethodBase.GetCurrentMethod().Name);
 

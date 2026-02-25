@@ -9,7 +9,7 @@ namespace WOTRMultiplayer.HarmonyPatches.GroupChanger
     {
         [HarmonyPatch(typeof(GroupChangerPCView), nameof(GroupChangerPCView.BindViewImplementation))]
         [HarmonyPostfix]
-        public static void GroupManager_BindViewImplementation_Postfix()
+        public static void GroupChangerPCView_BindViewImplementation_Postfix()
         {
             if (!Main.Multiplayer.IsActive)
             {

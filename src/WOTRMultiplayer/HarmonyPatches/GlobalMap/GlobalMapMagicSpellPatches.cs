@@ -73,7 +73,7 @@ namespace WOTRMultiplayer.HarmonyPatches.GlobalMap
 
         [HarmonyPatch(typeof(SelectedArmyAndPointTarget), nameof(SelectedArmyAndPointTarget.RunActions))]
         [HarmonyPrefix]
-        public static void PlayerSelectedNonTarget_RunActions_Prefix(IGMPoint point, BlueprintGlobalMagicSpell.GlobalMagicData context)
+        public static void SelectedArmyAndPointTarget_RunActions_Prefix(IGMPoint point, BlueprintGlobalMagicSpell.GlobalMagicData context)
         {
             if (!Main.Multiplayer.IsActive || point is not GlobalMapPointView globalMapPointView || Game.Instance.GlobalMapController.SelectedArmy == null)
             {

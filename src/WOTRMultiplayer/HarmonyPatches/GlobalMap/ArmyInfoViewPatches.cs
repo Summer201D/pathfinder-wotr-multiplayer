@@ -42,7 +42,7 @@ namespace WOTRMultiplayer.HarmonyPatches.GlobalMap
 
         [HarmonyPatch(typeof(ArmyInfoView), nameof(ArmyInfoView.CreateArmy))]
         [HarmonyPrefix]
-        public static void ArmyInfoPCView_CreateArmy_Prefix()
+        public static void ArmyInfoView_CreateArmy_Prefix()
         {
             if (!Main.Multiplayer.IsActive)
             {

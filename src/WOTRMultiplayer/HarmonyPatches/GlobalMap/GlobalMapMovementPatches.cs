@@ -256,7 +256,7 @@ namespace WOTRMultiplayer.HarmonyPatches.GlobalMap
 
         [HarmonyPatch(typeof(NavigationArrowView), nameof(NavigationArrowView.OnClick))]
         [HarmonyPrefix]
-        public static bool NavigationArrowsController_OnClick_Prefix(NavigationArrowView __instance)
+        public static bool NavigationArrowView_OnClick_Prefix(NavigationArrowView __instance)
         {
             if (!Main.Multiplayer.IsActive
                 || Game.Instance.CutsceneLock.Active

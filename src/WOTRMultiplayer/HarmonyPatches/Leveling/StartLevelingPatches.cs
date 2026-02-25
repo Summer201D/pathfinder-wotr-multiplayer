@@ -71,7 +71,7 @@ namespace WOTRMultiplayer.HarmonyPatches.Leveling
 
         [HarmonyPatch(typeof(RespecWindowVM), nameof(RespecWindowVM.InitiateNextLevelup))]
         [HarmonyPrefix]
-        public static void RespecCompanion_InitiateNextLevelup_Prefix(RespecWindowVM __instance)
+        public static void RespecWindowVM_InitiateNextLevelup_Prefix(RespecWindowVM __instance)
         {
             if (!Main.Multiplayer.IsActive)
             {
@@ -84,7 +84,7 @@ namespace WOTRMultiplayer.HarmonyPatches.Leveling
 
         [HarmonyPatch(typeof(RespecWindowVM), nameof(RespecWindowVM.InitiateNextMythic))]
         [HarmonyPrefix]
-        public static void RespecCompanion_InitiateNextMythic_Prefix(RespecWindowVM __instance)
+        public static void RespecWindowVM_InitiateNextMythic_Prefix(RespecWindowVM __instance)
         {
             if (!Main.Multiplayer.IsActive)
             {

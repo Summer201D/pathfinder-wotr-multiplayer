@@ -8,7 +8,6 @@ using Kingmaker.UI.MVVM._PCView.Crusade.ArmyInfo;
 using Kingmaker.UI.MVVM._VM.Crusade.ArmyInfo;
 using Microsoft.Extensions.Logging;
 using UnityEngine;
-using WOTRMultiplayer.Entities;
 using WOTRMultiplayer.Entities.GlobalMap;
 using WOTRMultiplayer.Extensions;
 

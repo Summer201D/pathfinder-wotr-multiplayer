@@ -152,7 +152,7 @@ namespace WOTRMultiplayer.HarmonyPatches.GlobalMap
 
         [HarmonyPatch(typeof(RecruitView), nameof(RecruitView.CreateArmy))]
         [HarmonyPrefix]
-        public static void RecruitPCView_CreateArmy_Prefix()
+        public static void RecruitView_CreateArmy_Prefix()
         {
             if (!Main.Multiplayer.IsActive)
             {

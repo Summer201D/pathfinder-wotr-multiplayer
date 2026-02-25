@@ -43,7 +43,7 @@ namespace WOTRMultiplayer.HarmonyPatches.Rolls
 
         [HarmonyPatch(typeof(RuleCombatManeuver), nameof(RuleCombatManeuver.ApplyManeuver))]
         [HarmonyTranspiler]
-        public static IEnumerable<CodeInstruction> RuleDrainEnergy_ApplyManeuver_Transpiler(IEnumerable<CodeInstruction> instructions)
+        public static IEnumerable<CodeInstruction> RuleCombatManeuver_ApplyManeuver_Transpiler(IEnumerable<CodeInstruction> instructions)
         {
             var target = PatchesUtils.GetTranspilerTarget(MethodBase.GetCurrentMethod());
             var replaceWith = AccessTools.Method(typeof(RuleCombatManeuverPatches), nameof(RuleCombatManeuverPatches.ApplyCombatManeuver));

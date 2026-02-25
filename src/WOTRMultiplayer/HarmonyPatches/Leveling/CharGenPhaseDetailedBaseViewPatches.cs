@@ -12,7 +12,7 @@ namespace WOTRMultiplayer.HarmonyPatches.Leveling
     {
         [HarmonyPatch(typeof(CharGenPhaseDetailedBaseView<CharGenPhaseBaseVM>), nameof(CharGenPhaseDetailedBaseView<CharGenPhaseBaseVM>.Show))]
         [HarmonyPrefix]
-        public static void CharInfoLevelClassScoresPCView_Prefix(CharGenPhaseDetailedBaseView<CharGenPhaseBaseVM> __instance)
+        public static void CharGenPhaseDetailedBaseView_Show_Prefix(CharGenPhaseDetailedBaseView<CharGenPhaseBaseVM> __instance)
         {
             if (!Main.Multiplayer.IsActive)
             {

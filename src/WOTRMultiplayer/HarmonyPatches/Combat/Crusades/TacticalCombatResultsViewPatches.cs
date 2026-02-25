@@ -21,7 +21,7 @@ namespace WOTRMultiplayer.HarmonyPatches.Combat.Crusades
 
         [HarmonyPatch(typeof(TacticalCombatResultsVM), nameof(TacticalCombatResultsVM.Close))]
         [HarmonyPrefix]
-        public static void TacticalCombatController_Close_Prefix()
+        public static void TacticalCombatResultsVM_Close_Prefix()
         {
             if (!Main.Multiplayer.IsActive)
             {
@@ -33,7 +33,7 @@ namespace WOTRMultiplayer.HarmonyPatches.Combat.Crusades
 
         [HarmonyPatch(typeof(TacticalCombatResultsVM), nameof(TacticalCombatResultsVM.StartManualCombat))]
         [HarmonyPrefix]
-        public static void TacticalCombatController_StartManualCombat_Prefix()
+        public static void TacticalCombatResultsVM_StartManualCombat_Prefix()
         {
             if (!Main.Multiplayer.IsActive)
             {

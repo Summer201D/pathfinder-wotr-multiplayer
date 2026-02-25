@@ -108,7 +108,7 @@ namespace WOTRMultiplayer.HarmonyPatches.GlobalMap
 
         [HarmonyPatch(typeof(GlobalMapController), nameof(GlobalMapController.SetSelectedArmy))]
         [HarmonyPrefix]
-        public static void GlobalMapCrusadeArmyVM_OnSelectClick_Prefix(GlobalMapArmyState army)
+        public static void GlobalMapController_OnSelectClick_Prefix(GlobalMapArmyState army)
         {
             if (!Main.Multiplayer.IsActive)
             {

@@ -11,7 +11,7 @@ namespace WOTRMultiplayer.HarmonyPatches.Vendor
     {
         [HarmonyPatch(typeof(VendorVM), nameof(VendorVM.Close))]
         [HarmonyPrefix]
-        public static bool Vendor_Close_Prefix(VendorVM __instance)
+        public static bool VendorVM_Close_Prefix(VendorVM __instance)
         {
             if (!Main.Multiplayer.IsActive)
             {

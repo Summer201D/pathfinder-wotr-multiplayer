@@ -72,7 +72,7 @@ namespace WOTRMultiplayer.HarmonyPatches.Rest
 
         [HarmonyPatch(typeof(RestBaseView), nameof(RestBaseView.CloseRest))]
         [HarmonyPrefix]
-        public static void RestPCView_RestBaseView_Prefix(RestBaseView __instance)
+        public static void RestBaseView_RestBaseView_Prefix(RestBaseView __instance)
         {
             if (!Main.Multiplayer.IsActive || __instance.ViewModel.CurrentPhase.Value == UIRestPhase.InProcess)
             {

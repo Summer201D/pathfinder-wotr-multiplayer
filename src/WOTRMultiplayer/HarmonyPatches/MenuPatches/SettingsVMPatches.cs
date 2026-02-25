@@ -55,7 +55,7 @@ namespace WOTRMultiplayer.HarmonyPatches.MenuPatches
 
         [HarmonyPatch(typeof(SettingsVM), nameof(SettingsVM.OnDefaultDialogAnswer))]
         [HarmonyPrefix]
-        public static bool SettingsController_ResetToDefault_Prefix(SettingsVM __instance, MessageModalBase.ButtonType buttonType)
+        public static bool SettingsVM_ResetToDefault_Prefix(SettingsVM __instance, MessageModalBase.ButtonType buttonType)
         {
             if (__instance.m_SelectedMenuEntity.Value.SettingsScreenType != UIFactory.MultiplayerSettingsMenuId || buttonType != MessageModalBase.ButtonType.Yes)
             {
@@ -82,7 +82,7 @@ namespace WOTRMultiplayer.HarmonyPatches.MenuPatches
 
         [HarmonyPatch(typeof(SettingsVM), nameof(SettingsVM.RevertSettings))]
         [HarmonyPostfix]
-        public static void SettingsController_RevertSettings_Postfix(SettingsVM __instance)
+        public static void SettingsVM_RevertSettings_Postfix(SettingsVM __instance)
         {
             if (__instance.m_SelectedMenuEntity.Value.SettingsScreenType != UIFactory.MultiplayerSettingsMenuId)
             {

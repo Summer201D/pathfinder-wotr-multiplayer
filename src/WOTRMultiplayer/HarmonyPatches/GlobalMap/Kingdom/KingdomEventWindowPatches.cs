@@ -12,7 +12,7 @@ namespace WOTRMultiplayer.HarmonyPatches.GlobalMap.Kingdom
     {
         [HarmonyPatch(typeof(KingdomUIEventWindow), nameof(KingdomUIEventWindow.OnNextClick))]
         [HarmonyPrefix]
-        public static bool KingdomNaviElement_OnNextClick_Prefix()
+        public static bool KingdomUIEventWindow_OnNextClick_Prefix()
         {
             if (!Main.Multiplayer.IsActive)
             {
@@ -25,7 +25,7 @@ namespace WOTRMultiplayer.HarmonyPatches.GlobalMap.Kingdom
 
         [HarmonyPatch(typeof(KingdomUIEventWindow), nameof(KingdomUIEventWindow.OnPrevClick))]
         [HarmonyPrefix]
-        public static bool KingdomNaviElement_OnPrevClick_Prefix()
+        public static bool KingdomUIEventWindow_OnPrevClick_Prefix()
         {
             if (!Main.Multiplayer.IsActive)
             {
@@ -38,7 +38,7 @@ namespace WOTRMultiplayer.HarmonyPatches.GlobalMap.Kingdom
 
         [HarmonyPatch(typeof(KingdomUIEventWindow), nameof(KingdomUIEventWindow.OnCrossPressed))]
         [HarmonyPrefix]
-        public static bool KingdomNaviElement_OnCrossPressed_Prefix()
+        public static bool KingdomUIEventWindow_OnCrossPressed_Prefix()
         {
             if (!Main.Multiplayer.IsActive)
             {

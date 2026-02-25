@@ -17,7 +17,7 @@ namespace WOTRMultiplayer.HarmonyPatches.Leveling
     {
         [HarmonyPatch(typeof(SelectionGroupEntityVM), nameof(SelectionGroupEntityVM.SetSelectedFromView))]
         [HarmonyPrefix]
-        public static bool SlideSelectorCommonView_SetSelectedFromView_Prefix(SelectionGroupEntityVM __instance)
+        public static bool SelectionGroupEntityVM_SetSelectedFromView_Prefix(SelectionGroupEntityVM __instance)
         {
             if (!Main.Multiplayer.IsActive || __instance is not TextureSelectorItemVM || GetCurrentCharGenDetailView() is not CharGenAppearancePhaseDetailedPCView)
             {

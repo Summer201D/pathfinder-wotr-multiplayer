@@ -94,6 +94,27 @@ namespace WOTRMultiplayer.UnitTests.HarmonyPatches
             Assert.That(invalidMethods, Is.Empty, $"Invalid harmony patch method name suffix detected ({invalidMethods.Count})");
         }
 
+        [Test]
+        public void HarmonyPatch_StartsWithCorrectPrefix()
+        {
+            // Arrange
+            var invalidMethods = new ConcurrentDictionary<string, string>();
+
+            // Act
+            foreach (var enumerated in EnumeratePatches())
+            {
+                var expectedPrefix = enumerated.PatchedClass.GenericTypeArguments.Length > 0 ? enumerated.PatchedClass.Name.Split('`').First() : enumerated.PatchedClass.Name;
+                var startsWith = enumerated.Method.Name.Split('_').FirstOrDefault();
+                if (string.IsNullOrEmpty(startsWith) || startsWith != expectedPrefix)
+                {
+                    invalidMethods.AddOrUpdate(enumerated.Method.Name, expectedPrefix, (key, value) => expectedPrefix);
+                }
+            }
+
+            // Assert
+            Assert.That(invalidMethods, Is.Empty, $"Invalid harmony patch method name prefix detected ({invalidMethods.Count})");
+        }
+
         private IEnumerable<EnumeratedHarmonyPatch> EnumeratePatches()
         {
             var classesWithPatches = typeof(Main).Assembly.GetTypes().Where(x => x.GetCustomAttribute<HarmonyPatch>() != null);

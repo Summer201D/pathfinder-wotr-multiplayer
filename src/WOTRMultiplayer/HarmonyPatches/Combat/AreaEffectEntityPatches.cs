@@ -11,7 +11,7 @@ namespace WOTRMultiplayer.HarmonyPatches.Combat
     {
         [HarmonyPatch(typeof(AbilityAreaEffectLogic), nameof(AbilityAreaEffectLogic.HandleRound))]
         [HarmonyPrefix]
-        public static bool AreaEffectEntityData_HandleRound_Prefix(AreaEffectEntityData areaEffect)
+        public static bool AbilityAreaEffectLogic_HandleRound_Prefix(AreaEffectEntityData areaEffect)
         {
             if (!Main.Multiplayer.IsActive || TacticalCombatHelper.IsActive)
             {

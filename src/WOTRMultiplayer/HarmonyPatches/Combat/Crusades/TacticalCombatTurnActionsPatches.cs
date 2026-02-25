@@ -40,7 +40,7 @@ namespace WOTRMultiplayer.HarmonyPatches.Combat.Crusades
 
         [HarmonyPatch(typeof(TacticalCombatUnitActionBarBaseView), nameof(TacticalCombatUnitActionBarBaseView.UpdateHoldButtonState))]
         [HarmonyPostfix]
-        public static void TacticalCombatTurnController_UpdateHoldButtonState_Postfix(TacticalCombatUnitActionBarBaseView __instance)
+        public static void TacticalCombatUnitActionBarBaseView_UpdateHoldButtonState_Postfix(TacticalCombatUnitActionBarBaseView __instance)
         {
             if (!Main.Multiplayer.IsActive)
             {
@@ -79,7 +79,7 @@ namespace WOTRMultiplayer.HarmonyPatches.Combat.Crusades
 
         [HarmonyPatch(typeof(TacticalCombatController), nameof(TacticalCombatController.HandleTotalDefensePressed))]
         [HarmonyPrefix]
-        public static bool TacticalCombatTurnController_HandleTotalDefensePressed_Prefix(TacticalCombatController __instance)
+        public static bool TacticalCombatController_HandleTotalDefensePressed_Prefix(TacticalCombatController __instance)
         {
             var turn = Game.Instance.TacticalCombat.Data.Turn;
             var unit = turn.Unit;
@@ -95,7 +95,7 @@ namespace WOTRMultiplayer.HarmonyPatches.Combat.Crusades
 
         [HarmonyPatch(typeof(TacticalCombatController), nameof(TacticalCombatController.HandlePostponeTurnPressed))]
         [HarmonyPrefix]
-        public static bool TacticalCombatTurnController_HandlePostponeTurnPressed_Prefix(TacticalCombatController __instance)
+        public static bool TacticalCombatController_HandlePostponeTurnPressed_Prefix(TacticalCombatController __instance)
         {
             var turn = Game.Instance.TacticalCombat.Data.Turn;
             if (!Main.Multiplayer.IsActive || __instance.TurnController.TurnEnded || turn.StandardActionUsed)

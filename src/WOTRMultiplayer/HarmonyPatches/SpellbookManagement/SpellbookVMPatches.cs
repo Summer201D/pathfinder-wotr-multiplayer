@@ -21,7 +21,7 @@ namespace WOTRMultiplayer.HarmonyPatches.SpellbookManagement
     {
         [HarmonyPatch(typeof(SpellbookPCView), nameof(SpellbookPCView.BindViewImplementation))]
         [HarmonyPostfix]
-        public static void SpellbookVM_BindViewImplementation_Postfix(SpellbookPCView __instance)
+        public static void SpellbookPCView_BindViewImplementation_Postfix(SpellbookPCView __instance)
         {
             if (!Main.Multiplayer.IsActive)
             {
