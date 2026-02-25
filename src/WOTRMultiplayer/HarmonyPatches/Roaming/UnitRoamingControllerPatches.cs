@@ -1,10 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
 using HarmonyLib;
+using Kingmaker.AreaLogic.Cutscenes;
 using Kingmaker.Controllers.Units;
 using Kingmaker.UnitLogic.Parts;
+using Kingmaker.Utility;
 using Microsoft.Extensions.Logging;
 using UnityEngine;
 using WOTRMultiplayer.Extensions;
@@ -17,7 +20,7 @@ namespace WOTRMultiplayer.HarmonyPatches.Roaming
     {
         [HarmonyPatch(typeof(UnitRoamingController), nameof(UnitRoamingController.RollNextPoint))]
         [HarmonyTranspiler]
-        public static IEnumerable<CodeInstruction> Projectile_CalculateMissTarget_Transpiler(IEnumerable<CodeInstruction> instructions)
+        public static IEnumerable<CodeInstruction> UnitRoamingController_RollNextPoint_Transpiler(IEnumerable<CodeInstruction> instructions)
         {
             var target = PatchesUtils.GetTranspilerTarget(MethodBase.GetCurrentMethod());
             var lookFor = AccessTools.PropertyGetter(typeof(UnityEngine.Random), nameof(UnityEngine.Random.insideUnitCircle));
@@ -26,7 +29,7 @@ namespace WOTRMultiplayer.HarmonyPatches.Roaming
             var match = matcher.SearchForward(x => x.Calls(lookFor));
             if (match.IsInvalid)
             {
-                Main.GetLogger<UnitRoamingControllerPatches>().LogError("Transpiler has not been applied. Target={Target}", target);
+                Main.GetLogger<UnitRoamingControllerPatches>().LogError("Transpiler has not been applied (NextPoint). Target={Target}", target);
                 return instructions;
             }
 
@@ -43,7 +46,7 @@ namespace WOTRMultiplayer.HarmonyPatches.Roaming
             match = matcher.SearchForward(x => x.Calls(lookForRange));
             if (match.IsInvalid)
             {
-                Main.GetLogger<UnitRoamingControllerPatches>().LogError("Transpiler has not been applied. Target={Target}", target);
+                Main.GetLogger<UnitRoamingControllerPatches>().LogError("Transpiler has not been applied (IdleTime). Target={Target}", target);
                 return instructions;
             }
 
@@ -54,8 +57,59 @@ namespace WOTRMultiplayer.HarmonyPatches.Roaming
             };
             match = match.RemoveInstruction().Insert(rangeInstructions);
 
-            Main.GetLogger<UnitRoamingControllerPatches>().LogInformation("Transpiler has been applied. Target={Target}", target);
+            var replaceRandomWith = AccessTools.Method(typeof(UnitRoamingControllerPatches), nameof(UnitRoamingControllerPatches.SelectIdleCutscene));
+            var lookForRandom = $"{typeof(Cutscene).FullName} {nameof(LinqExtensions.Random)}";
+            match = matcher.SearchForward(x => x.opcode == OpCodes.Call && (x.operand?.ToString().Contains(lookForRandom) ?? false));
+
+            if (match.IsInvalid)
+            {
+                Main.GetLogger<UnitRoamingControllerPatches>().LogError("Invalid transpiler position (IdleCutscene). Target={Target}", target);
+                return matcher.Instructions();
+            }
+
+            var randomInstructions = new List<CodeInstruction>()
+            {
+                new(OpCodes.Ldarg_0),
+                new(OpCodes.Call, replaceRandomWith),
+            };
+
+            match = match.RemoveInstruction().Insert(randomInstructions);
+            Main.GetLogger<UnitRoamingControllerPatches>().LogInformation("Transpiler has been applied (NextPoint + IdleTime + IdleCutscene). Target={Target}", target);
             return matcher.Instructions();
+        }
+
+        private static Cutscene SelectIdleCutscene(IEnumerable<Cutscene> cutscenes, Func<int, int, int> randomFromRange, UnitPartRoaming roaming)
+        {
+            if (!Main.Multiplayer.IsActive)
+            {
+                return cutscenes.Random(randomFromRange);
+            }
+
+            try
+            {
+                var minInclusive = 0;
+                var maxExclusive = cutscenes?.Count();
+                if (maxExclusive == 0)
+                {
+                    return null;
+                }
+
+                var sessionSeed = Main.Multiplayer.GetSessionSeed();
+                var loadedSaveSeed = Main.Multiplayer.GetLoadedSaveSeed();
+                var areaSeed = Main.Multiplayer.GetAreaSeed();
+
+                var identifier = $"{nameof(UnitRoamingController)}:{nameof(SelectIdleCutscene)}:{roaming.Owner.UniqueId}:{roaming.OriginalPoint}_{sessionSeed}:{loadedSaveSeed}:{areaSeed}";
+
+                var cutsceneIndex = Main.Multiplayer.ValueGenerator.Range(IdentifierLifetime.Area, identifier, minInclusive, maxExclusive.Value);
+                var cutscene = cutscenes.ElementAt(cutsceneIndex);
+                Main.GetLogger<UnitRoamingControllerPatches>().LogDebug("Unit idle cutscene has been rolled. UnitId={UnitId}, Time={Time}, Identifier={Identifier}", roaming.Owner.UniqueId, cutscene.name, identifier);
+                return cutscene;
+            }
+            catch (Exception ex)
+            {
+                Main.GetLogger<UnitRoamingControllerPatches>().LogError(ex, "Error rolling unit idle cutscene. UnitId={UnitId}", roaming.Owner.UniqueId);
+                throw;
+            }
         }
 
         private static float RollIdleTime(float minInclusive, float maxExclusive, UnitPartRoaming roaming)
