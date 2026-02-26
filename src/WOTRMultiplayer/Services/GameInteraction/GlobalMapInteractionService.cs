@@ -1592,6 +1592,22 @@ namespace WOTRMultiplayer.Services.GameInteraction
             });
         }
 
+        public void UpgradeSettlement(NetworkKingdomSettlement kingdomSettlement)
+        {
+            _mainThreadAccessor.Post(() =>
+            {
+                var settlement = _gameStateLookupService.GetKingdomSettlement(kingdomSettlement);
+                if (settlement == null)
+                {
+                    _logger.LogError("Unable to upgrade missing settlement. Id={Id}", kingdomSettlement.Id);
+                    return;
+                }
+
+                settlement.LevelUp();
+                _logger.LogInformation("Kingdom settlement has been upgraded. SettlementId={SettlementId}, SettlementName={SettlementName}", settlement.UniqueId, settlement.Name);
+            });
+        }
+
         public void EnterSettlement(NetworkKingdomSettlement kingdomSettlement, bool requiresUnloadEvent, bool exitSettlementToGlobalMap)
         {
             _mainThreadAccessor.Post(() =>

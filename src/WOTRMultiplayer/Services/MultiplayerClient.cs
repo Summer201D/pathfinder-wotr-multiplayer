@@ -614,6 +614,7 @@ namespace WOTRMultiplayer.Services
                .On<NotifyKingdomSettlementLeft>(OnNotifyKingdomSettlementLeft)
                .On<NotifyKingdomSettlementBuildingSold>(OnNotifyKingdomSettlementBuildingSold)
                .On<NotifyKingdomSettlementBuildingBuilt>(OnNotifyKingdomSettlementBuildingBuilt)
+               .On<NotifyKingdomSettlementUpgraded>(OnNotifyKingdomSettlementUpgraded)
 
                // dialogs
                .On<NotifyDialogStarted>(OnNotifyDialogStarted)
@@ -649,6 +650,12 @@ namespace WOTRMultiplayer.Services
                // inventory
                .On<NotifyPolymorphicItemCreated>(OnNotifyPolymorphicItemCreated)
                ;
+        }
+
+        private void OnNotifyKingdomSettlementUpgraded(long receivedFrom, NotifyKingdomSettlementUpgraded message)
+        {
+            var kingdomSettlement = Mapper.Map<NetworkKingdomSettlement>(message.Settlement);
+            GlobalMapInteraction.UpgradeSettlement(kingdomSettlement);
         }
 
         private void OnNotifyIslandMapEntryChosen(long receivedFrom, NotifyIslandMapEntryChosen message)

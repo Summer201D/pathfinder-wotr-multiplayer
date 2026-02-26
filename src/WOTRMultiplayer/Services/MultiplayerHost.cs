@@ -1127,6 +1127,15 @@ namespace WOTRMultiplayer.Services
             Send(message);
         }
 
+        public void OnKingdomUpgradeSettlement(NetworkKingdomSettlement kingdomSettlement)
+        {
+            var message = new NotifyKingdomSettlementUpgraded
+            {
+                Settlement = Mapper.Map<Networking.Messages.Contracts.NetworkKingdomSettlement>(kingdomSettlement)
+            };
+            Send(message);
+        }
+
         public void OnKingdomEnterSettlement(NetworkKingdomSettlement kingdomSettlement, bool requiresUnloadEvent, bool exitSettlementToGlobalMap)
         {
             var message = new NotifyKingdomSettlementEntered

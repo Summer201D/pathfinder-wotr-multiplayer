@@ -541,5 +541,7 @@ namespace WOTRMultiplayer.Abstractions
         void OnGlobalMapTeleport(NetworkGlobalMapLocation globalMapLocation);
 
         void OnIslandMapEntryChosen(NetworkIslandMapTransition islandMapTransition);
+
+        void OnKingdomUpgradeSettlement(NetworkKingdomSettlement kingdomSettlement);
     }
 }

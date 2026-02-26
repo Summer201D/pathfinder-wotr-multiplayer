@@ -4325,6 +4325,24 @@ namespace WOTRMultiplayer.Services
             }
         }
 
+        public void OnKingdomUpgradeSettlement(NetworkKingdomSettlement kingdomSettlement)
+        {
+            try
+            {
+                if (_multiplayerActorAccessor == null || _multiplayerActorAccessor.Client.IsActive)
+                {
+                    return;
+                }
+
+                _multiplayerActorAccessor.Host.OnKingdomUpgradeSettlement(kingdomSettlement);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while upgrading kingdom settlement. Id={Id}, Name={Name}", kingdomSettlement.Id, kingdomSettlement.Name);
+                throw;
+            }
+        }
+
         public void OnKingdomEnterSettlement(NetworkKingdomSettlement kingdomSettlement, bool requiresUnloadEvent, bool exitSettlementToGlobalMap)
         {
             try

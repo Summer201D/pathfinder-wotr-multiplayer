@@ -164,6 +164,19 @@ namespace WOTRMultiplayer.HarmonyPatches.GlobalMap.Kingdom
             }
         }
 
+        [HarmonyPatch(typeof(KingdomUISettlementWindow), nameof(KingdomUISettlementWindow.OnUpgradeClick))]
+        [HarmonyPrefix]
+        public static void KingdomUISettlementWindow_OnUpgradeClick_Prefix(KingdomUISettlementWindow __instance)
+        {
+            if (!Main.Multiplayer.IsActive)
+            {
+                return;
+            }
+
+            var settlement = Main.Mapper.Map<NetworkKingdomSettlement>(__instance.m_Settlement);
+            Main.Multiplayer.OnKingdomUpgradeSettlement(settlement);
+        }
+
         private static NetworkKingdomEventSolution GetEventSolution(KingdomUIEventWindowFooter footer)
         {
             if (footer.CurrentEventSolution == null)

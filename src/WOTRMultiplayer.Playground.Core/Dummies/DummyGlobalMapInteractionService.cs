@@ -337,5 +337,9 @@ namespace WOTRMultiplayer.Playground.Core.Dummies
         public void Teleport(NetworkGlobalMapLocation location)
         {
         }
+
+        public void UpgradeSettlement(NetworkKingdomSettlement kingdomSettlement)
+        {
+        }
     }
 }

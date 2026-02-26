@@ -206,5 +206,7 @@ namespace WOTRMultiplayer.Abstractions
         void OnTransitionMapClosed();
 
         void OnGlobalMapTeleport(NetworkGlobalMapLocation globalMapLocation);
+
+        void OnKingdomUpgradeSettlement(NetworkKingdomSettlement kingdomSettlement);
     }
 }

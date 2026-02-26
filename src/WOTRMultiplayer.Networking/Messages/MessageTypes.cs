@@ -266,7 +266,8 @@
             NotifyCustomSpellRemoved,
             NotifyGlobalMapTeleport,
             NotifyTrapActivated,
-            NotifyIslandMapEntryChosen
+            NotifyIslandMapEntryChosen,
+            NotifyKingdomSettlementUpgraded
         }
 
         public enum Request
