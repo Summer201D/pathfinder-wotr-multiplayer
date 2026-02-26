@@ -15,5 +15,7 @@ namespace WOTRMultiplayer.Entities.Combat
         public string CommandType { get; set; }
 
         public string MovementLimit { get; set; }
+
+        public string AttackMode { get; set; }
     }
 }

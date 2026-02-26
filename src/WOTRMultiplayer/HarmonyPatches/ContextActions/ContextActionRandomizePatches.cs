@@ -141,10 +141,10 @@ namespace WOTRMultiplayer.HarmonyPatches.ContextActions
                 var combatTurnSeed = Main.Multiplayer.GetCombatTurnSeed();
                 var armyCombatSeed = Main.Multiplayer.GetCrusadeArmyCombatSeed();
 
-                var unitId = contextActionRandomize.AbilityContext.MaybeOwner?.UniqueId;
-                var targetId = contextActionRandomize.AbilityContext.MainTarget?.Unit?.UniqueId;
-                var abilityName = contextActionRandomize.AbilityContext.NameForAcronym;
-                var attackNumber = contextActionRandomize.AbilityContext.AttackRoll?.RuleAttackWithWeapon?.AttackNumber ?? -1;
+                var unitId = contextActionRandomize.AbilityContext?.MaybeOwner?.UniqueId ?? contextActionRandomize.Context?.MaybeCaster?.UniqueId;
+                var targetId = contextActionRandomize.AbilityContext?.MainTarget?.Unit?.UniqueId;
+                var abilityName = contextActionRandomize.AbilityContext?.NameForAcronym;
+                var attackNumber = contextActionRandomize.AbilityContext?.AttackRoll?.RuleAttackWithWeapon?.AttackNumber ?? -1;
                 var lifetime = combatSeed == 0 ? IdentifierLifetime.Area : IdentifierLifetime.CombatTurn;
                 var identifier = $"{nameof(ContextActionRandomize)}:{nameof(RollRandomWeightedActionIndex)}:{minInclusive}:{maxExclusive}:{unitId}:{targetId}:{abilityName}:{attackNumber}_{sessionSeed}:{loadedSave}:{areaSeed}:{combatSeed}:{combatTurnSeed}:{armyCombatSeed}";
                 var index = Main.Multiplayer.ValueGenerator.Range(lifetime, identifier, minInclusive, maxExclusive);

@@ -2,6 +2,7 @@
 using System.Linq;
 using HarmonyLib;
 using Kingmaker;
+using Kingmaker.ElementsSystem;
 using Kingmaker.EntitySystem.Entities;
 using Kingmaker.TurnBasedMode;
 using Kingmaker.UnitLogic;
@@ -9,6 +10,7 @@ using Kingmaker.UnitLogic.Abilities;
 using Kingmaker.UnitLogic.Class.Kineticist;
 using Kingmaker.UnitLogic.Commands;
 using Kingmaker.UnitLogic.Commands.Base;
+using Kingmaker.UnitLogic.FactLogic;
 using Kingmaker.UnitLogic.Parts;
 using Microsoft.Extensions.Logging;
 using UnityEngine;
@@ -123,6 +125,7 @@ namespace WOTRMultiplayer.HarmonyPatches.Combat
 
             try
             {
+                var bombs = ContextData<FastBombs.FastBombsContext>.Current;
                 if (ShouldIgnoreStickyTouchAbilityCast(__instance))
                 {
                     Main.GetLogger<UnitCommandsPatches>().LogWarning("Skipping ability use as it's a part of sticky touch delivery usage. UnitId={UnitId}, AbilityName={AbilityName}, AbilityId={AbilityId}", __instance.Executor.UniqueId, __instance.Ability.Name, __instance.Ability.UniqueId);
@@ -141,6 +144,13 @@ namespace WOTRMultiplayer.HarmonyPatches.Combat
                     return;
                 }
 
+
+                if (IsAlchemistFastBombsSequentialCast(__instance))
+                {
+                    Main.GetLogger<UnitCommandsPatches>().LogWarning("Skipping ability use as it's a part of alchimsit sequential fast bombs usage. UnitId={UnitId}, AbilityName={AbilityName}, AbilityId={AbilityId}", __instance.Executor.UniqueId, __instance.Ability.Name, __instance.Ability.UniqueId);
+                    return;
+                }
+
                 // Tactical combat - TotalDefense
                 if (string.Equals(__instance.Ability.Blueprint.AssetGuid.ToString(), "5fcc24b820f55104892097782b92228e", StringComparison.OrdinalIgnoreCase))
                 {
@@ -154,6 +164,19 @@ namespace WOTRMultiplayer.HarmonyPatches.Combat
                 Main.GetLogger<UnitCommandsPatches>().LogError(ex, "Unable to handle unit ability use command. UnitId={UnitId}, AbilityName={AbilityName}", __instance.Executor.UniqueId, __instance.Ability.NameForAcronym);
                 throw;
             }
+        }
+
+        private static bool IsAlchemistFastBombsSequentialCast(UnitUseAbility command)
+        {
+            if (command.Executor.State?.FastBombsFeature == null || Game.Instance.TurnBasedCombatController.CurrentTurn == null)
+            {
+                return false;
+            }
+
+            var isFirstCast = command.Executor.State.FastBombsFeature.Abilities.Any(a => a.Guid == command.Ability.Blueprint.AssetGuid)
+                && Game.Instance.TurnBasedCombatController.CurrentTurn.CurrentAbility == command.Ability; // CurrentAbility == command.Ability for a first actual usage
+
+            return !isFirstCast;
         }
 
         private static bool ShouldIgnoreStickyTouchAbilityCast(UnitUseAbility command)
@@ -187,6 +210,8 @@ namespace WOTRMultiplayer.HarmonyPatches.Combat
             var path = PathVisualizer.Instance?.CurrentPathForUnit(command.Executor.View);
             var networkPath = path?.vectorPath.Select(v => v.ToNetworkVector3()).ToList();
             var movementLimit = Game.Instance.TurnBasedCombatController.CurrentTurn?.CurrentMovementLimit;
+            var attackMode = Game.Instance.TurnBasedCombatController.CurrentTurn?.m_AttackMode;
+
             var abilityUse = new NetworkAbilityUse
             {
                 Ability = Main.Mapper.Map<NetworkAbility>(command.Ability),
@@ -194,7 +219,8 @@ namespace WOTRMultiplayer.HarmonyPatches.Combat
                 InitiatorUnitId = command.Executor.UniqueId,
                 VectorPath = networkPath,
                 CommandType = command.Type.ToString(),
-                MovementLimit = movementLimit?.ToString()
+                MovementLimit = movementLimit?.ToString(),
+                AttackMode = attackMode?.ToString()
             };
 
             Main.Multiplayer.OnAbilityUse(abilityUse);

@@ -6,6 +6,7 @@ using Kingmaker.Items;
 using Kingmaker.Items.Slots;
 using Kingmaker.PubSubSystem;
 using Kingmaker.UnitLogic;
+using Kingmaker.UnitLogic.FactLogic;
 using Microsoft.Extensions.Logging;
 using WOTRMultiplayer.Abstractions;
 using WOTRMultiplayer.Abstractions.GameInteraction;
@@ -39,9 +40,11 @@ namespace WOTRMultiplayer.Services.PubSub
                 // - multiplayer is not active
                 // - game is loading new game
                 // - previousItem exists, but has no collection = either used by player (potion) or some scripted action
+                // - alchemist bombs
                 if (ActorAccessor.Current == null
                         || _gameInteractionService.CurrentGameMode == GameModeType.None
-                        || (previousItem != null && previousItem.Collection == null && !slot.HasItem))
+                        || (previousItem != null && previousItem.Collection == null && !slot.HasItem)
+                        || ContextData<FastBombs.FastBombsContext>.Current != null)
                 {
                     return;
                 }

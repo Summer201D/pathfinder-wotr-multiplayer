@@ -1068,6 +1068,13 @@ namespace WOTRMultiplayer.Services.GameInteraction
                 _logger.LogWarning("Unable to parse command type. Type={Type}", networkAbilityUse.CommandType);
                 commandType = UnitCommand.CommandType.Standard;
             }
+
+            var turn = Game.Instance.TurnBasedCombatController.CurrentTurn;
+            if (turn != null)
+            {
+                turn.m_AttackMode = (TurnController.AttackMode)Enum.Parse(typeof(TurnController.AttackMode), networkAbilityUse.AttackMode);
+            }
+
             var target = CreateTargetWrapper(networkAbilityUse.Target);
 
             RunUnitAbilityCommand(executorUnit, abilityData, target, networkAbilityUse.VectorPath, commandType, networkAbilityUse.MovementLimit);
