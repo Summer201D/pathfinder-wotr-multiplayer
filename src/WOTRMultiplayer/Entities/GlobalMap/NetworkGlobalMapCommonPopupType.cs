@@ -8,6 +8,8 @@
         Exhaust,
         ClearLeader,
         BuyLeader,
-        DismissArmy
+        DismissArmy,
+        BattleStarts,
+        SiegeStarts
     }
 }

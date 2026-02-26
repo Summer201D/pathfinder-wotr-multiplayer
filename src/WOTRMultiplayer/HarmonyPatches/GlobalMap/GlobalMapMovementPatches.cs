@@ -14,6 +14,7 @@ using Kingmaker.Globalmap;
 using Kingmaker.Globalmap.Blueprints;
 using Kingmaker.Globalmap.State;
 using Kingmaker.Globalmap.View;
+using Kingmaker.Kingdom.Settlements;
 using Kingmaker.PubSubSystem;
 using Kingmaker.UI;
 using Kingmaker.UI.Common;
@@ -121,6 +122,79 @@ namespace WOTRMultiplayer.HarmonyPatches.GlobalMap
             OnFatigueMessageActionChosen(btn);
         }
 
+        [HarmonyPatch(typeof(GlobalMapController), nameof(GlobalMapController.CheckArmyBattles))]
+        [HarmonyTranspiler]
+        public static IEnumerable<CodeInstruction> GlobalMapController_CheckArmyBattles_Transpiler(IEnumerable<CodeInstruction> instructions)
+        {
+            var target = PatchesUtils.GetTranspilerTarget(MethodBase.GetCurrentMethod());
+            var replaceWith = AccessTools.Method(typeof(GlobalMapMovementPatches), nameof(GlobalMapMovementPatches.OnShowBattleStartMessage));
+            var matcher = new CodeMatcher(instructions);
+            var match = matcher.SearchForward(x => x.Is(OpCodes.Isinst, typeof(LocationTravelLogic)));
+
+            if (match.IsInvalid)
+            {
+                Main.GetLogger<GlobalMapMovementPatches>().LogError("Invalid transpiler position (BattleStarts). Target={Target}", target);
+                return instructions;
+            }
+
+            var battleStartsInstructions = new List<CodeInstruction>()
+            {
+                new(OpCodes.Ldarg_0),
+                new(OpCodes.Ldarg_2),
+                new(OpCodes.Ldloc_1),
+                new(OpCodes.Ldarg_1),
+                new(OpCodes.Call, replaceWith),
+            };
+            match = match.Advance(6).RemoveInstructions(6).Insert(battleStartsInstructions);
+
+            var siegeLookup = AccessTools.PropertyGetter(typeof(SettlementState), nameof(SettlementState.CanBeBesieged));
+            var siegeMessage = AccessTools.Method(typeof(GlobalMapMovementPatches), nameof(GlobalMapMovementPatches.OnShowSiegeMessage));
+            match = match.SearchForward(x => x.Calls(siegeLookup));
+            if (match.IsInvalid)
+            {
+                Main.GetLogger<GlobalMapMovementPatches>().LogError("Invalid transpiler position (Siege). Target={Target}", target);
+                return instructions;
+            }
+            var siegeInstructions = new List<CodeInstruction>()
+            {
+                new(OpCodes.Ldloc_S, 4),
+                new(OpCodes.Call, siegeMessage),
+            };
+            match = match.Advance(8).RemoveInstructions(6).Insert(siegeInstructions);
+
+            Main.GetLogger<GlobalMapMovementPatches>().LogInformation("Transpiler has been applied (BattleStarts + Siege). Target={Target}", target);
+            return matcher.Instructions();
+        }
+
+        private static void OnShowSiegeMessage(SettlementState settlement)
+        {
+            var popup = new NetworkGlobalMapCommonPopup { Type = NetworkGlobalMapCommonPopupType.SiegeStarts };
+            var message = string.Format(BlueprintRoot.Instance.ArmyRoot.ArmyStrings.SiegeBeginMessageFormat, settlement.Name);
+            EventBus.RaiseEvent<IMessageModalUIHandler>(x => x.HandleOpen(message, MessageModalBase.ModalType.Message, _ =>
+            {
+                Main.Multiplayer.OnGlobalMapCommonPopupAccepted(popup);
+            }, null, null, null, null, null, null, 0, uint.MaxValue, null)); ;
+            Main.Multiplayer.OnGlobalMapCommonPopupShown(popup);
+        }
+
+        private static void OnShowBattleStartMessage(GlobalMapController globalMapController, GlobalMapArmyState army, int armyIndex, GlobalMapState state)
+        {
+            var otherArmy = state.Armies[armyIndex];
+            var popup = new NetworkGlobalMapCommonPopup { Type = NetworkGlobalMapCommonPopupType.BattleStarts };
+            EventBus.RaiseEvent<IMessageModalUIHandler>(x =>
+            {
+                x.HandleOpen(
+                    BlueprintRoot.Instance.ArmyRoot.ArmyStrings.BattleBeginMessage,
+                    MessageModalBase.ModalType.Message,
+                    button =>
+                    {
+                        Main.Multiplayer.OnGlobalMapCommonPopupAccepted(popup);
+                        globalMapController.BeginCombat(army, otherArmy);
+                    }, null, null, null, null, null, null, 0, uint.MaxValue, null);
+            }, true);
+            Main.Multiplayer.OnGlobalMapCommonPopupShown(popup);
+        }
+
         [HarmonyPatch(typeof(GlobalMapController), nameof(GlobalMapController.BeginCombat))]
         [HarmonyTranspiler]
         public static IEnumerable<CodeInstruction> GlobalMapController_BeginCombat_Transpiler(IEnumerable<CodeInstruction> instructions)
@@ -131,7 +205,6 @@ namespace WOTRMultiplayer.HarmonyPatches.GlobalMap
             var matcher = new CodeMatcher(instructions);
             var match = matcher.SearchForward(x => x.Calls(lookFor));
 
-            match = match.SearchForward(x => x.Calls(lookFor));
             if (match.IsInvalid)
             {
                 Main.GetLogger<GlobalMapMovementPatches>().LogError("Invalid transpiler position. Target={Target}, Position={Position}", target, match.Pos);
