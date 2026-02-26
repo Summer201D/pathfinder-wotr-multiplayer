@@ -155,7 +155,7 @@ namespace WOTRMultiplayer.HarmonyPatches.GameInstance
                 new (OpCodes.Call, pauseToggleCall),
             };
             match.Insert(pauseInstructions);
-            Main.GetLogger<GamePatches>().LogInformation("Transpiler has been applied (TogglePause + BreakGlobalMap). Target={Target}", target);
+            Main.GetLogger<GamePatches>().LogDebug("Transpiler has been applied (TogglePause + BreakGlobalMap). Target={Target}", target);
             return matcher.Instructions();
         }
 
@@ -180,7 +180,7 @@ namespace WOTRMultiplayer.HarmonyPatches.GameInstance
                 new (OpCodes.Call, replaceWith),
             };
             match.Insert(newInstructions);
-            Main.GetLogger<GamePatches>().LogInformation("Transpiler has been applied. Target={Target}", target);
+            Main.GetLogger<GamePatches>().LogDebug("Transpiler has been applied. Target={Target}", target);
             return matcher.Instructions();
         }
 

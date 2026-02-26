@@ -40,7 +40,7 @@ namespace WOTRMultiplayer.HarmonyPatches.ContextActions
 
             match = match.RemoveInstruction().Insert(newInstructions);
 
-            Main.GetLogger<ContextActionOnRandomAreaTargetPatches>().LogInformation("Transpiler has been applied. Target={Target}", target);
+            Main.GetLogger<ContextActionOnRandomAreaTargetPatches>().LogDebug("Transpiler has been applied. Target={Target}", target);
             return matcher.Instructions();
         }
 

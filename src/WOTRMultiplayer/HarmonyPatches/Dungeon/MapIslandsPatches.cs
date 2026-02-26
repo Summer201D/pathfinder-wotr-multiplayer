@@ -75,7 +75,7 @@ namespace WOTRMultiplayer.HarmonyPatches.Dungeon
                 new(OpCodes.Brfalse_S, endLabel)
             };
             match = match.Insert(newInstructions);
-            Main.GetLogger<MapIslandsPatches>().LogInformation("Transpiler has been applied. Target={Target}", target);
+            Main.GetLogger<MapIslandsPatches>().LogDebug("Transpiler has been applied. Target={Target}", target);
             return matcher.Instructions();
         }
 
@@ -104,7 +104,7 @@ namespace WOTRMultiplayer.HarmonyPatches.Dungeon
                 .RemoveInstructions(8)
                 .Insert(newInstructions);
 
-            Main.GetLogger<MapIslandsPatches>().LogInformation("Transpiler has been applied. Target={Target}", target);
+            Main.GetLogger<MapIslandsPatches>().LogDebug("Transpiler has been applied. Target={Target}", target);
             return matcher.Instructions();
         }
 

@@ -47,7 +47,7 @@ namespace WOTRMultiplayer.HarmonyPatches.Rolls
                 new(OpCodes.Call, replaceWith)
             };
             match = match.Advance(-1).RemoveInstructions(10).Insert(newInstructions);
-            Main.GetLogger<RuleCalculateDamagePatches>().LogInformation("Transpiler has been applied. Target={Target}", target);
+            Main.GetLogger<RuleCalculateDamagePatches>().LogDebug("Transpiler has been applied. Target={Target}", target);
             return matcher.Instructions();
         }
 
@@ -85,7 +85,7 @@ namespace WOTRMultiplayer.HarmonyPatches.Rolls
                 new(OpCodes.Call, replaceWith)
             };
             match = match.RemoveInstruction().Insert(newInstructions);
-            Main.GetLogger<RuleCalculateDamagePatches>().LogInformation("Transpiler has been applied (ReplaceNonTacticalCombat). Target={Target}", target);
+            Main.GetLogger<RuleCalculateDamagePatches>().LogDebug("Transpiler has been applied (ReplaceNonTacticalCombat). Target={Target}", target);
             return true;
         }
 
@@ -112,7 +112,7 @@ namespace WOTRMultiplayer.HarmonyPatches.Rolls
             };
             match = match.RemoveInstructions(4).Insert(newInstructions);
 
-            Main.GetLogger<RuleCalculateDamagePatches>().LogInformation("Transpiler has been applied (ReplaceTacticalCombat). Target={Target}", target);
+            Main.GetLogger<RuleCalculateDamagePatches>().LogDebug("Transpiler has been applied (ReplaceTacticalCombat). Target={Target}", target);
             return true;
         }
 

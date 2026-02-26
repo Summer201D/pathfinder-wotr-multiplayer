@@ -39,7 +39,7 @@ namespace WOTRMultiplayer.HarmonyPatches.Inspect
             };
             match.Insert(newInstructions);
 
-            Main.GetLogger<UnitStealthControllerPatches>().LogInformation("Transpiler has been applied. Target={Target}", target);
+            Main.GetLogger<UnitStealthControllerPatches>().LogDebug("Transpiler has been applied. Target={Target}", target);
             return matcher.Instructions();
         }
 

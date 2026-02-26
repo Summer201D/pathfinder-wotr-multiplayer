@@ -39,7 +39,7 @@ namespace WOTRMultiplayer.HarmonyPatches.Combat.Crusades
             };
 
             match.RemoveInstructions(7).Insert(newInstructions);
-            Main.GetLogger<TacticalCombatConfusionPatches>().LogInformation("Transpiler has been applied. Target={Target}", target);
+            Main.GetLogger<TacticalCombatConfusionPatches>().LogDebug("Transpiler has been applied. Target={Target}", target);
             return matcher.Instructions();
         }
 

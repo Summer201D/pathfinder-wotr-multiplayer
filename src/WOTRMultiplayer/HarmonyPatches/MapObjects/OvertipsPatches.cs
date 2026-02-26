@@ -97,7 +97,7 @@ namespace WOTRMultiplayer.HarmonyPatches.MapObjects
             };
             match.Insert(newInstructions);
 
-            Main.GetLogger<OvertipsPatches>().LogInformation("Transpiler has been applied. Target={Target}", target);
+            Main.GetLogger<OvertipsPatches>().LogDebug("Transpiler has been applied. Target={Target}", target);
             return matcher.Instructions();
         }
 

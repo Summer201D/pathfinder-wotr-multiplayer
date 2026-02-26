@@ -85,7 +85,7 @@ namespace WOTRMultiplayer.HarmonyPatches.Dialogs
                 new(OpCodes.Call, replaceWith),
             };
             match = match.RemoveInstruction().Insert(newInstructions);
-            Main.GetLogger<CharacterSelectionPatches>().LogInformation("Transpiler has been applied. Target={Target}", target);
+            Main.GetLogger<CharacterSelectionPatches>().LogDebug("Transpiler has been applied. Target={Target}", target);
             return matcher.Instructions();
         }
 

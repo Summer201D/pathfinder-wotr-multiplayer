@@ -40,7 +40,7 @@ namespace WOTRMultiplayer.HarmonyPatches.Rolls
                 return instructions;
             }
 
-            Main.GetLogger<RuleAttackRollPatches>().LogInformation("Transpiler has been applied. Target={Target}", target);
+            Main.GetLogger<RuleAttackRollPatches>().LogDebug("Transpiler has been applied. Target={Target}", target);
             return matcher.Instructions();
         }
 

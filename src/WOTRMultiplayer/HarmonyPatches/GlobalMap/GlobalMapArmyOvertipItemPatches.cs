@@ -62,7 +62,7 @@ namespace WOTRMultiplayer.HarmonyPatches.GlobalMap
                 new(OpCodes.Call, extraCall),
             };
             match = match.Insert(newInstruction);
-            Main.GetLogger<GlobalMapArmyOvertipItemPatches>().LogInformation("Transpiler has been applied. Target={Target}", target);
+            Main.GetLogger<GlobalMapArmyOvertipItemPatches>().LogDebug("Transpiler has been applied. Target={Target}", target);
             return matcher.Instructions();
         }
 

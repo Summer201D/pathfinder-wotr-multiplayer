@@ -41,7 +41,7 @@ namespace WOTRMultiplayer.HarmonyPatches.RandomIdGeneration
                 new(OpCodes.Call, replaceWith)
             };
             match = match.RemoveInstructions(5).Insert(newInstructions);
-            Main.GetLogger<TacticalCombatIdsPatches>().LogInformation("Transpiler has been applied. Target={Target}", target);
+            Main.GetLogger<TacticalCombatIdsPatches>().LogDebug("Transpiler has been applied. Target={Target}", target);
             return matcher.Instructions();
         }
 
@@ -68,7 +68,7 @@ namespace WOTRMultiplayer.HarmonyPatches.RandomIdGeneration
                 new(OpCodes.Call, replaceWith)
             };
             match = match.RemoveInstructions(5).Insert(newInstructions);
-            Main.GetLogger<TacticalCombatIdsPatches>().LogInformation("Transpiler has been applied. Target={Target}", target);
+            Main.GetLogger<TacticalCombatIdsPatches>().LogDebug("Transpiler has been applied. Target={Target}", target);
             return matcher.Instructions();
         }
 

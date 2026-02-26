@@ -33,7 +33,7 @@ namespace WOTRMultiplayer.HarmonyPatches.Dungeon
                 new(OpCodes.Call, replaceWith)
             };
             match = match.RemoveInstructions(5).Insert(newInstructions);
-            Main.GetLogger<DungeonStatePatches>().LogInformation("Transpiler has been applied. Target={Target}", target);
+            Main.GetLogger<DungeonStatePatches>().LogDebug("Transpiler has been applied. Target={Target}", target);
             return matcher.Instructions();
         }
 

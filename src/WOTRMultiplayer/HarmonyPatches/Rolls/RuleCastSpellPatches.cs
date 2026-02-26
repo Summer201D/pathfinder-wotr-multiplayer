@@ -64,7 +64,7 @@ namespace WOTRMultiplayer.HarmonyPatches.Rolls
             };
             match = match.RemoveInstruction().Insert(arcaneFailureInstructions);
 
-            Main.GetLogger<RuleCastSpellPatches>().LogInformation("Transpiler has been applied. Target={Target}", target);
+            Main.GetLogger<RuleCastSpellPatches>().LogDebug("Transpiler has been applied. Target={Target}", target);
             return matcher.Instructions();
         }
 

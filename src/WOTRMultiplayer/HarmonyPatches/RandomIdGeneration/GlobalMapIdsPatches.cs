@@ -48,7 +48,7 @@ namespace WOTRMultiplayer.HarmonyPatches.RandomIdGeneration
                 new(OpCodes.Call, replaceWith),
             };
             match = match.RemoveInstructions(5).Insert(newInstructions);
-            Main.GetLogger<GlobalMapIdsPatches>().LogInformation("Transpiler has been applied. Target={Target}", target);
+            Main.GetLogger<GlobalMapIdsPatches>().LogDebug("Transpiler has been applied. Target={Target}", target);
             return matcher.Instructions();
         }
 
@@ -74,7 +74,7 @@ namespace WOTRMultiplayer.HarmonyPatches.RandomIdGeneration
                 new(OpCodes.Call, replaceWith),
             };
             match = match.RemoveInstructions(5).Insert(newInstructions);
-            Main.GetLogger<GlobalMapIdsPatches>().LogInformation("Transpiler has been applied. Target={Target}", target);
+            Main.GetLogger<GlobalMapIdsPatches>().LogDebug("Transpiler has been applied. Target={Target}", target);
             return matcher.Instructions();
         }
 
@@ -116,7 +116,7 @@ namespace WOTRMultiplayer.HarmonyPatches.RandomIdGeneration
             };
 
             match = match.RemoveInstruction().Insert(randomArmyInstructions);
-            Main.GetLogger<GlobalMapIdsPatches>().LogInformation("Transpiler has been applied. Target={Target}", target);
+            Main.GetLogger<GlobalMapIdsPatches>().LogDebug("Transpiler has been applied. Target={Target}", target);
             return matcher.Instructions();
         }
 
@@ -142,7 +142,7 @@ namespace WOTRMultiplayer.HarmonyPatches.RandomIdGeneration
                 new(OpCodes.Call, replaceWith),
             };
             match = match.RemoveInstructions(5).Insert(newInstructions);
-            Main.GetLogger<GlobalMapIdsPatches>().LogInformation("Transpiler has been applied. Target={Target}", target);
+            Main.GetLogger<GlobalMapIdsPatches>().LogDebug("Transpiler has been applied. Target={Target}", target);
             return matcher.Instructions();
         }
 

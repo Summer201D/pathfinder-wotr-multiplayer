@@ -76,7 +76,7 @@ namespace WOTRMultiplayer.HarmonyPatches.Combat
             };
             match = match.RemoveInstructions(9).Insert(newInstructions);
 
-            Main.GetLogger<UnitCombatStatePatches>().LogInformation("Transpiler has been applied. Target={Target}", target);
+            Main.GetLogger<UnitCombatStatePatches>().LogDebug("Transpiler has been applied. Target={Target}", target);
             return matcher.Instructions();
         }
 

@@ -34,7 +34,7 @@ namespace WOTRMultiplayer.HarmonyPatches.Rolls
             };
 
             match.Insert(newInstructions);
-            Main.GetLogger<ParryDataPatches>().LogInformation("Transpiler has been applied. Target={Target}", target);
+            Main.GetLogger<ParryDataPatches>().LogDebug("Transpiler has been applied. Target={Target}", target);
 
             return matcher.Instructions();
         }

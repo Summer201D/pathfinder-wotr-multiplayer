@@ -74,7 +74,7 @@ namespace WOTRMultiplayer.HarmonyPatches.Roaming
             };
 
             match = match.RemoveInstruction().Insert(randomInstructions);
-            Main.GetLogger<UnitRoamingControllerPatches>().LogInformation("Transpiler has been applied (NextPoint + IdleTime + IdleCutscene). Target={Target}", target);
+            Main.GetLogger<UnitRoamingControllerPatches>().LogDebug("Transpiler has been applied (NextPoint + IdleTime + IdleCutscene). Target={Target}", target);
             return matcher.Instructions();
         }
 

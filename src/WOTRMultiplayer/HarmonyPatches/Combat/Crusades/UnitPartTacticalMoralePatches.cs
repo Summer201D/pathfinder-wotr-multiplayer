@@ -36,7 +36,7 @@ namespace WOTRMultiplayer.HarmonyPatches.Combat.Crusades
                 new(OpCodes.Call, replaceWith),
             };
             match = match.RemoveInstruction().Insert(newInstructions);
-            Main.GetLogger<UnitPartTacticalMoralePatches>().LogInformation("Transpiler has been applied. Target={Target}", target);
+            Main.GetLogger<UnitPartTacticalMoralePatches>().LogDebug("Transpiler has been applied. Target={Target}", target);
             return matcher.Instructions();
         }
 
@@ -61,7 +61,7 @@ namespace WOTRMultiplayer.HarmonyPatches.Combat.Crusades
                 new(OpCodes.Call, replaceWith),
             };
             match = match.RemoveInstruction().Insert(newInstructions);
-            Main.GetLogger<UnitPartTacticalMoralePatches>().LogInformation("Transpiler has been applied. Target={Target}", target);
+            Main.GetLogger<UnitPartTacticalMoralePatches>().LogDebug("Transpiler has been applied. Target={Target}", target);
             return matcher.Instructions();
         }
 

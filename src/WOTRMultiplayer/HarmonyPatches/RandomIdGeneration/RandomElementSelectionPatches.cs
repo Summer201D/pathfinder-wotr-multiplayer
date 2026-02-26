@@ -38,7 +38,7 @@ namespace WOTRMultiplayer.HarmonyPatches.RandomIdGeneration
                 return matcher.Instructions();
             }
 
-            Main.GetLogger<RandomElementSelectionPatches>().LogInformation("Transpiler has been applied. Target={Target}", target);
+            Main.GetLogger<RandomElementSelectionPatches>().LogDebug("Transpiler has been applied. Target={Target}", target);
             return matcher.Instructions();
         }
 
@@ -61,7 +61,7 @@ namespace WOTRMultiplayer.HarmonyPatches.RandomIdGeneration
                 return matcher.Instructions();
             }
 
-            Main.GetLogger<RandomElementSelectionPatches>().LogInformation("Transpiler has been applied. Target={Target}", target);
+            Main.GetLogger<RandomElementSelectionPatches>().LogDebug("Transpiler has been applied. Target={Target}", target);
             return matcher.Instructions();
         }
 
@@ -84,7 +84,7 @@ namespace WOTRMultiplayer.HarmonyPatches.RandomIdGeneration
                 return matcher.Instructions();
             }
 
-            Main.GetLogger<RandomElementSelectionPatches>().LogInformation("Transpiler has been applied. Target={Target}", target);
+            Main.GetLogger<RandomElementSelectionPatches>().LogDebug("Transpiler has been applied. Target={Target}", target);
             return matcher.Instructions();
         }
 

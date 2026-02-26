@@ -46,7 +46,7 @@ namespace WOTRMultiplayer.HarmonyPatches.Items
             };
             match = match.Insert(newInstructions);
 
-            Main.GetLogger<InventoryPatches>().LogInformation("Transpiler has been applied. Target={Target}", target);
+            Main.GetLogger<InventoryPatches>().LogDebug("Transpiler has been applied. Target={Target}", target);
             return matcher.Instructions();
         }
 
@@ -125,7 +125,7 @@ namespace WOTRMultiplayer.HarmonyPatches.Items
             };
 
             match = match.Insert(newInstructions);
-            Main.GetLogger<InventoryPatches>().LogInformation("Transpiler has been applied. Target={Target}", target);
+            Main.GetLogger<InventoryPatches>().LogDebug("Transpiler has been applied. Target={Target}", target);
             return matcher.Instructions();
         }
 

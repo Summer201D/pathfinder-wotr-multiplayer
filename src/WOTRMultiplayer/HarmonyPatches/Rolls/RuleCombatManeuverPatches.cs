@@ -37,7 +37,7 @@ namespace WOTRMultiplayer.HarmonyPatches.Rolls
             };
 
             match = match.RemoveInstruction().Insert(newInstructions);
-            Main.GetLogger<RuleCombatManeuverPatches>().LogInformation("Transpiler has been applied. Target={Target}", target);
+            Main.GetLogger<RuleCombatManeuverPatches>().LogDebug("Transpiler has been applied. Target={Target}", target);
             return matcher.Instructions();
         }
 
@@ -63,7 +63,7 @@ namespace WOTRMultiplayer.HarmonyPatches.Rolls
             };
 
             match = match.RemoveInstruction().Insert(newInstructions);
-            Main.GetLogger<RuleCombatManeuverPatches>().LogInformation("Transpiler has been applied. Target={Target}", target);
+            Main.GetLogger<RuleCombatManeuverPatches>().LogDebug("Transpiler has been applied. Target={Target}", target);
             return matcher.Instructions();
         }
 

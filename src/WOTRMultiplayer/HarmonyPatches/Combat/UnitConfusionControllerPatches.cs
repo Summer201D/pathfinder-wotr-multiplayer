@@ -39,7 +39,7 @@ namespace WOTRMultiplayer.HarmonyPatches.Combat
             };
             match = match.RemoveInstruction().Insert(newInstructions);
 
-            Main.GetLogger<UnitConfusionControllerPatches>().LogInformation("Transpiler has been applied. Target={Target}", target);
+            Main.GetLogger<UnitConfusionControllerPatches>().LogDebug("Transpiler has been applied. Target={Target}", target);
             return matcher.Instructions();
         }
 

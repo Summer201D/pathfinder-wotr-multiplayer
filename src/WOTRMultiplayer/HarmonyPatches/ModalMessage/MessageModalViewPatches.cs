@@ -37,7 +37,7 @@ namespace WOTRMultiplayer.HarmonyPatches.ModalMessage
             match = match.Advance(-6)
                 .RemoveInstructions(7)
                 .Insert(newInstructions);
-            Main.GetLogger<MessageModalViewPatches>().LogInformation("Transpiler has been applied. Target={Target}", target);
+            Main.GetLogger<MessageModalViewPatches>().LogDebug("Transpiler has been applied. Target={Target}", target);
             return matcher.Instructions();
         }
 

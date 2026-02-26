@@ -49,7 +49,7 @@ namespace WOTRMultiplayer.HarmonyPatches.MapObjects
                 new(OpCodes.Call, extraCall),
             };
             match = match.Advance(-2).Insert(newInstructions);
-            Main.GetLogger<AreaTransitionGroupCommandPatches>().LogInformation("Transpiler has been applied. Target={Target}", target);
+            Main.GetLogger<AreaTransitionGroupCommandPatches>().LogDebug("Transpiler has been applied. Target={Target}", target);
             return matcher.Instructions();
         }
 

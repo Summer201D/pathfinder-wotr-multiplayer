@@ -34,7 +34,7 @@ namespace WOTRMultiplayer.HarmonyPatches.Combat
                 new(OpCodes.Call, replaceWith),
             };
             match = match.Advance(-1).RemoveInstructions(2).Insert(newInstructions);
-            Main.GetLogger<ContextValueHelperPatches>().LogInformation("Transpiler has been applied. Target={Target}", target);
+            Main.GetLogger<ContextValueHelperPatches>().LogDebug("Transpiler has been applied. Target={Target}", target);
             return matcher.Instructions();
         }
 

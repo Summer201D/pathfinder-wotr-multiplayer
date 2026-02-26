@@ -37,7 +37,7 @@ namespace WOTRMultiplayer.HarmonyPatches
             match.RemoveInstruction();
             match.Insert(call);
 
-            Main.GetLogger<CommonTranspilerReplacements>().LogInformation("Transpiler has been applied. Target={Target}", target);
+            Main.GetLogger<CommonTranspilerReplacements>().LogDebug("Transpiler has been applied. Target={Target}", target);
         }
 
         private static bool IsControlledByLocalPlayer(UnitEntityData unit)

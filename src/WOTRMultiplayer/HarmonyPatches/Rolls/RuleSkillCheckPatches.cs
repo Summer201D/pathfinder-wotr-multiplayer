@@ -52,7 +52,7 @@ namespace WOTRMultiplayer.HarmonyPatches.Rolls
                 return instructions;
             }
 
-            Main.GetLogger<RuleSkillCheckPatches>().LogInformation("Transpiler has been applied. Target={Target}", target);
+            Main.GetLogger<RuleSkillCheckPatches>().LogDebug("Transpiler has been applied. Target={Target}", target);
             return matcher.Instructions();
         }
 
@@ -69,7 +69,7 @@ namespace WOTRMultiplayer.HarmonyPatches.Rolls
                 return instructions;
             }
 
-            Main.GetLogger<RuleSkillCheckPatches>().LogInformation("Transpiler has been applied. Target={Target}", target);
+            Main.GetLogger<RuleSkillCheckPatches>().LogDebug("Transpiler has been applied. Target={Target}", target);
             return matcher.Instructions();
         }
 

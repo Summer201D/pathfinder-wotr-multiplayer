@@ -58,7 +58,7 @@ namespace WOTRMultiplayer.HarmonyPatches.Rolls
                 new(OpCodes.Call, replaceWith)
             };
             match.Insert(newInstructions);
-            Main.GetLogger<RuleHealDamagePatches>().LogInformation("Transpiler has been applied. Target={Target}", target);
+            Main.GetLogger<RuleHealDamagePatches>().LogDebug("Transpiler has been applied. Target={Target}", target);
             return true;
         }
 
@@ -80,7 +80,7 @@ namespace WOTRMultiplayer.HarmonyPatches.Rolls
                 new(OpCodes.Call, replaceWith)
             };
             match = match.RemoveInstruction().Insert(newInstructions);
-            Main.GetLogger<RuleHealDamagePatches>().LogInformation("Transpiler has been applied. Target={Target}", target);
+            Main.GetLogger<RuleHealDamagePatches>().LogDebug("Transpiler has been applied. Target={Target}", target);
             return true;
         }
 

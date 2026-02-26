@@ -52,7 +52,7 @@ namespace WOTRMultiplayer.HarmonyPatches.GlobalMap.Kingdom
             };
             match.RemoveInstruction().Insert(nextEventDelayInstructions);
 
-            Main.GetLogger<CrusadeEventsTimelinePatches>().LogInformation("Transpiler has been applied (Random + NextDelay). Target={Target}", target);
+            Main.GetLogger<CrusadeEventsTimelinePatches>().LogDebug("Transpiler has been applied (Random + NextDelay). Target={Target}", target);
             return matcher.Instructions();
         }
 

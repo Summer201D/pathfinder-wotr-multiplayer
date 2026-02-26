@@ -39,7 +39,7 @@ namespace WOTRMultiplayer.HarmonyPatches.GlobalMap
                 new(OpCodes.Call, extraCall),
             };
             match = match.RemoveInstructions(8).Insert(newInstruction);
-            Main.GetLogger<ArmyDataPatches>().LogInformation("Transpiler has been applied. Target={Target}", target);
+            Main.GetLogger<ArmyDataPatches>().LogDebug("Transpiler has been applied. Target={Target}", target);
             return matcher.Instructions();
         }
 

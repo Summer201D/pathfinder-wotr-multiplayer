@@ -34,7 +34,7 @@ namespace WOTRMultiplayer.HarmonyPatches.Dialogs
                 new(OpCodes.Call, replaceWith),
             };
             match = match.RemoveInstruction().Insert(newInstructions);
-            Main.GetLogger<CueSelectionPatches>().LogInformation("Transpiler has been applied. Target={Target}", target);
+            Main.GetLogger<CueSelectionPatches>().LogDebug("Transpiler has been applied. Target={Target}", target);
             return matcher.Instructions();
         }
 

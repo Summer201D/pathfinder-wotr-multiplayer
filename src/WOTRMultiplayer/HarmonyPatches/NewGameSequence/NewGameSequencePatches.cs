@@ -44,7 +44,7 @@ namespace WOTRMultiplayer.HarmonyPatches.NewGameSequence
             };
             match = match.Insert(newInstructions);
 
-            Main.GetLogger<NewGameSequencePatches>().LogInformation("Transpiler has been applied. Target={Target}", target);
+            Main.GetLogger<NewGameSequencePatches>().LogDebug("Transpiler has been applied. Target={Target}", target);
             return matcher.Instructions();
         }
 

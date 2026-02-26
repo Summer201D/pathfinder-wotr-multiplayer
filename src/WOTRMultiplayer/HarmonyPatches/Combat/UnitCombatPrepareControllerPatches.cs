@@ -43,7 +43,7 @@ namespace WOTRMultiplayer.HarmonyPatches.Combat
                 return instructions;
             }
 
-            Main.GetLogger<TurnControllerPatches>().LogInformation("Transpiler has been applied. Target={Target}", target);
+            Main.GetLogger<TurnControllerPatches>().LogDebug("Transpiler has been applied. Target={Target}", target);
             return matcher.Instructions();
         }
     }

@@ -32,7 +32,7 @@ namespace WOTRMultiplayer.HarmonyPatches.Rolls
             };
             match = match.RemoveInstructions(3).Insert(newInstructions);
 
-            Main.GetLogger<RuleSavingThrowPatches>().LogInformation("Transpiler has been applied. Target={Target}", target);
+            Main.GetLogger<RuleSavingThrowPatches>().LogDebug("Transpiler has been applied. Target={Target}", target);
             return matcher.Instructions();
         }
 

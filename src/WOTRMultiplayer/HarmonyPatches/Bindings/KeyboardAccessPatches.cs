@@ -32,7 +32,7 @@ namespace WOTRMultiplayer.HarmonyPatches.Bindings
                 new(OpCodes.Call, replaceWith)
             };
             match = match.RemoveInstructions(6).Advance(2).RemoveInstructions(2).Insert(newInstructions);
-            Main.GetLogger<KeyboardAccessPatches>().LogInformation("Transpiler has been applied. Target={Target}", target);
+            Main.GetLogger<KeyboardAccessPatches>().LogDebug("Transpiler has been applied. Target={Target}", target);
             return matcher.Instructions();
         }
 
@@ -57,7 +57,7 @@ namespace WOTRMultiplayer.HarmonyPatches.Bindings
                 new(OpCodes.Call, replaceWith)
             };
             match = match.RemoveInstructions(6).Advance(2).RemoveInstructions(2).Insert(newInstructions);
-            Main.GetLogger<KeyboardAccessPatches>().LogInformation("Transpiler has been applied. Target={Target}", target);
+            Main.GetLogger<KeyboardAccessPatches>().LogDebug("Transpiler has been applied. Target={Target}", target);
             return matcher.Instructions();
         }
 

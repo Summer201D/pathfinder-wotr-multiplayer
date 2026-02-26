@@ -45,7 +45,7 @@ namespace WOTRMultiplayer.HarmonyPatches.Rolls
             };
 
             match = match.RemoveInstruction().Insert(newInstructions);
-            Main.GetLogger<RuleEnterStealth>().LogInformation("Transpiler has been applied. Target={Target}", target);
+            Main.GetLogger<RuleEnterStealth>().LogDebug("Transpiler has been applied. Target={Target}", target);
             return matcher.Instructions();
         }
 

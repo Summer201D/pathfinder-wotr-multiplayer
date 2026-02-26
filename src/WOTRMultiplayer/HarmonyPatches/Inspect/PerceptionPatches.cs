@@ -52,7 +52,7 @@ namespace WOTRMultiplayer.HarmonyPatches.Inspect
                 new(OpCodes.Call, replaceWith),
             };
             match = match.Advance(2).Insert(newInstructions);
-            Main.GetLogger<PerceptionPatches>().LogInformation("Transpiler has been applied. Target={Target}", target);
+            Main.GetLogger<PerceptionPatches>().LogDebug("Transpiler has been applied. Target={Target}", target);
             return matcher.Instructions();
         }
 

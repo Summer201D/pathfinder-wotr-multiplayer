@@ -38,7 +38,7 @@ namespace WOTRMultiplayer.HarmonyPatches.Combat
             };
             match = match.Advance(-2).RemoveInstructions(6).Insert(newInstructions);
 
-            Main.GetLogger<CombatControllerPatches>().LogInformation("Transpiler has been applied. Target={Target}", target);
+            Main.GetLogger<CombatControllerPatches>().LogDebug("Transpiler has been applied. Target={Target}", target);
             return matcher.Instructions();
         }
 
@@ -138,7 +138,7 @@ namespace WOTRMultiplayer.HarmonyPatches.Combat
                 new(OpCodes.Call, AccessTools.Method(typeof(CombatControllerPatches), nameof(CombatControllerPatches.CompareUnitsByUniqueId)))
             };
             actualValidPosition.Insert(newInstructions);
-            Main.GetLogger<CombatControllerPatches>().LogInformation("Transpiler has been applied. Target={Target}", target);
+            Main.GetLogger<CombatControllerPatches>().LogDebug("Transpiler has been applied. Target={Target}", target);
 
             return matcher.Instructions();
         }

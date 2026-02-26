@@ -124,7 +124,7 @@ namespace WOTRMultiplayer.HarmonyPatches.Leveling
 
             match = matcher.RemoveInstructions(2).Insert(newInstructions);
 
-            Main.GetLogger<StartLevelingPatches>().LogInformation("Transpiler has been applied. Target={Target}", target);
+            Main.GetLogger<StartLevelingPatches>().LogDebug("Transpiler has been applied. Target={Target}", target);
             return matcher.Instructions();
         }
 

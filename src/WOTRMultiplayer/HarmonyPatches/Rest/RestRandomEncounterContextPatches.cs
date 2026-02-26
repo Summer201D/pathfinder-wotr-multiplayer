@@ -67,7 +67,7 @@ namespace WOTRMultiplayer.HarmonyPatches.Rest
                 return instructions;
             }
 
-            Main.GetLogger<RestRandomEncounterContextPatches>().LogInformation("Transpiler has been applied. Target={Target}", target);
+            Main.GetLogger<RestRandomEncounterContextPatches>().LogDebug("Transpiler has been applied. Target={Target}", target);
             return matcher.Instructions();
         }
 
@@ -186,7 +186,7 @@ namespace WOTRMultiplayer.HarmonyPatches.Rest
                 return instructions;
             }
 
-            Main.GetLogger<RestRandomEncounterContextPatches>().LogInformation("Transpiler has been applied. Target={Target}", target);
+            Main.GetLogger<RestRandomEncounterContextPatches>().LogDebug("Transpiler has been applied. Target={Target}", target);
             return matcher.Instructions();
         }
 
@@ -312,7 +312,7 @@ namespace WOTRMultiplayer.HarmonyPatches.Rest
                 new(OpCodes.Call, replaceWith),
             };
             match.Insert(newInstructions);
-            Main.GetLogger<RestRandomEncounterContextPatches>().LogInformation("Transpiler has been applied. Target={Target}", target);
+            Main.GetLogger<RestRandomEncounterContextPatches>().LogDebug("Transpiler has been applied. Target={Target}", target);
             return matcher.Instructions();
         }
 
@@ -360,7 +360,7 @@ namespace WOTRMultiplayer.HarmonyPatches.Rest
                 return instructions;
             }
 
-            Main.GetLogger<RestRandomEncounterContextPatches>().LogInformation("Transpiler has been applied. Target={Target}", target);
+            Main.GetLogger<RestRandomEncounterContextPatches>().LogDebug("Transpiler has been applied. Target={Target}", target);
             return matcher.Instructions();
         }
 
@@ -587,7 +587,7 @@ namespace WOTRMultiplayer.HarmonyPatches.Rest
                 return instructions;
             }
 
-            Main.GetLogger<RestRandomEncounterContextPatches>().LogInformation("Transpiler has been applied. Target={Target}", target);
+            Main.GetLogger<RestRandomEncounterContextPatches>().LogDebug("Transpiler has been applied. Target={Target}", target);
             return matcher.Instructions();
         }
 

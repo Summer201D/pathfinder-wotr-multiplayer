@@ -82,7 +82,7 @@ namespace WOTRMultiplayer.HarmonyPatches.ContextActions
             };
             match.RemoveInstruction().Insert(weightedRandomInstructions);
 
-            Main.GetLogger<ContextActionRandomizePatches>().LogInformation("Transpiler has been applied (Seed + Salt + Random + WeightedRandom). Target={Target}", target);
+            Main.GetLogger<ContextActionRandomizePatches>().LogDebug("Transpiler has been applied (Seed + Salt + Random + WeightedRandom). Target={Target}", target);
             return matcher.Instructions();
         }
 

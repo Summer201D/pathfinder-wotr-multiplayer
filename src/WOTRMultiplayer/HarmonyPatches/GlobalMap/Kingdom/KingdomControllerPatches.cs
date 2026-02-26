@@ -37,7 +37,7 @@ namespace WOTRMultiplayer.HarmonyPatches.GlobalMap.Kingdom
                 new(OpCodes.Call, extraCall),
             };
             match = match.Advance(1).Insert(newInstruction);
-            Main.GetLogger<KingdomControllerPatches>().LogInformation("Transpiler has been applied. Target={Target}", target);
+            Main.GetLogger<KingdomControllerPatches>().LogDebug("Transpiler has been applied. Target={Target}", target);
             return matcher.Instructions();
         }
 
@@ -62,7 +62,7 @@ namespace WOTRMultiplayer.HarmonyPatches.GlobalMap.Kingdom
                 new(OpCodes.Call, extraCall),
             };
             match = match.Advance(1).Insert(newInstruction);
-            Main.GetLogger<KingdomControllerPatches>().LogInformation("Transpiler has been applied. Target={Target}", target);
+            Main.GetLogger<KingdomControllerPatches>().LogDebug("Transpiler has been applied. Target={Target}", target);
             return matcher.Instructions();
         }
 

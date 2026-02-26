@@ -39,7 +39,7 @@ namespace WOTRMultiplayer.HarmonyPatches.MenuPatches
                 new(OpCodes.Call, createMenuCall)
             };
             match.Insert(newInstructions);
-            Main.GetLogger<SettingsVMPatches>().LogInformation("Transpiler has been applied. Target={Target}", target);
+            Main.GetLogger<SettingsVMPatches>().LogDebug("Transpiler has been applied. Target={Target}", target);
             return matcher.Instructions();
         }
 

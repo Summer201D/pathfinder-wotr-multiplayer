@@ -131,7 +131,7 @@ namespace WOTRMultiplayer.HarmonyPatches.SpellbookManagement
                 new(OpCodes.Call, replaceWith),
             };
             match = match.Advance(1).Insert(newInstructions);
-            Main.GetLogger<SpellbookVMPatches>().LogInformation("Transpiler has been applied. Target={Target}", target);
+            Main.GetLogger<SpellbookVMPatches>().LogDebug("Transpiler has been applied. Target={Target}", target);
             return matcher.Instructions();
         }
 

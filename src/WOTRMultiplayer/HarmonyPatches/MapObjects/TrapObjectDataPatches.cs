@@ -45,7 +45,7 @@ namespace WOTRMultiplayer.HarmonyPatches.MapObjects
                 new(OpCodes.Call, extraCall),
             };
             match = match.Advance(2).Insert(newInstructions);
-            Main.GetLogger<TrapObjectDataPatches>().LogInformation("Transpiler has been applied. Target={Target}", target);
+            Main.GetLogger<TrapObjectDataPatches>().LogDebug("Transpiler has been applied. Target={Target}", target);
             return matcher.Instructions();
         }
 
@@ -72,7 +72,7 @@ namespace WOTRMultiplayer.HarmonyPatches.MapObjects
                 new(OpCodes.Call, extraCall),
             };
             match = match.Advance(-2).RemoveInstructions(3).Insert(newInstructions);
-            Main.GetLogger<TrapObjectDataPatches>().LogInformation("Transpiler has been applied. Target={Target}", target);
+            Main.GetLogger<TrapObjectDataPatches>().LogDebug("Transpiler has been applied. Target={Target}", target);
             return matcher.Instructions();
         }
 
@@ -116,7 +116,7 @@ namespace WOTRMultiplayer.HarmonyPatches.MapObjects
                 new(OpCodes.Call, rollPerceptionCall),
             };
             match = match.Advance(-2).RemoveInstructions(3).Insert(perceptionInstructions);
-            Main.GetLogger<TrapObjectDataPatches>().LogInformation("Transpiler has been applied (DisableDC + RollPerception). Target={Target}", target);
+            Main.GetLogger<TrapObjectDataPatches>().LogDebug("Transpiler has been applied (DisableDC + RollPerception). Target={Target}", target);
             return matcher.Instructions();
         }
 

@@ -35,7 +35,7 @@ namespace WOTRMultiplayer.HarmonyPatches.Combat
             };
             match.Insert(newInstructions);
 
-            Main.GetLogger<UnitPartMirrorImagePatches>().LogInformation("Transpiler has been applied. Target={Target}", target);
+            Main.GetLogger<UnitPartMirrorImagePatches>().LogDebug("Transpiler has been applied. Target={Target}", target);
             return matcher.Instructions();
         }
 

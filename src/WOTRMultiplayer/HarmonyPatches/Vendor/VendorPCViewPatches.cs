@@ -40,7 +40,7 @@ namespace WOTRMultiplayer.HarmonyPatches.Vendor
                 return matcher.Instructions();
             }
 
-            Main.GetLogger<VendorPCViewPatches>().LogInformation("Transpiler has been applied. Target={Target}", target);
+            Main.GetLogger<VendorPCViewPatches>().LogDebug("Transpiler has been applied. Target={Target}", target);
             return matcher.Instructions();
         }
 

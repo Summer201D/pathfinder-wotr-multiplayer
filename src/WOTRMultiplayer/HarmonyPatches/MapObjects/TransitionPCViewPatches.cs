@@ -79,7 +79,7 @@ namespace WOTRMultiplayer.HarmonyPatches.MapObjects
                 .RemoveInstructions(7)
                 .Insert(newInstructions);
 
-            Main.GetLogger<TransitionPCViewPatches>().LogInformation("Transpiler has been applied. Target={Target}", target);
+            Main.GetLogger<TransitionPCViewPatches>().LogDebug("Transpiler has been applied. Target={Target}", target);
             return matcher.Instructions();
         }
 

@@ -34,7 +34,7 @@ namespace WOTRMultiplayer.HarmonyPatches.Rolls
             };
 
             match.Insert(newInstructions);
-            Main.GetLogger<RuleSpellResistancePatches>().LogInformation("Transpiler has been applied. Target={Target}", target);
+            Main.GetLogger<RuleSpellResistancePatches>().LogDebug("Transpiler has been applied. Target={Target}", target);
 
             return matcher.Instructions();
         }

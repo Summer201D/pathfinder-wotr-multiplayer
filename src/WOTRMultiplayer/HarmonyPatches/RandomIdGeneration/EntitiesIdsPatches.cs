@@ -52,7 +52,7 @@ namespace WOTRMultiplayer.HarmonyPatches.RandomIdGeneration
             };
             match = match.Advance(-2).RemoveInstructions(3).Insert(newInstructions);
 
-            Main.GetLogger<EntitiesIdsPatches>().LogInformation("Transpiler has been applied. Target={Target}", target);
+            Main.GetLogger<EntitiesIdsPatches>().LogDebug("Transpiler has been applied. Target={Target}", target);
             return matcher.Instructions();
         }
 
@@ -94,7 +94,7 @@ namespace WOTRMultiplayer.HarmonyPatches.RandomIdGeneration
             };
             match.Insert(newInstructions);
 
-            Main.GetLogger<EntitiesIdsPatches>().LogInformation("Transpiler has been applied. Target={Target}", target);
+            Main.GetLogger<EntitiesIdsPatches>().LogDebug("Transpiler has been applied. Target={Target}", target);
             return matcher.Instructions();
         }
 
@@ -186,7 +186,7 @@ namespace WOTRMultiplayer.HarmonyPatches.RandomIdGeneration
                 new(OpCodes.Call, leftHandedCall),
             };
             match = match.Insert(leftHandedInstructions);
-            Main.GetLogger<EntitiesIdsPatches>().LogInformation("Transpiler has been applied. Target={Target}", target);
+            Main.GetLogger<EntitiesIdsPatches>().LogDebug("Transpiler has been applied. Target={Target}", target);
             return matcher.Instructions();
         }
 
@@ -295,7 +295,7 @@ namespace WOTRMultiplayer.HarmonyPatches.RandomIdGeneration
             };
             match.Insert(newInstructions);
 
-            Main.GetLogger<EntitiesIdsPatches>().LogInformation("Transpiler has been applied. Target={Target}", target);
+            Main.GetLogger<EntitiesIdsPatches>().LogDebug("Transpiler has been applied. Target={Target}", target);
             return matcher.Instructions();
         }
 
@@ -313,7 +313,7 @@ namespace WOTRMultiplayer.HarmonyPatches.RandomIdGeneration
             }
 
             match = match.RemoveInstructions(3).Insert(newInstructions);
-            Main.GetLogger<EntitiesIdsPatches>().LogInformation("Transpiler has been applied. Target={Target}", target);
+            Main.GetLogger<EntitiesIdsPatches>().LogDebug("Transpiler has been applied. Target={Target}", target);
             return matcher.Instructions();
         }
 
