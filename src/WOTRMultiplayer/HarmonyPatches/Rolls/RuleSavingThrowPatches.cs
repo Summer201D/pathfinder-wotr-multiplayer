@@ -11,30 +11,6 @@ namespace WOTRMultiplayer.HarmonyPatches.Rolls
     [HarmonyPatch]
     public class RuleSavingThrowPatches
     {
-        [HarmonyPatch(typeof(RuleSavingThrow), nameof(RuleSavingThrow.OnTrigger))]
-        [HarmonyPostfix]
-        public static void RuleSavingThrow_OnTrigger_Postfix(RuleSavingThrow __instance)
-        {
-            if (!Main.Multiplayer.IsActive)
-            {
-                return;
-            }
-
-            Main.Rolls.OnAfterRuleSavingThrowTrigger(__instance);
-        }
-
-        [HarmonyPatch(typeof(RuleSavingThrow), nameof(RuleSavingThrow.Calculate))]
-        [HarmonyPostfix]
-        public static void RuleSavingThrow_Calculate_Postfix(RuleSavingThrow __instance)
-        {
-            if (!Main.Multiplayer.IsActive)
-            {
-                return;
-            }
-
-            Main.Rolls.OnAfterRuleSavingThrowTrigger(__instance);
-        }
-
         [HarmonyPatch(typeof(RuleSavingThrow), nameof(RuleSavingThrow.RollD20))]
         [HarmonyTranspiler]
         public static IEnumerable<CodeInstruction> RuleSavingThrow_RollD20_Transpiler(IEnumerable<CodeInstruction> instructions)
@@ -73,7 +49,9 @@ namespace WOTRMultiplayer.HarmonyPatches.Rolls
                 return savingThrow.D20;
             }
 
-            return Rulebook.Trigger<RuleRollD20>(savingThrow.D20);
+            var d20 = Rulebook.Trigger<RuleRollD20>(savingThrow.D20);
+            Main.Rolls.OnAfterRuleSavingThrowTrigger(savingThrow);
+            return d20;
         }
     }
 }
