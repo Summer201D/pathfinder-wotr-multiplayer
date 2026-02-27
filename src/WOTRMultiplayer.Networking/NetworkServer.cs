@@ -50,10 +50,13 @@ namespace WOTRMultiplayer.Networking
 
             Server.ServerOptions.DefaultListen.StartRegionPort = hostPortRangeStart;
             Server.ServerOptions.DefaultListen.EndRegionPort = hostPortRangeEnd;
-            Server.ServerOptions.BufferSize = 1024 * 64;
-            Server.ServerOptions.BufferPoolGroups = 12;
+            //Server.ServerOptions.BufferPoolSize = 400;
+            //Server.ServerOptions.BufferPoolMaxMemory = 400;
+            //Server.ServerOptions.BufferSize = 1024 * 64;
+            //Server.ServerOptions.BufferPoolGroups = 24;
             Server.OnMessageReceive(OnMissingMessageHandler);
             Server.OnOpened(OnOpened);
+            Server.OnError(OnServerError);
             Server.OnLog(OnServerLog)
                 .OnConnected(OnConnected)
                 .OnDisconnect(OnDisconnected);
@@ -191,8 +194,25 @@ namespace WOTRMultiplayer.Networking
             }
         }
 
+        private void OnServerError(IServer server, ServerErrorEventArgs args)
+        {
+            _logger.LogError(args.Error, args.Message);
+        }
+
         private void OnServerLog(IServer server, ServerLogEventArgs args)
         {
+            switch (args.Type)
+            {
+                case LogType.Error:
+                    _logger.LogError(args.Message);
+                    break;
+                case LogType.Warring:
+                    _logger.LogWarning(args.Message);
+                    break;
+                default:
+                    _logger.LogInformation(args.Message);
+                    break;
+            }
         }
 
         private void OnDisconnected(ISession session, NetworkConnectionToken clientToken)

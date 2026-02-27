@@ -13,6 +13,7 @@ using UnityEngine;
 using WOTRMultiplayer.Entities;
 using WOTRMultiplayer.Entities.Combat;
 using WOTRMultiplayer.Extensions;
+using WOTRMultiplayer.HarmonyPatches.Combat;
 
 namespace WOTRMultiplayer.HarmonyPatches.Clicks
 {
@@ -37,7 +38,7 @@ namespace WOTRMultiplayer.HarmonyPatches.Clicks
         [HarmonyPrefix]
         public static void ClickGroundHandler_RunCommand_Prefix(UnitEntityData unit, ClickGroundHandler.CommandSettings settings)
         {
-            if (!Main.Multiplayer.IsActive)
+            if (!Main.Multiplayer.IsActive || TurnControllerPatches.IsSimulation.Value)
             {
                 return;
             }

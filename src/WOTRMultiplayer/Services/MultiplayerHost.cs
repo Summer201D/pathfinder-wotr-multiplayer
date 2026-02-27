@@ -2405,6 +2405,12 @@ namespace WOTRMultiplayer.Services
                     {
                         try
                         {
+                            if (Game.ForcedPause == null)
+                            {
+                                Logger.LogWarning("Previous forced pause lifter has been skipped due to null forcedpause. Most likely game was quickloaded");
+                                return;
+                            }
+
                             var message = new NotifyGamePauseEnded
                             {
                                 AreaSeed = Game.ForcedPause.Reason == NetworkForcedPauseReason.AreaLoading ? Game.CurrentArea.Seed : null,

@@ -11,11 +11,11 @@ namespace WOTRMultiplayer.Networking
         {
             var defaultGroup = typeof(BufferPoolGroup).GetField("mDefaultGroup", BindingFlags.NonPublic | BindingFlags.Static);
 
-            BufferPool.BUFFER_SIZE = 1024 * 64;
+            var bufferSize = 1024 * 64;
             var numberOfGroups = 12;
-            var count = BufferPool.POOL_SIZE * 8 / numberOfGroups;
-            var maxCount = BufferPool.POOL_MAX_SIZE * 8 / numberOfGroups;
-            var defaultGroupValue = new BufferPoolGroup(BufferPool.BUFFER_SIZE, count, maxCount, numberOfGroups);
+            var count = 1024 * 8 / numberOfGroups;
+            var maxCount = 20480 * 8 / numberOfGroups;
+            var defaultGroupValue = new BufferPoolGroup(bufferSize, count, maxCount, numberOfGroups);
             defaultGroup.SetValue(null, defaultGroupValue);
 
             var client = SocketFactory.CreateClient<BeetleTcpClient>(new Messages.ProtobufClientPacket(), host, port);
