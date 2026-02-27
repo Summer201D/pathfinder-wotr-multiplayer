@@ -203,6 +203,8 @@ namespace WOTRMultiplayer.Abstractions.GameInteraction
 
         bool IsDeadOrMissing(string unitId);
 
+        bool IsDeadOrAlly(string unitId);
+
         void UpdateTransitionMapUIState(bool isInteractable, int readyPlayersCount, int totalPlayersCount);
 
         void ChooseTransitionMapEntry(string entryId);

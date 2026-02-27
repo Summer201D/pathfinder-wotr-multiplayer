@@ -1764,7 +1764,15 @@ namespace WOTRMultiplayer.Services
 
         public bool CanLeaveCombat()
         {
-            var canLeave = Game.Combat == null || Game.Combat.UntargetableUnits.Count == 0 || Game.Combat.UntargetableUnits.All(GameInteraction.IsDeadOrMissing);
+            var canLeave = Game.Combat == null
+                || Game.Combat.UntargetableUnits.Count == 0
+                || Game.Combat.UntargetableUnits.All(GameInteraction.IsDeadOrAlly);
+
+            if (canLeave)
+            {
+                Game.Combat?.UntargetableUnits.Clear();
+            }
+
             return canLeave;
         }
 

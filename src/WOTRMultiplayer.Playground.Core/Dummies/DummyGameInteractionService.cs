@@ -457,5 +457,10 @@ namespace WOTRMultiplayer.Playground.Core.Dummies
         public void ChooseIslandMapEntry(NetworkIslandMapTransition island)
         {
         }
+
+        public bool IsDeadOrAlly(string unitId)
+        {
+            return false;
+        }
     }
 }

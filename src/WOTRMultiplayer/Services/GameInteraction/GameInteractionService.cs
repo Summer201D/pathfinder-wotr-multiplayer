@@ -2244,7 +2244,13 @@ namespace WOTRMultiplayer.Services.GameInteraction
         {
             var unit = _gameStateLookupService.GetUnitEntity(unitId);
 
-            return unit == null || unit.Descriptor.State.IsFinallyDead;
+            return unit == null || IsDead(unit);
+        }
+
+        public bool IsDeadOrAlly(string unitId)
+        {
+            var unit = _gameStateLookupService.GetUnitEntity(unitId);
+            return unit == null || IsDead(unit) || unit.IsAlly(Game.Instance.Player.MainCharacter);
         }
 
         public void UpdateTransitionMapUIState(bool isInteractable, int readyPlayersCount, int totalPlayersCount)
@@ -2767,6 +2773,11 @@ namespace WOTRMultiplayer.Services.GameInteraction
 
             var context = ContextData<ItemsCollection.SwapItems>.Request().Setup(from, to);
             return context;
+        }
+
+        private bool IsDead(UnitEntityData unit)
+        {
+            return unit.Descriptor.State.IsFinallyDead;
         }
 
         private void MatchSameNumberOfItems(List<ItemEntity> possibleItemsBag, int countToMatch, Action<ItemEntity> onMatched)
