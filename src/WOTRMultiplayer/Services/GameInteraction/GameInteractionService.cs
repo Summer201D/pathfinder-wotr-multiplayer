@@ -3190,7 +3190,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
                 if (shifterFuryPart != null && shifterFuryPart.AppliedFacts != null && shifterFuryPart.AppliedFacts.Count > activatableAbility.ShifterFuryIndex)
                 {
                     var shifterAbility = shifterFuryPart.AppliedFacts[activatableAbility.ShifterFuryIndex];
-                    _logger.LogInformation("Shifter fury abiliy has been found. UnitId={UnitId}, Id={Id}, Name={Name}, Index={Index}", caster.UniqueId, shifterAbility.UniqueId, shifterAbility.NameForAcronym, activatableAbility.ShifterFuryIndex);
+                    _logger.LogInformation("Shifter fury ability has been found. UnitId={UnitId}, Id={Id}, Name={Name}, Index={Index}", caster.UniqueId, shifterAbility.UniqueId, shifterAbility.NameForAcronym, activatableAbility.ShifterFuryIndex);
                     return shifterAbility;
                 }
             }

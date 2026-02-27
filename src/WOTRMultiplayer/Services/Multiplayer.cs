@@ -42,7 +42,6 @@ namespace WOTRMultiplayer.Services
 
         private readonly ILobbyWindowController _lobbyWindowController;
         private readonly IGameInteractionService _gameInteractionService;
-        private readonly ICombatInteractionService _combatInteractionService;
         private readonly ILogger _logger;
         private readonly IMultiplayerActorAccessor _multiplayerActorAccessor;
         private readonly IHotkeysService _hotkeysService;
@@ -63,7 +62,6 @@ namespace WOTRMultiplayer.Services
             ILobbyWindowController lobbyWindowController,
             IMultiplayerActorAccessor multiplayerActorAccessor,
             IGameInteractionService gameInteractionService,
-            ICombatInteractionService combatInteractionService,
             IHotkeysService hotkeysService,
             IValueGenerator valueGenerator)
         {
@@ -72,7 +70,6 @@ namespace WOTRMultiplayer.Services
             _multiplayerActorAccessor = multiplayerActorAccessor;
             _lobbyWindowController = lobbyWindowController;
             _gameInteractionService = gameInteractionService;
-            _combatInteractionService = combatInteractionService;
             _hotkeysService = hotkeysService;
             ValueGenerator = valueGenerator;
         }
@@ -393,42 +390,6 @@ namespace WOTRMultiplayer.Services
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error while checking if unit is controlled by players");
-                throw;
-            }
-        }
-
-        public void OnClickUnit(NetworkClick click)
-        {
-            try
-            {
-                if (_multiplayerActorAccessor.Current == null)
-                {
-                    return;
-                }
-
-                _multiplayerActorAccessor.Current.OnClickUnit(click);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error while clicking on unit. TargetUnitId={TargetUnitId}", click?.TargetUnitId);
-                throw;
-            }
-        }
-
-        public void OnClickGround(NetworkClick networkClick)
-        {
-            try
-            {
-                if (_multiplayerActorAccessor.Current == null)
-                {
-                    return;
-                }
-
-                _multiplayerActorAccessor.Current.OnClickGround(networkClick);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error while clicking on ground. WorldPosition={WorldPosition}", networkClick?.WorldPosition);
                 throw;
             }
         }
@@ -4489,6 +4450,42 @@ namespace WOTRMultiplayer.Services
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error while removing custom spell");
+                throw;
+            }
+        }
+
+        public void OnUnitInteractWithUnit(NetworkUnitInteractWithUnit networkUnitInteractWithUnit)
+        {
+            try
+            {
+                if (_multiplayerActorAccessor == null)
+                {
+                    return;
+                }
+
+                _multiplayerActorAccessor.Current.OnUnitInteractWithUnit(networkUnitInteractWithUnit);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while interacting with unit");
+                throw;
+            }
+        }
+
+        public void OnUnitLootUnit(NetworkUnitLootUnit networkUnitLootUnit)
+        {
+            try
+            {
+                if (_multiplayerActorAccessor == null)
+                {
+                    return;
+                }
+
+                _multiplayerActorAccessor.Current.OnUnitLootUnit(networkUnitLootUnit);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while looting unit");
                 throw;
             }
         }

@@ -105,10 +105,6 @@ namespace WOTRMultiplayer.Abstractions
         TRollValue RetrieveRoll<TRollValue>(int networkDiceRollId, string ruleName, string unitId)
             where TRollValue : RollValueBase;
 
-        void OnClickUnit(NetworkClick click);
-
-        void OnClickGround(NetworkClick click);
-
         void OnClickMapObject(NetworkClick click);
 
         void OnAbilityUse(NetworkAbilityUse abilityUse);
@@ -380,5 +376,9 @@ namespace WOTRMultiplayer.Abstractions
         void OnSpellbookMetamagicSpellCreated(NetworkMetamagicSpell metamagicSpell);
 
         void OnRemoveCustomSpell(string unitId, NetworkAbility ability);
+
+        void OnUnitInteractWithUnit(NetworkUnitInteractWithUnit networkUnitInteractWithUnit);
+
+        void OnUnitLootUnit(NetworkUnitLootUnit networkUnitLootUnit);
     }
 }

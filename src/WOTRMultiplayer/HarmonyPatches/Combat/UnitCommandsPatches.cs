@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Linq;
+using System.Threading;
 using HarmonyLib;
 using Kingmaker;
+using Kingmaker.Armies.TacticalCombat;
 using Kingmaker.ElementsSystem;
 using Kingmaker.EntitySystem.Entities;
 using Kingmaker.TurnBasedMode;
@@ -24,6 +26,71 @@ namespace WOTRMultiplayer.HarmonyPatches.Combat
     [HarmonyPatch]
     public class UnitCommandsPatches
     {
+        private readonly static AsyncLocal<bool> _isSecondGetUpCommand = new();
+
+        [HarmonyPatch(typeof(UnitCommand), nameof(UnitCommand.OnRun))]
+        [HarmonyPrefix]
+        public static void UnitCommand_OnRun_Prefix(UnitCommand __instance)
+        {
+            if (!Main.Multiplayer.IsActive || TurnControllerPatches.IsSimulation.Value || TacticalCombatHelper.IsActive)
+            {
+                return;
+            }
+
+            try
+            {
+                var isGetUp = Game.Instance.TurnBasedCombatController.CurrentTurn?.UnitCanGetUpOnCommand?.Value ?? false;
+                switch (__instance)
+                {
+                    case UnitInteractWithUnit unitInteractWithUnit when unitInteractWithUnit.CreatedByPlayer:
+                        var networkUnitInteractWithUnit = new NetworkUnitInteractWithUnit
+                        {
+                            InitiatorUnitId = __instance.Executor.UniqueId,
+                            TargetUnitId = unitInteractWithUnit.TargetUnit.UniqueId
+                        };
+                        Main.Multiplayer.OnUnitInteractWithUnit(networkUnitInteractWithUnit);
+                        break;
+                    case UnitLootUnit unitLootUnit when unitLootUnit.CreatedByPlayer:
+                        var path = PathVisualizer.Instance?.CurrentPathForUnit(unitLootUnit.Executor.View);
+                        var networkPath = path?.vectorPath.Select(v => v.ToNetworkVector3()).ToList();
+                        var movementLimit = Game.Instance.TurnBasedCombatController.CurrentTurn?.CurrentMovementLimit;
+                        var networkUnitLootUnit = new NetworkUnitLootUnit
+                        {
+                            InitiatorUnitId = __instance.Executor.UniqueId,
+                            TargetUnitId = unitLootUnit.TargetUnit.UniqueId,
+                            VectorPath = networkPath,
+                            MovementLimit = movementLimit?.ToString(),
+                        };
+                        Main.Multiplayer.OnUnitLootUnit(networkUnitLootUnit);
+                        break;
+                    // attack/ability commands can be synced immediately if combat has not started
+                    case UnitAttack unitAttack when !Game.Instance.Player.IsInCombat || isGetUp:
+                        // for some reason game runs x2 attack commands in this case, but second one must be suppressed to not cause an attack for other players
+                        if (isGetUp && _isSecondGetUpCommand.Value)
+                        {
+                            Main.GetLogger<UnitCommandsPatches>().LogWarning("Doubled GetUp attack command has been ignored. UnitId={UnitId}", __instance.Executor.UniqueId);
+                            _isSecondGetUpCommand.Value = false;
+                            return;
+                        }
+
+                        OnUnitAttack(unitAttack);
+                        if (isGetUp)
+                        {
+                            _isSecondGetUpCommand.Value = true;
+                        }
+                        break;
+                    case UnitUseAbility unitUseAbility when !Game.Instance.Player.IsInCombat:
+                        OnAbilityUse(unitUseAbility);
+                        break;
+                }
+            }
+            catch (Exception ex)
+            {
+                Main.GetLogger<UnitCommandsPatches>().LogError(ex, "Unable to handle command start. CommandType={CommandType}", __instance.GetType().Name);
+                throw;
+            }
+        }
+
         /// <summary>
         /// Attack has been started
         /// </summary>
@@ -32,14 +99,14 @@ namespace WOTRMultiplayer.HarmonyPatches.Combat
         [HarmonyPostfix]
         public static void UnitAttack_OnStart_Postfix(UnitAttack __instance)
         {
-            if (!Main.Multiplayer.IsActive)
+            if (!Main.Multiplayer.IsActive || (!Game.Instance.Player.IsInCombat && !TacticalCombatHelper.IsActive))
             {
                 return;
             }
 
             try
             {
-                if (Game.Instance.Player.IsInCombat && __instance.IsCharge)
+                if (__instance.IsCharge)
                 {
                     Main.GetLogger<UnitCommandsPatches>().LogWarning("Skipping attack command in combat as it's a part of charge ability. ExecutorUnitId={ExecutorUnitId}, TargetUnitId={TargetUnitId}", __instance.Executor.UniqueId, __instance.Target.UniqueId);
                     return;
@@ -70,7 +137,7 @@ namespace WOTRMultiplayer.HarmonyPatches.Combat
                 }
 
                 Main.GetLogger<UnitCommandsPatches>().LogWarning("Starting unit attack command. ExecutorUnitId={ExecutorUnitId}, TargetUnitId={TargetUnitId}, IsFullAttack={IsFullAttack}, ShouldUnitApproach={ShouldUnitApproach}, Limit={limit}, IsIgnoreCooldown={IsIgnoreCooldown}", __instance.Executor.UniqueId, __instance.Target.UniqueId, __instance.IsFullAttack(), __instance.ShouldUnitApproach, __instance.IsIgnoreCooldown);
-                OnUnitAttack(__instance, forceMount: false);
+                OnUnitAttack(__instance);
             }
             catch (Exception ex)
             {
@@ -88,7 +155,10 @@ namespace WOTRMultiplayer.HarmonyPatches.Combat
         [HarmonyPrefix]
         public static void UnitCommand_ForceFinishForTurnBased_Prefix(UnitCommand __instance, ResultType result)
         {
-            if (!Main.Multiplayer.IsActive || result != ResultType.Success || __instance.IsStarted)
+            if (!Main.Multiplayer.IsActive
+                || result != ResultType.Success
+                || __instance.IsStarted
+                || (!Game.Instance.Player.IsInCombat && !TacticalCombatHelper.IsActive))
             {
                 return;
             }
@@ -147,7 +217,7 @@ namespace WOTRMultiplayer.HarmonyPatches.Combat
 
                 if (IsAlchemistFastBombsSequentialCast(__instance))
                 {
-                    Main.GetLogger<UnitCommandsPatches>().LogWarning("Skipping ability use as it's a part of alchimsit sequential fast bombs usage. UnitId={UnitId}, AbilityName={AbilityName}, AbilityId={AbilityId}", __instance.Executor.UniqueId, __instance.Ability.Name, __instance.Ability.UniqueId);
+                    Main.GetLogger<UnitCommandsPatches>().LogWarning("Skipping ability use as it's a part of alchemist sequential fast bombs usage. UnitId={UnitId}, AbilityName={AbilityName}, AbilityId={AbilityId}", __instance.Executor.UniqueId, __instance.Ability.Name, __instance.Ability.UniqueId);
                     return;
                 }
 
@@ -241,16 +311,15 @@ namespace WOTRMultiplayer.HarmonyPatches.Combat
             Main.Multiplayer.OnUnitMoveTo(unitMoveTo);
         }
 
-        private static void OnUnitAttack(UnitAttack command, bool forceMount)
+        private static void OnUnitAttack(UnitAttack command)
         {
             var path = PathVisualizer.Instance?.CurrentPathForUnit(command.Executor.View);
             var networkPath = path?.vectorPath.Select(v => v.ToNetworkVector3()).ToList();
-            var executor = forceMount ? command.Executor.RiderPart.SaddledUnit.UniqueId : command.Executor.UniqueId;
             var movementLimit = Game.Instance.TurnBasedCombatController.CurrentTurn?.CurrentMovementLimit;
 
             var unitAttack = new NetworkUnitAttack
             {
-                InitiatorUnitId = executor,
+                InitiatorUnitId = command.Executor.UniqueId,
                 TargetUnitId = command.TargetUnit?.UniqueId,
                 IsFullAttack = command.IsAttackFull,
                 IsSingleAttack = command.IsSingleAttack,

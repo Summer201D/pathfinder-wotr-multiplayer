@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Reflection;
 using System.Reflection.Emit;
+using System.Threading;
 using HarmonyLib;
 using Kingmaker;
 using Microsoft.Extensions.Logging;
@@ -11,6 +12,32 @@ namespace WOTRMultiplayer.HarmonyPatches.Combat
     [HarmonyPatch]
     public class TurnControllerPatches
     {
+        public static AsyncLocal<bool> IsSimulation { get; private set; } = new();
+
+        [HarmonyPatch(typeof(TurnController), nameof(TurnController.UpdateActionPredictions))]
+        [HarmonyPrefix]
+        public static void TurnController_UpdateActionPredictions_Prefix()
+        {
+            if (!Main.Multiplayer.IsActive)
+            {
+                return;
+            }
+
+            IsSimulation.Value = true;
+        }
+
+        [HarmonyPatch(typeof(TurnController), nameof(TurnController.UpdateActionPredictions))]
+        [HarmonyPostfix]
+        public static void TurnController_UpdateActionPredictions_Postfix()
+        {
+            if (!Main.Multiplayer.IsActive && !IsSimulation.Value)
+            {
+                return;
+            }
+
+            IsSimulation.Value = false;
+        }
+
         [HarmonyPatch(typeof(TurnController), nameof(TurnController.TryScrollToUnit))]
         [HarmonyPrefix]
         public static bool TurnController_TryScrollToUnit_Prefix(TurnController __instance, ref bool __result)

@@ -235,15 +235,7 @@ namespace WOTRMultiplayer.Services
 
         public void OnUnitAttackCommandStarted(NetworkUnitAttack networkUnitAttack)
         {
-            // this one is only used in combat
-            // regular Unit Click handler is used to initiate the combat
-            if (Game.Combat == null)
-            {
-                return;
-            }
-
-            var isLocal = IsControlledByLocalPlayer(networkUnitAttack.InitiatorUnitId);
-            if (!isLocal || (Game.Combat.Turn?.IsAI ?? false))
+            if (!IsControlledByLocalPlayer(networkUnitAttack.InitiatorUnitId) || Game.Combat?.Turn != null && Game.Combat.Turn.IsAI)
             {
                 return;
             }
@@ -281,36 +273,6 @@ namespace WOTRMultiplayer.Services
             var response = RetrieveRoll(request);
 
             return ResponseToRollValue<TRollValue>(response);
-        }
-
-
-        public void OnClickUnit(NetworkClick click)
-        {
-            if (Game.Combat == null && (IsControlledByPlayers(click.TargetUnitId) || !IsControlledByLocalPlayer(click.SelectedUnits.FirstOrDefault()))
-                || Game.Combat != null && (!(Game.Combat.Turn?.IsLocalPlayer ?? false) || CombatInteraction.IsCombatTurnFinished()))
-            {
-                return;
-            }
-
-            var message = new NotifyUnitClicked
-            {
-                Click = Mapper.Map<Networking.Messages.Contracts.NetworkClick>(click)
-            };
-            Send(message);
-        }
-
-        public void OnClickGround(NetworkClick click)
-        {
-            if (!(Game.Combat?.Turn?.IsLocalPlayer ?? false) || CombatInteraction.IsCombatTurnFinished())
-            {
-                return;
-            }
-
-            var message = new NotifyGroundClicked
-            {
-                Click = Mapper.Map<Networking.Messages.Contracts.NetworkClick>(click)
-            };
-            Send(message);
         }
 
         public void OnClickMapObject(NetworkClick click)
@@ -1754,6 +1716,34 @@ namespace WOTRMultiplayer.Services
             var message = new NotifyUnitAutoUseAbilityChanged
             {
                 AutoUse = Mapper.Map<Networking.Messages.Contracts.NetworkAutoUseAbility>(networkAutoUseAbility)
+            };
+            Send(message);
+        }
+
+        public void OnUnitLootUnit(NetworkUnitLootUnit networkUnitLootUnit)
+        {
+            if (!IsControlledByLocalPlayer(networkUnitLootUnit.InitiatorUnitId))
+            {
+                return;
+            }
+
+            var message = new NotifyUnitLootedUnit
+            {
+                LootUnit = Mapper.Map<Networking.Messages.Contracts.NetworkUnitLootUnit>(networkUnitLootUnit)
+            };
+            Send(message);
+        }
+
+        public void OnUnitInteractWithUnit(NetworkUnitInteractWithUnit networkUnitInteractWithUnit)
+        {
+            if (!IsControlledByLocalPlayer(networkUnitInteractWithUnit.InitiatorUnitId))
+            {
+                return;
+            }
+
+            var message = new NotifyUnitInteractedWithUnit
+            {
+                Interaction = Mapper.Map<Networking.Messages.Contracts.NetworkUnitInteractWithUnit>(networkUnitInteractWithUnit)
             };
             Send(message);
         }
@@ -3403,8 +3393,6 @@ namespace WOTRMultiplayer.Services
                 .On<NotifyToggleActivatableAbility>(OnNotifyToggleActivatableAbility)
 
                 // clicks
-                .On<NotifyUnitClicked>(OnNotifyUnitClicked)
-                .On<NotifyGroundClicked>(OnNotifyGroundClicked)
                 .On<NotifyMapObjectClicked>(OnNotifyMapObjectClicked)
 
                 // pausing
@@ -3436,12 +3424,26 @@ namespace WOTRMultiplayer.Services
                 // cutscenes
                 .On<NotifyCutsceneSkipped>(OnNotifyCutsceneSkipped)
 
-                // movement
+                // unit actions
                 .On<NotifyUnitMovedTo>(OnNotifyUnitMovedTo)
+                .On<NotifyUnitInteractedWithUnit>(OnNotifyUnitInteractedWithUnit)
+                .On<NotifyUnitLootedUnit>(OnNotifyUnitLootedUnit)
 
                 // map objects
                 .On<NotifyTrapActivated>(OnNotifyTrapActivated)
                 ;
+        }
+
+        private void OnNotifyUnitLootedUnit(long receivedFrom, NotifyUnitLootedUnit message)
+        {
+            var lootUnit = Mapper.Map<NetworkUnitLootUnit>(message.LootUnit);
+            CombatInteraction.LootUnit(lootUnit);
+        }
+
+        private void OnNotifyUnitInteractedWithUnit(long receivedFrom, NotifyUnitInteractedWithUnit message)
+        {
+            var interaction = Mapper.Map<NetworkUnitInteractWithUnit>(message.Interaction);
+            CombatInteraction.InteractWithUnit(interaction);
         }
 
         private void OnNotifyTrapActivated(long receivedFrom, NotifyTrapActivated message)
@@ -4063,38 +4065,6 @@ namespace WOTRMultiplayer.Services
             GameInteraction.ClearActionBarSlot(actionBarSlot);
 
             OnAfterNetworkMessageHandled(receivedFrom, actionBarSlotCleared);
-        }
-
-        private void OnNotifyGroundClicked(long receivedFrom, NotifyGroundClicked clicked)
-        {
-            if (Game.Combat == null)
-            {
-                Logger.LogWarning($"{nameof(NotifyGroundClicked)} is ignored outside of combat");
-                return;
-            }
-
-            var click = Mapper.Map<NetworkClick>(clicked.Click);
-            GameInteraction.ClickGroundInCombat(click);
-
-            OnAfterNetworkMessageHandled(receivedFrom, clicked);
-        }
-
-        private void OnNotifyUnitClicked(long receivedFrom, NotifyUnitClicked clicked)
-        {
-            // Combat Unit clicks are usually followed up with UnitAttack command
-            // UnitAttack commands are synced separately as we can enforce specific rules like fullattack
-            // so this must be skiped to avoid command duplication
-            var canGetUp = CombatInteraction.CanRiderGetUp();
-            if (Game.Combat != null && !canGetUp)
-            {
-                Logger.LogInformation("Ignoring {MessageType} in combat", nameof(NotifyUnitClicked));
-                return;
-            }
-
-            var click = Mapper.Map<NetworkClick>(clicked.Click);
-            GameInteraction.ClickUnit(click);
-
-            OnAfterNetworkMessageHandled(receivedFrom, clicked);
         }
 
         private void OnNotifyMapObjectClicked(long receivedFrom, NotifyMapObjectClicked clicked)

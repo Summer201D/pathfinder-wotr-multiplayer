@@ -5,11 +5,11 @@ using WOTRMultiplayer.Networking.Messages.Contracts;
 namespace WOTRMultiplayer.Networking.Messages.Game
 {
     [ProtoContract]
-    [BeetleX.Packets.MessageType((int)MessageTypes.Game.NotifyGroundClicked)]
-    public class NotifyGroundClicked
+    [BeetleX.Packets.MessageType((int)MessageTypes.Game.NotifyUnitInteractedWithUnit)]
+    public class NotifyUnitInteractedWithUnit
     {
         [ProtoMember(1)]
         [LogMe]
-        public NetworkClick Click { get; set; }
+        public NetworkUnitInteractWithUnit Interaction { get; set; }
     }
 }

@@ -51,7 +51,6 @@
             NotifyDropItem,
             NotifyEquipmentSlotChanged,
             NotifyGamePauseEnded,
-            NotifyGroundClicked,
             NotifyInspectionKnowledgeCheckRolled,
             NotifyInvalidCombatTurnStarted,
             NotifyLevelingAbilityScoreDecreased,
@@ -77,7 +76,6 @@
             NotifySpellForgotten,
             NotifySpellMemorized,
             NotifyToggleActivatableAbility,
-            NotifyUnitClicked,
             NotifyUnitJoinedMidCombat,
             NotifyVendorDealMade,
             NotifyVendorItemTransferred,
@@ -267,7 +265,9 @@
             NotifyGlobalMapTeleport,
             NotifyTrapActivated,
             NotifyIslandMapEntryChosen,
-            NotifyKingdomSettlementUpgraded
+            NotifyKingdomSettlementUpgraded,
+            NotifyUnitInteractedWithUnit,
+            NotifyUnitLootedUnit
         }
 
         public enum Request

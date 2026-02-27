@@ -30,7 +30,7 @@ namespace WOTRMultiplayer.HarmonyPatches.GlobalMap
 
         [HarmonyPatch(typeof(GlobalMapSelectController), nameof(GlobalMapSelectController.HandleClick), [typeof(GlobalMapPawn)])]
         [HarmonyPrefix]
-        public static bool GlobalMapSelectController_HandleClick_Prefix()
+        public static bool GlobalMapSelectController_HandlePawnClick_Prefix()
         {
             if (!Main.Multiplayer.IsActive)
             {

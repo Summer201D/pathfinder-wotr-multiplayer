@@ -461,6 +461,66 @@ namespace WOTRMultiplayer.Services.GameInteraction
             });
         }
 
+        public void LootUnit(NetworkUnitLootUnit networkUnitLootUnit)
+        {
+            _mainThreadAccessor.Post(() =>
+            {
+                try
+                {
+                    var executor = _gameStateLookupService.GetUnitEntity(networkUnitLootUnit.InitiatorUnitId);
+                    if (executor == null)
+                    {
+                        _logger.LogError("Unable to find executor unit to perform lootunit command. InitiatorUnitId={InitiatorUnitId}", networkUnitLootUnit.InitiatorUnitId);
+                        return;
+                    }
+
+                    var target = _gameStateLookupService.GetUnitEntity(networkUnitLootUnit.TargetUnitId);
+                    if (target == null)
+                    {
+                        _logger.LogError("Unable to find target unit to perform lootunit command. TargetUnitId={TargetUnitId}", networkUnitLootUnit.TargetUnitId);
+                        return;
+                    }
+
+                    RunUnitLootUnitCommand(executor, target, networkUnitLootUnit);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Unable to run loot unit command. InitiatorUnitId={InitiatorUnitId}, TargetUnitId={TargetUnitId}", networkUnitLootUnit.InitiatorUnitId, networkUnitLootUnit.TargetUnitId);
+                    throw;
+                }
+            });
+        }
+
+        public void InteractWithUnit(NetworkUnitInteractWithUnit unitInteractWithUnit)
+        {
+            _mainThreadAccessor.Post(() =>
+            {
+                try
+                {
+                    var executor = _gameStateLookupService.GetUnitEntity(unitInteractWithUnit.InitiatorUnitId);
+                    if (executor == null)
+                    {
+                        _logger.LogError("Unable to find executor unit to perform unit interactwithunit command. InitiatorUnitId={InitiatorUnitId}", unitInteractWithUnit.InitiatorUnitId);
+                        return;
+                    }
+
+                    var target = _gameStateLookupService.GetUnitEntity(unitInteractWithUnit.TargetUnitId);
+                    if (target == null)
+                    {
+                        _logger.LogError("Unable to find target unit to perform unit interactwithunit command. TargetUnitId={TargetUnitId}", unitInteractWithUnit.TargetUnitId);
+                        return;
+                    }
+
+                    RunUnitInteractWithUnitCommand(executor, target);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Unable to interact with unit unit. InitiatorUnitId={InitiatorUnitId}, TargetUnitId={TargetUnitId}", unitInteractWithUnit.InitiatorUnitId, unitInteractWithUnit.TargetUnitId);
+                    throw;
+                }
+            });
+        }
+
         public void AttackUnit(NetworkUnitAttack attack)
         {
             _mainThreadAccessor.Post(() =>
@@ -505,12 +565,6 @@ namespace WOTRMultiplayer.Services.GameInteraction
                 _logger.LogError(ex, "Unable to initiate UseAbility. InitiatorUnitId={InitiatorUnitId}, TargetUnitId={TargetUnitId}, AbilityId={AbilityId}", networkAbilityUse.InitiatorUnitId, networkAbilityUse.Target?.UnitId, networkAbilityUse.Ability.Id);
                 throw;
             }
-        }
-
-        public bool CanRiderGetUp()
-        {
-            var canGetUp = Game.Instance.TurnBasedCombatController.CurrentTurn?.UnitCanGetUpOnCommand.Value ?? false;
-            return canGetUp;
         }
 
         public bool IsRiderActive()
@@ -1005,14 +1059,46 @@ namespace WOTRMultiplayer.Services.GameInteraction
             var command = new UnitMoveTo(destination)
             {
                 Orientation = networkUnitMoveTo.Orientation,
-                MovementDelay = networkUnitMoveTo.MovementDelay
+                MovementDelay = networkUnitMoveTo.MovementDelay,
+                CreatedByPlayer = true
             };
             SetCommandPath(networkUnitMoveTo.VectorPath, command);
             SetTurnMovementLimit(networkUnitMoveTo.MovementLimit, executorUnit);
 
             executorUnit.Commands.Run(command);
-            _logger.LogInformation("Unit MoveTo command has been initiated. UnitId={UnitId}, Destination={Destination}, Path={Path} MovementLimit={MovementLimit}",
+            _logger.LogInformation("Unit MoveTo command has been initiated. UnitId={UnitId}, Destination={Destination}, Path={Path}, MovementLimit={MovementLimit}",
                 networkUnitMoveTo.InitiatorUnitId, networkUnitMoveTo.Destination, networkUnitMoveTo.VectorPath, networkUnitMoveTo.MovementLimit);
+        }
+
+        private void RunUnitLootUnitCommand(UnitEntityData executorUnit, UnitEntityData target, NetworkUnitLootUnit networkUnitLootUnit)
+        {
+            var command = new UnitLootUnit(target)
+            {
+                CreatedByPlayer = true
+            };
+
+            executorUnit.Commands.Run(command);
+            SetCommandPath(networkUnitLootUnit.VectorPath, command);
+            SetTurnMovementLimit(networkUnitLootUnit.MovementLimit, executorUnit);
+
+            _logger.LogInformation("Unit LootUnit command has been initiated. UnitId={UnitId}, TargetId={TargetId}, Path={Path}, MovementLimit={MovementLimit}",
+                executorUnit.UniqueId, target.UniqueId, networkUnitLootUnit.VectorPath, networkUnitLootUnit.MovementLimit);
+        }
+
+        private void RunUnitInteractWithUnitCommand(UnitEntityData executorUnit, UnitEntityData target)
+        {
+            var command = new UnitInteractWithUnit(target)
+            {
+                CreatedByPlayer = true
+            };
+
+            executorUnit.Commands.Run(command);
+            // TODO: not possible to interact in combat at all?
+            // SetCommandPath(vectorPath, command);
+            // SetTurnMovementLimit(movementLimit, executorUnit);
+
+            _logger.LogInformation("Unit InteractWithUnit command has been initiated. UnitId={UnitId}, TargetId={TargetId}",
+                executorUnit.UniqueId, target.UniqueId);
         }
 
         private void RunUnitAttackCommand(UnitEntityData executorUnit, NetworkUnitAttack networkUnitAttack)
@@ -1088,7 +1174,8 @@ namespace WOTRMultiplayer.Services.GameInteraction
             SetCommandPath(vectorPath, command);
             SetTurnMovementLimit(rawMovementLimit, executorUnit);
 
-            _logger.LogInformation("Unit UseAbility command has been initiated. UnitId={UnitId}, TargetUnitId={TargetUnitId}, TargetPoint={TargetPoint}, AbilityId={AbilityId}, AbilityName={AbilityName}", executorUnit.UniqueId, targetWrapper.Point, targetWrapper.Unit?.UniqueId, abilityData.UniqueId, abilityData.NameForAcronym);
+            _logger.LogInformation("Unit UseAbility command has been initiated. UnitId={UnitId}, TargetUnitId={TargetUnitId}, TargetPoint={TargetPoint}, AbilityId={AbilityId}, AbilityName={AbilityName}, Path={Path}, MovementLimit={MovementLimit}",
+                executorUnit.UniqueId, targetWrapper.Point, targetWrapper.Unit?.UniqueId, abilityData.UniqueId, abilityData.NameForAcronym, vectorPath, rawMovementLimit);
             executorUnit.Commands.Run(command);
         }
 

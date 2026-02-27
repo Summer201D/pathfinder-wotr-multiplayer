@@ -680,7 +680,7 @@ namespace WOTRMultiplayer.UI
                 TimeSpanValidator.MaxLength);
             yield return CreateSliderSetting(WellKnownKeys.Settings.DangerZone.EnforcedCombatStartDelay.Title.Key,
                 WellKnownKeys.Settings.DangerZone.EnforcedCombatStartDelay.Tooltip.Key,
-                WellKnownSettings.DangerZone.EnforcedCombatStartDelay, 0f, 2f);
+                WellKnownSettings.DangerZone.EnforcedCombatStartDelay, 0f, 5f);
             yield return CreateStringInputSetting(
                 WellKnownKeys.Settings.DangerZone.CombatTurnDelayForAI.Title.Key,
                 WellKnownKeys.Settings.DangerZone.CombatTurnDelayForAI.Tooltip.Key,

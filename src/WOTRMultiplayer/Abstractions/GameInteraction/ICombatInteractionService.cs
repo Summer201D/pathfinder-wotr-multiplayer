@@ -62,8 +62,6 @@ namespace WOTRMultiplayer.Abstractions.GameInteraction
 
         void KillUnit(NetworkPlayer player, string unitId);
 
-        bool CanRiderGetUp();
-
         bool IsRiderActive();
 
         void MoveUnit(NetworkUnitMoveTo unitMoveTo);
@@ -71,5 +69,9 @@ namespace WOTRMultiplayer.Abstractions.GameInteraction
         void MakeUnitTargetable(string unitId, bool isTargetable);
 
         bool IsAnyProjectilesLaunchedByParty();
+
+        void InteractWithUnit(NetworkUnitInteractWithUnit networkUnitInteractWithUnit);
+
+        void LootUnit(NetworkUnitLootUnit networkUnitLootUnit);
     }
 }

@@ -33,10 +33,6 @@ namespace WOTRMultiplayer.HarmonyPatches.Clicks
             return false;
         }
 
-        /// <summary>
-        /// handles movement outside of combat since it runs after formation calculations
-        /// could be merged with ClickGroundHandler_OnClick_Postfix, but it requires repeating formation calculations
-        /// </summary>
         [HarmonyPatch(typeof(ClickGroundHandler), nameof(ClickGroundHandler.RunCommand))]
         [HarmonyPrefix]
         public static void ClickGroundHandler_RunCommand_Prefix(UnitEntityData unit, ClickGroundHandler.CommandSettings settings)
@@ -46,59 +42,18 @@ namespace WOTRMultiplayer.HarmonyPatches.Clicks
                 return;
             }
 
+            var movementLimit = Game.Instance.TurnBasedCombatController.CurrentTurn?.CurrentMovementLimit;
+            var path = PathVisualizer.Instance?.m_CurrentPath?.vectorPath;
             var unitMoveTo = new NetworkUnitMoveTo
             {
                 InitiatorUnitId = unit.UniqueId,
                 Destination = settings.Destination.ToNetworkVector3(),
                 MovementDelay = settings.Delay,
                 Orientation = settings.Orientation,
+                MovementLimit = movementLimit?.ToString(),
+                VectorPath = [.. path?.Select(x => x.ToNetworkVector3()) ?? []],
             };
             Main.Multiplayer.OnUnitMoveTo(unitMoveTo);
-        }
-
-        /// <summary>
-        /// handles movement in combat
-        /// </summary>
-        [HarmonyPatch(typeof(ClickGroundHandler), nameof(ClickGroundHandler.OnClick), [typeof(GameObject), typeof(Vector3), typeof(int), typeof(bool), typeof(bool), typeof(bool)])]
-        [HarmonyPostfix]
-        public static void ClickGroundHandler_OnClick_Postfix(bool __result, GameObject gameObject, Vector3 worldPosition, int button, bool simulate, bool muteEvents, bool IsTMBClick)
-        {
-            if (!Main.Multiplayer.IsActive || simulate || !__result)
-            {
-                return;
-            }
-
-            try
-            {
-                var click = CreateClick(gameObject, button, worldPosition, muteEvents, IsTMBClick);
-                Main.Multiplayer.OnClickGround(click);
-            }
-            catch (Exception ex)
-            {
-                Main.GetLogger<ClicksPatches>().LogError(ex, "Unable to process ClickGround click");
-                throw;
-            }
-        }
-
-        [HarmonyPatch(typeof(ClickUnitHandler), nameof(ClickUnitHandler.OnClick))]
-        [HarmonyPostfix]
-        public static void ClickUnitHandler_OnClick_Postfix(bool __result, GameObject gameObject, Vector3 worldPosition, int button, bool simulate, bool muteEvents, bool IsTMBClick)
-        {
-            if (!Main.Multiplayer.IsActive || simulate || !__result)
-            {
-                return;
-            }
-
-            try
-            {
-                var click = CreateClick(gameObject, button, worldPosition, muteEvents, IsTMBClick);
-                Main.Multiplayer.OnClickUnit(click);
-            }
-            catch (Exception ex)
-            {
-                Main.GetLogger<ClicksPatches>().LogError(ex, "Unable to process ClickUnit click");
-                throw;
-            }
         }
 
         [HarmonyPatch(typeof(ClickMapObjectHandler), nameof(ClickMapObjectHandler.OnClick), [typeof(GameObject), typeof(Vector3), typeof(int), typeof(bool), typeof(bool), typeof(bool)])]

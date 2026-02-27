@@ -376,6 +376,12 @@ namespace WOTRMultiplayer.Config.Mapping
 
             CreateMap<NetworkIslandMapTransition, Networking.Messages.Contracts.NetworkIslandMapTransition>()
                 .ReverseMap();
+
+            CreateMap<NetworkUnitInteractWithUnit, Networking.Messages.Contracts.NetworkUnitInteractWithUnit>()
+                .ReverseMap();
+
+            CreateMap<NetworkUnitLootUnit, Networking.Messages.Contracts.NetworkUnitLootUnit>()
+                .ReverseMap();
         }
     }
 }

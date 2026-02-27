@@ -72,10 +72,6 @@ namespace WOTRMultiplayer.Abstractions
 
         string GetCharacterOwnerName(string unitId);
 
-        void OnClickUnit(NetworkClick networkClick);
-
-        void OnClickGround(NetworkClick networkClick);
-
         void OnClickMapObject(NetworkClick networkClick);
 
         void OnInteractWithMapObjectOvertip(NetworkOvertip networkOvertip);
@@ -543,5 +539,9 @@ namespace WOTRMultiplayer.Abstractions
         void OnIslandMapEntryChosen(NetworkIslandMapTransition islandMapTransition);
 
         void OnKingdomUpgradeSettlement(NetworkKingdomSettlement kingdomSettlement);
+
+        void OnUnitInteractWithUnit(NetworkUnitInteractWithUnit networkUnitInteractWithUnit);
+
+        void OnUnitLootUnit(NetworkUnitLootUnit networkUnitLootUnit);
     }
 }

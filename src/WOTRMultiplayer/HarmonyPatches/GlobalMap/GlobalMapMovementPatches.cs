@@ -382,7 +382,7 @@ namespace WOTRMultiplayer.HarmonyPatches.GlobalMap
         private readonly static AsyncLocal<bool> _isLocationMessageFromClick = new();
         [HarmonyPatch(typeof(GlobalMapSelectController), nameof(GlobalMapSelectController.HandleClick), [typeof(GlobalMapPointView)])]
         [HarmonyPrefix]
-        public static void GlobalMapSelectController_HandleClick_Prefix()
+        public static void GlobalMapSelectController_HandlePointClick_Prefix()
         {
             if (!Main.Multiplayer.IsActive)
             {

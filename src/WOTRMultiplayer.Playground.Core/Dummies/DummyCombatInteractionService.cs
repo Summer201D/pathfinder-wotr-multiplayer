@@ -93,11 +93,6 @@ namespace WOTRMultiplayer.Playground.Core.Dummies
         {
         }
 
-        public bool CanRiderGetUp()
-        {
-            return false;
-        }
-
         public bool IsRiderActive()
         {
             return false;
@@ -153,6 +148,14 @@ namespace WOTRMultiplayer.Playground.Core.Dummies
         public bool IsAnyProjectilesLaunchedByParty()
         {
             return false;
+        }
+
+        public void InteractWithUnit(NetworkUnitInteractWithUnit interaction)
+        {
+        }
+
+        public void LootUnit(NetworkUnitLootUnit networkUnitLootUnit)
+        {
         }
     }
 }
