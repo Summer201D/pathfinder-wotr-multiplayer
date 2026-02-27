@@ -115,6 +115,8 @@ namespace WOTRMultiplayer.Services.GameInteraction
                     return;
                 }
 
+                globalMapTravelData.CreatedForDestinationLocation = travel.CreatedForDestinationLocation;
+
                 traveler.StartTravel(globalMapTravelData, travel.FromClick);
                 _logger.LogInformation("Global map traveler has been started. Type={Type}, FromClick={FromClick}, Destination={DestinationId}, DestinationName={DestinationName}", travel.Type, travel.FromClick, point.Blueprint.AssetGuid.ToString(), point.name);
             });

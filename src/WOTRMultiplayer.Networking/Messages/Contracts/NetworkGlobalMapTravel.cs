@@ -21,5 +21,9 @@ namespace WOTRMultiplayer.Networking.Messages.Contracts
         [ProtoMember(4)]
         [LogMe]
         public bool FromClick { get; set; }
+
+        [ProtoMember(5)]
+        [LogMe]
+        public bool CreatedForDestinationLocation { get; set; }
     }
 }

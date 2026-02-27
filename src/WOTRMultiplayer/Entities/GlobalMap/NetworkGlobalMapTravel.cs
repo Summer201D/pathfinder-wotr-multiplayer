@@ -9,5 +9,7 @@
         public NetworkGlobalMapLocation Destination { get; set; }
 
         public bool FromClick { get; set; }
+
+        public bool CreatedForDestinationLocation { get; set; }
     }
 }

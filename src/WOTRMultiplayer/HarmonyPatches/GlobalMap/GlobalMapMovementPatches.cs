@@ -345,7 +345,7 @@ namespace WOTRMultiplayer.HarmonyPatches.GlobalMap
                 return false;
             }
 
-            var travel = CreateGlobalMapTravel(NetworkGlobalMapPathType.Direction, __instance.m_DirLoc.Blueprint, fromClick: true);
+            var travel = CreateGlobalMapTravel(NetworkGlobalMapPathType.Direction, __instance.m_DirLoc.Blueprint, fromClick: true, createdForDestinationLocation: false);
             Main.Multiplayer.OnGlobalMapTravelStarted(travel);
             return true;
         }
@@ -567,7 +567,7 @@ namespace WOTRMultiplayer.HarmonyPatches.GlobalMap
                 return;
             }
 
-            var travel = CreateGlobalMapTravel(NetworkGlobalMapPathType.Direction, globalMapTravelData.To.Location, fromClick: true);
+            var travel = CreateGlobalMapTravel(NetworkGlobalMapPathType.Direction, globalMapTravelData.To.Location, fromClick: true, globalMapTravelData.CreatedForDestinationLocation);
             Main.Multiplayer.OnGlobalMapTravelStarted(travel);
         }
 
@@ -578,18 +578,20 @@ namespace WOTRMultiplayer.HarmonyPatches.GlobalMap
                 return;
             }
 
-            var travel = CreateGlobalMapTravel(NetworkGlobalMapPathType.Exact, globalMapTravelData.To.Location, fromClick);
+            var travel = CreateGlobalMapTravel(NetworkGlobalMapPathType.Exact, globalMapTravelData.To.Location, fromClick, globalMapTravelData.CreatedForDestinationLocation);
             Main.Multiplayer.OnGlobalMapTravelStarted(travel);
         }
 
-        private static NetworkGlobalMapTravel CreateGlobalMapTravel(NetworkGlobalMapPathType pathType, BlueprintGlobalMapPoint globalMapPoint, bool fromClick)
+        private static NetworkGlobalMapTravel CreateGlobalMapTravel(NetworkGlobalMapPathType pathType, BlueprintGlobalMapPoint globalMapPoint, bool fromClick, bool createdForDestinationLocation)
         {
             var travel = new NetworkGlobalMapTravel
             {
                 Traveler = GetGlobalMapTraveler(Game.Instance.GlobalMapController.SelectedTraveler),
                 Destination = GetNetworkGlobalMapLocation(globalMapPoint),
                 Type = pathType,
-                FromClick = fromClick
+                FromClick = fromClick,
+                CreatedForDestinationLocation = createdForDestinationLocation
+
             };
             return travel;
         }
