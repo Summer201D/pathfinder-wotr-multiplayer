@@ -216,5 +216,7 @@ namespace WOTRMultiplayer.Abstractions.GameInteraction
         void RemoveCustomSpell(string unitId, NetworkAbility ability);
 
         void ChooseIslandMapEntry(NetworkIslandMapTransition island);
+
+        void InteractWithMapObjectCombinePart(NetworkMapObject mapObject, int partIndex);
     }
 }

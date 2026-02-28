@@ -2272,6 +2272,14 @@ namespace WOTRMultiplayer.Services.GameInteraction
             });
         }
 
+        public void InteractWithMapObjectCombinePart(NetworkMapObject mapObject, int partIndex)
+        {
+            _mainThreadAccessor.Post(() =>
+            {
+                _logger.LogWarning("TODO: InteractWithMapObjectCombinePart");
+            });
+        }
+
         public void ChooseIslandMapEntry(NetworkIslandMapTransition islandMapTransition)
         {
             _mainThreadAccessor.Post(() =>

@@ -462,5 +462,9 @@ namespace WOTRMultiplayer.Playground.Core.Dummies
         {
             return false;
         }
+
+        public void InteractWithMapObjectCombinePart(NetworkMapObject mapObject, int partIndex)
+        {
+        }
     }
 }

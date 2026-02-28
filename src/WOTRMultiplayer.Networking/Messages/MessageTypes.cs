@@ -267,7 +267,8 @@
             NotifyIslandMapEntryChosen,
             NotifyKingdomSettlementUpgraded,
             NotifyUnitInteractedWithUnit,
-            NotifyUnitLootedUnit
+            NotifyUnitLootedUnit,
+            NotifyMapObjectCombinePartInteracted
         }
 
         public enum Request

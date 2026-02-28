@@ -1734,6 +1734,16 @@ namespace WOTRMultiplayer.Services
             Send(message);
         }
 
+        public void OnMapObjectCombinePartInteraction(NetworkMapObject mapObject, int partIndex)
+        {
+            var message = new NotifyMapObjectCombinePartInteracted
+            {
+                MapObject = Mapper.Map<Networking.Messages.Contracts.NetworkMapObject>(mapObject),
+                PartIndex = partIndex
+            };
+            Send(message);
+        }
+
         public void OnUnitInteractWithUnit(NetworkUnitInteractWithUnit networkUnitInteractWithUnit)
         {
             if (!IsControlledByLocalPlayer(networkUnitInteractWithUnit.InitiatorUnitId))
@@ -3439,7 +3449,14 @@ namespace WOTRMultiplayer.Services
 
                 // map objects
                 .On<NotifyTrapActivated>(OnNotifyTrapActivated)
+                .On<NotifyMapObjectCombinePartInteracted>(OnNotifyMapObjectCombinePartInteracted)
                 ;
+        }
+
+        private void OnNotifyMapObjectCombinePartInteracted(long receivedFrom, NotifyMapObjectCombinePartInteracted message)
+        {
+            var mapObject = Mapper.Map<NetworkMapObject>(message.MapObject);
+            GameInteraction.InteractWithMapObjectCombinePart(mapObject, message.PartIndex);
         }
 
         private void OnNotifyUnitLootedUnit(long receivedFrom, NotifyUnitLootedUnit message)

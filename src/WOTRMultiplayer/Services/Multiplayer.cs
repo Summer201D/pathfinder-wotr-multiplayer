@@ -4490,6 +4490,24 @@ namespace WOTRMultiplayer.Services
             }
         }
 
+        public void OnMapObjectCombinePartInteraction(NetworkMapObject mapObject, int partIndex)
+        {
+            try
+            {
+                if (_multiplayerActorAccessor == null)
+                {
+                    return;
+                }
+
+                _multiplayerActorAccessor.Current.OnMapObjectCombinePartInteraction(mapObject, partIndex);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while interacting with map object combine part. MapObjectId={MapObjectId}, PartIndex={PartIndex}", mapObject?.Id, partIndex);
+                throw;
+            }
+        }
+
         public void OnGlobalMapTeleport(NetworkGlobalMapLocation globalMapLocation)
         {
             try
