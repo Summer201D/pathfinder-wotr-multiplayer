@@ -4,7 +4,6 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using AutoMapper;
-using FluentValidation;
 using Kingmaker;
 using Kingmaker.Armies.TacticalCombat;
 using Kingmaker.Armies.TacticalCombat.Blueprints;
@@ -669,28 +668,34 @@ namespace WOTRMultiplayer.Services.GameInteraction
             return taskCompletion.Task;
         }
 
-        public Task<bool> EnsureUnitsInCombatAsync(List<NetworkUnit> units)
+        public void AddUnitsToCombat(List<string> units)
+        {
+            _mainThreadAccessor.Post(() =>
+            {
+                foreach (var unitId in units)
+                {
+                    var unit = _gameStateLookupService.GetUnitEntity(unitId);
+                    if (unit == null || unit.State.IsFinallyDead || unit.IsInCombat)
+                    {
+                        continue;
+                    }
+
+                    AddUnitToCombat(unit);
+                }
+            });
+        }
+
+        public async Task<bool> EnsureUnitsInCombatAsync(List<NetworkUnit> units)
         {
             var taskCompletion = new TaskCompletionSource<bool>();
 
-            using var timeout = new CancellationTokenSource(TimeSpan.FromMinutes(2));
-            List<UnitEntityData> localUnits = [.. units.Select(u => _gameStateLookupService.GetUnitEntity(u.Id)).Where(x => x != null)];
-            if (localUnits.Count != units.Count)
-            {
-                _logger.LogWarning("Waiting for all units to be available locally");
-                while (localUnits.Count != units.Count && !timeout.IsCancellationRequested)
-                {
-                    localUnits = [.. units.Select(u => _gameStateLookupService.GetUnitEntity(u.Id)).Where(x => x != null)];
-                }
-            }
+            var localUnits = await WaitForUnitsToBeAvailableLocally(units);
 
-            if (timeout.IsCancellationRequested)
+            if (localUnits == null)
             {
                 taskCompletion.SetResult(false);
-                return taskCompletion.Task;
+                return taskCompletion.Task.Result;
             }
-
-            timeout.Cancel();
 
             _mainThreadAccessor.Post(() =>
             {
@@ -698,7 +703,36 @@ namespace WOTRMultiplayer.Services.GameInteraction
                 taskCompletion.SetResult(true);
             });
 
-            return taskCompletion.Task;
+            return await taskCompletion.Task;
+        }
+
+        private async Task<List<UnitEntityData>> WaitForUnitsToBeAvailableLocally(List<NetworkUnit> units)
+        {
+            using var timeout = new CancellationTokenSource(TimeSpan.FromMinutes(1));
+            var requiredUnits = units.ToList();
+            var localUnits = new List<UnitEntityData>();
+            while (requiredUnits.Count > 0 && !timeout.IsCancellationRequested)
+            {
+                for (int i = requiredUnits.Count - 1; i >= 0; i--)
+                {
+                    var unitId = requiredUnits[i].Id;
+                    var unit = _gameStateLookupService.GetUnitEntity(unitId);
+                    if (unit != null)
+                    {
+                        localUnits.Add(unit);
+                        requiredUnits.RemoveAt(i);
+                    }
+                }
+
+                await Task.Delay(10);
+            }
+
+            if (localUnits.Count != units.Count)
+            {
+                return null;
+            }
+
+            return localUnits;
         }
 
         public List<NetworkUnit> GetParty()
@@ -813,11 +847,16 @@ namespace WOTRMultiplayer.Services.GameInteraction
                     continue;
                 }
 
-                var notSurprised = UnitCombatJoinController.CalculateIsNotSurprised(unit);
-                unit.JoinCombat(notSurprised);
+                AddUnitToCombat(unit);
             }
 
             _logger.LogInformation("Units have been added to combat. Units={Units}", units.Select(x => x.UniqueId));
+        }
+
+        private void AddUnitToCombat(UnitEntityData unit)
+        {
+            var notSurprised = UnitCombatJoinController.CalculateIsNotSurprised(unit);
+            unit.JoinCombat(notSurprised);
         }
 
         private void UpdateAreaEffects(List<NetworkAreaEffect> areaEffects)
@@ -1189,7 +1228,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
             SetCommandPath(vectorPath, command);
             SetTurnMovementLimit(rawMovementLimit, executorUnit);
 
-            _logger.LogInformation("Unit UseAbility command has been initiated. UnitId={UnitId}, TargetUnitId={TargetUnitId}, TargetPoint={TargetPoint}, AbilityId={AbilityId}, AbilityName={AbilityName}, Path={Path}, MovementLimit={MovementLimit}",
+            _logger.LogInformation("Unit UseAbility command has been initiated. UnitId={UnitId},  TargetPoint={TargetPoint}, TargetUnitId={TargetUnitId}, AbilityId={AbilityId}, AbilityName={AbilityName}, Path={Path}, MovementLimit={MovementLimit}",
                 executorUnit.UniqueId, targetWrapper.Point, targetWrapper.Unit?.UniqueId, abilityData.UniqueId, abilityData.NameForAcronym, vectorPath, rawMovementLimit);
             executorUnit.Commands.Run(command);
         }

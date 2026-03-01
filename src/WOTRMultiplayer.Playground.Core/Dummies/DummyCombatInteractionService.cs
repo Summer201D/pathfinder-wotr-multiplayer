@@ -157,5 +157,9 @@ namespace WOTRMultiplayer.Playground.Core.Dummies
         public void LootUnit(NetworkUnitLootUnit networkUnitLootUnit)
         {
         }
+
+        public void AddUnitsToCombat(List<string> units)
+        {
+        }
     }
 }

@@ -32,26 +32,16 @@ namespace WOTRMultiplayer.Networking.Consuming
             _logger.LogInformation("Consumer has been stopped");
         }
 
-        public void On<TMessage>(Action<long, TMessage> messageHandler, MessageHandlerPriority priority)
+        public void On<TMessage>(Action<long, TMessage> messageHandler, MessageHandlerPriority messageHandlerPriority)
             where TMessage : class
         {
-            switch (priority)
+            var handlers = _consumers.GetOrAdd(typeof(TMessage), []);
+            var priority = messageHandlerPriority switch
             {
-                case MessageHandlerPriority.Default:
-                    _consumers.AddOrUpdate(
-                        typeof(TMessage),
-                        k => new SortedList<int, Action<long, object>>
-                        {
-                            { default, (player, message) => messageHandler(player, (TMessage)message) }
-                        },
-                        (k, existing) =>
-                        {
-                            var next = existing.Keys.Max() + 1;
-                            existing.Add(next, (player, message) => messageHandler(player, (TMessage)message));
-                            return existing;
-                        });
-                    break;
-            }
+                MessageHandlerPriority.High => handlers.Keys.Count == 0 ? -1 : handlers.Keys.Min() - 1,
+                _ or MessageHandlerPriority.Default => handlers.Keys.Count == 0 ? 0 : handlers.Keys.Max() + 1
+            };
+            handlers.Add(priority, (player, message) => messageHandler(player, (TMessage)message));
         }
 
         public void Enqueue(NetworkMessageMetadata message)
@@ -86,14 +76,14 @@ namespace WOTRMultiplayer.Networking.Consuming
                         continue;
                     }
 
-                    _logger.LogObject(LogLevel.Information, "Received {MessageType}. ReceivedFrom={ReceivedFrom}", metadata.Message, metadata.PlayerId);
-
                     var messageType = metadata.Message.GetType();
                     if (!_consumers.TryGetValue(messageType, out var configuredHandlers))
                     {
                         _logger.LogError("There are no configured message handlers. Type={Type}", messageType);
                         continue;
                     }
+
+                    _logger.LogObject(LogLevel.Information, "Received {MessageType}. ReceivedFrom={ReceivedFrom}, Consumers={Consumers},", metadata.Message, metadata.PlayerId, configuredHandlers.Count);
 
                     var handlers = configuredHandlers.ToList();
                     foreach (var handler in handlers)
@@ -104,7 +94,7 @@ namespace WOTRMultiplayer.Networking.Consuming
                         }
                         catch (Exception ex)
                         {
-                            _logger.LogError(ex, "Error consuming message. PlayerId={PlayerId}, Type={Type}", metadata.PlayerId, messageType);
+                            _logger.LogError(ex, "Error while consuming message. PlayerId={PlayerId}, Type={Type}", metadata.PlayerId, messageType);
                         }
                     }
                 }

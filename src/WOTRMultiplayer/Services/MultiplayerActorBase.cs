@@ -513,6 +513,9 @@ namespace WOTRMultiplayer.Services
                 Logger.LogWarning("Previous combat has not been disposed correctly");
             }
 
+            // there is no pause in the combat
+            Game.ForcedPause = null;
+
             Game.Combat = new NetworkCombat { StartedAt = DateTime.UtcNow };
             Game.LastCombatTurn = null;
 
@@ -619,6 +622,11 @@ namespace WOTRMultiplayer.Services
                         Game.Combat.TriggeredAreaEffects.Clear();
                         ResetCombatTurn();
                         PlayerNotification.AddCombatText(WellKnownKeys.GameNotifications.Combat.Turn.Ended.Key, CombatTextSeverity.Common, new UnitEntityLog(unitId));
+                        var confirmedUnits = Game.Combat.ConfirmedMidCombatUnits.ToList() ?? [];
+                        if (confirmedUnits.Count > 0)
+                        {
+                            CombatInteraction.AddUnitsToCombat(confirmedUnits);
+                        }
                         return true;
                     default:
                         return false;

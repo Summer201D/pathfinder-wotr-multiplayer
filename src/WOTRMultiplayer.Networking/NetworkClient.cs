@@ -4,7 +4,6 @@ using System.Net;
 using System.Threading.Tasks;
 using BeetleX.Clients;
 using Microsoft.Extensions.Logging;
-using WOTRMultiplayer.Logging.Extensions;
 using WOTRMultiplayer.Networking.Abstractions;
 using WOTRMultiplayer.Networking.Awaiters;
 using WOTRMultiplayer.Networking.Consuming;

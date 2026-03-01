@@ -2272,11 +2272,19 @@ namespace WOTRMultiplayer.Services.GameInteraction
             });
         }
 
-        public void InteractWithMapObjectCombinePart(NetworkMapObject mapObject, int partIndex)
+        public void InteractWithMapObjectCombinePart(NetworkMapObject networkMapObject, int partIndex)
         {
             _mainThreadAccessor.Post(() =>
             {
-                _logger.LogWarning("TODO: InteractWithMapObjectCombinePart");
+                var mapObject = _gameStateLookupService.GetMapObject(networkMapObject.Id);
+                if (mapObject == null)
+                {
+                    _logger.LogError("Unabel to interact with combine part of missing map object. Id={Id}", networkMapObject.Id);
+                    return;
+                }
+
+                // TODO
+                _logger.LogWarning("TODO: MapObject combine part has been interacted. MapObjectId={MapObjectId}, PartIndex={PartIndex}", networkMapObject.Id, partIndex);
             });
         }
 

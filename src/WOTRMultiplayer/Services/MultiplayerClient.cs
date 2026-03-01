@@ -92,6 +92,8 @@ namespace WOTRMultiplayer.Services
         {
             _ipEndPointParser = ipEndPointParser;
             _networkClient = networkClient;
+
+            SetupNetworkMessageHandlers();
         }
 
         public AddressParseResult Connect(string address)
@@ -106,8 +108,6 @@ namespace WOTRMultiplayer.Services
             {
                 return AddressParseResult.Error(WellKnownKeys.MultiplayerClient.Errors.InvalidPort.Key);
             }
-
-            SetupNetworkMessageHandlers();
 
             var settings = SettingsService.GetSettings();
             _networkClient.ConnectAsync(endpoint.Address.ToString(), endpoint.Port, settings.NetworkAwaiterTimeout).ConfigureAwait(false);

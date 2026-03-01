@@ -2,6 +2,7 @@
 {
     public enum MessageHandlerPriority
     {
-        Default
+        Default,
+        High
     }
 }
