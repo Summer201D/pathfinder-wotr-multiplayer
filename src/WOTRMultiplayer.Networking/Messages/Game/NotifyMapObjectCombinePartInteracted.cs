@@ -15,5 +15,9 @@ namespace WOTRMultiplayer.Networking.Messages.Game
         [ProtoMember(2)]
         [LogMe]
         public int PartIndex { get; set; }
+
+        [ProtoMember(3)]
+        [LogMe]
+        public string UnitId { get; set; }
     }
 }

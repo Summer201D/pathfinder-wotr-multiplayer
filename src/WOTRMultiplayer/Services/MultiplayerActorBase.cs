@@ -1742,11 +1742,12 @@ namespace WOTRMultiplayer.Services
             Send(message);
         }
 
-        public void OnMapObjectCombinePartInteraction(NetworkMapObject mapObject, int partIndex)
+        public void OnMapObjectCombinePartInteraction(NetworkMapObject mapObject, string interactedUnitId, int partIndex)
         {
             var message = new NotifyMapObjectCombinePartInteracted
             {
                 MapObject = Mapper.Map<Networking.Messages.Contracts.NetworkMapObject>(mapObject),
+                UnitId = interactedUnitId,
                 PartIndex = partIndex
             };
             Send(message);
@@ -3464,7 +3465,7 @@ namespace WOTRMultiplayer.Services
         private void OnNotifyMapObjectCombinePartInteracted(long receivedFrom, NotifyMapObjectCombinePartInteracted message)
         {
             var mapObject = Mapper.Map<NetworkMapObject>(message.MapObject);
-            GameInteraction.InteractWithMapObjectCombinePart(mapObject, message.PartIndex);
+            GameInteraction.InteractWithMapObjectCombinePart(mapObject, message.UnitId, message.PartIndex);
         }
 
         private void OnNotifyUnitLootedUnit(long receivedFrom, NotifyUnitLootedUnit message)

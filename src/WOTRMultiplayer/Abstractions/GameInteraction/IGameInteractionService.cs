@@ -217,6 +217,6 @@ namespace WOTRMultiplayer.Abstractions.GameInteraction
 
         void ChooseIslandMapEntry(NetworkIslandMapTransition island);
 
-        void InteractWithMapObjectCombinePart(NetworkMapObject mapObject, int partIndex);
+        void InteractWithMapObjectCombinePart(NetworkMapObject mapObject, string unitId, int partIndex);
     }
 }

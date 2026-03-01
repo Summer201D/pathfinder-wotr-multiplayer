@@ -35,6 +35,7 @@ namespace WOTRMultiplayer.HarmonyPatches.MapObjects
             {
                 new(OpCodes.Ldarg_0),
                 new(OpCodes.Ldloc_2),
+                new(OpCodes.Ldarg_1),
                 new(OpCodes.Ldloc_S, 5),
                 new(OpCodes.Call, extraCall)
             };
@@ -44,7 +45,7 @@ namespace WOTRMultiplayer.HarmonyPatches.MapObjects
             return matcher.Instructions();
         }
 
-        private static void OnShowCombinePartUI(OvertipsViewCombinePartBase<OvertipsViewCombinePartEntity> overtipsViewCombinePartBase, int partIndex, OvertipsViewCombinePartEntity entity)
+        private static void OnShowCombinePartUI(OvertipsViewCombinePartBase<OvertipsViewCombinePartEntity> overtipsViewCombinePartBase, int partIndex, UnitEntityData interactedUnit, OvertipsViewCombinePartEntity entity)
         {
             // index 0 is always insert 'item' (as of now)
             // will see if this needs more specific treatment
@@ -53,13 +54,14 @@ namespace WOTRMultiplayer.HarmonyPatches.MapObjects
                 return;
             }
 
-            overtipsViewCombinePartBase.m_Disposables.Add(entity.Button.OnLeftClickAsObservable().Subscribe(_ => OnMapObjectCombinePartInteraction(overtipsViewCombinePartBase.ViewModel.MapObject, partIndex)));
+            overtipsViewCombinePartBase.m_Disposables.Add(entity.Button.OnLeftClickAsObservable().Subscribe(_ => OnMapObjectCombinePartInteraction(overtipsViewCombinePartBase.ViewModel.MapObject, interactedUnit, partIndex)));
         }
 
-        private static void OnMapObjectCombinePartInteraction(MapObjectEntityData mapObjectEntityData, int partIndex)
+        private static void OnMapObjectCombinePartInteraction(MapObjectEntityData mapObjectEntityData, UnitEntityData interactedUnit, int partIndex)
         {
             var mapObject = Main.Mapper.Map<NetworkMapObject>(mapObjectEntityData);
-            Main.Multiplayer.OnMapObjectCombinePartInteraction(mapObject, partIndex);
+            var interactedUnitId = interactedUnit.UniqueId;
+            Main.Multiplayer.OnMapObjectCombinePartInteraction(mapObject, interactedUnitId, partIndex);
         }
     }
 }

@@ -16,6 +16,7 @@ using Kingmaker.Controllers.Rest;
 using Kingmaker.Controllers.Rest.State;
 using Kingmaker.Controllers.Units;
 using Kingmaker.Craft;
+using Kingmaker.Designers.EventConditionActionSystem.ContextData;
 using Kingmaker.DLC;
 using Kingmaker.ElementsSystem;
 using Kingmaker.EntitySystem;
@@ -2272,15 +2273,57 @@ namespace WOTRMultiplayer.Services.GameInteraction
             });
         }
 
-        public void InteractWithMapObjectCombinePart(NetworkMapObject networkMapObject, int partIndex)
+        public void InteractWithMapObjectCombinePart(NetworkMapObject networkMapObject, string interactedUnitId, int partIndex)
         {
             _mainThreadAccessor.Post(() =>
             {
                 var mapObject = _gameStateLookupService.GetMapObject(networkMapObject.Id);
                 if (mapObject == null)
                 {
-                    _logger.LogError("Unabel to interact with combine part of missing map object. Id={Id}", networkMapObject.Id);
+                    _logger.LogError("Unable to interact with combine part of missing map object. MapObjectId={MapObjectId}", networkMapObject.Id);
                     return;
+                }
+
+                var combinePart = mapObject.Get<InteractionCombinePart>();
+                if (combinePart == null)
+                {
+                    _logger.LogError("Map object has no InteractionCombinePart. MapObjectId={MapObjectId}", networkMapObject.Id);
+                    return;
+                }
+
+                var unit = _gameStateLookupService.GetUnitEntity(interactedUnitId);
+                if (unit == null)
+                {
+                    _logger.LogError("Unable to interact with combine part due to missing unit. UnitId={UnitId}", interactedUnitId);
+                    return;
+                }
+
+                var validPartIndex = -1;
+                foreach (var entry in combinePart.Settings.Entries)
+                {
+                    if (entry == null)
+                    {
+                        continue;
+                    }
+
+                    using (ContextData<MapObjectData>.Request().Setup(mapObject))
+                    {
+                        using (ContextData<InteractingUnitData>.Request().Setup(unit))
+                        {
+                            if (entry.Condition.Get() != null && !entry.Condition.Get().Check())
+                            {
+                                continue;
+                            }
+
+                            validPartIndex++;
+                            if (validPartIndex != partIndex)
+                            {
+                                continue;
+                            }
+
+                            entry.Action?.Get()?.Run();
+                        }
+                    }
                 }
 
                 // TODO

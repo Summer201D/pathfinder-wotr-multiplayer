@@ -4490,7 +4490,7 @@ namespace WOTRMultiplayer.Services
             }
         }
 
-        public void OnMapObjectCombinePartInteraction(NetworkMapObject mapObject, int partIndex)
+        public void OnMapObjectCombinePartInteraction(NetworkMapObject mapObject, string interactedUnitId, int partIndex)
         {
             try
             {
@@ -4499,7 +4499,7 @@ namespace WOTRMultiplayer.Services
                     return;
                 }
 
-                _multiplayerActorAccessor.Current.OnMapObjectCombinePartInteraction(mapObject, partIndex);
+                _multiplayerActorAccessor.Current.OnMapObjectCombinePartInteraction(mapObject, interactedUnitId, partIndex);
             }
             catch (Exception ex)
             {
