@@ -581,6 +581,8 @@ namespace WOTRMultiplayer.Services.GameInteraction
                         {
                             _logger.LogInformation("Transfering item. Name={Name}, Id={Id}, Count={Count}, Source={Source}, SourceIsStash={SourceIsStash}, Destination={Destination}, DestinationIsStash={DestinationIsStash}", matchedItem.Name, matchedItem.UniqueId, matchedItem.Count, sourceCollection.OwnerRef.Entity?.UniqueId, sourceCollection.IsSharedStash, destinationCollection.OwnerRef.Entity.UniqueId, destinationCollection.IsSharedStash);
                             sourceCollection.Transfer(matchedItem, matchedItem.Count, destinationCollection);
+
+                            TryTriggerLootClosedActions(sourceCollection.OwnerRef.Entity, destinationCollection.OwnerRef.Entity);
                         });
                     }
 
@@ -3227,6 +3229,20 @@ namespace WOTRMultiplayer.Services.GameInteraction
                 && AreSameEnchantments(itemEntity.Enchantments, networkLootItem.Enchantments);
 
             return sameItemType;
+        }
+
+        private void TryTriggerLootClosedActions(params EntityDataBase[] entities)
+        {
+            foreach (var entity in entities)
+            {
+                if (entity is not MapObjectEntityData mapObjectEntityData)
+                {
+                    continue;
+                }
+
+                var lootPart = mapObjectEntityData.Get<InteractionLootPart>();
+                lootPart?.OnLootClosed();
+            }
         }
 
         private bool AreSameEnchantments(List<ItemEnchantment> itemEnchantments, List<string> enchantments)
