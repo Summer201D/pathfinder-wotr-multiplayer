@@ -2326,8 +2326,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
                     }
                 }
 
-                // TODO
-                _logger.LogWarning("TODO: MapObject combine part has been interacted. MapObjectId={MapObjectId}, PartIndex={PartIndex}", networkMapObject.Id, partIndex);
+                _logger.LogWarning("MapObject combine part has been interacted. MapObjectId={MapObjectId}, PartIndex={PartIndex}", networkMapObject.Id, partIndex);
             });
         }
 
