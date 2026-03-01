@@ -12,7 +12,6 @@ using Kingmaker.UnitLogic.Abilities;
 using Microsoft.Extensions.Logging;
 using WOTRMultiplayer.Entities.Combat;
 using WOTRMultiplayer.Entities.Spells;
-using WOTRMultiplayer.HarmonyPatches.Combat;
 
 namespace WOTRMultiplayer.HarmonyPatches.SpellbookManagement
 {
@@ -86,7 +85,7 @@ namespace WOTRMultiplayer.HarmonyPatches.SpellbookManagement
             }
             catch (Exception ex)
             {
-                Main.GetLogger<UnitFearControllerPatches>().LogError(ex, "Error while memorizing spell");
+                Main.GetLogger<SpellbookVMPatches>().LogError(ex, "Error while memorizing spell");
                 throw;
             }
         }
@@ -152,7 +151,7 @@ namespace WOTRMultiplayer.HarmonyPatches.SpellbookManagement
             }
             catch (Exception ex)
             {
-                Main.GetLogger<UnitFearControllerPatches>().LogError(ex, "Error while forgetting spell");
+                Main.GetLogger<SpellbookVMPatches>().LogError(ex, "Error while forgetting spell");
                 throw;
             }
         }
