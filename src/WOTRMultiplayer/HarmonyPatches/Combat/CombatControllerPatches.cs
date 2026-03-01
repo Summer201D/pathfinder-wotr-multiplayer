@@ -41,19 +41,6 @@ namespace WOTRMultiplayer.HarmonyPatches.Combat
             return matcher.Instructions();
         }
 
-        [HarmonyPatch(typeof(UnitCombatPrepareController), nameof(UnitCombatPrepareController.Tick))]
-        [HarmonyPrefix]
-        public static bool UnitCombatPrepareController_Tick_Prefix()
-        {
-            if (!Main.Multiplayer.IsActive)
-            {
-                return true;
-            }
-
-            var canContinue = Main.Multiplayer.CanTickUnitCombatPrepareController();
-            return canContinue;
-        }
-
         [HarmonyPatch(typeof(CombatController), nameof(CombatController.HandleDelayTurn))]
         [HarmonyPrefix]
         public static void CombatController_HandleDelayTurn_Prefix(UnitEntityData unit, UnitEntityData targetUnit)

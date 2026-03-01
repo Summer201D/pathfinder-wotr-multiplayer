@@ -2243,17 +2243,18 @@ namespace WOTRMultiplayer.Services.GameInteraction
             });
         }
 
-        public bool IsDeadOrMissing(string unitId)
-        {
-            var unit = _gameStateLookupService.GetUnitEntity(unitId);
-
-            return unit == null || IsDead(unit);
-        }
-
         public bool IsDeadOrAlly(string unitId)
         {
-            var unit = _gameStateLookupService.GetUnitEntity(unitId);
-            return unit == null || IsDead(unit) || unit.IsAlly(Game.Instance.Player.MainCharacter);
+            try
+            {
+                var unit = _gameStateLookupService.GetUnitEntity(unitId);
+                return unit == null || IsDead(unit) || unit.IsAlly(Game.Instance.Player.MainCharacter);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while checking if unit is dead or ally. UnitId={UnitId}", unitId);
+                return true;
+            }
         }
 
         public void UpdateTransitionMapUIState(bool isInteractable, int readyPlayersCount, int totalPlayersCount)

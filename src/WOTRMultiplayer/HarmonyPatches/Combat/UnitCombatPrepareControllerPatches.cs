@@ -15,6 +15,20 @@ namespace WOTRMultiplayer.HarmonyPatches.Combat
     [HarmonyPatch]
     public class UnitCombatPrepareControllerPatches
     {
+
+        [HarmonyPatch(typeof(UnitCombatPrepareController), nameof(UnitCombatPrepareController.Tick))]
+        [HarmonyPrefix]
+        public static bool UnitCombatPrepareController_Tick_Prefix()
+        {
+            if (!Main.Multiplayer.IsActive)
+            {
+                return true;
+            }
+
+            var canContinue = Main.Multiplayer.CanTickUnitCombatPrepareController();
+            return canContinue;
+        }
+
         [HarmonyPatch(typeof(UnitCombatPrepareController), nameof(UnitCombatPrepareController.Tick))]
         [HarmonyTranspiler]
         public static IEnumerable<CodeInstruction> UnitCombatPrepareController_Tick_Transpiler(IEnumerable<CodeInstruction> instructions)
@@ -48,7 +62,12 @@ namespace WOTRMultiplayer.HarmonyPatches.Combat
             return matcher.Instructions();
         }
 
-        private static int OnRollRandomInitiative(RuleRollD20 ruleRollD20)
+        /// <summary>
+        /// must not be static - otherwise occasionally crashes the game while loading
+        /// </summary>
+        /// <param name="ruleRollD20"></param>
+        /// <returns></returns>
+        private int OnRollRandomInitiative(RuleRollD20 ruleRollD20)
         {
             if (!Main.Multiplayer.IsActive)
             {
