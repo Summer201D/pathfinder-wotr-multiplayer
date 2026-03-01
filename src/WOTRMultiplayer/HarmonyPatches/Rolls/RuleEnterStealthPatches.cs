@@ -12,18 +12,6 @@ namespace WOTRMultiplayer.HarmonyPatches.Rolls
     public class RuleEnterStealthPatches
     {
         [HarmonyPatch(typeof(RuleEnterStealth), nameof(RuleEnterStealth.OnTrigger))]
-        [HarmonyPostfix]
-        public static void RuleEnterStealth_OnTrigger_Postfix(RuleEnterStealth __instance)
-        {
-            if (!Main.Multiplayer.IsActive)
-            {
-                return;
-            }
-
-            Main.Rolls.OnAfterRuleEnterStealthTrigger(__instance);
-        }
-
-        [HarmonyPatch(typeof(RuleEnterStealth), nameof(RuleEnterStealth.OnTrigger))]
         [HarmonyTranspiler]
         public static IEnumerable<CodeInstruction> RuleEnterStealth_OnTrigger_Transpiler(IEnumerable<CodeInstruction> instructions)
         {

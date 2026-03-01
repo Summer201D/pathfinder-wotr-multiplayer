@@ -28,18 +28,6 @@ namespace WOTRMultiplayer.HarmonyPatches.Rolls
             return matcher.Instructions();
         }
 
-        [HarmonyPatch(typeof(RuleHealDamage), nameof(RuleHealDamage.Roll))]
-        [HarmonyPostfix]
-        public static void RuleHealDamage_Roll_Postfix(RuleHealDamage __instance, ref int __result)
-        {
-            if (!Main.Multiplayer.IsActive)
-            {
-                return;
-            }
-
-            Main.Rolls.OnAfterRollRuleHealDamage(__instance, __result, TacticalCombatHelper.IsActive);
-        }
-
         private static bool ReplaceNonTacticalCombat(CodeMatcher matcher, string target)
         {
             var lookFor = AccessTools.Method(typeof(Dice), nameof(Dice.D), [typeof(DiceFormula)]);

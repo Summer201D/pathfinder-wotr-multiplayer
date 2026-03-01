@@ -491,7 +491,10 @@ namespace WOTRMultiplayer.Services
 
             UpdateSaveInfo(gameId, savePath);
 
-            Game.ForcedPause = null;
+            lock (ActionLock)
+            {
+                Game.ForcedPause = null;
+            }
             ResetGameIdGenerator();
             Game.LoadedSaveSeed = CreateRandomSeed();
 
@@ -513,8 +516,10 @@ namespace WOTRMultiplayer.Services
                 Logger.LogWarning("Previous combat has not been disposed correctly");
             }
 
-            // there is no pause in the combat
-            Game.ForcedPause = null;
+            lock (ActionLock)
+            {
+                Game.ForcedPause = null;
+            }
 
             Game.Combat = new NetworkCombat { StartedAt = DateTime.UtcNow };
             Game.LastCombatTurn = null;
@@ -714,6 +719,15 @@ namespace WOTRMultiplayer.Services
                 lock (ActionLock)
                 {
                     Game.ForcedPause.ReadyPlayers.Add(Game.LocalPlayerId);
+                }
+            }
+
+            // game removes pause in this cases
+            if (type == GameModeType.Dialog || type == GameModeType.Cutscene)
+            {
+                lock (ActionLock)
+                {
+                    Game.ForcedPause = null;
                 }
             }
 
@@ -2080,7 +2094,7 @@ namespace WOTRMultiplayer.Services
                 var message = new NotifyTacticalCombatTurnInitialized
                 {
                     PlayerId = playerId,
-                    TurnNumber = turnNumber
+                    TurnNumber = turnNumber,
                 };
                 Send(message);
             }
@@ -3466,36 +3480,48 @@ namespace WOTRMultiplayer.Services
         {
             var mapObject = Mapper.Map<NetworkMapObject>(message.MapObject);
             GameInteraction.InteractWithMapObjectCombinePart(mapObject, message.UnitId, message.PartIndex);
+
+            OnAfterNetworkMessageHandled(receivedFrom, message);
         }
 
         private void OnNotifyUnitLootedUnit(long receivedFrom, NotifyUnitLootedUnit message)
         {
             var lootUnit = Mapper.Map<NetworkUnitLootUnit>(message.LootUnit);
             CombatInteraction.LootUnit(lootUnit);
+
+            OnAfterNetworkMessageHandled(receivedFrom, message);
         }
 
         private void OnNotifyUnitInteractedWithUnit(long receivedFrom, NotifyUnitInteractedWithUnit message)
         {
             var interaction = Mapper.Map<NetworkUnitInteractWithUnit>(message.Interaction);
             CombatInteraction.InteractWithUnit(interaction);
+
+            OnAfterNetworkMessageHandled(receivedFrom, message);
         }
 
         private void OnNotifyTrapActivated(long receivedFrom, NotifyTrapActivated message)
         {
             var trapObject = Mapper.Map<NetworkMapObject>(message.Trap);
             GameInteraction.ActivateTrap(message.UnitId, trapObject);
+
+            OnAfterNetworkMessageHandled(receivedFrom, message);
         }
 
         private void OnNotifyCustomSpellRemoved(long receivedFrom, NotifyCustomSpellRemoved message)
         {
             var ability = Mapper.Map<NetworkAbility>(message.Ability);
             GameInteraction.RemoveCustomSpell(message.UnitId, ability);
+
+            OnAfterNetworkMessageHandled(receivedFrom, message);
         }
 
         private void OnNotifyMetamagicSpellCreated(long receivedFrom, NotifyMetamagicSpellCreated message)
         {
             var metamagicSpell = Mapper.Map<NetworkMetamagicSpell>(message.MetamagicSpell);
             GameInteraction.CreateMetamagicSpell(metamagicSpell);
+
+            OnAfterNetworkMessageHandled(receivedFrom, message);
         }
 
         private void OnNotifyTransitionMapShown(long receivedFrom, NotifyTransitionMapShown message)
@@ -3607,21 +3633,37 @@ namespace WOTRMultiplayer.Services
         {
             OnAfterNetworkMessageHandled(receivedFrom, combatUnitKilled);
 
-            if (Game.Combat == null)
+            try
             {
-                return;
+                if (Game.Combat == null)
+                {
+                    return;
+                }
+
+                // simple way to make sure turn is not going to end while we are trying to kill unit
+                lock (ActionLock)
+                {
+                    Game.Combat.Turn.LockCounter++;
+                }
+
+                await WaitWhileTrue(CombatInteraction.IsRiderActive, "Waiting for active commands to finish before checking if unit should be killed");
+
+                var player = GetPlayer(combatUnitKilled.PlayerId);
+                if (player == null)
+                {
+                    Logger.LogWarning("Received unit killed event from a missing player. PlayerId={PlayerId}", combatUnitKilled.PlayerId);
+                    return;
+                }
+
+                await CombatInteraction.KillUnitAsync(player, combatUnitKilled.UnitId);
             }
-
-            await WaitWhileTrue(CombatInteraction.IsRiderActive, "Waiting for active commands to finish before checking if unit should be killed");
-
-            var player = GetPlayer(combatUnitKilled.PlayerId);
-            if (player == null)
+            finally
             {
-                Logger.LogWarning("Received unit killed event from a missing player. PlayerId={PlayerId}", combatUnitKilled.PlayerId);
-                return;
+                lock (ActionLock)
+                {
+                    Game.Combat.Turn.LockCounter--;
+                }
             }
-
-            CombatInteraction.KillUnit(player, combatUnitKilled.UnitId);
         }
 
         private async void OnNotifyCombatStarted(long receivedFrom, NotifyCombatStarted combatStarted)

@@ -11,18 +11,6 @@ namespace WOTRMultiplayer.HarmonyPatches.Rolls
     public class RuleRollChancePatches
     {
         [HarmonyPatch(typeof(RuleRollChance), nameof(RuleRollChance.OnTrigger))]
-        [HarmonyPostfix]
-        public static void RuleRollChance_OnTrigger_Postfix(RuleRollChance __instance)
-        {
-            if (!Main.Multiplayer.IsActive)
-            {
-                return;
-            }
-
-            Main.Rolls.OnAfterRuleRollChanceTrigger(__instance);
-        }
-
-        [HarmonyPatch(typeof(RuleRollChance), nameof(RuleRollChance.OnTrigger))]
         [HarmonyTranspiler]
         public static IEnumerable<CodeInstruction> RuleRollChance_OnTrigger_Transpiler(IEnumerable<CodeInstruction> instructions)
         {

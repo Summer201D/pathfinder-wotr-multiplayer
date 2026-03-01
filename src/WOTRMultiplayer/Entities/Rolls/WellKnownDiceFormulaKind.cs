@@ -9,6 +9,7 @@
         RuleCheckConcentration,
         RuleSkillCheck,
         RuleDispelMagic,
+        CombatManeuver,
 
         // RuleCastSpell
         SpellFailureRoll,

@@ -1,5 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
+using System.Reflection.Emit;
 using System.Threading;
 using HarmonyLib;
 using Kingmaker;
@@ -19,6 +22,7 @@ using UnityEngine;
 using WOTRMultiplayer.Entities;
 using WOTRMultiplayer.Entities.Combat;
 using WOTRMultiplayer.Extensions;
+using WOTRMultiplayer.Services.Random;
 using static Kingmaker.UnitLogic.Commands.Base.UnitCommand;
 
 namespace WOTRMultiplayer.HarmonyPatches.Combat
@@ -27,6 +31,135 @@ namespace WOTRMultiplayer.HarmonyPatches.Combat
     public class UnitCommandsPatches
     {
         private readonly static AsyncLocal<bool> _isSecondGetUpCommand = new();
+
+        [HarmonyPatch(typeof(UnitAttack), nameof(UnitAttack.UpdateTarget))]
+        [HarmonyTranspiler]
+        public static IEnumerable<CodeInstruction> UnitAttack_UpdateTarget_Transpiler(IEnumerable<CodeInstruction> instructions)
+        {
+            var target = PatchesUtils.GetTranspilerTarget(MethodBase.GetCurrentMethod());
+            var replaceWith = AccessTools.Method(typeof(UnitCommandsPatches), nameof(UnitCommandsPatches.SelectNextTarget));
+            var lookFor = AccessTools.Method(typeof(UnitCommand), nameof(UnitCommand.CommandTargetUntargetable));
+            var matcher = new CodeMatcher(instructions);
+            var match = matcher.SearchForward(x => x.Calls(lookFor));
+            if (match.IsInvalid)
+            {
+                Main.GetLogger<UnitCommandsPatches>().LogError("Transpiler has not been applied. Target={Target}", target);
+                return instructions;
+            }
+
+            var newInstructions = new List<CodeInstruction>()
+            {
+                new(OpCodes.Ldarg_0),
+                new(OpCodes.Call, replaceWith),
+            };
+            match = match.Advance(-15).Insert(newInstructions);
+            Main.GetLogger<UnitCommandsPatches>().LogDebug("Transpiler has been applied. Target={Target}", target);
+            return matcher.Instructions();
+        }
+
+        /// <summary>
+        /// There is a need to get consistency in the next target selection in case of rider/mount units.
+        /// Multiattack (next attack after unit is dead) should hit the same target across every MP players, so the idea is to enforce rider/mount order position (rolled deterministically)
+        /// </summary>
+        /// <param name="nearbyUnits"></param>
+        /// <param name="command"></param>
+        /// <returns></returns>
+        private static List<UnitEntityData> SelectNextTarget(List<UnitEntityData> nearbyUnits, UnitAttack command)
+        {
+            if (!Main.Multiplayer.IsActive)
+            {
+                return nearbyUnits;
+            }
+
+            var count = nearbyUnits.Count;
+            var sortedUnits = new UnitEntityData[count];
+            var positionIsFilled = new bool[count];
+
+            var indexMap = new Dictionary<UnitEntityData, int>(count);
+            for (int i = 0; i < count; i++)
+            {
+                indexMap[nearbyUnits[i]] = i;
+            }
+
+            for (int i = 0; i < count; i++)
+            {
+                if (positionIsFilled[i])
+                {
+                    continue;
+                }
+
+                var unit = nearbyUnits[i];
+
+                // untargetable / unconscious
+                if (IsExcludedUnit(unit, command.Executor))
+                {
+                    sortedUnits[i] = unit;
+                    positionIsFilled[i] = true;
+                    continue;
+                }
+
+                UnitEntityData pairedUnit = null;
+
+                if (unit.RiderPart?.SaddledUnit != null && !IsExcludedUnit(unit.RiderPart.SaddledUnit, command.Executor))
+                {
+                    pairedUnit = unit.RiderPart.SaddledUnit;
+                }
+                else if (unit.SaddledPart?.Rider != null && !IsExcludedUnit(unit.SaddledPart.Rider, command.Executor))
+                {
+                    pairedUnit = unit.SaddledPart.Rider;
+                }
+
+                if (pairedUnit != null && indexMap.TryGetValue(pairedUnit, out var otherIndex))
+                {
+                    var first = Math.Min(i, otherIndex);
+                    var second = Math.Max(i, otherIndex);
+
+                    bool riderFirst = ShouldRiderBeFirst(command.Executor);
+
+                    sortedUnits[first] = riderFirst ? pairedUnit : unit;
+                    sortedUnits[second] = riderFirst ? unit : pairedUnit;
+
+                    positionIsFilled[first] = true;
+                    positionIsFilled[second] = true;
+                }
+                else
+                {
+                    sortedUnits[i] = unit;
+                    positionIsFilled[i] = true;
+                }
+            }
+
+            return [.. sortedUnits];
+        }
+
+        private static bool IsExcludedUnit(UnitEntityData unitEntityData, UnitEntityData executor)
+        {
+            return unitEntityData.Descriptor.State.IsConscious || UnitCommand.CommandTargetUntargetable(executor, unitEntityData, null);
+        }
+
+        private static bool ShouldRiderBeFirst(UnitEntityData executor)
+        {
+            try
+            {
+                var sessionSeed = Main.Multiplayer.GetSessionSeed();
+                var loadedSaveSeed = Main.Multiplayer.GetLoadedSaveSeed();
+                var combatSeed = Main.Multiplayer.GetCombatSeed();
+                var combatTurnSeed = Main.Multiplayer.GetCombatTurnSeed();
+                var armyCombatSeed = Main.Multiplayer.GetCrusadeArmyCombatAreaSeed();
+
+                var identifier = $"{nameof(UnitAttack)}:{nameof(SelectNextTarget)}:{executor.UniqueId}:{sessionSeed}:{loadedSaveSeed}:{combatSeed}:{combatTurnSeed}:{armyCombatSeed}";
+                var random = Main.Multiplayer.ValueGenerator.GetRandom(IdentifierLifetime.CombatTurn, identifier);
+                var riderShouldBeFirst = random.Next(0, 2) == 1;
+                Main.GetLogger<UnitCommandsPatches>().LogInformation("Rider/Mount order has been rolled. Executor={Executor}, Result={Result}, Identifier={Identifier}", executor.UniqueId, riderShouldBeFirst, identifier);
+                return riderShouldBeFirst;
+            }
+            catch (Exception ex)
+            {
+                Main.GetLogger<UnitCommandsPatches>().LogError(ex, "Unable to roll rider/mount order. Executor={Executor}", executor.UniqueId);
+                throw;
+            }
+        }
+
 
         [HarmonyPatch(typeof(UnitCommand), nameof(UnitCommand.OnRun))]
         [HarmonyPrefix]

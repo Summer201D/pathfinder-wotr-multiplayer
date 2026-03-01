@@ -45,18 +45,6 @@ namespace WOTRMultiplayer.HarmonyPatches.Rolls
         }
 
         [HarmonyPatch(typeof(RuleAttackRoll), nameof(RuleAttackRoll.TryOvercomeTargetConcealmentAndMissChance))]
-        [HarmonyPostfix]
-        public static void RuleAttackRoll_TryOvercomeTargetConcealmentAndMissChance_Postfix(RuleAttackRoll __instance)
-        {
-            if (!Main.Multiplayer.IsActive || PatchesUtils.IsHelperUnit(__instance.Initiator.UniqueId) || PatchesUtils.IsHelperUnit(__instance.Target.UniqueId))
-            {
-                return;
-            }
-
-            Main.Rolls.OnAfterRuleAttackOvercomeConcealmentRoll(__instance);
-        }
-
-        [HarmonyPatch(typeof(RuleAttackRoll), nameof(RuleAttackRoll.TryOvercomeTargetConcealmentAndMissChance))]
         [HarmonyTranspiler]
         public static IEnumerable<CodeInstruction> RuleAttackRoll_TryOvercomeTargetConcealmentAndMissChance_Transpiler(IEnumerable<CodeInstruction> instructions)
         {

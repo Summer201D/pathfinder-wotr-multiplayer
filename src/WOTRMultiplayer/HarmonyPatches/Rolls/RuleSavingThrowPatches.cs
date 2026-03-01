@@ -50,7 +50,6 @@ namespace WOTRMultiplayer.HarmonyPatches.Rolls
             }
 
             var d20 = Rulebook.Trigger<RuleRollD20>(savingThrow.D20);
-            Main.Rolls.OnAfterRuleSavingThrowTrigger(savingThrow);
             return d20;
         }
     }

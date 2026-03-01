@@ -43,6 +43,7 @@ namespace WOTRMultiplayer.Services
             { WellKnownDiceFormulaKind.RuleCheckConcentration, new WellKnownDiceFormula(new DiceFormula(1, DiceType.D20), 0) },
             { WellKnownDiceFormulaKind.RuleSkillCheck, new WellKnownDiceFormula(new DiceFormula(1, DiceType.D20), 0) },
             { WellKnownDiceFormulaKind.RuleDispelMagic, new WellKnownDiceFormula(new DiceFormula(1, DiceType.D20), 0) },
+            { WellKnownDiceFormulaKind.CombatManeuver, new WellKnownDiceFormula(new DiceFormula(1, DiceType.D20), 0) },
 
             { WellKnownDiceFormulaKind.SpellFailureRoll, new WellKnownDiceFormula(new DiceFormula(1, DiceType.D100), 0) },
             { WellKnownDiceFormulaKind.ArcaneSpellFailureRoll, new WellKnownDiceFormula(new DiceFormula(1, DiceType.D100), 0) },
@@ -92,125 +93,17 @@ namespace WOTRMultiplayer.Services
             }
         }
 
-        public bool OnBeforeRuleCalculateDamageBundle(RuleCalculateDamage ruleCalculateDamage)
-        {
-            try
-            {
-                if (!ShouldRetrieveRoll(ruleCalculateDamage) || IsRolledDeterministically(ruleCalculateDamage))
-                {
-                    return true;
-                }
-
-                var rollId = GetDamageRollId(ruleCalculateDamage);
-                if (rollId == null)
-                {
-                    if (_combatInteractionService.IsInCrusadeTacticalCombat())
-                    {
-                        return true;
-                    }
-
-                    _logger.LogWarning("Damage Roll retrieving has been skipped due to unability to generate rollId. InitiatorName={InitiatorName}, InitiatorId={InitiatorId}", ruleCalculateDamage.Initiator?.CharacterName, ruleCalculateDamage.Initiator?.UniqueId);
-                    return true;
-                }
-
-                var networkRoll = _multiplayerActorAccessor.Current.RetrieveRoll<NetworkDamageListRollValue>(rollId.Value, nameof(RuleCalculateDamage), ruleCalculateDamage.Initiator.UniqueId);
-
-                if (networkRoll == null)
-                {
-                    _logger.LogCritical("Failed to acquire damage roll from remote player which guarantees desync in the game. RollId={RollId}", rollId.Value);
-
-                    _playerNotificationService.AddCombatText(WellKnownKeys.GameNotifications.Rolls.MissingDamageRoll.Key, CombatTextSeverity.Critical, new UnitEntityLog(ruleCalculateDamage.Initiator.UniqueId));
-                    return true;
-                }
-                var bundles = ruleCalculateDamage.DamageBundle.ToList();
-                if (networkRoll.Value.Count != bundles.Count)
-                {
-                    _logger.LogCritical("Network damage contains invalid number of damage values. RollId={RollId}, ExpectedCount={ExpectedCount}, ActualCount={ActualCount}, Bundles={Bundles}",
-                        rollId.Value, bundles.Count, networkRoll.Value.Count, bundles.Select(x => x.SourceFact?.NameForAcronym));
-
-                    _playerNotificationService.AddCombatText(WellKnownKeys.GameNotifications.Rolls.DiscrepantDamageRoll.Key, CombatTextSeverity.Critical, new UnitEntityLog(ruleCalculateDamage.Initiator.UniqueId), bundles.Count, networkRoll.Value.Count);
-
-                    return true;
-                }
-
-                for (int i = 0; i < bundles.Count; i++)
-                {
-                    var damage = bundles[i];
-                    var networkDamageValue = networkRoll.Value[i];
-                    var damageValue = new DamageValue(damage, networkDamageValue.ValueWithoutReduction, networkDamageValue.RollAndBonusValue, networkDamageValue.RollResult, networkDamageValue.TacticalCombatDRModifier);
-                    damageValue.Source.MaximumValue = networkDamageValue.MaximumDamage;
-                    ruleCalculateDamage.CalculatedDamage.Add(damageValue);
-                }
-
-                _logger.LogInformation("Damage roll result has been acquired from another player. RollId={RollId}, DamageValuesCount={DamageValuesCount}", rollId.Value, ruleCalculateDamage.CalculatedDamage.Count);
-                return false;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error before damage bundle rule trigger");
-                throw;
-            }
-        }
-
-        public void OnAfterRuleCalculateDamageBundle(RuleCalculateDamage ruleCalculateDamage)
-        {
-            try
-            {
-                if (!ShouldStoreRoll(ruleCalculateDamage) || IsRolledDeterministically(ruleCalculateDamage))
-                {
-                    return;
-                }
-
-                var rollId = GetDamageRollId(ruleCalculateDamage);
-                if (rollId == null)
-                {
-                    if (_combatInteractionService.IsInCrusadeTacticalCombat())
-                    {
-                        return;
-                    }
-
-                    _logger.LogWarning("Damage Roll saving has been skipped due to unability to generate rollId. InitiatorName={InitiatorName}, InitiatorId={InitiatorId}", ruleCalculateDamage.Initiator?.CharacterName, ruleCalculateDamage.Initiator?.UniqueId);
-                    return;
-                }
-
-                var rollValue = new NetworkDamageListRollValue
-                {
-                    Value = [..ruleCalculateDamage.CalculatedDamage.Select(x => new NetworkDamageRollValue
-                    {
-                        MaximumDamage = x.Source.MaximumValue,
-                        RollAndBonusValue = x.RollAndBonusValue,
-                        RollResult = x.RollResult,
-                        TacticalCombatDRModifier = x.TacticalCombatDRModifier,
-                        ValueWithoutReduction = x.ValueWithoutReduction
-                    })]
-                };
-
-                SaveRollValue(rollId.Value, rollValue);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error after damage rule trigger");
-                throw;
-            }
-        }
-
         public bool OnBeforeRollRuleHealDamage(RuleHealDamage ruleHealDamage, bool isTacticalCombat, DiceFormula diceFormula)
         {
             try
             {
-                var isRolledDeterministically = IsRolledDeterministically(ruleHealDamage);
-                if (!ShouldRetrieveRoll(ruleHealDamage) && !isRolledDeterministically || diceFormula.Rolls == 0 && diceFormula.Dice == DiceType.Zero)
+                if (!IsRolledDeterministically(ruleHealDamage) || diceFormula.Rolls == 0 && diceFormula.Dice == DiceType.Zero)
                 {
                     return true;
                 }
 
-                var result = isRolledDeterministically ? RollHealDamage(ruleHealDamage, isTacticalCombat, diceFormula) : RetrieveHealDamageRoll(ruleHealDamage, isTacticalCombat);
-                if (result == null)
-                {
-                    return true;
-                }
-
-                ruleHealDamage.RollResult = result.Value;
+                var result = RollHealDamage(ruleHealDamage, isTacticalCombat, diceFormula);
+                ruleHealDamage.RollResult = result;
                 return false;
             }
             catch (Exception ex)
@@ -220,49 +113,16 @@ namespace WOTRMultiplayer.Services
             }
         }
 
-        public void OnAfterRollRuleHealDamage(RuleHealDamage ruleHealDamage, int result, bool isTacticalCombat)
-        {
-            try
-            {
-                if (!ShouldStoreRoll(ruleHealDamage) || IsRolledDeterministically(ruleHealDamage) || ruleHealDamage.HealFormula.ModifiedValue.Rolls == 0 && ruleHealDamage.HealFormula.ModifiedValue.Dice == DiceType.Zero)
-                {
-                    return;
-                }
-
-                var roll = CreateHealDamageRoll(NetworkDiceRollType.Hit, ruleHealDamage, isTacticalCombat);
-                var rollId = GetDiceRollId(roll);
-                if (rollId == null)
-                {
-                    _logger.LogWarning("Heal Damage saving has been skipped due to unability to generate rollId. InitiatorName={InitiatorName}, InitiatorId={InitiatorId}", ruleHealDamage.Initiator?.CharacterName, ruleHealDamage.Initiator?.UniqueId);
-                    return;
-                }
-
-                var rollValue = new NetworkIntRollValue
-                {
-                    RollHistory = [],
-                    Value = result
-                };
-
-                SaveRollValue(rollId.Value, rollValue);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error after heal rule trigger");
-                throw;
-            }
-        }
-
         public bool OnBeforeRuleAttackOvercomeConcealmentRoll(RuleAttackRoll ruleAttackRoll)
         {
             try
             {
-                var isRolledDeterministically = IsRolledDeterministically(ruleAttackRoll, RuleAttackRollSubType.Concealment);
-                if (!ShouldRetrieveRoll(ruleAttackRoll) && !isRolledDeterministically)
+                if (!IsRolledDeterministically(RuleAttackRollSubType.Concealment))
                 {
                     return true;
                 }
 
-                var d100 = isRolledDeterministically ? RollAttackOvercomeConcealment(ruleAttackRoll) : RetrieveAttackOvercomeConcealment(ruleAttackRoll);
+                var d100 = RollAttackOvercomeConcealment(ruleAttackRoll);
                 if (d100 == null)
                 {
                     return true;
@@ -278,36 +138,16 @@ namespace WOTRMultiplayer.Services
             }
         }
 
-        public void OnAfterRuleAttackOvercomeConcealmentRoll(RuleAttackRoll ruleAttackRoll)
-        {
-            try
-            {
-                if (!ShouldStoreRoll(ruleAttackRoll) || IsRolledDeterministically(ruleAttackRoll, RuleAttackRollSubType.Concealment) || ruleAttackRoll.MissChanceRoll == null)
-                {
-                    return;
-                }
-
-                var roll = CreateAttackOvercomeConcealmentRoll(NetworkDiceRollType.Hit, ruleAttackRoll);
-                SaveIntRollValue(roll, ruleAttackRoll.MissChanceRoll);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Unable to handle {MethodName}", MethodBase.GetCurrentMethod().Name);
-                throw;
-            }
-        }
-
         public bool OnBeforeRuleAttackFortificationRoll(RuleAttackRoll ruleAttackRoll)
         {
             try
             {
-                var isRolledDeterministically = IsRolledDeterministically(ruleAttackRoll, RuleAttackRollSubType.Fortification);
-                if (!ShouldRetrieveRoll(ruleAttackRoll) && !isRolledDeterministically)
+                if (!IsRolledDeterministically(RuleAttackRollSubType.Fortification))
                 {
                     return true;
                 }
 
-                var d100 = isRolledDeterministically ? RollFortificationAttackRoll(ruleAttackRoll) : RetrieveFortificationAttackRoll(ruleAttackRoll);
+                var d100 = RollFortificationAttackRoll(ruleAttackRoll);
                 if (d100 == null)
                 {
                     return true;
@@ -329,13 +169,12 @@ namespace WOTRMultiplayer.Services
             {
                 if (ruleAttackRoll.IsCriticalRoll)
                 {
-                    var isCriticalRolledDeterministically = IsRolledDeterministically(ruleAttackRoll, RuleAttackRollSubType.Critical);
-                    if (!ShouldRetrieveRoll(ruleAttackRoll) && !isCriticalRolledDeterministically)
+                    if (!IsRolledDeterministically(RuleAttackRollSubType.Critical))
                     {
                         return true;
                     }
 
-                    var criticalD20 = isCriticalRolledDeterministically ? RollCriticalAttackRoll(ruleAttackRoll) : RetrieveCriticalAttackRoll(ruleAttackRoll);
+                    var criticalD20 = RollCriticalAttackRoll(ruleAttackRoll);
                     if (criticalD20 == null)
                     {
                         return true;
@@ -344,7 +183,7 @@ namespace WOTRMultiplayer.Services
                     return false;
                 }
 
-                var isRolledDeterministically = IsRolledDeterministically(ruleAttackRoll, RuleAttackRollSubType.None);
+                var isRolledDeterministically = IsRolledDeterministically(RuleAttackRollSubType.None);
                 if (!ShouldRetrieveRoll(ruleAttackRoll) && !isRolledDeterministically)
                 {
                     return true;
@@ -369,47 +208,16 @@ namespace WOTRMultiplayer.Services
         {
             try
             {
-                if (!ShouldStoreRoll(ruleAttackRoll) || ruleAttackRoll.D20 == null)
+                if (ruleAttackRoll.D20 == null)
                 {
                     return;
                 }
 
-                if (!IsRolledDeterministically(ruleAttackRoll, RuleAttackRollSubType.None))
+                if (!ruleAttackRoll.IsCriticalRoll && !IsRolledDeterministically(RuleAttackRollSubType.None) && ShouldStoreRoll(ruleAttackRoll))
                 {
                     var roll = CreateAttackRoll(NetworkDiceRollType.Hit, ruleAttackRoll, isCriticalRoll: false);
                     SaveIntRollValue(roll, ruleAttackRoll.D20);
                 }
-
-                if (ruleAttackRoll.IsCriticalRoll && !IsRolledDeterministically(ruleAttackRoll, RuleAttackRollSubType.Critical))
-                {
-                    var criticalRoll = CreateAttackRoll(NetworkDiceRollType.Hit, ruleAttackRoll, isCriticalRoll: true);
-                    SaveIntRollValue(criticalRoll, ruleAttackRoll.CriticalConfirmationD20);
-                }
-
-                if (ruleAttackRoll.FortificationRoll != null && !IsRolledDeterministically(ruleAttackRoll, RuleAttackRollSubType.Fortification))
-                {
-                    var fortificationRoll = CreateFortificationAttackRoll(NetworkDiceRollType.Hit, ruleAttackRoll);
-                    SaveIntRollValue(fortificationRoll, ruleAttackRoll.FortificationRoll);
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Unable to handle {MethodName}", MethodBase.GetCurrentMethod().Name);
-                throw;
-            }
-        }
-
-        public void OnAfterRuleSavingThrowTrigger(RuleSavingThrow ruleSavingThrow)
-        {
-            try
-            {
-                if (!ShouldStoreRoll(ruleSavingThrow) || IsRolledDeterministically(ruleSavingThrow))
-                {
-                    return;
-                }
-
-                var savingThrow = CreateSavingThrowRoll(NetworkDiceRollType.Hit, ruleSavingThrow);
-                SaveIntRollValue(savingThrow, ruleSavingThrow.D20);
             }
             catch (Exception ex)
             {
@@ -422,12 +230,12 @@ namespace WOTRMultiplayer.Services
         {
             try
             {
-                if (!ShouldRetrieveRoll(ruleSavingThrow) && !IsRolledDeterministically(ruleSavingThrow))
+                if (!IsRolledDeterministically(ruleSavingThrow))
                 {
                     return true;
                 }
 
-                var d20 = IsRolledDeterministically(ruleSavingThrow) ? RollSavingThrow(ruleSavingThrow) : RetrieveSavingThrow(ruleSavingThrow);
+                var d20 = RollSavingThrow(ruleSavingThrow);
                 if (d20 == null)
                 {
                     return true;
@@ -447,13 +255,12 @@ namespace WOTRMultiplayer.Services
         {
             try
             {
-                var isRolledDeterministically = IsRolledDeterministically(ruleSpellResistanceCheck);
-                if (!ShouldRetrieveRoll(ruleSpellResistanceCheck) && !isRolledDeterministically)
+                if (!IsRolledDeterministically(ruleSpellResistanceCheck))
                 {
                     return true;
                 }
 
-                var d20 = isRolledDeterministically ? RollSpellResistance(ruleSpellResistanceCheck) : RetrieveSpellResistance(ruleSpellResistanceCheck);
+                var d20 = RollSpellResistance(ruleSpellResistanceCheck);
                 if (d20 == null)
                 {
                     return true;
@@ -469,58 +276,19 @@ namespace WOTRMultiplayer.Services
             }
         }
 
-        public void OnAfterRuleSpellResistanceCheckTrigger(RuleSpellResistanceCheck ruleSpellResistanceCheck)
-        {
-            try
-            {
-                if (!ShouldStoreRoll(ruleSpellResistanceCheck) || IsRolledDeterministically(ruleSpellResistanceCheck) || ruleSpellResistanceCheck.Roll == null)
-                {
-                    return;
-                }
-
-                var roll = CreateSpellResistanceCheckRoll(NetworkDiceRollType.Hit, ruleSpellResistanceCheck);
-                SaveIntRollValue(roll, ruleSpellResistanceCheck.Roll);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Unable to handle {MethodName}", MethodBase.GetCurrentMethod().Name);
-                throw;
-            }
-        }
-
         public bool OnBeforeRuleCheckConcentrationRoll(RuleCheckConcentration ruleCheckConcentration)
         {
             try
             {
-                var isRolledDeterministically = IsRolledDeterministically(ruleCheckConcentration);
-                if (!ShouldRetrieveRoll(ruleCheckConcentration) && !isRolledDeterministically)
+                if (!IsRolledDeterministically(ruleCheckConcentration))
                 {
                     return true;
                 }
 
-                var d20 = isRolledDeterministically ? RollCheckConcentration(ruleCheckConcentration) : RetrieveCheckConcentration(ruleCheckConcentration);
+                var d20 = RollCheckConcentration(ruleCheckConcentration);
 
                 ruleCheckConcentration.ResultRollRaw = d20;
                 return false;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Unable to handle {MethodName}", MethodBase.GetCurrentMethod().Name);
-                throw;
-            }
-        }
-
-        public void OnAfterRuleCheckConcentrationTrigger(RuleCheckConcentration ruleCheckConcentration)
-        {
-            try
-            {
-                if (!ShouldStoreRoll(ruleCheckConcentration) || IsRolledDeterministically(ruleCheckConcentration))
-                {
-                    return;
-                }
-
-                var roll = CreateConcentrationRoll(NetworkDiceRollType.Hit, ruleCheckConcentration);
-                SaveIntRollValue(roll, ruleCheckConcentration.ResultRollRaw);
             }
             catch (Exception ex)
             {
@@ -533,13 +301,12 @@ namespace WOTRMultiplayer.Services
         {
             try
             {
-                var isRolledDeterministically = IsRolledDeterministically(ruleSkillCheck);
-                if (!ShouldRetrieveRoll(ruleSkillCheck) && !isRolledDeterministically)
+                if (!IsRolledDeterministically(ruleSkillCheck))
                 {
                     return true;
                 }
 
-                var d20 = isRolledDeterministically ? RollSkillCheck(ruleSkillCheck) : RetrieveSkillCheck(ruleSkillCheck);
+                var d20 = RollSkillCheck(ruleSkillCheck);
                 if (d20 == null)
                 {
                     return true;
@@ -555,36 +322,17 @@ namespace WOTRMultiplayer.Services
             }
         }
 
-        public void OnAfterRuleSkillCheckTrigger(RuleSkillCheck ruleSkillCheck)
-        {
-            try
-            {
-                if (!ShouldStoreRoll(ruleSkillCheck) || IsRolledDeterministically(ruleSkillCheck))
-                {
-                    return;
-                }
-
-                var roll = CreateSkillCheckRoll(NetworkDiceRollType.Hit, ruleSkillCheck);
-                SaveIntRollValue(roll, ruleSkillCheck.D20);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Unable to handle {MethodName}", MethodBase.GetCurrentMethod().Name);
-                throw;
-            }
-        }
-
         public bool OnBeforeRuleInitiativeRoll(RuleInitiativeRoll ruleInitiativeRoll)
         {
             try
             {
                 var isRolledDeterministically = IsRolledDeterministically(ruleInitiativeRoll);
-                if (!ShouldRetrieveRoll(ruleInitiativeRoll) && !isRolledDeterministically)
+                if (!IsRolledDeterministically(ruleInitiativeRoll))
                 {
                     return true;
                 }
 
-                var d20 = isRolledDeterministically ? RollInitiative(ruleInitiativeRoll) : RetrieveInitiativeRoll(ruleInitiativeRoll);
+                var d20 = RollInitiative(ruleInitiativeRoll);
                 if (d20 == null)
                 {
                     return true;
@@ -600,36 +348,16 @@ namespace WOTRMultiplayer.Services
             }
         }
 
-        public void OnAfterRuleInitiativeRollTrigger(RuleInitiativeRoll ruleInitiativeRoll)
-        {
-            try
-            {
-                if (!ShouldStoreRoll(ruleInitiativeRoll) || IsRolledDeterministically(ruleInitiativeRoll))
-                {
-                    return;
-                }
-
-                var roll = CreateInitiativeRoll(NetworkDiceRollType.Hit, ruleInitiativeRoll);
-                SaveIntRollValue(roll, ruleInitiativeRoll.D20);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Unable to handle {MethodName}", MethodBase.GetCurrentMethod().Name);
-                throw;
-            }
-        }
-
         public bool OnBeforeRuleConcealmentCheckTrigger(RuleConcealmentCheck ruleConcealmentCheck)
         {
             try
             {
-                var isRolledDeterministically = IsRolledDeterministically(ruleConcealmentCheck);
-                if (!ShouldRetrieveRoll(ruleConcealmentCheck) && !isRolledDeterministically)
+                if (!IsRolledDeterministically(ruleConcealmentCheck))
                 {
                     return true;
                 }
 
-                var d100 = isRolledDeterministically ? RollConcealmentCheck(ruleConcealmentCheck) : RetrieveConcealmentCheck(ruleConcealmentCheck);
+                var d100 = RollConcealmentCheck(ruleConcealmentCheck);
                 if (d100 == null)
                 {
                     return true;
@@ -645,36 +373,16 @@ namespace WOTRMultiplayer.Services
             }
         }
 
-        public void OnAfterRuleConcealmentCheckTrigger(RuleConcealmentCheck ruleConcealmentCheck)
-        {
-            try
-            {
-                if (!ShouldStoreRoll(ruleConcealmentCheck) || IsRolledDeterministically(ruleConcealmentCheck) || ruleConcealmentCheck.ConcealmentValue <= 0)
-                {
-                    return;
-                }
-
-                var roll = CreateConcealmentRoll(NetworkDiceRollType.Hit, ruleConcealmentCheck);
-                SaveIntRollValue(roll, ruleConcealmentCheck.Roll);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Unable to handle {MethodName}", MethodBase.GetCurrentMethod().Name);
-                throw;
-            }
-        }
-
         public bool OnBeforeParryDataTrigger(RuleAttackRoll.ParryData parryData)
         {
             try
             {
-                var isRolledDeterministically = IsRolledDeterministically(parryData);
-                if (!ShouldRetrieveRoll(parryData) && !isRolledDeterministically)
+                if (!IsRolledDeterministically(parryData))
                 {
                     return true;
                 }
 
-                var d20 = isRolledDeterministically ? RollAttackParryData(parryData) : RetrieveAttackParryData(parryData);
+                var d20 = RollAttackParryData(parryData);
                 if (d20 == null)
                 {
                     return true;
@@ -690,36 +398,16 @@ namespace WOTRMultiplayer.Services
             }
         }
 
-        public void OnAfterParryDataTrigger(RuleAttackRoll.ParryData parryData)
-        {
-            try
-            {
-                if (!ShouldStoreRoll(parryData) || IsRolledDeterministically(parryData))
-                {
-                    return;
-                }
-
-                var roll = CreateParryRoll(NetworkDiceRollType.Hit, parryData);
-                SaveIntRollValue(roll, parryData.Roll);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Unable to handle {MethodName}", MethodBase.GetCurrentMethod().Name);
-                throw;
-            }
-        }
-
         public bool OnBeforeRuleDispelMagicRoll(RuleDispelMagic ruleDispelMagic)
         {
             try
             {
-                var isRolledDeterministically = IsRolledDeterministically(ruleDispelMagic);
-                if (!ShouldRetrieveRoll(ruleDispelMagic) && !isRolledDeterministically)
+                if (!IsRolledDeterministically(ruleDispelMagic))
                 {
                     return true;
                 }
 
-                var d20 = isRolledDeterministically ? RollDispelMagic(ruleDispelMagic) : RetrieveDispelMagic(ruleDispelMagic);
+                var d20 = RollDispelMagic(ruleDispelMagic);
                 if (d20 == null)
                 {
                     return true;
@@ -735,36 +423,16 @@ namespace WOTRMultiplayer.Services
             }
         }
 
-        public void OnAfterRuleDispelMagicTrigger(RuleDispelMagic ruleDispelMagic)
-        {
-            try
-            {
-                if (!ShouldStoreRoll(ruleDispelMagic) || IsRolledDeterministically(ruleDispelMagic))
-                {
-                    return;
-                }
-
-                var roll = CreateDispelMagicRoll(NetworkDiceRollType.Hit, ruleDispelMagic);
-                SaveIntRollValue(roll, ruleDispelMagic.CheckRoll);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Unable to handle {MethodName}", MethodBase.GetCurrentMethod().Name);
-                throw;
-            }
-        }
-
         public bool OnBeforeRuleEnterStealthRoll(RuleEnterStealth ruleEnterStealth)
         {
             try
             {
-                var isRolledDeterministically = IsRolledDeterministically(ruleEnterStealth);
-                if (!ShouldRetrieveRoll(ruleEnterStealth) && !isRolledDeterministically || ruleEnterStealth.D20.ResultOverride == 20)
+                if (!IsRolledDeterministically(ruleEnterStealth) || ruleEnterStealth.D20.ResultOverride == 20)
                 {
                     return true;
                 }
 
-                var d20 = isRolledDeterministically ? RollEnterStealth(ruleEnterStealth) : RetrieveEnterStealth(ruleEnterStealth);
+                var d20 = RollEnterStealth(ruleEnterStealth);
                 if (d20 == null)
                 {
                     return true;
@@ -781,61 +449,22 @@ namespace WOTRMultiplayer.Services
             }
         }
 
-        public void OnAfterRuleEnterStealthTrigger(RuleEnterStealth ruleEnterStealth)
-        {
-            try
-            {
-                if (!ShouldStoreRoll(ruleEnterStealth) || IsRolledDeterministically(ruleEnterStealth) || ruleEnterStealth.D20.ResultOverride == 20)
-                {
-                    return;
-                }
-
-                var roll = CreateEnterStealthRoll(NetworkDiceRollType.Hit, ruleEnterStealth);
-                SaveIntRollValue(roll, ruleEnterStealth.D20);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Unable to handle {MethodName}", MethodBase.GetCurrentMethod().Name);
-                throw;
-            }
-        }
-
         public void OnBeforeRuleRollChanceTrigger(RuleRollChance ruleRollChance)
         {
             try
             {
-                if (!ShouldRetrieveRoll(ruleRollChance))
+                if (!IsRolledDeterministically(ruleRollChance))
                 {
                     return;
                 }
 
-                var roll = CreateChanceRoll(NetworkDiceRollType.Hit, ruleRollChance);
-                var d20 = RetrieveRoll<RuleRollD20>(roll, ruleRollChance.Initiator);
-                if (d20 == null)
+                var d100 = RollRuleChance(ruleRollChance);
+                if (d100 == null)
                 {
                     return;
                 }
 
-                ruleRollChance.m_Result = d20;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Unable to handle {MethodName}", MethodBase.GetCurrentMethod().Name);
-                throw;
-            }
-        }
-
-        public void OnAfterRuleRollChanceTrigger(RuleRollChance ruleRollChance)
-        {
-            try
-            {
-                if (!ShouldStoreRoll(ruleRollChance))
-                {
-                    return;
-                }
-
-                var roll = CreateChanceRoll(NetworkDiceRollType.Hit, ruleRollChance);
-                SaveIntRollValue(roll, ruleRollChance);
+                ruleRollChance.m_Result = d100;
             }
             catch (Exception ex)
             {
@@ -848,13 +477,13 @@ namespace WOTRMultiplayer.Services
         {
             try
             {
-                if (!ShouldRetrieveRoll(ruleDrainEnergy) || ruleRollDice.DiceFormula.Rolls == 0 && ruleRollDice.DiceFormula.Dice == DiceType.Zero)
+                if (!IsRolledDeterministically(ruleDrainEnergy) || ruleRollDice.DiceFormula.Rolls == 0 && ruleRollDice.DiceFormula.Dice == DiceType.Zero)
                 {
                     return true;
                 }
 
                 var roll = CreateDrainEnergyRoll(NetworkDiceRollType.Damage, ruleDrainEnergy, ruleRollDice);
-                var d100 = RetrieveRoll<RuleRollD100>(roll, ruleDrainEnergy.Initiator);
+                var d100 = RollDrainEnergy(ruleDrainEnergy, ruleRollDice);
                 if (d100 == null)
                 {
                     return true;
@@ -871,36 +500,16 @@ namespace WOTRMultiplayer.Services
             }
         }
 
-        public void OnAfterRuleDrainEnergyRoll(RuleDrainEnergy ruleDrainEnergy, RuleRollDice ruleRollDice)
-        {
-            try
-            {
-                if (!ShouldStoreRoll(ruleDrainEnergy) || ruleRollDice.DiceFormula.Rolls == 0 && ruleRollDice.DiceFormula.Dice == DiceType.Zero)
-                {
-                    return;
-                }
-
-                var roll = CreateDrainEnergyRoll(NetworkDiceRollType.Damage, ruleDrainEnergy, ruleRollDice);
-                SaveIntRollValue(roll, ruleRollDice);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Unable to handle {MethodName}", MethodBase.GetCurrentMethod().Name);
-                throw;
-            }
-        }
-
         public bool OnBeforeRuleCombatManeuverRoll(RuleCombatManeuver ruleCombatManeuver)
         {
             try
             {
-                if (!ShouldRetrieveRoll(ruleCombatManeuver))
+                if (!IsRolledDeterministically(ruleCombatManeuver))
                 {
                     return true;
                 }
 
-                var roll = CreateCombatManeuverRoll(NetworkDiceRollType.Hit, ruleCombatManeuver);
-                var d20 = RetrieveRoll<RuleRollD20>(roll, ruleCombatManeuver.Initiator);
+                var d20 = RollCombatManeuver(ruleCombatManeuver);
                 if (d20 == null)
                 {
                     return true;
@@ -916,36 +525,17 @@ namespace WOTRMultiplayer.Services
             }
         }
 
-        public void OnAfterRuleCombatManeuverRoll(RuleCombatManeuver ruleCombatManeuver, RuleRollD20 rollD20)
+        public int? OnBeforeRuleDealStatDamageRoll(RuleDealStatDamage ruleDealStatDamage, DiceFormula damageFormula, int criticalModifier)
         {
             try
             {
-                if (!ShouldStoreRoll(ruleCombatManeuver))
-                {
-                    return;
-                }
-
-                var roll = CreateCombatManeuverRoll(NetworkDiceRollType.Hit, ruleCombatManeuver);
-                SaveIntRollValue(roll, rollD20);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Unable to handle {MethodName}", MethodBase.GetCurrentMethod().Name);
-                throw;
-            }
-        }
-
-        public int? OnBeforeRuleDealStatDamageRoll(RuleDealStatDamage ruleDealStatDamage, int criticalModifier)
-        {
-            try
-            {
-                if (!ShouldRetrieveRoll(ruleDealStatDamage))
+                if (!IsRolledDeterministically(ruleDealStatDamage))
                 {
                     return null;
                 }
 
                 var roll = CreateDealStatDamageRoll(NetworkDiceRollType.Damage, ruleDealStatDamage, criticalModifier);
-                var d100 = RetrieveRoll<RuleRollD100>(roll, ruleDealStatDamage.Initiator);
+                var d100 = RollDealStatDamage(ruleDealStatDamage, damageFormula, criticalModifier);
                 if (d100 == null)
                 {
                     return null;
@@ -960,39 +550,16 @@ namespace WOTRMultiplayer.Services
             }
         }
 
-        public void OnAfterRuleDealStatDamageRoll(RuleDealStatDamage ruleDealStatDamage, RuleRollD100 damageRoll, int criticalModifier)
-        {
-            try
-            {
-                if (!ShouldStoreRoll(ruleDealStatDamage))
-                {
-                    return;
-                }
-
-                var statDamageRoll = CreateDealStatDamageRoll(NetworkDiceRollType.Damage, ruleDealStatDamage, criticalModifier);
-                SaveIntRollValue(statDamageRoll, damageRoll);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Unable to handle {MethodName}", MethodBase.GetCurrentMethod().Name);
-                throw;
-            }
-        }
-
         public bool OnBeforeRuleCastSpellRoll(RuleCastSpell ruleCastSpell, bool isSpellFailure)
         {
             try
             {
-                var isRolledDeterministically = IsRolledDeterministically(ruleCastSpell);
-                if (!ShouldRetrieveRoll(ruleCastSpell) && !isRolledDeterministically)
+                if (!IsRolledDeterministically(ruleCastSpell))
                 {
                     return true;
                 }
 
-                var d100 = isRolledDeterministically ?
-                    isSpellFailure ? RollSpellFailureRoll(ruleCastSpell)
-                        : RollArcaneSpellFailureRoll(ruleCastSpell)
-                    : RetrieveCastSpellRoll(ruleCastSpell, isSpellFailure);
+                var d100 = isSpellFailure ? RollSpellFailureRoll(ruleCastSpell) : RollArcaneSpellFailureRoll(ruleCastSpell);
 
                 if (d100 == null)
                 {
@@ -1017,45 +584,16 @@ namespace WOTRMultiplayer.Services
             }
         }
 
-        public void OnAfterRuleCastSpellTrigger(RuleCastSpell ruleCastSpell)
-        {
-            try
-            {
-                if (!ShouldStoreRoll(ruleCastSpell) || IsRolledDeterministically(ruleCastSpell))
-                {
-                    return;
-                }
-
-                if (ruleCastSpell.SpellFailureRoll != null)
-                {
-                    var roll = CreateCastSpellRoll(NetworkDiceRollType.Hit, ruleCastSpell, true);
-                    SaveIntRollValue(roll, ruleCastSpell.SpellFailureRoll);
-                }
-
-                if (ruleCastSpell.ArcaneSpellFailureRoll != null)
-                {
-                    var roll = CreateCastSpellRoll(NetworkDiceRollType.Hit, ruleCastSpell, false);
-                    SaveIntRollValue(roll, ruleCastSpell.ArcaneSpellFailureRoll);
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Unable to handle {MethodName}", MethodBase.GetCurrentMethod().Name);
-                throw;
-            }
-        }
-
         public bool OnBeforeRuleCheckCastingDefensivelyRoll(RuleCheckCastingDefensively ruleCheckCastingDefensively)
         {
             try
             {
-                var isRolledDeterministically = IsRolledDeterministically(ruleCheckCastingDefensively);
-                if (!ShouldRetrieveRoll(ruleCheckCastingDefensively) && !isRolledDeterministically)
+                if (!IsRolledDeterministically(ruleCheckCastingDefensively))
                 {
                     return true;
                 }
 
-                var d20 = isRolledDeterministically ? RollCastingDefensively(ruleCheckCastingDefensively) : RetrieveCheckCastingDefensivelyRoll(ruleCheckCastingDefensively);
+                var d20 = RollCastingDefensively(ruleCheckCastingDefensively);
                 if (d20 == null)
                 {
                     return true;
@@ -1063,25 +601,6 @@ namespace WOTRMultiplayer.Services
 
                 ruleCheckCastingDefensively.D20 = d20;
                 return false;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Unable to handle {MethodName}", MethodBase.GetCurrentMethod().Name);
-                throw;
-            }
-        }
-
-        public void OnAfterRuleCheckCastingDefensivelyTrigger(RuleCheckCastingDefensively ruleCheckCastingDefensively)
-        {
-            try
-            {
-                if ((!ShouldStoreRoll(ruleCheckCastingDefensively) && !IsRolledDeterministically(ruleCheckCastingDefensively)) || ruleCheckCastingDefensively.AutoFail)
-                {
-                    return;
-                }
-
-                var roll = CreateCastingDefensivelyRoll(NetworkDiceRollType.Hit, ruleCheckCastingDefensively);
-                SaveIntRollValue(roll, ruleCheckCastingDefensively.D20);
             }
             catch (Exception ex)
             {
@@ -1102,34 +621,35 @@ namespace WOTRMultiplayer.Services
 
         private bool IsRolledDeterministically(object rule)
         {
-            var currentArea = _multiplayerActorAccessor.Current?.CurrentArea;
-
-            switch (rule)
+            var isMeaningful = IsMeaningfulRoll(rule);
+            var isEnabledForRule = rule switch
             {
-                case RuleSavingThrow:
-                case RuleSkillCheck:
-                    var rulebookEvent = (RulebookEvent)rule;
-                    var IsGlobalMapOrMissingInitiator = currentArea != null && currentArea.IsGlobalMap
-                        || _combatInteractionService.IsInCombat() && _gameInteractionService.IsDeadOrMissing(rulebookEvent.Initiator.UniqueId);
-                    return IsGlobalMapOrMissingInitiator;
-                case RuleHealDamage:
-                case RuleSpellResistanceCheck:
-                case RuleCheckCastingDefensively:
-                case RuleInitiativeRoll:
-                case RuleConcealmentCheck:
-                case RuleCheckConcentration:
-                case RuleEnterStealth:
-                case RuleCastSpell:
-                case RuleDispelMagic:
-                case RuleAttackRoll.ParryData:
-                case RuleCalculateDamage:
-                    return true;
-                default:
-                    return false;
-            }
+                RuleSavingThrow
+                or RuleSkillCheck
+                or RuleHealDamage
+                or RuleSpellResistanceCheck
+                or RuleCheckCastingDefensively
+                or RuleInitiativeRoll
+                or RuleConcealmentCheck
+                or RuleCheckConcentration
+                or RuleEnterStealth
+                or RuleCastSpell
+                or RuleDispelMagic
+                or RuleAttackRoll.ParryData
+                or RuleRollChance
+                or RuleDrainEnergy
+                or RuleCombatManeuver
+                or RuleDealStatDamage
+                or RuleCalculateDamage => true,
+                RuleAttackRoll => false,
+                _ => false,
+            };
+
+            var isRolled = isMeaningful && isEnabledForRule;
+            return isRolled;
         }
 
-        private bool IsRolledDeterministically(RuleAttackRoll ruleAttackRoll, RuleAttackRollSubType subType)
+        private bool IsRolledDeterministically(RuleAttackRollSubType subType)
         {
             var isRolled = subType switch
             {
@@ -1149,13 +669,20 @@ namespace WOTRMultiplayer.Services
         {
             return rule switch
             {
-                RuleSkillCheck => _multiplayerActorAccessor.Host.IsActive,
                 _ => _multiplayerActorAccessor.Current.IsDiceRollOwner(),
             };
         }
 
         private bool IsMeaningfulRoll(object rule)
         {
+            if (
+                rule is RulebookTargetEvent rulebookTargetEvent && (string.IsNullOrEmpty(rulebookTargetEvent.Target?.UniqueId) || rulebookTargetEvent.Target.UniqueId.StartsWith("description-helper-", StringComparison.OrdinalIgnoreCase))
+                    ||
+                rule is RulebookEvent rulebookEvent && (string.IsNullOrEmpty(rulebookEvent.Initiator?.UniqueId) || rulebookEvent.Initiator.UniqueId.StartsWith("description-helper-", StringComparison.OrdinalIgnoreCase)))
+            {
+                return false;
+            }
+
             var gameMode = _gameInteractionService.CurrentGameMode;
             if (gameMode == GameModeType.Dialog)
             {
@@ -1822,12 +1349,57 @@ namespace WOTRMultiplayer.Services
             return d20;
         }
 
+        private RuleRollD20 RollCombatManeuver(RuleCombatManeuver ruleCombatManeuver)
+        {
+            var combatManeuver = CreateCombatManeuverRoll(NetworkDiceRollType.Hit, ruleCombatManeuver);
+            var formula = GetDiceFormula(WellKnownDiceFormulaKind.CombatManeuver);
+            if (formula == null)
+            {
+                return null;
+            }
+            var deterministicRoll = RollDice(combatManeuver, formula.Formula, formula.Rerolls);
+
+            var d20 = RuleRollD20.FromInt(ruleCombatManeuver.Initiator, deterministicRoll.Result);
+            d20.RollHistory = deterministicRoll.History;
+            return d20;
+        }
+
         private RuleRollD100 RollConcealmentCheck(RuleConcealmentCheck ruleConcealmentCheck)
         {
             var concealment = CreateConcealmentRoll(NetworkDiceRollType.Hit, ruleConcealmentCheck);
             var deterministicRoll = RollDice(concealment, ruleConcealmentCheck.Roll);
 
             var d100 = RuleRollD100.FromInt(ruleConcealmentCheck.Initiator, deterministicRoll.Result);
+            d100.RollHistory = deterministicRoll.History;
+            return d100;
+        }
+
+        private RuleRollD100 RollRuleChance(RuleRollChance ruleRollChance)
+        {
+            var chance = CreateChanceRoll(NetworkDiceRollType.Hit, ruleRollChance);
+            var deterministicRoll = RollDice(chance, ruleRollChance.DiceFormula, ruleRollChance.m_RerollAmount);
+
+            var d100 = RuleRollD100.FromInt(ruleRollChance.Initiator, deterministicRoll.Result);
+            d100.RollHistory = deterministicRoll.History;
+            return d100;
+        }
+
+        private RuleRollD100 RollDrainEnergy(RuleDrainEnergy ruleDrainEnergy, RuleRollDice ruleRollDice)
+        {
+            var drainEnergy = CreateDrainEnergyRoll(NetworkDiceRollType.Damage, ruleDrainEnergy, ruleRollDice);
+            var deterministicRoll = RollDice(drainEnergy, ruleRollDice.DiceFormula, ruleRollDice.m_RerollAmount);
+
+            var d100 = RuleRollD100.FromInt(ruleDrainEnergy.Initiator, deterministicRoll.Result);
+            d100.RollHistory = deterministicRoll.History;
+            return d100;
+        }
+
+        private RuleRollD100 RollDealStatDamage(RuleDealStatDamage ruleDealStatDamage, DiceFormula damageFormula, int criticalModifier)
+        {
+            var chance = CreateDealStatDamageRoll(NetworkDiceRollType.Damage, ruleDealStatDamage, criticalModifier);
+            var deterministicRoll = RollDice(chance, damageFormula, 0);
+
+            var d100 = RuleRollD100.FromInt(ruleDealStatDamage.Initiator, deterministicRoll.Result);
             d100.RollHistory = deterministicRoll.History;
             return d100;
         }
@@ -1925,140 +1497,11 @@ namespace WOTRMultiplayer.Services
             return (history, result);
         }
 
-        private RuleRollD100 RetrieveFortificationAttackRoll(RuleAttackRoll ruleAttackRoll)
-        {
-            var roll = CreateFortificationAttackRoll(NetworkDiceRollType.Hit, ruleAttackRoll);
-            var d100 = RetrieveRoll<RuleRollD100>(roll, ruleAttackRoll.Initiator);
-            return d100;
-        }
-
-        private RuleRollD100 RetrieveAttackOvercomeConcealment(RuleAttackRoll ruleAttackRoll)
-        {
-            var roll = CreateAttackOvercomeConcealmentRoll(NetworkDiceRollType.Hit, ruleAttackRoll);
-            var d100 = RetrieveRoll<RuleRollD100>(roll, ruleAttackRoll.Initiator);
-            return d100;
-        }
-
-        private RuleRollD20 RetrieveCriticalAttackRoll(RuleAttackRoll ruleAttackRoll)
-        {
-            var roll = CreateAttackRoll(NetworkDiceRollType.Hit, ruleAttackRoll, isCriticalRoll: true);
-            var d20 = RetrieveRoll<RuleRollD20>(roll, ruleAttackRoll.Initiator);
-            return d20;
-        }
-
         private RuleRollD20 RetrieveAttackRoll(RuleAttackRoll ruleAttackRoll)
         {
             var roll = CreateAttackRoll(NetworkDiceRollType.Hit, ruleAttackRoll, isCriticalRoll: false);
             var d20 = RetrieveRoll<RuleRollD20>(roll, ruleAttackRoll.Initiator);
             return d20;
-        }
-
-        private RuleRollD20 RetrieveInitiativeRoll(RuleInitiativeRoll ruleInitiativeRoll)
-        {
-            var roll = CreateInitiativeRoll(NetworkDiceRollType.Hit, ruleInitiativeRoll);
-            var d20 = RetrieveRoll<RuleRollD20>(roll, ruleInitiativeRoll.Initiator);
-            return d20;
-        }
-
-        private RuleRollD20 RetrieveSpellResistance(RuleSpellResistanceCheck ruleSpellResistanceCheck)
-        {
-            var roll = CreateSpellResistanceCheckRoll(NetworkDiceRollType.Hit, ruleSpellResistanceCheck);
-            var d20 = RetrieveRoll<RuleRollD20>(roll, ruleSpellResistanceCheck.Initiator);
-            return d20;
-        }
-
-        private RuleRollD20 RetrieveCheckCastingDefensivelyRoll(RuleCheckCastingDefensively ruleCheckCastingDefensively)
-        {
-            var roll = CreateCastingDefensivelyRoll(NetworkDiceRollType.Hit, ruleCheckCastingDefensively);
-            var d20 = RetrieveRoll<RuleRollD20>(roll, ruleCheckCastingDefensively.Initiator);
-            return d20;
-        }
-
-        private RuleRollD100 RetrieveConcealmentCheck(RuleConcealmentCheck ruleConcealmentCheck)
-        {
-            var roll = CreateConcealmentRoll(NetworkDiceRollType.Hit, ruleConcealmentCheck);
-            var d100 = RetrieveRoll<RuleRollD100>(roll, ruleConcealmentCheck.Initiator);
-            return d100;
-        }
-
-        private RuleRollD100 RetrieveCastSpellRoll(RuleCastSpell ruleCastSpell, bool isSpellFailure)
-        {
-            var roll = CreateCastSpellRoll(NetworkDiceRollType.Hit, ruleCastSpell, isSpellFailure);
-            var d100 = RetrieveRoll<RuleRollD100>(roll, ruleCastSpell.Initiator);
-            return d100;
-        }
-
-        private RuleRollD20 RetrieveSavingThrow(RuleSavingThrow ruleSavingThrow)
-        {
-            var savingThrow = CreateSavingThrowRoll(NetworkDiceRollType.Hit, ruleSavingThrow);
-            var d20 = RetrieveRoll<RuleRollD20>(savingThrow, ruleSavingThrow.Initiator);
-            if (d20 == null)
-            {
-                _logger.LogError("Roll retrieving context={StackTrace}", Environment.StackTrace);
-            }
-
-            return d20;
-        }
-
-        private RuleRollD20 RetrieveSkillCheck(RuleSkillCheck ruleSkillCheck)
-        {
-            var roll = CreateSkillCheckRoll(NetworkDiceRollType.Hit, ruleSkillCheck);
-            var d20 = RetrieveRoll<RuleRollD20>(roll, ruleSkillCheck.Initiator);
-            if (d20 == null)
-            {
-                _logger.LogError("Roll retrieving context={StackTrace}", Environment.StackTrace);
-            }
-
-            return d20;
-        }
-
-        private RuleRollD20 RetrieveAttackParryData(RuleAttackRoll.ParryData parryData)
-        {
-            var roll = CreateParryRoll(NetworkDiceRollType.Hit, parryData);
-            var d20 = RetrieveRoll<RuleRollD20>(roll, parryData.Initiator);
-            return d20;
-        }
-
-        private RuleRollD20 RetrieveDispelMagic(RuleDispelMagic ruleDispelMagic)
-        {
-            var roll = CreateDispelMagicRoll(NetworkDiceRollType.Hit, ruleDispelMagic);
-            var d20 = RetrieveRoll<RuleRollD20>(roll, ruleDispelMagic.Initiator);
-            return d20;
-        }
-
-        private RuleRollD20 RetrieveEnterStealth(RuleEnterStealth ruleEnterStealth)
-        {
-            var roll = CreateEnterStealthRoll(NetworkDiceRollType.Hit, ruleEnterStealth);
-            var d20 = RetrieveRoll<RuleRollD20>(roll, ruleEnterStealth.Initiator);
-            return d20;
-        }
-
-        private RuleRollD20 RetrieveCheckConcentration(RuleCheckConcentration ruleCheckConcentration)
-        {
-            var roll = CreateConcentrationRoll(NetworkDiceRollType.Hit, ruleCheckConcentration);
-            var d20 = RetrieveRoll<RuleRollD20>(roll, ruleCheckConcentration.Initiator);
-            return d20;
-        }
-
-        private int? RetrieveHealDamageRoll(RuleHealDamage ruleHealDamage, bool isTacticalCombat)
-        {
-            var roll = CreateHealDamageRoll(NetworkDiceRollType.Hit, ruleHealDamage, isTacticalCombat);
-            var rollId = GetDiceRollId(roll);
-            if (rollId == null)
-            {
-                _logger.LogWarning("Heal Damage retrieving has been skipped due to unability to generate rollId. InitiatorName={InitiatorName}, InitiatorId={InitiatorId}", ruleHealDamage.Initiator?.CharacterName, ruleHealDamage.Initiator?.UniqueId);
-                return null;
-            }
-
-            var networkRoll = _multiplayerActorAccessor.Current.RetrieveRoll<NetworkIntRollValue>(rollId.Value, roll.RuleName, ruleHealDamage.Initiator.UniqueId);
-            if (networkRoll == null)
-            {
-                _logger.LogCritical("Failed to acquire heal damage roll from remote player which guarantees desync in the game. RollId={RollId}", rollId.Value);
-                _playerNotificationService.AddCombatText(WellKnownKeys.GameNotifications.Rolls.MissingHealingRoll.Key, CombatTextSeverity.Critical, new UnitEntityLog(ruleHealDamage.Initiator.UniqueId));
-                return null;
-            }
-
-            return networkRoll.Value;
         }
 
         private enum RuleAttackRollSubType

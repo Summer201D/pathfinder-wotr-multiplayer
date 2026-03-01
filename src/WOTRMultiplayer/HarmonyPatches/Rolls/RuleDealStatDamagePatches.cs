@@ -65,7 +65,7 @@ namespace WOTRMultiplayer.HarmonyPatches.Rolls
 
                 if (Main.Multiplayer.IsActive)
                 {
-                    var rollOverride = Main.Rolls.OnBeforeRuleDealStatDamageRoll(ruleDealStatDamage, criticalModifier);
+                    var rollOverride = Main.Rolls.OnBeforeRuleDealStatDamageRoll(ruleDealStatDamage, damageFormula, criticalModifier);
                     if (rollOverride.HasValue)
                     {
                         return rollOverride.Value;
@@ -73,14 +73,6 @@ namespace WOTRMultiplayer.HarmonyPatches.Rolls
                 }
 
                 var damage = RollCriticalDamage(damageFormula, criticalModifier);
-
-                if (Main.Multiplayer.IsActive)
-                {
-                    var damageRoll = RuleRollD100.FromInt(ruleDealStatDamage.Initiator, damage);
-                    damageRoll.m_Result = damage;
-                    Main.Rolls.OnAfterRuleDealStatDamageRoll(ruleDealStatDamage, damageRoll, criticalModifier);
-                }
-
                 return damage;
             }
             catch (Exception ex)

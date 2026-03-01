@@ -14,31 +14,6 @@ namespace WOTRMultiplayer.HarmonyPatches.Rolls
     [HarmonyPatch]
     public class RuleSkillCheckPatches
     {
-
-        [HarmonyPatch(typeof(RuleSkillCheck), nameof(RuleSkillCheck.OnTrigger))]
-        [HarmonyPostfix]
-        public static void RuleSkillCheck_OnTrigger_Postfix(RuleSkillCheck __instance)
-        {
-            if (!Main.Multiplayer.IsActive)
-            {
-                return;
-            }
-
-            Main.Rolls.OnAfterRuleSkillCheckTrigger(__instance);
-        }
-
-        [HarmonyPatch(typeof(RuleSkillCheck), nameof(RuleSkillCheck.Calculate))]
-        [HarmonyPostfix]
-        public static void RuleSkillCheck_Calculate_Postfix(RuleSkillCheck __instance)
-        {
-            if (!Main.Multiplayer.IsActive)
-            {
-                return;
-            }
-
-            Main.Rolls.OnAfterRuleSkillCheckTrigger(__instance);
-        }
-
         [HarmonyPatch(typeof(RuleSkillCheck), nameof(RuleSkillCheck.OnTrigger))]
         [HarmonyTranspiler]
         public static IEnumerable<CodeInstruction> RuleSkillCheck_OnTrigger_Transpiler(IEnumerable<CodeInstruction> instructions)

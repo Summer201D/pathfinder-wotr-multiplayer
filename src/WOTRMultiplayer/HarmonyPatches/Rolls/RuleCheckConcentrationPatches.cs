@@ -13,18 +13,6 @@ namespace WOTRMultiplayer.HarmonyPatches.Rolls
     public class RuleCheckConcentrationPatches
     {
         [HarmonyPatch(typeof(RuleCheckConcentration), nameof(RuleCheckConcentration.OnTrigger))]
-        [HarmonyPostfix]
-        public static void RuleCheckConcentration_OnTrigger_Postfix(RuleCheckConcentration __instance)
-        {
-            if (!Main.Multiplayer.IsActive)
-            {
-                return;
-            }
-
-            Main.Rolls.OnAfterRuleCheckConcentrationTrigger(__instance);
-        }
-
-        [HarmonyPatch(typeof(RuleCheckConcentration), nameof(RuleCheckConcentration.OnTrigger))]
         [HarmonyTranspiler]
         public static IEnumerable<CodeInstruction> RuleCheckConcentration_OnTrigger_Transpiler(IEnumerable<CodeInstruction> instructions)
         {

@@ -16,18 +16,6 @@ namespace WOTRMultiplayer.HarmonyPatches.Rolls
     public class RuleCastSpellPatches
     {
         [HarmonyPatch(typeof(RuleCastSpell), nameof(RuleCastSpell.OnTrigger))]
-        [HarmonyPostfix]
-        public static void RuleCastSpell_OnTrigger_Postfix(RuleCastSpell __instance)
-        {
-            if (!Main.Multiplayer.IsActive)
-            {
-                return;
-            }
-
-            Main.Rolls.OnAfterRuleCastSpellTrigger(__instance);
-        }
-
-        [HarmonyPatch(typeof(RuleCastSpell), nameof(RuleCastSpell.OnTrigger))]
         [HarmonyTranspiler]
         public static IEnumerable<CodeInstruction> RuleCastSpell_OnTrigger_Transpiler(IEnumerable<CodeInstruction> instructions)
         {

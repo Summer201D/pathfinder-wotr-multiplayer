@@ -21,5 +21,10 @@ namespace WOTRMultiplayer.Entities.Combat
         public HashSet<long> PlayersEndTurnInitialization { get; set; } = [];
 
         public HashSet<long> PlayersEndTurnSynchronization { get; set; } = [];
+
+        /// <summary>
+        /// TODO: might need to expand to track exact reasons why turn is locked (cannot be ended)
+        /// </summary>
+        public int LockCounter { get; set; }
     }
 }

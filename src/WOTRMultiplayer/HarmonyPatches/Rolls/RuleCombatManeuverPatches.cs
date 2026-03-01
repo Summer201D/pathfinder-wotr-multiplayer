@@ -113,12 +113,6 @@ namespace WOTRMultiplayer.HarmonyPatches.Rolls
             }
 
             var roll = Dice.D20;
-
-            if (Main.Multiplayer.IsActive)
-            {
-                Main.Rolls.OnAfterRuleCombatManeuverRoll(ruleCombatManeuver, roll);
-            }
-
             return roll;
         }
     }

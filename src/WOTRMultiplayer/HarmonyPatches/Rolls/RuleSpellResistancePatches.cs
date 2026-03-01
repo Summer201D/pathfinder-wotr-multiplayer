@@ -39,18 +39,6 @@ namespace WOTRMultiplayer.HarmonyPatches.Rolls
             return matcher.Instructions();
         }
 
-        [HarmonyPatch(typeof(RuleSpellResistanceCheck), nameof(RuleSpellResistanceCheck.OnTrigger))]
-        [HarmonyPostfix]
-        public static void RuleSpellResistanceCheck_OnTrigger_Postfix(RuleSpellResistanceCheck __instance)
-        {
-            if (!Main.Multiplayer.IsActive)
-            {
-                return;
-            }
-
-            Main.Rolls.OnAfterRuleSpellResistanceCheckTrigger(__instance);
-        }
-
         private static RuleRollD20 SpellResistanceRollD20(RuleSpellResistanceCheck ruleSpellResistanceCheck)
         {
             if (!Main.Multiplayer.IsActive)

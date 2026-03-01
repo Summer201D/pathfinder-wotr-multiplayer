@@ -12,20 +12,6 @@ namespace WOTRMultiplayer.HarmonyPatches.Rolls
     public class RuleConcealmentPatches
     {
         [HarmonyPatch(typeof(RuleConcealmentCheck), nameof(RuleConcealmentCheck.OnTrigger))]
-        [HarmonyPostfix]
-        public static void RuleConcealmentCheck_OnTrigger_Postfix(RuleConcealmentCheck __instance)
-        {
-            if (!Main.Multiplayer.IsActive
-                || PatchesUtils.IsHelperUnit(__instance.Initiator.UniqueId)
-                || PatchesUtils.IsHelperUnit(__instance.Target?.UniqueId))
-            {
-                return;
-            }
-
-            Main.Rolls.OnAfterRuleConcealmentCheckTrigger(__instance);
-        }
-
-        [HarmonyPatch(typeof(RuleConcealmentCheck), nameof(RuleConcealmentCheck.OnTrigger))]
         [HarmonyTranspiler]
         public static IEnumerable<CodeInstruction> RuleConcealmentCheck_OnTrigger_Transpiler(IEnumerable<CodeInstruction> instructions)
         {

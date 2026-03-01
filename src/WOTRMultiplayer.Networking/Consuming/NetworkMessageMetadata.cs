@@ -1,6 +1,4 @@
-﻿using WOTRMultiplayer.Networking.Messages;
-
-namespace WOTRMultiplayer.Networking.Consuming
+﻿namespace WOTRMultiplayer.Networking.Consuming
 {
     public class NetworkMessageMetadata
     {

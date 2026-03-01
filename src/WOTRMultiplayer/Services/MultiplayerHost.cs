@@ -332,64 +332,72 @@ namespace WOTRMultiplayer.Services
         /// <returns></returns>
         public bool CanInitializeCombat()
         {
-            if (Game.Combat == null)
+            try
             {
-                return false;
-            }
+                if (Game.Combat == null)
+                {
+                    return false;
+                }
 
-            switch (Game.Combat.Stage)
-            {
-                case NetworkCombatStage.Idle:
-                    if (!Game.Combat.PlayersCombatPreparation.TryGetValue(Game.LocalPlayerId, out _))
-                    {
-                        var unitsInCombat = CombatInteraction.GetUnitsInCombat();
-                        Game.Combat.PlayersCombatPreparation.TryAdd(Game.LocalPlayerId, unitsInCombat);
-                    }
-
-                    var canStartPreparing = Game.Combat.PlayersCombatPreparation.Count >= GetSyncedPlayersCount();
-                    if (canStartPreparing)
-                    {
-                        SetCombatStage(NetworkCombatStage.Preparing);
-                    }
-                    else
-                    {
-                        if (!Game.Combat.IsRecovering && (DateTime.UtcNow - Game.Combat.StartedAt) > TimeSpan.FromSeconds(15))
+                switch (Game.Combat.Stage)
+                {
+                    case NetworkCombatStage.Idle:
+                        if (!Game.Combat.PlayersCombatPreparation.TryGetValue(Game.LocalPlayerId, out _))
                         {
-                            var player = GetPlayer(Game.LocalPlayerId);
-                            InitiateCombatRecovering(player);
+                            var unitsInCombat = CombatInteraction.GetUnitsInCombat();
+                            Game.Combat.PlayersCombatPreparation.TryAdd(Game.LocalPlayerId, unitsInCombat);
                         }
-                    }
-                    return false;
-                case NetworkCombatStage.Preparing:
-                    if (CombatInteraction.IsAnyProjectilesLaunchedByParty())
-                    {
-                        return false;
-                    }
 
-                    if (!Game.Combat.IsPreparationStarted)
-                    {
-                        Game.Combat.Seed = CreateRandomSeed();
-
-                        var discrepantUnits = GetDiscrepantCombatUnits();
-                        var preparationRequiredMessage = new NotifyCombatPreparationRequired
+                        var canStartPreparing = Game.Combat.PlayersCombatPreparation.Count >= GetSyncedPlayersCount();
+                        if (canStartPreparing)
                         {
-                            Discrepancy = Mapper.Map<Networking.Messages.Contracts.NetworkCombatUnitDiscrepancy>(discrepantUnits),
-                        };
-                        Send(preparationRequiredMessage);
-                        Game.Combat.IsPreparationStarted = true;
-                        Task.Run(() =>
-                            FixCombatUnitDiscrepancyAsync(discrepantUnits)
-                            .ContinueWith(_ => Game.Combat.IsPrepared = true));
-                    }
+                            SetCombatStage(NetworkCombatStage.Preparing);
+                        }
+                        else
+                        {
+                            if (!Game.Combat.IsRecovering && (DateTime.UtcNow - Game.Combat.StartedAt) > TimeSpan.FromSeconds(15))
+                            {
+                                var player = GetPlayer(Game.LocalPlayerId);
+                                InitiateCombatRecovering(player);
+                            }
+                        }
+                        return false;
+                    case NetworkCombatStage.Preparing:
+                        if (CombatInteraction.IsAnyProjectilesLaunchedByParty())
+                        {
+                            return false;
+                        }
 
-                    var isPrepared = Game.Combat.IsPrepared && Game.Combat.PlayersCombatPreparation.Count == 0;
-                    if (isPrepared)
-                    {
-                        SetCombatStage(NetworkCombatStage.Initialization);
-                    }
-                    return false;
-                default:
-                    return true;
+                        if (!Game.Combat.IsPreparationStarted)
+                        {
+                            Game.Combat.Seed = CreateRandomSeed();
+
+                            var discrepantUnits = GetDiscrepantCombatUnits();
+                            var preparationRequiredMessage = new NotifyCombatPreparationRequired
+                            {
+                                Discrepancy = Mapper.Map<Networking.Messages.Contracts.NetworkCombatUnitDiscrepancy>(discrepantUnits),
+                            };
+                            Send(preparationRequiredMessage);
+                            Game.Combat.IsPreparationStarted = true;
+                            Task.Run(() =>
+                                FixCombatUnitDiscrepancyAsync(discrepantUnits)
+                                .ContinueWith(_ => Game.Combat.IsPrepared = true));
+                        }
+
+                        var isPrepared = Game.Combat.IsPrepared && Game.Combat.PlayersCombatPreparation.Count == 0;
+                        if (isPrepared)
+                        {
+                            SetCombatStage(NetworkCombatStage.Initialization);
+                        }
+                        return false;
+                    default:
+                        return true;
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, "Error while initializing combat");
+                throw;
             }
         }
 
@@ -399,50 +407,58 @@ namespace WOTRMultiplayer.Services
         /// <returns></returns>
         public bool CanContinueCombat()
         {
-            if (Game.Combat == null)
+            try
             {
-                return false;
-            }
-
-            switch (Game.Combat.Stage)
-            {
-                case NetworkCombatStage.Idle:
-                case NetworkCombatStage.Preparing:
+                if (Game.Combat == null)
+                {
                     return false;
-                case NetworkCombatStage.Initialization:
-                    if (!Game.Combat.IsInitialized)
-                    {
-                        var combatState = CombatInteraction.GetCombatState();
-                        var message = new NotifyCombatInitializationRequired
+                }
+
+                switch (Game.Combat.Stage)
+                {
+                    case NetworkCombatStage.Idle:
+                    case NetworkCombatStage.Preparing:
+                        return false;
+                    case NetworkCombatStage.Initialization:
+                        if (!Game.Combat.IsInitialized)
                         {
-                            State = Mapper.Map<Networking.Messages.Contracts.NetworkCombatState>(combatState),
-                            CombatSeed = Game.Combat.Seed,
-                            TriggeredAreaEffects = Mapper.Map<List<Networking.Messages.Contracts.NetworkAreaEffect>>(Game.Combat.TriggeredAreaEffects)
-                        };
-                        Game.Combat.TriggeredAreaEffects.Clear();
-                        Send(message);
+                            var combatState = CombatInteraction.GetCombatState();
+                            var message = new NotifyCombatInitializationRequired
+                            {
+                                State = Mapper.Map<Networking.Messages.Contracts.NetworkCombatState>(combatState),
+                                CombatSeed = Game.Combat.Seed,
+                                TriggeredAreaEffects = Mapper.Map<List<Networking.Messages.Contracts.NetworkAreaEffect>>(Game.Combat.TriggeredAreaEffects)
+                            };
+                            Game.Combat.TriggeredAreaEffects.Clear();
+                            Send(message);
 
-                        Game.Combat.IsRecovering = false;
-                        Game.Combat.IsInitialized = true;
-                        Game.Combat.PlayersCombatInitialization.TryAdd(Game.LocalPlayerId, true);
-                    }
+                            Game.Combat.IsRecovering = false;
+                            Game.Combat.IsInitialized = true;
+                            Game.Combat.PlayersCombatInitialization.TryAdd(Game.LocalPlayerId, true);
+                        }
 
-                    var canContinue = Game.Combat.PlayersCombatInitialization.Count >= GetSyncedPlayersCount();
-                    if (canContinue)
-                    {
-                        SetCombatStage(NetworkCombatStage.Playing);
-                    }
-                    return false;
-                case NetworkCombatStage.Playing:
-                    if (!Game.Combat.IsPlaying)
-                    {
-                        var message = new NotifyCombatInitializationCompleted();
-                        Send(message);
-                        Game.Combat.IsPlaying = true;
-                    }
-                    return true;
-                default:
-                    return Game.Combat.IsPlaying;
+                        var canContinue = Game.Combat.PlayersCombatInitialization.Count >= GetSyncedPlayersCount();
+                        if (canContinue)
+                        {
+                            SetCombatStage(NetworkCombatStage.Playing);
+                        }
+                        return false;
+                    case NetworkCombatStage.Playing:
+                        if (!Game.Combat.IsPlaying)
+                        {
+                            var message = new NotifyCombatInitializationCompleted();
+                            Send(message);
+                            Game.Combat.IsPlaying = true;
+                        }
+                        return true;
+                    default:
+                        return Game.Combat.IsPlaying;
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, "Error while continuing combat");
+                throw;
             }
         }
 
@@ -1662,7 +1678,7 @@ namespace WOTRMultiplayer.Services
 
         private async void OnNotifyCombatLocalTurnEnded(long receivedFrom, NotifyCombatLocalTurnEnded combatTurnEnded)
         {
-            await WaitWhileTrue(CombatInteraction.IsRiderActive, "Waiting for all combat commands to finish before ending turn");
+            await WaitWhileTrue(() => CombatInteraction.IsRiderActive() || Game.Combat.Turn.LockCounter > 0, "Waiting for all combat commands to finish before ending turn");
 
             Game.Combat.Turn.PlayersEndTurnInitialization.Add(combatTurnEnded.PlayerId);
             CombatInteraction.EndTurnBasedCombatTurn();

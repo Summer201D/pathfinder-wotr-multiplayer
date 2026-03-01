@@ -55,12 +55,6 @@ namespace WOTRMultiplayer.HarmonyPatches.Rolls
             }
 
             var roll = Rulebook.Trigger(ruleRollDice);
-
-            if (Main.Multiplayer.IsActive)
-            {
-                Main.Rolls.OnAfterRuleDrainEnergyRoll(ruleDrainEnergy, roll);
-            }
-
             return roll;
         }
     }

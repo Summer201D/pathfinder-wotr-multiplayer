@@ -44,18 +44,6 @@ namespace WOTRMultiplayer.HarmonyPatches.Rolls
             return matcher.Instructions();
         }
 
-        [HarmonyPatch(typeof(RuleDispelMagic), nameof(RuleDispelMagic.OnTrigger))]
-        [HarmonyPostfix]
-        public static void RuleDispelMagic_OnTrigger_Postfix(RuleDispelMagic __instance)
-        {
-            if (!Main.Multiplayer.IsActive)
-            {
-                return;
-            }
-
-            Main.Rolls.OnAfterRuleDispelMagicTrigger(__instance);
-        }
-
         private static RuleRollD20 DispelMagicRollD20(RuleDispelMagic ruleDispelMagic)
         {
             if (!Main.Multiplayer.IsActive)

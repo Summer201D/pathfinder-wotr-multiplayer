@@ -39,18 +39,6 @@ namespace WOTRMultiplayer.HarmonyPatches.Rolls
             return matcher.Instructions();
         }
 
-        [HarmonyPatch(typeof(RuleAttackRoll.ParryData), nameof(RuleAttackRoll.ParryData.Trigger))]
-        [HarmonyPostfix]
-        public static void ParryData_Trigger_Postfix(RuleAttackRoll.ParryData __instance)
-        {
-            if (!Main.Multiplayer.IsActive)
-            {
-                return;
-            }
-
-            Main.Rolls.OnAfterParryDataTrigger(__instance);
-        }
-
         private static RuleRollD20 ParryDataRollD20(RuleAttackRoll.ParryData parryData)
         {
             if (!Main.Multiplayer.IsActive)

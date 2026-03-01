@@ -39,18 +39,6 @@ namespace WOTRMultiplayer.HarmonyPatches.Rolls
             return matcher.Instructions();
         }
 
-        [HarmonyPatch(typeof(RuleCheckCastingDefensively), nameof(RuleCheckCastingDefensively.OnTrigger))]
-        [HarmonyPostfix]
-        public static void RuleCheckCastingDefensively_OnTrigger_Postfix(RuleCheckCastingDefensively __instance)
-        {
-            if (!Main.Multiplayer.IsActive)
-            {
-                return;
-            }
-
-            Main.Rolls.OnAfterRuleCheckCastingDefensivelyTrigger(__instance);
-        }
-
         private static RuleRollD20 CheckCastingDefensivelyRollD20(RuleCheckCastingDefensively ruleCheckCastingDefensively)
         {
             if (!Main.Multiplayer.IsActive)

@@ -62,7 +62,7 @@ namespace WOTRMultiplayer.Abstractions.GameInteraction
 
         void AddUnitsToCombat(List<string> units);
 
-        void KillUnit(NetworkPlayer player, string unitId);
+        Task<bool> KillUnitAsync(NetworkPlayer player, string unitId);
 
         bool IsRiderActive();
 

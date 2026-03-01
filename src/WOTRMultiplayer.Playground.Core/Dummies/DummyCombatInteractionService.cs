@@ -89,8 +89,9 @@ namespace WOTRMultiplayer.Playground.Core.Dummies
             return Task.FromResult(false);
         }
 
-        public void KillUnit(NetworkPlayer player, string unitId)
+        public Task<bool> KillUnitAsync(NetworkPlayer player, string unitId)
         {
+            return Task.FromResult(false);
         }
 
         public bool IsRiderActive()
