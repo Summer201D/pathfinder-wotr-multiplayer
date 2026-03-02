@@ -24,15 +24,18 @@ namespace WOTRMultiplayer.Services.GameInteraction
         private readonly ILogger<PlayerNotificationService> _logger;
         private readonly IMainThreadAccessor _mainThreadAccessor;
         private readonly IGameStateLookupService _gameStateLookupService;
+        private readonly IUIAccessor _uiAccessor;
 
         public PlayerNotificationService(
             ILogger<PlayerNotificationService> logger,
             IMainThreadAccessor mainThreadAccessor,
-            IGameStateLookupService gameStateLookupService)
+            IGameStateLookupService gameStateLookupService,
+            IUIAccessor uiAccessor)
         {
             _logger = logger;
             _mainThreadAccessor = mainThreadAccessor;
             _gameStateLookupService = gameStateLookupService;
+            _uiAccessor = uiAccessor;
         }
 
         public void ShowModalMessage(string messageKey, params object[] args)
@@ -72,11 +75,18 @@ namespace WOTRMultiplayer.Services.GameInteraction
 
         private void AddCombatText(string messageKey, CombatTextSeverity combatTextSeverity, TooltipBaseTemplate template, params object[] args)
         {
+            var combatLogVM = _uiAccessor.CombatLogPCView?.ViewModel;
+            if (combatLogVM == null)
+            {
+                _logger.LogWarning("Missing combatlogVM");
+                return;
+            }
+
             var parameters = GetCombatLogParameters(args).ToArray();
             var message = GetLocalizedText(messageKey, parameters);
             var color = GetTextColor(combatTextSeverity);
             var combatLogMessage = new CombatLogMessage(message, color, PrefixIcon.None, template, false);
-            Game.Instance.RootUiContext.InGameVM?.StaticPartVM?.CombatLogVM?.AddNewMessage(combatLogMessage);
+            combatLogVM.AddNewMessage(combatLogMessage);
         }
 
         private Color32 GetTextColor(CombatTextSeverity combatTextSeverity)

@@ -1488,7 +1488,6 @@ namespace WOTRMultiplayer.Services
                 ResetPlayersTracker(Game.StartUp.ReadyPlayers);
             }
 
-            var characterName = GameInteraction.GetUnitCharacterName(Game.Leveling.UnitId);
             var messageKey = Game.Leveling.Type switch
             {
                 NetworkLevelingType.MythicLeveling => WellKnownKeys.GameNotifications.Leveling.MythicLeveling.Terminated.Key,
@@ -1499,7 +1498,7 @@ namespace WOTRMultiplayer.Services
 
             if (!string.IsNullOrEmpty(messageKey))
             {
-                PlayerNotification.ShowWarningNotification(messageKey, args: characterName);
+                PlayerNotification.AddCombatText(messageKey, CombatTextSeverity.Common, new UnitEntityLog(Game.Leveling.UnitId));
             }
 
             Game.Leveling = null;
