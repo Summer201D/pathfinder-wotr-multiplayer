@@ -1694,7 +1694,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
                 }
 
                 var spellSlot = _gameStateLookupService.GetSpellSlot(spellbook, networkSpellSlot, networkAbility.SpellLevel);
-                var spell = _gameStateLookupService.GetKnownSpell(spellbook, networkAbility);
+                var spell = networkAbility.Metamagic.HasValue ? _gameStateLookupService.GetCustomSpell(spellbook, networkAbility) : _gameStateLookupService.GetKnownSpell(spellbook, networkAbility);
                 spellbook.Memorize(spell, spellSlot);
                 _playerNotificationService.AddCombatText(WellKnownKeys.GameNotifications.SpellBook.MemorizedSpell.Key, CombatTextSeverity.Common, new AbilityTooltipLog(spell), spell.Name, new UnitEntityLog(unit.UniqueId));
                 RefreshSpellbookUI();

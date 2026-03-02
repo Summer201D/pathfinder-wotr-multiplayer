@@ -61,8 +61,8 @@ namespace WOTRMultiplayer.Networking
             _server.ServerOptions.BufferSize = 1024 * 64;
             _server.ServerOptions.MaxWaitMessages = 100;
             _server.ServerOptions.MaxAcceptQueue = 10;
-            _server.ServerOptions.BufferPoolSize = 1000;
-            _server.ServerOptions.BufferPoolMaxMemory = 8000;
+            _server.ServerOptions.BufferPoolSize = 400;
+            _server.ServerOptions.BufferPoolMaxMemory = 1200;
 
             _server.OnMessageReceive(OnMessageReceived);
             _server.OnOpened(OnOpened);
