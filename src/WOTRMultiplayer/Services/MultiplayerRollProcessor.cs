@@ -676,9 +676,9 @@ namespace WOTRMultiplayer.Services
         private bool IsMeaningfulRoll(object rule)
         {
             if (
-                rule is RulebookTargetEvent rulebookTargetEvent && (string.IsNullOrEmpty(rulebookTargetEvent.Target?.UniqueId) || rulebookTargetEvent.Target.UniqueId.StartsWith("description-helper-", StringComparison.OrdinalIgnoreCase))
+                rule is RulebookTargetEvent rulebookTargetEvent && !string.IsNullOrEmpty(rulebookTargetEvent.Target?.UniqueId) && rulebookTargetEvent.Target.UniqueId.StartsWith("description-helper-", StringComparison.OrdinalIgnoreCase)
                     ||
-                rule is RulebookEvent rulebookEvent && (string.IsNullOrEmpty(rulebookEvent.Initiator?.UniqueId) || rulebookEvent.Initiator.UniqueId.StartsWith("description-helper-", StringComparison.OrdinalIgnoreCase)))
+                rule is RulebookEvent rulebookEvent && !string.IsNullOrEmpty(rulebookEvent.Initiator?.UniqueId) && rulebookEvent.Initiator.UniqueId.StartsWith("description-helper-", StringComparison.OrdinalIgnoreCase))
             {
                 return false;
             }
@@ -696,31 +696,31 @@ namespace WOTRMultiplayer.Services
                 return rule is RuleCalculateDamage && _importantCutsceneAreas.Contains(areaName);
             }
 
-            if (!_combatInteractionService.IsInCrusadeTacticalCombat())
+            if (_combatInteractionService.IsInCrusadeTacticalCombat())
             {
-                switch (rule)
+                // ignore damage ranges shown on hover
+                return rule switch
                 {
-                    case RuleCalculateDamage:
-                    case RuleHealDamage:
-                    case RuleDealDamage:
-                        var targetEvent = (RulebookTargetEvent)rule;
-                        var isMeaningfulTargetEvent = IsControlledCharacterTargeted(targetEvent);
-                        return isMeaningfulTargetEvent;
-                    // this one is used to detect stealth units. It's always rolled on the host and sent to the client as separate info to prevent sync issues (similar to other perception/inspection checks)
-                    case RuleCachedPerceptionCheck:
-                        return false;
-                }
-
-                return true;
+                    RuleAttackRoll attackRoll => !attackRoll.IsFake,
+                    RuleCalculateDamage calculateDamage when calculateDamage.ParentRule is RuleDealDamage dealDamage => !dealDamage.IsFake,
+                    _ => true,
+                };
             }
 
-            // ignore damage ranges shown on hover
-            return rule switch
+            switch (rule)
             {
-                RuleAttackRoll attackRoll => !attackRoll.IsFake,
-                RuleCalculateDamage calculateDamage when calculateDamage.ParentRule is RuleDealDamage dealDamage => !dealDamage.IsFake,
-                _ => true,
-            };
+                case RuleCalculateDamage:
+                case RuleHealDamage:
+                case RuleDealDamage:
+                    var targetEvent = (RulebookTargetEvent)rule;
+                    var isMeaningfulTargetEvent = IsControlledCharacterTargeted(targetEvent);
+                    return isMeaningfulTargetEvent;
+                // this one is used to detect stealth units. It's always rolled on the host and sent to the client as separate info to prevent sync issues (similar to other perception/inspection checks)
+                case RuleCachedPerceptionCheck:
+                    return false;
+                default:
+                    return true;
+            }
         }
 
         private bool IsControlledCharacterTargeted(RulebookTargetEvent rulebookTargetEvent)
@@ -1469,8 +1469,8 @@ namespace WOTRMultiplayer.Services
                     RollId = _hashService.Murmur3(identifier)
                 };
 
-                _logger.LogInformation("{RuleName} has been rolled deterministicaly. UnitId={UnitId}, RollId={RollId}, Result={Result}, History={History}, Lifetime={Lifetime}, Identifier={Identifier}",
-                    roll.RuleName, roll.InitiatorId, outcome.RollId, outcome.Result, outcome.History, lifetime, outcome.Identifier);
+                _logger.LogInformation("{RuleName} has been rolled deterministicaly. Type={Type}, UnitId={UnitId}, RollId={RollId}, Result={Result}, History={History}, Lifetime={Lifetime}, Identifier={Identifier}",
+                    roll.RuleName, roll.RollType, roll.InitiatorId, outcome.RollId, outcome.Result, outcome.History, lifetime, outcome.Identifier);
 
                 return outcome;
             }
