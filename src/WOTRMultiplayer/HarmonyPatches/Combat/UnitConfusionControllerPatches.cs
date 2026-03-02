@@ -60,7 +60,7 @@ namespace WOTRMultiplayer.HarmonyPatches.Combat
                 var random = Main.Multiplayer.ValueGenerator.GetRandom(IdentifierLifetime.CombatTurn, identifier);
                 var result = ruleRollDice.DiceFormula.Roll(random);
                 Main.GetLogger<UnitConfusionControllerPatches>().LogInformation("UnitConfusionController condition has been rolled. UnitId={UnitId}, Roll={Roll}, Identifier={Identifier}", unit.UniqueId, result, identifier);
-                Main.PlayerNotification.AddCombatText(WellKnownKeys.GameNotifications.Combat.Conditions.Confusion.Key, CombatTextSeverity.Debug, result, new UnitEntityLog(unit.UniqueId));
+                Main.PlayerNotification.AddCombatText(WellKnownKeys.GameNotifications.Combat.Conditions.Confusion.Key, CombatTextSeverity.Debug, result, new UnitLogParameter(unit.UniqueId));
                 ruleRollDice.m_Triggered = true;
                 ruleRollDice.m_Result = result;
                 return ruleRollDice;

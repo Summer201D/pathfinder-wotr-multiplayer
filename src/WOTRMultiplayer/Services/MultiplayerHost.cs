@@ -45,8 +45,6 @@ namespace WOTRMultiplayer.Services
 
         private NetworkLobbyStage Status => Game?.Stage ?? NetworkLobbyStage.None;
 
-        public Action<NetworkGameConnectivity> OnConnected { get; set; }
-
         public bool IsActive => _networkServer.IsActive;
 
         public bool IsInLobby => IsActive && Status == NetworkLobbyStage.Lobby;
@@ -177,32 +175,20 @@ namespace WOTRMultiplayer.Services
         public bool Start()
         {
             Logger.LogInformation("Starting hosted game...");
-            if (!TryGetSaveGameContent(out var content))
-            {
-                Logger.LogError("Unable to start a game due to missing save file. Path={Path}, IsNewGameSequence={IsNewGameSequence}", Game.StartUp.SavePath, Game.StartUp.IsNewGameSequence);
-                return false;
-            }
-
             SetLobbyStage(NetworkLobbyStage.PreparingToStart);
             Game.LoadedSaveSeed = CreateRandomSeed();
 
             var host = GetHost();
             UpdateLobbySyncStatus(host, NetworkLobbySyncStatus.Succeed);
 
-            var saveSyncStatusChanged = new NotifyLobbySyncStatusChanged
+            var saveSyncStatusChanged = new NotifySaveGameSyncStatusChanged
             {
                 Status = host.LobbySyncStatus.ToString(),
                 PlayerId = host.Id,
             };
             Send(saveSyncStatusChanged);
 
-            var saveGameChanged = new NotifyLobbySaveGameChanged
-            {
-                GameId = Game.Id,
-                Content = content,
-                Seed = Game.LoadedSaveSeed
-            };
-            Send(saveGameChanged);
+            TransferSaveGame();
 
             TryStartSavedGame();
             return true;
@@ -1399,7 +1385,11 @@ namespace WOTRMultiplayer.Services
 
         protected override void Send(object message)
         {
-            Logger.LogObject(LogLevel.Information, "Sending {MessageType}.", message);
+            if (message is not NotifySaveGameChunkCreated and not NotifySaveGameTransferProgressChanged)
+            {
+                Logger.LogObject(LogLevel.Information, "Sending {MessageType}.", message);
+            }
+
             _networkServer.SendAll(message);
         }
 
@@ -1625,8 +1615,9 @@ namespace WOTRMultiplayer.Services
                .On<ClientTogglePauseOff>(OnClientTogglePauseOff)
 
                // lobby
-               .On<NotifyLobbySyncStatusChanged>(OnNotifyLobbySyncStatusChanged)
+               .On<NotifySaveGameSyncStatusChanged>(OnNotifyLobbySyncStatusChanged)
                .On<ClientGameServerConnectionConfirmed>(OnClientGameServerConnectionConfirmed)
+               .On<NotifySaveGameChunkReceived>(OnNotifySaveGameChunkReceived)
 
                // area transitioning
                .On<ClientAreaLoaded>(OnClientAreaLoaded)
@@ -1668,6 +1659,19 @@ namespace WOTRMultiplayer.Services
                // inventory
                .On<NotifyPolymorphicItemCreationRequested>(OnNotifyPolymorphicItemCreationRequested)
                ;
+        }
+
+        private void OnNotifySaveGameChunkReceived(long receivedFrom, NotifySaveGameChunkReceived message)
+        {
+            Game.StartUp.ConfirmedChunks.AddOrUpdate(receivedFrom, message.ChunkNumber, (key, existing) => message.ChunkNumber);
+
+            var progressChanged = new NotifySaveGameTransferProgressChanged
+            {
+                Players = [.. Game.StartUp.ConfirmedChunks]
+            };
+            Send(progressChanged);
+
+            OnSaveGameTransferProgressChanged?.Invoke([.. Game.StartUp.ConfirmedChunks]);
         }
 
         private void OnNotifyKingdomNavigationChanged(long receivedFrom, NotifyKingdomNavigationChanged message)
@@ -2028,7 +2032,7 @@ namespace WOTRMultiplayer.Services
             return turn;
         }
 
-        private void OnNotifyLobbySyncStatusChanged(long receivedFrom, NotifyLobbySyncStatusChanged lobbySyncStatusChanged)
+        private void OnNotifyLobbySyncStatusChanged(long receivedFrom, NotifySaveGameSyncStatusChanged lobbySyncStatusChanged)
         {
             var status = Mapper.Map<NetworkLobbySyncStatus>(lobbySyncStatusChanged.Status);
             UpdateLobbySyncStatus(lobbySyncStatusChanged.PlayerId, status);
@@ -2415,6 +2419,15 @@ namespace WOTRMultiplayer.Services
                     var removalDelay = Game.ForcedPause.RemovalDelay;
                     var delay = removalDelay.HasValue ? Task.Delay(removalDelay.Value) : Task.CompletedTask;
                     Game.ForcedPause.IsLifting = true;
+                    if (Game.ForcedPause.Reason == NetworkForcedPauseReason.AreaLoading)
+                    {
+                        var message = new NotifyAreaLoadingCompleted
+                        {
+                            AreaSeed = Game.CurrentArea.Seed
+                        };
+                        Send(message);
+                    }
+
                     Logger.LogInformation("Forced pause will be lifted soon. Reason={Reason}, RemovalDelay={RemovalDelay}", Game.ForcedPause.Reason, removalDelay.GetValueOrDefault());
                     delay.ContinueWith(x =>
                     {
@@ -2426,16 +2439,7 @@ namespace WOTRMultiplayer.Services
                                 return;
                             }
 
-                            var message = new NotifyGamePauseEnded
-                            {
-                                AreaSeed = Game.ForcedPause.Reason == NetworkForcedPauseReason.AreaLoading ? Game.CurrentArea.Seed : null,
-                            };
-
-                            if (GameInteraction.IsPaused && Game.ForcedPause.Reason == NetworkForcedPauseReason.AreaLoading)
-                            {
-                                var party = CombatInteraction.GetParty();
-                                message.Party = Mapper.Map<List<Networking.Messages.Contracts.NetworkUnit>>(party);
-                            }
+                            var message = new NotifyGamePauseEnded();
                             Send(message);
 
                             Game.ForcedPause = null;
@@ -2494,18 +2498,6 @@ namespace WOTRMultiplayer.Services
             }
 
             Send(message);
-        }
-
-        private bool TryGetSaveGameContent(out byte[] content)
-        {
-            if (Game.StartUp.IsNewGameSequence)
-            {
-                content = null;
-                return true;
-            }
-
-            content = FileSystem.GetRawFileContent(Game.StartUp.SavePath);
-            return content != null;
         }
 
         private NetworkCombatUnitDiscrepancy GetDiscrepantCombatUnits()

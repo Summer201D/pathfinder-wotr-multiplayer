@@ -786,7 +786,7 @@ namespace WOTRMultiplayer.Services
                 if (roll == null)
                 {
                     _logger.LogCritical("Failed to acquire roll from remote player which guarantees desync in the game. RollId={RollId}, RollType={RollType}, InitiatorId={InitiatorId}", rollId.Value, rollType, initiator.UniqueId);
-                    _playerNotificationService.AddCombatText(WellKnownKeys.GameNotifications.Rolls.MissingRoll.Key, CombatTextSeverity.Critical, networkDiceRoll.RuleName, new UnitEntityLog(networkDiceRoll.InitiatorId));
+                    _playerNotificationService.AddCombatText(WellKnownKeys.GameNotifications.Rolls.MissingRoll.Key, CombatTextSeverity.Critical, networkDiceRoll.RuleName, new UnitLogParameter(networkDiceRoll.InitiatorId));
                     return null;
                 }
 

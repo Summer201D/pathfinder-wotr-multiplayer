@@ -181,6 +181,10 @@
                 "combatTurnDelayForAI": {
                     "title": "AI Turn delay",
                     "tooltip": "AI turn for clients starts a bit later so AI actions can be synced/overridden from host if needed.\nKeep this somewhere above your network ping"
+                },
+                "saveGameChunkSize": {
+                    "title": "Save Game chunk size",
+                    "tooltip": "Controls chunk size (bytes) when transferring save game over the network. Smaller chunks can improve stability on slower or unstable connections, while larger chunks may increase transfer speed on fast networks.\nChanging this value can affect connection reliability and compatibility. Only modify it if you understand how networking and data transfer work. Incorrect values may cause slow transfers, connection issues, or failed uploads/downloads."
                 }
             }
         },
@@ -228,11 +232,11 @@
             },
             "spellBook": {
                 "noSpellSlotPermission": "Changing spells is restricted to character owner only",
-                "memorizedSpell": "'{0}' has been memorized by {1}",
-                "forgottenSpell": "'{0}' has been forgotten by {1}",
-                "removedCustomSpell": "Custom spell '{0}' has been removed from {1} spellbook",
-                "removedDuplicateMetamagicSpell": "Duplicate metamagic spell '{0}' has been removed from {1} spellbook.",
-                "newMetamagicSpell": "Metamagic spell '{0}' has been created in {1} spellbook.\nApplied metamagic: {2}"
+                "memorizedSpell": "{0} has been memorized by {1}",
+                "forgottenSpell": "{0} has been forgotten by {1}",
+                "removedCustomSpell": "Custom spell {0} has been removed from {1} spellbook",
+                "removedDuplicateMetamagicSpell": "Duplicate metamagic spell {0} has been removed from {1} spellbook.",
+                "newMetamagicSpell": "Metamagic spell {0} has been created in {1} spellbook.\nApplied metamagic: {2}"
             },
             "forcedPause": {
                 "areaLoading": "Please wait for other players to finish loading the area",

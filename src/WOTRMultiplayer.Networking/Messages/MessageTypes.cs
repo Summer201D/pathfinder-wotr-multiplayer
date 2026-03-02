@@ -15,11 +15,13 @@
             NotifyLobbyCharactersChanged,
             NotifyGameStarted,
             NotifyLobbyPlayersChanged,
-            NotifyLobbySaveGameChanged,
+            NotifySaveGameInfoChanged,
             NotifyPlayerReadyStatusChanged,
-            NotifyLobbySyncStatusChanged,
+            NotifySaveGameSyncStatusChanged,
             NotifyNewGameDifficultyChanged,
-            NotifyGameForceLoaded
+            NotifySaveGameChunkCreated,
+            NotifySaveGameChunkReceived,
+            NotifySaveGameTransferProgressChanged
         }
 
         public enum Game
@@ -269,7 +271,8 @@
             NotifyUnitInteractedWithUnit,
             NotifyUnitLootedUnit,
             NotifyMapObjectCombinePartInteracted,
-            NotifySpellSlotsSwapped
+            NotifySpellSlotsSwapped,
+            NotifyAreaLoadingCompleted
         }
 
         public enum Request

@@ -11,10 +11,8 @@ using WOTRMultiplayer.Abstractions.IO;
 using WOTRMultiplayer.Abstractions.Random;
 using WOTRMultiplayer.Abstractions.Settings;
 using WOTRMultiplayer.Config.Mapping;
-using WOTRMultiplayer.Entities;
 using WOTRMultiplayer.Entities.Rolls.Claiming.Values;
 using WOTRMultiplayer.Networking.Abstractions;
-using WOTRMultiplayer.Networking.Messages.Lobby;
 using WOTRMultiplayer.Networking.Messages.Requests;
 using WOTRMultiplayer.Services;
 using WOTRMultiplayer.UnitTests.FakeRules;
@@ -160,89 +158,6 @@ namespace WOTRMultiplayer.UnitTests.Services
             // Assert
             A.CallTo(() => _diceRollStorage.GetAsync<RollValueBase>(request.RollId, request.PlayerId, request.Timeout)).MustHaveHappened();
             A.CallTo(() => _networkClient.Send(A<DiceRollValueResponse>.Ignored)).MustHaveHappened();
-        }
-
-        [Test]
-        public void OnNotifyLobbySaveGameChanged_StoresSaveFileAndSendsConfirmation()
-        {
-            // Arrange
-            var parsedHost = "192.168.1.1";
-            var parsedPort = 555;
-            IPAddress.TryParse(parsedHost, out var parsedAddress);
-            var endpoint = new IPEndPoint(parsedAddress, parsedPort);
-            var address = Guid.NewGuid().ToString();
-            A.CallTo(() => _endpointParser.Parse(address)).Returns(endpoint);
-            _multiplayerClient.Connect(address);
-            _multiplayerClient.Game = new NetworkGame(new NetworkGameStartUp("whatever"));
-            var handler = FakeUtils.GetNetworkReceiverHandler<NotifyLobbySaveGameChanged>(_networkClient);
-            var request = new NotifyLobbySaveGameChanged { Content = [], GameId = Guid.NewGuid().ToString() };
-
-            // Act
-            handler.Invoke(1, request);
-
-            // Assert
-            A.CallTo(() => _fileSystemService.WriteFile(A<string>.Ignored, request.Content)).MustHaveHappened();
-            A.CallTo(() => _networkClient.Send(A<NotifyLobbySyncStatusChanged>.Ignored)).MustHaveHappened();
-        }
-
-        [Test]
-        public void OnGameForceLoaded_PlayerIsInGame_StoresSaveFileAnCallsQuickLoad()
-        {
-            // Arrange
-            var parsedHost = "192.168.1.1";
-            var parsedPort = 555;
-            IPAddress.TryParse(parsedHost, out var parsedAddress);
-            var endpoint = new IPEndPoint(parsedAddress, parsedPort);
-            var address = Guid.NewGuid().ToString();
-            A.CallTo(() => _endpointParser.Parse(address)).Returns(endpoint);
-            _multiplayerClient.Connect(address);
-            _multiplayerClient.Game = new NetworkGame(new NetworkGameStartUp("whatever"))
-            {
-                Stage = NetworkLobbyStage.Playing
-            };
-            var handler = FakeUtils.GetNetworkReceiverHandler<NotifyGameForceLoaded>(_networkClient);
-            var request = new NotifyGameForceLoaded { Content = [], GameId = Guid.NewGuid().ToString() };
-
-            // Act
-            handler.Invoke(1, request);
-
-            // Assert
-            A.CallTo(() => _fileSystemService.WriteFile(A<string>.Ignored, request.Content)).MustHaveHappened();
-            A.CallTo(() => _gameInteractionService.QuickLoadGame(A<string>.Ignored)).MustHaveHappened();
-            A.CallTo(() => _networkClient.Send(A<NotifyLobbySyncStatusChanged>.Ignored)).MustNotHaveHappened();
-        }
-
-        [Test]
-        public void OnGameForceLoaded_PlayerJoinedMidGame_MakesPlayerReadyAndCallsLoadFromMainMenu()
-        {
-            // Arrange
-            var parsedHost = "192.168.1.1";
-            var parsedPort = 555;
-            var localPlayerId = 1231231;
-            IPAddress.TryParse(parsedHost, out var parsedAddress);
-            var endpoint = new IPEndPoint(parsedAddress, parsedPort);
-            var address = Guid.NewGuid().ToString();
-            A.CallTo(() => _endpointParser.Parse(address)).Returns(endpoint);
-            A.CallTo(() => _gameInteractionService.GetSaveGamePath()).Returns("asdasdas");
-            A.CallTo(() => _fileSystemService.WriteFile(A<string>.Ignored, A<byte[]>.Ignored)).Returns(true);
-            _multiplayerClient.Connect(address);
-            _multiplayerClient.Game = new NetworkGame(new NetworkGameStartUp("whatever"))
-            {
-                LocalPlayerId = localPlayerId,
-                Stage = NetworkLobbyStage.Lobby,
-                Players = [new NetworkPlayer { Id = localPlayerId }]
-            };
-            var handler = FakeUtils.GetNetworkReceiverHandler<NotifyGameForceLoaded>(_networkClient);
-            var request = new NotifyGameForceLoaded { Content = [], GameId = Guid.NewGuid().ToString() };
-
-            // Act
-            handler.Invoke(1, request);
-
-            // Assert
-            A.CallTo(() => _fileSystemService.WriteFile(A<string>.Ignored, request.Content)).MustHaveHappened();
-            A.CallTo(() => _gameInteractionService.LoadGameFromMainMenu(A<string>.That.Not.IsNullOrEmpty())).MustHaveHappened();
-            A.CallTo(() => _networkClient.Send(A<NotifyPlayerReadyStatusChanged>.Ignored)).MustHaveHappened();
-            A.CallTo(() => _networkClient.Send(A<NotifyLobbySyncStatusChanged>.Ignored)).MustHaveHappened();
         }
     }
 }

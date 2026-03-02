@@ -78,6 +78,10 @@ namespace WOTRMultiplayer.Services
 
         public Action<bool> OnNewGameSequenceStarted { get; set; }
 
+        public Action<List<KeyValuePair<long, int>>> OnSaveGameTransferProgressChanged { get; set; }
+
+        public Action<NetworkGameConnectivity> OnConnected { get; set; }
+
         internal NetworkGame Game { get; set; }
 
         protected ILogger Logger { get; private set; }
@@ -489,23 +493,23 @@ namespace WOTRMultiplayer.Services
                 return;
             }
 
-            UpdateSaveInfo(gameId, savePath);
+            Game.StartUp = new NetworkGameStartUp
+            {
+                SavePath = savePath,
+                AutoStart = true,
+                IsNewGameSequence = false,
+            };
+            Game.Id = gameId;
 
             lock (ActionLock)
             {
                 Game.ForcedPause = null;
             }
+
             ResetGameIdGenerator();
             Game.LoadedSaveSeed = CreateRandomSeed();
 
-            var content = FileSystem.GetRawFileContent(savePath);
-            var message = new NotifyGameForceLoaded
-            {
-                GameId = Game.Id,
-                Content = content,
-                Seed = Game.LoadedSaveSeed,
-            };
-            Send(message);
+            TransferSaveGame();
         }
 
         public void CombatStarted()
@@ -595,7 +599,7 @@ namespace WOTRMultiplayer.Services
                         }
 
                         UpdateConfirmedMidCombatUnits();
-                        PlayerNotification.AddCombatText(WellKnownKeys.GameNotifications.Combat.Turn.Started.Key, CombatTextSeverity.Common, new UnitEntityLog(unitId));
+                        PlayerNotification.AddCombatText(WellKnownKeys.GameNotifications.Combat.Turn.Started.Key, CombatTextSeverity.Common, new UnitLogParameter(unitId));
                         Logger.LogInformation("Turn start is allowed. UnitId={UnitId}, IsActingInSurpiseRound={IsActingInSurpiseRound}, TurnUnitId={TurnUnitId}, TurnSeed={TurnSeed}", unitId, actingInSurpriseRound, Game.Combat.Turn.UnitId, Game.Combat.Turn.Seed);
                         return true;
                     default:
@@ -629,7 +633,7 @@ namespace WOTRMultiplayer.Services
                         Logger.LogInformation("Turn end is allowed. Round={Round}, TurnUnitId={TurnUnitId}, IsAI={IsAI}, UnitId={UnitId}", Game.Combat.Round, Game.Combat.Turn.UnitId, Game.Combat.Turn.IsAI, unitId);
                         Game.Combat.TriggeredAreaEffects.Clear();
                         ResetCombatTurn();
-                        PlayerNotification.AddCombatText(WellKnownKeys.GameNotifications.Combat.Turn.Ended.Key, CombatTextSeverity.Common, new UnitEntityLog(unitId));
+                        PlayerNotification.AddCombatText(WellKnownKeys.GameNotifications.Combat.Turn.Ended.Key, CombatTextSeverity.Common, new UnitLogParameter(unitId));
                         var confirmedUnits = Game.Combat.ConfirmedMidCombatUnits.ToList() ?? [];
                         if (confirmedUnits.Count > 0)
                         {
@@ -1511,7 +1515,7 @@ namespace WOTRMultiplayer.Services
 
             if (!string.IsNullOrEmpty(messageKey))
             {
-                PlayerNotification.AddCombatText(messageKey, CombatTextSeverity.Common, new UnitEntityLog(Game.Leveling.UnitId));
+                PlayerNotification.AddCombatText(messageKey, CombatTextSeverity.Common, new UnitLogParameter(Game.Leveling.UnitId));
             }
 
             Game.Leveling = null;
@@ -1537,7 +1541,7 @@ namespace WOTRMultiplayer.Services
 
             if (!string.IsNullOrEmpty(messageKey))
             {
-                PlayerNotification.AddCombatText(messageKey, CombatTextSeverity.Common, new UnitEntityLog(Game.Leveling.UnitId));
+                PlayerNotification.AddCombatText(messageKey, CombatTextSeverity.Common, new UnitLogParameter(Game.Leveling.UnitId));
             }
 
             Game.Leveling = null;
@@ -2776,6 +2780,45 @@ namespace WOTRMultiplayer.Services
             UpdateLevelingRespecUIState(respecUnitId);
         }
 
+        protected void TransferSaveGame()
+        {
+            var initialMessage = new NotifySaveGameInfoChanged
+            {
+                AutoStart = Game.StartUp.AutoStart,
+                GameId = Game.Id,
+                Seed = Game.LoadedSaveSeed,
+                IsNewGameSequence = Game.StartUp.IsNewGameSequence
+            };
+
+            if (Game.StartUp.IsNewGameSequence)
+            {
+                Send(initialMessage);
+                return;
+            }
+
+            var settings = SettingsService.GetSettings();
+            var content = FileSystem.GetRawFileContent(Game.StartUp.SavePath);
+            var chunks = (content.Length + settings.SaveGameChunkSize - 1) / settings.SaveGameChunkSize;
+            var chunksCount = Math.Max(1, chunks);
+
+            initialMessage.ExpectedChunks = chunksCount;
+            initialMessage.ContentSize = content.Length;
+            Send(initialMessage);
+
+            var chunkNumber = 1;
+            for (int offset = 0; offset < content.Length; offset += settings.SaveGameChunkSize)
+            {
+                int size = Math.Min(settings.SaveGameChunkSize, content.Length - offset);
+                var chunkMessage = new NotifySaveGameChunkCreated
+                {
+                    ChunkNumber = chunkNumber,
+                    Content = new ReadOnlyMemory<byte>(content, offset, size).ToArray(),
+                };
+                Send(chunkMessage);
+                chunkNumber++;
+            }
+        }
+
         protected HashSet<long> AddPlayerReadyStatus(PlayerTurnReadinessType playerReadinessType, long playerId, string unitId)
         {
             try
@@ -2825,6 +2868,7 @@ namespace WOTRMultiplayer.Services
         {
             ResetGameIdGenerator();
             Game.ForcedPause = null;
+            GameInteraction.SetPause(false);
             Game.DialogState = null;
 
             // it's important to use different loading method for players who joined mid-game
@@ -2839,7 +2883,7 @@ namespace WOTRMultiplayer.Services
 
                 var status = NetworkLobbySyncStatus.Succeed;
                 UpdateLobbySyncStatus(localPlayer, status);
-                var message = new NotifyLobbySyncStatusChanged { PlayerId = localPlayer.Id, Status = status.ToString() };
+                var message = new NotifySaveGameSyncStatusChanged { PlayerId = localPlayer.Id, Status = status.ToString() };
                 Send(message);
 
                 Game.Id = GameInteraction.LoadGameFromMainMenu(Game.StartUp.SavePath);
@@ -3098,7 +3142,7 @@ namespace WOTRMultiplayer.Services
             }
 
             GameInteraction.ReselectSelectedCharacters();
-            PlayerNotification.AddCombatText(WellKnownKeys.GameNotifications.Session.CharacterOwnerChanged.Key, CombatTextSeverity.Common, networkCharacter.Owner.Name, new UnitEntityLog(networkCharacter.UnitId));
+            PlayerNotification.AddCombatText(WellKnownKeys.GameNotifications.Session.CharacterOwnerChanged.Key, CombatTextSeverity.Common, networkCharacter.Owner.Name, new UnitLogParameter(networkCharacter.UnitId));
 
             if (Game.Combat?.Turn != null)
             {
@@ -3257,20 +3301,6 @@ namespace WOTRMultiplayer.Services
             return true;
         }
 
-        protected void UpdateSaveInfo(string gameId, byte[] content)
-        {
-            var savePath = StoreSaveGameContent(content);
-            UpdateSaveInfo(gameId, savePath);
-        }
-
-        protected void UpdateSaveInfo(string gameId, string savePath)
-        {
-            Game.StartUp = new NetworkGameStartUp(savePath);
-            Game.Id = gameId;
-
-            Logger.LogInformation("Save info has been updated. GameId={GameId}, SavePath={SavePath}, IsNewGameSequence={IsNewGameSequence}", Game.Id, Game.StartUp.SavePath, Game.StartUp.IsNewGameSequence);
-        }
-
         protected void ResetGlobalMapCounters()
         {
             Game.PlayersInGlobalMapMode.Clear();
@@ -3326,11 +3356,20 @@ namespace WOTRMultiplayer.Services
                 });
         }
 
+        protected virtual void OnSaveGameChunkSaved(int chunkNumber)
+        {
+        }
+
+        protected virtual void OnSaveGameChunksTransferCompleted()
+        {
+
+        }
         protected virtual void SetupNetworkMessageHandlers()
         {
             _networkReceiver
                 // lobby
-                .On<NotifyGameForceLoaded>(OnNotifyGameForceLoaded)
+                .On<NotifySaveGameChunkCreated>(OnNotifySaveGameChunkCreated)
+                .On<NotifySaveGameInfoChanged>(OnNotifySaveGameInfoChanged)
                 .On<NotifyPlayerReadyStatusChanged>(OnNotifyPlayerReadyStatusChanged)
 
                 // combat
@@ -3495,11 +3534,57 @@ namespace WOTRMultiplayer.Services
                 ;
         }
 
+        private void OnNotifySaveGameInfoChanged(long receivedFrom, NotifySaveGameInfoChanged message)
+        {
+            Game.StartUp = new NetworkGameStartUp
+            {
+                AutoStart = message.AutoStart,
+                ExpectedChunks = message.ExpectedChunks,
+                Content = new List<byte>(message.ContentSize),
+                IsNewGameSequence = message.IsNewGameSequence
+            };
+            Game.Id = message.GameId;
+            Game.LoadedSaveSeed = message.Seed;
+
+            if (Game.StartUp.IsNewGameSequence)
+            {
+                OnSaveGameChunksTransferCompleted();
+            }
+
+            OnAfterNetworkMessageHandled(receivedFrom, message);
+        }
+
+        private void OnNotifySaveGameChunkCreated(long receivedFrom, NotifySaveGameChunkCreated message)
+        {
+            Game.StartUp.Content.AddRange(message.Content);
+
+            OnSaveGameChunkSaved(message.ChunkNumber);
+
+            OnAfterNetworkMessageHandled(receivedFrom, message);
+
+            if (Game.StartUp.ExpectedChunks != message.ChunkNumber)
+            {
+                return;
+            }
+
+            Game.StartUp.SavePath = StoreSaveGameContent([.. Game.StartUp.Content]);
+
+            if (Game.StartUp.AutoStart)
+            {
+                LoadSavedGame();
+                return;
+            }
+
+            OnSaveGameChunksTransferCompleted();
+        }
+
         private void OnNotifySpellSlotsSwapped(long receivedFrom, NotifySpellSlotsSwapped message)
         {
             var slotA = Mapper.Map<NetworkSpellSlot>(message.SlotA);
             var slotB = Mapper.Map<NetworkSpellSlot>(message.SlotB);
             GameInteraction.SwapSpellSlots(message.UnitId, message.SpellbookId, message.SpellLevel, slotA, slotB);
+
+            OnAfterNetworkMessageHandled(receivedFrom, message);
         }
 
         private void OnNotifyMapObjectCombinePartInteracted(long receivedFrom, NotifyMapObjectCombinePartInteracted message)
@@ -3880,17 +3965,6 @@ namespace WOTRMultiplayer.Services
             }
 
             OnAfterNetworkMessageHandled(receivedFrom, gameModeTypeStarted);
-        }
-
-        private void OnNotifyGameForceLoaded(long receivedFrom, NotifyGameForceLoaded gameForceLoaded)
-        {
-            UpdateSaveInfo(gameForceLoaded.GameId, gameForceLoaded.Content);
-
-            Game.LoadedSaveSeed = gameForceLoaded.Seed;
-
-            LoadSavedGame();
-
-            OnAfterNetworkMessageHandled(receivedFrom, gameForceLoaded);
         }
 
         private void OnNotifyNewGameSequenceWitnessed(long receivedFrom, NotifyNewGameSequenceWitnessed newGameSequenceWitnessed)

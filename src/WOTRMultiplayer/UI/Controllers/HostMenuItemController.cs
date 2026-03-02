@@ -266,11 +266,13 @@ namespace WOTRMultiplayer.UI.Controllers
             if (string.Equals(saveSlot.GameId.Value, NewGameSequenceId, StringComparison.OrdinalIgnoreCase))
             {
                 var mainCharacterId = Guid.NewGuid().ToString();
-                var newGameSequence = new NetworkGameStartUp(null)
+                var newGameSequence = new NetworkGameStartUp
                 {
                     // empty character that can be used to assign control for leveling (chargen) screen
                     Characters = [new NetworkCharacter { Portrait = "b7aa1433ab20e3745a4a169ee34ca738_MaskGolem", UnitId = mainCharacterId }],
-                    Title = saveSlot.SaveName.Value
+                    Title = saveSlot.SaveName.Value,
+                    IsNewGameSequence = true,
+                    AutoStart = false
                 };
 
                 var gameId = Guid.NewGuid().ToString("N");
@@ -281,10 +283,13 @@ namespace WOTRMultiplayer.UI.Controllers
             var portraits = saveSlot.PartyPortraits.Value.Select(p => p.Portrait.name).ToList();
             var characters = portraits.Select(x => new NetworkCharacter { Name = x, Portrait = x, Owner = null }).ToList();
             var savePath = saveSlot.Reference.FolderName;
-            var saveGame = new NetworkGameStartUp(savePath)
+            var saveGame = new NetworkGameStartUp
             {
+                SavePath = savePath,
                 Title = saveSlot.SaveName.Value,
-                Characters = characters
+                Characters = characters,
+                IsNewGameSequence = false,
+                AutoStart = false
             };
 
             var mainCharacter = characters.FirstOrDefault();

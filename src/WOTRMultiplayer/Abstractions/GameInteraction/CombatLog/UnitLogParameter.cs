@@ -1,10 +1,10 @@
 ﻿namespace WOTRMultiplayer.Abstractions.GameInteraction.CombatLog
 {
-    public class UnitEntityLog
+    public class UnitLogParameter
     {
         public string UnitId { get; set; }
 
-        public UnitEntityLog(string unitId)
+        public UnitLogParameter(string unitId)
         {
             UnitId = unitId;
         }

@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using WOTRMultiplayer.Logging.Extensions;
 using WOTRMultiplayer.Networking.Abstractions;
+using WOTRMultiplayer.Networking.Messages.Lobby;
 
 namespace WOTRMultiplayer.Networking.Consuming
 {
@@ -28,7 +29,6 @@ namespace WOTRMultiplayer.Networking.Consuming
         public void Reset()
         {
             _cancellation?.Cancel();
-            _cancellation?.Dispose();
             _isRunning = false;
         }
 
@@ -83,7 +83,10 @@ namespace WOTRMultiplayer.Networking.Consuming
                         continue;
                     }
 
-                    _logger.LogObject(LogLevel.Information, "Received {MessageType}. ReceivedFrom={ReceivedFrom}, Consumers={Consumers}", metadata.Message, metadata.PlayerId, configuredHandlers.Count);
+                    if (metadata.Message is not NotifySaveGameChunkCreated and not NotifySaveGameTransferProgressChanged)
+                    {
+                        _logger.LogObject(LogLevel.Information, "Received {MessageType}. ReceivedFrom={ReceivedFrom}, Consumers={Consumers}", metadata.Message, metadata.PlayerId, configuredHandlers.Count);
+                    }
 
                     var handlers = configuredHandlers.ToList();
                     foreach (var handler in handlers)

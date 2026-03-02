@@ -107,7 +107,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
 
         public GameModeType CurrentGameMode => Game.Instance.CurrentMode;
 
-        public bool IsPaused => Game.Instance.IsPaused;
+        public bool IsPaused => Game.Instance.IsPaused || Game.Instance.m_WillBePaused;
 
         public bool IsCapitalPartyMode => Game.Instance.Player.CapitalPartyMode;
 
@@ -1669,7 +1669,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
                     return;
                 }
 
-                _playerNotificationService.AddCombatText(WellKnownKeys.GameNotifications.SpellBook.ForgottenSpell.Key, CombatTextSeverity.Common, new AbilityTooltipLog(spellSlot.SpellShell), spellSlot.SpellShell.Name, new UnitEntityLog(unit.UniqueId));
+                _playerNotificationService.AddCombatText(WellKnownKeys.GameNotifications.SpellBook.ForgottenSpell.Key, CombatTextSeverity.Common, new AbilityTooltipLog(spellSlot.SpellShell), new AbilityLogParameter(spellSlot.SpellShell.Name), new UnitLogParameter(unit.UniqueId));
                 spellbook.ForgetMemorized(spellSlot);
                 RefreshSpellbookUI();
             });
@@ -1696,7 +1696,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
                 var spellSlot = _gameStateLookupService.GetSpellSlot(spellbook, networkSpellSlot, networkAbility.SpellLevel);
                 var spell = networkAbility.Metamagic.HasValue ? _gameStateLookupService.GetCustomSpell(spellbook, networkAbility) : _gameStateLookupService.GetKnownSpell(spellbook, networkAbility);
                 spellbook.Memorize(spell, spellSlot);
-                _playerNotificationService.AddCombatText(WellKnownKeys.GameNotifications.SpellBook.MemorizedSpell.Key, CombatTextSeverity.Common, new AbilityTooltipLog(spell), spell.Name, new UnitEntityLog(unit.UniqueId));
+                _playerNotificationService.AddCombatText(WellKnownKeys.GameNotifications.SpellBook.MemorizedSpell.Key, CombatTextSeverity.Common, new AbilityTooltipLog(spell), new AbilityLogParameter(spell.Name), new UnitLogParameter(unit.UniqueId));
                 RefreshSpellbookUI();
             });
         }
@@ -1753,7 +1753,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
                 }
 
                 spellbook.RemoveCustomSpell(spell);
-                _playerNotificationService.AddCombatText(WellKnownKeys.GameNotifications.SpellBook.RemovedCustomSpell.Key, CombatTextSeverity.Common, new AbilityTooltipLog(spell), spell.Name, new UnitEntityLog(unit.UniqueId));
+                _playerNotificationService.AddCombatText(WellKnownKeys.GameNotifications.SpellBook.RemovedCustomSpell.Key, CombatTextSeverity.Common, new AbilityTooltipLog(spell), new AbilityLogParameter(spell.Name), new UnitLogParameter(unit.UniqueId));
                 _logger.LogInformation("Custom spell has been removed. UnitId={UnitId}, SpellName={SpellName}", unit.UniqueId, spell.NameForAcronym);
                 RefreshSpellbookUI();
             });
@@ -1816,7 +1816,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
                     {
                         var duplicateSpellMetamagicFlags = duplicate.MetamagicData.MetamagicMask.GetAllFlags();
                         _logger.LogInformation("Duplicate metamagic spell has been removed. UnitId={UnitId}, SpellName={SpellName}, Metamagic={Metamagic}", unit.UniqueId, duplicate.NameForAcronym, duplicateSpellMetamagicFlags);
-                        _playerNotificationService.AddCombatText(WellKnownKeys.GameNotifications.SpellBook.RemovedDuplicateMetamagicSpell.Key, CombatTextSeverity.Common, new AbilityTooltipLog(duplicate), duplicate.Name, new UnitEntityLog(unit.UniqueId));
+                        _playerNotificationService.AddCombatText(WellKnownKeys.GameNotifications.SpellBook.RemovedDuplicateMetamagicSpell.Key, CombatTextSeverity.Common, new AbilityTooltipLog(duplicate), new AbilityLogParameter(duplicate.Name), new UnitLogParameter(unit.UniqueId));
                         spellbook.RemoveCustomSpell(duplicate);
                     }
 
@@ -1827,7 +1827,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
                     }
 
                     var metamagicFlags = metaSpell.MetamagicData.MetamagicMask.GetAllFlags();
-                    _playerNotificationService.AddCombatText(WellKnownKeys.GameNotifications.SpellBook.NewMetamagicSpell.Key, CombatTextSeverity.Common, new AbilityTooltipLog(metaSpell), metaSpell.Name, new UnitEntityLog(unit.UniqueId), string.Join(", ", metamagicFlags));
+                    _playerNotificationService.AddCombatText(WellKnownKeys.GameNotifications.SpellBook.NewMetamagicSpell.Key, CombatTextSeverity.Common, new AbilityTooltipLog(metaSpell), new AbilityLogParameter(metaSpell.Name), new UnitLogParameter(unit.UniqueId), string.Join(", ", metamagicFlags));
                     _logger.LogInformation("Metamagic spell has been created. UnitId={UnitId}, SpellName={SpellName}, MetamagicFeatures={MetamagicFeatures}", unit.UniqueId, metamagicSpell.Ability.Name, metamagicFlags);
                     RefreshSpellbookUI();
                 }

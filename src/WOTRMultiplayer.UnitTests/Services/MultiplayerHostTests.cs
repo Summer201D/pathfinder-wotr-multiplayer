@@ -91,7 +91,7 @@ namespace WOTRMultiplayer.UnitTests.Services
         public void Create_NonEmptySavePathAndGameId_CallsNetworkServerStart()
         {
             // Arrange
-            var startUp = new NetworkGameStartUp(Guid.NewGuid().ToString());
+            var startUp = new NetworkGameStartUp() { SavePath = Guid.NewGuid().ToString(), IsNewGameSequence = false };
             var gameId = Guid.NewGuid().ToString();
             var settings = new NetworkMultiplayerSettings { HostPortRangeStart = 123, HostPortRangeEnd = 1234, NetworkAwaiterTimeout = TimeSpan.FromMinutes(1) };
             A.CallTo(() => _multiplayerSettingsProvider.GetSettings()).Returns(settings);
@@ -107,7 +107,7 @@ namespace WOTRMultiplayer.UnitTests.Services
         public void OnNotifyDropItem__CallsGameInteractionAndResendsMessage()
         {
             // Arrange
-            var startUp = new NetworkGameStartUp(Guid.NewGuid().ToString());
+            var startUp = new NetworkGameStartUp() { SavePath = Guid.NewGuid().ToString(), IsNewGameSequence = false };
             var gameId = Guid.NewGuid().ToString();
             var settings = new NetworkMultiplayerSettings() { HostPortRangeStart = 123, HostPortRangeEnd = 1234 };
             A.CallTo(() => _multiplayerSettingsProvider.GetSettings()).Returns(settings);
@@ -128,7 +128,7 @@ namespace WOTRMultiplayer.UnitTests.Services
         public void OnNotifyRestEnded__AddsToReadyListAndCallsGameInteractionService()
         {
             // Arrange
-            var startUp = new NetworkGameStartUp(Guid.NewGuid().ToString());
+            var startUp = new NetworkGameStartUp() { SavePath = Guid.NewGuid().ToString(), IsNewGameSequence = false };
             var gameId = Guid.NewGuid().ToString();
             var settings = new NetworkMultiplayerSettings() { HostPortRangeStart = 123, HostPortRangeEnd = 1234 };
             A.CallTo(() => _multiplayerSettingsProvider.GetSettings()).Returns(settings);
@@ -150,7 +150,7 @@ namespace WOTRMultiplayer.UnitTests.Services
         public void ClientGameServerConnectionConfirmed_PlayerNameExists_PlayerNameIsUpdated()
         {
             // Arrange
-            var startUp = new NetworkGameStartUp(Guid.NewGuid().ToString());
+            var startUp = new NetworkGameStartUp() { SavePath = Guid.NewGuid().ToString(), IsNewGameSequence = false };
             var gameId = Guid.NewGuid().ToString();
             var settings = new NetworkMultiplayerSettings() { HostPortRangeStart = 123, HostPortRangeEnd = 1234 };
             A.CallTo(() => _multiplayerSettingsProvider.GetSettings()).Returns(settings);
@@ -176,7 +176,7 @@ namespace WOTRMultiplayer.UnitTests.Services
         public void ClientGameServerConnectionConfirmed_BothHaveEmptyContentState_PlayerStateRemainsUnchanged()
         {
             // Arrange
-            var startUp = new NetworkGameStartUp(Guid.NewGuid().ToString());
+            var startUp = new NetworkGameStartUp() { SavePath = Guid.NewGuid().ToString(), IsNewGameSequence = false };
             var gameId = Guid.NewGuid().ToString();
             var settings = new NetworkMultiplayerSettings() { HostPortRangeStart = 123, HostPortRangeEnd = 1234 };
             A.CallTo(() => _multiplayerSettingsProvider.GetSettings()).Returns(settings);
@@ -203,7 +203,7 @@ namespace WOTRMultiplayer.UnitTests.Services
         public void ClientGameServerConnectionConfirmed_DlcContentStateIsDifferent_DiscrepantListContainsCorrectReasonAndNumberOfDLCs(ContentStateTestCase testCase)
         {
             // Arrange
-            var startUp = new NetworkGameStartUp(Guid.NewGuid().ToString());
+            var startUp = new NetworkGameStartUp() { SavePath = Guid.NewGuid().ToString(), IsNewGameSequence = false };
             var gameId = Guid.NewGuid().ToString();
             var settings = new NetworkMultiplayerSettings() { HostPortRangeStart = 123, HostPortRangeEnd = 1234 };
             A.CallTo(() => _multiplayerSettingsProvider.GetSettings()).Returns(settings);
@@ -246,7 +246,7 @@ namespace WOTRMultiplayer.UnitTests.Services
         public void ClientGameServerConnectionConfirmed_ModContentStateIsDifferent_DiscrepantListContainsCorrectReasonAndNumberOfDLCs(ContentStateTestCase testCase)
         {
             // Arrange
-            var startUp = new NetworkGameStartUp(Guid.NewGuid().ToString());
+            var startUp = new NetworkGameStartUp() { SavePath = Guid.NewGuid().ToString(), IsNewGameSequence = false };
             var gameId = Guid.NewGuid().ToString();
             var settings = new NetworkMultiplayerSettings() { HostPortRangeStart = 123, HostPortRangeEnd = 1234 };
             A.CallTo(() => _multiplayerSettingsProvider.GetSettings()).Returns(settings);
@@ -296,7 +296,7 @@ namespace WOTRMultiplayer.UnitTests.Services
         {
             // Arrange
             var gameMode = GameModeType.All.First(x => x.Index == (int)mode);
-            _multiplayerHost.Game = new NetworkGame(new NetworkGameStartUp(string.Empty))
+            _multiplayerHost.Game = new NetworkGame(new NetworkGameStartUp())
             {
                 LocalPlayerId = 12312313
             };
@@ -315,7 +315,7 @@ namespace WOTRMultiplayer.UnitTests.Services
         {
             // Arrange
             var gameMode = GameModeType.All.First(x => x.Index == (int)GameModeType.Enum.Rest);
-            _multiplayerHost.Game = new NetworkGame(new NetworkGameStartUp(string.Empty))
+            _multiplayerHost.Game = new NetworkGame(new NetworkGameStartUp())
             {
                 LocalPlayerId = NetworkingConsts.HostPlayerId,
                 Players = [

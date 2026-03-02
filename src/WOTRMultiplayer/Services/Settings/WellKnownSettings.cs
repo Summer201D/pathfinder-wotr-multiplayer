@@ -110,6 +110,9 @@ namespace WOTRMultiplayer.Services.Settings
 
             [Description("combat-turn-delay-for-ai")]
             public static WellKnownSettingKey<TimeSpan> CombatTurnDelayForAI { get; } = new(TimeSpan.FromSeconds(0.4d));
+
+            [Description("save-game-chunk-size")]
+            public static WellKnownSettingKey<int> SaveGameChunkSize { get; } = new(32768);
         }
     }
 }

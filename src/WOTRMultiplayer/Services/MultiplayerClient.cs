@@ -45,8 +45,6 @@ namespace WOTRMultiplayer.Services
 
         public Action OnNetworkError { get; set; }
 
-        public Action<NetworkGameConnectivity> OnConnected { get; set; }
-
         public Action<NetworkCharacter> OnCharacterOwnerChanged { get; set; }
 
         public bool IsActive => _networkClient.IsActive;
@@ -434,7 +432,10 @@ namespace WOTRMultiplayer.Services
 
         protected override void Send(object message)
         {
-            Logger.LogObject(LogLevel.Information, "Sending {MessageType}.", message);
+            if (message is not NotifySaveGameChunkCreated and not NotifySaveGameChunkReceived)
+            {
+                Logger.LogObject(LogLevel.Information, "Sending {MessageType}.", message);
+            }
             _networkClient.Send(message);
         }
 
@@ -474,6 +475,23 @@ namespace WOTRMultiplayer.Services
             }
         }
 
+        protected override void OnSaveGameChunkSaved(int chunkNumber)
+        {
+            if (Game.StartUp.AutoStart)
+            {
+                return;
+            }
+
+            var confirmation = new NotifySaveGameChunkReceived { ChunkNumber = chunkNumber };
+            Send(confirmation);
+        }
+
+        protected override void OnSaveGameChunksTransferCompleted()
+        {
+            var confirmation = new NotifySaveGameSyncStatusChanged { PlayerId = Game.LocalPlayerId, Status = NetworkLobbySyncStatus.Succeed.ToString() };
+            Send(confirmation);
+        }
+
         protected override void SetupNetworkMessageHandlers()
         {
             _networkClient.OnError = OnNetworkClientError;
@@ -486,14 +504,14 @@ namespace WOTRMultiplayer.Services
                .On<DiceRollValueRequest>(OnDiceRollValueRequest)
 
                // lobby
-               .On<NotifyLobbySaveGameChanged>(OnNotifyLobbySaveGameChanged)
                .On<GameServerConnectionSucceeded>(OnGameServerConnectionSucceeded)
                .On<NotifyLobbyPlayersChanged>(OnNotifyLobbyPlayersChanged)
                .On<NotifyLobbyCharactersChanged>(OnNotifyLobbyCharactersChanged)
                .On<NotifyCharacterOwnerChanged>(OnNotifyCharacterOwnerChanged)
                .On<NotifyGameStarted>(OnNotifyGameStarted)
-               .On<NotifyLobbySyncStatusChanged>(OnNotifyLobbySyncStatusChanged)
+               .On<NotifySaveGameSyncStatusChanged>(OnNotifyLobbySyncStatusChanged)
                .On<NotifyNewGameDifficultyChanged>(OnNotifyNewGameDifficultyChanged)
+               .On<NotifySaveGameTransferProgressChanged>(OnNotifySaveGameTransferProgressChanged)
 
                // new game sequence
                .On<NotifyNewGameSequencePhaseChanged>(OnNotifyNewGameSequencePhaseChanged)
@@ -508,6 +526,7 @@ namespace WOTRMultiplayer.Services
                .On<NotifyTransitionMapEntryChosen>(OnNotifyTransitionMapEntryChosen)
                .On<NotifyTransitionMapClosed>(OnNotifyTransitionMapClosed)
                .On<NotifyIslandMapEntryChosen>(OnNotifyIslandMapEntryChosen)
+               .On<NotifyAreaLoadingCompleted>(OnNotifyAreaLoadingCompleted)
 
                // leveling
                .On<NotifyLevelingStarted>(OnNotifyLevelingStarted)
@@ -650,6 +669,16 @@ namespace WOTRMultiplayer.Services
                // inventory
                .On<NotifyPolymorphicItemCreated>(OnNotifyPolymorphicItemCreated)
                ;
+        }
+
+        private void OnNotifyAreaLoadingCompleted(long receivedFrom, NotifyAreaLoadingCompleted message)
+        {
+            SetAreaSeed(message.AreaSeed);
+        }
+
+        private void OnNotifySaveGameTransferProgressChanged(long receivedFrom, NotifySaveGameTransferProgressChanged message)
+        {
+            OnSaveGameTransferProgressChanged?.Invoke([.. message.Players]);
         }
 
         private void OnNotifyKingdomSettlementUpgraded(long receivedFrom, NotifyKingdomSettlementUpgraded message)
@@ -1344,7 +1373,7 @@ namespace WOTRMultiplayer.Services
             ResetPlayersTracker(Game.PlayersInGroupChanger);
         }
 
-        private void OnNotifyLobbySyncStatusChanged(long receivedFrom, NotifyLobbySyncStatusChanged lobbySyncStatusChanged)
+        private void OnNotifyLobbySyncStatusChanged(long receivedFrom, NotifySaveGameSyncStatusChanged lobbySyncStatusChanged)
         {
             var status = Mapper.Map<NetworkLobbySyncStatus>(lobbySyncStatusChanged.Status);
             UpdateLobbySyncStatus(lobbySyncStatusChanged.PlayerId, status);
@@ -1374,7 +1403,7 @@ namespace WOTRMultiplayer.Services
 
         private void OnNotifyInvalidCombatTurnStarted(long playerId, NotifyInvalidCombatTurnStarted message)
         {
-            PlayerNotification.AddCombatText(WellKnownKeys.GameNotifications.Combat.Turn.ClientOrderDesync.Key, CombatTextSeverity.Debug, new UnitEntityLog(message.UnitId));
+            PlayerNotification.AddCombatText(WellKnownKeys.GameNotifications.Combat.Turn.ClientOrderDesync.Key, CombatTextSeverity.Debug, new UnitLogParameter(message.UnitId));
             ResetCombatTurn();
             CombatInteraction.StartTurnBasedCombatTurn(message.UnitId);
         }
@@ -1575,18 +1604,6 @@ namespace WOTRMultiplayer.Services
 
         private void OnNotifyGamePauseEnded(long playerId, NotifyGamePauseEnded message)
         {
-            if (message.AreaSeed.HasValue)
-            {
-                SetAreaSeed(message.AreaSeed.Value);
-            }
-
-            if (message.Party.Count > 0)
-            {
-                var party = Mapper.Map<List<NetworkUnit>>(message.Party);
-                CombatInteraction.UpdateUnits(party, updatePosition: false);
-                Logger.LogInformation("Party units have been updated");
-            }
-
             Game.ForcedPause = null;
             GameInteraction.SetPause(false);
         }
@@ -1636,17 +1653,6 @@ namespace WOTRMultiplayer.Services
                 Logger.LogError(ex, "Unable to handle changed character ownership");
                 throw;
             }
-        }
-
-        private void OnNotifyLobbySaveGameChanged(long playerId, NotifyLobbySaveGameChanged notifyLobbySaveGameChanged)
-        {
-            UpdateSaveInfo(notifyLobbySaveGameChanged.GameId, notifyLobbySaveGameChanged.Content);
-
-            Game.LoadedSaveSeed = notifyLobbySaveGameChanged.Seed;
-
-            Logger.LogInformation("Game is ready to be started. SavePath={SavePath}, LoadedSaveSeed={LoadedSaveSeed}", Game.StartUp.SavePath, Game.LoadedSaveSeed);
-            var confirmationMessage = new NotifyLobbySyncStatusChanged { PlayerId = Game.LocalPlayerId, Status = NetworkLobbySyncStatus.Succeed.ToString() };
-            Send(confirmationMessage);
         }
 
         private void OnNotifyLobbyCharactersChanged(long playerId, NotifyLobbyCharactersChanged lobbyCharactersChanged)

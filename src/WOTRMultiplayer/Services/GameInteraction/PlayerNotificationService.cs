@@ -73,6 +73,21 @@ namespace WOTRMultiplayer.Services.GameInteraction
             });
         }
 
+        public void AddCombatText(RulebookEvent rulebookEvent)
+        {
+            _mainThreadAccessor.Post(() =>
+            {
+                var logEvent = GameLogEventsFactory.Create(rulebookEvent);
+                if (logEvent == null)
+                {
+                    _logger.LogWarning("Unable to create combat log event for specified rule. RuleType={RuleType}", rulebookEvent?.GetType().Name);
+                    return;
+                }
+
+                Game.Instance.GameLogController.AddReadyEvent(logEvent);
+            });
+        }
+
         private void AddCombatText(string messageKey, CombatTextSeverity combatTextSeverity, TooltipBaseTemplate template, params object[] args)
         {
             var combatLogVM = _uiAccessor.CombatLogPCView?.ViewModel;
@@ -103,29 +118,18 @@ namespace WOTRMultiplayer.Services.GameInteraction
         {
             foreach (var param in args)
             {
-                if (param is UnitEntityLog unit)
+                switch (param)
                 {
-                    yield return GetUnitName(unit);
-                    continue;
+                    case UnitLogParameter unit:
+                        yield return GetUnitName(unit);
+                        continue;
+                    case ColorizedParameter colorized:
+                        yield return GetColorizedParameter(colorized);
+                        continue;
                 }
 
                 yield return param;
             }
-        }
-
-        public void AddCombatText(RulebookEvent rulebookEvent)
-        {
-            _mainThreadAccessor.Post(() =>
-            {
-                var logEvent = GameLogEventsFactory.Create(rulebookEvent);
-                if (logEvent == null)
-                {
-                    _logger.LogWarning("Unable to create combat log event for specified rule. RuleType={RuleType}", rulebookEvent?.GetType().Name);
-                    return;
-                }
-
-                Game.Instance.GameLogController.AddReadyEvent(logEvent);
-            });
         }
 
         private string GetLocalizedText(string messageKey, params object[] args)
@@ -135,7 +139,14 @@ namespace WOTRMultiplayer.Services.GameInteraction
             return message;
         }
 
-        private string GetUnitName(UnitEntityLog unitLog)
+        private string GetColorizedParameter(ColorizedParameter colorizedParameter)
+        {
+            string textColor = ColorUtility.ToHtmlStringRGB(colorizedParameter.Color);
+            var value = $"<b><color=#{textColor}>{colorizedParameter.Value}</color></b>";
+            return value;
+        }
+
+        private string GetUnitName(UnitLogParameter unitLog)
         {
             var unit = _gameStateLookupService.GetUnitEntity(unitLog.UnitId);
             if (unit == null)

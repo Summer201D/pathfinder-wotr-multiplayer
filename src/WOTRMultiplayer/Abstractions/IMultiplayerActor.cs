@@ -56,6 +56,8 @@ namespace WOTRMultiplayer.Abstractions
 
         Action<bool> OnNewGameSequenceStarted { get; set; }
 
+        Action<List<KeyValuePair<long, int>>> OnSaveGameTransferProgressChanged { get; set; }
+
         int SessionSeed { get; }
 
         int? LoadedSaveSeed { get; }

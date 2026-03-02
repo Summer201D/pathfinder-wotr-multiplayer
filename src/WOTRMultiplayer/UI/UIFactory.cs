@@ -687,6 +687,12 @@ namespace WOTRMultiplayer.UI
                 WellKnownSettings.DangerZone.CombatTurnDelayForAI,
                 new TimeSpanValidator(),
                 TimeSpanValidator.MaxLength);
+            yield return CreateIntInputSetting(
+                WellKnownKeys.Settings.DangerZone.SaveGameChunkSize.Title.Key,
+                WellKnownKeys.Settings.DangerZone.SaveGameChunkSize.Tooltip.Key,
+                WellKnownSettings.DangerZone.SaveGameChunkSize,
+                new NetworkChunkSizeValidator(),
+                NetworkChunkSizeValidator.MaxLength);
         }
 
         private SettingEntityKeyBindingVM CreateKeyBindingSetting(string titleKey, string tooltipKey, WellKnownSettingKey<KeyBindingPair> settingKey)

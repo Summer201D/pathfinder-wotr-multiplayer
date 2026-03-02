@@ -109,7 +109,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
                 return;
             }
 
-            _playerNotificationService.AddCombatText(WellKnownKeys.GameNotifications.Combat.Buffs.AddedBuffs.Key, CombatTextSeverity.Critical, new UnitEntityLog(unit.UniqueId), string.Join(", ", remoteUnitBuffs.Select(x => x.Name)));
+            _playerNotificationService.AddCombatText(WellKnownKeys.GameNotifications.Combat.Buffs.AddedBuffs.Key, CombatTextSeverity.Critical, new UnitLogParameter(unit.UniqueId), string.Join(", ", remoteUnitBuffs.Select(x => x.Name)));
             foreach (var buffToAdd in remoteUnitBuffs)
             {
                 var caster = _gameStateLookupService.GetUnitEntity(buffToAdd.CasterId) ?? unit;
@@ -175,7 +175,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
                 return;
             }
 
-            _playerNotificationService.AddCombatText(WellKnownKeys.GameNotifications.Combat.Buffs.RemovedBuffs.Key, CombatTextSeverity.Debug, new UnitEntityLog(unit.UniqueId), string.Join(", ", unitBuffs.Select(x => x.NameForAcronym)));
+            _playerNotificationService.AddCombatText(WellKnownKeys.GameNotifications.Combat.Buffs.RemovedBuffs.Key, CombatTextSeverity.Debug, new UnitLogParameter(unit.UniqueId), string.Join(", ", unitBuffs.Select(x => x.NameForAcronym)));
             foreach (var buffToRemove in unitBuffs)
             {
                 GameHelper.RemoveBuff(unit, buffToRemove.Blueprint);
