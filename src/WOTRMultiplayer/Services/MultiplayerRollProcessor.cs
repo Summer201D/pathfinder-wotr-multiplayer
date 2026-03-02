@@ -624,25 +624,8 @@ namespace WOTRMultiplayer.Services
             var isMeaningful = IsMeaningfulRoll(rule);
             var isEnabledForRule = rule switch
             {
-                RuleSavingThrow
-                or RuleSkillCheck
-                or RuleHealDamage
-                or RuleSpellResistanceCheck
-                or RuleCheckCastingDefensively
-                or RuleInitiativeRoll
-                or RuleConcealmentCheck
-                or RuleCheckConcentration
-                or RuleEnterStealth
-                or RuleCastSpell
-                or RuleDispelMagic
-                or RuleAttackRoll.ParryData
-                or RuleRollChance
-                or RuleDrainEnergy
-                or RuleCombatManeuver
-                or RuleDealStatDamage
-                or RuleCalculateDamage => true,
                 RuleAttackRoll => false,
-                _ => false,
+                _ => true,
             };
 
             var isRolled = isMeaningful && isEnabledForRule;
@@ -675,10 +658,11 @@ namespace WOTRMultiplayer.Services
 
         private bool IsMeaningfulRoll(object rule)
         {
+            const string HelperUnitPrefix = "description-helper-";
             if (
-                rule is RulebookTargetEvent rulebookTargetEvent && !string.IsNullOrEmpty(rulebookTargetEvent.Target?.UniqueId) && rulebookTargetEvent.Target.UniqueId.StartsWith("description-helper-", StringComparison.OrdinalIgnoreCase)
+                rule is RulebookTargetEvent rulebookTargetEvent && !string.IsNullOrEmpty(rulebookTargetEvent.Target?.UniqueId) && rulebookTargetEvent.Target.UniqueId.StartsWith(HelperUnitPrefix, StringComparison.OrdinalIgnoreCase)
                     ||
-                rule is RulebookEvent rulebookEvent && !string.IsNullOrEmpty(rulebookEvent.Initiator?.UniqueId) && rulebookEvent.Initiator.UniqueId.StartsWith("description-helper-", StringComparison.OrdinalIgnoreCase))
+                rule is RulebookEvent rulebookEvent && !string.IsNullOrEmpty(rulebookEvent.Initiator?.UniqueId) && rulebookEvent.Initiator.UniqueId.StartsWith(HelperUnitPrefix, StringComparison.OrdinalIgnoreCase))
             {
                 return false;
             }
@@ -783,24 +767,6 @@ namespace WOTRMultiplayer.Services
             };
 
             return roll;
-        }
-
-        private int? GetDamageRollId(RuleCalculateDamage ruleCalculateDamage)
-        {
-            NetworkDiceRollBase roll = GetDamageRoll(ruleCalculateDamage);
-            if (roll == null)
-            {
-                return null;
-            }
-
-            var rollId = GetDiceRollId(roll);
-            if (rollId == null)
-            {
-                _logger.LogWarning("Unable to get damage roll id due to unability to generate rollId. InitiatorName={InitiatorName}, InitiatorId={InitiatorId}", ruleCalculateDamage.Initiator?.CharacterName, ruleCalculateDamage.Initiator?.UniqueId);
-                return null;
-            }
-
-            return rollId.Value;
         }
 
         private T RetrieveRoll<T>(NetworkDiceRollBase networkDiceRoll, UnitEntityData initiator)

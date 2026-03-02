@@ -518,7 +518,10 @@ namespace WOTRMultiplayer.Services
 
             lock (ActionLock)
             {
-                Game.ForcedPause = null;
+                if (Game.ForcedPause != null && Game.ForcedPause.Reason == NetworkForcedPauseReason.Manual)
+                {
+                    Game.ForcedPause = null;
+                }
             }
 
             Game.Combat = new NetworkCombat { StartedAt = DateTime.UtcNow };
@@ -727,7 +730,10 @@ namespace WOTRMultiplayer.Services
             {
                 lock (ActionLock)
                 {
-                    Game.ForcedPause = null;
+                    if (Game.ForcedPause != null && Game.ForcedPause.Reason == NetworkForcedPauseReason.Manual)
+                    {
+                        Game.ForcedPause = null;
+                    }
                 }
             }
 

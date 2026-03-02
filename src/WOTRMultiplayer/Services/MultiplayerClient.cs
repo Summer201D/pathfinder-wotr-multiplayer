@@ -1490,7 +1490,7 @@ namespace WOTRMultiplayer.Services
 
         private async void OnNotifyCombatInitializationRequired(long playerId, NotifyCombatInitializationRequired message)
         {
-            await WaitWhileTrue(() => Game.Combat == null, "Combat has not been started on client yet. Waiting until start");
+            await WaitWhileTrue(() => Game.Combat == null || Game.CurrentArea == null || Game.CurrentArea.Seed == 0, "Combat has not been started on client yet. Waiting until start");
 
             Game.Combat.Seed = message.CombatSeed;
             Logger.LogInformation("Combat seed has been configured. Seed={Seed}", Game.Combat.Seed);
