@@ -16,7 +16,7 @@ namespace WOTRMultiplayer.HarmonyPatches.Rolls
         [HarmonyPostfix]
         public static void RuleAttackRoll_OnTrigger_Postfix(RuleAttackRoll __instance)
         {
-            if (!Main.Multiplayer.IsActive || PatchesUtils.IsHelperUnit(__instance.Initiator.UniqueId) || PatchesUtils.IsHelperUnit(__instance.Target.UniqueId))
+            if (!Main.Multiplayer.IsActive)
             {
                 return;
             }

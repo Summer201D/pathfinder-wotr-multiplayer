@@ -213,7 +213,7 @@ namespace WOTRMultiplayer.Services
                     return;
                 }
 
-                if (!ruleAttackRoll.IsCriticalRoll && !IsRolledDeterministically(RuleAttackRollSubType.None) && ShouldStoreRoll(ruleAttackRoll))
+                if (!IsRolledDeterministically(RuleAttackRollSubType.None) && ShouldStoreRoll(ruleAttackRoll))
                 {
                     var roll = CreateAttackRoll(NetworkDiceRollType.Hit, ruleAttackRoll, isCriticalRoll: false);
                     SaveIntRollValue(roll, ruleAttackRoll.D20);
@@ -1221,13 +1221,13 @@ namespace WOTRMultiplayer.Services
 
         private RuleRollD20 RollCriticalAttackRoll(RuleAttackRoll ruleAttackRoll)
         {
-            var fortificationAttackRoll = CreateAttackRoll(NetworkDiceRollType.Hit, ruleAttackRoll, isCriticalRoll: true);
+            var criticalRoll = CreateAttackRoll(NetworkDiceRollType.Critical, ruleAttackRoll, isCriticalRoll: true);
             var formula = GetDiceFormula(WellKnownDiceFormulaKind.CriticalAttackRoll);
             if (formula == null)
             {
                 return null;
             }
-            var deterministicRoll = RollDice(fortificationAttackRoll, formula.Formula, formula.Rerolls);
+            var deterministicRoll = RollDice(criticalRoll, formula.Formula, formula.Rerolls);
 
             var d20 = RuleRollD20.FromInt(ruleAttackRoll.Initiator, deterministicRoll.Result);
             d20.RollHistory = deterministicRoll.History;

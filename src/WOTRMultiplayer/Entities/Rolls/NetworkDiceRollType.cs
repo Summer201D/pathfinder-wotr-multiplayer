@@ -4,6 +4,7 @@
     {
         Hit,
         Damage,
-        Heal
+        Heal,
+        Critical
     }
 }
