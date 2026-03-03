@@ -2042,11 +2042,11 @@ namespace WOTRMultiplayer.Services
             OnAfterNetworkMessageHandled(receivedFrom, lobbySyncStatusChanged);
         }
 
-        private async void OnClientAreaLoaded(long receivedFrom, ClientAreaLoaded message)
+        private void OnClientAreaLoaded(long receivedFrom, ClientAreaLoaded message)
         {
-            await WaitWhileTrue(() => Game.ForcedPause == null, "Waiting for game to finish loading and initialize local force pause");
             lock (ActionLock)
             {
+                EnsureForcePaused(NetworkForcedPauseReason.AreaLoading);
                 Game.ForcedPause.ReadyPlayers.Add(receivedFrom);
             }
 
