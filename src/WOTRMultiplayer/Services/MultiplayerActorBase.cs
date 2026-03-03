@@ -2823,6 +2823,8 @@ namespace WOTRMultiplayer.Services
                 Send(chunkMessage);
                 chunkNumber++;
             }
+
+            Logger.LogInformation("Last save game chunk has been sent. LastChunkNumber={LastChunkNumber}", chunkNumber);
         }
 
         protected HashSet<long> AddPlayerReadyStatus(PlayerTurnReadinessType playerReadinessType, long playerId, string unitId)

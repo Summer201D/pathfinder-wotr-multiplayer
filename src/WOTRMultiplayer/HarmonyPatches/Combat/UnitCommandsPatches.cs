@@ -7,7 +7,6 @@ using System.Threading;
 using HarmonyLib;
 using Kingmaker;
 using Kingmaker.Armies.TacticalCombat;
-using Kingmaker.ElementsSystem;
 using Kingmaker.EntitySystem.Entities;
 using Kingmaker.TurnBasedMode;
 using Kingmaker.UnitLogic;
@@ -15,7 +14,6 @@ using Kingmaker.UnitLogic.Abilities;
 using Kingmaker.UnitLogic.Class.Kineticist;
 using Kingmaker.UnitLogic.Commands;
 using Kingmaker.UnitLogic.Commands.Base;
-using Kingmaker.UnitLogic.FactLogic;
 using Kingmaker.UnitLogic.Parts;
 using Microsoft.Extensions.Logging;
 using UnityEngine;
@@ -445,12 +443,14 @@ namespace WOTRMultiplayer.HarmonyPatches.Combat
         {
             var movementLimit = Game.Instance.TurnBasedCombatController.CurrentTurn?.CurrentMovementLimit;
             var path = PathVisualizer.Instance?.m_CurrentPath?.vectorPath;
+            var attackMode = Game.Instance.TurnBasedCombatController.CurrentTurn?.m_AttackMode;
             var unitMoveTo = new NetworkUnitMoveTo
             {
                 InitiatorUnitId = unitId,
                 VectorPath = [.. path?.Select(x => x.ToNetworkVector3()) ?? []],
                 Destination = destination.ToNetworkVector3(),
-                MovementLimit = movementLimit?.ToString()
+                MovementLimit = movementLimit?.ToString(),
+                AttackMode = attackMode?.ToString()
             };
 
             Main.Multiplayer.OnUnitMoveTo(unitMoveTo);

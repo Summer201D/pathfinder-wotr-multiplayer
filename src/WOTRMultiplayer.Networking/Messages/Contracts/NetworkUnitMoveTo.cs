@@ -30,5 +30,9 @@ namespace WOTRMultiplayer.Networking.Messages.Contracts
         [ProtoMember(6)]
         [LogMe]
         public float MovementDelay { get; set; }
+
+        [ProtoMember(7)]
+        [LogMe]
+        public string AttackMode { get; set; }
     }
 }

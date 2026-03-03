@@ -1143,6 +1143,12 @@ namespace WOTRMultiplayer.Services.GameInteraction
             SetCommandPath(networkUnitMoveTo.VectorPath, command);
             SetTurnMovementLimit(networkUnitMoveTo.MovementLimit, executorUnit);
 
+            var turn = Game.Instance.TurnBasedCombatController.CurrentTurn;
+            if (turn != null)
+            {
+                turn.m_AttackMode = (TurnController.AttackMode)Enum.Parse(typeof(TurnController.AttackMode), networkUnitMoveTo.AttackMode);
+            }
+
             executorUnit.Commands.Run(command);
             _logger.LogInformation("Unit MoveTo command has been initiated. UnitId={UnitId}, Destination={Destination}, Path={Path}, MovementLimit={MovementLimit}",
                 networkUnitMoveTo.InitiatorUnitId, networkUnitMoveTo.Destination, networkUnitMoveTo.VectorPath, networkUnitMoveTo.MovementLimit);

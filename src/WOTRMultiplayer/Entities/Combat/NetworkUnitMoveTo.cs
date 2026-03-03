@@ -15,5 +15,7 @@ namespace WOTRMultiplayer.Entities.Combat
         public float? Orientation { get; set; }
 
         public float MovementDelay { get; set; }
+
+        public string AttackMode { get; set; }
     }
 }
