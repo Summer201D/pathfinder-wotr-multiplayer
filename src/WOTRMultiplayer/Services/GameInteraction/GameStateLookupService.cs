@@ -205,6 +205,11 @@ namespace WOTRMultiplayer.Services.GameInteraction
             return action;
         }
 
+        public AbilityData GetSpecialSpell(Spellbook spellbook, NetworkAbility ability)
+        {
+            return GetSpecialSpell(spellbook, ability.Id, ability.BlueprintId, ability.SpellLevel, ability.Metamagic);
+        }
+
         public AbilityData GetCustomSpell(Spellbook spellbook, NetworkAbility ability)
         {
             return GetCustomSpell(spellbook, ability.Id, ability.BlueprintId, ability.SpellLevel, ability.Metamagic);
@@ -229,6 +234,18 @@ namespace WOTRMultiplayer.Services.GameInteraction
             }
 
             var spells = spellbook.m_CustomSpells[spellLevel];
+            var spell = GetSpell(spells, abilityId, abilityBlueprintId, metamagic);
+            return spell;
+        }
+
+        private AbilityData GetSpecialSpell(Spellbook spellbook, string abilityId, string abilityBlueprintId, int spellLevel, int? metamagic)
+        {
+            if (spellbook.m_SpecialSpells.Length <= spellLevel)
+            {
+                return null;
+            }
+
+            var spells = spellbook.m_SpecialSpells[spellLevel];
             var spell = GetSpell(spells, abilityId, abilityBlueprintId, metamagic);
             return spell;
         }
@@ -281,7 +298,8 @@ namespace WOTRMultiplayer.Services.GameInteraction
             {
                 var spellConversionSource = GetKnownSpell(spellbook, networkAbility.ConvertedFromId, networkAbility.BlueprintId, networkAbility.SpellLevel, networkAbility.Metamagic)
                     ?? GetMemorizedSpell(spellbook, networkAbility.ConvertedFromId, networkAbility.BlueprintId, networkAbility.SpellLevel, networkAbility.Metamagic)
-                    ?? GetCustomSpell(spellbook, networkAbility.ConvertedFromId, networkAbility.BlueprintId, networkAbility.SpellLevel, networkAbility.Metamagic);
+                    ?? GetCustomSpell(spellbook, networkAbility.ConvertedFromId, networkAbility.BlueprintId, networkAbility.SpellLevel, networkAbility.Metamagic)
+                    ?? GetSpecialSpell(spellbook, networkAbility.ConvertedFromId, networkAbility.BlueprintId, networkAbility.SpellLevel, networkAbility.Metamagic);
 
                 if (spellConversionSource == null)
                 {
@@ -318,6 +336,13 @@ namespace WOTRMultiplayer.Services.GameInteraction
             if (customSpell != null)
             {
                 _logger.LogInformation("Spell has been found in custom spells. UnitId={UnitId}, AbilityId={AbilityId}, SpellbookName={SpellbookName}", unit.UniqueId, networkAbility.Id, spellbook.Blueprint.Name);
+                return customSpell;
+            }
+
+            var specialSpell = GetSpecialSpell(spellbook, networkAbility);
+            if (specialSpell != null)
+            {
+                _logger.LogInformation("Spell has been found in special spells. UnitId={UnitId}, AbilityId={AbilityId}, SpellbookName={SpellbookName}", unit.UniqueId, networkAbility.Id, spellbook.Blueprint.Name);
                 return customSpell;
             }
 

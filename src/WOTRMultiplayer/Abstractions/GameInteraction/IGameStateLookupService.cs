@@ -52,5 +52,7 @@ namespace WOTRMultiplayer.Abstractions.GameInteraction
         AiAction FindAIAction(UnitEntityData unit, NetworkAIAction networkAIAction);
 
         SettlementState GetKingdomSettlement(NetworkKingdomSettlement settlement);
+
+        AbilityData GetSpecialSpell(Spellbook spellbook, NetworkAbility networkAbility);
     }
 }
