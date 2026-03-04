@@ -304,7 +304,7 @@ namespace WOTRMultiplayer.HarmonyPatches.Combat
                 {
                     case UnitAttack unitAttack:
                         // rider is still attacking, no need to interfere with attacks
-                        if (__instance.Executor.SaddledPart != null && __instance.Executor.SaddledPart.Rider.HasOffensiveCommand())
+                        if (__instance.Executor.SaddledPart != null && __instance.Executor.SaddledPart.Rider.HasOffensiveCommand(x => x.IsStarted))
                         {
                             return;
                         }
