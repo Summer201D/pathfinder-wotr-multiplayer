@@ -641,7 +641,7 @@ namespace WOTRMultiplayer.Services
                 RuleAttackRollSubType.Critical => true,
 
                 // default attack roll
-                RuleAttackRollSubType.None => false,
+                RuleAttackRollSubType.None => true,
                 _ => false,
             };
 
