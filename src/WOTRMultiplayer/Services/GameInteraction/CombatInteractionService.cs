@@ -422,7 +422,10 @@ namespace WOTRMultiplayer.Services.GameInteraction
                         if (unit != null)
                         {
                             unit.Descriptor.State.Features.IsUntargetable.ReleaseAll();
-                            unit.Group.IsInCombat--;
+                            if (unit.Group.IsInCombat.m_GuardCount > 0)
+                            {
+                                unit.Group.IsInCombat--;
+                            }
                         }
                     }
                     else

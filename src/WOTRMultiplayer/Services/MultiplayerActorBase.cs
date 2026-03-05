@@ -679,7 +679,10 @@ namespace WOTRMultiplayer.Services
 
                 if (Game.Combat.ConfirmedMidCombatUnits.Contains(unitId))
                 {
-                    CombatInteraction.MakeUnitTargetable(unitId, isTargetable: true);
+                    if (Game.Combat.UntargetableUnits.Remove(unitId))
+                    {
+                        CombatInteraction.MakeUnitTargetable(unitId, isTargetable: true);
+                    }
 
                     Logger.LogWarning("Unit has been allowed to join mid combat. UnitId={UnitId}", unitId);
                     return true;
