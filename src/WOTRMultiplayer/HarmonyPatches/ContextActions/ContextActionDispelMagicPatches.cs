@@ -50,15 +50,28 @@ namespace WOTRMultiplayer.HarmonyPatches.ContextActions
 
             try
             {
-                buffs.Sort((b1, b2) =>
+                var sessionSeed = Main.Multiplayer.GetSessionSeed();
+                var loadedSaveSeed = Main.Multiplayer.GetLoadedSaveSeed();
+                var combatSeed = Main.Multiplayer.GetCombatSeed();
+                var combatTurnSeed = Main.Multiplayer.GetCombatTurnSeed();
+                var crusadeCombatTurnSeed = Main.Multiplayer.GetCrusadeArmyCombatSeed();
+
+                var fullSeed = $"{combatSeed}:{loadedSaveSeed}:{combatSeed}:{combatTurnSeed}:{crusadeCombatTurnSeed}";
+
+                buffs.Sort((buff1, buff2) =>
                 {
-                    int result = -b1.Context.Params.CasterLevel.CompareTo(b2.Context.Params.CasterLevel);
+                    int result = -buff1.Context.Params.CasterLevel.CompareTo(buff2.Context.Params.CasterLevel);
                     if (result != 0)
                     {
                         return result;
                     }
 
-                    return string.Compare(b1.Blueprint?.name, b2.Blueprint?.name, StringComparison.OrdinalIgnoreCase);
+                    var buff1Identifier = fullSeed + buff1.Blueprint?.name;
+                    var buff2Identifier = fullSeed + buff2.Blueprint?.name;
+                    var buff1Seed = Main.HashService.Murmur3(buff1Identifier);
+                    var buff2Seed = Main.HashService.Murmur3(buff2Identifier);
+
+                    return buff1Seed.CompareTo(buff2Seed);
                 });
             }
             catch (Exception ex)

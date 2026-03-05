@@ -12,6 +12,7 @@ using UnityEngine;
 using UnityModManagerNet;
 using WOTRMultiplayer.Abstractions;
 using WOTRMultiplayer.Abstractions.GameInteraction;
+using WOTRMultiplayer.Abstractions.Hashing;
 using WOTRMultiplayer.Abstractions.Localization;
 using WOTRMultiplayer.Abstractions.Settings;
 using WOTRMultiplayer.Abstractions.UI;
@@ -40,6 +41,8 @@ namespace WOTRMultiplayer
         public static IUIAccessor UIAccessor { get; private set; }
 
         public static IMapper Mapper { get; private set; }
+
+        public static IHashService HashService { get; private set; }
 
         public static IMultiplayerRollsProcessor Rolls { get; private set; }
 
@@ -79,6 +82,7 @@ namespace WOTRMultiplayer
                 Mapper = _serviceProvider.GetRequiredService<IMapper>();
                 PlayerNotification = _serviceProvider.GetRequiredService<IPlayerNotificationService>();
                 State = _serviceProvider.GetRequiredService<IGameStateLookupService>();
+                HashService = _serviceProvider.GetRequiredService<IHashService>();
 
                 entry.OnGUI += OnGui;
                 entry.OnSaveGUI += OnSaveGui;
