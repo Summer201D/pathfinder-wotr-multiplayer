@@ -60,10 +60,10 @@ namespace WOTRMultiplayer.HarmonyPatches.ContextActions
                 var combatTurnSeed = Main.Multiplayer.GetCombatTurnSeed();
                 var armyCombatSeed = Main.Multiplayer.GetCrusadeArmyCombatSeed();
 
-                var unitId = contextActionOnRandomTargetsAround.AbilityContext.MaybeOwner?.UniqueId;
-                var targetId = contextActionOnRandomTargetsAround.AbilityContext.MainTarget?.Unit?.UniqueId;
-                var abilityName = contextActionOnRandomTargetsAround.AbilityContext.NameForAcronym;
-                var attackNumber = contextActionOnRandomTargetsAround.AbilityContext.AttackRoll?.RuleAttackWithWeapon?.AttackNumber ?? -1;
+                var unitId = contextActionOnRandomTargetsAround.AbilityContext?.MaybeOwner?.UniqueId;
+                var targetId = contextActionOnRandomTargetsAround.AbilityContext?.MainTarget?.Unit?.UniqueId;
+                var abilityName = contextActionOnRandomTargetsAround.AbilityContext?.NameForAcronym;
+                var attackNumber = contextActionOnRandomTargetsAround.AbilityContext?.AttackRoll?.RuleAttackWithWeapon?.AttackNumber ?? -1;
                 var units = string.Join(",", targets.Select(x => x.UniqueId));
                 var lifetime = combatSeed == 0 ? IdentifierLifetime.Area : IdentifierLifetime.CombatTurn;
                 var identifier = $"{nameof(ContextActionOnRandomTargetsAround)}:{nameof(SelectRandomTarget)}:{units}:{unitId}:{targetId}:{abilityName}:{attackNumber}_{sessionSeed}:{loadedSave}:{areaSeed}:{combatSeed}:{combatTurnSeed}:{armyCombatSeed}";
