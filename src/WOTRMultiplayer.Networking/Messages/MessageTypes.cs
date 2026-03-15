@@ -279,7 +279,8 @@
             NotifyUnitLootedUnit,
             NotifyMapObjectCombinePartInteracted,
             NotifySpellSlotsSwapped,
-            NotifyAreaLoadingCompleted
+            NotifyAreaLoadingCompleted,
+            NotifyAlyshenyrraCameraDirectionChanged
         }
 
         public enum Mod

@@ -4578,7 +4578,7 @@ namespace WOTRMultiplayer.Services
         {
             var isOutOfSupport = Game.CurrentArea.Chapter switch
             {
-                <= 3 => false,
+                <= 4 => false,
                 _ => true,
             };
 

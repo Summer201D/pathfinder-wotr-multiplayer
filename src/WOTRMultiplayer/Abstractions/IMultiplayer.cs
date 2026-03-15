@@ -266,6 +266,8 @@ namespace WOTRMultiplayer.Abstractions
 
         bool CanControlGlobalMap();
 
+        bool CanControlAlushenyrraIsles();
+
         void OnGlobalMapSkipDay();
 
         void OnGlobalMapDisposed();

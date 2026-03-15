@@ -465,5 +465,9 @@ namespace WOTRMultiplayer.Playground.Core.Dummies
         public void SwapSpellSlots(string unitId, string spellbookId, int spellLevel, NetworkSpellSlot slotA, NetworkSpellSlot slotB)
         {
         }
+
+        public void ChangeAlushenyrraIslesState(string cameraDirection)
+        {
+        }
     }
 }

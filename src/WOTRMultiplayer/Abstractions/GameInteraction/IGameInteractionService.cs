@@ -218,5 +218,7 @@ namespace WOTRMultiplayer.Abstractions.GameInteraction
         void ChooseIslandMapEntry(NetworkIslandMapTransition island);
 
         void InteractWithMapObjectCombinePart(NetworkMapObject mapObject, string unitId, int partIndex);
+
+        void ChangeAlushenyrraIslesState(string cameraDirection);
     }
 }

@@ -638,7 +638,15 @@ namespace WOTRMultiplayer.Services
 
                // inventory
                .On<NotifyPolymorphicItemCreated>(OnNotifyPolymorphicItemCreated)
+
+               // alushenyrra
+               .On<NotifyAlyshenyrraCameraDirectionChanged>(OnNotifyAlyshenyrraCameraDirectionChanged)
                ;
+        }
+
+        private void OnNotifyAlyshenyrraCameraDirectionChanged(long receivedFrom, NotifyAlyshenyrraCameraDirectionChanged message)
+        {
+            GameInteraction.ChangeAlushenyrraIslesState(message.Direction);
         }
 
         private void OnNotifyAreaLoadingCompleted(long receivedFrom, NotifyAreaLoadingCompleted message)

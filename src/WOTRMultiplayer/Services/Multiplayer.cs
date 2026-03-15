@@ -2451,6 +2451,11 @@ namespace WOTRMultiplayer.Services
             return _multiplayerActorAccessor.Current != null && _multiplayerActorAccessor.Host.IsActive;
         }
 
+        public bool CanControlAlushenyrraIsles()
+        {
+            return _multiplayerActorAccessor.Current != null && _multiplayerActorAccessor.Host.IsActive;
+        }
+
         public bool CanControlTacticalCombat()
         {
             return _multiplayerActorAccessor.Current != null && _multiplayerActorAccessor.Host.IsActive;

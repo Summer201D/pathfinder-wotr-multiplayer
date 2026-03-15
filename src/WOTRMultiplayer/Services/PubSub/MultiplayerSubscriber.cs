@@ -1,5 +1,6 @@
 ﻿using System;
 using AutoMapper;
+using Kingmaker.AreaLogic.AlushenyrraIsles;
 using Kingmaker.Blueprints.Area;
 using Kingmaker.EntitySystem.Entities;
 using Kingmaker.PubSubSystem;
@@ -21,7 +22,8 @@ namespace WOTRMultiplayer.Services.PubSub
         IPartyHandler,
         IAreaLoadingStagesHandler,
         IWarningNotificationUIHandler,
-        ITrapActivationHandler
+        ITrapActivationHandler,
+        ICameraRotationStateHandler
     {
         public MultiplayerSubscriber(
             ILogger<MultiplayerSubscriber> logger,
@@ -157,6 +159,24 @@ namespace WOTRMultiplayer.Services.PubSub
         public void OnAreaScenesLoaded()
         {
             Logger.LogInformation("OnAreaScenesLoaded");
+        }
+
+        public void StateChange(CameraDirection direction)
+        {
+            try
+            {
+                if (ActorAccessor.Current == null)
+                {
+                    return;
+                }
+
+                ActorAccessor.Host.OnAlushenyrraCameraDirectionChanged(direction.ToString());
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, "Unable to handle AlushenyrraCameraDirectionChanged event");
+                throw;
+            }
         }
 
         private void OnPartyChanged()

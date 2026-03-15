@@ -1133,6 +1133,15 @@ namespace WOTRMultiplayer.Services
             Send(message);
         }
 
+        public void OnAlushenyrraCameraDirectionChanged(string cameraDirection)
+        {
+            var message = new NotifyAlyshenyrraCameraDirectionChanged
+            {
+                Direction = cameraDirection
+            };
+            Send(message);
+        }
+
         public void OnKingdomEnterSettlement(NetworkKingdomSettlement kingdomSettlement, bool requiresUnloadEvent, bool exitSettlementToGlobalMap)
         {
             var message = new NotifyKingdomSettlementEntered

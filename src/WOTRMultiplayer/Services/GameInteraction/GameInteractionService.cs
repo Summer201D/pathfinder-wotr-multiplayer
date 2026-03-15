@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using Kingmaker;
+using Kingmaker.AreaLogic.AlushenyrraIsles;
 using Kingmaker.Blueprints;
 using Kingmaker.Blueprints.Items;
 using Kingmaker.Blueprints.Items.Components;
@@ -2304,6 +2305,17 @@ namespace WOTRMultiplayer.Services.GameInteraction
             });
         }
 
+        public void ChangeAlushenyrraIslesState(string cameraDirection)
+        {
+            _mainThreadAccessor.Post(() =>
+            {
+                var direction = (CameraDirection)Enum.Parse(typeof(CameraDirection), cameraDirection, true);
+                EventBus.RaiseEvent<ICameraRotationStateHandler>(x => x.StateChange(direction));
+
+                _logger.LogInformation("Alushenyrra camera state has been updated. Direction={Direction}", direction);
+            });
+        }
+
         public void InteractWithMapObjectCombinePart(NetworkMapObject networkMapObject, string interactedUnitId, int partIndex)
         {
             _mainThreadAccessor.Post(() =>
@@ -2357,7 +2369,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
                     }
                 }
 
-                _logger.LogWarning("MapObject combine part has been interacted. MapObjectId={MapObjectId}, PartIndex={PartIndex}", networkMapObject.Id, partIndex);
+                _logger.LogInformation("MapObject combine part has been interacted. MapObjectId={MapObjectId}, PartIndex={PartIndex}", networkMapObject.Id, partIndex);
             });
         }
 

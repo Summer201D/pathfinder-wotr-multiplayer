@@ -208,5 +208,7 @@ namespace WOTRMultiplayer.Abstractions
         void OnGlobalMapTeleport(NetworkGlobalMapLocation globalMapLocation);
 
         void OnKingdomUpgradeSettlement(NetworkKingdomSettlement kingdomSettlement);
+
+        void OnAlushenyrraCameraDirectionChanged(string cameraDirection);
     }
 }
