@@ -64,7 +64,6 @@ namespace WOTRMultiplayer.Config.DI
             serviceCollection.AddSingleton<IResourceProvider, ResourceBundleProvider>();
             serviceCollection.AddSingleton<IUIFactory, UIFactory>();
             serviceCollection.AddSingleton<IHashService, HashService>();
-            serviceCollection.AddSingleton<IDiceRollStorage, ClaimableDiceRollStorage>();
             serviceCollection.AddSingleton<ILocalizationService, LocalizationService>();
             serviceCollection.AddSingleton<ILocalizationManagerAccessor, LocalizationManagerAccessor>();
 

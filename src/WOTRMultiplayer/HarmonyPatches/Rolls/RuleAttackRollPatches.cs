@@ -12,18 +12,6 @@ namespace WOTRMultiplayer.HarmonyPatches.Rolls
     [HarmonyPatch]
     public class RuleAttackRollPatches
     {
-        [HarmonyPatch(typeof(RuleAttackRoll), nameof(RuleAttackRoll.OnTrigger))]
-        [HarmonyPostfix]
-        public static void RuleAttackRoll_OnTrigger_Postfix(RuleAttackRoll __instance)
-        {
-            if (!Main.Multiplayer.IsActive)
-            {
-                return;
-            }
-
-            Main.Rolls.OnAfterRuleAttackRollTrigger(__instance);
-        }
-
         /// <summary>
         /// D20 + CriticalD20 + Fortificationd100
         /// </summary>

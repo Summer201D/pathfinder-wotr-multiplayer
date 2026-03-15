@@ -17,7 +17,6 @@ using WOTRMultiplayer.Entities.MapObjects;
 using WOTRMultiplayer.Entities.NewGame;
 using WOTRMultiplayer.Entities.Ping;
 using WOTRMultiplayer.Entities.Rest;
-using WOTRMultiplayer.Entities.Rolls.Claiming.Values;
 using WOTRMultiplayer.Entities.Settings;
 using WOTRMultiplayer.Entities.SpellbookManagement;
 using WOTRMultiplayer.Entities.Spells;
@@ -59,29 +58,11 @@ namespace WOTRMultiplayer.Config.Mapping
             CreateMap<NetworkAbility, Networking.Messages.Contracts.NetworkAbility>()
                 .ReverseMap();
 
-            CreateMap<NetworkDamageRollValue, Networking.Messages.Contracts.NetworkDamageRollValue>()
-                .ReverseMap();
-
             CreateMap<NetworkUnit, Networking.Messages.Contracts.NetworkUnit>()
                 .ReverseMap();
 
             CreateMap<NetworkActivatableAbility, Networking.Messages.Contracts.NetworkActivatableAbility>()
                 .ReverseMap();
-
-            CreateMap<NetworkDamageListRollValue, Networking.Messages.Contracts.NetworkRollValue>()
-                .ForMember(m => m.DamageValues, o => o.MapFrom(v => v.Value))
-                .ReverseMap()
-                .ForMember(m => m.Value, o => o.MapFrom(v => v.DamageValues));
-
-            CreateMap<NetworkNamedIntRollValue, Networking.Messages.Contracts.NetworkRollValue>()
-                .ForMember(m => m.NamedIntValues, o => o.MapFrom(v => v.Value))
-                .ReverseMap()
-                .ForMember(m => m.Value, o => o.MapFrom(v => v.NamedIntValues));
-
-            CreateMap<NetworkIntRollValue, Networking.Messages.Contracts.NetworkRollValue>()
-                .ForMember(m => m.Result, o => o.MapFrom(v => v.Value))
-                .ReverseMap()
-                .ForMember(m => m.Value, o => o.MapFrom(v => v.Result));
 
             CreateMap<NetworkItem, Networking.Messages.Contracts.NetworkItem>()
                 .ReverseMap();
@@ -381,6 +362,9 @@ namespace WOTRMultiplayer.Config.Mapping
                 .ReverseMap();
 
             CreateMap<NetworkUnitLootUnit, Networking.Messages.Contracts.NetworkUnitLootUnit>()
+                .ReverseMap();
+
+            CreateMap<NetworkUnitEngagement, Networking.Messages.Contracts.NetworkUnitEngagement>()
                 .ReverseMap();
         }
     }

@@ -14,7 +14,6 @@ namespace WOTRMultiplayer.Abstractions
         bool OnBeforeRuleAttackFortificationRoll(RuleAttackRoll ruleAttackRoll);
 
         bool OnBeforeRuleAttackRoll(RuleAttackRoll ruleAttackRoll);
-        void OnAfterRuleAttackRollTrigger(RuleAttackRoll ruleAttackRoll);
 
         bool OnBeforeRuleSavingThrowRoll(RuleSavingThrow ruleSavingThrow);
 

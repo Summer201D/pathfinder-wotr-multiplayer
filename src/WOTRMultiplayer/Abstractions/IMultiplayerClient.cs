@@ -5,7 +5,7 @@ namespace WOTRMultiplayer.Abstractions
 {
     public interface IMultiplayerClient : IMultiplayerActor
     {
-        AddressParseResult Connect(string address);
+        void Connect(string address, int port);
 
         bool IsConnecting { get; }
 

@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using WOTRMultiplayer.Entities;
 using WOTRMultiplayer.Entities.Area;
 using WOTRMultiplayer.Entities.Combat.Crusades;

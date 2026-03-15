@@ -1,19 +1,14 @@
 ﻿using System;
-using System.Net;
-using System.Threading.Tasks;
 using AutoMapper;
 using FakeItEasy;
 using Microsoft.Extensions.Logging;
 using NUnit.Framework;
-using WOTRMultiplayer.Abstractions;
 using WOTRMultiplayer.Abstractions.GameInteraction;
 using WOTRMultiplayer.Abstractions.IO;
 using WOTRMultiplayer.Abstractions.Random;
 using WOTRMultiplayer.Abstractions.Settings;
 using WOTRMultiplayer.Config.Mapping;
-using WOTRMultiplayer.Entities.Rolls.Claiming.Values;
 using WOTRMultiplayer.Networking.Abstractions;
-using WOTRMultiplayer.Networking.Messages.Requests;
 using WOTRMultiplayer.Services;
 using WOTRMultiplayer.UnitTests.FakeRules;
 
@@ -33,10 +28,8 @@ namespace WOTRMultiplayer.UnitTests.Services
         private IPingInteractionService _pingInteractionService;
         private ICombatInteractionService _combatInteractionService;
         private IMultiplayerSettingsService _multiplayerSettingsProvider;
-        private IIPEndPointParser _endpointParser;
         private IFileSystemService _fileSystemService;
         private INetworkClient _networkClient;
-        private IDiceRollStorage _diceRollStorage;
         private IValueGenerator _valueGenerator;
         private IMapper _mapper;
 
@@ -56,7 +49,6 @@ namespace WOTRMultiplayer.UnitTests.Services
             _globalMapInteractionService = A.Fake<IGlobalMapInteractionService>();
             _pingInteractionService = A.Fake<IPingInteractionService>();
             _combatInteractionService = A.Fake<ICombatInteractionService>();
-            _endpointParser = A.Fake<IIPEndPointParser>();
             _multiplayerSettingsProvider = A.Fake<IMultiplayerSettingsService>();
             _fileSystemService = A.Fake<IFileSystemService>();
 
@@ -64,7 +56,6 @@ namespace WOTRMultiplayer.UnitTests.Services
             _networkClient = A.Fake<INetworkClient>();
             Fake.GetFakeManager(_networkClient).AddRuleFirst(new NetworkReceiverFakeRule());
 
-            _diceRollStorage = A.Fake<IDiceRollStorage>();
             _valueGenerator = A.Fake<IValueGenerator>();
 
             _multiplayerClient = new MultiplayerClient(
@@ -76,88 +67,25 @@ namespace WOTRMultiplayer.UnitTests.Services
                 _globalMapInteractionService,
                 _pingInteractionService,
                 _combatInteractionService,
-                _endpointParser,
                 _multiplayerSettingsProvider,
                 _fileSystemService,
                 _networkClient,
-                _diceRollStorage,
                 _valueGenerator,
                 _mapper);
         }
 
         [Test]
-        public void Connect_AddressIsNotParsed_ReturnsNotOkResult()
+        public void Connect_ValidAddress_CallsConnectOnNetworkClient()
         {
             // Arrange
-            var address = Guid.NewGuid().ToString();
-            A.CallTo(() => _endpointParser.Parse(address)).Returns(null);
+            var host = "192.168.1.1";
+            var port = 555;
 
             // Act
-            var result = _multiplayerClient.Connect(address);
+            _multiplayerClient.Connect(host, port);
 
             // Assert
-            Assert.That(result.IsOk, Is.False);
-        }
-
-        [Test]
-        public void Connect_InvalidPort_ReturnsNotOkResult()
-        {
-            // Arrange
-            IPAddress.TryParse("192.168.1.1", out var parsedAddress);
-            var endpoint = new IPEndPoint(parsedAddress, 0);
-            var address = Guid.NewGuid().ToString();
-            A.CallTo(() => _endpointParser.Parse(address)).Returns(endpoint);
-
-            // Act
-            var result = _multiplayerClient.Connect(address);
-
-            // Assert
-            Assert.That(result.IsOk, Is.False);
-        }
-
-        [Test]
-        public void Connect_ValidAddress_RegistersHandlersAndCallsConnectOnNetworkClient()
-        {
-            // Arrange
-            var parsedHost = "192.168.1.1";
-            var parsedPort = 555;
-            IPAddress.TryParse(parsedHost, out var parsedAddress);
-            var endpoint = new IPEndPoint(parsedAddress, parsedPort);
-            var address = Guid.NewGuid().ToString();
-            A.CallTo(() => _endpointParser.Parse(address)).Returns(endpoint);
-
-            // Act
-            var result = _multiplayerClient.Connect(address);
-
-            // Assert
-            Assert.That(result.IsOk, Is.True);
-            A.CallTo(() => _networkClient.On(A<Action<long, DiceRollValueRequest>>.Ignored, Networking.Consuming.MessageHandlerPriority.Default)).MustHaveHappenedOnceExactly();
-            A.CallTo(() => _networkClient.ConnectAsync(parsedHost, parsedPort, A<TimeSpan>.Ignored)).MustHaveHappenedOnceExactly();
-        }
-
-        [Test]
-        public async Task OnDiceRollValueRequest_PlayerIdIsSet_CallsDiceRollStorageAndSendsResult()
-        {
-            // Arrange
-            var parsedHost = "192.168.1.1";
-            var parsedPort = 555;
-            IPAddress.TryParse(parsedHost, out var parsedAddress);
-            var endpoint = new IPEndPoint(parsedAddress, parsedPort);
-            var address = Guid.NewGuid().ToString();
-            A.CallTo(() => _endpointParser.Parse(address)).Returns(endpoint);
-            _multiplayerClient.Connect(address);
-            var handler = FakeUtils.GetNetworkReceiverHandler<DiceRollValueRequest>(_networkClient);
-            var request = new DiceRollValueRequest { RollId = 1, Timeout = TimeSpan.FromDays(1), UnitId = Guid.NewGuid().ToString(), PlayerId = 1 };
-            var getRollTask = Task.FromResult<RollValueBase>(new NetworkIntRollValue());
-            A.CallTo(() => _diceRollStorage.GetAsync<RollValueBase>(request.RollId, request.PlayerId, request.Timeout)).Returns(getRollTask);
-
-            // Act
-            handler.Invoke(1, request);
-            await getRollTask;
-
-            // Assert
-            A.CallTo(() => _diceRollStorage.GetAsync<RollValueBase>(request.RollId, request.PlayerId, request.Timeout)).MustHaveHappened();
-            A.CallTo(() => _networkClient.Send(A<DiceRollValueResponse>.Ignored)).MustHaveHappened();
+            A.CallTo(() => _networkClient.ConnectAsync(host, port, A<TimeSpan>.Ignored)).MustHaveHappenedOnceExactly();
         }
     }
 }

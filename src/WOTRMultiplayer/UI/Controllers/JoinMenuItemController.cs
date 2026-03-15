@@ -15,6 +15,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 using WOTRMultiplayer.Abstractions;
+using WOTRMultiplayer.Abstractions.GameInteraction;
 using WOTRMultiplayer.Abstractions.IO;
 using WOTRMultiplayer.Abstractions.Settings;
 using WOTRMultiplayer.Abstractions.UI;
@@ -23,6 +24,7 @@ using WOTRMultiplayer.Abstractions.UI.Controllers.Menu;
 using WOTRMultiplayer.Abstractions.Unity;
 using WOTRMultiplayer.Entities;
 using WOTRMultiplayer.Extensions;
+using WOTRMultiplayer.Networking.Abstractions;
 using WOTRMultiplayer.UI.Windows;
 namespace WOTRMultiplayer.UI.Controllers
 {
@@ -54,7 +56,8 @@ namespace WOTRMultiplayer.UI.Controllers
         private readonly IMultiplayerClient _multiplayerClient;
         private readonly IFileSystemService _fileSystemService;
         private readonly IMultiplayerSettingsService _multiplayerSettingsService;
-
+        private readonly IIPEndPointParser _ipEndPointParser;
+        private readonly IPlayerNotificationService _playerNotificationService;
         private HashSet<ConnectionHistoryRecord> _connectionHistory;
         private HashSet<ConnectionHistoryRecord> ConnectionHistory
         {
@@ -122,6 +125,8 @@ namespace WOTRMultiplayer.UI.Controllers
             IResourceProvider resourceProvider,
             IMultiplayerSettingsService multiplayerSettingsService,
             IFileSystemService fileSystemService,
+            IIPEndPointParser ipEndPointParser,
+            IPlayerNotificationService playerNotificationService,
             IUIFactory uiFactory)
             : base(logger, lobbyWindowController, mainThreadAccessor, resourceProvider, multiplayerClient)
         {
@@ -130,6 +135,8 @@ namespace WOTRMultiplayer.UI.Controllers
             _multiplayerClient = multiplayerClient;
             _fileSystemService = fileSystemService;
             _multiplayerSettingsService = multiplayerSettingsService;
+            _ipEndPointParser = ipEndPointParser;
+            _playerNotificationService = playerNotificationService;
         }
 
         public override void Activate()
@@ -488,14 +495,20 @@ namespace WOTRMultiplayer.UI.Controllers
 
         private void ConnectToAddress(string address, GameObject initiator)
         {
-            var result = _multiplayerClient.Connect(address);
-            if (!result.IsOk)
+            var endpoint = _ipEndPointParser.Parse(address);
+            if (endpoint == null)
             {
-                var message = new LocalizedString { Key = result.MessageKey };
-                EventBus.RaiseEvent<IMessageModalUIHandler>(x => x.HandleOpen(message, MessageModalBase.ModalType.Message));
+                _playerNotificationService.ShowModalMessage(WellKnownKeys.MultiplayerClient.Errors.InvalidAddress.Key);
                 return;
             }
 
+            if (endpoint.Port == 0)
+            {
+                _playerNotificationService.ShowModalMessage(WellKnownKeys.MultiplayerClient.Errors.InvalidPort.Key);
+                return;
+            }
+
+            _multiplayerClient.Connect(endpoint.Address.ToString(), endpoint.Port);
             SetJoiningState(true, initiator);
         }
 
@@ -520,7 +533,6 @@ namespace WOTRMultiplayer.UI.Controllers
                 }
             }
         }
-
 
         private void AddSuccessfulConnectionRecord(NetworkGameConnectivity connectivity)
         {

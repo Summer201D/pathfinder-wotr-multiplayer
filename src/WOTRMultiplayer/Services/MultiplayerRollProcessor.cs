@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
-using Kingmaker.EntitySystem.Entities;
 using Kingmaker.GameModes;
 using Kingmaker.RuleSystem;
 using Kingmaker.RuleSystem.Rules;
@@ -11,11 +9,9 @@ using Kingmaker.RuleSystem.Rules.Damage;
 using Microsoft.Extensions.Logging;
 using WOTRMultiplayer.Abstractions;
 using WOTRMultiplayer.Abstractions.GameInteraction;
-using WOTRMultiplayer.Abstractions.GameInteraction.CombatLog;
 using WOTRMultiplayer.Abstractions.Hashing;
 using WOTRMultiplayer.Abstractions.Random;
 using WOTRMultiplayer.Entities.Rolls;
-using WOTRMultiplayer.Entities.Rolls.Claiming.Values;
 using WOTRMultiplayer.Extensions;
 using WOTRMultiplayer.Services.Random;
 
@@ -27,7 +23,6 @@ namespace WOTRMultiplayer.Services
         private readonly IGameInteractionService _gameInteractionService;
         private readonly ICombatInteractionService _combatInteractionService;
         private readonly IPlayerNotificationService _playerNotificationService;
-        private readonly IDiceRollStorage _diceRollStorage;
         private readonly IHashService _hashService;
         private readonly IMultiplayerActorAccessor _multiplayerActorAccessor;
         private readonly IValueGenerator _valueGenerator;
@@ -59,7 +54,6 @@ namespace WOTRMultiplayer.Services
             IGameInteractionService gameInteractionService,
             ICombatInteractionService combatInteractionService,
             IPlayerNotificationService playerNotificationService,
-            IDiceRollStorage diceRollStorage,
             IHashService hashService,
             IMultiplayerActorAccessor multiplayerActorAccessor,
             IValueGenerator valueGenerator)
@@ -68,7 +62,6 @@ namespace WOTRMultiplayer.Services
             _gameInteractionService = gameInteractionService;
             _combatInteractionService = combatInteractionService;
             _playerNotificationService = playerNotificationService;
-            _diceRollStorage = diceRollStorage;
             _hashService = hashService;
             _multiplayerActorAccessor = multiplayerActorAccessor;
             _valueGenerator = valueGenerator;
@@ -184,40 +177,18 @@ namespace WOTRMultiplayer.Services
                 }
 
                 var isRolledDeterministically = IsRolledDeterministically(RuleAttackRollSubType.None);
-                if (!ShouldRetrieveRoll(ruleAttackRoll) && !isRolledDeterministically)
+                if (!isRolledDeterministically)
                 {
                     return true;
                 }
 
-                var d20 = isRolledDeterministically ? RollAttackRoll(ruleAttackRoll) : RetrieveAttackRoll(ruleAttackRoll);
+                var d20 = RollAttackRoll(ruleAttackRoll);
                 if (d20 == null)
                 {
                     return true;
                 }
                 ruleAttackRoll.D20 = d20;
                 return false;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Unable to handle {MethodName}", MethodBase.GetCurrentMethod().Name);
-                throw;
-            }
-        }
-
-        public void OnAfterRuleAttackRollTrigger(RuleAttackRoll ruleAttackRoll)
-        {
-            try
-            {
-                if (ruleAttackRoll.D20 == null)
-                {
-                    return;
-                }
-
-                if (!IsRolledDeterministically(RuleAttackRollSubType.None) && ShouldStoreRoll(ruleAttackRoll))
-                {
-                    var roll = CreateAttackRoll(NetworkDiceRollType.Hit, ruleAttackRoll, isCriticalRoll: false);
-                    SaveIntRollValue(roll, ruleAttackRoll.D20);
-                }
             }
             catch (Exception ex)
             {
@@ -609,16 +580,6 @@ namespace WOTRMultiplayer.Services
             }
         }
 
-        private bool ShouldRetrieveRoll(object rule)
-        {
-            return _multiplayerActorAccessor.Current != null && IsMeaningfulRoll(rule) && !IsRollOwner(rule);
-        }
-
-        private bool ShouldStoreRoll(object rule)
-        {
-            return _multiplayerActorAccessor.Current != null && IsMeaningfulRoll(rule) && IsRollOwner(rule);
-        }
-
         private bool IsRolledDeterministically(object rule)
         {
             var isMeaningful = IsMeaningfulRoll(rule);
@@ -646,14 +607,6 @@ namespace WOTRMultiplayer.Services
             };
 
             return isRolled;
-        }
-
-        private bool IsRollOwner(object rule)
-        {
-            return rule switch
-            {
-                _ => _multiplayerActorAccessor.Current.IsDiceRollOwner(),
-            };
         }
 
         private bool IsMeaningfulRoll(object rule)
@@ -718,44 +671,6 @@ namespace WOTRMultiplayer.Services
             return affectsControlledCharacters;
         }
 
-        private int? GetDiceRollId(NetworkDiceRollBase roll)
-        {
-            if (roll == null)
-            {
-                return null;
-            }
-            var rawId = roll.GetIdString();
-            var id = _hashService.Murmur3(rawId);
-            _logger.LogInformation("RollId has been generated. RollId={rollId}, RollType={RollType}, RuleName={RuleName}, IdString={IdString}", id, roll.RollType, roll.RuleName, rawId);
-            return id;
-        }
-
-        private void SaveIntRollValue(NetworkDiceRollBase networkDiceRoll, RuleRollDice ruleRollDice)
-        {
-            var rollType = networkDiceRoll.GetType().Name;
-            var rollId = GetDiceRollId(networkDiceRoll);
-            if (rollId == null)
-            {
-                _logger.LogWarning("Roll saving has been skipped due to unability to generate rollId. DiceType={DiceType}, RollType={RollType}, InitiatorId={InitiatorId}", ruleRollDice.GetType().Name, rollType, networkDiceRoll.InitiatorId);
-                return;
-            }
-
-            var rollValue = new NetworkIntRollValue
-            {
-                RollHistory = [.. ruleRollDice.RollHistory ?? []],
-                Value = ruleRollDice.m_Result
-            };
-
-            SaveRollValue(rollId.Value, rollValue);
-        }
-
-        private void SaveRollValue(int rollId, RollValueBase rollValue)
-        {
-            var claimingList = _multiplayerActorAccessor.Current.GetOtherPlayers().Select(i => i.Id).ToList();
-            _diceRollStorage.Add(rollId, claimingList, rollValue);
-
-        }
-
         private NetworkDiceRollBase GetDamageRoll(RuleCalculateDamage ruleCalculateDamage)
         {
             NetworkDiceRollBase roll = ruleCalculateDamage.Reason.Rule switch
@@ -767,55 +682,6 @@ namespace WOTRMultiplayer.Services
             };
 
             return roll;
-        }
-
-        private T RetrieveRoll<T>(NetworkDiceRollBase networkDiceRoll, UnitEntityData initiator)
-            where T : RuleRollDice
-        {
-            try
-            {
-                var rollType = networkDiceRoll.GetType().Name;
-                var rollId = GetDiceRollId(networkDiceRoll);
-                if (rollId == null)
-                {
-                    _logger.LogWarning("Unable to retrieve roll due to null rollId. RollType={RollType}, InitiatorId={InitiatorId}", rollType, initiator.UniqueId);
-                    return null;
-                }
-
-                var roll = _multiplayerActorAccessor.Current.RetrieveRoll<NetworkIntRollValue>(rollId.Value, networkDiceRoll.RuleName, networkDiceRoll.InitiatorId);
-                if (roll == null)
-                {
-                    _logger.LogCritical("Failed to acquire roll from remote player which guarantees desync in the game. RollId={RollId}, RollType={RollType}, InitiatorId={InitiatorId}", rollId.Value, rollType, initiator.UniqueId);
-                    _playerNotificationService.AddCombatText(WellKnownKeys.GameNotifications.Rolls.MissingRoll.Key, CombatTextSeverity.Critical, networkDiceRoll.RuleName, new UnitLogParameter(networkDiceRoll.InitiatorId));
-                    return null;
-                }
-
-                var diceType = typeof(T);
-                T dice = diceType switch
-                {
-                    _ when diceType == typeof(RuleRollD20) => RuleRollD20.FromInt(initiator, roll.Value) as T,
-                    _ when diceType == typeof(RuleRollD100) => RuleRollD100.FromInt(initiator, roll.Value) as T,
-                    _ => null,
-                };
-
-                if (dice == null)
-                {
-                    _logger.LogError("Roll has been retrieved, but dicetype is not supported. DiceType={DiceType}, RollId={RollId}", diceType, rollId.Value);
-                    return null;
-                }
-
-                dice.RollHistory = [.. roll.RollHistory];
-
-                _logger.LogInformation("Roll has been acquired from another player. DiceType={DiceType}, RollId={RollId}, Result={Result}, RollType={RollType}, InitiatorId={InitiatorId}",
-                    diceType, rollId.Value, dice.Result, rollType, initiator.UniqueId);
-
-                return dice;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, $"Unable to handle {MethodBase.GetCurrentMethod().Name}");
-                throw;
-            }
         }
 
         private DispelMagicRoll CreateDispelMagicRoll(NetworkDiceRollType diceRollType, RuleDispelMagic ruleDispelMagic)
@@ -1417,12 +1283,6 @@ namespace WOTRMultiplayer.Services
                 var combatSeed = _multiplayerActorAccessor.Current.CombatSeed;
                 var combatTurnSeed = _multiplayerActorAccessor.Current.CombatTurnSeed;
                 var crusadeCombatSeed = _multiplayerActorAccessor.Current.CrusadeArmyCombatSeed;
-                // mid turn damage
-                if (combatSeed != null && combatTurnSeed == null)
-                {
-                    combatTurnSeed = _multiplayerActorAccessor.Current.LastCombatTurnSeed;
-                }
-
                 var lifetime = combatTurnSeed == null ? IdentifierLifetime.Area : IdentifierLifetime.CombatTurn;
 
                 var identifier = $"{rollIdentifier}_ss={sessionSeed}:ls={loadedSaveSeed}:as={areaSeed}:cs={combatSeed ?? 0}:cts={combatTurnSeed ?? 0}:ccs={crusadeCombatSeed ?? 0}";
@@ -1461,13 +1321,6 @@ namespace WOTRMultiplayer.Services
             }
 
             return (history, result);
-        }
-
-        private RuleRollD20 RetrieveAttackRoll(RuleAttackRoll ruleAttackRoll)
-        {
-            var roll = CreateAttackRoll(NetworkDiceRollType.Hit, ruleAttackRoll, isCriticalRoll: false);
-            var d20 = RetrieveRoll<RuleRollD20>(roll, ruleAttackRoll.Initiator);
-            return d20;
         }
 
         private enum RuleAttackRollSubType

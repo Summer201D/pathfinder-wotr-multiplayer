@@ -11,7 +11,6 @@ using WOTRMultiplayer.Config.DI;
 using WOTRMultiplayer.Entities;
 using WOTRMultiplayer.Entities.Equipment;
 using WOTRMultiplayer.Entities.Leveling;
-using WOTRMultiplayer.Entities.Rolls.Claiming.Values;
 using WOTRMultiplayer.Networking.Abstractions;
 using WOTRMultiplayer.Playground.Core;
 using WOTRMultiplayer.Playground.Core.Dummies;
@@ -39,11 +38,9 @@ namespace WOTRMultiplayer.Playground.Client
                 new DummyGlobalMapInteractionService(),
                 new DummyPingInteractionService(),
                 new DummyCombatInteractionService(),
-                serviceProvider.GetService<IIPEndPointParser>(),
                 new MultiplayerSettingsProvider(new DummySettingsControllerAccessor()),
                 serviceProvider.GetService<IFileSystemService>(),
                 serviceProvider.GetService<INetworkClient>(),
-                new DummyDiceRollStorage([new NetworkIntRollValue { Value = 59 }]),
                 serviceProvider.GetService<IValueGenerator>(),
                 serviceProvider.GetService<IMapper>());
 
@@ -82,8 +79,7 @@ namespace WOTRMultiplayer.Playground.Client
                     client.OnShowRestView(showRestView.Phase);
                     break;
                 case CommandVerbs.ConnectCommandVerb connect:
-                    var result = client.Connect(connect.ServerAddress);
-                    Console.WriteLine(result.MessageKey);
+                    client.Connect(connect.ServerAddress, connect.Port);
                     break;
                 case CommandVerbs.ExitCommandVerb:
                     Environment.Exit(0);

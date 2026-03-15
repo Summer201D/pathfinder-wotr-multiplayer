@@ -9,7 +9,6 @@ using WOTRMultiplayer.Abstractions.IO;
 using WOTRMultiplayer.Abstractions.Random;
 using WOTRMultiplayer.Config.DI;
 using WOTRMultiplayer.Entities;
-using WOTRMultiplayer.Entities.Rolls.Claiming.Values;
 using WOTRMultiplayer.Networking.Abstractions;
 using WOTRMultiplayer.Playground.Core;
 using WOTRMultiplayer.Playground.Core.Dummies;
@@ -42,7 +41,6 @@ namespace WOTRMultiplayer.Playground.Host
                 new MultiplayerSettingsProvider(new DummySettingsControllerAccessor()),
                 serviceProvider.GetService<IFileSystemService>(),
                 serviceProvider.GetService<INetworkServer>(),
-                new DummyDiceRollStorage([new NetworkIntRollValue { Value = 66 }]),
                 serviceProvider.GetService<IValueGenerator>(),
                 serviceProvider.GetService<IMapper>());
 

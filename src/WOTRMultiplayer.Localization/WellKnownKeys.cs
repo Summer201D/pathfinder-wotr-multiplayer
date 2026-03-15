@@ -1014,16 +1014,6 @@ public static class WellKnownKeys
                 }
             }
 
-            [Description("end")]
-            public static class End
-            {
-                [Description("untargetableDesync")]
-                public static class UntargetableDesync
-                {
-                    public static string Key { get; set; }
-                }
-            }
-
             [Description("stageChanged")]
             public static class StageChanged
             {

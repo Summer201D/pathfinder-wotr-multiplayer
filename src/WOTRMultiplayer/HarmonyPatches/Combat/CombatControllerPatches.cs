@@ -5,7 +5,6 @@ using System.Reflection.Emit;
 using HarmonyLib;
 using Kingmaker;
 using Kingmaker.Controllers;
-using Kingmaker.Controllers.Combat;
 using Kingmaker.EntitySystem.Entities;
 using Kingmaker.EntitySystem.Persistence.JsonUtility;
 using Microsoft.Extensions.Logging;

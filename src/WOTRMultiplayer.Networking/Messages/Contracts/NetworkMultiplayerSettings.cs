@@ -9,21 +9,17 @@ namespace WOTRMultiplayer.Networking.Messages.Contracts
     {
         [ProtoMember(1)]
         [LogMe]
-        public TimeSpan RemoteRollRetrievalTimeout { get; set; }
+        public TimeSpan NetworkAwaiterTimeout { get; set; }
 
         [ProtoMember(2)]
         [LogMe]
-        public TimeSpan NetworkAwaiterTimeout { get; set; }
+        public TimeSpan RestEncounterSyncTimeout { get; set; }
 
         [ProtoMember(3)]
         [LogMe]
-        public TimeSpan RestEncounterSyncTimeout { get; set; }
-
-        [ProtoMember(4)]
-        [LogMe]
         public TimeSpan CombatTurnDelayForAI { get; set; }
 
-        [ProtoMember(5)]
+        [ProtoMember(4)]
         [LogMe]
         public float EnforcedCombatStartDelay { get; set; }
     }

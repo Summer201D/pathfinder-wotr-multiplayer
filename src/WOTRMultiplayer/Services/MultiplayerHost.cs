@@ -63,7 +63,6 @@ namespace WOTRMultiplayer.Services
             IMultiplayerSettingsService multiplayerSettingsProvider,
             IFileSystemService fileSystemService,
             INetworkServer networkServer,
-            IDiceRollStorage diceRollStorage,
             IValueGenerator valueGenerator,
             IMapper mapper)
             : base(logger,
@@ -76,7 +75,6 @@ namespace WOTRMultiplayer.Services
                   globalMapInteractionService,
                   pingInteractionService,
                   combatInteractionService,
-                  diceRollStorage,
                   fileSystemService,
                   valueGenerator,
                   networkServer)
@@ -446,11 +444,6 @@ namespace WOTRMultiplayer.Services
                 Logger.LogError(ex, "Error while continuing combat");
                 throw;
             }
-        }
-
-        public bool IsDiceRollOwner()
-        {
-            return IsRolledByHost() || IsRolledByLocalPlayer();
         }
 
         public void OnPerceptionCheck(NetworkPerceptionCheck check)
@@ -1363,26 +1356,6 @@ namespace WOTRMultiplayer.Services
             return TryEndForcedPause(Game.LocalPlayerId);
         }
 
-        protected override DiceRollValueResponse RetrieveRoll(DiceRollValueRequest rollRequest)
-        {
-            // the only case when host is retrieving rolls - he is not the turn owner + it's not AI turn
-            var character = GetPartyCharacter(Game.Combat.Turn.UnitId);
-            if (character?.Owner == null)
-            {
-                Logger.LogError("Unable to retrieve roll due to missing character ownership. UnitId={UnitId}");
-                return null;
-            }
-
-            if (character.Owner.IsHost)
-            {
-                Logger.LogError("Host is character owner, but tries to retrieve network roll");
-                return null;
-            }
-
-            // .Result is important to block current (main) thread
-            return _networkServer.SendAndWaitForAsync<DiceRollValueResponse>(character.Owner.Id, rollRequest).Result;
-        }
-
         protected override void Send(object message)
         {
             if (message is not NotifySaveGameChunkCreated and not NotifySaveGameTransferProgressChanged)
@@ -1492,9 +1465,6 @@ namespace WOTRMultiplayer.Services
 
                     Game.Combat.PlayersNextTurnInitialization.Clear();
                     Game.Combat.PlayersNextTurnSynchronization.Clear();
-
-                    DiceRollStorage.Reset();
-                    Logger.LogInformation("Dice roll storage has been reset at turn entites sync stage");
 
                     ValueGenerator.ResetSeededGenerators(IdentifierLifetime.CombatTurn);
                     Game.Combat.Turn.Seed = CreateRandomSeed();
@@ -1608,7 +1578,6 @@ namespace WOTRMultiplayer.Services
 
             _networkServer
                // requests - this is kinda special because requester is blocking the thread (most likely main game loop) until corresponded response is received
-               .On<DiceRollValueRequest>(OnDiceRollValueRequest)
                .On<RandomEncounterContextRequest>(OnRandomEncounterContextRequest)
 
                // pausing
@@ -1735,11 +1704,6 @@ namespace WOTRMultiplayer.Services
 
         private void InitiateCombatRecovering(NetworkPlayer initiator)
         {
-            foreach (var player in GetPlayers())
-            {
-                DiceRollStorage.UndoClaiming(player.Id);
-            }
-
             Logger.LogWarning("Initiating combat recovery");
             Game.Combat.IsRecovering = true;
             Game.Combat.IsPrepared = false;
@@ -1968,58 +1932,6 @@ namespace WOTRMultiplayer.Services
 
             AddCueWitness(message.CueName, playerId);
             TryEnableDialogContinueButton();
-        }
-
-        private async void OnDiceRollValueRequest(long playerId, DiceRollValueRequest request)
-        {
-            try
-            {
-                // roll storage (location) is dynamic in combat and depends on TurnOwner
-                var (shouldBeProxied, playerToAsk) = ShouldRollBeProxied(playerId, request);
-                if (!shouldBeProxied)
-                {
-                    await SendLocalRollAsync(playerId, request);
-                    return;
-                }
-
-                var message = new DiceRollValueRequest
-                {
-                    RollId = request.RollId,
-                    UnitId = request.UnitId,
-                    Timeout = request.Timeout,
-                    PlayerId = playerId
-                };
-                Logger.LogInformation("Asking another client for a roll. PlayerToAsk={PlayerToAsk}, PlayerId={PlayerId}, RollId={RollId}, UnitId={UnitId}, Timeout={Timeout}", playerToAsk, message.PlayerId, message.RollId, message.UnitId, message.Timeout);
-                var rollFromAnotherClient = await _networkServer.SendAndWaitForAsync<DiceRollValueResponse>(playerToAsk.Value, message);
-                Send(playerId, rollFromAnotherClient);
-            }
-            catch (Exception ex)
-            {
-                Logger.LogError(ex, "Unable to process dice roll value request. PlayerId={PlayerId}, RollId={RollId}, UnitId={UnitId}", playerId, request.RollId, request.UnitId);
-                throw;
-            }
-        }
-
-        private (bool, long?) ShouldRollBeProxied(long playerId, DiceRollValueRequest diceRollValueRequest)
-        {
-            // either combat has already ended on the client (last turn action) or it's a mid combat unit join which rolls initiative
-            if (diceRollValueRequest.CombatTurnUnitId == null || string.Equals(diceRollValueRequest.RuleName, "RuleInitiativeRoll", StringComparison.OrdinalIgnoreCase))
-            {
-                return (false, null);
-            }
-
-            var turn = SelectValidTurn(diceRollValueRequest.CombatTurnUnitId);
-            var characterTurn = GetPartyCharacter(turn?.UnitId);
-            var shouldRollBeProxied = (Game.Combat == null || Game.Combat.IsInitialized) && turn != null && !turn.IsLocalPlayer && !turn.IsAI && characterTurn != null && characterTurn.Owner.Id != playerId && characterTurn.Owner.Id != Game.LocalPlayerId;
-            return (shouldRollBeProxied, characterTurn?.Owner?.Id);
-        }
-
-        private NetworkCombatTurn SelectValidTurn(string unitId)
-        {
-            // LastCombatTurn is valid only when:
-            // - combat is already ended locally
-            // - AI turn is already ended locally
-            return CheckTurnValidity(Game.Combat?.Turn, unitId) ?? CheckTurnValidity(Game.LastCombatTurn, unitId);
         }
 
         private NetworkCombatTurn CheckTurnValidity(NetworkCombatTurn turn, string unitId)

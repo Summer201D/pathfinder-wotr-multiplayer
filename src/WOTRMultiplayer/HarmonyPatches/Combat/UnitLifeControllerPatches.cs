@@ -16,7 +16,7 @@ namespace WOTRMultiplayer.HarmonyPatches.Combat
                 return;
             }
 
-            Main.Multiplayer.OnUnitDeath(unit.UniqueId);
+            Main.Multiplayer.OnUnitDeath(unit.UniqueId, unit.GroupId);
         }
     }
 }

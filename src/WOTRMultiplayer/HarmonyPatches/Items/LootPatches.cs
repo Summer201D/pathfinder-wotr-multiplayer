@@ -125,7 +125,8 @@ namespace WOTRMultiplayer.HarmonyPatches.Items
         [HarmonyPrefix]
         public static void LootObjectVM_TransferAllItems_Prefix(LootObjectVM __instance)
         {
-            if (!Main.Multiplayer.IsActive)
+            // Zone Collect All is synced, no need to send transfer item notifications
+            if (!Main.Multiplayer.IsActive || __instance.m_Mode == LootContextVM.LootWindowMode.ZoneExit)
             {
                 return;
             }

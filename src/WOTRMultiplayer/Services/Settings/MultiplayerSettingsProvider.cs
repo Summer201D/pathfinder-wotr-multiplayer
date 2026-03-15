@@ -39,7 +39,6 @@ namespace WOTRMultiplayer.Services.Settings
             // danger zone
             _settingsControllerAccessor.CreateDefaultValue<string>(WellKnownSettings.DangerZone.DefaultForcedPauseTimeout);
             _settingsControllerAccessor.CreateDefaultValue<string>(WellKnownSettings.DangerZone.RestEncounterForcedPauseTimeout);
-            _settingsControllerAccessor.CreateDefaultValue<string>(WellKnownSettings.DangerZone.RemoteRollRetrievalTimeout);
             _settingsControllerAccessor.CreateDefaultValue<string>(WellKnownSettings.DangerZone.NetworkAwaiterTimeout);
             _settingsControllerAccessor.CreateDefaultValue<string>(WellKnownSettings.DangerZone.RestEncounterSyncTimeout);
             _settingsControllerAccessor.CreateDefaultValue(WellKnownSettings.DangerZone.EnforcedCombatStartDelay);
@@ -71,7 +70,6 @@ namespace WOTRMultiplayer.Services.Settings
                 // danger zone
                 ForcedPauseDefaultTerminationDelay = _settingsControllerAccessor.GetTimeSpanValue(WellKnownSettings.DangerZone.DefaultForcedPauseTimeout),
                 ForcedPauseRandomEncounterTerminationDelay = _settingsControllerAccessor.GetTimeSpanValue(WellKnownSettings.DangerZone.RestEncounterForcedPauseTimeout),
-                RemoteRollRetrievalTimeout = _settingsControllerAccessor.GetTimeSpanValue(WellKnownSettings.DangerZone.RemoteRollRetrievalTimeout),
                 NetworkAwaiterTimeout = _settingsControllerAccessor.GetTimeSpanValue(WellKnownSettings.DangerZone.NetworkAwaiterTimeout),
                 RestEncounterSyncTimeout = _settingsControllerAccessor.GetTimeSpanValue(WellKnownSettings.DangerZone.RestEncounterSyncTimeout),
                 EnforcedCombatStartDelay = _settingsControllerAccessor.GetValue(WellKnownSettings.DangerZone.EnforcedCombatStartDelay),

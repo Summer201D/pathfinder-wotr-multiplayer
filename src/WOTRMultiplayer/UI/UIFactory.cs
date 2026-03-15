@@ -668,12 +668,6 @@ namespace WOTRMultiplayer.UI
                 new TimeSpanValidator(),
                 TimeSpanValidator.MaxLength);
             yield return CreateStringInputSetting(
-                WellKnownKeys.Settings.DangerZone.RemoteRollRetrievalTimeout.Title.Key,
-                WellKnownKeys.Settings.DangerZone.RemoteRollRetrievalTimeout.Tooltip.Key,
-                WellKnownSettings.DangerZone.RemoteRollRetrievalTimeout,
-                new TimeSpanValidator(),
-                TimeSpanValidator.MaxLength);
-            yield return CreateStringInputSetting(
                 WellKnownKeys.Settings.DangerZone.NetworkAwaiterTimeout.Title.Key,
                 WellKnownKeys.Settings.DangerZone.NetworkAwaiterTimeout.Tooltip.Key,
                 WellKnownSettings.DangerZone.NetworkAwaiterTimeout,

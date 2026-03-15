@@ -13,6 +13,7 @@ using Kingmaker.Globalmap;
 using Kingmaker.UI.Common;
 using Kingmaker.UI.FullScreenUITypes;
 using Kingmaker.UI.MVVM;
+using Kingmaker.Utility;
 using Microsoft.Extensions.Logging;
 using Owlcat.Runtime.UI.Controls.Button;
 
@@ -22,22 +23,15 @@ namespace WOTRMultiplayer.HarmonyPatches.GameInstance
     public class GamePatches
     {
         [HarmonyPatch(typeof(Game), nameof(Game.LoadArea), [typeof(BlueprintArea), typeof(BlueprintAreaEnterPoint), typeof(AutoSaveMode), typeof(bool), typeof(SaveInfo), typeof(Action)])]
-        [HarmonyPrefix]
-        public static void Game_LoadArea_Prefix(ref Action callback)
+        [HarmonyPostfix]
+        public static void Game_LoadArea_Prefix()
         {
             if (!Main.Multiplayer.IsActive)
             {
                 return;
             }
 
-            if (callback == null)
-            {
-                callback = Main.Multiplayer.OnAreaLoaded;
-            }
-            else
-            {
-                callback += Main.Multiplayer.OnAreaLoaded;
-            }
+            LoadingProcess.Instance.StartLoadingProcess(Main.Multiplayer.OnAreaLoaded, LoadingProcessTag.Load);
         }
 
         [HarmonyPatch(typeof(Game), nameof(Game.LoadGame))]

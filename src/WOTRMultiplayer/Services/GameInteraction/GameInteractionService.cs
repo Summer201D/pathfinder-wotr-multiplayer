@@ -46,6 +46,7 @@ using Kingmaker.UI.MVVM._PCView.Rest;
 using Kingmaker.UI.MVVM._PCView.Settings.Entities.Difficulty;
 using Kingmaker.UI.MVVM._PCView.Transition;
 using Kingmaker.UI.MVVM._VM.Lockpick;
+using Kingmaker.UI.MVVM._VM.Loot;
 using Kingmaker.UI.MVVM._VM.MapIslands;
 using Kingmaker.UI.MVVM._VM.NewGame;
 using Kingmaker.UI.MVVM._VM.Settings.Entities;
@@ -1144,7 +1145,6 @@ namespace WOTRMultiplayer.Services.GameInteraction
 
                 if (networkGameSettings.Multiplayer != null)
                 {
-                    SettingsController.GeneralSettingsProvider.SetValue(WellKnownSettings.DangerZone.RemoteRollRetrievalTimeout.Key, networkGameSettings.Multiplayer.RemoteRollRetrievalTimeout.ToString());
                     SettingsController.GeneralSettingsProvider.SetValue(WellKnownSettings.DangerZone.NetworkAwaiterTimeout.Key, networkGameSettings.Multiplayer.NetworkAwaiterTimeout.ToString());
                     SettingsController.GeneralSettingsProvider.SetValue(WellKnownSettings.DangerZone.RestEncounterSyncTimeout.Key, networkGameSettings.Multiplayer.RestEncounterSyncTimeout.ToString());
                     SettingsController.GeneralSettingsProvider.SetValue(WellKnownSettings.DangerZone.CombatTurnDelayForAI.Key, networkGameSettings.Multiplayer.CombatTurnDelayForAI.ToString());
@@ -3239,6 +3239,11 @@ namespace WOTRMultiplayer.Services.GameInteraction
         {
             _uiAccessor.InventoryVM?.StashVM?.CollectionChanged();
             _uiAccessor.InventoryVM?.DollVM?.RefreshData();
+
+            if (IsCapitalPartyMode && _uiAccessor.LootPCView?.ViewModel != null && _uiAccessor.LootPCView.ViewModel.Mode == LootContextVM.LootWindowMode.StandardChest)
+            {
+                _uiAccessor.LootPCView.ViewModel.InventoryCollectionChanged();
+            }
         }
 
         private bool IsSameUnholdedItem(ItemEntity itemEntity, NetworkItem networkLootItem)

@@ -142,10 +142,6 @@ namespace WOTRMultiplayer.Playground.Core.Dummies
             return Task.FromResult(false);
         }
 
-        public void MakeUnitTargetable(string unitId, bool isTargetable)
-        {
-        }
-
         public bool IsAnyProjectilesLaunchedByParty()
         {
             return false;
@@ -164,6 +160,14 @@ namespace WOTRMultiplayer.Playground.Core.Dummies
         }
 
         public void ForceResetCombat()
+        {
+        }
+
+        public void MakeUnitTargetable(string unitId, bool isLastGroupMember, bool isLastGroup)
+        {
+        }
+
+        public void MakeUnitUntargetable(string unitId, bool isFirstGroupMember, bool isFirstGroup)
         {
         }
     }

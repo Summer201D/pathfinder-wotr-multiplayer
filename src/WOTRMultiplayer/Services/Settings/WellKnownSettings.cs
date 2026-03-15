@@ -99,9 +99,6 @@ namespace WOTRMultiplayer.Services.Settings
             [Description("rest-encounter-forced-pause-timeout")]
             public static WellKnownSettingKey<TimeSpan> RestEncounterForcedPauseTimeout { get; } = new(TimeSpan.FromSeconds(8));
 
-            [Description("remote-roll-retrieval-timeout")]
-            public static WellKnownSettingKey<TimeSpan> RemoteRollRetrievalTimeout { get; } = new(TimeSpan.FromSeconds(5));
-
             [Description("network-awaiter-timeout")]
             public static WellKnownSettingKey<TimeSpan> NetworkAwaiterTimeout { get; } = new(TimeSpan.FromMinutes(1));
 
@@ -112,7 +109,7 @@ namespace WOTRMultiplayer.Services.Settings
             public static WellKnownSettingKey<float> EnforcedCombatStartDelay { get; } = new(0.5f);
 
             [Description("combat-turn-delay-for-ai")]
-            public static WellKnownSettingKey<TimeSpan> CombatTurnDelayForAI { get; } = new(TimeSpan.FromSeconds(0.4d));
+            public static WellKnownSettingKey<TimeSpan> CombatTurnDelayForAI { get; } = new(TimeSpan.FromSeconds(0.5d));
 
             [Description("save-game-chunk-size")]
             public static WellKnownSettingKey<int> SaveGameChunkSize { get; } = new(32768);

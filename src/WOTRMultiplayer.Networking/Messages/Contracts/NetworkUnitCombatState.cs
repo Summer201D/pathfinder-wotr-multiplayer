@@ -9,11 +9,11 @@ namespace WOTRMultiplayer.Networking.Messages.Contracts
     {
         [ProtoMember(1)]
         [LogMe]
-        public List<string> EngagedUnits { get; set; } = [];
+        public List<NetworkUnitEngagement> EngagedUnits { get; set; } = [];
 
         [ProtoMember(2)]
         [LogMe]
-        public List<string> EngagedBy { get; set; } = [];
+        public List<NetworkUnitEngagement> EngagedBy { get; set; } = [];
 
         [ProtoMember(3)]
         [LogMe]

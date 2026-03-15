@@ -2,10 +2,17 @@
 {
     /// <summary>
     /// protobuf ids must be unique, but no one cares about actual int value
-    /// None value is a logic delimiter
+    /// None value is a logical delimiter
     /// </summary>
     public static class MessageTypes
     {
+        public enum Request
+        {
+            None = 0,
+            RandomEncounterContextRequest,
+            RandomEncounterContextResponse,
+        }
+
         public enum Lobby
         {
             None = 100,
@@ -275,13 +282,9 @@
             NotifyAreaLoadingCompleted
         }
 
-        public enum Request
+        public enum Mod
         {
-            None = 88888,
-            DiceRollValueRequest,
-            DiceRollValueResponse,
-            RandomEncounterContextRequest,
-            RandomEncounterContextResponse,
+            None = 10_000
         }
     }
 }

@@ -19,7 +19,6 @@ using WOTRMultiplayer.Entities.MapObjects;
 using WOTRMultiplayer.Entities.NewGame;
 using WOTRMultiplayer.Entities.Ping;
 using WOTRMultiplayer.Entities.Rest;
-using WOTRMultiplayer.Entities.Rolls.Claiming.Values;
 using WOTRMultiplayer.Entities.SpellbookManagement;
 using WOTRMultiplayer.Entities.Spells;
 using WOTRMultiplayer.Entities.Vendor;
@@ -66,8 +65,6 @@ namespace WOTRMultiplayer.Abstractions
 
         int? CombatTurnSeed { get; }
 
-        int? LastCombatTurnSeed { get; }
-
         int? CombatSeed { get; }
 
         int? CrusadeArmyCombatAreaSeed { get; }
@@ -102,11 +99,6 @@ namespace WOTRMultiplayer.Abstractions
 
         void ForceLoadGame(string savePath, string gameId);
 
-        bool IsDiceRollOwner();
-
-        TRollValue RetrieveRoll<TRollValue>(int networkDiceRollId, string ruleName, string unitId)
-            where TRollValue : RollValueBase;
-
         void OnClickMapObject(NetworkClick click);
 
         void OnAbilityUse(NetworkAbilityUse abilityUse);
@@ -131,7 +123,7 @@ namespace WOTRMultiplayer.Abstractions
 
         void OnAreaLoaded();
 
-        bool CanUnitJoinCombat(string unitId);
+        bool CanUnitJoinCombat(string unitId, string groupId);
 
         string GetCharacterOwnerName(string unitId);
 
@@ -341,7 +333,7 @@ namespace WOTRMultiplayer.Abstractions
 
         void OnGlobalMapCrusadeArmyLeaderLevelingStarted(NetworkGlobalMapArmy globalMapArmy);
 
-        void OnUnitDeath(string unitId);
+        void OnUnitDeath(string unitId, string groupId);
 
         void OnTrapDisarmRolled(NetworkTrapDisarm trapDisarm);
 

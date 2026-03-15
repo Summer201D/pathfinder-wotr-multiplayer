@@ -12,8 +12,11 @@ namespace WOTRMultiplayer.Playground.Client
         [Verb("connect", HelpText = "connect to specified host, default is 127.0.0.1:1024")]
         public class ConnectCommandVerb
         {
-            [Option('s', "server", Required = false, Default = "127.0.0.1:1024")]
+            [Option('s', "server", Required = false, Default = "127.0.0.1")]
             public string ServerAddress { get; set; }
+
+            [Option('p', "port", Required = false, Default = 1024)]
+            public int Port { get; set; }
         }
 
         [Verb("ready", HelpText = "triggers ready status change")]

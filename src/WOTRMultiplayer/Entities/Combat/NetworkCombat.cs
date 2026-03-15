@@ -41,7 +41,7 @@ namespace WOTRMultiplayer.Entities.Combat
 
         public HashSet<string> ConfirmedMidCombatUnits { get; set; } = [];
 
-        public HashSet<string> UntargetableUnits { get; set; } = [];
+        public ConcurrentDictionary<string, HashSet<string>> UntargetableUnits { get; set; } = [];
 
         public HashSet<NetworkAreaEffect> TriggeredAreaEffects { get; set; } = [];
 

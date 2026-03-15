@@ -184,7 +184,7 @@
                 },
                 "combatTurnDelayForAI": {
                     "title": "AI Turn delay",
-                    "tooltip": "AI turn for clients starts a bit later so AI actions can be synced/overridden from host if needed.\nKeep this somewhere above your network ping"
+                    "tooltip": "AI turn for clients starts a bit later so AI actions can be synced/overridden from host if needed.\nKeep this value slightly higher than your network ping, but adjust it depending on how much the game starts to stutter during longer play sessions"
                 },
                 "saveGameChunkSize": {
                     "title": "Save Game chunk size",
@@ -256,9 +256,6 @@
                         "host": "Combat recovery has been initiated due to desynced combat startup sequence.\nReason: {0}",
                         "client": "Combat recovery has been initiated by host"
                     }
-                },
-                "end": {
-                    "untargetableDesync": "You are unable to leave combat due to the following remaining unsynced units:\n{0}"
                 },
                 "stageChanged": "Combat stage has been changed from {0} to {1}",
                 "forcedToStart": "Combat has been forced to start by {0}",

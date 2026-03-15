@@ -40,7 +40,6 @@ namespace WOTRMultiplayer.Services
 {
     public class MultiplayerClient : MultiplayerActorBase, IMultiplayerClient
     {
-        private readonly IIPEndPointParser _ipEndPointParser;
         private readonly INetworkClient _networkClient;
 
         public Action OnNetworkError { get; set; }
@@ -66,11 +65,9 @@ namespace WOTRMultiplayer.Services
             IGlobalMapInteractionService globalMapInteractionService,
             IPingInteractionService pingInteractionService,
             ICombatInteractionService combatInteractionService,
-            IIPEndPointParser ipEndPointParser,
             IMultiplayerSettingsService multiplayerSettingsProvider,
             IFileSystemService fileSystemService,
             INetworkClient networkClient,
-            IDiceRollStorage diceRollStorage,
             IValueGenerator valueGenerator,
             IMapper mapper)
             : base(logger,
@@ -83,34 +80,19 @@ namespace WOTRMultiplayer.Services
                   globalMapInteractionService,
                   pingInteractionService,
                   combatInteractionService,
-                  diceRollStorage,
                   fileSystemService,
                   valueGenerator,
                   networkClient)
         {
-            _ipEndPointParser = ipEndPointParser;
             _networkClient = networkClient;
 
             SetupNetworkMessageHandlers();
         }
 
-        public AddressParseResult Connect(string address)
+        public void Connect(string address, int port)
         {
-            var endpoint = _ipEndPointParser.Parse(address);
-            if (endpoint == null)
-            {
-                return AddressParseResult.Error(WellKnownKeys.MultiplayerClient.Errors.InvalidAddress.Key);
-            }
-
-            if (endpoint.Port == 0)
-            {
-                return AddressParseResult.Error(WellKnownKeys.MultiplayerClient.Errors.InvalidPort.Key);
-            }
-
             var settings = SettingsService.GetSettings();
-            _networkClient.ConnectAsync(endpoint.Address.ToString(), endpoint.Port, settings.NetworkAwaiterTimeout).ConfigureAwait(false);
-
-            return AddressParseResult.Ok();
+            _networkClient.ConnectAsync(address, port, settings.NetworkAwaiterTimeout).ConfigureAwait(false);
         }
 
         public void Reset()
@@ -234,11 +216,6 @@ namespace WOTRMultiplayer.Services
         {
             var canContinueCombat = Game.Combat != null && Game.Combat.IsPlaying;
             return canContinueCombat;
-        }
-
-        public bool IsDiceRollOwner()
-        {
-            return !IsRolledByHost() && IsRolledByLocalPlayer();
         }
 
         public void OnBeforeTryRollRestRandomEncounter()
@@ -426,11 +403,6 @@ namespace WOTRMultiplayer.Services
             }
         }
 
-        protected override DiceRollValueResponse RetrieveRoll(DiceRollValueRequest rollRequest)
-        {
-            return _networkClient.SendAndWaitForAsync<DiceRollValueResponse>(rollRequest).Result;
-        }
-
         protected override void Send(object message)
         {
             if (message is not NotifySaveGameChunkCreated and not NotifySaveGameChunkReceived)
@@ -501,9 +473,6 @@ namespace WOTRMultiplayer.Services
             base.SetupNetworkMessageHandlers();
 
             _networkClient
-               // this is kind of special because requester is blocking the thread (most likely game main loop) until <see cref="DiceRollValueResponse"/> is received
-               .On<DiceRollValueRequest>(OnDiceRollValueRequest)
-
                // lobby
                .On<GameServerConnectionSucceeded>(OnGameServerConnectionSucceeded)
                .On<NotifyLobbyPlayersChanged>(OnNotifyLobbyPlayersChanged)
@@ -1467,9 +1436,6 @@ namespace WOTRMultiplayer.Services
 
                 await CombatInteraction.UpdateCombatStateAsync(combatState, areaEffects, false);
 
-                DiceRollStorage.Reset();
-                Logger.LogInformation("Dice roll storage has been reset after syncing turn units");
-
                 ValueGenerator.ResetSeededGenerators(Random.IdentifierLifetime.CombatTurn);
 
                 var confirmationMessage = new ClientCombatTurnStartSynchronized { UnitId = Game.Combat.Turn.UnitId };
@@ -1480,11 +1446,6 @@ namespace WOTRMultiplayer.Services
                 Logger.LogError(ex, "Unable to sync combat turn");
                 throw;
             }
-        }
-
-        private async void OnDiceRollValueRequest(long playerId, DiceRollValueRequest request)
-        {
-            await SendLocalRollAsync(request.PlayerId, request);
         }
 
         private async void OnNotifyCombatTurnStarted(long playerId, NotifyCombatTurnStarted message)

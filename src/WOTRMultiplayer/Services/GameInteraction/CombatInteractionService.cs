@@ -9,6 +9,7 @@ using Kingmaker.Armies.TacticalCombat;
 using Kingmaker.Armies.TacticalCombat.Blueprints;
 using Kingmaker.Armies.TacticalCombat.Commands;
 using Kingmaker.Armies.TacticalCombat.Controllers;
+using Kingmaker.Controllers;
 using Kingmaker.Controllers.Combat;
 using Kingmaker.Designers;
 using Kingmaker.EntitySystem.Entities;
@@ -407,46 +408,40 @@ namespace WOTRMultiplayer.Services.GameInteraction
             return false;
         }
 
-        public void MakeUnitTargetable(string unitId, bool isTargetable)
+        public void MakeUnitUntargetable(string unitId, bool isFirstGroupMember, bool isFirstGroup)
         {
-            _mainThreadAccessor.Post(() =>
+            var unit = _gameStateLookupService.GetUnitEntity(unitId);
+            unit?.Descriptor.State.Features.IsUntargetable.Retain();
+
+            if (isFirstGroupMember && unit != null)
             {
-                try
-                {
-                    var unit = _gameStateLookupService.GetUnitEntity(unitId);
+                unit.Group.IsInCombat++;
+            }
 
-                    if (isTargetable)
-                    {
-                        Game.Instance.Player.Group.IsInCombat--;
+            if (isFirstGroup)
+            {
+                Game.Instance.Player.Group.IsInCombat++;
+            }
 
-                        if (unit != null)
-                        {
-                            unit.Descriptor.State.Features.IsUntargetable.ReleaseAll();
-                            if (unit.Group.IsInCombat.m_GuardCount > 0)
-                            {
-                                unit.Group.IsInCombat--;
-                            }
-                        }
-                    }
-                    else
-                    {
-                        Game.Instance.Player.Group.IsInCombat++;
+            _logger.LogInformation("Unit is not targetable anymore. UnitId={UnitId}, IsUntargetable={IsUntargetable}, PlayerCombatCounter={PlayerCombatCounter}", unitId, unit?.Descriptor.State.Features.IsUntargetable.Value, Game.Instance.Player.Group.IsInCombat.m_GuardCount);
+        }
 
-                        if (unit != null)
-                        {
-                            unit.Descriptor.State.Features.IsUntargetable.Retain();
-                            unit.Group.IsInCombat++;
-                        }
-                    }
+        public void MakeUnitTargetable(string unitId, bool isLastGroupMember, bool isLastGroup)
+        {
+            var unit = _gameStateLookupService.GetUnitEntity(unitId);
+            unit?.Descriptor.State.Features.IsUntargetable.Release();
 
-                    _logger.LogInformation("Unit targetable feature has been updated. UnitId={UnitId}, RequestedTargetable={RequestedTargetable}, IsUntargetable={IsUntargetable}", unitId, isTargetable, unit?.Descriptor.State.Features.IsUntargetable.Value);
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Unable to make change unit targetable feature. UnitId={UnitId}, IsTargetable={IsTargetable}", unitId, isTargetable);
-                    throw;
-                }
-            });
+            if (isLastGroupMember && unit != null)
+            {
+                unit.Group.IsInCombat--;
+            }
+
+            if (isLastGroup)
+            {
+                Game.Instance.Player.Group.IsInCombat--;
+            }
+
+            _logger.LogInformation("Unit is targetable. UnitId={UnitId}, IsUntargetable={IsUntargetable}, PlayerCombatCounter={PlayerCombatCounter}", unitId, unit?.Descriptor.State.Features.IsUntargetable.Value, Game.Instance.Player.Group.IsInCombat.m_GuardCount);
         }
 
         public void MoveUnit(NetworkUnitMoveTo unitMoveTo)
@@ -1027,11 +1022,23 @@ namespace WOTRMultiplayer.Services.GameInteraction
             var unitCombatState = combatUnit.CombatState;
             var state = new NetworkUnitCombatState
             {
-                EngagedUnits = [.. unitCombatState.EngagedUnits.Select(x => x.UniqueId)],
-                EngagedBy = [.. unitCombatState.EngagedBy.Select(x => x.UniqueId)]
+                EngagedUnits = [.. unitCombatState.m_EngagedUnits.Select(CreateUnitEngagement)],
+                EngagedBy = [.. unitCombatState.m_EngagedBy.Select(CreateUnitEngagement)]
             };
 
             return state;
+        }
+
+        private NetworkUnitEngagement CreateUnitEngagement(KeyValuePair<UnitEntityData, TimeSpan> engagement)
+        {
+            var engagementTime = Game.Instance.TimeController.GameTime - engagement.Value;
+            var unitEngagement = new NetworkUnitEngagement
+            {
+                UnitId = engagement.Key.UniqueId,
+                Rounds = (int)Math.Round(engagementTime.TotalSeconds / 6f)
+            };
+
+            return unitEngagement;
         }
 
         private void UpdateCombatState(NetworkCombatState networkCombatState, bool requiresFullUpdate)
@@ -1325,8 +1332,8 @@ namespace WOTRMultiplayer.Services.GameInteraction
             foreach (var (networkUnit, unit) in unitsToUpdate)
             {
                 AddUnitForEngagementClearence([unit.UniqueId], engagedUnits);
-                AddUnitForEngagementClearence(networkUnit.CombatState?.EngagedBy ?? [], engagedUnits);
-                AddUnitForEngagementClearence(networkUnit.CombatState?.EngagedUnits ?? [], engagedUnits);
+                AddUnitForEngagementClearence(networkUnit.CombatState?.EngagedBy.Select(x => x.UnitId).ToList() ?? [], engagedUnits);
+                AddUnitForEngagementClearence(networkUnit.CombatState?.EngagedUnits.Select(x => x.UnitId).ToList() ?? [], engagedUnits);
             }
 
             foreach (var (_, unitToClear) in engagedUnits)
@@ -1338,16 +1345,20 @@ namespace WOTRMultiplayer.Services.GameInteraction
 
             foreach (var (networkUnit, unit) in unitsToUpdate)
             {
-                foreach (var engageTargetId in networkUnit.CombatState.EngagedUnits)
+                foreach (var engagement in networkUnit.CombatState.EngagedUnits)
                 {
-                    var engageTarget = _gameStateLookupService.GetUnitEntity(engageTargetId);
+                    var engageTarget = _gameStateLookupService.GetUnitEntity(engagement.UnitId);
                     if (engageTarget == null)
                     {
-                        _logger.LogError("Unable to engage missing unit. UnitId={UnitId}, EngageTargetId={EngageTargetId}", unit.UniqueId, engageTargetId);
+                        _logger.LogError("Unable to engage missing unit. UnitId={UnitId}, EngageTargetId={EngageTargetId}", unit.UniqueId, engagement.UnitId);
                         continue;
                     }
 
                     unit.CombatState.Engage(engageTarget);
+                    // overriding engagement time to make sure it doesn't provoke opportunity attacks
+                    var engageTime = Game.Instance.TimeController.GameTime - engagement.Rounds.Seconds();
+                    unit.CombatState.m_EngagedUnits[engageTarget] = engageTime;
+                    engageTarget.CombatState.m_EngagedBy[unit] = engageTime;
                 }
 
                 _logger.LogDebug("Unit engagement has been updated. UnitId={UnitId}, EngagedWith={EngagedWith}, EngagedBy={EngagedBy}, HostEngagedWith={HostEngagedWith}, HostEngagedBy={HostEngagedBy}", unit.UniqueId, string.Join(";", unit.CombatState.m_EngagedUnits.Select(x => x.Key.UniqueId)), string.Join(";", unit.CombatState.m_EngagedBy.Select(x => x.Key.UniqueId)), networkUnit.CombatState.EngagedUnits, networkUnit.CombatState.EngagedBy);

@@ -6,7 +6,6 @@ using FakeItEasy;
 using Kingmaker.GameModes;
 using Microsoft.Extensions.Logging;
 using NUnit.Framework;
-using WOTRMultiplayer.Abstractions;
 using WOTRMultiplayer.Abstractions.GameInteraction;
 using WOTRMultiplayer.Abstractions.IO;
 using WOTRMultiplayer.Abstractions.Random;
@@ -41,7 +40,6 @@ namespace WOTRMultiplayer.UnitTests.Services
         private IMultiplayerSettingsService _multiplayerSettingsProvider;
         private IFileSystemService _fileSystemService;
         private INetworkServer _networkServer;
-        private IDiceRollStorage _diceRollStorage;
         private IValueGenerator _valueGenerator;
         private IMapper _mapper;
 
@@ -67,7 +65,6 @@ namespace WOTRMultiplayer.UnitTests.Services
             _networkServer = A.Fake<INetworkServer>();
             Fake.GetFakeManager(_networkServer).AddRuleFirst(new NetworkReceiverFakeRule());
 
-            _diceRollStorage = A.Fake<IDiceRollStorage>();
             _valueGenerator = A.Fake<IValueGenerator>();
 
             _multiplayerHost = new MultiplayerHost(
@@ -82,7 +79,6 @@ namespace WOTRMultiplayer.UnitTests.Services
                 _multiplayerSettingsProvider,
                 _fileSystemService,
                 _networkServer,
-                _diceRollStorage,
                 _valueGenerator,
                 _mapper);
         }

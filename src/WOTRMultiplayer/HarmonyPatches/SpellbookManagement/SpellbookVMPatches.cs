@@ -104,7 +104,7 @@ namespace WOTRMultiplayer.HarmonyPatches.SpellbookManagement
             var spellLevel = slot1.SpellLevel;
             var spellbookId = __instance.CurrentSpellbook.Value.Blueprint.AssetGuid.ToString();
             var unitId = __instance.UnitDescriptor.Value.Unit.UniqueId;
-            Main.Multiplayer.OnSwapMemorizedSlots(unitId, spellbookId, spellLevel, spellSlotA,  spellSlotB);
+            Main.Multiplayer.OnSwapMemorizedSlots(unitId, spellbookId, spellLevel, spellSlotA, spellSlotB);
         }
 
         [HarmonyPatch(typeof(SpellbookVM), nameof(SpellbookVM.TryForget))]

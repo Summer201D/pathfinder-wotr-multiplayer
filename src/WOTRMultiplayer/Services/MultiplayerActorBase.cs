@@ -13,7 +13,6 @@ using Kingmaker.UI.Kingdom;
 using Kingmaker.Utility;
 using Microsoft.Extensions.Logging;
 using UniRx;
-using WOTRMultiplayer.Abstractions;
 using WOTRMultiplayer.Abstractions.GameInteraction;
 using WOTRMultiplayer.Abstractions.GameInteraction.CombatLog;
 using WOTRMultiplayer.Abstractions.IO;
@@ -35,7 +34,6 @@ using WOTRMultiplayer.Entities.MapObjects;
 using WOTRMultiplayer.Entities.NewGame;
 using WOTRMultiplayer.Entities.Ping;
 using WOTRMultiplayer.Entities.Rest;
-using WOTRMultiplayer.Entities.Rolls.Claiming.Values;
 using WOTRMultiplayer.Entities.Settings;
 using WOTRMultiplayer.Entities.SpellbookManagement;
 using WOTRMultiplayer.Entities.Spells;
@@ -43,7 +41,6 @@ using WOTRMultiplayer.Entities.Vendor;
 using WOTRMultiplayer.Networking.Abstractions;
 using WOTRMultiplayer.Networking.Messages.Game;
 using WOTRMultiplayer.Networking.Messages.Lobby;
-using WOTRMultiplayer.Networking.Messages.Requests;
 using WOTRMultiplayer.Services.Random;
 
 namespace WOTRMultiplayer.Services
@@ -64,9 +61,7 @@ namespace WOTRMultiplayer.Services
 
         public int? CombatSeed => Game.Combat?.Seed;
 
-        public int? CombatTurnSeed => Game.Combat?.Turn?.Seed;
-
-        public int? LastCombatTurnSeed => Game.LastCombatTurn?.Seed;
+        public int? CombatTurnSeed => Game.Combat?.Turn?.Seed ?? Game.LastCombatTurn?.Seed;
 
         public int? CrusadeArmyCombatAreaSeed => Game.ArmyCombat?.AreaSeed;
 
@@ -102,8 +97,6 @@ namespace WOTRMultiplayer.Services
 
         protected ICombatInteractionService CombatInteraction { get; private set; }
 
-        protected IDiceRollStorage DiceRollStorage { get; private set; }
-
         protected IFileSystemService FileSystem { get; private set; }
 
         protected IMultiplayerSettingsService SettingsService { get; private set; }
@@ -128,7 +121,6 @@ namespace WOTRMultiplayer.Services
             IGlobalMapInteractionService globalMapInteractionService,
             IPingInteractionService pingInteractionService,
             ICombatInteractionService combatInteractionService,
-            IDiceRollStorage diceRollStorage,
             IFileSystemService fileSystemService,
             IValueGenerator valueGenerator,
             INetworkReceiver networkReceiver)
@@ -142,7 +134,6 @@ namespace WOTRMultiplayer.Services
             GlobalMapInteraction = globalMapInteractionService;
             PingInteraction = pingInteractionService;
             CombatInteraction = combatInteractionService;
-            DiceRollStorage = diceRollStorage;
             FileSystem = fileSystemService;
             SettingsService = multiplayerSettingsService;
             ValueGenerator = valueGenerator;
@@ -263,20 +254,6 @@ namespace WOTRMultiplayer.Services
                 Ability = Mapper.Map<Networking.Messages.Contracts.NetworkActivatableAbility>(activatableAbilityUse)
             };
             Send(message);
-        }
-
-        public TRollValue RetrieveRoll<TRollValue>(int networkDiceRollId, string ruleName, string unitId)
-            where TRollValue : RollValueBase
-        {
-            Logger.LogInformation("Retrieving roll over network. RollId={RollId}, UnitId={UnitId}, RuleName={RuleName}", networkDiceRollId, unitId, ruleName);
-
-            var waitForRollTimeout = SettingsService.GetSettings().RemoteRollRetrievalTimeout;
-            var request = new DiceRollValueRequest { RollId = networkDiceRollId, Timeout = waitForRollTimeout, UnitId = unitId, PlayerId = Game.LocalPlayerId, RuleName = ruleName, CombatTurnUnitId = Game.Combat?.Turn?.UnitId };
-            // it's important to block current thread since we cannot proceed without response
-            // yeah most likely it will cause the game to freeze in case of bad network
-            var response = RetrieveRoll(request);
-
-            return ResponseToRollValue<TRollValue>(response);
         }
 
         public void OnClickMapObject(NetworkClick click)
@@ -542,8 +519,7 @@ namespace WOTRMultiplayer.Services
 
         public void ForceCombatEnd()
         {
-            ResetUntargetableState();
-            // hotkeys are in mainthread
+            CleanupUntargetableUnitsState();
             CombatInteraction.ForceResetCombat();
         }
 
@@ -558,8 +534,6 @@ namespace WOTRMultiplayer.Services
                 }
 
                 SaveLastCombatTurn();
-
-                ResetUntargetableState();
 
                 Game.Combat = null;
                 ValueGenerator.ResetSeededGenerators(IdentifierLifetime.Combat, IdentifierLifetime.CombatTurn);
@@ -660,7 +634,7 @@ namespace WOTRMultiplayer.Services
             }
         }
 
-        public bool CanUnitJoinCombat(string unitId)
+        public bool CanUnitJoinCombat(string unitId, string groupId)
         {
             try
             {
@@ -679,11 +653,7 @@ namespace WOTRMultiplayer.Services
 
                 if (Game.Combat.ConfirmedMidCombatUnits.Contains(unitId))
                 {
-                    if (Game.Combat.UntargetableUnits.Remove(unitId))
-                    {
-                        CombatInteraction.MakeUnitTargetable(unitId, isTargetable: true);
-                    }
-
+                    MakeUnitTargetable(unitId, groupId);
                     Logger.LogWarning("Unit has been allowed to join mid combat. UnitId={UnitId}", unitId);
                     return true;
                 }
@@ -696,10 +666,7 @@ namespace WOTRMultiplayer.Services
                 }
 
                 AddPlayerReadyStatus(PlayerTurnReadinessType.UnitJoinedMidCombat, Game.LocalPlayerId, unitId);
-                if (Game.Combat.UntargetableUnits.Add(unitId))
-                {
-                    CombatInteraction.MakeUnitTargetable(unitId, isTargetable: false);
-                }
+                MakeUnitUntargetable(unitId, groupId);
 
                 return false;
             }
@@ -1725,17 +1692,15 @@ namespace WOTRMultiplayer.Services
             UpdateGlobalMapUIState();
         }
 
-        public void OnUnitDeath(string unitId)
+        public void OnUnitDeath(string unitId, string groupId)
         {
             if (Game.Combat?.Turn == null)
             {
                 return;
             }
 
-            if (Game.Combat.UntargetableUnits.Remove(unitId))
-            {
-                CombatInteraction.MakeUnitTargetable(unitId, true);
-            }
+            // if unit is dead for some reason
+            MakeUnitTargetable(unitId, groupId);
 
             var message = new NotifyCombatUnitKilled
             {
@@ -1838,23 +1803,50 @@ namespace WOTRMultiplayer.Services
 
         public bool CanLeaveCombat()
         {
-            Logger.LogInformation("Checking if combat is allowed to end. UntargetableUnits={UntargetableUnits}", Game.Combat?.UntargetableUnits);
-
-            var canLeave = Game.Combat == null
-                || Game.Combat.UntargetableUnits.Count == 0
-                || Game.Combat.UntargetableUnits.All(GameInteraction.IsNotPartOfCombatAnymore);
-
-            if (canLeave)
+            if (!IsWaitingForUntargetableUnits())
             {
-                ResetUntargetableState();
-            }
-            else
-            {
-                Logger.LogWarning("Unable to leave combat. UntargetableUnits={UntargetableUnits}", Game.Combat?.UntargetableUnits);
-                PlayerNotification.AddCombatText(WellKnownKeys.GameNotifications.Combat.End.UntargetableDesync.Key, CombatTextSeverity.Common, string.Join(", ", Game.Combat?.UntargetableUnits ?? []));
+                CleanupUntargetableUnitsState();
+                return true;
             }
 
-            return canLeave;
+            var groups = string.Join(", ", Game.Combat.UntargetableUnits.Select(x => $"{x.Key}=[{string.Join(", ", x.Value)}]"));
+            Logger.LogWarning("Unable to leave combat. UntargetableGroups={UntargetableGroups}", groups);
+
+            return false;
+        }
+
+        public void CleanupUntargetableUnitsState()
+        {
+            var groups = Game.Combat.UntargetableUnits.ToList();
+            foreach (var group in groups)
+            {
+                foreach (var unit in group.Value)
+                {
+                    MakeUnitTargetable(unit, group.Key);
+                }
+            }
+        }
+
+        private bool IsWaitingForUntargetableUnits()
+        {
+            if (Game.Combat == null || Game.Combat.UntargetableUnits.Count == 0)
+            {
+                return false;
+            }
+
+            foreach (var group in Game.Combat.UntargetableUnits)
+            {
+                foreach (var unit in group.Value)
+                {
+                    var isNotPartOfCombat = GameInteraction.IsNotPartOfCombatAnymore(unit);
+                    if (!isNotPartOfCombat)
+                    {
+                        return true;
+                    }
+                }
+            }
+
+            return false;
         }
 
         public void OnItemDescriptionRead(NetworkItem networkItem)
@@ -2226,8 +2218,6 @@ namespace WOTRMultiplayer.Services
             Send(message);
             UpdateTransitionMapUIState();
         }
-
-        protected abstract DiceRollValueResponse RetrieveRoll(DiceRollValueRequest rollRequest);
 
         protected abstract void OnLocalPlayerTurnStart();
 
@@ -2825,15 +2815,15 @@ namespace WOTRMultiplayer.Services
             var settings = SettingsService.GetSettings();
             var content = FileSystem.GetRawFileContent(Game.StartUp.SavePath);
             var chunks = (content.Length + settings.SaveGameChunkSize - 1) / settings.SaveGameChunkSize;
-            var chunksCount = Math.Max(1, chunks);
 
-            initialMessage.ExpectedChunks = chunksCount;
+            initialMessage.ExpectedChunks = Math.Max(1, chunks);
             initialMessage.ContentSize = content.Length;
             Send(initialMessage);
 
-            var chunkNumber = 1;
+            var chunkNumber = 0;
             for (int offset = 0; offset < content.Length; offset += settings.SaveGameChunkSize)
             {
+                chunkNumber++;
                 int size = Math.Min(settings.SaveGameChunkSize, content.Length - offset);
                 var chunkMessage = new NotifySaveGameChunkCreated
                 {
@@ -2841,7 +2831,6 @@ namespace WOTRMultiplayer.Services
                     Content = new ReadOnlyMemory<byte>(content, offset, size).ToArray(),
                 };
                 Send(chunkMessage);
-                chunkNumber++;
             }
 
             Logger.LogInformation("Last save game chunk has been sent. LastChunkNumber={LastChunkNumber}", chunkNumber);
@@ -2942,7 +2931,6 @@ namespace WOTRMultiplayer.Services
             Game.LastCombatTurn = null;
             Game.ArmyCombat = null;
             Game.Leveling = null;
-            DiceRollStorage.Reset();
             ValueGenerator.ResetSeededGenerators(IdentifierLifetime.Area, IdentifierLifetime.Combat, IdentifierLifetime.CombatTurn);
 
             ResetPlayersTracker(Game.PlayersInGroupChanger);
@@ -3023,81 +3011,6 @@ namespace WOTRMultiplayer.Services
 
             var shouldNotify = IsControlledByLocalPlayer(sourceUnitId);
             return shouldNotify;
-        }
-
-        protected TRollValue ResponseToRollValue<TRollValue>(DiceRollValueResponse rollResponse)
-               where TRollValue : RollValueBase
-        {
-            if (rollResponse == null)
-            {
-                return null;
-            }
-
-            if (rollResponse.RollValue == null)
-            {
-                Logger.LogError("Specified roll is missing at remote player. RollId={RollId}", rollResponse?.RollId);
-                return null;
-            }
-
-            if (rollResponse.RollValue.DamageValues.Count > 0)
-            {
-                var damageValues = Mapper.Map<NetworkDamageListRollValue>(rollResponse.RollValue);
-                return damageValues as TRollValue;
-            }
-
-            if (rollResponse.RollValue.NamedIntValues.Count > 0)
-            {
-                var namedIntValues = Mapper.Map<NetworkNamedIntRollValue>(rollResponse.RollValue);
-                return namedIntValues as TRollValue;
-            }
-
-            var intValue = Mapper.Map<NetworkIntRollValue>(rollResponse.RollValue);
-            return intValue as TRollValue;
-        }
-
-        protected async Task SendLocalRollAsync(long playerId, DiceRollValueRequest request)
-        {
-            try
-            {
-                var roll = await DiceRollStorage.GetAsync<RollValueBase>(request.RollId, request.PlayerId, request.Timeout);
-                var response = new DiceRollValueResponse
-                {
-                    RollId = request.RollId,
-                    UnitId = request.UnitId,
-                    RollValue = Mapper.Map<Networking.Messages.Contracts.NetworkRollValue>(roll),
-                    PlayerId = request.PlayerId
-                };
-                Send(playerId, response);
-            }
-            catch (Exception ex)
-            {
-                Logger.LogError(ex, "Unable to send local roll");
-                throw;
-            }
-        }
-
-        protected bool IsRolledByHost()
-        {
-            var isNotInCombat = Game.Combat == null;
-            var isCombatNotInitialized = !(Game.Combat?.IsInitialized ?? false);
-            var isTurnNotInitialized = Game.Combat?.Turn == null;
-            var isAI = Game.Combat?.Turn?.IsAI ?? false;
-            var result = isNotInCombat // everything happens on host outside of combat
-                || isCombatNotInitialized // combat initialization phase (initiative rolls)
-                || isTurnNotInitialized // could happen when some new NPC joins midfight in midturns, e.g. Anevia in prologue
-                || isAI; // clients are getting their AI rolls from host
-
-            return result;
-        }
-
-        protected bool IsRolledByLocalPlayer()
-        {
-            var isNotAI = !(Game.Combat?.Turn?.IsAI ?? false);
-            var isLocalPlayer = Game.Combat?.Turn?.IsLocalPlayer ?? false;
-            var result = isNotAI  // clients are getting their AI rolls from host
-                && isLocalPlayer; // other MP players are getting rolls from turn owner
-
-            return result;
         }
 
         protected List<NetworkPlayer> GetMissingPlayers(string key, ConcurrentDictionary<string, HashSet<long>> playersReadinessTracker)
@@ -4161,12 +4074,12 @@ namespace WOTRMultiplayer.Services
             OnAfterNetworkMessageHandled(receivedFrom, dialogPopupShown);
         }
 
-        private void OnNotifyInventoryItemTransferred(long receivedFrom, NotifyInventoryItemTransferred itemTransferred)
+        private void OnNotifyInventoryItemTransferred(long receivedFrom, NotifyInventoryItemTransferred message)
         {
-            var transferItem = Mapper.Map<NetworkItemsTransfer>(itemTransferred.TransferItem);
+            var transferItem = Mapper.Map<NetworkItemsTransfer>(message.TransferItem);
             GameInteraction.TransferInventoryItems(transferItem);
 
-            OnAfterNetworkMessageHandled(receivedFrom, itemTransferred);
+            OnAfterNetworkMessageHandled(receivedFrom, message);
         }
 
         private void OnNotifyZoneLootClosed(long receivedFrom, NotifyZoneLootClosed zoneLootClosed)
@@ -4695,14 +4608,44 @@ namespace WOTRMultiplayer.Services
             }
         }
 
-        private void ResetUntargetableState()
+        private void MakeUnitTargetable(string unitId, string groupId)
         {
-            foreach (var unit in Game.Combat?.UntargetableUnits ?? [])
+            if (Game.Combat == null)
             {
-                CombatInteraction.MakeUnitTargetable(unit, true);
+                return;
             }
 
-            Game.Combat?.UntargetableUnits.Clear();
+            var group = Game.Combat.UntargetableUnits.GetOrAdd(groupId, []);
+            if (group.Remove(unitId))
+            {
+                var isLastGroupMember = group.Count == 0;
+                if (isLastGroupMember)
+                {
+                    Game.Combat.UntargetableUnits.TryRemove(groupId, out _);
+                }
+
+                var isLastGroup = Game.Combat.UntargetableUnits.Count == 0;
+
+                CombatInteraction.MakeUnitTargetable(unitId, isLastGroupMember, isLastGroup);
+            }
+        }
+
+        private void MakeUnitUntargetable(string unitId, string groupId)
+        {
+            if (Game.Combat == null)
+            {
+                return;
+            }
+
+            var group = Game.Combat.UntargetableUnits.GetOrAdd(groupId, []);
+            if (group.Add(unitId))
+            {
+                var isFirstGroupMember = group.Count == 1;
+
+                var isFirstGroup = Game.Combat.UntargetableUnits.Count == 1;
+
+                CombatInteraction.MakeUnitUntargetable(unitId, isFirstGroupMember, isFirstGroup);
+            }
         }
     }
 }

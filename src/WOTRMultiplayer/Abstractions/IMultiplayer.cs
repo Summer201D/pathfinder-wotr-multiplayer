@@ -90,7 +90,7 @@ namespace WOTRMultiplayer.Abstractions
 
         void OnDropItem(NetworkDropItem networkDropItem);
 
-        bool CanUnitJoinCombat(string unitId);
+        bool CanUnitJoinCombat(string unitId, string groupId);
 
         bool CanMakePerceptionCheck(string unitId, string mapObjectId);
 
@@ -279,8 +279,6 @@ namespace WOTRMultiplayer.Abstractions
         int GetCombatSeed();
 
         int GetCombatTurnSeed();
-
-        int GetLastCombatTurnSeed();
 
         int GetCrusadeArmyCombatSeed();
 
@@ -484,7 +482,7 @@ namespace WOTRMultiplayer.Abstractions
 
         void OnGlobalMapCrusadeArmyLeaderLevelingSkillSelected(string skillId);
 
-        void OnUnitDeath(string unitId);
+        void OnUnitDeath(string unitId, string groupId);
 
         void OnTrapDisarmRolled(NetworkTrapDisarm trapDisarm);
 

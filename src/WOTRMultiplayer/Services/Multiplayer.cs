@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Reflection;
-using JetBrains.Annotations;
 using Kingmaker.GameModes;
 using Kingmaker.Items.Slots;
 using Microsoft.Extensions.Logging;
@@ -560,7 +559,7 @@ namespace WOTRMultiplayer.Services
             }
         }
 
-        public bool CanUnitJoinCombat(string unitId)
+        public bool CanUnitJoinCombat(string unitId, string groupId)
         {
             try
             {
@@ -569,11 +568,11 @@ namespace WOTRMultiplayer.Services
                     return true;
                 }
 
-                return _multiplayerActorAccessor.Current.CanUnitJoinCombat(unitId);
+                return _multiplayerActorAccessor.Current.CanUnitJoinCombat(unitId, groupId);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error while checking if unit can join combat. UnitId={UnitId}", unitId);
+                _logger.LogError(ex, "Error while checking if unit can join combat. UnitId={UnitId}, GroupId={GroupId}", unitId, groupId);
                 throw;
             }
         }
@@ -923,12 +922,6 @@ namespace WOTRMultiplayer.Services
         public int GetCombatTurnSeed()
         {
             var seed = _multiplayerActorAccessor.Current?.CombatTurnSeed ?? 0;
-            return seed;
-        }
-
-        public int GetLastCombatTurnSeed()
-        {
-            var seed = _multiplayerActorAccessor.Current?.LastCombatTurnSeed ?? 0;
             return seed;
         }
 
@@ -3969,7 +3962,7 @@ namespace WOTRMultiplayer.Services
             }
         }
 
-        public void OnUnitDeath(string unitId)
+        public void OnUnitDeath(string unitId, string groupId)
         {
             try
             {
@@ -3978,7 +3971,7 @@ namespace WOTRMultiplayer.Services
                     return;
                 }
 
-                _multiplayerActorAccessor.Current.OnUnitDeath(unitId);
+                _multiplayerActorAccessor.Current.OnUnitDeath(unitId, groupId);
             }
             catch (Exception ex)
             {
