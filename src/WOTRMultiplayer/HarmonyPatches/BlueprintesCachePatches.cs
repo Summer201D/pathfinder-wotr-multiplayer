@@ -161,21 +161,21 @@ namespace WOTRMultiplayer.HarmonyPatches
             var commonViewGameObject = bundle.LoadAllAssets<UnityEngine.GameObject>().First();
             var commonView = commonViewGameObject.GetComponent<CommonPCView>();
             var saveLoad = commonView.m_SaveLoadPCView;
-            Main.Multiplayer.Factory.StoreSaveLoadPCViewPrefab(saveLoad);
+            Main.Multiplayer.UIFactory.StoreSaveLoadPCViewPrefab(saveLoad);
 
             var screen = saveLoad.gameObject.transform.Find("SaveLoadScreen");
-            Main.Multiplayer.Factory.StoreBackgroundArt(screen.Find("PapperBackground").gameObject);
+            Main.Multiplayer.UIFactory.StoreBackgroundArt(screen.Find("PapperBackground").gameObject);
 
             var saveList = screen.Find("SaveSlotCollectionPlace").Find("SaveSlotVirtualCollectionView");
-            Main.Multiplayer.Factory.StoreBorderDecoration(saveList.Find("Decoration").gameObject);
+            Main.Multiplayer.UIFactory.StoreBorderDecoration(saveList.Find("Decoration").gameObject);
 
             var title = screen.Find("SaveLoadDetails").Find("Title");
             var defaultTextMesh = title.GetComponentInChildren<TextMeshProUGUI>();
-            Main.Multiplayer.Factory.StoreDefaultTextMesh(defaultTextMesh);
+            Main.Multiplayer.UIFactory.StoreDefaultTextMesh(defaultTextMesh);
 
             var escMenuView = commonView.m_EscMenuContextPCView.m_EscMenuPCView;
             var closeButtonObject = escMenuView.gameObject.transform.Find("Window/Close").gameObject;
-            Main.Multiplayer.Factory.StoreCloseButtonPrefab(closeButtonObject);
+            Main.Multiplayer.UIFactory.StoreCloseButtonPrefab(closeButtonObject);
         }
 
         private static void SavePrefabsFromMainMenu()
@@ -185,10 +185,10 @@ namespace WOTRMultiplayer.HarmonyPatches
             var creditsSearchPanel = mainMenuViewGameObject.transform.Find("Canvas/Credits_Legacy/CreditsScreen/SearchPanel");
 
             var inputPrefab = creditsSearchPanel.Find("Input_Field");
-            Main.Multiplayer.Factory.StoreInputPrefab(inputPrefab.gameObject);
+            Main.Multiplayer.UIFactory.StoreInputPrefab(inputPrefab.gameObject);
 
             var buttonPrefab = creditsSearchPanel.Find("SearchButton");
-            Main.Multiplayer.Factory.StoreButtonPrefab(buttonPrefab.gameObject);
+            Main.Multiplayer.UIFactory.StoreButtonPrefab(buttonPrefab.gameObject);
         }
     }
 }

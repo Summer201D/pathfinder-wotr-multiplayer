@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using Kingmaker;
 using Kingmaker.UI.ServiceWindow;
 using Microsoft.Extensions.Logging;
-using UnityEngine;
 using WOTRMultiplayer.Abstractions.UI.Controllers;
 using WOTRMultiplayer.Abstractions.UI.Windows;
 using WOTRMultiplayer.Entities;
@@ -15,6 +14,8 @@ namespace WOTRMultiplayer.UI.Windows
         private ILogger<LobbyWindow> _logger;
         private ILobbyWindowController _lobbyWindowController;
         private Action _onClose;
+        private Action _onShow;
+
         private IDisposable _escSubscription;
 
         public Func<NetworkGameConnectivity> GetGameConnectivity { get; set; }
@@ -24,8 +25,6 @@ namespace WOTRMultiplayer.UI.Windows
         public Func<List<NetworkCharacter>> GetCharacters { get; set; }
 
         public Func<bool> GetIsHost { get; set; }
-
-        public GameObject Initiator { get; private set; }
 
         public bool IsVisible => base.IsShow;
 
@@ -41,15 +40,15 @@ namespace WOTRMultiplayer.UI.Windows
             return this;
         }
 
-        public ILobbyWindow WithCloseHandler(Action onClose)
+        public ILobbyWindow WithShowHandler(Action onShow)
         {
-            _onClose = onClose;
+            _onShow = onShow;
             return this;
         }
 
-        public ILobbyWindow WithInitiator(GameObject initiator)
+        public ILobbyWindow WithCloseHandler(Action onClose)
         {
-            Initiator = initiator;
+            _onClose = onClose;
             return this;
         }
 
@@ -107,6 +106,7 @@ namespace WOTRMultiplayer.UI.Windows
 
         public void Show()
         {
+            _onShow?.Invoke();
             Show(true);
         }
     }

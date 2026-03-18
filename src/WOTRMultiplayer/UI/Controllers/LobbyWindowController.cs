@@ -10,9 +10,11 @@ using TMPro;
 using UniRx;
 using UnityEngine;
 using UnityEngine.UI;
+using WOTRMultiplayer.Abstractions;
 using WOTRMultiplayer.Abstractions.Settings;
 using WOTRMultiplayer.Abstractions.UI;
 using WOTRMultiplayer.Abstractions.UI.Controllers;
+using WOTRMultiplayer.Abstractions.UI.Windows;
 using WOTRMultiplayer.Abstractions.Unity;
 using WOTRMultiplayer.Entities;
 using WOTRMultiplayer.Extensions;
@@ -50,16 +52,19 @@ namespace WOTRMultiplayer.UI.Controllers
         public const string CharacterOwnerObjectName = "CharacterOwner";
 
         private readonly ILogger<LobbyWindowController> _logger;
-        private readonly IUIFactory _uIFactory;
+        private readonly IUIFactory _uiFactory;
         private readonly IMainThreadAccessor _mainThreadAccessor;
         private readonly IResourceProvider _resourceProvider;
         private readonly IMultiplayerSettingsService _multiplayerSettingsService;
+        private readonly IMultiplayerActorAccessor _multiplayerActorAccessor;
         private readonly ConcurrentDictionary<LobbyWindowOwner, GameObject> _contents = new();
         private LobbyWindowOwner _activeOwner;
 
         private readonly List<IDisposable> _disposables = [];
 
         public Action<NetworkCharacter, NetworkPlayer> OnCharacterOwnerChanged { get; set; }
+
+        public ILobbyWindow Window { get; private set; }
 
         private GameObject ServerInfoSectionContent => GetContentOwnedObject()?.transform
             .Find(LobbyContentObjectName)
@@ -81,13 +86,55 @@ namespace WOTRMultiplayer.UI.Controllers
             IMainThreadAccessor mainThreadAccessor,
             IResourceProvider resourceProvider,
             IMultiplayerSettingsService multiplayerSettingsService,
-            IUIFactory uIFactory)
+            IMultiplayerActorAccessor multiplayerActorAccessor,
+            IUIFactory uiFactory)
         {
             _logger = logger;
-            _uIFactory = uIFactory;
+            _uiFactory = uiFactory;
             _mainThreadAccessor = mainThreadAccessor;
             _resourceProvider = resourceProvider;
             _multiplayerSettingsService = multiplayerSettingsService;
+            _multiplayerActorAccessor = multiplayerActorAccessor;
+        }
+
+        public void CloseWindow()
+        {
+            if (Window != null && Window.IsVisible)
+            {
+                Window.Close();
+            }
+        }
+
+        public void Reset()
+        {
+            Window = null;
+            ResetOwnerContent(LobbyWindowOwner.EscMenu);
+            OnCharacterOwnerChanged = null;
+        }
+
+        public void EnsureStandaloneWindowInitialized()
+        {
+            if (Window != null)
+            {
+                return;
+            }
+
+            Window = _uiFactory.InitializeEscMenuLobbyWindow(this);
+
+            Window.GetGameConnectivity = _multiplayerActorAccessor.Current.GetGameConnectivity;
+            Window.GetPlayers = _multiplayerActorAccessor.Current.GetPlayers;
+            Window.GetCharacters = _multiplayerActorAccessor.Current.GetCharacters;
+            Window.GetIsHost = () => _multiplayerActorAccessor.Host.IsActive;
+
+            if (_multiplayerActorAccessor.Host.IsActive)
+            {
+                OnCharacterOwnerChanged = _multiplayerActorAccessor.Host.ChangeCharacterOwner;
+            }
+
+            if (_multiplayerActorAccessor.Client.IsActive)
+            {
+                _multiplayerActorAccessor.Client.OnCharacterOwnerChanged = character => UpdateCharacterOwnerDropdown(character, silent: true);
+            }
         }
 
         public void InitializeContent(LobbyWindowOwner owner, Transform parent)
@@ -100,7 +147,7 @@ namespace WOTRMultiplayer.UI.Controllers
                 return;
             }
 
-            var lobbyContent = _uIFactory.CreateLobbyWindowContent(parent);
+            var lobbyContent = _uiFactory.CreateLobbyWindowContent(parent);
             lobbyContent.SetActive(false);
             _contents.TryAdd(owner, lobbyContent);
             _logger.LogInformation("Content has been created. Owner={Owner}", owner);
@@ -138,20 +185,20 @@ namespace WOTRMultiplayer.UI.Controllers
 
             ServerInfoSectionContent.CleanupAllChildren();
 
-            var serverInfoContainerObject = Main.Multiplayer.Factory.CreateDefaultGameObject(ServerInfoSectionContent.transform);
+            var serverInfoContainerObject = Main.Multiplayer.UIFactory.CreateDefaultGameObject(ServerInfoSectionContent.transform);
             serverInfoContainerObject.name = PlayerContainerObjectName;
             serverInfoContainerObject.AddComponent<HorizontalLayoutGroup>();
             var serverInfoContainerSizeFitter = serverInfoContainerObject.AddComponent<ContentSizeFitter>();
             serverInfoContainerSizeFitter.horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
             serverInfoContainerSizeFitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
 
-            var serverAddressObject = Main.Multiplayer.Factory.CreateDefaultGameObject(serverInfoContainerObject.transform);
+            var serverAddressObject = Main.Multiplayer.UIFactory.CreateDefaultGameObject(serverInfoContainerObject.transform);
             var serverAddressElement = serverAddressObject.AddComponent<LayoutElement>();
             serverAddressElement.preferredHeight = 40;
             var serverAddressBox = serverAddressObject.AddComponent<TextMeshProUGUI>();
             serverAddressBox.alignment = TextAlignmentOptions.Center;
-            serverAddressBox.material = Main.Multiplayer.Factory.DefaultTextMesh.Material;
-            serverAddressBox.color = Main.Multiplayer.Factory.DefaultTextMesh.Color;
+            serverAddressBox.material = Main.Multiplayer.UIFactory.DefaultTextMesh.Material;
+            serverAddressBox.color = Main.Multiplayer.UIFactory.DefaultTextMesh.Color;
 
             var settings = _multiplayerSettingsService.GetSettings();
             var endpointText = settings.HideServerAddress ? "***.***.***.***:****" : connectivity.Endpoint.ToString();
@@ -185,7 +232,6 @@ namespace WOTRMultiplayer.UI.Controllers
                 {
                     ListenForDropdownChange(tmpDropdown);
                 }
-
             });
         }
 
@@ -260,8 +306,8 @@ namespace WOTRMultiplayer.UI.Controllers
 
         private void CreatePlayerObject(NetworkPlayer player)
         {
-            var defaultMesh = Main.Multiplayer.Factory.DefaultTextMesh;
-            var playerContainerObject = Main.Multiplayer.Factory.CreateDefaultGameObject(PlayersSectionContent.transform);
+            var defaultMesh = Main.Multiplayer.UIFactory.DefaultTextMesh;
+            var playerContainerObject = Main.Multiplayer.UIFactory.CreateDefaultGameObject(PlayersSectionContent.transform);
             playerContainerObject.name = PlayerContainerObjectName;
             var horizontal = playerContainerObject.AddComponent<HorizontalLayoutGroup>();
             horizontal.spacing = 6f;
@@ -270,7 +316,7 @@ namespace WOTRMultiplayer.UI.Controllers
             playerContainerSizeFitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
 
             const int PreferredHeight = 28;
-            var gameVersionObject = Main.Multiplayer.Factory.CreateDefaultGameObject(playerContainerObject.transform);
+            var gameVersionObject = Main.Multiplayer.UIFactory.CreateDefaultGameObject(playerContainerObject.transform);
             var gameVersionElement = gameVersionObject.AddComponent<LayoutElement>();
             gameVersionElement.preferredHeight = PreferredHeight;
             var gameVersionBox = gameVersionObject.AddComponent<TextMeshProUGUI>();
@@ -279,7 +325,7 @@ namespace WOTRMultiplayer.UI.Controllers
             gameVersionBox.color = defaultMesh.Color;
             gameVersionBox.SetText($"[{player.ContentState.GameVersion}]");
 
-            var playerObject = Main.Multiplayer.Factory.CreateDefaultGameObject(playerContainerObject.transform);
+            var playerObject = Main.Multiplayer.UIFactory.CreateDefaultGameObject(playerContainerObject.transform);
             var playerElement = playerObject.AddComponent<LayoutElement>();
             playerElement.preferredHeight = PreferredHeight;
             playerObject.name = PlayerNameObjectName;
@@ -303,7 +349,7 @@ namespace WOTRMultiplayer.UI.Controllers
 
         private void CreatePlayerIcon(string iconName, GameObject parent, int size, TooltipBaseTemplate template = null)
         {
-            var iconObject = Main.Multiplayer.Factory.CreateDefaultGameObject(parent.transform);
+            var iconObject = Main.Multiplayer.UIFactory.CreateDefaultGameObject(parent.transform);
             var layoutElement = iconObject.AddComponent<LayoutElement>();
             layoutElement.preferredHeight = size;
             layoutElement.preferredWidth = size;

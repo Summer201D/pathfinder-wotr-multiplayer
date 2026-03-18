@@ -24,7 +24,7 @@ namespace WOTRMultiplayer.HarmonyPatches.GameInstance
     {
         [HarmonyPatch(typeof(Game), nameof(Game.LoadArea), [typeof(BlueprintArea), typeof(BlueprintAreaEnterPoint), typeof(AutoSaveMode), typeof(bool), typeof(SaveInfo), typeof(Action)])]
         [HarmonyPostfix]
-        public static void Game_LoadArea_Prefix()
+        public static void Game_LoadArea_Postfix()
         {
             if (!Main.Multiplayer.IsActive)
             {

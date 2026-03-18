@@ -20,6 +20,7 @@ using Kingmaker.UI.MVVM._PCView.InGame;
 using Kingmaker.UI.MVVM._PCView.Kingdom;
 using Kingmaker.UI.MVVM._PCView.Kingdom.KingdomInfo;
 using Kingmaker.UI.MVVM._PCView.Loot;
+using Kingmaker.UI.MVVM._PCView.MainMenu;
 using Kingmaker.UI.MVVM._PCView.MapIslands;
 using Kingmaker.UI.MVVM._PCView.NewGame;
 using Kingmaker.UI.MVVM._PCView.Party;
@@ -112,6 +113,8 @@ namespace WOTRMultiplayer.Abstractions.GameInteraction
         TransitionPCView TransitionPCView { get; }
 
         MapIslandsPCView MapIslandsPCView { get; }
+
+        MainMenuSideBarPCView MainMenuSideBarPCView { get; }
 
         void CloseAllWindows();
     }

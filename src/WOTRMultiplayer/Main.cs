@@ -16,6 +16,7 @@ using WOTRMultiplayer.Abstractions.Hashing;
 using WOTRMultiplayer.Abstractions.Localization;
 using WOTRMultiplayer.Abstractions.Settings;
 using WOTRMultiplayer.Abstractions.UI;
+using WOTRMultiplayer.Abstractions.UI.Controllers;
 using WOTRMultiplayer.Config.DI;
 using WOTRMultiplayer.Localization;
 using WOTRMultiplayer.Services.PubSub;
@@ -31,6 +32,8 @@ namespace WOTRMultiplayer
         private static ILogger<Main> _logger;
 
         public static UnityModManagerSettings ModManagerSettings { get; private set; }
+
+        public static ILobbyWindowController Lobby { get; private set; }
 
         public static IMultiplayer Multiplayer { get; private set; }
 
@@ -83,6 +86,7 @@ namespace WOTRMultiplayer
                 PlayerNotification = _serviceProvider.GetRequiredService<IPlayerNotificationService>();
                 State = _serviceProvider.GetRequiredService<IGameStateLookupService>();
                 HashService = _serviceProvider.GetRequiredService<IHashService>();
+                Lobby = _serviceProvider.GetRequiredService<ILobbyWindowController>();
 
                 entry.OnGUI += OnGui;
                 entry.OnSaveGUI += OnSaveGui;

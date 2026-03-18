@@ -1,7 +1,6 @@
 ﻿using HarmonyLib;
 using Kingmaker.UI;
 using Kingmaker.UI.MVVM._VM.EscMenu;
-using Microsoft.Extensions.Logging;
 
 namespace WOTRMultiplayer.HarmonyPatches.MenuPatches
 {
@@ -12,11 +11,8 @@ namespace WOTRMultiplayer.HarmonyPatches.MenuPatches
         [HarmonyPrefix]
         public static void EscMenuVM_OnQuitToMainMenuAction_Prefix(MessageModalBase.ButtonType buttonType)
         {
-            var logger = Main.GetLogger<EscMenuVMPatches>();
-            logger.LogInformation("Applying patch [{PatchName}]", nameof(EscMenuVM_OnQuitToMainMenuAction_Prefix));
             if (buttonType == MessageModalBase.ButtonType.Yes)
             {
-                logger.LogInformation("quit to main menu");
                 Main.Multiplayer.TerminateMultiplayer();
             }
         }

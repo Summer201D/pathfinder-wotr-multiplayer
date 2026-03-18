@@ -30,17 +30,13 @@ namespace WOTRMultiplayer.Abstractions
     {
         RemoteExecutionContext RemoteContext { get; }
 
-        IUIFactory Factory { get; }
+        IUIFactory UIFactory { get; }
 
         IValueGenerator ValueGenerator { get; }
 
-        void CloseMultiplayerLobbyWindow();
-
-        bool InitializeMultiplayer(InitializeMultiplayerContext context);
+        void Initialize();
 
         void TerminateMultiplayer();
-
-        void InitializeEscMenuLobbyWindow();
 
         void OnStartGameMode(GameModeType type);
 

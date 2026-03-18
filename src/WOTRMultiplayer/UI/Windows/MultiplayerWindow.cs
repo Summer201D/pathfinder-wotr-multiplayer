@@ -61,7 +61,7 @@ namespace WOTRMultiplayer.UI.Windows
             _isInitialized = true;
             _logger.LogInformation("Initalizing");
 
-            Main.Multiplayer.Factory.StoreDefaultGameObject(gameObject.transform.Find("Black").gameObject);
+            Main.Multiplayer.UIFactory.StoreDefaultGameObject(gameObject.transform.Find("Black").gameObject);
 
             SetupLayout();
 

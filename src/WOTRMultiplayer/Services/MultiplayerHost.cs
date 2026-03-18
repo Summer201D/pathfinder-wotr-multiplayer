@@ -1135,6 +1135,12 @@ namespace WOTRMultiplayer.Services
 
         public void OnAlushenyrraCameraDirectionChanged(string cameraDirection)
         {
+            // TODO: is in isles area?
+            if (Game.CurrentArea == null || Game.CurrentArea.Chapter != 4)
+            {
+                return;
+            }
+
             var message = new NotifyAlyshenyrraCameraDirectionChanged
             {
                 Direction = cameraDirection

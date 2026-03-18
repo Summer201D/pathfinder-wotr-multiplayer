@@ -1,5 +1,4 @@
-﻿using System;
-using Kingmaker.UI.MVVM._PCView.SaveLoad;
+﻿using Kingmaker.UI.MVVM._PCView.SaveLoad;
 using Kingmaker.UI.MVVM._PCView.Settings.Entities;
 using Kingmaker.UI.MVVM._VM.Settings;
 using Owlcat.Runtime.UI.VirtualListSystem;
@@ -7,7 +6,6 @@ using TMPro;
 using UnityEngine;
 using WOTRMultiplayer.Abstractions.UI.Controllers;
 using WOTRMultiplayer.Abstractions.UI.Windows;
-using WOTRMultiplayer.Entities;
 
 namespace WOTRMultiplayer.Abstractions.UI
 {
@@ -15,7 +13,7 @@ namespace WOTRMultiplayer.Abstractions.UI
     {
         WOTRMultiplayer.UI.Mesh DefaultTextMesh { get; }
 
-        IMultiplayerWindow InitializeMultiplayerWindow(InitializeMultiplayerContext context, Action onShow);
+        void InitializeMultiplayerWindow();
 
         GameObject CreateBorderDecoration(Transform parent);
 
@@ -31,7 +29,7 @@ namespace WOTRMultiplayer.Abstractions.UI
 
         SaveLoadPCView CreateSaveLoadPCView(Transform parent);
 
-        ILobbyWindow InitializeEscMenuLobbyWindow(ILobbyWindowController lobbyWindowController, Action onShow);
+        ILobbyWindow InitializeEscMenuLobbyWindow(ILobbyWindowController lobbyWindowController);
 
         GameObject CreateBackgroundArt(Transform parent);
 
@@ -51,8 +49,6 @@ namespace WOTRMultiplayer.Abstractions.UI
 
         void StoreBackgroundArt(GameObject backgroundArt);
 
-        void DestroyLobbyWindow(ILobbyWindow lobbyWindow);
-
         void PopulateMultiplayerSettingsUI(SettingsVM instance);
 
         IVirtualListElementView InitializeInputSettingTemplate(GameObject settingPrefab);
@@ -62,5 +58,7 @@ namespace WOTRMultiplayer.Abstractions.UI
         void StoreCloseButtonPrefab(GameObject closeButtonObject);
 
         GameObject CreateCloseButton(Transform parent);
+
+        void DestroyStandaloneLobbyWindow();
     }
 }

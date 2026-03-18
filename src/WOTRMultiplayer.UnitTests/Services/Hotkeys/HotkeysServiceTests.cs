@@ -7,6 +7,7 @@ using NUnit.Framework;
 using WOTRMultiplayer.Abstractions;
 using WOTRMultiplayer.Abstractions.GameInteraction;
 using WOTRMultiplayer.Abstractions.Settings;
+using WOTRMultiplayer.Abstractions.UI.Controllers;
 using WOTRMultiplayer.Services.Hotkeys;
 using WOTRMultiplayer.Services.Settings;
 
@@ -20,6 +21,7 @@ namespace WOTRMultiplayer.UnitTests.Services.Hotkeys
         private IMultiplayerActorAccessor _multiplayerActorAccessor;
         private IPingInteractionService _pingInteractionService;
         private ISettingsControllerAccessor _settingsControllerAccessor;
+        private ILobbyWindowController _lobbyWindowController;
         private IKeyboardAccessor _keyboardAccessor;
 
         [SetUp]
@@ -31,6 +33,7 @@ namespace WOTRMultiplayer.UnitTests.Services.Hotkeys
             _multiplayerActorAccessor = A.Fake<IMultiplayerActorAccessor>();
             _pingInteractionService = A.Fake<IPingInteractionService>();
             _settingsControllerAccessor = A.Fake<ISettingsControllerAccessor>();
+            _lobbyWindowController = A.Fake<ILobbyWindowController>();
             _keyboardAccessor = A.Fake<IKeyboardAccessor>();
 
             _hotkeysService = new HotkeysService(
@@ -38,6 +41,7 @@ namespace WOTRMultiplayer.UnitTests.Services.Hotkeys
                 _multiplayerActorAccessor,
                 _settingsControllerAccessor,
                 _pingInteractionService,
+                _lobbyWindowController,
                 _keyboardAccessor);
         }
 

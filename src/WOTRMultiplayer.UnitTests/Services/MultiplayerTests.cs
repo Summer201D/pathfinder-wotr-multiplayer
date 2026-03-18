@@ -1,5 +1,4 @@
-﻿using System;
-using FakeItEasy;
+﻿using FakeItEasy;
 using Microsoft.Extensions.Logging;
 using NUnit.Framework;
 using WOTRMultiplayer.Abstractions;
@@ -9,7 +8,6 @@ using WOTRMultiplayer.Abstractions.Random;
 using WOTRMultiplayer.Abstractions.UI;
 using WOTRMultiplayer.Abstractions.UI.Controllers;
 using WOTRMultiplayer.Abstractions.UI.Windows;
-using WOTRMultiplayer.Entities;
 using WOTRMultiplayer.Services;
 using WOTRMultiplayer.UI.Windows;
 
@@ -69,33 +67,31 @@ namespace WOTRMultiplayer.UnitTests.Services
         }
 
         [Test]
-        public void InitializeMultiplayer_HostAndClientAreNotActive_CallsFactoryWithoutCallingDispose()
+        public void Initialize_HostAndClientAreNotActive_CallsFactoryWithoutCallingDispose()
         {
             // Arrange
-            var context = new InitializeMultiplayerContext(null, null);
             A.CallTo(() => _multiplayerHost.IsActive).Returns(false);
             A.CallTo(() => _multiplayerClient.IsActive).Returns(false);
 
             // Act
-            _multiplayer.InitializeMultiplayer(context);
+            _multiplayer.Initialize();
 
             // Assert
-            A.CallTo(() => _uiFactory.InitializeMultiplayerWindow(context, An<Action>.Ignored)).MustHaveHappenedOnceExactly();
+            A.CallTo(() => _uiFactory.InitializeMultiplayerWindow()).MustHaveHappenedOnceExactly();
             A.CallTo(() => _multiplayerHost.Reset()).MustNotHaveHappened();
             A.CallTo(() => _multiplayerClient.Reset()).MustNotHaveHappened();
         }
 
         [Test]
-        public void InitializeMultiplayer_MultiplayerHostIsActive_LogsAndCallsDispose()
+        public void Initialize_MultiplayerHostIsActive_LogsAndCallsDispose()
         {
             // Arrange
             A.CallTo(() => _multiplerActorAccessor.Host).Returns(_multiplayerHost);
             A.CallTo(() => _multiplerActorAccessor.Client).Returns(_multiplayerClient);
-            var context = new InitializeMultiplayerContext(null, null);
             A.CallTo(() => _multiplayerHost.IsActive).Returns(true);
 
             // Act
-            _multiplayer.InitializeMultiplayer(context);
+            _multiplayer.Initialize();
 
             // Assert
             A.CallTo(() => _multiplayerHost.Reset()).MustHaveHappenedOnceExactly();
@@ -115,20 +111,18 @@ namespace WOTRMultiplayer.UnitTests.Services
             A.CallTo(() => _multiplayerClient.Reset()).MustHaveHappenedOnceExactly();
             A.CallTo(() => _multiplayerHost.Reset()).MustHaveHappenedOnceExactly();
             A.CallTo(() => _lobbyWindowController.ResetOwnerContent(LobbyWindowOwner.EscMenu)).MustHaveHappenedOnceExactly();
-            A.CallTo(() => _uiFactory.DestroyLobbyWindow(An<ILobbyWindow>.Ignored)).MustHaveHappenedOnceExactly();
         }
 
         [Test]
-        public void InitializeMultiplayer_MultiplayerClientIsActive_LogsAndCallsDispose()
+        public void Initialize_MultiplayerClientIsActive_LogsAndCallsDispose()
         {
             // Arrange
             A.CallTo(() => _multiplerActorAccessor.Host).Returns(_multiplayerHost);
             A.CallTo(() => _multiplerActorAccessor.Client).Returns(_multiplayerClient);
-            var context = new InitializeMultiplayerContext(null, null);
             A.CallTo(() => _multiplayerClient.IsActive).Returns(true);
 
             // Act
-            _multiplayer.InitializeMultiplayer(context);
+            _multiplayer.Initialize();
 
             // Assert
             A.CallTo(() => _multiplayerClient.Reset()).MustHaveHappenedOnceExactly();

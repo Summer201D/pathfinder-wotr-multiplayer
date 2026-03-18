@@ -11,9 +11,7 @@ Set `WOTR_PATH` environment var to target Wrath game folder, e.g. `D:\Games\Stea
 4. Update `Wrath_Data/boot.config`
 ```
 player-connection-mode=Listen
-player-connection-guid=3060108046
 player-connection-debug=1
-player-connection-ip=127.0.0.1
 ```
 5. Launch Game
 6. Visual Studio -> Debug -> Attach Unity Debugger

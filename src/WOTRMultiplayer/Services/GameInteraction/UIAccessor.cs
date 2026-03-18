@@ -109,6 +109,8 @@ namespace WOTRMultiplayer.Services.GameInteraction
         public TransitionPCView TransitionPCView => InGamePCView?.m_StaticPartPCView?.m_TransitionPCView ?? GlobalMapPCView?.m_TransitionPCView;
         public MapIslandsPCView MapIslandsPCView => InGamePCView?.m_StaticPartPCView?.m_CreatedMapIslandsPCView;
 
+        public MainMenuSideBarPCView MainMenuSideBarPCView => MainMenuPCView?.m_MainMenuSideBarPCView;
+
         public void CloseAllWindows()
         {
             ServiceWindowsVM?.HandleCloseAll();
@@ -127,7 +129,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
                 settingsVM.m_CloseAction?.Invoke();
             }
 
-            Main.Multiplayer.CloseMultiplayerLobbyWindow();
+            Main.Lobby.CloseWindow();
         }
     }
 }

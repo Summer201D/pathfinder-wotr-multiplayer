@@ -7,6 +7,7 @@ using WOTRMultiplayer.Abstractions;
 using WOTRMultiplayer.Abstractions.GameInteraction;
 using WOTRMultiplayer.Abstractions.Hotkeys;
 using WOTRMultiplayer.Abstractions.Settings;
+using WOTRMultiplayer.Abstractions.UI.Controllers;
 using WOTRMultiplayer.Services.Settings;
 
 namespace WOTRMultiplayer.Services.Hotkeys
@@ -18,6 +19,7 @@ namespace WOTRMultiplayer.Services.Hotkeys
         private readonly ISettingsControllerAccessor _settingsControllerAccessor;
         private readonly IKeyboardAccessor _keyboardAccessor;
         private readonly IPingInteractionService _pingInteractionService;
+        private readonly ILobbyWindowController _lobbyWindowController;
         private readonly List<IDisposable> _bindings = [];
 
         public HotkeysService(
@@ -25,6 +27,7 @@ namespace WOTRMultiplayer.Services.Hotkeys
             IMultiplayerActorAccessor multiplayerActorAccessor,
             ISettingsControllerAccessor settingsControllerAccessor,
             IPingInteractionService pingInteractionService,
+            ILobbyWindowController lobbyWindowController,
             IKeyboardAccessor keyboardAccessor)
         {
             _logger = logger;
@@ -32,6 +35,7 @@ namespace WOTRMultiplayer.Services.Hotkeys
             _settingsControllerAccessor = settingsControllerAccessor;
             _keyboardAccessor = keyboardAccessor;
             _pingInteractionService = pingInteractionService;
+            _lobbyWindowController = lobbyWindowController;
         }
 
         public void Initialize()
@@ -46,8 +50,9 @@ namespace WOTRMultiplayer.Services.Hotkeys
             _bindings.Clear();
 
             ConfigureHotkey(WellKnownSettings.Hotkeys.Ping, OnPingHotkey);
-            ConfigureHotkey(WellKnownSettings.Hotkeys.ForceUnpause, OnForceUnpause);
-            ConfigureHotkey(WellKnownSettings.Hotkeys.ForceCombatEnd, OnForceCombatEnd);
+            ConfigureHotkey(WellKnownSettings.Hotkeys.ShowLobby, OnShowLobbyHotkey);
+            ConfigureHotkey(WellKnownSettings.Hotkeys.ForceUnpause, OnForceUnpauseHotkey);
+            ConfigureHotkey(WellKnownSettings.Hotkeys.ForceCombatEnd, OnForceCombatEndHotkey);
         }
 
         public void ConfigureHotkey(WellKnownSettingKey<KeyBindingPair> hotkey, Action hotkeyHandler)
@@ -77,7 +82,7 @@ namespace WOTRMultiplayer.Services.Hotkeys
 
         private void OnHotkeyPressed(string key, Action onHotkey)
         {
-            if (_multiplayerActorAccessor.Current == null)
+            if (_multiplayerActorAccessor.Current == null || _multiplayerActorAccessor.Current.IsInLobby)
             {
                 return;
             }
@@ -103,16 +108,28 @@ namespace WOTRMultiplayer.Services.Hotkeys
             _multiplayerActorAccessor.Current.OnPing(ping);
         }
 
-        private void OnForceUnpause()
+        private void OnForceUnpauseHotkey()
         {
             _logger.LogWarning("Forcing to unpause");
             _multiplayerActorAccessor.Current.ForceUnpause();
         }
 
-        private void OnForceCombatEnd()
+        private void OnForceCombatEndHotkey()
         {
             _logger.LogWarning("Forcing combat to end");
             _multiplayerActorAccessor.Current.ForceCombatEnd();
+        }
+
+        private void OnShowLobbyHotkey()
+        {
+            _lobbyWindowController.EnsureStandaloneWindowInitialized();
+
+            if (_lobbyWindowController.Window.IsVisible)
+            {
+                return;
+            }
+
+            _lobbyWindowController.Window.Show();
         }
     }
 }

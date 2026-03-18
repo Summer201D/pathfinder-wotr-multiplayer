@@ -21,7 +21,7 @@ namespace WOTRMultiplayer.HarmonyPatches.MenuPatches
         {
             try
             {
-                Main.Multiplayer.Factory.StoreDropdownPrefab(__instance.m_SettingsViews.m_SettingsEntityDropdownViewPrefab);
+                Main.Multiplayer.UIFactory.StoreDropdownPrefab(__instance.m_SettingsViews.m_SettingsEntityDropdownViewPrefab);
             }
             catch (Exception ex)
             {
@@ -58,7 +58,7 @@ namespace WOTRMultiplayer.HarmonyPatches.MenuPatches
         public static IVirtualListElementTemplate[] InitializeCustomSettingElements(IVirtualListElementTemplate[] templates, SettingsPCView.SettingsViews views)
         {
             var baseTemplatesCount = templates.Length;
-            var view = Main.Multiplayer.Factory.InitializeInputSettingTemplate(views.m_SettingsEntityBoolViewPrefab.gameObject);
+            var view = Main.Multiplayer.UIFactory.InitializeInputSettingTemplate(views.m_SettingsEntityBoolViewPrefab.gameObject);
 
             IVirtualListElementTemplate[] allTemplates = [.. templates.Concat(
                 new VirtualListElementTemplate<SettingsEntityStringInputVM>(view),

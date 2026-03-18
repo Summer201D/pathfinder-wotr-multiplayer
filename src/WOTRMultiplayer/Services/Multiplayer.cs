@@ -10,7 +10,6 @@ using WOTRMultiplayer.Abstractions.Hotkeys;
 using WOTRMultiplayer.Abstractions.Random;
 using WOTRMultiplayer.Abstractions.UI;
 using WOTRMultiplayer.Abstractions.UI.Controllers;
-using WOTRMultiplayer.Abstractions.UI.Windows;
 using WOTRMultiplayer.Entities;
 using WOTRMultiplayer.Entities.ActionBar;
 using WOTRMultiplayer.Entities.Area;
@@ -31,22 +30,18 @@ using WOTRMultiplayer.Entities.SpellbookManagement;
 using WOTRMultiplayer.Entities.Spells;
 using WOTRMultiplayer.Entities.Vendor;
 using WOTRMultiplayer.Services.GameInteraction.Contexts;
-using WOTRMultiplayer.UI.Windows;
 
 namespace WOTRMultiplayer.Services
 {
     public class Multiplayer : IMultiplayer
     {
-        private IMultiplayerWindow _multiplayerWindow;
-        private ILobbyWindow _lobbyWindow;
-
         private readonly ILobbyWindowController _lobbyWindowController;
         private readonly IGameInteractionService _gameInteractionService;
         private readonly ILogger _logger;
         private readonly IMultiplayerActorAccessor _multiplayerActorAccessor;
         private readonly IHotkeysService _hotkeysService;
 
-        public IUIFactory Factory { get; private set; }
+        public IUIFactory UIFactory { get; private set; }
 
         public IValueGenerator ValueGenerator { get; private set; }
 
@@ -66,7 +61,7 @@ namespace WOTRMultiplayer.Services
             IValueGenerator valueGenerator)
         {
             _logger = logger;
-            Factory = uiFactory;
+            UIFactory = uiFactory;
             _multiplayerActorAccessor = multiplayerActorAccessor;
             _lobbyWindowController = lobbyWindowController;
             _gameInteractionService = gameInteractionService;
@@ -74,7 +69,7 @@ namespace WOTRMultiplayer.Services
             ValueGenerator = valueGenerator;
         }
 
-        public bool InitializeMultiplayer(InitializeMultiplayerContext context)
+        public void Initialize()
         {
             if (_multiplayerActorAccessor.Host.IsActive)
             {
@@ -88,10 +83,8 @@ namespace WOTRMultiplayer.Services
                 _multiplayerActorAccessor.Client.Reset();
             }
 
-            _multiplayerWindow = Factory.InitializeMultiplayerWindow(context, ShowMultiplayerWindow);
+            UIFactory.InitializeMultiplayerWindow();
             _hotkeysService.Initialize();
-
-            return true;
         }
 
         public void TerminateMultiplayer()
@@ -100,38 +93,9 @@ namespace WOTRMultiplayer.Services
             _multiplayerActorAccessor.Host.Reset();
             _multiplayerActorAccessor.Client.Reset();
             _multiplayerActorAccessor.Client.OnCharacterOwnerChanged = null;
-            _lobbyWindowController.ResetOwnerContent(LobbyWindowOwner.EscMenu);
-            _lobbyWindowController.OnCharacterOwnerChanged = null;
-            _logger.LogInformation("Disposing Esc menu window game objects");
-            Factory.DestroyLobbyWindow(_lobbyWindow);
-        }
 
-        public void InitializeEscMenuLobbyWindow()
-        {
-            if (_multiplayerActorAccessor.Current == null)
-            {
-                return;
-            }
-
-            _logger.LogInformation("Creating Esc menu multiplayer lobby window");
-            _lobbyWindow = Factory.InitializeEscMenuLobbyWindow(_lobbyWindowController, ShowMultiplayerLobbyWindow);
-
-            _lobbyWindow.GetGameConnectivity = _multiplayerActorAccessor.Current.GetGameConnectivity;
-            _lobbyWindow.GetPlayers = _multiplayerActorAccessor.Current.GetPlayers;
-            _lobbyWindow.GetCharacters = _multiplayerActorAccessor.Current.GetCharacters;
-            _lobbyWindow.GetIsHost = () => _multiplayerActorAccessor.Host.IsActive;
-
-            _lobbyWindow.WithController(_lobbyWindowController);
-
-            if (_multiplayerActorAccessor.Host.IsActive)
-            {
-                _lobbyWindowController.OnCharacterOwnerChanged = OnMultiplayerHostLobbyCharacterOwnerChanged;
-            }
-
-            if (_multiplayerActorAccessor.Client.IsActive)
-            {
-                _multiplayerActorAccessor.Client.OnCharacterOwnerChanged = OnMultiplayerClientCharacterOwnerChanged;
-            }
+            _lobbyWindowController.Reset();
+            UIFactory.DestroyStandaloneLobbyWindow();
         }
 
         public string GetCharacterOwnerName(string unitId)
@@ -4150,15 +4114,6 @@ namespace WOTRMultiplayer.Services
             }
         }
 
-        public void CloseMultiplayerLobbyWindow()
-        {
-            if (_lobbyWindow != null && _lobbyWindow.IsVisible)
-            {
-                _logger.LogInformation("Closing lobby window");
-                _lobbyWindow.Close();
-            }
-        }
-
         public void OnEnterKingdom(NetworkKingdomEntryPoint kingdomEntryPoint)
         {
             try
@@ -4559,30 +4514,6 @@ namespace WOTRMultiplayer.Services
                 _logger.LogError(ex, "Error while choosing island");
                 throw;
             }
-        }
-
-        private void ShowMultiplayerLobbyWindow()
-        {
-            _logger.LogInformation("Opening lobby window");
-            _lobbyWindow.Show();
-        }
-
-        private void ShowMultiplayerWindow()
-        {
-            _logger.LogInformation("Show Multiplayer window");
-            _multiplayerWindow.Show(true);
-        }
-
-        private void OnMultiplayerHostLobbyCharacterOwnerChanged(NetworkCharacter character, NetworkPlayer player)
-        {
-            _logger.LogInformation("OnMultiplayerHostLobbyCharacterOwnerChanged. CharacterId={CharacterId}, PlayerId={PlayerId}", character.UnitId, player.Id);
-            _multiplayerActorAccessor.Host.ChangeCharacterOwner(character, player);
-        }
-
-        private void OnMultiplayerClientCharacterOwnerChanged(NetworkCharacter character)
-        {
-            _logger.LogInformation("OnMultiplayerClientCharacterOwnerChanged. CharacterId={CharacterId}, PlayerId={PlayerId}", character.Name, character.Owner.Id);
-            _lobbyWindowController.UpdateCharacterOwnerDropdown(character, silent: true);
         }
     }
 }

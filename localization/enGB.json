@@ -147,6 +147,10 @@
                     "title": "Ping",
                     "tooltip": "Use it to quickly highlight a specific world position, unit, map object, or other target. Your ping will be visible to other players, helping you communicate important locations or points of interest"
                 },
+                "showLobby": {
+                    "title": "Show Lobby",
+                    "tooltip": "Opens the lobby window, which can also be accessed through the Esc menu"
+                },
                 "forceUnpause": {
                     "title": "Force Unpause",
                     "tooltip": "Completly removes local pause. Use this in case of any bugs with synced pause"

@@ -383,7 +383,7 @@ namespace WOTRMultiplayer.UI.Controllers
 
         private void SetupLoadSaveGamesLayout()
         {
-            _saveLoadView = Main.Multiplayer.Factory.CreateSaveLoadPCView(_menuContent.transform);
+            _saveLoadView = Main.Multiplayer.UIFactory.CreateSaveLoadPCView(_menuContent.transform);
             _saveLoadView.Initialize();
         }
 

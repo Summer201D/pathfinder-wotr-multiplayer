@@ -129,14 +129,14 @@ namespace WOTRMultiplayer.HarmonyPatches.MenuPatches
                 return true;
             }
 
-            Main.Multiplayer.Factory.PopulateMultiplayerSettingsUI(__instance);
+            Main.Multiplayer.UIFactory.PopulateMultiplayerSettingsUI(__instance);
 
             return false;
         }
 
         public static void CreateMultiplayerSettingsMenu(SettingsVM settingsVM)
         {
-            Main.Multiplayer.Factory.CreateMultiplayerSettingsMenu(settingsVM);
+            Main.Multiplayer.UIFactory.CreateMultiplayerSettingsMenu(settingsVM);
         }
     }
 }

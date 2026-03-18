@@ -31,7 +31,6 @@ using WOTRMultiplayer.Abstractions.UI;
 using WOTRMultiplayer.Abstractions.UI.Controllers;
 using WOTRMultiplayer.Abstractions.UI.Controllers.Menu;
 using WOTRMultiplayer.Abstractions.UI.Windows;
-using WOTRMultiplayer.Entities;
 using WOTRMultiplayer.Extensions;
 using WOTRMultiplayer.HarmonyPatches.MenuPatches;
 using WOTRMultiplayer.Services.Settings;
@@ -224,10 +223,17 @@ namespace WOTRMultiplayer.UI
             return dropdownContainerObject;
         }
 
-        public IMultiplayerWindow InitializeMultiplayerWindow(InitializeMultiplayerContext context, Action onShow)
+        public void InitializeMultiplayerWindow()
         {
-            var multiplayerMenu = UnityEngine.Object.Instantiate(context.MenuItemPrototype, context.Parent);
-            multiplayerMenu.transform.SetSiblingIndex(context.MenuItemPrototype.transform.GetSiblingIndex());
+            var menuButtons = _uiAccessor.MainMenuSideBarPCView.transform.GetChild(0);
+            var settingsMenuItem = menuButtons?.transform.Find("Settings");
+            if (settingsMenuItem == null)
+            {
+                return;
+            }
+
+            var multiplayerMenu = UnityEngine.Object.Instantiate(settingsMenuItem, menuButtons);
+            multiplayerMenu.transform.SetSiblingIndex(settingsMenuItem.transform.GetSiblingIndex());
             var multiplayerMenuView = multiplayerMenu.GetComponent<ContextMenuEntityPCView>();
             var element = CreateCopyOfCreditsScreen();
             var multiplayerWindow = element.AddComponent<MultiplayerWindow>()
@@ -237,15 +243,13 @@ namespace WOTRMultiplayer.UI
 
             CreateBackgroundArt(multiplayerWindow.transform.Find("BackgroundGroup"));
             var text = UIUtility.GetSaberBookFormat(new LocalizedString { Key = WellKnownKeys.MainMenu.Multiplayer.Title.Key });
-            var viewModel = new ContextMenuEntityVM(new ContextMenuCollectionEntity(UIUtility.GetSaberBookFormat(text), onShow));
+            var viewModel = new ContextMenuEntityVM(new ContextMenuCollectionEntity(UIUtility.GetSaberBookFormat(text), () => multiplayerWindow.Show(true)));
             multiplayerMenuView.Bind(viewModel);
 
             // extra menu item = shift up %
-            float shiftY = context.Parent.position.y * 1.5f;
-            var newPosition = new Vector3(context.Parent.position.x, shiftY, context.Parent.position.z);
-            context.Parent.SetPositionAndRotation(newPosition, context.Parent.rotation);
-
-            return multiplayerWindow;
+            float shiftY = menuButtons.position.y * 1.5f;
+            var newPosition = new Vector3(menuButtons.position.x, shiftY, menuButtons.position.z);
+            menuButtons.SetPositionAndRotation(newPosition, menuButtons.rotation);
         }
 
         private GameObject CreateCopyOfCreditsScreen()
@@ -284,7 +288,7 @@ namespace WOTRMultiplayer.UI
             return lobbyContent;
         }
 
-        public ILobbyWindow InitializeEscMenuLobbyWindow(ILobbyWindowController controller, Action onShow)
+        public ILobbyWindow InitializeEscMenuLobbyWindow(ILobbyWindowController controller)
         {
             var escMenuView = _uiAccessor.EscMenu;
 
@@ -328,8 +332,12 @@ namespace WOTRMultiplayer.UI
 
             var lobbyWindow = lobbyContainer.AddComponent<LobbyWindow>()
                 .WithLogger(_serviceProvider.GetService<ILogger<LobbyWindow>>())
-                .WithInitiator(multiplayerLobbyMenuItem)
                 .WithController(controller)
+                .WithShowHandler(() =>
+                {
+                    escMenuView.m_CloseButton.m_OnLeftClick.Invoke();
+                    windowContainer.SetActive(true);
+                })
                 .WithCloseHandler(() => windowContainer.SetActive(false))
                 .Initialize(LobbyWindowOwner.EscMenu);
 
@@ -339,13 +347,7 @@ namespace WOTRMultiplayer.UI
 
             var multiplayerLobbyButton = multiplayerLobbyMenuItem.GetComponent<OwlcatButton>();
             multiplayerLobbyButton.OnLeftClick.RemoveAllListeners();
-            multiplayerLobbyButton.OnLeftClick.AddListener(() =>
-            {
-                escMenuView.m_CloseButton.m_OnLeftClick.Invoke();
-                windowContainer.SetActive(true);
-                onShow();
-            });
-
+            multiplayerLobbyButton.OnLeftClick.AddListener(lobbyWindow.Show);
 
             windowContainer.SetActive(false);
             return lobbyWindow;
@@ -358,6 +360,15 @@ namespace WOTRMultiplayer.UI
                 Color = defaultTextMesh.color,
                 Material = defaultTextMesh.material,
             };
+        }
+
+        public void DestroyStandaloneLobbyWindow()
+        {
+            var escMenuLobbyButton = _uiAccessor.EscMenu?.transform.Find($"Window/ButtonBlock/{MultiplayerMenuObjectName}")?.gameObject;
+            if (escMenuLobbyButton != null)
+            {
+                UnityEngine.Object.DestroyImmediate(escMenuLobbyButton);
+            }
         }
 
         public GameObject CreateCloseButton(Transform parent)
@@ -531,32 +542,10 @@ namespace WOTRMultiplayer.UI
                 portraitLayoutElement.preferredWidth = preferedWidth;
                 portraitLayoutElement.preferredHeight = preferedWidth * 1.2f;
 
-                var dropdownContainerObject = Main.Multiplayer.Factory.CreateDropdown(preferedWidth, characterObject.transform);
+                var dropdownContainerObject = Main.Multiplayer.UIFactory.CreateDropdown(preferedWidth, characterObject.transform);
                 dropdownContainerObject.name = LobbyWindowController.CharacterOwnerObjectName;
                 dropdownContainerObject.AddComponent<CharacterDataBehaviour>();
             }
-        }
-
-        public void DestroyLobbyWindow(ILobbyWindow lobbyWindow)
-        {
-            if (lobbyWindow == null)
-            {
-                _logger.LogWarning("Lobby window is null");
-                return;
-            }
-
-            lobbyWindow.GetGameConnectivity = null;
-            lobbyWindow.GetPlayers = null;
-            lobbyWindow.GetCharacters = null;
-            lobbyWindow.GetIsHost = null;
-
-            if (lobbyWindow.Initiator == null)
-            {
-                _logger.LogWarning("Lobby Initiator is null");
-                return;
-            }
-
-            UnityEngine.Object.DestroyImmediate(lobbyWindow.Initiator);
         }
 
         public void PopulateMultiplayerSettingsUI(SettingsVM settingsVM)
@@ -581,7 +570,7 @@ namespace WOTRMultiplayer.UI
             var inputContainer = stringView.transform.Find("MultiButton").gameObject;
             var placeAt = inputContainer.transform.Find("OffText");
             var placeAtRect = placeAt.GetComponent<RectTransform>();
-            var input = Main.Multiplayer.Factory.CreateInput(inputContainer.transform);
+            var input = Main.Multiplayer.UIFactory.CreateInput(inputContainer.transform);
             input.transform.SetPositionAndRotation(placeAt.position, placeAt.rotation);
             var inputRect = input.GetComponent<RectTransform>();
             inputRect.pivot = placeAtRect.pivot;
@@ -643,6 +632,7 @@ namespace WOTRMultiplayer.UI
 
             // hotkeys
             yield return new SettingsEntityHeaderVM(new LocalizedString { Key = WellKnownKeys.Settings.Hotkeys.Title.Key });
+            yield return CreateKeyBindingSetting(WellKnownKeys.Settings.Hotkeys.ShowLobby.Title.Key, WellKnownKeys.Settings.Hotkeys.ShowLobby.Tooltip.Key, WellKnownSettings.Hotkeys.ShowLobby);
             yield return CreateKeyBindingSetting(WellKnownKeys.Settings.Hotkeys.Ping.Title.Key, WellKnownKeys.Settings.Hotkeys.Ping.Tooltip.Key, WellKnownSettings.Hotkeys.Ping);
             yield return CreateKeyBindingSetting(WellKnownKeys.Settings.Hotkeys.ForceUnpause.Title.Key, WellKnownKeys.Settings.Hotkeys.ForceUnpause.Tooltip.Key, WellKnownSettings.Hotkeys.ForceUnpause);
             yield return CreateKeyBindingSetting(WellKnownKeys.Settings.Hotkeys.ForceCombatEnd.Title.Key, WellKnownKeys.Settings.Hotkeys.ForceCombatEnd.Tooltip.Key, WellKnownSettings.Hotkeys.ForceCombatEnd);

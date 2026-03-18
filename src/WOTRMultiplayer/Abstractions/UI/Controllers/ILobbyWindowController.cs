@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using UnityEngine;
+using WOTRMultiplayer.Abstractions.UI.Windows;
 using WOTRMultiplayer.Entities;
 using WOTRMultiplayer.UI.Windows;
 
@@ -23,6 +24,14 @@ namespace WOTRMultiplayer.Abstractions.UI.Controllers
         void SetActiveOwner(LobbyWindowOwner owner);
 
         void ResetOwnerContent(LobbyWindowOwner owner);
+
+        void CloseWindow();
+
+        void EnsureStandaloneWindowInitialized();
+
+        void Reset();
+
+        public ILobbyWindow Window { get; }
 
         Action<NetworkCharacter, NetworkPlayer> OnCharacterOwnerChanged { get; set; }
     }
