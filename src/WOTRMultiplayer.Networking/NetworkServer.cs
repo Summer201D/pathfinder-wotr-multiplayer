@@ -7,10 +7,12 @@ using System.Threading.Tasks;
 using BeetleX;
 using BeetleX.EventArgs;
 using Microsoft.Extensions.Logging;
+using WOTRMultiplayer.Logging.Extensions;
 using WOTRMultiplayer.Networking.Abstractions;
 using WOTRMultiplayer.Networking.Awaiters;
 using WOTRMultiplayer.Networking.Consuming;
 using WOTRMultiplayer.Networking.Messages;
+using WOTRMultiplayer.Networking.Messages.Lobby;
 
 namespace WOTRMultiplayer.Networking
 {
@@ -81,6 +83,7 @@ namespace WOTRMultiplayer.Networking
                 return;
             }
 
+            _logger.LogObject(LogLevel.Information, "Sending {MessageType} to Player {PlayerId}.", message, clientId);
             _server.AppServer.Send(message, session);
         }
 
@@ -109,12 +112,18 @@ namespace WOTRMultiplayer.Networking
 
         public void SendAll(object message)
         {
+            if (message is not NotifySaveGameChunkCreated and not NotifySaveGameTransferProgressChanged)
+            {
+                _logger.LogObject(LogLevel.Information, "Sending {MessageType}.", message);
+            }
+
             var sessions = _server.AppServer.GetOnlines();
             _server.AppServer.Send(message, sessions);
         }
 
         public void SendAllExcept(long clientId, object message)
         {
+            _logger.LogObject(LogLevel.Information, "Sending {MessageType} to all EXCEPT Player {PlayerId}.", message, clientId);
             var sessions = _server.AppServer.GetOnlines().Where(s => s.ID != clientId).ToArray();
             _server.AppServer.Send(message, sessions);
         }

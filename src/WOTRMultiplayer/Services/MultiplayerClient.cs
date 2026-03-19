@@ -405,10 +405,6 @@ namespace WOTRMultiplayer.Services
 
         protected override void Send(object message)
         {
-            if (message is not NotifySaveGameChunkCreated and not NotifySaveGameChunkReceived)
-            {
-                Logger.LogObject(LogLevel.Information, "Sending {MessageType}.", message);
-            }
             _networkClient.Send(message);
         }
 

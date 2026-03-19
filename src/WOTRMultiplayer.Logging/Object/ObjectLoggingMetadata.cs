@@ -13,7 +13,7 @@ namespace WOTRMultiplayer.Logging.Object
 
         public static void Initialize(IEnumerable<Type> types)
         {
-            _metadata = Build(types);
+            _metadata = Build(_metadata, types);
         }
 
         public static Dictionary<string, object> GetLoggingInfo(object message)
@@ -47,9 +47,8 @@ namespace WOTRMultiplayer.Logging.Object
             return result;
         }
 
-        private static Dictionary<Type, List<ObjectPropertyPath>> Build(IEnumerable<Type> types)
+        private static Dictionary<Type, List<ObjectPropertyPath>> Build(Dictionary<Type, List<ObjectPropertyPath>> result, IEnumerable<Type> types)
         {
-            var result = new Dictionary<Type, List<ObjectPropertyPath>>();
             var processedRoots = new HashSet<Type>();
 
             foreach (var type in types)

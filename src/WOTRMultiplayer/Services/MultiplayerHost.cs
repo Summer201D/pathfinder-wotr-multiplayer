@@ -1373,17 +1373,11 @@ namespace WOTRMultiplayer.Services
 
         protected override void Send(object message)
         {
-            if (message is not NotifySaveGameChunkCreated and not NotifySaveGameTransferProgressChanged)
-            {
-                Logger.LogObject(LogLevel.Information, "Sending {MessageType}.", message);
-            }
-
             _networkServer.SendAll(message);
         }
 
         protected override void Send(long playerId, object message)
         {
-            Logger.LogObject(LogLevel.Information, "Sending {MessageType} to Player {PlayerId}.", message, playerId);
             _networkServer.Send(playerId, message);
         }
 
@@ -2051,7 +2045,6 @@ namespace WOTRMultiplayer.Services
 
                 InvokeOnPlayersChanged();
                 var playersChanged = CreateNotifyLobbyPlayersChanged();
-                Logger.LogObject(LogLevel.Information, "Sending {MessageType} to all EXCEPT Player {PlayerId}.", playersChanged, playerId);
                 _networkServer.SendAllExcept(playerId, playersChanged);
                 ShowPlayerDisconnectedMessage(removedPlayer);
 

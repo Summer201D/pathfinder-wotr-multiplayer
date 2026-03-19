@@ -110,7 +110,7 @@ namespace WOTRMultiplayer.UnitTests.Services
             // Assert
             A.CallTo(() => _multiplayerClient.Reset()).MustHaveHappenedOnceExactly();
             A.CallTo(() => _multiplayerHost.Reset()).MustHaveHappenedOnceExactly();
-            A.CallTo(() => _lobbyWindowController.ResetOwnerContent(LobbyWindowOwner.EscMenu)).MustHaveHappenedOnceExactly();
+            A.CallTo(() => _lobbyWindowController.Reset()).MustHaveHappenedOnceExactly();
         }
 
         [Test]

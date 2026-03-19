@@ -4,9 +4,11 @@ using System.Net;
 using System.Threading.Tasks;
 using BeetleX.Clients;
 using Microsoft.Extensions.Logging;
+using WOTRMultiplayer.Logging.Extensions;
 using WOTRMultiplayer.Networking.Abstractions;
 using WOTRMultiplayer.Networking.Awaiters;
 using WOTRMultiplayer.Networking.Consuming;
+using WOTRMultiplayer.Networking.Messages.Lobby;
 
 namespace WOTRMultiplayer.Networking
 {
@@ -61,6 +63,11 @@ namespace WOTRMultiplayer.Networking
 
         public void Send(object message)
         {
+            if (message is not NotifySaveGameChunkCreated and not NotifySaveGameChunkReceived)
+            {
+                _logger.LogObject(LogLevel.Information, "Sending {MessageType}.", message);
+            }
+
             _client.SendAsync(message).Wait();
         }
 

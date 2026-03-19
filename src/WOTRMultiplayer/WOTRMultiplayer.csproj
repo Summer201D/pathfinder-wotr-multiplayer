@@ -6,50 +6,54 @@
 	</PropertyGroup>
 
 	<PropertyGroup>
+		<ModFolder>$(WOTR_PATH)\Mods\00_WOTRMultiplayer</ModFolder>
+		<ModOutputFolder>$(ModFolder)\*</ModOutputFolder>
+		<ModLocalizationFolder>$(ModFolder)\localization\*</ModLocalizationFolder>
+
 		<PostBuildEvent Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-			xcopy /q /y ".\Info.json" "$(WOTR_PATH)\Mods\WOTRMultiplayer\*"
-			xcopy /q /y ".\WOTRMultiplayer*.dll" "$(WOTR_PATH)\Mods\WOTRMultiplayer\*"
-			xcopy /q /y ".\WOTRMultiplayer*.pdb" "$(WOTR_PATH)\Mods\WOTRMultiplayer\*"
+			xcopy /q /y ".\Info.json" "$(ModOutputFolder)"
+			xcopy /q /y ".\WOTRMultiplayer*.dll" "$(ModOutputFolder)"
+			xcopy /q /y ".\WOTRMultiplayer*.pdb" "$(ModOutputFolder)"
 
-			xcopy /q /y ".\BeetleX.dll" "$(WOTR_PATH)\Mods\WOTRMultiplayer\*"
-			xcopy /q /y ".\protobuf-net.dll" "$(WOTR_PATH)\Mods\WOTRMultiplayer\*"
-			xcopy /q /y ".\protobuf-net.Core.dll" "$(WOTR_PATH)\Mods\WOTRMultiplayer\*"
-			xcopy /q /y ".\System.Memory.dll" "$(WOTR_PATH)\Mods\WOTRMultiplayer\*"
-			xcopy /q /y ".\System.Numerics.Vectors.dll" "$(WOTR_PATH)\Mods\WOTRMultiplayer\*"
-			xcopy /q /y ".\System.Runtime.CompilerServices.Unsafe.dll" "$(WOTR_PATH)\Mods\WOTRMultiplayer\*"
-			xcopy /q /y ".\System.Threading.Tasks.Extensions.dll" "$(WOTR_PATH)\Mods\WOTRMultiplayer\*"
-			xcopy /q /y ".\System.Collections.Immutable.dll" "$(WOTR_PATH)\Mods\WOTRMultiplayer\*"
+			xcopy /q /y ".\BeetleX.dll" "$(ModOutputFolder)"
+			xcopy /q /y ".\protobuf-net.dll" "$(ModOutputFolder)"
+			xcopy /q /y ".\protobuf-net.Core.dll" "$(ModOutputFolder)"
+			xcopy /q /y ".\System.Memory.dll" "$(ModOutputFolder)"
+			xcopy /q /y ".\System.Numerics.Vectors.dll" "$(ModOutputFolder)"
+			xcopy /q /y ".\System.Runtime.CompilerServices.Unsafe.dll" "$(ModOutputFolder)"
+			xcopy /q /y ".\System.Threading.Tasks.Extensions.dll" "$(ModOutputFolder)"
+			xcopy /q /y ".\System.Collections.Immutable.dll" "$(ModOutputFolder)"
 
-			xcopy /q /y ".\Serilog.dll" "$(WOTR_PATH)\Mods\WOTRMultiplayer\*"
-			xcopy /q /y ".\Serilog.Sinks.Console.dll" "$(WOTR_PATH)\Mods\WOTRMultiplayer\*"
-			xcopy /q /y ".\Serilog.Sinks.File.dll" "$(WOTR_PATH)\Mods\WOTRMultiplayer\*"
-			xcopy /q /y ".\Serilog.Extensions.Logging.dll" "$(WOTR_PATH)\Mods\WOTRMultiplayer\*"
-			xcopy /q /y ".\System.Buffers.dll" "$(WOTR_PATH)\Mods\WOTRMultiplayer\*"
-			xcopy /q /y ".\System.Diagnostics.DiagnosticSource.dll" "$(WOTR_PATH)\Mods\WOTRMultiplayer\*"
-			xcopy /q /y ".\System.Memory.dll" "$(WOTR_PATH)\Mods\WOTRMultiplayer\*"
-			xcopy /q /y ".\System.Numerics.Vectors.dll" "$(WOTR_PATH)\Mods\WOTRMultiplayer\*"
-			xcopy /q /y ".\System.Runtime.CompilerServices.Unsafe.dll" "$(WOTR_PATH)\Mods\WOTRMultiplayer\*"
-			xcopy /q /y ".\System.Threading.Channels.dll" "$(WOTR_PATH)\Mods\WOTRMultiplayer\*"
-			xcopy /q /y ".\System.Threading.Tasks.Extensions.dll" "$(WOTR_PATH)\Mods\WOTRMultiplayer\*"
+			xcopy /q /y ".\Serilog.dll" "$(ModOutputFolder)"
+			xcopy /q /y ".\Serilog.Sinks.Console.dll" "$(ModOutputFolder)"
+			xcopy /q /y ".\Serilog.Sinks.File.dll" "$(ModOutputFolder)"
+			xcopy /q /y ".\Serilog.Extensions.Logging.dll" "$(ModOutputFolder)"
+			xcopy /q /y ".\System.Buffers.dll" "$(ModOutputFolder)"
+			xcopy /q /y ".\System.Diagnostics.DiagnosticSource.dll" "$(ModOutputFolder)"
+			xcopy /q /y ".\System.Memory.dll" "$(ModOutputFolder)"
+			xcopy /q /y ".\System.Numerics.Vectors.dll" "$(ModOutputFolder)"
+			xcopy /q /y ".\System.Runtime.CompilerServices.Unsafe.dll" "$(ModOutputFolder)"
+			xcopy /q /y ".\System.Threading.Channels.dll" "$(ModOutputFolder)"
+			xcopy /q /y ".\System.Threading.Tasks.Extensions.dll" "$(ModOutputFolder)"
 
-			xcopy /q /y ".\Microsoft.Bcl.AsyncInterfaces.dll" "$(WOTR_PATH)\Mods\WOTRMultiplayer\*"
-			xcopy /q /y ".\Microsoft.Extensions.DependencyInjection.Abstractions.dll" "$(WOTR_PATH)\Mods\WOTRMultiplayer\*"
-			xcopy /q /y ".\Microsoft.Extensions.DependencyInjection.dll" "$(WOTR_PATH)\Mods\WOTRMultiplayer\*"
+			xcopy /q /y ".\Microsoft.Bcl.AsyncInterfaces.dll" "$(ModOutputFolder)"
+			xcopy /q /y ".\Microsoft.Extensions.DependencyInjection.Abstractions.dll" "$(ModOutputFolder)"
+			xcopy /q /y ".\Microsoft.Extensions.DependencyInjection.dll" "$(ModOutputFolder)"
 
-			xcopy /q /y ".\Microsoft.Extensions.Logging.dll" "$(WOTR_PATH)\Mods\WOTRMultiplayer\*"
-			xcopy /q /y ".\Microsoft.Extensions.Logging.Abstractions.dll" "$(WOTR_PATH)\Mods\WOTRMultiplayer\*"
-			xcopy /q /y ".\Microsoft.Extensions.Options.dll" "$(WOTR_PATH)\Mods\WOTRMultiplayer\*"
-			xcopy /q /y ".\Microsoft.Extensions.Primitives.dll" "$(WOTR_PATH)\Mods\WOTRMultiplayer\*"
-			xcopy /q /y ".\System.ValueTuple.dll" "$(WOTR_PATH)\Mods\WOTRMultiplayer\*"
+			xcopy /q /y ".\Microsoft.Extensions.Logging.dll" "$(ModOutputFolder)"
+			xcopy /q /y ".\Microsoft.Extensions.Logging.Abstractions.dll" "$(ModOutputFolder)"
+			xcopy /q /y ".\Microsoft.Extensions.Options.dll" "$(ModOutputFolder)"
+			xcopy /q /y ".\Microsoft.Extensions.Primitives.dll" "$(ModOutputFolder)"
+			xcopy /q /y ".\System.ValueTuple.dll" "$(ModOutputFolder)"
 
-			xcopy /q /y ".\MurmurHash.dll" "$(WOTR_PATH)\Mods\WOTRMultiplayer\*"
+			xcopy /q /y ".\MurmurHash.dll" "$(ModOutputFolder)"
 
-			xcopy /q /y ".\AutoMapper.dll" "$(WOTR_PATH)\Mods\WOTRMultiplayer\*"
-			xcopy /q /y ".\AutoMapper.Extensions.Microsoft.DependencyInjection.dll" "$(WOTR_PATH)\Mods\WOTRMultiplayer\*"
+			xcopy /q /y ".\AutoMapper.dll" "$(ModOutputFolder)"
+			xcopy /q /y ".\AutoMapper.Extensions.Microsoft.DependencyInjection.dll" "$(ModOutputFolder)"
 
-			xcopy /q /y ".\FluentValidation.dll" "$(WOTR_PATH)\Mods\WOTRMultiplayer\*"
+			xcopy /q /y ".\FluentValidation.dll" "$(ModOutputFolder)"
 
-			xcopy /q /y "..\..\..\..\..\localization\*.json" "$(WOTR_PATH)\Mods\WOTRMultiplayer\localization\*"
+			xcopy /q /y "..\..\..\..\..\localization\*.json" "$(ModLocalizationFolder)"
 		</PostBuildEvent>
 	</PropertyGroup>
 

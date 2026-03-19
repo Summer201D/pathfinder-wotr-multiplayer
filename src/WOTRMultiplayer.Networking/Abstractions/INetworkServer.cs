@@ -7,8 +7,6 @@ namespace WOTRMultiplayer.Networking.Abstractions
 {
     public interface INetworkServer : INetworkReceiver
     {
-        bool IsActive { get; }
-
         Action<long> OnClientConnected { get; set; }
 
         Action<long> OnClientDisconnected { get; set; }
@@ -17,12 +15,6 @@ namespace WOTRMultiplayer.Networking.Abstractions
 
         void Send(long clientId, object message);
 
-        /// <summary>
-        /// make sure to block main thread for every call (.Result)
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="message"></param>
-        /// <returns></returns>
         Task<T> SendAndWaitForAsync<T>(long clientId, IAwaitableRequest message)
             where T : IAwaitableResponse;
 

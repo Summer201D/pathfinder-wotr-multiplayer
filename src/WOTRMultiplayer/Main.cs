@@ -28,8 +28,9 @@ namespace WOTRMultiplayer
     {
         public const string ModFolder = "./Mods/WOTRMultiplayer";
 
-        private static IServiceProvider _serviceProvider;
         private static ILogger<Main> _logger;
+
+        public static IServiceProvider ServiceProvider { get; private set; }
 
         public static UnityModManagerSettings ModManagerSettings { get; private set; }
 
@@ -53,7 +54,7 @@ namespace WOTRMultiplayer
 
         public static ILogger<T> GetLogger<T>()
         {
-            return _serviceProvider.GetService<ILogger<T>>();
+            return ServiceProvider.GetService<ILogger<T>>();
         }
 
         public static bool Load(UnityModManager.ModEntry entry)
@@ -61,9 +62,9 @@ namespace WOTRMultiplayer
             try
             {
                 ModManagerSettings = UnityModManager.ModSettings.Load<UnityModManagerSettings>(entry);
-                _serviceProvider = DIFactory.Create(ModManagerSettings, ModFolder);
+                ServiceProvider = DIFactory.Create(ModManagerSettings, ModFolder);
 
-                _logger = _serviceProvider.GetService<ILogger<Main>>();
+                _logger = ServiceProvider.GetService<ILogger<Main>>();
             }
             catch (Exception ex)
             {
@@ -79,18 +80,18 @@ namespace WOTRMultiplayer
                 WellKnownKeysInitializer.Run();
                 WellKnownSettings.Initialize();
 
-                Multiplayer = _serviceProvider.GetRequiredService<IMultiplayer>();
-                Rolls = _serviceProvider.GetRequiredService<IMultiplayerRollsProcessor>();
-                UIAccessor = _serviceProvider.GetRequiredService<IUIAccessor>();
-                Mapper = _serviceProvider.GetRequiredService<IMapper>();
-                PlayerNotification = _serviceProvider.GetRequiredService<IPlayerNotificationService>();
-                State = _serviceProvider.GetRequiredService<IGameStateLookupService>();
-                HashService = _serviceProvider.GetRequiredService<IHashService>();
-                Lobby = _serviceProvider.GetRequiredService<ILobbyWindowController>();
+                Multiplayer = ServiceProvider.GetRequiredService<IMultiplayer>();
+                Rolls = ServiceProvider.GetRequiredService<IMultiplayerRollsProcessor>();
+                UIAccessor = ServiceProvider.GetRequiredService<IUIAccessor>();
+                Mapper = ServiceProvider.GetRequiredService<IMapper>();
+                PlayerNotification = ServiceProvider.GetRequiredService<IPlayerNotificationService>();
+                State = ServiceProvider.GetRequiredService<IGameStateLookupService>();
+                HashService = ServiceProvider.GetRequiredService<IHashService>();
+                Lobby = ServiceProvider.GetRequiredService<ILobbyWindowController>();
 
                 entry.OnGUI += OnGui;
                 entry.OnSaveGUI += OnSaveGui;
-                entry.OnUnload += OnUnload;
+                entry.OnToggle += OnToggle;
 
                 var harmony = new Harmony(entry.Info.Id);
                 harmony.PatchAll(Assembly.GetExecutingAssembly());
@@ -126,43 +127,46 @@ namespace WOTRMultiplayer
 
         public static void UpdateLocale(string locale)
         {
-            _serviceProvider.GetService<ILocalizationService>().UpdateLocale(locale);
+            ServiceProvider.GetService<ILocalizationService>().UpdateLocale(locale);
         }
 
         private static void InitializePortraits()
         {
             _logger.LogInformation("Initializing portrait sprites");
-            _serviceProvider.GetService<IResourceProvider>().Initialize();
+            ServiceProvider.GetService<IResourceProvider>().Initialize();
         }
 
         private static void InitializeMultiplayerSettings()
         {
             _logger.LogInformation("Initializing multiplayer settings");
-            _serviceProvider.GetService<IMultiplayerSettingsService>().Initialize();
+            ServiceProvider.GetService<IMultiplayerSettingsService>().Initialize();
         }
-
 
         private static void Subscribe()
         {
-            var genericSubscriber = _serviceProvider.GetService<MultiplayerSubscriber>();
+            var genericSubscriber = ServiceProvider.GetService<MultiplayerSubscriber>();
             EventBus.Subscribe(genericSubscriber);
 
-            var unitEquipmentSubscriber = _serviceProvider.GetService<MultiplayerUnitEquipmentSubscriber>();
+            var unitEquipmentSubscriber = ServiceProvider.GetService<MultiplayerUnitEquipmentSubscriber>();
             EventBus.Subscribe(unitEquipmentSubscriber);
 
-            var campingStateSubscriber = _serviceProvider.GetService<MultiplayerCampingStateSubscriber>();
+            var campingStateSubscriber = ServiceProvider.GetService<MultiplayerCampingStateSubscriber>();
             EventBus.Subscribe(campingStateSubscriber);
 
-            var combatSubscriber = _serviceProvider.GetService<MultiplayerCombatSubscriber>();
+            var combatSubscriber = ServiceProvider.GetService<MultiplayerCombatSubscriber>();
             EventBus.Subscribe(combatSubscriber);
 
-            var kingdomSubscriber = _serviceProvider.GetService<MultiplayerKingdomSubscriber>();
+            var kingdomSubscriber = ServiceProvider.GetService<MultiplayerKingdomSubscriber>();
             EventBus.Subscribe(kingdomSubscriber);
         }
 
-        private static bool OnUnload(UnityModManager.ModEntry entry)
+        private static bool OnToggle(UnityModManager.ModEntry entry, bool isOn)
         {
-            _logger.LogInformation("Unloading on the fly is not supported. Please restart the game");
+            if (!isOn)
+            {
+                _logger.LogWarning("Disabling on the fly is not supported. Please restart the game");
+            }
+
             return true;
         }
 

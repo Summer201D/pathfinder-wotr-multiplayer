@@ -283,9 +283,15 @@
             NotifyAlyshenyrraCameraDirectionChanged
         }
 
-        public enum Mod
+        public static class Mods
         {
-            None = 10_000
+            public enum Bubble
+            {
+                None = 10_000,
+                NotifyBubbleBuffsUsed,
+            }
+
+            // any other mod 11_000 etc ?
         }
     }
 }
