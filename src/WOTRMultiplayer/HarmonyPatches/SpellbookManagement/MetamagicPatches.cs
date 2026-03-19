@@ -34,6 +34,7 @@ namespace WOTRMultiplayer.HarmonyPatches.SpellbookManagement
                 {
                     return null;
                 }
+
                 var metamagicSpell = new NetworkMetamagicSpell
                 {
                     Ability = Main.Mapper.Map<NetworkAbility>(currentSpell),

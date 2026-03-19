@@ -3,7 +3,8 @@
 #### Disclaimer: All of the changes below only kick in when you are playing in Multiplayer (started or joined through the Multiplayer Window). Single-player isn't affected at all, so you can keep playing normally. But if you are curious about what the mod adds, you can always host a solo game to check it out.
 
 ## TL/DR:
-- Prologue, Act1 and Act2 are mostly playable. Anything beyond that (including any DLCs) does not work
+- 4 Acts are mostly playable
+- There are no changes to content or balance or how mythic paths/companions work.
 
 - Game Version/DLC/Mods/Content should match across players. 
 
@@ -11,13 +12,13 @@
 
 ## Other Mods Compatibility
 Most of the syncing relies on the blueprint asset ID (or something similiar) to replicate action for other players, so in **THEORY** things should work fine as long as those IDs are the same for abilities, spells, etc. This also includes any extra rolls (e.g. Skill Check or Attack Roll) added by mods, but those roll types must be available within base game.
-That said, compatibility with other mods hasn't really been tested at all and there are no plans to support it.
+That said, compatibility with other mods hasn't really been tested at all and there are no plans to support it yet.
 
-However, this might be revised later on once multiplayer is stable enough to start focusing on making things play nicely with popular mods.
+Here is a basic [example](https://github.com/fl01/pathfinder-wotr-multiplayer-bubblebuffs) on how to use the existing network layer for your own mods. But keep in mind that it depends on low-level objects that are subject to change. **There is no guarantee that they will stay stable/same**.
 
 ### Known mod compatibility issues:
 - Bubble Tweaks - works fine if you use it purely for non-interactive UI changes (Character Statistics / pathing through AoE / loot icons / etc)
-  - additional interactive UI elements ('Jump to siege' button / etc) are not synced
+  - additional interactive UI elements ('Jump to siege' button / Dismiss army / etc) are not synced
   - animation speed is not synced
 
 - ModMenu - not compatible
@@ -31,10 +32,10 @@ However, this might be revised later on once multiplayer is stable enough to sta
 Most players won't need to bother with these settings
 
 ## Networking
-There are two connection options planned, but only one works right now:
 
 - Direct IP Connect – works fine with local network emulators or a public/static ('white') IP from your ISP.
-- Game Code (via remote server) – not available yet.
+
+**There are no plans to support anything like dedicated server or "joining by Game Code".**
 
 ## Interface
 
@@ -88,11 +89,10 @@ It is possible to join when the game has already started (host IP address or gam
 Opening the Esc menu or a fullscreen window will not pause the game anymore. You can freely change settings/expore inventory/etc without affecting anyone.
 
 ### Manual Pause
-Only the host can pause the game (with spacebar or whatever key they have set). Once paused, it can only be unpaused if everyone else has paused too.
+Manual pause can be initiated by anyone, but once paused, it can only be unpaused if everyone else has paused too. It works fine in general case, but can be buggy sometimes as it's not guaranteed that the game will allow to pause for everyone (i.e. already started combat/cutscene/etc), so there is a hotkey to remove 'network pause' state and unpause your local game. Use it in case of any issues.
 
 ### Forced Pause
-
-Sometimes the game will hit a `forced pause` that you can't unpause yourself (neither as a host nor a client), but it will go away automatically once everyone is synced up again.
+Sometimes the game will hit a `forced pause` that you can't unpause yourself normally (via Spacebar), but it will go away automatically once everyone is synced up again
 
 Forced pause occurrences:
 - loading area
@@ -118,7 +118,7 @@ Certain vendor actions are host-only, like finalizing a deal or closing the shop
 ##### Note: Group Changer data is stored within the UI itself, so it must be opened for everyone before Host is allowed to make any changes (just for the sake of simplified sync implementation)
 
 ### Leaving zone
-Client is only a watcher with no permissions to change anything. There is a counter within Accept button to see how many players are ready. Closing screen as a host will result in closing screen for everyone
+Client is only a watcher with no permissions to change anything. There is a counter at Accept button to see how many players are ready. Closing screen as a host will result in closing screen for everyone
 
 ### Mid Zone (aka recruiting companions)
 The same rules apply
@@ -142,26 +142,13 @@ Although the base game has no support for pausing while you are in the global ma
 Crusade is fully controlled by the host (army movement/recruiting/battles/etc...)
 
 #### Crusade automode
-Although this difficutly setting is not disabled, it has not been checked and there are no plans to implement it soon.
+Although this difficutly setting is not disabled, it has not been checked and there are no plans to support it if anything
+
+## Alushenyrra Isles (Act 4)
+Dynamic parts (isles/houses/platforms/etc) are controlled by the host camera direction. It might be a bit clunky, but make sure characters don't get stuck as there is no additional position or isle state sync.
 
 ## Rolls
-Network communication to retrieve rolls requires blocking the main game loop. Basically, it means that a slow network would cause noticeable stutters. More about this in the [`Long Terms Plans`](#long-term-plans) section
-
-### Non-Combat (World)
-Every roll happens on the host.
-
-### Cutscenes
-Rolls are not synced because it doesn't really matter. There is no difference when you hit an enemy for 50 or 80 damage if it is still scripted to die.
-
-### Dialogs
-Host rolls `Skill checks` / `Saving throws`, everything else is ignored for the same "doesn't really matter" reason.
-
-### Combat
-There is a concept of `Turn Owner` - the player who controls the active character.
-
-`Turn Owner` rolls everything locally to make his turn silky smooth. Everyone else (including the host) is getting rolls from the current `Turn Owner`. This makes roll storage dynamic in combat.
-
-Worth noting: in lobbies with 3+ players (1 host and 2+ clients), the host works as a middleman for passing rolls between clients. Because there is no direct client-to-client connection in the current setup, a client who isn't the Turn Owner may notice slightly longer delays.
+Every roll is rolled deterministically based on the numerous seeds(e.g. AreaSeed/Combat Turn Seed/etc.). Those seeds are transferred by the host depending on a situation.
 
 ### Perception check rolls (map objects)
 Perception checks to reveal stuff don't auto-trigger on clients. Instead, they only go off once the host triggers them. This is to prevent desyncs, like different characters trying to run the same check because of movement lag or other hiccups.
@@ -180,21 +167,21 @@ Automatically passed on both host/client
 
 Turn-Based only. Real-Time with Pause (RTwP) combat is completely disabled.
 
-The only caveat is that you can't change character control once combat has started. Although technically you can do that, as the lobby window is not blocked/disabled during combat, some important calculations only run on the host before starting the turn. Supporting this feature would require re-running/re-syncing info after character ownership change, but this is surely out of scope as of now.
+You can switch character owner at any time during combat.
 
 ### Players
 
-The source of truth is the host. Position of units in combat is synchronized with host on every combat start/turn start event. Next turn will be started only once host synchronizes info with the clients. Host is also able to detect when clients want to start different character turn (e.g. due to desync issues), but there is an automatic recovery for this situation where host forces clients to start correct turn.
+The source of truth is the host. Position of units in combat is synchronized with host on every combat start/turn start/turn end event. Next turn will be started only once host synchronizes info with the clients. Host is also able to detect when clients want to start different character turn (e.g. due to desync issues), but there is an automatic recovery for this situation where host forces clients to start correct turn.
 
 ### AI
-AI actions don't have any randomness, so their turns play out the same for everyone in multiplayer. AI rolls are handled by the host when out of combat, or by the `Turn Owner` during combat.
+The base game uses “AI action score” calculations that are largely deterministic and typically produce the same results. However, scores can occasionally differ due to factors like position desynchronization, low FPS, or similar issues.
 
-In rare cases, AI might attack a different target or make an extra attack after moving - usually because of position desync or low FPS. There's a basic AI sync option that forces AI to attack the same target, but you can turn it off in 'Multiplayer Settings' if it causes issues
+To reduce this desync, a simple workaround is used: on the client, the AI turn begins with a slight delay (configurable in settings). This allows the host to determine AI actions first and send them to clients. If a client's locally calculated actions don't match, they are overridden by the host's results.
 
 ### Crusade Army Battles
 Combat is fully controlled by the host.
 
-There is a dedicated 'Crusade AI sync' setting to enable AI combat actions sync. It works the same as for turn-based combat.
+AI sync is not enabled for this combat as it seems impossible to choose different AI action in such limited zone.
 
 ## Cutscenes
 Cutscene skip is synchronized, but, as of now, there are no additional checks to make sure it started/ended for everyone.
@@ -205,8 +192,10 @@ Action bars stay synced. Any changes you make are instantly reflected for everyo
 ## Inventory
 Inventory item positions are not synced, so you can sort or split items however you want - but keep in mind that loading a save will reset everything to the save owner version.
 
+Copying recipe/scroll or reading a book (to recieve bonuses or trigger something) is synced.
+
 ## Loot
-Looting is synced for all multiplayer players, so everyone can grab items from the same container at the same time.
+Items are never created, but rather transferred from X to Y container which makes it impossible to recieve duplicate items. It's completely safe to loot same container/item, but item verification is very basic. It might produce false positive warnings about missing loot if you loot same item at the same time.
 
 ### Area Looting screen: 
 Same as regular looting. However, 'Collect All' / 'Leave' / 'Destroy Uncollected Loot' buttons are disabled for host until everyone is ready to leave the area.
@@ -221,22 +210,27 @@ Only the host can set up camp, including managing roles and picking crafting rec
 
 Rest can't start until everyone is in 'rest mode' (aka opened the rest window). The Start button now shows a counter for how many players are ready to go.
 
-Banter (small talk) is randomly picked in a way that stays consistent - host and clients roll separately but still get the same results without extra network syncing. Each multiplayer session has its own "random seed", so rehosting the game gives different banter. Skipping banter lines is synced for all players.
+Banter (small talk) is randomly picked in a deterministic way, so everyone sees the same dialogs. Skipping banter lines is synced for all players.
 
 ### Random encounter
 The host rolls encounters. Clients communicate with the host after each sleep phase to receive rolled results.
 
-## Memorizing spells
+## Spellbook
+
+The Spellbook UI updates in real time, so you can see when other players are forgetting/memorizing spells. This makes it easier to chat about which spells to pick. Plus, a combat log notification pops up whenever someone changes their spells.
+
+### Changing spells
 You can only change spells for characters you control. Trying to change someone else's spells will show a warning.
 
-The Spellbook UI updates in real time, so you can see when other players are updating spell. This makes it easier to chat about which spells to pick. Plus, a combat text notification pops up whenever someone changes their spells.
+### Metamagic
+You are free to create metamagic for any character (even if you don't control it)
 
 ## Leveling
 Leveling is synced via UI interactions. Host has to confirm opening the leveling screen before everyone else sees it (same system as dialogs for consistency).
 
 Leveling UI is controlled by the character owner. Everyone else is just a watcher who can't neither interact with UI nor close it.
 
-While simultaneous (background sync) leveling is a nice feature that allows for leveling multiple characters at the same time, it's not planned for the near future. However, this might be implemented once the entire campaign is playable in multiplayer.
+Simultaneous leveling (i.e. different characters by different players at the same time) is not planned for the near future.
 
 ### Mythic leveling
 same rules apply for everything (including path selection).
@@ -263,7 +257,7 @@ The tricky part is `Item.UniqueId` generation - stacking or splitting items crea
 ## Ping system
 There is a configurable hotkey you can use to send pings (alerts) to other players. This includes position, unit and map object pings.
 
-More options are planned later, like pinging at different UI elements (should be useful during leveling).
+More options are planned later, like pinging at different UI elements (should be useful during leveling or vendoring).
 
 ## How to deal with desync
 If a roll doesn't come through for some reason, you will get a stutter and a popup warning. In that case, the roll will be rolled locally, which might lead to different results.
@@ -272,16 +266,7 @@ You can either ignore it (if the outcome is more or less the same for everyone) 
 
 ## Long term plans
 
-### Rolls
-Current roll syncing has a fairly obvious issue: the game freezes while mod retrieves roll results over the network. There is no clean way around this - the game expects the roll result immediately, so the mod hijacks the roll and fetches it over the network instead. Making the game "wait" for rolls properly is extremely hard to justify from a reverse-engineering standpoint.
-
-The plan is to switch to deterministic rolls. Both host and clients will use the same RNG seed, so they all generate the same "random" results locally. That removes the need for extra network calls during rolls. These seeds can be shared at safe points that don't block the game, like combat start, round start, area load, or with an attack/ability usage notification.
-
-The downside is that if the roll order ever gets out of sync, the sequence breaks until the next seed update (for example, the next round or the next attack command).
-
-Anyway, this will be updated according to the roll type. For example, reworking attack and damage rolls alone should almost eliminate combat stutters, since most other rolls are pretty rare.
-
 ### UI Control
 Every UI window/element that is not tied to a specific character is controlled by the host, but there are no restrictions on changing this behavior. The only reason for this is the simplicity of implementation compared to dynamic configuration. 
 
-Anyway, Lobby window would serve as a place to configure who controls dialogs/vendor/global map/etc
+Eventually, the Lobby window will serve as a central place to configure control over dialogs, vendors, the global map, and other shared interactions.

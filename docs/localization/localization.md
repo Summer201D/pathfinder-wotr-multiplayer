@@ -2,17 +2,6 @@
 
 All localization files (like `enGB.json`) live in the `./localization` folder. The mod always falls back to `enGB.json` if it can't find a file for your current language.
 
-Here is what the filenames should look like for each supported game locale (case-insensitive):
-
-- enGB => `enGB.json`
-- deDE => `deDE.json`
-- frFR => `frFR.json`
-- zhCN => `zhCN.json`
-- esES => `esES.json`
-- ptBR => `ptBR.json`
-- itIT => `itIT.json`
-- ruRU => `ruRU.json`
-
 ## File structure
 
 Example:
