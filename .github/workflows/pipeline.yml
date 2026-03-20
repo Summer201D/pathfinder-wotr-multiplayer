@@ -119,9 +119,11 @@ jobs:
           path: "${{ github.workspace }}/__releases/"
           retention-days: 3
       - name: Prepare Refs
+        shell: cmd
         run: |
-          for /d %%D in (.\\src\\*) do (
-            xcopy /q /y "%%D\obj\Release\net481\ref\*.dll" "${{ env.REFS_OUTPUT_PATH }}\*"
+          if not exist "%REFS_OUTPUT_PATH%" mkdir "%REFS_OUTPUT_PATH%"
+          for /d %%D in (.\src\*) do (
+            xcopy /q /y "%%D\obj\Release\net481\ref\*.dll" "%REFS_OUTPUT_PATH%\"
           )
       - name: Upload Refs
         uses: actions/upload-artifact@v4
