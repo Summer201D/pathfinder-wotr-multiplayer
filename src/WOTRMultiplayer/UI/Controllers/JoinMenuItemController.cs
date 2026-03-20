@@ -30,8 +30,6 @@ namespace WOTRMultiplayer.UI.Controllers
 {
     public class JoinMenuItemController : MenuItemControllerBase, IJoinMenuItemController
     {
-        public const string ConnectionHistoryFilePath = $"{Main.ModFolder}/data/connections.json";
-
         public const string RootContentScreenObjectName = "RootContentScreen";
         public const string JoinMenuItemContentObjectName = "JoinMenuItemContent";
         public const string JoinLobbyControlsMenuObjectName = "JoinLobbyControlsMenu";
@@ -50,6 +48,8 @@ namespace WOTRMultiplayer.UI.Controllers
         public const string LobbyWindowObjectName = "LobbyWindow";
 
         public const string GameTitleObjectName = "LobbyTitleObject";
+
+        private string ConnectionHistoryFilePath => Path.Combine(Main.ModManagerSettings.ModFolder, "data/connections.json");
 
         private readonly ILogger<JoinMenuItemController> _logger;
         private readonly IUIFactory _uiFactory;

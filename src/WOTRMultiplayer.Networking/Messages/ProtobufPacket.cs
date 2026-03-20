@@ -11,6 +11,7 @@ namespace WOTRMultiplayer.Networking.Messages
         {
             TypeHeader.Register(typeof(ProtobufClientPacket).Assembly);
         }
+
         public static BeetleX.Packets.CustomTypeHeader TypeHeader { get; set; } = new BeetleX.Packets.CustomTypeHeader(BeetleX.Packets.MessageIDType.INT);
 
         public override IPacket Clone()
