@@ -120,7 +120,7 @@ jobs:
           retention-days: 3
       - name: Prepare Refs
         run: |
-          xcopy /Y /I src\**\obj\Release\net481\ref\*.dll "${{ env.REFS_OUTPUT_PATH }}"
+          xcopy /q /y ".\\src\\**\\obj\\Release\\net481\\ref\\*.dll" "${{ env.REFS_OUTPUT_PATH }}\*"
       - name: Upload Refs
         uses: actions/upload-artifact@v4
         with:
