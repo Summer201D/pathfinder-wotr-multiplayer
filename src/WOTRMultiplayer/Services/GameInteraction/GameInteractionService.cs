@@ -1782,7 +1782,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
                         return;
                     }
 
-                    var spell = _gameStateLookupService.GetKnownSpell(spellbook, metamagicSpell.Ability);
+                    var spell = _gameStateLookupService.GetKnownSpell(spellbook, metamagicSpell.Ability) ?? _gameStateLookupService.GetCustomSpell(spellbook, metamagicSpell.Ability);
                     if (spell == null)
                     {
                         _logger.LogError("Unable to find spell to create metamagic spell. UnitId={UnitId}, SpellId={SpellId}, SpellBlueprintId={SpellBlueprintId}, SpellName={SpellName}, SpellbookId={SpellbookId}", unit.UniqueId, metamagicSpell.Ability.Id, metamagicSpell.Ability.BlueprintId, metamagicSpell.Ability.Name, metamagicSpell.Ability.SpellbookId);
