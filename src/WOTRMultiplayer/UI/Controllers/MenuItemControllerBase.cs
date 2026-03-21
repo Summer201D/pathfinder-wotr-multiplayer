@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using Kingmaker.Localization;
 using Kingmaker.UI;
 using Microsoft.Extensions.Logging;
@@ -93,6 +94,16 @@ namespace WOTRMultiplayer.UI.Controllers
             ActiveImage = MenuItem.transform.Find(SelectedGameObjectName).gameObject;
             _hoverImage = MenuItem.transform.Find(HoverGameObjectName).gameObject;
             ActiveImage.SetActive(false);
+        }
+
+        protected void OnMultiplayerOnGameStarted()
+        {
+            Lobby.UpdateLoadingProgress(null);
+        }
+
+        protected void OnMultiplayerSaveGameTransferProgressChanged(Dictionary<long, float> progress)
+        {
+            Lobby.UpdateLoadingProgress(progress);
         }
 
         protected void OnMultiplayerNewGameSequenceStarted(bool isCancelled)

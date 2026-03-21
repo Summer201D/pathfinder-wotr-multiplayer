@@ -73,7 +73,9 @@ namespace WOTRMultiplayer.Services
 
         public Action<bool> OnNewGameSequenceStarted { get; set; }
 
-        public Action<List<KeyValuePair<long, int>>> OnSaveGameTransferProgressChanged { get; set; }
+        public Action OnGameStarted { get; set; }
+
+        public Action<Dictionary<long, float>> OnSaveGameTransferProgressChanged { get; set; }
 
         public Action<NetworkGameConnectivity> OnConnected { get; set; }
 
@@ -2828,10 +2830,12 @@ namespace WOTRMultiplayer.Services
             var settings = SettingsService.GetSettings();
             var content = FileSystem.GetRawFileContent(Game.StartUp.SavePath);
             var chunks = (content.Length + settings.SaveGameChunkSize - 1) / settings.SaveGameChunkSize;
+            Game.StartUp.ExpectedChunks = Math.Max(1, chunks);
 
-            initialMessage.ExpectedChunks = Math.Max(1, chunks);
+            initialMessage.ExpectedChunks = Game.StartUp.ExpectedChunks;
             initialMessage.ContentSize = content.Length;
             Send(initialMessage);
+
 
             var chunkNumber = 0;
             for (int offset = 0; offset < content.Length; offset += settings.SaveGameChunkSize)

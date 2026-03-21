@@ -184,6 +184,8 @@ namespace WOTRMultiplayer.UI.Controllers
             _multiplayerHost.OnPlayersChanged = enable ? OnMultiplayerPlayersChanged : null;
             _multiplayerHost.OnNewGameSequenceStarted = enable ? OnMultiplayerNewGameSequenceStarted : null;
             _multiplayerHost.OnCharactersChanged = enable ? OnMultiplayerCharactersChanged : null;
+            _multiplayerHost.OnSaveGameTransferProgressChanged = enable ? OnMultiplayerSaveGameTransferProgressChanged : null;
+            _multiplayerHost.OnGameStarted = enable ? OnMultiplayerOnGameStarted : null;
 
             Lobby.OnCharacterOwnerChanged = enable ? OnLobbyCharacterOwnerChanged : null;
         }

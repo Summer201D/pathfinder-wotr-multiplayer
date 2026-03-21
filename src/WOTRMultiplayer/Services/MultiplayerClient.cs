@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
+using System.Threading;
 using System.Threading.Tasks;
 using AutoMapper;
 using Kingmaker.UI.Kingdom;
@@ -476,7 +477,6 @@ namespace WOTRMultiplayer.Services
                .On<NotifyGameStarted>(OnNotifyGameStarted)
                .On<NotifySaveGameSyncStatusChanged>(OnNotifyLobbySyncStatusChanged)
                .On<NotifyNewGameDifficultyChanged>(OnNotifyNewGameDifficultyChanged)
-               .On<NotifySaveGameTransferProgressChanged>(OnNotifySaveGameTransferProgressChanged)
 
                // new game sequence
                .On<NotifyNewGameSequencePhaseChanged>(OnNotifyNewGameSequencePhaseChanged)
@@ -647,11 +647,6 @@ namespace WOTRMultiplayer.Services
         private void OnNotifyAreaLoadingCompleted(long receivedFrom, NotifyAreaLoadingCompleted message)
         {
             SetAreaSeed(message.AreaSeed);
-        }
-
-        private void OnNotifySaveGameTransferProgressChanged(long receivedFrom, NotifySaveGameTransferProgressChanged message)
-        {
-            OnSaveGameTransferProgressChanged?.Invoke([.. message.Players]);
         }
 
         private void OnNotifyKingdomSettlementUpgraded(long receivedFrom, NotifyKingdomSettlementUpgraded message)
@@ -1575,6 +1570,8 @@ namespace WOTRMultiplayer.Services
 
         private void OnNotifyGameStarted(long playerId, NotifyGameStarted started)
         {
+            OnGameStarted?.Invoke();
+
             if (Game.StartUp.IsNewGameSequence)
             {
                 StartNewGameSequence();

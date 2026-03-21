@@ -31,6 +31,8 @@ namespace WOTRMultiplayer.Abstractions.UI.Controllers
 
         void Reset();
 
+        void UpdateLoadingProgress(Dictionary<long, float> progress);
+
         public ILobbyWindow Window { get; }
 
         Action<NetworkCharacter, NetworkPlayer> OnCharacterOwnerChanged { get; set; }

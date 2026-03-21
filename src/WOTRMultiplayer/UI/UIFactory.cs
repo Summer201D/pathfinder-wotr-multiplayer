@@ -52,6 +52,8 @@ namespace WOTRMultiplayer.UI
         public const string InputPlaceholderObjectName = "PlaceholderText";
         public const string InputLabelObjectName = "Label_Input";
         public const string MultiplayerMenuObjectName = "MultiplayerLobbyButton";
+        public const string ProgressBarObjectName = "ProgressBar";
+        public const string ProgressBarImageObjectName = "ProgressBarImage";
 
         public const int LobbySectionTitleHeight = 50;
         private GameObject _dropdownPrefab;
@@ -92,6 +94,91 @@ namespace WOTRMultiplayer.UI
             _serviceProvider = serviceProvider;
             _uiAccessor = uiAccessor;
             _multiplayerActorAccessor = multiplayerActorAccessor;
+        }
+
+        public GameObject CreateProgressBar(Transform parent, int size, float thickness, bool withBackround = false)
+        {
+            var root = CreateDefaultGameObject(parent.transform);
+            root.name = ProgressBarObjectName;
+            var layoutElement = root.AddComponent<LayoutElement>();
+            layoutElement.preferredHeight = size;
+            layoutElement.preferredWidth = size;
+
+            if (withBackround)
+            {
+                var background = CreateDefaultGameObject(root.transform);
+                var bgImage = background.AddComponent<Image>();
+                bgImage.sprite = CreateRingSprite();
+                bgImage.color = new Color(0.2f, 0.2f, 0.2f, 1);
+
+                var bgRect = bgImage.GetComponent<RectTransform>();
+                bgRect.anchorMin = Vector2.zero;
+                bgRect.anchorMax = Vector2.one;
+                bgRect.offsetMin = Vector2.zero;
+                bgRect.offsetMax = Vector2.zero;
+            }
+
+            // Progress
+            var progress = CreateDefaultGameObject(root.transform);
+            progress.name = ProgressBarImageObjectName;
+            var progressImage = progress.AddComponent<Image>();
+            progressImage.color = Color.green;
+            progressImage.sprite = CreateRingSprite(thickness: thickness);
+            progressImage.type = Image.Type.Filled;
+            progressImage.fillMethod = Image.FillMethod.Radial360;
+            progressImage.fillOrigin = (int)Image.Origin360.Top;
+            progressImage.fillAmount = 0f;
+
+            var progressRect = progress.GetComponent<RectTransform>();
+            progressRect.anchorMin = Vector2.zero;
+            progressRect.anchorMax = Vector2.one;
+            progressRect.offsetMin = Vector2.zero;
+            progressRect.offsetMax = Vector2.zero;
+
+            return root;
+        }
+
+        public Sprite CreateRingSprite(int size = 256, float thickness = 0.25f)
+        {
+            var texture = new Texture2D(size, size, TextureFormat.RGBA32, false)
+            {
+                filterMode = FilterMode.Point,
+                wrapMode = TextureWrapMode.Clamp
+            };
+
+            var outer = size * 0.5f;
+            var inner = outer * (1f - thickness);
+
+            var outer2 = outer * outer;
+            var inner2 = inner * inner;
+
+            Color[] pixels = new Color[size * size];
+
+            for (int y = 0; y < size; y++)
+            {
+                for (int x = 0; x < size; x++)
+                {
+                    var dx = x - outer + 0.5f;
+                    var dy = y - outer + 0.5f;
+
+                    var dist2 = dx * dx + dy * dy;
+
+                    if (dist2 <= outer2 && dist2 >= inner2)
+                    {
+                        pixels[y * size + x] = Color.white;
+                    }
+                    else
+                    {
+                        pixels[y * size + x] = new Color(0, 0, 0, 0);
+                    }
+                }
+            }
+
+            texture.SetPixels(pixels);
+            texture.Apply();
+
+            var sprite = Sprite.Create(texture, new Rect(0, 0, size, size), new Vector2(0.5f, 0.5f));
+            return sprite;
         }
 
         public void StoreDropdownPrefab(SettingsEntityDropdownPCView view)

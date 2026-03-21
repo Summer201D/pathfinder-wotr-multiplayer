@@ -15,6 +15,10 @@ namespace WOTRMultiplayer.Abstractions.UI
 
         void InitializeMultiplayerWindow();
 
+        GameObject CreateProgressBar(Transform parent, int size, float thickness, bool withBackround = false);
+
+        Sprite CreateRingSprite(int size = 256, float thickness = 0.25f);
+
         GameObject CreateBorderDecoration(Transform parent);
 
         GameObject CreateDefaultGameObject(Transform parent);

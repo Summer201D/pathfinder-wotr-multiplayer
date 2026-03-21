@@ -165,7 +165,7 @@ namespace WOTRMultiplayer.Services.PubSub
         {
             try
             {
-                if (ActorAccessor.Current == null)
+                if (ActorAccessor.Current == null || ActorAccessor.Client.IsActive)
                 {
                     return;
                 }

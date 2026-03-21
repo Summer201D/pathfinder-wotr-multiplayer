@@ -185,20 +185,20 @@ namespace WOTRMultiplayer.UI.Controllers
 
             ServerInfoSectionContent.CleanupAllChildren();
 
-            var serverInfoContainerObject = Main.Multiplayer.UIFactory.CreateDefaultGameObject(ServerInfoSectionContent.transform);
+            var serverInfoContainerObject = _uiFactory.CreateDefaultGameObject(ServerInfoSectionContent.transform);
             serverInfoContainerObject.name = PlayerContainerObjectName;
             serverInfoContainerObject.AddComponent<HorizontalLayoutGroup>();
             var serverInfoContainerSizeFitter = serverInfoContainerObject.AddComponent<ContentSizeFitter>();
             serverInfoContainerSizeFitter.horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
             serverInfoContainerSizeFitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
 
-            var serverAddressObject = Main.Multiplayer.UIFactory.CreateDefaultGameObject(serverInfoContainerObject.transform);
+            var serverAddressObject = _uiFactory.CreateDefaultGameObject(serverInfoContainerObject.transform);
             var serverAddressElement = serverAddressObject.AddComponent<LayoutElement>();
             serverAddressElement.preferredHeight = 40;
             var serverAddressBox = serverAddressObject.AddComponent<TextMeshProUGUI>();
             serverAddressBox.alignment = TextAlignmentOptions.Center;
-            serverAddressBox.material = Main.Multiplayer.UIFactory.DefaultTextMesh.Material;
-            serverAddressBox.color = Main.Multiplayer.UIFactory.DefaultTextMesh.Color;
+            serverAddressBox.material = _uiFactory.DefaultTextMesh.Material;
+            serverAddressBox.color = _uiFactory.DefaultTextMesh.Color;
 
             var settings = _multiplayerSettingsService.GetSettings();
             var endpointText = settings.HideServerAddress ? "***.***.***.***:****" : connectivity.Endpoint.ToString();
@@ -289,6 +289,32 @@ namespace WOTRMultiplayer.UI.Controllers
             });
         }
 
+        public void UpdateLoadingProgress(Dictionary<long, float> progress)
+        {
+            _mainThreadAccessor.Post(() =>
+            {
+                foreach (Transform playerContainer in PlayersSectionContent.transform)
+                {
+                    var progressBar = playerContainer.Find(UIFactory.ProgressBarObjectName);
+                    if (progress == null)
+                    {
+                        progressBar.gameObject.SetActive(false);
+                        continue;
+                    }
+
+                    var player = progressBar.GetComponent<PlayerHandle>()?.Owner;
+                    if (player != null && progress.TryGetValue(player.Id, out var playerProgress))
+                    {
+                        var progressImage = progressBar.Find(UIFactory.ProgressBarImageObjectName)?.GetComponent<Image>();
+                        if (progressImage != null)
+                        {
+                            progressImage.fillAmount = Mathf.Clamp01(playerProgress);
+                        }
+                    }
+                }
+            });
+        }
+
         private Transform FindCharacterContainer(NetworkCharacter character)
         {
             foreach (Transform child in CharactersInfoContainer.transform)
@@ -306,8 +332,8 @@ namespace WOTRMultiplayer.UI.Controllers
 
         private void CreatePlayerObject(NetworkPlayer player)
         {
-            var defaultMesh = Main.Multiplayer.UIFactory.DefaultTextMesh;
-            var playerContainerObject = Main.Multiplayer.UIFactory.CreateDefaultGameObject(PlayersSectionContent.transform);
+            var defaultMesh = _uiFactory.DefaultTextMesh;
+            var playerContainerObject = _uiFactory.CreateDefaultGameObject(PlayersSectionContent.transform);
             playerContainerObject.name = PlayerContainerObjectName;
             var horizontal = playerContainerObject.AddComponent<HorizontalLayoutGroup>();
             horizontal.spacing = 6f;
@@ -316,7 +342,10 @@ namespace WOTRMultiplayer.UI.Controllers
             playerContainerSizeFitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
 
             const int PreferredHeight = 28;
-            var gameVersionObject = Main.Multiplayer.UIFactory.CreateDefaultGameObject(playerContainerObject.transform);
+
+            CreateProgressBar(player, playerContainerObject.transform, PreferredHeight, withBackround: false);
+
+            var gameVersionObject = _uiFactory.CreateDefaultGameObject(playerContainerObject.transform);
             var gameVersionElement = gameVersionObject.AddComponent<LayoutElement>();
             gameVersionElement.preferredHeight = PreferredHeight;
             var gameVersionBox = gameVersionObject.AddComponent<TextMeshProUGUI>();
@@ -325,7 +354,7 @@ namespace WOTRMultiplayer.UI.Controllers
             gameVersionBox.color = defaultMesh.Color;
             gameVersionBox.SetText($"[{player.ContentState.GameVersion}]");
 
-            var playerObject = Main.Multiplayer.UIFactory.CreateDefaultGameObject(playerContainerObject.transform);
+            var playerObject = _uiFactory.CreateDefaultGameObject(playerContainerObject.transform);
             var playerElement = playerObject.AddComponent<LayoutElement>();
             playerElement.preferredHeight = PreferredHeight;
             playerObject.name = PlayerNameObjectName;
@@ -347,9 +376,15 @@ namespace WOTRMultiplayer.UI.Controllers
             }
         }
 
+        private void CreateProgressBar(NetworkPlayer networkPlayer, Transform parent, int size, bool withBackround = false)
+        {
+            var progressBar = _uiFactory.CreateProgressBar(parent, size, 0.45f, withBackround);
+            progressBar.AddComponent<PlayerHandle>().Owner = networkPlayer;
+        }
+
         private void CreatePlayerIcon(string iconName, GameObject parent, int size, TooltipBaseTemplate template = null)
         {
-            var iconObject = Main.Multiplayer.UIFactory.CreateDefaultGameObject(parent.transform);
+            var iconObject = _uiFactory.CreateDefaultGameObject(parent.transform);
             var layoutElement = iconObject.AddComponent<LayoutElement>();
             layoutElement.preferredHeight = size;
             layoutElement.preferredWidth = size;

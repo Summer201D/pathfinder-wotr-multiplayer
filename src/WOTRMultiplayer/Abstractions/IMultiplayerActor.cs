@@ -56,7 +56,9 @@ namespace WOTRMultiplayer.Abstractions
 
         Action<bool> OnNewGameSequenceStarted { get; set; }
 
-        Action<List<KeyValuePair<long, int>>> OnSaveGameTransferProgressChanged { get; set; }
+        Action<Dictionary<long, float>> OnSaveGameTransferProgressChanged { get; set; }
+
+        Action OnGameStarted { get; set; }
 
         SeededContext GetSeededContext();
 

@@ -27,8 +27,7 @@
             NotifySaveGameSyncStatusChanged,
             NotifyNewGameDifficultyChanged,
             NotifySaveGameChunkCreated,
-            NotifySaveGameChunkReceived,
-            NotifySaveGameTransferProgressChanged
+            NotifySaveGameChunkReceived
         }
 
         public enum Game

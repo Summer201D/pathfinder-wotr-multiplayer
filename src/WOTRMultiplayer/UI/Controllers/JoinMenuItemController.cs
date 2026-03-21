@@ -330,6 +330,8 @@ namespace WOTRMultiplayer.UI.Controllers
             _multiplayerClient.OnCharactersChanged = enable ? OnMultiplayerCharactersChanged : null;
             _multiplayerClient.OnCharacterOwnerChanged = enable ? OnMultiplayerCharacterOwnerChanged : null;
             _multiplayerClient.OnNewGameSequenceStarted = enable ? OnMultiplayerNewGameSequenceStarted : null;
+            _multiplayerClient.OnSaveGameTransferProgressChanged = enable ? OnMultiplayerSaveGameTransferProgressChanged : null;
+            _multiplayerClient.OnGameStarted = enable ? OnMultiplayerOnGameStarted : null;
         }
 
         protected override void DisposeInternal()

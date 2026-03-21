@@ -188,6 +188,7 @@ namespace WOTRMultiplayer.Services
             TransferSaveGame();
 
             TryStartSavedGame();
+
             return true;
         }
 
@@ -1135,7 +1136,7 @@ namespace WOTRMultiplayer.Services
         public void OnAlushenyrraCameraDirectionChanged(string cameraDirection)
         {
             // TODO: is in isles area?
-            if (Game.CurrentArea == null || Game.CurrentArea.Chapter != 4)
+            if (Game?.CurrentArea == null || Game.CurrentArea.Chapter != 4)
             {
                 return;
             }
@@ -1636,13 +1637,8 @@ namespace WOTRMultiplayer.Services
         {
             Game.StartUp.ConfirmedChunks.AddOrUpdate(receivedFrom, message.ChunkNumber, (key, existing) => message.ChunkNumber);
 
-            var progressChanged = new NotifySaveGameTransferProgressChanged
-            {
-                Players = [.. Game.StartUp.ConfirmedChunks]
-            };
-            Send(progressChanged);
-
-            OnSaveGameTransferProgressChanged?.Invoke([.. Game.StartUp.ConfirmedChunks]);
+            var progress = Game.StartUp.ConfirmedChunks.ToDictionary(x => x.Key, x => x.Value / (float)Game.StartUp.ExpectedChunks);
+            OnSaveGameTransferProgressChanged?.Invoke(progress);
         }
 
         private void OnNotifyKingdomNavigationChanged(long receivedFrom, NotifyKingdomNavigationChanged message)
@@ -2350,6 +2346,7 @@ namespace WOTRMultiplayer.Services
                 {
                     Logger.LogInformation("Everyone is synced, game can be started. LobbyStage={LobbyStage}, IsNewGameSequence={IsNewGameSequence}", Game.Stage, Game.StartUp.IsNewGameSequence);
                     Send(new NotifyGameStarted());
+                    OnGameStarted?.Invoke();
 
                     if (Game.StartUp.IsNewGameSequence)
                     {
