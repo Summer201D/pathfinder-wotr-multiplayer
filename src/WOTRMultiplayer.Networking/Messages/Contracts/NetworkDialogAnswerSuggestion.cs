@@ -14,5 +14,10 @@ namespace WOTRMultiplayer.Networking.Messages.Contracts
         [ProtoMember(2)]
         [LogMe]
         public List<long> Players { get; set; } = [];
+
+        public override string ToString()
+        {
+            return AnswerName;
+        }
     }
 }

@@ -1818,16 +1818,24 @@ namespace WOTRMultiplayer.Services
 
         public bool CanLeaveCombat()
         {
-            if (!IsWaitingForUntargetableUnits())
+            try
             {
-                CleanupUntargetableUnitsState();
-                return true;
+                if (!IsWaitingForUntargetableUnits())
+                {
+                    CleanupUntargetableUnitsState();
+                    return true;
+                }
+
+                var groups = string.Join(", ", Game.Combat?.UntargetableUnits.Select(x => $"{x.Key}=[{string.Join(", ", x.Value)}]"));
+                Logger.LogWarning("Unable to leave combat. UntargetableGroups={UntargetableGroups}", groups);
+
+                return false;
             }
-
-            var groups = string.Join(", ", Game.Combat.UntargetableUnits.Select(x => $"{x.Key}=[{string.Join(", ", x.Value)}]"));
-            Logger.LogWarning("Unable to leave combat. UntargetableGroups={UntargetableGroups}", groups);
-
-            return false;
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, "Error while checking if combat can be ended");
+                throw;
+            }
         }
 
         public void CleanupUntargetableUnitsState()
@@ -4406,6 +4414,7 @@ namespace WOTRMultiplayer.Services
                 if (isLastGroupMember)
                 {
                     Game.Combat.UntargetableUnits.TryRemove(groupId, out _);
+                    Logger.LogWarning("Unit was last in untargetable group. UnitId={UnitId}, GroupId={GroupId}", unitId, groupId);
                 }
 
                 var isLastGroup = Game.Combat.UntargetableUnits.Count == 0;

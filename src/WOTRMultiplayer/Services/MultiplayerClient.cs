@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
-using System.Threading;
 using System.Threading.Tasks;
 using AutoMapper;
 using Kingmaker.UI.Kingdom;
@@ -162,8 +161,15 @@ namespace WOTRMultiplayer.Services
         {
             if (networkDialog.IsScripted)
             {
+                var previousDialog = Game.DialogState;
                 Game.DialogState = new NetworkDialogState(networkDialog);
                 Logger.LogInformation("Scripted dialog has been started. DialogId={DialogId}, DialogName={Name}", Game.DialogState.Dialog.Id, Game.DialogState.Dialog.Name);
+                // workaround for scripted sequential dialogs (e.g. Act4 shamira -> nocticula message dialog)
+                if (previousDialog != null)
+                {
+                    Logger.LogWarning("Previous cuename has been preserved. PreviousDialogName={PreviousDialogName}, NewDialogName={NewDialogName}", previousDialog.Dialog.Name, Game.DialogState.Dialog.Name);
+                    Game.DialogState.CurrentCueName = previousDialog.CurrentCueName;
+                }
 
                 return true;
             }

@@ -423,7 +423,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
                 Game.Instance.Player.Group.IsInCombat++;
             }
 
-            _logger.LogInformation("Unit is not targetable anymore. UnitId={UnitId}, IsUntargetable={IsUntargetable}, PlayerCombatCounter={PlayerCombatCounter}", unitId, unit?.Descriptor.State.Features.IsUntargetable.Value, Game.Instance.Player.Group.IsInCombat.m_GuardCount);
+            _logger.LogInformation("Unit is not targetable anymore. UnitId={UnitId}, IsUntargetable={IsUntargetable}, PlayerCombatCounter={PlayerCombatCounter}, IsFirstGroupMember={IsFirstGroupMember}, IsFirstGroup={IsFirstGroup}", unitId, unit?.Descriptor.State.Features.IsUntargetable.Value, Game.Instance.Player.Group.IsInCombat.m_GuardCount, isFirstGroupMember, isFirstGroup);
         }
 
         public void MakeUnitTargetable(string unitId, bool isLastGroupMember, bool isLastGroup)
@@ -441,7 +441,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
                 Game.Instance.Player.Group.IsInCombat--;
             }
 
-            _logger.LogInformation("Unit is targetable. UnitId={UnitId}, IsUntargetable={IsUntargetable}, PlayerCombatCounter={PlayerCombatCounter}", unitId, unit?.Descriptor.State.Features.IsUntargetable.Value, Game.Instance.Player.Group.IsInCombat.m_GuardCount);
+            _logger.LogInformation("Unit is targetable. UnitId={UnitId}, IsUntargetable={IsUntargetable}, PlayerCombatCounter={PlayerCombatCounter}, IsLastGroupMember={IsLastGroupMember}, IsLastGroup={IsLastGroup}", unitId, unit?.Descriptor.State.Features.IsUntargetable.Value, Game.Instance.Player.Group.IsInCombat.m_GuardCount, isLastGroupMember, isLastGroup);
         }
 
         public void MoveUnit(NetworkUnitMoveTo unitMoveTo)

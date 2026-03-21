@@ -294,7 +294,17 @@ namespace WOTRMultiplayer.Services
         {
             if (!string.Equals(Game.DialogState?.Dialog.Id, networkDialog.Id, StringComparison.OrdinalIgnoreCase))
             {
+                var previousDialog = Game.DialogState;
                 Game.DialogState = new NetworkDialogState(networkDialog);
+                lock (ActionLock)
+                {
+                    // workaround for scripted sequential dialogs (e.g. Act4 shamira -> nocticula message dialog)
+                    if (networkDialog.IsScripted && previousDialog != null)
+                    {
+                        Logger.LogWarning("Previous cue views have been preserved. PreviousDialogName={PreviousDialogName}, NewDialogName={NewDialogName}", previousDialog.Dialog.Name, Game.DialogState.Dialog.Name);
+                        Game.DialogState.CueViews = previousDialog.CueViews ?? [];
+                    }
+                }
             }
 
             if (!Game.DialogState.Dialog.IsScripted)
@@ -2184,11 +2194,14 @@ namespace WOTRMultiplayer.Services
                 return;
             }
 
-            Game.DialogState.CueViews.AddOrUpdate(cueName, (key) => new HashSet<long>([playerId]), (key, existing) =>
+            lock (ActionLock)
             {
-                existing.Add(playerId);
-                return existing;
-            });
+                Game.DialogState.CueViews.AddOrUpdate(cueName, (key) => new HashSet<long>([playerId]), (key, existing) =>
+                {
+                    existing.Add(playerId);
+                    return existing;
+                });
+            }
 
             Logger.LogInformation("Cue witness has been added. CueName={CueName}, PlayerId={PlayerId}", cueName, playerId);
         }

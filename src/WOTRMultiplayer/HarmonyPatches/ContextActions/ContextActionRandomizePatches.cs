@@ -146,10 +146,18 @@ namespace WOTRMultiplayer.HarmonyPatches.ContextActions
                 return salt.GetValue();
             }
 
-            // TODO: check if this needs to by synced
-            var value = salt.GetValue();
-            Main.GetLogger<ContextActionRandomizePatches>().LogWarning("ContextActionRandomize Salt value evaluated. Result={Result}, UnitId={UnitId}, AbilityName={AbilityName}", value, contextActionRandomize.AbilityContext?.Caster?.UniqueId, contextActionRandomize.AbilityContext?.NameForAcronym);
-            return value;
+            try
+            {
+                // TODO: check if this needs to by synced
+                var value = salt.GetValue();
+                Main.GetLogger<ContextActionRandomizePatches>().LogWarning("ContextActionRandomize Salt value evaluated. Result={Result}, UnitId={UnitId}, AbilityName={AbilityName}", value, contextActionRandomize.AbilityContext?.Caster?.UniqueId, contextActionRandomize.AbilityContext?.NameForAcronym);
+                return value;
+            }
+            catch (Exception ex)
+            {
+                Main.GetLogger<ContextActionRandomizePatches>().LogError(ex, "ContextActionRandomize Salt has not been evaluated");
+                throw;
+            }
         }
 
         private static int EvaluateSeed(Evaluator<int> seed, ContextActionRandomize contextActionRandomize)
@@ -159,10 +167,18 @@ namespace WOTRMultiplayer.HarmonyPatches.ContextActions
                 return seed.GetValue();
             }
 
-            // TODO: check if this needs to by synced
-            var value = seed.GetValue();
-            Main.GetLogger<ContextActionRandomizePatches>().LogWarning("ContextActionRandomize Seed value evaluated. Result={Result}, UnitId={UnitId}, AbilityName={AbilityName}", value, contextActionRandomize.AbilityContext?.Caster?.UniqueId, contextActionRandomize.AbilityContext?.NameForAcronym);
-            return value;
+            try
+            {
+                // TODO: check if this needs to by synced
+                var value = seed.GetValue();
+                Main.GetLogger<ContextActionRandomizePatches>().LogWarning("ContextActionRandomize Seed value evaluated. Result={Result}, UnitId={UnitId}, AbilityName={AbilityName}", value, contextActionRandomize.AbilityContext?.Caster?.UniqueId, contextActionRandomize.AbilityContext?.NameForAcronym);
+                return value;
+            }
+            catch (Exception ex)
+            {
+                Main.GetLogger<ContextActionRandomizePatches>().LogError(ex, "ContextActionRandomize Seed has not been evaluated");
+                throw;
+            }
         }
     }
 }
