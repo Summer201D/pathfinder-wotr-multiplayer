@@ -384,11 +384,6 @@ namespace WOTRMultiplayer.Services
                 EnsureForcePaused(NetworkForcedPauseReason.AreaLoading);
                 GameInteraction.SetPause(true);
             }
-
-            if (IsOutOfSupportedArea())
-            {
-                PlayerNotification.ShowModalMessage(WellKnownKeys.SysMessages.OutOfSupportedAreas.Key);
-            }
         }
 
         /// <summary>
@@ -4368,17 +4363,6 @@ namespace WOTRMultiplayer.Services
             return canControl;
         }
 
-        private bool IsOutOfSupportedArea()
-        {
-            var isOutOfSupport = Game.CurrentArea.Chapter switch
-            {
-                <= 4 => false,
-                _ => true,
-            };
-
-            return isOutOfSupport;
-        }
-
         private bool ReadyChanged(NetworkPlayer networkPlayer, bool isReady)
         {
             lock (ActionLock)
@@ -4432,13 +4416,11 @@ namespace WOTRMultiplayer.Services
                 return;
             }
 
+            var isFirstGroup = Game.Combat.UntargetableUnits.Keys.Count == 0;
             var group = Game.Combat.UntargetableUnits.GetOrAdd(groupId, []);
             if (group.Add(unitId))
             {
                 var isFirstGroupMember = group.Count == 1;
-
-                var isFirstGroup = Game.Combat.UntargetableUnits.Count == 1;
-
                 CombatInteraction.MakeUnitUntargetable(unitId, isFirstGroupMember, isFirstGroup);
             }
         }
