@@ -630,13 +630,6 @@ namespace WOTRMultiplayer.Services.GameInteraction
 
                     _playerNotificationService.ShowWarningNotification(WellKnownKeys.GameNotifications.Combat.UnitAutokilled.Key, args: [unit.CharacterName, unit.UniqueId, player.Name]);
                     GameHelper.KillUnit(unit);
-
-                    if (Game.Instance.TurnBasedCombatController.CurrentTurn?.Rider == unit)
-                    {
-                        _logger.LogWarning("Auto-ending current turn due to killed unit. UnitId={UnitId}", unitId);
-                        Game.Instance.TurnBasedCombatController.CurrentTurn.ForceToEnd();
-                    }
-
                     _logger.LogInformation("Unit has been auto-killed. FromPlayerId={FromPlayerId}, UnitId={UnitId}", player.Id, unitId);
                     tcs.SetResult(true);
                 }
