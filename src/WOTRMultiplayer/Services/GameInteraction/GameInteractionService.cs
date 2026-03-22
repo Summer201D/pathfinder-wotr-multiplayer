@@ -584,12 +584,12 @@ namespace WOTRMultiplayer.Services.GameInteraction
                         matchedItems.TryGetValue(item, out var containerItems);
                         MatchSameNumberOfItems(containerItems, item.Count, matchedItem =>
                         {
-                            _logger.LogInformation("Transfering item. Name={Name}, Id={Id}, Count={Count}, Source={Source}, SourceIsStash={SourceIsStash}, Destination={Destination}, DestinationIsStash={DestinationIsStash}", matchedItem.Name, matchedItem.UniqueId, matchedItem.Count, sourceCollection.OwnerRef.Entity?.UniqueId, sourceCollection.IsSharedStash, destinationCollection.OwnerRef.Entity.UniqueId, destinationCollection.IsSharedStash);
-                            sourceCollection.Transfer(matchedItem, matchedItem.Count, destinationCollection);
-
-                            TryTriggerLootClosedActions(sourceCollection.OwnerRef.Entity, destinationCollection.OwnerRef.Entity);
+                            var transferredItem = sourceCollection.Transfer(matchedItem, matchedItem.Count, destinationCollection);
+                            _logger.LogInformation("Transferred item. Name={Name}, Id={Id}, Count={Count}, Source={Source}, SourceIsStash={SourceIsStash}, Destination={Destination}, DestinationIsStash={DestinationIsStash}", transferredItem?.NameForAcronym, transferredItem?.UniqueId, transferredItem?.Count, sourceCollection.OwnerRef.Entity?.UniqueId, sourceCollection.IsSharedStash, destinationCollection.OwnerRef.Entity.UniqueId, destinationCollection.IsSharedStash);
                         });
                     }
+
+                    TryTriggerLootClosedActions(sourceCollection.OwnerRef.Entity, destinationCollection.OwnerRef.Entity);
 
                     RefreshLootUI();
                     RefreshInventoryWindow();
@@ -2797,21 +2797,18 @@ namespace WOTRMultiplayer.Services.GameInteraction
 
         private bool TryFindRequiredItemsInCollection(ItemsCollection collection, List<NetworkItem> items, out Dictionary<NetworkItem, List<ItemEntity>> matchedItems)
         {
-            var alreadyPickedItems = new HashSet<ItemEntity>();
             matchedItems = [];
             foreach (var item in items)
             {
-                var existingItems = collection.Items.Where(x => !alreadyPickedItems.Contains(x) && IsSameUnholdedItem(x, item)).ToList();
+                var existingItems = collection.Items.Where(x => IsSameUnholdedItem(x, item)).ToList();
                 var existingItemsCount = existingItems.Sum(x => x.Count);
                 if (existingItemsCount < item.Count)
                 {
                     matchedItems = null;
-                    alreadyPickedItems.Clear();
                     return false;
                 }
 
                 matchedItems.Add(item, existingItems);
-                alreadyPickedItems.AddRange(existingItems);
             }
 
             return true;
