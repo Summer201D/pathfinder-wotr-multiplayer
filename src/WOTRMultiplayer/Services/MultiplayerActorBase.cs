@@ -1844,7 +1844,8 @@ namespace WOTRMultiplayer.Services
             var groups = Game.Combat.UntargetableUnits.ToList();
             foreach (var group in groups)
             {
-                foreach (var unit in group.Value)
+                var units = group.Value.ToList();
+                foreach (var unit in units)
                 {
                     MakeUnitTargetable(unit, group.Key);
                 }
