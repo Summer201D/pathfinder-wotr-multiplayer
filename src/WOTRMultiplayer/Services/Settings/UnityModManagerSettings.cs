@@ -9,9 +9,11 @@ namespace WOTRMultiplayer.Services.Settings
 
         public bool UseDebugConsole { get; set; } = false;
 
+        public int GlobalMinimumLogLevel { get; set; } = (int)LogEventLevel.Information;
+
         public int ConsoleMinimumLogLevel { get; set; } = (int)LogEventLevel.Information;
 
-        public int FileMinimumLogLevel { get; set; } = (int)LogEventLevel.Debug;
+        public int FileMinimumLogLevel { get; set; } = (int)LogEventLevel.Information;
 
         public bool AddUnitIdToOvertip { get; set; } = false;
     }

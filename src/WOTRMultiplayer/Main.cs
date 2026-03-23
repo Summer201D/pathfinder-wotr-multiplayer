@@ -61,7 +61,7 @@ namespace WOTRMultiplayer
             {
                 ModManagerSettings = UnityModManager.ModSettings.Load<UnityModManagerSettings>(entry);
                 ModManagerSettings.ModFolder = entry.Path;
-                ServiceProvider = DIFactory.Create(ModManagerSettings, ModManagerSettings.ModFolder);
+                ServiceProvider = DIFactory.Create(ModManagerSettings);
 
                 _logger = ServiceProvider.GetService<ILogger<Main>>();
             }
@@ -181,6 +181,13 @@ namespace WOTRMultiplayer
             GUILayout.EndHorizontal();
             GUILayout.BeginHorizontal();
             ModManagerSettings.UseDebugConsole = GUILayout.Toggle(ModManagerSettings.UseDebugConsole, $"Enable Debug Console", GUILayout.ExpandWidth(false));
+            GUILayout.EndHorizontal();
+
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("Minimum Console Log Level (Information is recommended, Debug - if you are mad)");
+            GUILayout.EndHorizontal();
+            GUILayout.BeginHorizontal();
+            ModManagerSettings.GlobalMinimumLogLevel = GUILayout.Toolbar(ModManagerSettings.GlobalMinimumLogLevel, Enum.GetNames(typeof(LogEventLevel)));
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();

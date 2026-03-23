@@ -36,14 +36,18 @@ namespace WOTRMultiplayer.Config.DI
 {
     public static class DIFactory
     {
-        public static IServiceProvider Create(UnityModManagerSettings settings, string modFolder)
+        public static IServiceProvider Create(UnityModManagerSettings settings)
         {
             var serviceCollection = new ServiceCollection();
-            var consoleLogLevel = (LogEventLevel)settings.ConsoleMinimumLogLevel;
-            var fileLogLevel = (LogEventLevel)settings.FileMinimumLogLevel;
 
             var loggableObjects = typeof(MessageTypes).Assembly.GetTypes().Where(x => x.GetCustomAttribute<BeetleX.Packets.MessageTypeAttribute>() != null).ToList();
-            Log.Logger = Logging.LoggerFactory.Create(settings.UseDebugConsole, modFolder, consoleLogLevel, fileLogLevel, loggableObjects);
+            Log.Logger = Logging.LoggerFactory.Create(
+                settings.UseDebugConsole,
+                settings.ModFolder,
+                (LogEventLevel)settings.GlobalMinimumLogLevel,
+                (LogEventLevel)settings.ConsoleMinimumLogLevel,
+                (LogEventLevel)settings.FileMinimumLogLevel,
+                loggableObjects);
 
             serviceCollection.AddLogging(x =>
             {

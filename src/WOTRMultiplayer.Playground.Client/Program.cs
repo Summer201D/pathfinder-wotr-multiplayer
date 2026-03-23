@@ -26,7 +26,8 @@ namespace WOTRMultiplayer.Playground.Client
         public static void Main(string[] args)
         {
             WellKnownSettings.Initialize();
-            var serviceProvider = DIFactory.Create(new UnityModManagerSettings { UseDebugConsole = false, ConsoleMinimumLogLevel = (int)Serilog.Events.LogEventLevel.Debug }, "./");
+            var settings = new UnityModManagerSettings { UseDebugConsole = false, ConsoleMinimumLogLevel = (int)Serilog.Events.LogEventLevel.Debug, ModFolder = "./" };
+            var serviceProvider = DIFactory.Create(settings);
             var logger = serviceProvider.GetService<ILogger<Program>>();
 
             var client = new MultiplayerClient(
