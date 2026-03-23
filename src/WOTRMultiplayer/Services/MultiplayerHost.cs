@@ -2237,11 +2237,8 @@ namespace WOTRMultiplayer.Services
                 return [];
             }
 
-            lock (ActionLock)
-            {
-                var players = Game.Players.Where(p => !cueViews.Contains(p.Id)).ToList();
-                return players;
-            }
+            var players = GetSyncedPlayers().Where(p => !cueViews.Contains(p.Id)).ToList();
+            return players;
         }
 
         private void TryEnableDialogContinueButton()

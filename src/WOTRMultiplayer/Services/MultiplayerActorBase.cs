@@ -2960,7 +2960,6 @@ namespace WOTRMultiplayer.Services
             ResetPlayersTracker(Game.PlayersInSkipTime);
             ResetPlayersTracker(Game.PlayersInGlobalMapLocationMessage);
             ResetPlayersTracker(Game.PlayersInGlobalMapCommonPopup);
-            ResetPlayersTracker(Game.PlayersInGlobalMapEncounterMessage);
             ResetPlayersTracker(Game.PlayersInZoneLoot);
             ResetPlayersTracker(Game.PlayersInDialogPopup);
             ResetPlayersTracker(Game.PlayersInCharacterSelectionWindow);
