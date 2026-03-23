@@ -213,7 +213,7 @@ namespace WOTRMultiplayer.HarmonyPatches.GameInstance
         }
 
         /// <summary>
-        /// EscMode and FullScreenUi game modes are never actually started. We block them to prevent the game from 'fake' pausing (reducing timeScale to 0, stopping moving units, etc.) in multiplayer - the game should keep running when a player opens Esc menu, settings, inventory, etc.
+        /// EscMode and FullScreenUi game modes are never actually started. They are blocked to prevent the game from pausing (reducing timeScale to 0, stopping moving units, etc.) in multiplayer - the game should keep running when a player opens Esc menu, settings, inventory, etc.
         /// This, however, causes some undesirable side effects. For example, opened inventory (fullscreenui) overlaps with the combat log. Even though the combat log is not visible, it still captures all mouse inputs, so you can't use some inventory slots or interact with Finnean.
         /// An alternative to blocking these modes would be to stop controllers from being deactivated (starting FullScreenUi mode stops Default mode, which calls Deactivate on every controller),
         /// but that looks like a rabbit hole with an unclear amount of work to fix every controller that needs to stay active.
@@ -233,7 +233,7 @@ namespace WOTRMultiplayer.HarmonyPatches.GameInstance
                 combatLogView?.Hide();
                 var needsUpdate = false;
                 // capital mode + inventory/etc should show every character
-                if (Game.Instance.Player.CapitalPartyMode && !Game.Instance.Vendor.IsTrading)
+                if (Game.Instance.Player.CapitalPartyMode)
                 {
                     switch (Game.Instance.RootUiContext.InGameVM.StaticPartVM.ServiceWindowsVM.m_FullScreenUIType)
                     {
@@ -243,6 +243,7 @@ namespace WOTRMultiplayer.HarmonyPatches.GameInstance
                         case FullScreenUIType.Journal:
                         case FullScreenUIType.CharacterScreen:
                         case FullScreenUIType.MythicScreen:
+                        case FullScreenUIType.Vendor:
                             var group = SelectionCharacterController.GetGroup(true, false);
                             if (Game.Instance.SelectionCharacter.m_ActualGroup.Count != group.Count)
                             {
@@ -268,11 +269,6 @@ namespace WOTRMultiplayer.HarmonyPatches.GameInstance
 
         private static void UpdateSelectedCharacter()
         {
-            if (Game.Instance.Vendor.IsTrading)
-            {
-                return;
-            }
-
             var selectedCharacter = Game.Instance.Player.CapitalPartyMode || Game.Instance.SelectionCharacter.SelectedUnits?.Count == 0 ? Game.Instance.Player.MainCharacter.Value : Game.Instance.SelectionCharacter.SelectedUnits.FirstOrDefault();
             Game.Instance.SelectionCharacter.SelectedUnit.Value = selectedCharacter;
             Game.Instance.SelectionCharacter.m_FullScreenSelectedUnit = selectedCharacter;
