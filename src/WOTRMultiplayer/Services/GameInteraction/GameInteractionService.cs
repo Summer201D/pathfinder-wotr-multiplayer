@@ -3123,6 +3123,12 @@ namespace WOTRMultiplayer.Services.GameInteraction
                 .OrderBy(x => x.Count)
                 .ToList();
 
+            if (possibleItems.Count == 0)
+            {
+                _logger.LogError("Unable to find item to sell. Item={Item}", transfer.Item.Name);
+                return;
+            }
+
             MatchSameNumberOfItems(possibleItems, transfer.Count,
                 item =>
                 {

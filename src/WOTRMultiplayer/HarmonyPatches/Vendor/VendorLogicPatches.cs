@@ -47,10 +47,10 @@ namespace WOTRMultiplayer.HarmonyPatches.Vendor
         }
 
         [HarmonyPatch(typeof(VendorLogic), nameof(VendorLogic.AddForSell))]
-        [HarmonyPostfix]
-        public static void VendorLogic_AddForSell_Postfix(ItemEntity item, int count, ref ItemEntity __result)
+        [HarmonyPrefix]
+        public static void VendorLogic_AddForSell_Prefix(ItemEntity item, int count)
         {
-            if (!Main.Multiplayer.IsActive || __result == null)
+            if (!Main.Multiplayer.IsActive || item.Collection != VendorLogic.Player.Inventory)
             {
                 return;
             }
