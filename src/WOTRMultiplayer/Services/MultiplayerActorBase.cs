@@ -631,10 +631,10 @@ namespace WOTRMultiplayer.Services
             }
         }
 
-        public SeededContext GetSeededContext()
+        public SeededContext GetSeededContext(bool excludeAreaSeed = false)
         {
             var lifetime = CombatTurnSeed == null ? IdentifierLifetime.Area : IdentifierLifetime.CombatTurn;
-            var identifier = $"{nameof(SessionSeed)}={SessionSeed}:{nameof(LoadedSaveSeed)}={LoadedSaveSeed ?? 0}:{nameof(AreaSeed)}={(Game.CurrentArea.IsGlobalMap ? 0 : AreaSeed ?? 0)}:{nameof(CombatSeed)}={CombatSeed ?? 0}:{nameof(CombatTurnSeed)}={CombatTurnSeed ?? 0}:{nameof(CrusadeArmyCombatAreaSeed)}={CrusadeArmyCombatAreaSeed ?? 0}:{nameof(CrusadeArmyCombatSeed)}={CrusadeArmyCombatSeed ?? 0}";
+            var identifier = $"{nameof(SessionSeed)}={SessionSeed}:{nameof(LoadedSaveSeed)}={LoadedSaveSeed ?? 0}:{nameof(AreaSeed)}={(excludeAreaSeed ? 0 : AreaSeed ?? 0)}:{nameof(CombatSeed)}={CombatSeed ?? 0}:{nameof(CombatTurnSeed)}={CombatTurnSeed ?? 0}:{nameof(CrusadeArmyCombatAreaSeed)}={CrusadeArmyCombatAreaSeed ?? 0}:{nameof(CrusadeArmyCombatSeed)}={CrusadeArmyCombatSeed ?? 0}";
             var context = new SeededContext
             {
                 Id = identifier,

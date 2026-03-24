@@ -275,7 +275,7 @@ namespace WOTRMultiplayer.Abstractions
 
         void OnGlobalMapAutoCrusadeCombatChanged(bool isEnabled);
 
-        SeededContext GetSeededContext();
+        SeededContext GetSeededContext(bool excludeAreaSeed = false);
 
         void OnZoneLootShown();
 
