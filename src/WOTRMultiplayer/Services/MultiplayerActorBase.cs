@@ -3240,6 +3240,7 @@ namespace WOTRMultiplayer.Services
             UpdateGlobalMapCrusadeArmyBattleResultsUIState();
 
             RemovePlayerFromTracker(Game.PlayersInGlobalMapCommonPopup, playerId);
+            UpdateGlobalMapCommonPopupUIState(null);
 
             RemovePlayerFromTracker(Game.PlayersInGlobalMapCombatResults, playerId);
             UpdateGlobalMapCombatResultsUIState();
