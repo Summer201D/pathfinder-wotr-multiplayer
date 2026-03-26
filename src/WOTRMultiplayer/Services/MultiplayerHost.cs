@@ -2015,11 +2015,12 @@ namespace WOTRMultiplayer.Services
                 InvokeOnPlayersChanged();
                 var playersChanged = CreateNotifyLobbyPlayersChanged();
                 _networkServer.SendAllExcept(playerId, playersChanged);
+
+                RefreshUIOnPlayerDisconnect(removedPlayer.Id);
+
                 ShowPlayerDisconnectedMessage(removedPlayer);
 
                 TryEnableDialogContinueButton();
-
-                RefreshUIOnPlayerDisconnect(removedPlayer.Id);
 
                 TryEndForcedPause(Game.LocalPlayerId);
             }
