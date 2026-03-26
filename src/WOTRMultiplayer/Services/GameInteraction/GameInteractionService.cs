@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading;
 using Kingmaker;
@@ -205,9 +206,9 @@ namespace WOTRMultiplayer.Services.GameInteraction
             });
         }
 
-        public string GetSaveGamePath()
+        public string GetPersistentDataPath()
         {
-            var path = Game.Instance.SaveManager.SavePath;
+            var path = Path.Combine(ApplicationPaths.persistentDataPath, "Multiplayer");
             return path;
         }
 

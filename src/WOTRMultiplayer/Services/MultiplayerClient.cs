@@ -487,6 +487,7 @@ namespace WOTRMultiplayer.Services
                .On<NotifyCharacterOwnerChanged>(OnNotifyCharacterOwnerChanged)
                .On<NotifyGameStarted>(OnNotifyGameStarted)
                .On<NotifySaveGameSyncStatusChanged>(OnNotifyLobbySyncStatusChanged)
+               .On<NotifySaveGameTransferProgressChanged>(OnNotifySaveGameTransferProgressChanged)
                .On<NotifyNewGameDifficultyChanged>(OnNotifyNewGameDifficultyChanged)
 
                // new game sequence
@@ -648,6 +649,11 @@ namespace WOTRMultiplayer.Services
                // alushenyrra
                .On<NotifyAlyshenyrraCameraDirectionChanged>(OnNotifyAlyshenyrraCameraDirectionChanged)
                ;
+        }
+
+        private void OnNotifySaveGameTransferProgressChanged(long receivedFrom, NotifySaveGameTransferProgressChanged message)
+        {
+            OnSaveGameTransferProgressChanged?.Invoke(message.Progress);
         }
 
         private void OnNotifyAlyshenyrraCameraDirectionChanged(long receivedFrom, NotifyAlyshenyrraCameraDirectionChanged message)

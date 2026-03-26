@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using DG.Tweening;
 using Kingmaker;
 using Kingmaker.Blueprints.Root.Strings.GameLog;
 using Kingmaker.Localization;
@@ -47,12 +48,24 @@ namespace WOTRMultiplayer.Services.GameInteraction
             });
         }
 
-        public void ShowWarningNotification(string messageKey, bool addToLog, params object[] args)
+        public void ShowWarningNotification(string messageKey, bool addToLog, float warningDuration = 4f, params object[] args)
         {
             _mainThreadAccessor.Post(() =>
             {
                 var message = GetLocalizedText(messageKey, args);
                 EventBus.RaiseEvent<IWarningNotificationUIHandler>(x => x.HandleWarning(message, addToLog));
+                var warningContainer = _uiAccessor.CommonPCView?.m_WarningsText?.m_WarningsContainer;
+                if (warningContainer == null)
+                {
+                    return;
+                }
+
+                warningContainer.DOKill();
+                Sequence sequence = DOTween.Sequence();
+                sequence.Append(warningContainer.DOFade(1f, 0.2f));
+                sequence.Append(warningContainer.DOFade(1f, warningDuration)); // default duration is 2f
+                sequence.Append(warningContainer.DOFade(0f, 0.2f));
+                sequence.Play<Sequence>().SetUpdate(true);
             });
         }
 

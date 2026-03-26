@@ -44,7 +44,7 @@ namespace WOTRMultiplayer.Abstractions.GameInteraction
 
         string LoadGameFromMainMenu(string savePath);
 
-        string GetSaveGamePath();
+        string GetPersistentDataPath();
 
         string GetPetOwnerId(string unitId);
 

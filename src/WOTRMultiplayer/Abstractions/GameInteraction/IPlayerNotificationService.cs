@@ -8,7 +8,7 @@ namespace WOTRMultiplayer.Abstractions.GameInteraction
     {
         void ShowModalMessage(string messageKey, params object[] args);
 
-        void ShowWarningNotification(string messageKey, bool addToLog = true, params object[] args);
+        void ShowWarningNotification(string messageKey, bool addToLog = true, float warningDuration = 4f, params object[] args);
 
         void AddCombatText(string messageKey, CombatTextSeverity combatTextSeverity, params object[] args);
 

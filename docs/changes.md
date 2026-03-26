@@ -14,7 +14,9 @@
 Most of the syncing relies on the blueprint asset ID (or something similiar) to replicate action for other players, so in **THEORY** things should work fine as long as those IDs are the same for abilities, spells, etc. This also includes any extra rolls (e.g. Skill Check or Attack Roll) added by mods, but those roll types must be available within base game.
 That said, compatibility with other mods hasn't really been tested at all and there are no plans to support it yet.
 
-Here is a basic [example](https://github.com/fl01/pathfinder-wotr-multiplayer-bubblebuffs) on how to use the existing network layer for your own mods. But keep in mind that it depends on low-level objects that are subject to change. **There is no guarantee that they will stay stable/same**.
+### Adding Multiplayer Compatibility to Your Mod
+
+See the [general information](/docs/dev/mods.md) about mod integration, as well as a basic [example](https://github.com/fl01/pathfinder-wotr-multiplayer-bubblebuffs) demonstrating how to utilize the existing networking layer in a separate mod.
 
 ### Known mod compatibility issues:
 - Bubble Tweaks - works fine if you use it purely for non-interactive UI changes (Character Statistics / show AoE range / loot icons / etc)

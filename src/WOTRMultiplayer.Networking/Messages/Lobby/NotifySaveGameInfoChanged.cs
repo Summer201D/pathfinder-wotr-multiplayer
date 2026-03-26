@@ -13,7 +13,7 @@ namespace WOTRMultiplayer.Networking.Messages.Lobby
 
         [ProtoMember(2)]
         [LogMe]
-        public int Seed { get; set; }
+        public int LoadedSaveSeed { get; set; }
 
         [ProtoMember(3)]
         [LogMe]
@@ -30,5 +30,9 @@ namespace WOTRMultiplayer.Networking.Messages.Lobby
         [ProtoMember(6)]
         [LogMe]
         public bool IsNewGameSequence { get; set; }
+
+        [ProtoMember(7)]
+        [LogMe]
+        public long PlayerId { get; set; }
     }
 }

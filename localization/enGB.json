@@ -1,7 +1,7 @@
 {
     "wotrmultiplayer": {
         "sysMessages": {
-            "failedToStoreSave": "Failed to write save game file to disk.\nMake sure the game is allowed to write to the following folder:\n{0}"
+            "failedToStoreSave": "Failed to write save game file to disk.\nMake sure the game is allowed to write to the following location:\n{0}"
         },
         "mainMenu": {
             "multiplayer": {
@@ -206,7 +206,7 @@
         },
         "gameNotifications": {
             "dialogs": {
-                "waitingForOtherPlayers": "Can't continue until everyone has seen the cue"
+                "waitingForOtherPlayers": "Waiting for other players to witness cue"
             },
             "rolls": {
                 "missingDamageRoll": "Error retrieving damage roll for {0} unit.\nThis guarantees desync in the game",
@@ -235,7 +235,8 @@
             "session": {
                 "playerJoined": "Player {0} has joined the game",
                 "playerLeft": "Player {0} has left the game",
-                "characterOwnerChanged": "Player {0} is in charge of {1} now"
+                "characterOwnerChanged": "Player {0} is in charge of {1} now",
+                "loadingSave": "Save game load has been initiated by {0}"
             },
             "spellBook": {
                 "noSpellSlotPermission": "Changing spells is restricted to character owner only",

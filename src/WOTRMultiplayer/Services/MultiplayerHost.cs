@@ -185,7 +185,7 @@ namespace WOTRMultiplayer.Services
             };
             Send(saveSyncStatusChanged);
 
-            TransferSaveGame();
+            TransferSaveGame(requiresProgress: true);
 
             TryStartSavedGame();
 
@@ -1650,10 +1650,24 @@ namespace WOTRMultiplayer.Services
 
         private void OnNotifySaveGameChunkReceived(long receivedFrom, NotifySaveGameChunkReceived message)
         {
-            Game.StartUp.ConfirmedChunks.AddOrUpdate(receivedFrom, message.ChunkNumber, (key, existing) => message.ChunkNumber);
+            var transfer = GetSaveGameTransferData(receivedFrom);
+            transfer.ConfirmedChunk = message.ChunkNumber;
 
-            var progress = Game.StartUp.ConfirmedChunks.ToDictionary(x => x.Key, x => x.Value / (float)Game.StartUp.ExpectedChunks);
-            OnSaveGameTransferProgressChanged?.Invoke(progress);
+            if (transfer.MaxOffset != Game.StartUp.SaveGameTransfer.Content.Length)
+            {
+                var settings = SettingsService.GetSettings();
+                transfer.MaxOffset = Math.Min(Game.StartUp.SaveGameTransfer.Content.Length, transfer.CurrentOffset + settings.SaveGameChunkSize);
+                SendSaveChunks(receivedFrom, Game.StartUp.SaveGameTransfer.Content, transfer, settings.SaveGameChunkSize);
+            }
+
+            var currentProgress = Game.StartUp.SaveGameTransfer.Data.ToDictionary(x => x.Key, x => x.Value.ConfirmedChunk / (float)Game.StartUp.SaveGameTransfer.TotalChunks);
+            OnSaveGameTransferProgressChanged?.Invoke(currentProgress);
+
+            var progressMessage = new NotifySaveGameTransferProgressChanged
+            {
+                Progress = currentProgress
+            };
+            Send(progressMessage);
         }
 
         private void OnNotifyKingdomNavigationChanged(long receivedFrom, NotifyKingdomNavigationChanged message)

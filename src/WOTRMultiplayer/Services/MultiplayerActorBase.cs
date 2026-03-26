@@ -485,7 +485,7 @@ namespace WOTRMultiplayer.Services
             ResetGameIdGenerator();
             Game.LoadedSaveSeed = CreateRandomSeed();
 
-            TransferSaveGame();
+            TransferSaveGame(requiresProgress: false);
         }
 
         public void CombatStarted()
@@ -2824,14 +2824,15 @@ namespace WOTRMultiplayer.Services
             UpdateLevelingRespecUIState(respecUnitId);
         }
 
-        protected void TransferSaveGame()
+        protected void TransferSaveGame(bool requiresProgress)
         {
             var initialMessage = new NotifySaveGameInfoChanged
             {
                 AutoStart = Game.StartUp.AutoStart,
                 GameId = Game.Id,
-                Seed = Game.LoadedSaveSeed,
-                IsNewGameSequence = Game.StartUp.IsNewGameSequence
+                LoadedSaveSeed = Game.LoadedSaveSeed,
+                IsNewGameSequence = Game.StartUp.IsNewGameSequence,
+                PlayerId = Game.LocalPlayerId
             };
 
             if (Game.StartUp.IsNewGameSequence)
@@ -2843,27 +2844,54 @@ namespace WOTRMultiplayer.Services
             var settings = SettingsService.GetSettings();
             var content = FileSystem.GetRawFileContent(Game.StartUp.SavePath);
             var chunks = (content.Length + settings.SaveGameChunkSize - 1) / settings.SaveGameChunkSize;
-            Game.StartUp.ExpectedChunks = Math.Max(1, chunks);
-
-            initialMessage.ExpectedChunks = Game.StartUp.ExpectedChunks;
+            initialMessage.ExpectedChunks = chunks;
             initialMessage.ContentSize = content.Length;
             Send(initialMessage);
 
+            Game.StartUp.SaveGameTransfer = new NetworkChunkedContentTransfer
+            {
+                Content = content,
+                TotalChunks = chunks
+            };
 
-            var chunkNumber = 0;
-            for (int offset = 0; offset < content.Length; offset += settings.SaveGameChunkSize)
+            foreach (var player in Game.Players)
+            {
+                if (player.Id == Game.LocalPlayerId)
+                {
+                    continue;
+                }
+
+                var transferData = GetSaveGameTransferData(player.Id);
+                transferData.CurrentOffset = 0;
+                transferData.ConfirmedChunk = 0;
+                transferData.MaxOffset = requiresProgress ? settings.SaveGameChunkSize : content.Length;
+
+                SendSaveChunks(player.Id, content, transferData, settings.SaveGameChunkSize);
+            }
+
+            Logger.LogInformation("Save game transfer has been initiated");
+        }
+
+        protected NetworkChunkedContentTransferData GetSaveGameTransferData(long playerId)
+        {
+            return Game.StartUp.SaveGameTransfer.Data.GetOrAdd(playerId, k => new NetworkChunkedContentTransferData());
+        }
+
+        protected void SendSaveChunks(long playerId, byte[] content, NetworkChunkedContentTransferData transferData, int chunkSize)
+        {
+            var chunkNumber = transferData.ConfirmedChunk;
+            for (; transferData.CurrentOffset < transferData.MaxOffset; transferData.CurrentOffset += chunkSize)
             {
                 chunkNumber++;
-                int size = Math.Min(settings.SaveGameChunkSize, content.Length - offset);
+                int size = Math.Min(chunkSize, content.Length - transferData.CurrentOffset);
                 var chunkMessage = new NotifySaveGameChunkCreated
                 {
                     ChunkNumber = chunkNumber,
-                    Content = new ReadOnlyMemory<byte>(content, offset, size).ToArray(),
+                    Content = new ReadOnlyMemory<byte>(content, transferData.CurrentOffset, size).ToArray(),
                 };
-                Send(chunkMessage);
-            }
 
-            Logger.LogInformation("Last save game chunk has been sent. LastChunkNumber={LastChunkNumber}", chunkNumber);
+                Send(playerId, chunkMessage);
+            }
         }
 
         protected HashSet<long> AddPlayerReadyStatus(PlayerTurnReadinessType playerReadinessType, long playerId, string unitId)
@@ -3001,12 +3029,11 @@ namespace WOTRMultiplayer.Services
                 return null;
             }
 
-            var baseUnityPath = GameInteraction.GetSaveGamePath();
-            var multiplayerPath = Regex.Replace(baseUnityPath, "((\\\\|\\/)+(Saved Games))$", "/Saved Multiplayer Games/");
-            var savePath = Path.Combine(multiplayerPath, "latest joined game.zks");
+            var persistentDataPath = GameInteraction.GetPersistentDataPath();
+            var savePath = Path.Combine(persistentDataPath, "Saved Games", "latest joined game.zks");
             if (!FileSystem.WriteFile(savePath, content))
             {
-                PlayerNotification.ShowModalMessage(WellKnownKeys.SysMessages.FailedToStoreSave.Key, multiplayerPath);
+                PlayerNotification.ShowModalMessage(WellKnownKeys.SysMessages.FailedToStoreSave.Key, savePath);
                 return null;
             }
 
@@ -3505,31 +3532,44 @@ namespace WOTRMultiplayer.Services
             Game.StartUp = new NetworkGameStartUp
             {
                 AutoStart = message.AutoStart,
-                ExpectedChunks = message.ExpectedChunks,
-                Content = new List<byte>(message.ContentSize),
-                IsNewGameSequence = message.IsNewGameSequence
+                IsNewGameSequence = message.IsNewGameSequence,
+                SaveGameTransfer = new NetworkChunkedContentTransfer
+                {
+                    TotalChunks = message.ExpectedChunks,
+                    Content = new byte[message.ContentSize]
+                }
             };
+
             Game.Id = message.GameId;
-            Game.LoadedSaveSeed = message.Seed;
+            Game.LoadedSaveSeed = message.LoadedSaveSeed;
 
             if (Game.StartUp.IsNewGameSequence)
             {
                 OnSaveGameChunksTransferCompleted();
             }
+
+            if (Game.Stage == NetworkLobbyStage.Playing)
+            {
+                var player = GetPlayer(message.PlayerId);
+                PlayerNotification.ShowWarningNotification(WellKnownKeys.GameNotifications.Session.LoadingSave.Key, args: player?.Name);
+            }
         }
 
         private void OnNotifySaveGameChunkCreated(long receivedFrom, NotifySaveGameChunkCreated message)
         {
-            Game.StartUp.Content.AddRange(message.Content);
+            var transfer = GetSaveGameTransferData(Game.LocalPlayerId);
+            Array.Copy(message.Content, 0, Game.StartUp.SaveGameTransfer.Content, transfer.CurrentOffset, message.Content.Length);
+            transfer.CurrentOffset += message.Content.Length;
+            transfer.ConfirmedChunk = message.ChunkNumber;
 
             OnSaveGameChunkSaved(message.ChunkNumber);
 
-            if (Game.StartUp.ExpectedChunks != message.ChunkNumber)
+            if (Game.StartUp.SaveGameTransfer.TotalChunks != message.ChunkNumber)
             {
                 return;
             }
 
-            Game.StartUp.SavePath = StoreSaveGameContent([.. Game.StartUp.Content]);
+            Game.StartUp.SavePath = StoreSaveGameContent([.. Game.StartUp.SaveGameTransfer.Content]);
 
             if (Game.StartUp.AutoStart)
             {
@@ -4314,7 +4354,7 @@ namespace WOTRMultiplayer.Services
             if (!result)
             {
                 Logger.LogError("Combat unit discrepancy has not been fixed");
-                PlayerNotification.ShowWarningNotification(WellKnownKeys.GameNotifications.Combat.DesyncedCombatUnits.Key);
+                PlayerNotification.AddCombatText(WellKnownKeys.GameNotifications.Combat.DesyncedCombatUnits.Key, CombatTextSeverity.Critical);
             }
 
             return result;

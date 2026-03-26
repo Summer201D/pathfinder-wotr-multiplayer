@@ -1,5 +1,4 @@
-﻿using System.Collections.Concurrent;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using WOTRMultiplayer.Entities.NewGame;
 
 namespace WOTRMultiplayer.Entities
@@ -7,6 +6,8 @@ namespace WOTRMultiplayer.Entities
     public class NetworkGameStartUp
     {
         public bool IsNewGameSequence { get; set; }
+
+        public NetworkChunkedContentTransfer SaveGameTransfer { get; set; }
 
         public string Title { get; set; }
 
@@ -19,11 +20,5 @@ namespace WOTRMultiplayer.Entities
         public string SavePath { get; set; }
 
         public bool AutoStart { get; set; }
-
-        public List<byte> Content { get; set; }
-
-        public int ExpectedChunks { get; set; }
-
-        public ConcurrentDictionary<long, int> ConfirmedChunks { get; set; } = [];
     }
 }

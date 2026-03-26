@@ -919,6 +919,12 @@ public static class WellKnownKeys
             {
                 public static string Key { get; set; }
             }
+
+            [Description("loadingSave")]
+            public static class LoadingSave
+            {
+                public static string Key { get; set; }
+            }
         }
 
         [Description("spellBook")]

@@ -172,10 +172,10 @@ namespace WOTRMultiplayer.Playground.Core.Dummies
             return null;
         }
 
-        public string GetSaveGamePath()
+        public string GetPersistentDataPath()
         {
             var appData = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
-            var fullPath = Path.Combine(appData, "AppData\\LocalLow\\Owlcat Games\\Pathfinder Wrath Of The Righteous\\Saved Games");
+            var fullPath = Path.Combine(appData, "AppData\\LocalLow\\Owlcat Games\\Pathfinder Wrath Of The Righteous");
             return fullPath;
         }
 

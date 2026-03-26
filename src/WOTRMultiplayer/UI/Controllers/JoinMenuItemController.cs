@@ -49,7 +49,7 @@ namespace WOTRMultiplayer.UI.Controllers
 
         public const string GameTitleObjectName = "LobbyTitleObject";
 
-        private string ConnectionHistoryFilePath => Path.Combine(Main.ModManagerSettings.ModFolder, "data/connections.json");
+        private string ConnectionHistoryFilePath => Path.Combine(_gameInteractionService.GetPersistentDataPath(), "connections.json");
 
         private readonly ILogger<JoinMenuItemController> _logger;
         private readonly IUIFactory _uiFactory;
@@ -58,6 +58,8 @@ namespace WOTRMultiplayer.UI.Controllers
         private readonly IMultiplayerSettingsService _multiplayerSettingsService;
         private readonly IIPEndPointParser _ipEndPointParser;
         private readonly IPlayerNotificationService _playerNotificationService;
+        private readonly IGameInteractionService _gameInteractionService;
+
         private HashSet<ConnectionHistoryRecord> _connectionHistory;
         private HashSet<ConnectionHistoryRecord> ConnectionHistory
         {
@@ -127,6 +129,7 @@ namespace WOTRMultiplayer.UI.Controllers
             IFileSystemService fileSystemService,
             IIPEndPointParser ipEndPointParser,
             IPlayerNotificationService playerNotificationService,
+            IGameInteractionService gameInteractionService,
             IUIFactory uiFactory)
             : base(logger, lobbyWindowController, mainThreadAccessor, resourceProvider, multiplayerClient)
         {
@@ -137,6 +140,7 @@ namespace WOTRMultiplayer.UI.Controllers
             _multiplayerSettingsService = multiplayerSettingsService;
             _ipEndPointParser = ipEndPointParser;
             _playerNotificationService = playerNotificationService;
+            _gameInteractionService = gameInteractionService;
         }
 
         public override void Activate()

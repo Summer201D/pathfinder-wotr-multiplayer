@@ -209,6 +209,11 @@ namespace WOTRMultiplayer.Services.GameInteraction
                     return;
                 }
 
+                if (globalMapCommonPopup == null && readyPlayersCount == 0)
+                {
+                    return;
+                }
+
                 modalMessage.m_AcceptButton.Interactable = isInteractable;
                 modalMessage.m_DeclineButton.Interactable = isInteractable;
                 _uiSyncCountersService.UpdateButtonTextCounter(modalMessage.m_AcceptText, readyPlayersCount, totalPlayersCount);
