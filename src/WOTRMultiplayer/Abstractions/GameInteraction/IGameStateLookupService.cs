@@ -6,7 +6,9 @@ using Kingmaker.Globalmap.View;
 using Kingmaker.Kingdom.Settlements;
 using Kingmaker.UnitLogic;
 using Kingmaker.UnitLogic.Abilities;
+using Kingmaker.View.MapObjects;
 using WOTRMultiplayer.Entities;
+using WOTRMultiplayer.Entities.Area;
 using WOTRMultiplayer.Entities.AreaEffects;
 using WOTRMultiplayer.Entities.Combat;
 using WOTRMultiplayer.Entities.GlobalMap;
@@ -54,5 +56,9 @@ namespace WOTRMultiplayer.Abstractions.GameInteraction
         SettlementState GetKingdomSettlement(NetworkKingdomSettlement settlement);
 
         AbilityData GetSpecialSpell(Spellbook spellbook, NetworkAbility networkAbility);
+
+        AreaTransitionPart GetAreaTransitionPart(NetworkAreaTransition networkAreaTransition);
+
+        AreaTransitionPart GetAreaTransitionPart(string areaExitId);
     }
 }

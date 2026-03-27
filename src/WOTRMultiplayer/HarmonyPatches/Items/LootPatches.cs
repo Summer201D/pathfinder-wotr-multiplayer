@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
+using System.Reflection.Emit;
 using HarmonyLib;
 using Kingmaker.EntitySystem;
 using Kingmaker.EntitySystem.Entities;
@@ -12,6 +14,7 @@ using Kingmaker.UI.MVVM._VM.Loot;
 using Kingmaker.UI.MVVM._VM.Slots;
 using Kingmaker.View.MapObjects;
 using Microsoft.Extensions.Logging;
+using Owlcat.Runtime.UI.MVVM;
 using WOTRMultiplayer.Entities.Equipment;
 using WOTRMultiplayer.Entities.Items;
 using WOTRMultiplayer.Extensions;
@@ -33,16 +36,29 @@ namespace WOTRMultiplayer.HarmonyPatches.Items
             Main.Multiplayer.OnZoneLootCollectorButtonsUpdated();
         }
 
-        [HarmonyPatch(typeof(LootPCView), nameof(LootPCView.BindViewImplementation))]
-        [HarmonyPostfix]
-        public static void LootPCView_BindViewImplementation_Postfix(LootPCView __instance)
+        [HarmonyPatch(typeof(LootContextVM), nameof(LootContextVM.HandleZoneLootInterraction))]
+        [HarmonyTranspiler]
+        public static IEnumerable<CodeInstruction> LootContextVM_HandleZoneLootInterraction_Transpiler(IEnumerable<CodeInstruction> instructions)
         {
-            if (!Main.Multiplayer.IsActive || __instance.ViewModel.Mode != LootContextVM.LootWindowMode.ZoneExit)
+            var target = PatchesUtils.GetTranspilerTarget(MethodBase.GetCurrentMethod());
+            var lookFor = AccessTools.Method(typeof(BaseDisposable), nameof(BaseDisposable.AddDisposable), [typeof(IDisposable)]);
+            var replaceWith = AccessTools.Method(typeof(LootPatches), nameof(LootPatches.OnZoneLootShown));
+            var matcher = new CodeMatcher(instructions);
+            var match = matcher.SearchForward(x => x.Calls(lookFor));
+            if (match.IsInvalid)
             {
-                return;
+                Main.GetLogger<LootPatches>().LogError("Transpiler has not been applied. Target={Target}", target);
+                return instructions;
             }
 
-            Main.Multiplayer.OnZoneLootShown();
+            var newInstructions = new List<CodeInstruction>
+            {
+                new (OpCodes.Ldarg_1),
+                new (OpCodes.Call, replaceWith),
+            };
+            match = match.Advance(1).Insert(newInstructions);
+            Main.GetLogger<LootPatches>().LogDebug("Transpiler has been applied. Target={Target}", target);
+            return matcher.Instructions();
         }
 
         [HarmonyPatch(typeof(LootVM), nameof(LootVM.Close))]
@@ -189,6 +205,17 @@ namespace WOTRMultiplayer.HarmonyPatches.Items
             var transfer = CreateItemsTransfer(itemSlotVM.ItemEntity.Collection, [item], targetCollection.MechanicCollection);
 
             Main.Multiplayer.OnTransferInventoryItems(transfer);
+        }
+
+        private static void OnZoneLootShown(AreaTransitionPart areaTransitionPart)
+        {
+            if (!Main.Multiplayer.IsActive)
+            {
+                return;
+            }
+
+            var areaExitId = areaTransitionPart.Owner?.UniqueId;
+            Main.Multiplayer.OnZoneLootShown(areaExitId);
         }
 
         private static NetworkItemsTransfer CreateItemsTransfer(ItemsCollection source, List<ItemEntity> items, ItemsCollection destination)

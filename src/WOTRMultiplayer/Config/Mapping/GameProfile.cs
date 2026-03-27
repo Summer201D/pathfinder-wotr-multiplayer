@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using AutoMapper;
+using Kingmaker.Blueprints.Area;
 using Kingmaker.Dungeon;
 using Kingmaker.EntitySystem;
 using Kingmaker.EntitySystem.Entities;
@@ -78,6 +79,44 @@ namespace WOTRMultiplayer.Config.Mapping
 
             CreateMap<DungeonIslandState, NetworkIslandMapTransition>().ConstructUsing(x => Create(x))
                 .ForAllMembers(x => x.Ignore());
+
+            CreateMap<BlueprintArea, NetworkArea>().ConstructUsing(x => Create(x))
+                .ForAllMembers(x => x.Ignore());
+
+            CreateMap<BlueprintAreaEnterPoint, NetworkArea>().ConstructUsing(x => Create(x))
+                .ForAllMembers(x => x.Ignore());
+        }
+
+        private NetworkArea Create(BlueprintArea blueprintArea)
+        {
+            if (blueprintArea == null)
+            {
+                return null;
+            }
+
+            var area = new NetworkArea
+            {
+                Id = blueprintArea.AssetGuid.ToString(),
+                Name = blueprintArea.name
+            };
+
+            return area;
+        }
+
+        private NetworkArea Create(BlueprintAreaEnterPoint blueprintAreaEnterPoint)
+        {
+            if (blueprintAreaEnterPoint == null)
+            {
+                return null;
+            }
+
+            var area = new NetworkArea
+            {
+                Id = blueprintAreaEnterPoint.AssetGuid.ToString(),
+                Name = blueprintAreaEnterPoint.name
+            };
+
+            return area;
         }
 
         private NetworkIslandMapTransition Create(DungeonIslandState islandState)

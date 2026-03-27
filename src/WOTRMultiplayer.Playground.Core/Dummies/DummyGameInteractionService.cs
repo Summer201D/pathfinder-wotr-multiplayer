@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading.Tasks;
 using Kingmaker.EntitySystem;
 using Kingmaker.GameModes;
 using Kingmaker.Items.Slots;
@@ -468,6 +469,11 @@ namespace WOTRMultiplayer.Playground.Core.Dummies
 
         public void ChangeAlushenyrraIslesState(string cameraDirection)
         {
+        }
+
+        public Task ShowZoneLootAsync(string areaExitId)
+        {
+            return Task.CompletedTask;
         }
     }
 }

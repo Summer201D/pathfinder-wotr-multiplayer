@@ -220,7 +220,7 @@ namespace WOTRMultiplayer.Abstractions
 
         bool OnSpawnCampPlace(NetworkVector3 position);
 
-        void OnZoneLootShown();
+        void OnZoneLootShown(string areaExitId);
 
         void OnZoneLootClosed();
 

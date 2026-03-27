@@ -1892,13 +1892,14 @@ namespace WOTRMultiplayer.Services
             UpdateZoneLootUIState();
         }
 
-        public void OnZoneLootShown()
+        public void OnZoneLootShown(string areaExitId)
         {
             AddPlayerToTracker(Game.PlayersInZoneLoot, Game.LocalPlayerId);
 
             var message = new NotifyZoneLootShown
             {
-                PlayerId = Game.LocalPlayerId
+                PlayerId = Game.LocalPlayerId,
+                AreaExitId = areaExitId
             };
             Send(message);
 
@@ -4029,9 +4030,10 @@ namespace WOTRMultiplayer.Services
             UpdateZoneLootUIState();
         }
 
-        private void OnNotifyZoneLootShown(long receivedFrom, NotifyZoneLootShown message)
+        private async void OnNotifyZoneLootShown(long receivedFrom, NotifyZoneLootShown message)
         {
             AddPlayerToTracker(Game.PlayersInZoneLoot, message.PlayerId);
+            await GameInteraction.ShowZoneLootAsync(message.AreaExitId);
             UpdateZoneLootUIState();
         }
 

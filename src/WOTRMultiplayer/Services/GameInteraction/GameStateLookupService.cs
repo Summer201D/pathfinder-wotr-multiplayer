@@ -16,6 +16,7 @@ using Microsoft.Extensions.Logging;
 using Owlcat.Runtime.Core.Utils;
 using WOTRMultiplayer.Abstractions.GameInteraction;
 using WOTRMultiplayer.Entities;
+using WOTRMultiplayer.Entities.Area;
 using WOTRMultiplayer.Entities.AreaEffects;
 using WOTRMultiplayer.Entities.Combat;
 using WOTRMultiplayer.Entities.GlobalMap;
@@ -216,6 +217,19 @@ namespace WOTRMultiplayer.Services.GameInteraction
         public AbilityData GetCustomSpell(Spellbook spellbook, NetworkAbility ability)
         {
             return GetCustomSpell(spellbook, ability.Id, ability.BlueprintId, ability.SpellLevel, ability.Metamagic);
+        }
+
+        public AreaTransitionPart GetAreaTransitionPart(NetworkAreaTransition networkAreaTransition)
+        {
+            return GetAreaTransitionPart(networkAreaTransition.AreaExitId);
+        }
+
+        public AreaTransitionPart GetAreaTransitionPart(string areaExitId)
+        {
+            var allTransitions = Game.Instance.State.MapObjects.All.Select(o => o.View.GetComponent<AreaTransition>()).Where(t => t != null).ToList();
+            var transition = allTransitions.FirstOrDefault(x => string.Equals(x.GetComponent<MapObjectView>().UniqueId, areaExitId, StringComparison.OrdinalIgnoreCase));
+            var areaTransition = transition?.GetComponent<MapObjectView>()?.Data.Get<AreaTransitionPart>();
+            return areaTransition;
         }
 
         private AbilityData GetItemAbility(UnitEntityData unit, NetworkAbility networkAbility)

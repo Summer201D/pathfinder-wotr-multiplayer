@@ -91,7 +91,6 @@ Typical message will look something like this:
 public class NotifyDialogStarted
 {
     [ProtoMember(1)]
-    [LogMe]
     public NetworkDialog Dialog { get; set; }
 }
 ```
@@ -102,11 +101,9 @@ and if it uses any complex classes
 public class NetworkDialog
 {
     [ProtoMember(1)]
-    [LogMe]
     public string Id { get; set; }
 
     [ProtoMember(2)]
-    [LogMe]
     public string Name { get; set; }
 }
 ```

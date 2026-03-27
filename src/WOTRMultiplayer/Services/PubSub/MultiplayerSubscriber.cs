@@ -83,8 +83,8 @@ namespace WOTRMultiplayer.Services.PubSub
                 {
                     AreaExitId = areaExitId,
                     IsActionsTransition = false, // HandlePartyLeaveArea is never called on actions transition
-                    From = new NetworkArea { Id = currentArea.AssetGuid.ToString(), Name = currentArea.name },
-                    To = new NetworkArea { Id = targetArea.AssetGuid.ToString(), Name = targetArea.name }
+                    From = Main.Mapper.Map<NetworkArea>(currentArea),
+                    To = Main.Mapper.Map<NetworkArea>(targetArea)
                 };
 
                 ActorAccessor.Host.OnAreaTransition(transition);

@@ -2486,7 +2486,7 @@ namespace WOTRMultiplayer.Services
             }
         }
 
-        public void OnZoneLootShown()
+        public void OnZoneLootShown(string areaExitId)
         {
             try
             {
@@ -2495,7 +2495,7 @@ namespace WOTRMultiplayer.Services
                     return;
                 }
 
-                _multiplayerActorAccessor.Current.OnZoneLootShown();
+                _multiplayerActorAccessor.Current.OnZoneLootShown(areaExitId);
             }
             catch (Exception ex)
             {

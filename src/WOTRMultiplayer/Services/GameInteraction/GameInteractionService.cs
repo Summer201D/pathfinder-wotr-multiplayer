@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using Kingmaker;
 using Kingmaker.AreaLogic.AlushenyrraIsles;
 using Kingmaker.Blueprints;
@@ -218,6 +219,32 @@ namespace WOTRMultiplayer.Services.GameInteraction
             return save;
         }
 
+        public Task ShowZoneLootAsync(string areaExitId)
+        {
+            var tcs = new TaskCompletionSource<bool>();
+            _mainThreadAccessor.Post(() =>
+            {
+                try
+                {
+                    var areaTransition = _gameStateLookupService.GetAreaTransitionPart(areaExitId);
+                    if (areaTransition == null)
+                    {
+                        _logger.LogError("Unable to find requested area transition to show zone loot. AreaExitId={AreaExitId}", areaExitId);
+                        return;
+                    }
+
+                    EventBus.RaiseEvent<ILootInterractionHandler>(x => x.HandleZoneLootInterraction(areaTransition));
+                    _logger.LogInformation("ZoneLoot has been shown. AreaExitId={AreaExitId}", areaExitId);
+                }
+                finally
+                {
+                    tcs.SetResult(true);
+                }
+            });
+
+            return tcs.Task;
+        }
+
         public void LeaveArea(NetworkAreaTransition networkAreaTransition)
         {
             _mainThreadAccessor.Post(() =>
@@ -225,16 +252,14 @@ namespace WOTRMultiplayer.Services.GameInteraction
                 var currentArea = Game.Instance.CurrentlyLoadedArea;
                 if (!string.Equals(currentArea?.AssetGuid.ToString(), networkAreaTransition.From.Id, StringComparison.OrdinalIgnoreCase))
                 {
-                    _logger.LogWarning("Current area doesn't match area transition. AreaExitId={AreaExitId}, FromAreaId={FromAreaId}, FromAreaName={FromAreaName}, CurrentAreaId={CurrentAreaId}, CurrentAreaName={CurrentAreaName}", networkAreaTransition.AreaExitId, networkAreaTransition.From.Id, networkAreaTransition.From.Name, currentArea?.AssetGuid.ToString(), currentArea?.name);
+                    _logger.LogError("Current area doesn't match area transition. AreaExitId={AreaExitId}, FromAreaId={FromAreaId}, FromAreaName={FromAreaName}, CurrentAreaId={CurrentAreaId}, CurrentAreaName={CurrentAreaName}", networkAreaTransition.AreaExitId, networkAreaTransition.From.Id, networkAreaTransition.From.Name, currentArea?.AssetGuid.ToString(), currentArea?.name);
                     return;
                 }
 
-                var allTransitions = Game.Instance.State.MapObjects.All.Select(o => o.View.GetComponent<AreaTransition>()).Where(t => t != null).ToList();
-                var transition = allTransitions.FirstOrDefault(x => string.Equals(x.GetComponent<MapObjectView>().UniqueId, networkAreaTransition.AreaExitId, StringComparison.OrdinalIgnoreCase));
-                var areaTransition = transition?.GetComponent<MapObjectView>()?.Data.Get<AreaTransitionPart>();
+                var areaTransition = _gameStateLookupService.GetAreaTransitionPart(networkAreaTransition);
                 if (areaTransition == null)
                 {
-                    _logger.LogError("Unable to find requested area transition. TransitionsCount={TransitionsCount}, AreaExitId={AreaExitId}", allTransitions.Count, networkAreaTransition.AreaExitId);
+                    _logger.LogError("Unable to find requested area transition to leave area. AreaExitId={AreaExitId}", networkAreaTransition.AreaExitId);
                     return;
                 }
 
@@ -261,7 +286,6 @@ namespace WOTRMultiplayer.Services.GameInteraction
                 EventBus.RaiseEvent<IPartyLeaveAreaHandler>(x => x.HandlePartyLeaveArea(Game.Instance.CurrentlyLoadedArea, targetPoint, areaTransition));
                 Game.Instance.LoadArea(targetPoint, areaTransition.Settings.AutoSaveMode, null);
             });
-
         }
 
         public void SetPause(bool isPaused)
@@ -2844,7 +2868,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
             return itemSlot;
         }
 
-        private Kingmaker.Utility.TargetWrapper CreateTargetWrapper(NetworkTargetWrapper networkTargetWrapper)
+        private TargetWrapper CreateTargetWrapper(NetworkTargetWrapper networkTargetWrapper)
         {
             if (networkTargetWrapper == null)
             {
@@ -2853,7 +2877,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
 
             var point = networkTargetWrapper.Point.ToUnityVector3();
             var unit = _gameStateLookupService.GetUnitEntity(networkTargetWrapper.UnitId);
-            var wrapper = new Kingmaker.Utility.TargetWrapper(point, networkTargetWrapper.Orientation, unit);
+            var wrapper = new TargetWrapper(point, networkTargetWrapper.Orientation, unit);
             return wrapper;
         }
 

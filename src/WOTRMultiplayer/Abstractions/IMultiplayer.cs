@@ -277,7 +277,7 @@ namespace WOTRMultiplayer.Abstractions
 
         SeededContext GetSeededContext(SeedKind seedKind = SeedKind.All);
 
-        void OnZoneLootShown();
+        void OnZoneLootShown(string areaExitId);
 
         void OnZoneLootClosed();
 

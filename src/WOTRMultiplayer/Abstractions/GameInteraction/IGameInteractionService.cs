@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using Kingmaker.EntitySystem;
 using Kingmaker.GameModes;
 using Kingmaker.Items.Slots;
@@ -31,6 +32,8 @@ namespace WOTRMultiplayer.Abstractions.GameInteraction
         bool IsPaused { get; }
 
         bool IsCapitalPartyMode { get; }
+
+        Task ShowZoneLootAsync(string areaExitId);
 
         void LeaveArea(NetworkAreaTransition areaTransition);
 

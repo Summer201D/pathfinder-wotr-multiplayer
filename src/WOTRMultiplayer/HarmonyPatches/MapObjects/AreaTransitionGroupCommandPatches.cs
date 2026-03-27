@@ -60,8 +60,8 @@ namespace WOTRMultiplayer.HarmonyPatches.MapObjects
             {
                 AreaExitId = areaTransition.View.UniqueId,
                 IsActionsTransition = true, // exclusive for transpiler
-                From = new NetworkArea { Id = currentArea.AssetGuid.ToString(), Name = currentArea.name },
-                To = new NetworkArea { Id = areaTransition.AreaEnterPoint.AssetGuid.ToString(), Name = areaTransition.AreaEnterPoint.name }
+                From = Main.Mapper.Map<NetworkArea>(currentArea),
+                To = Main.Mapper.Map<NetworkArea>(areaTransition.AreaEnterPoint)
             };
 
             Main.Multiplayer.OnAreaTransition(transition);
