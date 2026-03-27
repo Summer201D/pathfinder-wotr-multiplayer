@@ -17,15 +17,16 @@ namespace WOTRMultiplayer.Networking.UnitTests.Messages
             var allMessages = Assembly
                 .GetAssembly(typeof(BeetleXMessageTypes.ProtobufServerPacket))
                 .GetTypes()
-                .Where(t => t.GetCustomAttribute<BeetleX.Packets.MessageTypeAttribute>() != null)
-                .Select(t => new { Type = t, MessageType = t.GetCustomAttribute<BeetleX.Packets.MessageTypeAttribute>() })
+                .Where(t => t.GetCustomAttribute<MessageTypeAttribute>() != null)
+                .Select(t => new { Type = t, MessageType = t.GetCustomAttribute<MessageTypeAttribute>() })
                 .ToList();
 
             // Act
-            var duplicateIds = allMessages.GroupBy(x => (int)x.MessageType.ID).Where(x => x.Count() > 1).ToList();
+            var duplicateIds = allMessages.GroupBy(x => (int)x.MessageType.Id).Where(x => x.Count() > 1).ToList();
 
             // Assert
             Assert.That(duplicateIds.Count, Is.EqualTo(0), "Duplicate Ids: " + string.Join(", ", duplicateIds.Select(x => $"{x.Key} ({string.Join(",", x.Select(a => a.Type.Name).ToList())})")));
+            Assert.That(allMessages.Count, Is.GreaterThan(0));
         }
 
         [TestCase((int)MessageTypes.Lobby.None)]
@@ -37,15 +38,16 @@ namespace WOTRMultiplayer.Networking.UnitTests.Messages
             var allMessages = Assembly
                 .GetAssembly(typeof(BeetleXMessageTypes.ProtobufServerPacket))
                 .GetTypes()
-                .Where(t => t.GetCustomAttribute<BeetleX.Packets.MessageTypeAttribute>() != null)
-                .Select(t => new { Type = t, MessageType = t.GetCustomAttribute<BeetleX.Packets.MessageTypeAttribute>() })
+                .Where(t => t.GetCustomAttribute<MessageTypeAttribute>() != null)
+                .Select(t => new { Type = t, MessageType = t.GetCustomAttribute<MessageTypeAttribute>() })
                 .ToList();
 
             // Act
-            var restrictedIdsCount = allMessages.Count(x => (int)x.MessageType.ID == delimiter);
+            var restrictedIdsCount = allMessages.Count(x => (int)x.MessageType.Id == delimiter);
 
             // Assert
             Assert.That(restrictedIdsCount, Is.EqualTo(0));
+            Assert.That(allMessages.Count, Is.GreaterThan(0));
         }
 
         [TestCase(typeof(MessageTypes.Lobby))]
@@ -57,9 +59,9 @@ namespace WOTRMultiplayer.Networking.UnitTests.Messages
             var allMessageIds = Assembly
                 .GetAssembly(typeof(BeetleXMessageTypes.ProtobufServerPacket))
                 .GetTypes()
-                .Where(t => t.GetCustomAttribute<BeetleX.Packets.MessageTypeAttribute>() != null)
-                .Select(t => new { Type = t, MessageType = t.GetCustomAttribute<BeetleX.Packets.MessageTypeAttribute>() })
-                .Select(x => (int)x.MessageType.ID)
+                .Where(t => t.GetCustomAttribute<MessageTypeAttribute>() != null)
+                .Select(t => new { Type = t, MessageType = t.GetCustomAttribute<MessageTypeAttribute>() })
+                .Select(x => (int)x.MessageType.Id)
                 .ToList();
 
             // element 1 is None
@@ -70,6 +72,7 @@ namespace WOTRMultiplayer.Networking.UnitTests.Messages
 
             // Assert
             Assert.That(notUsedValues.Count, Is.EqualTo(0), "Not used Enum Values: " + string.Join(", ", notUsedValues.Select(x => Enum.GetName(type, x))));
+            Assert.That(allMessageIds.Count, Is.GreaterThan(0));
         }
 
         [Test]
@@ -87,6 +90,7 @@ namespace WOTRMultiplayer.Networking.UnitTests.Messages
 
             // Assert
             Assert.That(invalidProtoContracts.Count, Is.EqualTo(0), "Missing ProtoMember: " + string.Join(", ", invalidProtoContracts.Select(x => x.Name)));
+            Assert.That(allProtoContracts.Count, Is.GreaterThan(0));
         }
 
         [Test]
@@ -96,7 +100,7 @@ namespace WOTRMultiplayer.Networking.UnitTests.Messages
             var allMessages = Assembly
                 .GetAssembly(typeof(BeetleXMessageTypes.ProtobufServerPacket))
                 .GetTypes()
-                .Where(t => t.GetCustomAttribute<BeetleX.Packets.MessageTypeAttribute>() != null)
+                .Where(t => t.GetCustomAttribute<MessageTypeAttribute>() != null)
                 .ToList();
 
             // Act
@@ -104,6 +108,7 @@ namespace WOTRMultiplayer.Networking.UnitTests.Messages
 
             // Assert
             Assert.That(invalidMessages.Count, Is.EqualTo(0), "Missing ProtoContractAttribute: " + string.Join(", ", invalidMessages.Select(x => x.Name)));
+            Assert.That(allMessages.Count, Is.GreaterThan(0));
         }
     }
 }
