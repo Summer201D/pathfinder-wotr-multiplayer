@@ -232,7 +232,7 @@
             NotifyCapitalModeRestInitiated,
             NotifyCombatStarted,
             NotifyZoneLootLeft,
-            NotifyCombatUnitKilled,
+            NotifyUnitKilled,
             NotifyTrapDisarmRolled,
             ClientTogglePauseOff,
             NotifyUnitAutoUseAbilityChanged,

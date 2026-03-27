@@ -4,8 +4,8 @@ using WOTRMultiplayer.Logging.Attributes;
 namespace WOTRMultiplayer.Networking.Messages.Game
 {
     [ProtoContract]
-    [BeetleX.Packets.MessageType((int)MessageTypes.Game.NotifyCombatUnitKilled)]
-    public class NotifyCombatUnitKilled : IForwardableMessage
+    [BeetleX.Packets.MessageType((int)MessageTypes.Game.NotifyUnitKilled)]
+    public class NotifyUnitKilled : IForwardableMessage
     {
         [ProtoMember(1)]
         [LogMe]

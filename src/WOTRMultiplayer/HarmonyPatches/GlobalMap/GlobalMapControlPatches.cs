@@ -143,14 +143,9 @@ namespace WOTRMultiplayer.HarmonyPatches.GlobalMap
             Main.Multiplayer.OnKingdomUnloaded();
         }
 
-        private static NetworkGlobalMapTravelerMode GetTravelerMode(bool state)
+        private static NetworkGlobalMapTravelerMode GetTravelerMode(bool isArmy)
         {
-            if (state)
-            {
-                return NetworkGlobalMapTravelerMode.Army;
-            }
-
-            return NetworkGlobalMapTravelerMode.Player;
+            return isArmy ? NetworkGlobalMapTravelerMode.Army : NetworkGlobalMapTravelerMode.Player;
         }
 
         private static NetworkGlobalMapArmy Create(GlobalMapArmyState army)

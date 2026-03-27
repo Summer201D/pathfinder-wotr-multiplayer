@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using AutoMapper;
@@ -363,6 +362,7 @@ namespace WOTRMultiplayer.Services
             {
                 if (!Game.PlayersInGlobalMapMode.TryGetValue(Game.LocalPlayerId, out var mode))
                 {
+                    Logger.LogWarning("Traveler mode is not set yet");
                     mode = NetworkGlobalMapTravelerMode.Player;
                 }
 
@@ -1691,13 +1691,6 @@ namespace WOTRMultiplayer.Services
         public void OnGlobalMapTravelerModeChanged(NetworkGlobalMapTravelerMode travelerMode)
         {
             RegisterGlobalMapMode(Game.LocalPlayerId, travelerMode);
-
-            if (Game.CurrentArea == null || !Game.CurrentArea.IsGlobalMap)
-            {
-                UpdateGlobalMapUIState();
-                return;
-            }
-
             var message = new NotifyGlobalMapTravelerModeChanged
             {
                 PlayerId = Game.LocalPlayerId,
@@ -1705,7 +1698,6 @@ namespace WOTRMultiplayer.Services
                 MustBeEnforced = HasControlOverUI
             };
             Send(message);
-
             UpdateGlobalMapUIState();
         }
 
@@ -1719,7 +1711,7 @@ namespace WOTRMultiplayer.Services
             // if unit is dead for some reason
             MakeUnitTargetable(unitId, groupId);
 
-            var message = new NotifyCombatUnitKilled
+            var message = new NotifyUnitKilled
             {
                 PlayerId = Game.LocalPlayerId,
                 UnitId = unitId
@@ -2174,7 +2166,7 @@ namespace WOTRMultiplayer.Services
         public void OnCrusadeArmyCombatTurnStarted(NetworkArmyCombatTurn armyCombatTurn)
         {
             Game.ArmyCombat.Turn = armyCombatTurn;
-            Logger.LogInformation("New Crusade Army combat turn started. TurnNumber={TurnNumber}, UnitId={UnitId}, IsAI={IsAI}", Game.ArmyCombat.Turn.Number, Game.ArmyCombat.Turn.UnitId, Game.ArmyCombat.Turn.IsAI);
+            Logger.LogInformation("Crusade Army combat turn has been started. TurnNumber={TurnNumber}, UnitId={UnitId}, IsAI={IsAI}", Game.ArmyCombat.Turn.Number, Game.ArmyCombat.Turn.UnitId, Game.ArmyCombat.Turn.IsAI);
         }
 
         public void OnEnterKingdom(NetworkKingdomEntryPoint kingdomEntryPoint)
@@ -3438,9 +3430,10 @@ namespace WOTRMultiplayer.Services
                 .On<NotifyUnitJoinedMidCombat>(OnNotifyUnitJoinedMidCombat)
                 .On<NotifyUnitAttacked>(OnNotifyUnitAttacked)
                 .On<NotifyCombatTurnDelayed>(OnNotifyCombatTurnDelayed)
-                .On<NotifyCombatUnitKilled>(OnNotifyCombatUnitKilled)
+                .On<NotifyUnitKilled>(OnNotifyUnitKilled)
 
                 // global map & crusade combat
+                .On<NotifyGlobalMapTravelerModeChanged>(OnNotifyGlobalMapTravelerModeChanged)
                 .On<NotifyGlobalMapLocationMessageShown>(OnNotifyGlobalMapLocationMessageShown)
                 .On<NotifyGlobalMapEncounterMessageShown>(OnNotifyGlobalMapEncounterMessageShown)
                 .On<NotifyGlobalMapCombatResultsShown>(OnNotifyGlobalMapCombatResultsShown)
@@ -3525,6 +3518,20 @@ namespace WOTRMultiplayer.Services
                 .On<NotifyTrapActivated>(OnNotifyTrapActivated)
                 .On<NotifyMapObjectCombinePartInteracted>(OnNotifyMapObjectCombinePartInteracted)
                 ;
+        }
+
+        private async void OnNotifyGlobalMapTravelerModeChanged(long receivedFrom, NotifyGlobalMapTravelerModeChanged message)
+        {
+            await WaitWhileTrue(() => Game.CurrentArea == null, "Waiting for area to load before updating traveler mode");
+
+            var travelerMode = Mapper.Map<NetworkGlobalMapTravelerMode>(message.TravelerMode);
+            RegisterGlobalMapMode(message.PlayerId, travelerMode);
+            UpdateGlobalMapUIState();
+
+            if (message.MustBeEnforced)
+            {
+                GlobalMapInteraction.ChangeArmyMode(travelerMode);
+            }
         }
 
         private void OnNotifySaveGameInfoChanged(long receivedFrom, NotifySaveGameInfoChanged message)
@@ -3706,7 +3713,7 @@ namespace WOTRMultiplayer.Services
             GameInteraction.ApplyTrapDisarm(trapDisarm);
         }
 
-        private async void OnNotifyCombatUnitKilled(long receivedFrom, NotifyCombatUnitKilled message)
+        private async void OnNotifyUnitKilled(long receivedFrom, NotifyUnitKilled message)
         {
             try
             {

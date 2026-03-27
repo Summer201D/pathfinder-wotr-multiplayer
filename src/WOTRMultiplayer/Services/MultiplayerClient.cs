@@ -548,7 +548,6 @@ namespace WOTRMultiplayer.Services
                .On<NotifyGlobalMapLocationMessageAccepted>(OnNotifyGlobalMapLocationMessageAccepted)
                .On<NotifyGlobalMapCommonPopupDeclined>(OnNotifyGlobalMapCommonPopupDeclined)
                .On<NotifyGlobalMapDaySkipped>(OnNotifyGlobalMapDaySkipped)
-               .On<NotifyGlobalMapTravelerModeChanged>(OnNotifyGlobalMapTravelerModeChanged)
                .On<NotifyGlobalMapSelectedArmyChanged>(OnNotifyGlobalMapSelectedArmyChanged)
                .On<NotifyGlobalMapAutoCrusadeCombatChanged>(OnNotifyGlobalMapAutoCrusadeCombatChanged)
                .On<NotifyGlobalMapCombatResultsClosed>(OnNotifyGlobalMapCombatResultsClosed)
@@ -1162,18 +1161,6 @@ namespace WOTRMultiplayer.Services
             var army = Mapper.Map<NetworkGlobalMapArmy>(globalMapSelectedArmyChanged.Army);
 
             GlobalMapInteraction.SetSelectedArmy(army);
-        }
-
-        private void OnNotifyGlobalMapTravelerModeChanged(long receivedFrom, NotifyGlobalMapTravelerModeChanged globalMapTravelerModeChanged)
-        {
-            var travelerMode = Mapper.Map<NetworkGlobalMapTravelerMode>(globalMapTravelerModeChanged.TravelerMode);
-            RegisterGlobalMapMode(globalMapTravelerModeChanged.PlayerId, travelerMode);
-            UpdateGlobalMapUIState();
-
-            if (globalMapTravelerModeChanged.MustBeEnforced)
-            {
-                GlobalMapInteraction.ChangeArmyMode(travelerMode);
-            }
         }
 
         private void OnNotifyGlobalMapDaySkipped(long receivedFrom, NotifyGlobalMapDaySkipped globalMapDaySkipped)

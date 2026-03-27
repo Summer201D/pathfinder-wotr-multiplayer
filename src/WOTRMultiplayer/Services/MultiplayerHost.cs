@@ -1622,7 +1622,6 @@ namespace WOTRMultiplayer.Services
                .On<NotifyCombatLocalTurnEnded>(OnNotifyCombatLocalTurnEnded)
 
                // global map & crusade combat
-               .On<NotifyGlobalMapTravelerModeChanged>(OnNotifyGlobalMapTravelerModeChanged)
                .On<NotifyTacticalCombatInitializationConfirmed>(OnNotifyTacticalCombatInitializationConfirmed)
                .On<NotifyGlobalMapCrusadeArmyMergeCartClosed>(OnNotifyGlobalMapCrusadeArmyMergeCartClosed)
                .On<NotifyGlobalMapCrusadeArmyInfoShown>(OnNotifyGlobalMapCrusadeArmyInfoShown)
@@ -1804,13 +1803,6 @@ namespace WOTRMultiplayer.Services
             Game.ArmyCombat.PlayersCombatInitialization.TryAdd(tacticalCombatInitializationConfirmed.PlayerId, true);
 
             Game.ArmyCombat.IsInitialized = TryConfirmTacticalCombatInitialization();
-        }
-
-        private void OnNotifyGlobalMapTravelerModeChanged(long receivedFrom, NotifyGlobalMapTravelerModeChanged message)
-        {
-            var travelerMode = Mapper.Map<NetworkGlobalMapTravelerMode>(message.TravelerMode);
-            RegisterGlobalMapMode(message.PlayerId, travelerMode);
-            UpdateGlobalMapUIState();
         }
 
         private void OnNotifyPolymorphicItemCreationRequested(long playerId, NotifyPolymorphicItemCreationRequested message)

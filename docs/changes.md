@@ -3,7 +3,7 @@
 #### Disclaimer: All of the changes below only kick in when you are playing in Multiplayer (started or joined through the Multiplayer Window). Single-player isn't affected at all, so you can keep playing normally. But if you are curious about what the mod adds, you can always host a solo game to check it out.
 
 ## TL/DR:
-- 4 Acts are mostly playable. Although there are a few heavily bugged encounters (mostly caused by completely desynced enemy spawns)
+- Campaign is mostly playable. Although there are a few heavily bugged encounters (usually caused by completely desynced enemy spawns)
 - There are no changes to content or balance or how mythic paths/companions work.
 
 - Game Version/DLC/Mods/Content should match across players. 

@@ -1,6 +1,6 @@
 ## Load Order
 
-When defining new messages, you are required to annotate them with attributes from the `multiplayer` assemblies. The `.NET` runtime (specifically the CLR) resolves attribute types during metadata loading - **before** your assembly is actually loaded. Because of this, your code never gets a chance to run and hook into assembly resolution.
+When defining new network messages, you must annotate them with attributes from the `multiplayer` assemblies. The .NET runtime (CLR) resolves attribute types while loading assembly metadata — before any of your assembly code executes. Because of this, your code never gets a chance to register custom assembly resolution logic
 
 As a result, the multiplayer assemblies must already be loaded. Otherwise, a `TypeLoadException` will occur.
 
@@ -63,11 +63,10 @@ var deterministicValue = Main.Multiplayer.ValueGenerator.Range(
 
 You can override the lifetime if necessary, but in most cases it should be taken directly from `SeededContext`.
 
-
 ## Network Messages
 
 In most cases, you will work with `INetworkServer` or `INetworkClient`. These provide direct access to network messages, allowing you to listen to existing messages or send custom ones.
 
-When registering a handler, a simple priority system is used. You can specify whether your handler should run before or after others, including those already registered by the multiplayer mod.
+When registering a handler, a simple priority system is used. You can specify whether your handler should run before or after others, including those already registered by the base multiplayer mod.
 
 Use **High** priority only when your handler must execute before the default handlers.
