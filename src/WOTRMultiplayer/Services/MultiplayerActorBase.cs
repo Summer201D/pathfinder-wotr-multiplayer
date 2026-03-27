@@ -3740,16 +3740,7 @@ namespace WOTRMultiplayer.Services
                 await Task.Delay(TimeSpan.FromSeconds(1f));
 
                 var player = GetPlayer(message.PlayerId);
-                var isKilled = await CombatInteraction.KillUnitAsync(player, message.UnitId);
-
-                if (isKilled
-                    && Game.Combat.Turn != null
-                    && Game.Combat.Turn.Stage != NetworkCombatTurnStage.Ended
-                    && Game.Combat.Turn.Stage != NetworkCombatTurnStage.Ending
-                    && string.Equals(Game.Combat.Turn.UnitId, message.UnitId, StringComparison.OrdinalIgnoreCase))
-                {
-                    SetCombatTurnStage(NetworkCombatTurnStage.Ended);
-                }
+                await CombatInteraction.KillUnitAsync(player, message.UnitId);
             }
             finally
             {
