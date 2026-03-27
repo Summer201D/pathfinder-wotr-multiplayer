@@ -170,5 +170,10 @@ namespace WOTRMultiplayer.Playground.Core.Dummies
         public void MakeUnitUntargetable(string unitId, bool isFirstGroupMember, bool isFirstGroup)
         {
         }
+
+        public bool IsCombatInitialized()
+        {
+            return false;
+        }
     }
 }

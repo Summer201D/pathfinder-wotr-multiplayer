@@ -384,7 +384,7 @@ namespace WOTRMultiplayer.Services
                         }
 
                         var isPrepared = Game.Combat.IsPrepared && Game.Combat.PlayersCombatPreparation.Count == 0;
-                        if (isPrepared)
+                        if (isPrepared && CombatInteraction.IsCombatInitialized())
                         {
                             SetCombatStage(NetworkCombatStage.Initialization);
                         }

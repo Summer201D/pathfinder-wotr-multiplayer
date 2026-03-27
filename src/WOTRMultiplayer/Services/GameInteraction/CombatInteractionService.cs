@@ -491,6 +491,11 @@ namespace WOTRMultiplayer.Services.GameInteraction
             Game.Instance.Player.Group.IsInCombat.Reset();
         }
 
+        public bool IsCombatInitialized()
+        {
+            return Game.Instance.TurnBasedCombatController.Initialized;
+        }
+
         public void LootUnit(NetworkUnitLootUnit networkUnitLootUnit)
         {
             _mainThreadAccessor.Post(() =>
@@ -927,7 +932,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
                 localAreaEffect.m_Position = position;
 
                 localAreaEffect.UpdateViewAndUnits();
-                _logger.LogInformation("Area effect has been updated. Id={Id}, Name={Name}, Position={Position}, UnitsUnside={UnitsUnside}", localAreaEffect.UniqueId, localAreaEffect.Blueprint.name, localAreaEffect.Position, localAreaEffect.m_UnitsInside.Select(x => x.Reference.UniqueId));
+                _logger.LogDebug("Area effect has been updated. Id={Id}, Name={Name}, Position={Position}, UnitsUnside={UnitsUnside}", localAreaEffect.UniqueId, localAreaEffect.Blueprint.name, localAreaEffect.Position, localAreaEffect.m_UnitsInside.Select(x => x.Reference.UniqueId));
             }
         }
 

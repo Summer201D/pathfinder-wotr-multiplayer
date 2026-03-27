@@ -3733,13 +3733,17 @@ namespace WOTRMultiplayer.Services
                 await WaitWhileTrue(CombatInteraction.IsRiderActive, "Waiting for active commands to finish before checking if unit should be killed");
                 await Task.Delay(TimeSpan.FromSeconds(1f));
 
-                if (string.Equals(Game.Combat.Turn.UnitId, message.UnitId, StringComparison.OrdinalIgnoreCase))
+                var player = GetPlayer(message.PlayerId);
+                var isKilled = await CombatInteraction.KillUnitAsync(player, message.UnitId);
+
+                if (isKilled
+                    && Game.Combat.Turn != null
+                    && Game.Combat.Turn.Stage != NetworkCombatTurnStage.Ended
+                    && Game.Combat.Turn.Stage != NetworkCombatTurnStage.Ending
+                    && string.Equals(Game.Combat.Turn.UnitId, message.UnitId, StringComparison.OrdinalIgnoreCase))
                 {
                     SetCombatTurnStage(NetworkCombatTurnStage.Ended);
                 }
-
-                var player = GetPlayer(message.PlayerId);
-                await CombatInteraction.KillUnitAsync(player, message.UnitId);
             }
             finally
             {

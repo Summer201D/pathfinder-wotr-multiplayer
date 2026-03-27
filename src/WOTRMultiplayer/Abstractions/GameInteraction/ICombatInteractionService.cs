@@ -79,5 +79,7 @@ namespace WOTRMultiplayer.Abstractions.GameInteraction
         void LootUnit(NetworkUnitLootUnit networkUnitLootUnit);
 
         void ForceResetCombat();
+
+        bool IsCombatInitialized();
     }
 }
