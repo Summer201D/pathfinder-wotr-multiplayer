@@ -215,17 +215,27 @@ namespace WOTRMultiplayer.Services.GameInteraction
                 {
                     _logger.LogInformation("Updating combat state");
                     var requiresExtraLog = false;
-                    if (requiresFullUpdate && Game.Instance.TurnBasedCombatController.m_HasSurpriseRound != networkCombatState.HasSurpriseRound)
+                    var turnBasedController = Game.Instance.TurnBasedCombatController;
+                    if (requiresFullUpdate && turnBasedController.m_HasSurpriseRound != networkCombatState.HasSurpriseRound)
                     {
-                        _logger.LogWarning("Surprise round difference synced. PreviousSurpriseState={PreviousSurpriseState}, NewSurpriseState={NewSurpriseState}", Game.Instance.TurnBasedCombatController.m_HasSurpriseRound, networkCombatState.HasSurpriseRound);
-                        Game.Instance.TurnBasedCombatController.m_HasSurpriseRound = networkCombatState.HasSurpriseRound;
+                        _playerNotificationService.AddCombatText(WellKnownKeys.GameNotifications.Combat.Start.SurpriseOverride.Key, CombatTextSeverity.Common, turnBasedController.m_HasSurpriseRound, networkCombatState.HasSurpriseRound);
+                        _logger.LogWarning("Surprise round difference synced. PreviousSurpriseState={PreviousSurpriseState}, NewSurpriseState={NewSurpriseState}", turnBasedController.m_HasSurpriseRound, networkCombatState.HasSurpriseRound);
+                        turnBasedController.m_HasSurpriseRound = networkCombatState.HasSurpriseRound;
+                        turnBasedController.m_Units = [.. turnBasedController.m_Units.OrderBy(u => u.Unit.GetTimeToNextTurn())];
                         requiresExtraLog = true;
                     }
 
                     if (requiresFullUpdate && Game.Instance.TurnBasedCombatController.RoundNumber != networkCombatState.RoundNumber)
                     {
-                        _logger.LogWarning("RoundNumber difference synced. PreviousRoundNumber={PreviousRoundNumber}, NewRoundNumber={NewRoundNumber}", Game.Instance.TurnBasedCombatController.RoundNumber, networkCombatState.RoundNumber);
-                        Game.Instance.TurnBasedCombatController.RoundNumber = networkCombatState.RoundNumber;
+                        _logger.LogWarning("RoundNumber difference synced. PreviousRoundNumber={PreviousRoundNumber}, NewRoundNumber={NewRoundNumber}", turnBasedController.RoundNumber, networkCombatState.RoundNumber);
+                        turnBasedController.RoundNumber = networkCombatState.RoundNumber;
+                        var initiativeTracker = Game.Instance.UI?.TurnBasedUI?.m_InitiativeTrackerVm;
+                        if (initiativeTracker != null)
+                        {
+                            initiativeTracker.RoundCounter.Value = networkCombatState.RoundNumber;
+                            initiativeTracker.m_NeedUpdate = true;
+                        }
+
                         requiresExtraLog = true;
                     }
 
@@ -944,8 +954,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
                         break;
                 }
 
-                _logger.LogInformation("Area effect has been triggered. Id={Id}, Name={Name}, Type={Type}", triggered.Id, triggered.Name, triggered.Type);
-                _playerNotificationService.AddCombatText(WellKnownKeys.GameNotifications.Combat.AreaEffects.Triggered.Key, CombatTextSeverity.Debug, triggered.Name, triggered.Id);
+                _logger.LogDebug("Area effect has been triggered. Id={Id}, Name={Name}, Type={Type}", triggered.Id, triggered.Name, triggered.Type);
             }
         }
 

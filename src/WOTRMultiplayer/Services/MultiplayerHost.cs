@@ -1339,8 +1339,7 @@ namespace WOTRMultiplayer.Services
         {
             if (Game.Combat != null && Game.Combat.Turn == null && Game.Combat.TriggeredAreaEffects.Add(areaEffect))
             {
-                Logger.LogWarning("Area effect has been triggered in combat mid turn. Id={Id}, Name={Name}", areaEffect.Id, areaEffect.Name);
-                PlayerNotification.AddCombatText(WellKnownKeys.GameNotifications.Combat.AreaEffects.Triggered.Key, Abstractions.GameInteraction.CombatLog.CombatTextSeverity.Debug, areaEffect.Name, areaEffect.Id);
+                Logger.LogDebug("Area effect has been triggered in combat mid turn. Id={Id}, Name={Name}", areaEffect.Id, areaEffect.Name);
             }
 
             return true;
@@ -1735,7 +1734,7 @@ namespace WOTRMultiplayer.Services
             Game.Combat.PlayersCombatPreparation.Clear();
             Game.Combat.PlayersCombatInitialization.Clear();
             Game.Combat.StartedAt = DateTime.UtcNow;
-            PlayerNotification.AddCombatText(WellKnownKeys.GameNotifications.Combat.Start.Desynced.Host.Key, CombatTextSeverity.Critical, initiator.Name);
+            PlayerNotification.AddCombatText(WellKnownKeys.GameNotifications.Combat.Start.DesyncedStartup.Host.Key, CombatTextSeverity.Critical, initiator.Name);
             SetCombatStage(NetworkCombatStage.Idle);
 
             var recoveryMessage = new NotifyCombatRecoveryRequired();

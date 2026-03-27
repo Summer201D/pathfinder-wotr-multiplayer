@@ -256,10 +256,11 @@
             "combat": {
                 "unitAutokilled": "Auto-killing unit '{0}' ({1}) as it's been killed at {2}",
                 "start": {
-                    "desynced": {
+                    "desyncedStartup": {
                         "host": "Combat recovery has been initiated due to desynced combat startup sequence.\nReason: {0}",
                         "client": "Combat recovery has been initiated by host"
-                    }
+                    },
+                    "surpriseOverride": "Surprise round state has been overriden by host from {0} to {1}"
                 },
                 "stageChanged": "Combat stage has been changed from {0} to {1}",
                 "forcedToStart": "Combat has been forced to start by {0}",
@@ -278,7 +279,6 @@
                     "clientOrderDesync": "Next unit turn has been overridden to '{0}'"
                 },
                 "areaEffects": {
-                    "triggered": "Area effect '{0}' ({1}) has been triggered",
                     "missing": "Missing area effect '{0}' ({1}) was not triggered"
                 }
             },

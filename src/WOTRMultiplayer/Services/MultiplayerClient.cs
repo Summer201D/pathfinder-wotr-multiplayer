@@ -784,7 +784,7 @@ namespace WOTRMultiplayer.Services
 
         private void OnNotifyCombatRecoveryRequired(long receivedFrom, NotifyCombatRecoveryRequired message)
         {
-            PlayerNotification.AddCombatText(WellKnownKeys.GameNotifications.Combat.Start.Desynced.Client.Key, CombatTextSeverity.Critical);
+            PlayerNotification.AddCombatText(WellKnownKeys.GameNotifications.Combat.Start.DesyncedStartup.Client.Key, CombatTextSeverity.Critical);
 
             Game.Combat.IsPreparationStarted = false;
             Game.Combat.IsPrepared = false;

@@ -1013,8 +1013,8 @@ public static class WellKnownKeys
             [Description("start")]
             public static class Start
             {
-                [Description("desynced")]
-                public static class Desynced
+                [Description("desyncedStartup")]
+                public static class DesyncedStartup
                 {
                     [Description("host")]
                     public static class Host
@@ -1027,6 +1027,12 @@ public static class WellKnownKeys
                     {
                         public static string Key { get; set; }
                     }
+                }
+
+                [Description("surpriseOverride")]
+                public static class SurpriseOverride
+                {
+                    public static string Key { get; set; }
                 }
             }
 
@@ -1105,12 +1111,6 @@ public static class WellKnownKeys
             [Description("areaEffects")]
             public static class AreaEffects
             {
-                [Description("triggered")]
-                public static class Triggered
-                {
-                    public static string Key { get; set; }
-                }
-
                 [Description("missing")]
                 public static class Missing
                 {
