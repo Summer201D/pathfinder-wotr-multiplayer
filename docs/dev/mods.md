@@ -67,6 +67,48 @@ You can override the lifetime if necessary, but in most cases it should be taken
 
 In most cases, you will work with `INetworkServer` or `INetworkClient`. These provide direct access to network messages, allowing you to listen to existing messages or send custom ones.
 
-When registering a handler, a simple priority system is used. You can specify whether your handler should run before or after others, including those already registered by the base multiplayer mod.
+### Reacting to existing messages
+Both `INetworkServer`/`INetworkClient` implement `INetworkReceiver` which has a method that can be used to subscribe to incoming messages
+```csharp
+On<TMessage>(Action<long, TMessage> messageHandler, MessageHandlerPriority priority)
+```
 
-Use **High** priority only when your handler must execute before the default handlers.
+When registering a handler, a simple priority system is used. You can specify whether your handler should run before (`High`) or after (`Default`) others, including those already registered by the base multiplayer mod.
+
+*Note: this does depend on mod load order and using `High` does not guarantee your handler to be executed first. Any mod that uses `High` and is loaded after your mod will have a higher priority.*
+In general, use `High` when you want your handler to run **before** the base multiplayer handler, and `Default` if it should run **after** it.
+
+Messages are processed **one by one**, and there is no parallel execution by default. However, if your handler is `async`, other messages can still be processed while it runs, because the internal **message queue never awaits your handler**.
+
+### Sending custom messages
+
+Each network message must be marked with `WOTRMultiplayer.Networking.Messages.MessageTypeAttribute` and [Protobuf](https://github.com/protobuf-net/protobuf-net) attributes.
+Typical message will look something like this:
+
+```csharp
+[ProtoContract]
+[MessageType((int)MessageTypes.Game.NotifyDialogStarted)]
+public class NotifyDialogStarted
+{
+    [ProtoMember(1)]
+    [LogMe]
+    public NetworkDialog Dialog { get; set; }
+}
+```
+
+and if it uses any complex classes 
+```csharp
+[ProtoContract]
+public class NetworkDialog
+{
+    [ProtoMember(1)]
+    [LogMe]
+    public string Id { get; set; }
+
+    [ProtoMember(2)]
+    [LogMe]
+    public string Name { get; set; }
+}
+```
+
+`MessageTypeAttribute.Id` value should be unique across all registered messages, so ideally it must be tracked in [one place](https://github.com/fl01/pathfinder-wotr-multiplayer/blob/main/src/WOTRMultiplayer.Networking/Messages/MessageTypes.cs), but you are free to use any `int` number, just be aware of consequences :)

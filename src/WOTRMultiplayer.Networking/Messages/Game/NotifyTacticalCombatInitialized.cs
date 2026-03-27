@@ -4,7 +4,7 @@ using WOTRMultiplayer.Logging.Attributes;
 namespace WOTRMultiplayer.Networking.Messages.Game
 {
     [ProtoContract]
-    [BeetleX.Packets.MessageType((int)MessageTypes.Game.NotifyTacticalCombatInitialized)]
+    [MessageType((int)MessageTypes.Game.NotifyTacticalCombatInitialized)]
     public class NotifyTacticalCombatInitialized
     {
         [ProtoMember(1)]

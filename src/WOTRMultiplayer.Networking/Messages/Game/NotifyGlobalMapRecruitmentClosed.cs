@@ -4,7 +4,7 @@ using WOTRMultiplayer.Logging.Attributes;
 namespace WOTRMultiplayer.Networking.Messages.Game
 {
     [ProtoContract]
-    [BeetleX.Packets.MessageType((int)MessageTypes.Game.NotifyGlobalMapRecruitmentClosed)]
+    [MessageType((int)MessageTypes.Game.NotifyGlobalMapRecruitmentClosed)]
     public class NotifyGlobalMapRecruitmentClosed : IForwardableMessage
     {
         [ProtoMember(1)]

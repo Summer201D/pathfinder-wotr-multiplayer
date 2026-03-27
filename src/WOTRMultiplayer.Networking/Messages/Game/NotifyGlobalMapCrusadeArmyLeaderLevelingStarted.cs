@@ -5,7 +5,7 @@ using WOTRMultiplayer.Networking.Messages.Contracts;
 namespace WOTRMultiplayer.Networking.Messages.Game
 {
     [ProtoContract]
-    [BeetleX.Packets.MessageType((int)MessageTypes.Game.NotifyGlobalMapCrusadeArmyLeaderLevelingStarted)]
+    [MessageType((int)MessageTypes.Game.NotifyGlobalMapCrusadeArmyLeaderLevelingStarted)]
     public class NotifyGlobalMapCrusadeArmyLeaderLevelingStarted : IForwardableMessage
     {
         [ProtoMember(1)]

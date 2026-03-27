@@ -5,7 +5,7 @@ using WOTRMultiplayer.Networking.Messages.Contracts;
 namespace WOTRMultiplayer.Networking.Messages.Lobby
 {
     [ProtoContract]
-    [BeetleX.Packets.MessageType((int)MessageTypes.Lobby.ClientGameServerConnectionConfirmed)]
+    [MessageType((int)MessageTypes.Lobby.ClientGameServerConnectionConfirmed)]
     public class ClientGameServerConnectionConfirmed
     {
         [ProtoMember(1)]

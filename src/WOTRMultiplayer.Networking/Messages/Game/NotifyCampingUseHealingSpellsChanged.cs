@@ -4,7 +4,7 @@ using WOTRMultiplayer.Logging.Attributes;
 namespace WOTRMultiplayer.Networking.Messages.Game
 {
     [ProtoContract]
-    [BeetleX.Packets.MessageType((int)MessageTypes.Game.NotifyCampingUseHealingSpellsChanged)]
+    [MessageType((int)MessageTypes.Game.NotifyCampingUseHealingSpellsChanged)]
     public class NotifyCampingUseHealingSpellsChanged
     {
         [ProtoMember(1)]

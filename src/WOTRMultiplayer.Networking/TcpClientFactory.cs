@@ -1,6 +1,7 @@
 ﻿using BeetleX;
 using BeetleX.Buffers;
 using WOTRMultiplayer.Networking.Abstractions;
+using WOTRMultiplayer.Networking.Messages;
 
 namespace WOTRMultiplayer.Networking
 {
@@ -13,7 +14,7 @@ namespace WOTRMultiplayer.Networking
             BufferPool.POOL_MAX_SIZE = 80000;
             BufferPool.BUFFER_SIZE = 1024 * 32;
 
-            var client = SocketFactory.CreateClient<BeetleTcpClient>(new Messages.ProtobufClientPacket(), host, port);
+            var client = SocketFactory.CreateClient<BeetleTcpClient>(new BeetleXMessageTypes.ProtobufClientPacket(), host, port);
             return client;
         }
     }

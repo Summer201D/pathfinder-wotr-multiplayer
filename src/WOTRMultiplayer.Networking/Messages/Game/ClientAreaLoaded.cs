@@ -3,7 +3,7 @@
 namespace WOTRMultiplayer.Networking.Messages.Game
 {
     [ProtoContract]
-    [BeetleX.Packets.MessageType((int)MessageTypes.Game.ClientAreaLoaded)]
+    [MessageType((int)MessageTypes.Game.ClientAreaLoaded)]
     public class ClientAreaLoaded
     {
     }

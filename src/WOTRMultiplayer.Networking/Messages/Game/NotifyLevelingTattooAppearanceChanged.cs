@@ -5,7 +5,7 @@ using WOTRMultiplayer.Networking.Messages.Contracts;
 namespace WOTRMultiplayer.Networking.Messages.Game
 {
     [ProtoContract]
-    [BeetleX.Packets.MessageType((int)MessageTypes.Game.NotifyLevelingTattooAppearanceChanged)]
+    [MessageType((int)MessageTypes.Game.NotifyLevelingTattooAppearanceChanged)]
     public class NotifyLevelingTattooAppearanceChanged : IForwardableMessage
     {
         [ProtoMember(1)]

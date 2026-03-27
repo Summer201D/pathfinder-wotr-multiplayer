@@ -3,7 +3,7 @@
 namespace WOTRMultiplayer.Networking.Messages.Game
 {
     [ProtoContract]
-    [BeetleX.Packets.MessageType((int)MessageTypes.Game.NotifySkipTimeStarted)]
+    [MessageType((int)MessageTypes.Game.NotifySkipTimeStarted)]
     public class NotifySkipTimeStarted
     {
     }

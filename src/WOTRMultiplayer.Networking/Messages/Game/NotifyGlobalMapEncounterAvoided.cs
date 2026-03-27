@@ -3,7 +3,7 @@
 namespace WOTRMultiplayer.Networking.Messages.Game
 {
     [ProtoContract]
-    [BeetleX.Packets.MessageType((int)MessageTypes.Game.NotifyGlobalMapEncounterAvoided)]
+    [MessageType((int)MessageTypes.Game.NotifyGlobalMapEncounterAvoided)]
     public class NotifyGlobalMapEncounterAvoided
     {
     }

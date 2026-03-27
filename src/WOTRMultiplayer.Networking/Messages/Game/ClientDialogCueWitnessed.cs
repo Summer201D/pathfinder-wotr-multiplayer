@@ -5,7 +5,7 @@ using WOTRMultiplayer.Networking.Messages.Contracts;
 namespace WOTRMultiplayer.Networking.Messages.Game
 {
     [ProtoContract]
-    [BeetleX.Packets.MessageType((int)MessageTypes.Game.ClientDialogCueWitnessed)]
+    [MessageType((int)MessageTypes.Game.ClientDialogCueWitnessed)]
     public class ClientDialogCueWitnessed
     {
         [ProtoMember(1)]

@@ -5,7 +5,7 @@ using WOTRMultiplayer.Networking.Messages.Contracts;
 namespace WOTRMultiplayer.Networking.Messages.Game
 {
     [ProtoContract]
-    [BeetleX.Packets.MessageType((int)MessageTypes.Game.NotifyItemDescriptionRead)]
+    [MessageType((int)MessageTypes.Game.NotifyItemDescriptionRead)]
     public class NotifyItemDescriptionRead : IForwardableMessage
     {
         [ProtoMember(1)]

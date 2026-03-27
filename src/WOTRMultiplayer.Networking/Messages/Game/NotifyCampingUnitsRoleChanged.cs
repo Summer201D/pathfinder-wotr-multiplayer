@@ -6,7 +6,7 @@ using WOTRMultiplayer.Networking.Messages.Contracts;
 namespace WOTRMultiplayer.Networking.Messages.Game
 {
     [ProtoContract]
-    [BeetleX.Packets.MessageType((int)MessageTypes.Game.NotifyCampingUnitsRoleChanged)]
+    [MessageType((int)MessageTypes.Game.NotifyCampingUnitsRoleChanged)]
     public class NotifyCampingUnitsRoleChanged
     {
         [ProtoMember(1)]

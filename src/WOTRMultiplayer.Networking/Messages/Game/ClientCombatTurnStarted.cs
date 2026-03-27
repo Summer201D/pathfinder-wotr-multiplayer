@@ -4,7 +4,7 @@ using WOTRMultiplayer.Logging.Attributes;
 namespace WOTRMultiplayer.Networking.Messages.Game
 {
     [ProtoContract]
-    [BeetleX.Packets.MessageType((int)MessageTypes.Game.ClientCombatTurnStarted)]
+    [MessageType((int)MessageTypes.Game.ClientCombatTurnStarted)]
     public class ClientCombatTurnStarted
     {
         [ProtoMember(1)]

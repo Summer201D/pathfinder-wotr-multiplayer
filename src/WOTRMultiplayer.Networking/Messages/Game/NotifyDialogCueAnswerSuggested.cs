@@ -6,7 +6,7 @@ using WOTRMultiplayer.Networking.Messages.Contracts;
 namespace WOTRMultiplayer.Networking.Messages.Game
 {
     [ProtoContract]
-    [BeetleX.Packets.MessageType((int)MessageTypes.Game.NotifyDialogCueAnswerSuggested)]
+    [MessageType((int)MessageTypes.Game.NotifyDialogCueAnswerSuggested)]
     public class NotifyDialogCueAnswerSuggested
     {
         [ProtoMember(1)]

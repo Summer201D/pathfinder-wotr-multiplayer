@@ -4,7 +4,7 @@ using WOTRMultiplayer.Logging.Attributes;
 namespace WOTRMultiplayer.Networking.Messages.Game
 {
     [ProtoContract]
-    [BeetleX.Packets.MessageType((int)MessageTypes.Game.ClientTogglePauseOff)]
+    [MessageType((int)MessageTypes.Game.ClientTogglePauseOff)]
     public class ClientTogglePauseOff
     {
         [ProtoMember(1)]

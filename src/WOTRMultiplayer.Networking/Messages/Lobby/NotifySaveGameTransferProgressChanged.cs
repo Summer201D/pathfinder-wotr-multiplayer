@@ -5,7 +5,7 @@ using WOTRMultiplayer.Logging.Attributes;
 namespace WOTRMultiplayer.Networking.Messages.Lobby
 {
     [ProtoContract]
-    [BeetleX.Packets.MessageType((int)MessageTypes.Lobby.NotifySaveGameTransferProgressChanged)]
+    [MessageType((int)MessageTypes.Lobby.NotifySaveGameTransferProgressChanged)]
     [ExcludeFromLogging]
     public class NotifySaveGameTransferProgressChanged
     {

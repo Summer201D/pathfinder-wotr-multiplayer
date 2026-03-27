@@ -6,7 +6,7 @@ using WOTRMultiplayer.Networking.Messages.Contracts;
 namespace WOTRMultiplayer.Networking.Messages.Game
 {
     [ProtoContract]
-    [BeetleX.Packets.MessageType((int)MessageTypes.Game.ClientCombatPreparationStarted)]
+    [MessageType((int)MessageTypes.Game.ClientCombatPreparationStarted)]
     public class ClientCombatPreparationStarted
     {
         [ProtoMember(1)]

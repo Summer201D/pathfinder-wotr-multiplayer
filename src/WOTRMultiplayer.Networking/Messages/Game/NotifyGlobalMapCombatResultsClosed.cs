@@ -3,7 +3,7 @@
 namespace WOTRMultiplayer.Networking.Messages.Game
 {
     [ProtoContract]
-    [BeetleX.Packets.MessageType((int)MessageTypes.Game.NotifyGlobalMapCombatResultsClosed)]
+    [MessageType((int)MessageTypes.Game.NotifyGlobalMapCombatResultsClosed)]
     public class NotifyGlobalMapCombatResultsClosed
     {
     }

@@ -4,7 +4,7 @@ using WOTRMultiplayer.Logging.Attributes;
 namespace WOTRMultiplayer.Networking.Messages.Game
 {
     [ProtoContract]
-    [BeetleX.Packets.MessageType((int)MessageTypes.Game.NotifyGlobalMapTravelerModeChanged)]
+    [MessageType((int)MessageTypes.Game.NotifyGlobalMapTravelerModeChanged)]
     public class NotifyGlobalMapTravelerModeChanged : IForwardableMessage
     {
         [ProtoMember(1)]

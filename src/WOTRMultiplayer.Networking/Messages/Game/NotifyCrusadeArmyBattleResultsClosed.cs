@@ -3,7 +3,7 @@
 namespace WOTRMultiplayer.Networking.Messages.Game
 {
     [ProtoContract]
-    [BeetleX.Packets.MessageType((int)MessageTypes.Game.NotifyCrusadeArmyBattleResultsClosed)]
+    [MessageType((int)MessageTypes.Game.NotifyCrusadeArmyBattleResultsClosed)]
     public class NotifyCrusadeArmyBattleResultsClosed
     {
     }

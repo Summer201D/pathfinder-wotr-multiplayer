@@ -15,7 +15,7 @@ namespace WOTRMultiplayer.Networking.UnitTests.Messages
         {
             // Arrange
             var allMessages = Assembly
-                .GetAssembly(typeof(ProtobufPacket))
+                .GetAssembly(typeof(BeetleXMessageTypes.ProtobufServerPacket))
                 .GetTypes()
                 .Where(t => t.GetCustomAttribute<BeetleX.Packets.MessageTypeAttribute>() != null)
                 .Select(t => new { Type = t, MessageType = t.GetCustomAttribute<BeetleX.Packets.MessageTypeAttribute>() })
@@ -35,7 +35,7 @@ namespace WOTRMultiplayer.Networking.UnitTests.Messages
         {
             // Arrange
             var allMessages = Assembly
-                .GetAssembly(typeof(ProtobufPacket))
+                .GetAssembly(typeof(BeetleXMessageTypes.ProtobufServerPacket))
                 .GetTypes()
                 .Where(t => t.GetCustomAttribute<BeetleX.Packets.MessageTypeAttribute>() != null)
                 .Select(t => new { Type = t, MessageType = t.GetCustomAttribute<BeetleX.Packets.MessageTypeAttribute>() })
@@ -55,7 +55,7 @@ namespace WOTRMultiplayer.Networking.UnitTests.Messages
         {
             // Arrange
             var allMessageIds = Assembly
-                .GetAssembly(typeof(ProtobufPacket))
+                .GetAssembly(typeof(BeetleXMessageTypes.ProtobufServerPacket))
                 .GetTypes()
                 .Where(t => t.GetCustomAttribute<BeetleX.Packets.MessageTypeAttribute>() != null)
                 .Select(t => new { Type = t, MessageType = t.GetCustomAttribute<BeetleX.Packets.MessageTypeAttribute>() })
@@ -77,7 +77,7 @@ namespace WOTRMultiplayer.Networking.UnitTests.Messages
         {
             // Arrange
             var allProtoContracts = Assembly
-                .GetAssembly(typeof(ProtobufPacket))
+                .GetAssembly(typeof(BeetleXMessageTypes.ProtobufServerPacket))
                 .GetTypes()
                 .Where(t => t.GetCustomAttribute<ProtoContractAttribute>() != null)
                 .ToList();
@@ -94,7 +94,7 @@ namespace WOTRMultiplayer.Networking.UnitTests.Messages
         {
             // Arrange
             var allMessages = Assembly
-                .GetAssembly(typeof(ProtobufPacket))
+                .GetAssembly(typeof(BeetleXMessageTypes.ProtobufServerPacket))
                 .GetTypes()
                 .Where(t => t.GetCustomAttribute<BeetleX.Packets.MessageTypeAttribute>() != null)
                 .ToList();

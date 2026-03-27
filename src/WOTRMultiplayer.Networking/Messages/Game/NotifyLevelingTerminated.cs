@@ -3,7 +3,7 @@
 namespace WOTRMultiplayer.Networking.Messages.Game
 {
     [ProtoContract]
-    [BeetleX.Packets.MessageType((int)MessageTypes.Game.NotifyLevelingTerminated)]
+    [MessageType((int)MessageTypes.Game.NotifyLevelingTerminated)]
     public class NotifyLevelingTerminated : IForwardableMessage
     {
     }

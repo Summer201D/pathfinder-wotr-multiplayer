@@ -3,7 +3,7 @@
 namespace WOTRMultiplayer.Networking.Messages.Game
 {
     [ProtoContract]
-    [BeetleX.Packets.MessageType((int)MessageTypes.Game.NotifyTacticalCombatRetreated)]
+    [MessageType((int)MessageTypes.Game.NotifyTacticalCombatRetreated)]
     public class NotifyTacticalCombatRetreated
     {
     }

@@ -3,7 +3,7 @@
 namespace WOTRMultiplayer.Networking.Messages.Game
 {
     [ProtoContract]
-    [BeetleX.Packets.MessageType((int)MessageTypes.Game.NotifyNewGameSequenceTerminated)]
+    [MessageType((int)MessageTypes.Game.NotifyNewGameSequenceTerminated)]
     public class NotifyNewGameSequenceTerminated
     {
     }

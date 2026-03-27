@@ -4,7 +4,7 @@ using WOTRMultiplayer.Logging.Attributes;
 namespace WOTRMultiplayer.Networking.Messages.Game
 {
     [ProtoContract]
-    [BeetleX.Packets.MessageType((int)MessageTypes.Game.NotifyAreaLoadingCompleted)]
+    [MessageType((int)MessageTypes.Game.NotifyAreaLoadingCompleted)]
     public class NotifyAreaLoadingCompleted
     {
         [ProtoMember(1)]

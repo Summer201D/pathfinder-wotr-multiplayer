@@ -3,7 +3,7 @@
 namespace WOTRMultiplayer.Networking.Messages.Game
 {
     [ProtoContract]
-    [BeetleX.Packets.MessageType((int)MessageTypes.Game.NotifyNewGameSequenceLevelingStarted)]
+    [MessageType((int)MessageTypes.Game.NotifyNewGameSequenceLevelingStarted)]
     public class NotifyNewGameSequenceLevelingStarted
     {
     }

@@ -5,7 +5,7 @@ using WOTRMultiplayer.Networking.Messages.Contracts;
 namespace WOTRMultiplayer.Networking.Messages.Game
 {
     [ProtoContract]
-    [BeetleX.Packets.MessageType((int)MessageTypes.Game.ClientDialogStartRequested)]
+    [MessageType((int)MessageTypes.Game.ClientDialogStartRequested)]
     public class ClientDialogStartRequested
     {
         [ProtoMember(1)]

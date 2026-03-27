@@ -5,7 +5,7 @@ using WOTRMultiplayer.Networking.Messages.Contracts;
 namespace WOTRMultiplayer.Networking.Messages.Game
 {
     [ProtoContract]
-    [BeetleX.Packets.MessageType((int)MessageTypes.Game.NotifyNewGameSequenceWitnessed)]
+    [MessageType((int)MessageTypes.Game.NotifyNewGameSequenceWitnessed)]
     public class NotifyNewGameSequenceWitnessed : IForwardableMessage
     {
         [ProtoMember(1)]

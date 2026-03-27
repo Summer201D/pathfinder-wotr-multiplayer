@@ -6,7 +6,7 @@ using WOTRMultiplayer.Networking.Awaiters;
 namespace WOTRMultiplayer.Networking.Messages.Requests
 {
     [ProtoContract]
-    [BeetleX.Packets.MessageType((int)MessageTypes.Request.RandomEncounterContextRequest)]
+    [MessageType((int)MessageTypes.Request.RandomEncounterContextRequest)]
     public class RandomEncounterContextRequest : IAwaitableRequest
     {
         [ProtoMember(1)]

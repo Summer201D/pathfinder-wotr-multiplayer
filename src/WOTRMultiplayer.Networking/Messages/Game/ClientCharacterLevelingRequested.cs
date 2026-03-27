@@ -4,7 +4,7 @@ using WOTRMultiplayer.Logging.Attributes;
 namespace WOTRMultiplayer.Networking.Messages.Game
 {
     [ProtoContract]
-    [BeetleX.Packets.MessageType((int)MessageTypes.Game.ClientCharacterLevelingRequested)]
+    [MessageType((int)MessageTypes.Game.ClientCharacterLevelingRequested)]
     public class ClientCharacterLevelingRequested
     {
         [ProtoMember(1)]

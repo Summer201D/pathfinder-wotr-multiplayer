@@ -4,7 +4,7 @@ using WOTRMultiplayer.Logging.Attributes;
 namespace WOTRMultiplayer.Networking.Messages.Lobby
 {
     [ProtoContract]
-    [BeetleX.Packets.MessageType((int)MessageTypes.Lobby.NotifySaveGameChunkReceived)]
+    [MessageType((int)MessageTypes.Lobby.NotifySaveGameChunkReceived)]
     [ExcludeFromLogging]
     public class NotifySaveGameChunkReceived
     {

@@ -5,7 +5,7 @@ using WOTRMultiplayer.Networking.Messages.Contracts;
 namespace WOTRMultiplayer.Networking.Messages.Game
 {
     [ProtoContract]
-    [BeetleX.Packets.MessageType((int)MessageTypes.Game.NotifySpellMemorized)]
+    [MessageType((int)MessageTypes.Game.NotifySpellMemorized)]
     public class NotifySpellMemorized : IForwardableMessage
     {
         [ProtoMember(1)]

@@ -3,7 +3,7 @@
 namespace WOTRMultiplayer.Networking.Messages.Game
 {
     [ProtoContract]
-    [BeetleX.Packets.MessageType((int)MessageTypes.Game.NotifyGlobalMapCrusadeArmiesMerging)]
+    [MessageType((int)MessageTypes.Game.NotifyGlobalMapCrusadeArmiesMerging)]
     public class NotifyGlobalMapCrusadeArmiesMerging
     {
     }

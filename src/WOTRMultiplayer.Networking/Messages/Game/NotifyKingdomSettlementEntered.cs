@@ -5,7 +5,7 @@ using WOTRMultiplayer.Networking.Messages.Contracts;
 namespace WOTRMultiplayer.Networking.Messages.Game
 {
     [ProtoContract]
-    [BeetleX.Packets.MessageType((int)MessageTypes.Game.NotifyKingdomSettlementEntered)]
+    [MessageType((int)MessageTypes.Game.NotifyKingdomSettlementEntered)]
     public class NotifyKingdomSettlementEntered
     {
         [ProtoMember(1)]

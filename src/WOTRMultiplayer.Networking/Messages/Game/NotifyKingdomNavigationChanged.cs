@@ -4,7 +4,7 @@ using WOTRMultiplayer.Logging.Attributes;
 namespace WOTRMultiplayer.Networking.Messages.Game
 {
     [ProtoContract]
-    [BeetleX.Packets.MessageType((int)MessageTypes.Game.NotifyKingdomNavigationChanged)]
+    [MessageType((int)MessageTypes.Game.NotifyKingdomNavigationChanged)]
     public class NotifyKingdomNavigationChanged
     {
         [ProtoMember(1)]

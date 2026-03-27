@@ -16,6 +16,11 @@ namespace WOTRMultiplayer.Logging.Object
             _metadata = Build(_metadata, types);
         }
 
+        public static void Initialize(Type type)
+        {
+            _metadata = Build(_metadata, [type]);
+        }
+
         public static Dictionary<string, object> GetLoggingInfo(object message)
         {
             var result = new Dictionary<string, object>();

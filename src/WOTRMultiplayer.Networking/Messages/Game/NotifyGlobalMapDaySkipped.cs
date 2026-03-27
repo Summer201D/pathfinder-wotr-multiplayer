@@ -3,7 +3,7 @@
 namespace WOTRMultiplayer.Networking.Messages.Game
 {
     [ProtoContract]
-    [BeetleX.Packets.MessageType((int)MessageTypes.Game.NotifyGlobalMapDaySkipped)]
+    [MessageType((int)MessageTypes.Game.NotifyGlobalMapDaySkipped)]
     public class NotifyGlobalMapDaySkipped
     {
     }

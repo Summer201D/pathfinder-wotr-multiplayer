@@ -5,7 +5,7 @@ using WOTRMultiplayer.Networking.Messages.Contracts;
 namespace WOTRMultiplayer.Networking.Messages.Game
 {
     [ProtoContract]
-    [BeetleX.Packets.MessageType((int)MessageTypes.Game.NotifyGlobalMapCrusadeArmySquadsSwitched)]
+    [MessageType((int)MessageTypes.Game.NotifyGlobalMapCrusadeArmySquadsSwitched)]
     public class NotifyGlobalMapCrusadeArmySquadsSwitched
     {
         [ProtoMember(1)]

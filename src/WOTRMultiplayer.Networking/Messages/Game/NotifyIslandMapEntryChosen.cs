@@ -5,7 +5,7 @@ using WOTRMultiplayer.Networking.Messages.Contracts;
 namespace WOTRMultiplayer.Networking.Messages.Game
 {
     [ProtoContract]
-    [BeetleX.Packets.MessageType((int)MessageTypes.Game.NotifyIslandMapEntryChosen)]
+    [MessageType((int)MessageTypes.Game.NotifyIslandMapEntryChosen)]
     public class NotifyIslandMapEntryChosen
     {
         [ProtoMember(1)]

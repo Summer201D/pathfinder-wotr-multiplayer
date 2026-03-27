@@ -3,7 +3,7 @@
 namespace WOTRMultiplayer.Networking.Messages.Game
 {
     [ProtoContract]
-    [BeetleX.Packets.MessageType((int)MessageTypes.Game.NotifyCharacterSelectionWindowAccepted)]
+    [MessageType((int)MessageTypes.Game.NotifyCharacterSelectionWindowAccepted)]
     public class NotifyCharacterSelectionWindowAccepted
     {
     }

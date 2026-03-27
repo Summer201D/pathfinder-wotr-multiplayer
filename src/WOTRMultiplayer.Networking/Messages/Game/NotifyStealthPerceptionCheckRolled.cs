@@ -5,7 +5,7 @@ using WOTRMultiplayer.Networking.Messages.Contracts;
 namespace WOTRMultiplayer.Networking.Messages.Game
 {
     [ProtoContract]
-    [BeetleX.Packets.MessageType((int)MessageTypes.Game.NotifyStealthPerceptionCheckRolled)]
+    [MessageType((int)MessageTypes.Game.NotifyStealthPerceptionCheckRolled)]
     public class NotifyStealthPerceptionCheckRolled
     {
         [ProtoMember(1)]

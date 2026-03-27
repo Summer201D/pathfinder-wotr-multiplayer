@@ -3,7 +3,7 @@
 namespace WOTRMultiplayer.Networking.Messages.Game
 {
     [ProtoContract]
-    [BeetleX.Packets.MessageType((int)MessageTypes.Game.NotifyZoneLootLeft)]
+    [MessageType((int)MessageTypes.Game.NotifyZoneLootLeft)]
     public class NotifyZoneLootLeft
     {
     }

@@ -6,7 +6,7 @@ using WOTRMultiplayer.Networking.Messages.Contracts;
 namespace WOTRMultiplayer.Networking.Messages.Game
 {
     [ProtoContract]
-    [BeetleX.Packets.MessageType((int)MessageTypes.Game.NotifyGlobalMapTravelStopped)]
+    [MessageType((int)MessageTypes.Game.NotifyGlobalMapTravelStopped)]
     public class NotifyGlobalMapTravelStopped
     {
         [ProtoMember(1)]

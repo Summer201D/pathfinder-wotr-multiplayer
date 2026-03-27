@@ -4,7 +4,7 @@ using WOTRMultiplayer.Logging.Attributes;
 namespace WOTRMultiplayer.Networking.Messages.Game
 {
     [ProtoContract]
-    [BeetleX.Packets.MessageType((int)MessageTypes.Game.NotifyLevelingStarted)]
+    [MessageType((int)MessageTypes.Game.NotifyLevelingStarted)]
     public class NotifyLevelingStarted
     {
         [ProtoMember(1)]

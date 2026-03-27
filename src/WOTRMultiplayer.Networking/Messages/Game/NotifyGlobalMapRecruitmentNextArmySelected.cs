@@ -3,7 +3,7 @@
 namespace WOTRMultiplayer.Networking.Messages.Game
 {
     [ProtoContract]
-    [BeetleX.Packets.MessageType((int)MessageTypes.Game.NotifyGlobalMapRecruitmentNextArmySelected)]
+    [MessageType((int)MessageTypes.Game.NotifyGlobalMapRecruitmentNextArmySelected)]
     public class NotifyGlobalMapRecruitmentNextArmySelected
     {
     }

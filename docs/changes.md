@@ -91,7 +91,7 @@ There is no hard player limit. Extra players can even join as spectators with 0 
 It is possible to join when the game has already started (host IP address or game code can be found in the Multiplayer Lobby window), you need to ask host to load save game and it will load for you as well
 
 ## Logs
-- Mod writes logs to `Mods/WOTRMultiplayer/logs` folder.
+- Mod writes logs to `./logs` folder.
 - Log files are never cleaned by the mod itself
 
 ## Pausing

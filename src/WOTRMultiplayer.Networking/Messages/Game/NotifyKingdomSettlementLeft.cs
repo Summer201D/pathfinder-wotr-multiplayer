@@ -3,7 +3,7 @@
 namespace WOTRMultiplayer.Networking.Messages.Game
 {
     [ProtoContract]
-    [BeetleX.Packets.MessageType((int)MessageTypes.Game.NotifyKingdomSettlementLeft)]
+    [MessageType((int)MessageTypes.Game.NotifyKingdomSettlementLeft)]
     public class NotifyKingdomSettlementLeft
     {
     }

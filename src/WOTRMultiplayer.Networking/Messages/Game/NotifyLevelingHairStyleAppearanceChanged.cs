@@ -4,7 +4,7 @@ using WOTRMultiplayer.Logging.Attributes;
 namespace WOTRMultiplayer.Networking.Messages.Game
 {
     [ProtoContract]
-    [BeetleX.Packets.MessageType((int)MessageTypes.Game.NotifyLevelingHairStyleAppearanceChanged)]
+    [MessageType((int)MessageTypes.Game.NotifyLevelingHairStyleAppearanceChanged)]
     public class NotifyLevelingHairStyleAppearanceChanged : IForwardableMessage
     {
         [ProtoMember(1)]

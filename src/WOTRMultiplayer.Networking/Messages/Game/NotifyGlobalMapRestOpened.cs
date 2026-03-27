@@ -3,7 +3,7 @@
 namespace WOTRMultiplayer.Networking.Messages.Game
 {
     [ProtoContract]
-    [BeetleX.Packets.MessageType((int)MessageTypes.Game.NotifyGlobalMapRestOpened)]
+    [MessageType((int)MessageTypes.Game.NotifyGlobalMapRestOpened)]
     public class NotifyGlobalMapRestOpened
     {
     }

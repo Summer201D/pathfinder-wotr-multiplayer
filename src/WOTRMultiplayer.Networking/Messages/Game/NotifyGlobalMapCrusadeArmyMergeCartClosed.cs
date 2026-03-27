@@ -4,7 +4,7 @@ using WOTRMultiplayer.Logging.Attributes;
 namespace WOTRMultiplayer.Networking.Messages.Game
 {
     [ProtoContract]
-    [BeetleX.Packets.MessageType((int)MessageTypes.Game.NotifyGlobalMapCrusadeArmyMergeCartClosed)]
+    [MessageType((int)MessageTypes.Game.NotifyGlobalMapCrusadeArmyMergeCartClosed)]
     public class NotifyGlobalMapCrusadeArmyMergeCartClosed : IForwardableMessage
     {
         [ProtoMember(1)]

@@ -5,7 +5,7 @@ using WOTRMultiplayer.Networking.Messages.Contracts;
 namespace WOTRMultiplayer.Networking.Messages.Game
 {
     [ProtoContract]
-    [BeetleX.Packets.MessageType((int)MessageTypes.Game.NotifyGlobalMapCrusadeArmySquadSplitRequested)]
+    [MessageType((int)MessageTypes.Game.NotifyGlobalMapCrusadeArmySquadSplitRequested)]
     public class NotifyGlobalMapCrusadeArmySquadSplitRequested
     {
         [ProtoMember(1)]

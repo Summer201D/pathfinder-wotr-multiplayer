@@ -3,7 +3,7 @@
 namespace WOTRMultiplayer.Networking.Messages.Game
 {
     [ProtoContract]
-    [BeetleX.Packets.MessageType((int)MessageTypes.Game.NotifyCombatInitializationCompleted)]
+    [MessageType((int)MessageTypes.Game.NotifyCombatInitializationCompleted)]
     public class NotifyCombatInitializationCompleted
     {
     }

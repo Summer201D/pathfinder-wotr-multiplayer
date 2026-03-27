@@ -12,10 +12,8 @@ namespace WOTRMultiplayer.Logging
     {
         private readonly static object _consoleSinkRoot = new();
 
-        public static ILogger Create(bool addDebugConsoleSink, string baseFolder, LogEventLevel globalMinLevel, LogEventLevel consoleMinLevel, LogEventLevel fileMinLevel, IEnumerable<Type> loggableObjects)
+        public static ILogger Create(bool addDebugConsoleSink, string baseFolder, LogEventLevel globalMinLevel, LogEventLevel consoleMinLevel, LogEventLevel fileMinLevel)
         {
-            ObjectLoggingMetadata.Initialize(loggableObjects);
-
             var template = "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level}] {SourceContext}: {Message:lj}{NewLine}{Exception}";
             var logConfig = new LoggerConfiguration()
                 .MinimumLevel.Is(globalMinLevel)

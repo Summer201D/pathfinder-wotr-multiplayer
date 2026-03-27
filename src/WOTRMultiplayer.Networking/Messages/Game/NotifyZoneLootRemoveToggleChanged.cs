@@ -4,7 +4,7 @@ using WOTRMultiplayer.Logging.Attributes;
 namespace WOTRMultiplayer.Networking.Messages.Game
 {
     [ProtoContract]
-    [BeetleX.Packets.MessageType((int)MessageTypes.Game.NotifyZoneLootRemoveToggleChanged)]
+    [MessageType((int)MessageTypes.Game.NotifyZoneLootRemoveToggleChanged)]
     public class NotifyZoneLootRemoveToggleChanged
     {
         [ProtoMember(1)]

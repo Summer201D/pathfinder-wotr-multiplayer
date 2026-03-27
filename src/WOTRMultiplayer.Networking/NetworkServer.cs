@@ -18,7 +18,7 @@ namespace WOTRMultiplayer.Networking
     public class NetworkServer : INetworkServer
     {
         private TimeSpan _defaultAwaiterTimeout;
-        private ServerBuilder<NetworkServerApp, NetworkConnectionToken, ProtobufPacket> _server;
+        private ServerBuilder<NetworkServerApp, NetworkConnectionToken, BeetleXMessageTypes.ProtobufServerPacket> _server;
 
         private readonly ILogger<NetworkServer> _logger;
         private readonly IMessageConsumer _messageConsumer;
@@ -56,7 +56,7 @@ namespace WOTRMultiplayer.Networking
                 Reset();
             }
 
-            _server = new ServerBuilder<NetworkServerApp, NetworkConnectionToken, ProtobufPacket>();
+            _server = new();
             _server.ServerOptions.DefaultListen.StartRegionPort = hostPortRangeStart;
             _server.ServerOptions.DefaultListen.EndRegionPort = hostPortRangeEnd;
             _server.ServerOptions.BufferSize = 1024 * 32;
