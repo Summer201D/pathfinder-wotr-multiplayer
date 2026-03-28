@@ -1095,6 +1095,12 @@ public static class WellKnownKeys
                     public static string Key { get; set; }
                 }
 
+                [Description("delayed")]
+                public static class Delayed
+                {
+                    public static string Key { get; set; }
+                }
+
                 [Description("hostOrderDesync")]
                 public static class HostOrderDesync
                 {

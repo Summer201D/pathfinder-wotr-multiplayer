@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using WOTRMultiplayer.Abstractions.GameInteraction;
 using WOTRMultiplayer.Entities;
@@ -27,10 +28,6 @@ namespace WOTRMultiplayer.Playground.Core.Dummies
         public NetworkCombatState GetCombatState()
         {
             return null;
-        }
-
-        public void StartTurnBasedCombatTurn(string unitId)
-        {
         }
 
         public void InitializeCrusadeArmyCombat()
@@ -85,11 +82,6 @@ namespace WOTRMultiplayer.Playground.Core.Dummies
         }
 
         public Task<bool> StartCombatAsync(NetworkCombatState networkCombatState)
-        {
-            return Task.FromResult(false);
-        }
-
-        public Task<bool> KillUnitAsync(NetworkPlayer player, string unitId)
         {
             return Task.FromResult(false);
         }
@@ -174,6 +166,15 @@ namespace WOTRMultiplayer.Playground.Core.Dummies
         public bool IsCombatInitialized()
         {
             return false;
+        }
+
+        public bool KillUnit(NetworkPlayer player, string unitId)
+        {
+            return false;
+        }
+
+        public void StartTurnBasedCombatTurn(string unitId, Action onInvalidUnit = null)
+        {
         }
     }
 }

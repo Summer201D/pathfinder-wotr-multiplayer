@@ -137,7 +137,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
                 || turnStatus == TurnController.TurnStatus.Ending;
         }
 
-        public void StartTurnBasedCombatTurn(string unitId)
+        public void StartTurnBasedCombatTurn(string unitId, Action onInvalidUnit = null)
         {
             _mainThreadAccessor.Post(() =>
             {
@@ -150,18 +150,22 @@ namespace WOTRMultiplayer.Services.GameInteraction
                         return;
                     }
 
-                    _logger.LogInformation("Starting turn. UnitId={UnitId}", unitId);
-                    Game.Instance.TurnBasedCombatController.StartTurn(currentUnit);
-
                     if (currentUnit.State.IsFinallyDead)
                     {
-                        Game.Instance.TurnBasedCombatController.CurrentTurn?.ForceToEnd();
-                        _logger.LogWarning("Turn has been forced to end due to invalid state of a unit. UnitId={UnitId}", unitId);
+                        _logger.LogError("Unable to start turn for already dead unit. UnitId={UnitId}", unitId);
+                        Game.Instance.TurnBasedCombatController.CurrentTurn?.End();
+                        onInvalidUnit?.Invoke();
+                        Game.Instance.TurnBasedCombatController.CurrentTurn?.Dispose();
+                        Game.Instance.TurnBasedCombatController.CurrentTurn = null;
+                        return;
                     }
+
+                    _logger.LogInformation("Starting turn. UnitId={UnitId}", unitId);
+                    Game.Instance.TurnBasedCombatController.StartTurn(currentUnit);
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "Unable to start CombatController.StartTurn");
+                    _logger.LogError(ex, "Unable to start CombatController.StartTurn. UnitId={UnitId}", unitId);
                     throw;
                 }
             });
@@ -629,39 +633,26 @@ namespace WOTRMultiplayer.Services.GameInteraction
             }
         }
 
-        public Task<bool> KillUnitAsync(NetworkPlayer player, string unitId)
+        public bool KillUnit(NetworkPlayer player, string unitId)
         {
-            var tcs = new TaskCompletionSource<bool>();
-            _mainThreadAccessor.Post(() =>
+            try
             {
-                try
+                var unit = _gameStateLookupService.GetUnitEntity(unitId);
+                if (unit == null || unit.State.IsFinallyDead || Game.Instance.CurrentMode == GameModeType.Dialog || Game.Instance.CurrentMode == GameModeType.Cutscene)
                 {
-                    var unit = _gameStateLookupService.GetUnitEntity(unitId);
-                    if (unit == null || unit.State.IsFinallyDead || Game.Instance.CurrentMode == GameModeType.Dialog || Game.Instance.CurrentMode == GameModeType.Cutscene)
-                    {
-                        tcs.SetResult(false);
-                        return;
-                    }
-
-                    _playerNotificationService.ShowWarningNotification(WellKnownKeys.GameNotifications.Combat.UnitAutokilled.Key, args: [unit.CharacterName, unit.UniqueId, player.Name]);
-                    if (Game.Instance.TurnBasedCombatController.CurrentTurn?.Rider == unit)
-                    {
-                        Game.Instance.TurnBasedCombatController.CurrentTurn.End();
-                    }
-
-                    GameHelper.KillUnit(unit);
-                    _logger.LogInformation("Unit has been auto-killed. FromPlayerId={FromPlayerId}, UnitId={UnitId}", player.Id, unitId);
-                    tcs.SetResult(true);
+                    return false;
                 }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Error while killing unit. FromPlayerId={FromPlayerId}, UnitId={UnitId}", player?.Id, unitId);
-                    tcs.SetResult(false);
-                    throw;
-                }
-            });
 
-            return tcs.Task;
+                _playerNotificationService.ShowWarningNotification(WellKnownKeys.GameNotifications.Combat.UnitAutokilled.Key, args: [unit.CharacterName, unit.UniqueId, player.Name]);
+                GameHelper.KillUnit(unit);
+                _logger.LogInformation("Unit has been auto-killed. FromPlayerId={FromPlayerId}, UnitId={UnitId}", player.Id, unitId);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while killing unit. FromPlayerId={FromPlayerId}, UnitId={UnitId}", player?.Id, unitId);
+                throw;
+            }
         }
 
         public Task<bool> StartCombatAsync(NetworkCombatState networkCombatState)

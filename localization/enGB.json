@@ -275,6 +275,7 @@
                 "turn": {
                     "started": "----- Turn Started: {0}",
                     "ended": "----- Turn Ended: {0}",
+                    "delayed": "----- Turn Delayed: {0}",
                     "hostOrderDesync": "Next turn for player {0} has been overridden",
                     "clientOrderDesync": "Next unit turn has been overridden to '{0}'"
                 },

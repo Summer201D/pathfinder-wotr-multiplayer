@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using WOTRMultiplayer.Entities;
 using WOTRMultiplayer.Entities.AreaEffects;
@@ -26,7 +27,7 @@ namespace WOTRMultiplayer.Abstractions.GameInteraction
 
         Task<bool> UpdateUnitsAsync(List<NetworkUnit> networkUnits, bool updatePosition);
 
-        void StartTurnBasedCombatTurn(string unitId);
+        void StartTurnBasedCombatTurn(string unitId, Action onInvalidUnit = null);
 
         void EndTurnBasedCombatTurn();
 
@@ -62,7 +63,7 @@ namespace WOTRMultiplayer.Abstractions.GameInteraction
 
         void AddUnitsToCombat(List<string> units);
 
-        Task<bool> KillUnitAsync(NetworkPlayer player, string unitId);
+        bool KillUnit(NetworkPlayer player, string unitId);
 
         bool IsRiderActive();
 

@@ -1478,7 +1478,12 @@ namespace WOTRMultiplayer.Services
             }
 
             SetCombatTurnStage(NetworkCombatTurnStage.Playing);
-            CombatInteraction.StartTurnBasedCombatTurn(Game.Combat.Turn.UnitId);
+            CombatInteraction.StartTurnBasedCombatTurn(Game.Combat.Turn.UnitId, () =>
+            {
+                OnTurnEnded(message.UnitId);
+                Game.Combat.Turn = null;
+                Logger.LogWarning("Turn has been reset due to unability to start turn. UnitId={UnitId}", message.UnitId);
+            });
         }
 
         private async void OnNotifyCombatInitializationRequired(long playerId, NotifyCombatInitializationRequired message)

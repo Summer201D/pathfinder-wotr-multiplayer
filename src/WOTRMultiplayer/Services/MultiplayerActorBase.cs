@@ -557,6 +557,8 @@ namespace WOTRMultiplayer.Services
                 TargetUnitId = targetUnitId
             };
             Send(message);
+
+            PlayerNotification.AddCombatText(WellKnownKeys.GameNotifications.Combat.Turn.Delayed.Key, CombatTextSeverity.Common, new UnitLogParameter(unitId));
         }
 
         public bool OnBeforeTurnStart(string unitId, bool actingInSurpriseRound)
@@ -599,6 +601,12 @@ namespace WOTRMultiplayer.Services
         {
             try
             {
+                // turn has been forcefully ended due to auto-kill
+                if (Game.Combat.Turn == null)
+                {
+                    return false;
+                }
+
                 switch (Game.Combat.Turn.Stage)
                 {
                     case NetworkCombatTurnStage.Playing:
@@ -612,15 +620,7 @@ namespace WOTRMultiplayer.Services
                         OnLocalPlayerTurnEnd();
                         return false;
                     case NetworkCombatTurnStage.Ended:
-                        Logger.LogInformation("Turn end is allowed. Round={Round}, TurnUnitId={TurnUnitId}, IsAI={IsAI}, UnitId={UnitId}", Game.Combat.Round, Game.Combat.Turn.UnitId, Game.Combat.Turn.IsAI, unitId);
-                        Game.Combat.TriggeredAreaEffects.Clear();
-                        ResetCombatTurn();
-                        PlayerNotification.AddCombatText(WellKnownKeys.GameNotifications.Combat.Turn.Ended.Key, CombatTextSeverity.Common, new UnitLogParameter(unitId));
-                        var confirmedUnits = Game.Combat.ConfirmedMidCombatUnits.ToList() ?? [];
-                        if (confirmedUnits.Count > 0)
-                        {
-                            CombatInteraction.AddUnitsToCombat(confirmedUnits);
-                        }
+                        OnTurnEnded(unitId);
                         return true;
                     default:
                         return false;
@@ -628,7 +628,7 @@ namespace WOTRMultiplayer.Services
             }
             catch (Exception ex)
             {
-                Logger.LogError(ex, "Unabel to process turn end");
+                Logger.LogError(ex, "Unable to process turn end. UnitId={UnitId}", unitId);
                 throw;
             }
         }
@@ -1708,8 +1708,16 @@ namespace WOTRMultiplayer.Services
                 return;
             }
 
-            // if unit is dead for some reason
-            MakeUnitTargetable(unitId, groupId);
+            if (Game.Combat.UntargetableUnits.ContainsKey(groupId))
+            {
+                // if unit is dead for some reason
+                MakeUnitTargetable(unitId, groupId);
+            }
+
+            if (Game.Combat.RemotelyKilledUnits.Contains(unitId))
+            {
+                return;
+            }
 
             var message = new NotifyUnitKilled
             {
@@ -2251,6 +2259,19 @@ namespace WOTRMultiplayer.Services
 
         protected virtual void OnLocalPlayerTurnEnd()
         {
+        }
+
+        protected void OnTurnEnded(string unitId)
+        {
+            Logger.LogInformation("Turn end is allowed. Round={Round}, TurnUnitId={TurnUnitId}, IsAI={IsAI}, UnitId={UnitId}", Game.Combat.Round, Game.Combat.Turn.UnitId, Game.Combat.Turn.IsAI, unitId);
+            Game.Combat.TriggeredAreaEffects.Clear();
+            ResetCombatTurn();
+            PlayerNotification.AddCombatText(WellKnownKeys.GameNotifications.Combat.Turn.Ended.Key, CombatTextSeverity.Common, new UnitLogParameter(unitId));
+            var confirmedUnits = Game.Combat.ConfirmedMidCombatUnits.ToList() ?? [];
+            if (confirmedUnits.Count > 0)
+            {
+                CombatInteraction.AddUnitsToCombat(confirmedUnits);
+            }
         }
 
         protected void ShowForcedPauseReason()
@@ -3736,17 +3757,33 @@ namespace WOTRMultiplayer.Services
                     Game.Combat.Turn.LockCounter++;
                 }
 
+                Game.Combat.RemotelyKilledUnits.Add(message.UnitId);
+
                 await WaitWhileTrue(CombatInteraction.IsRiderActive, "Waiting for active commands to finish before checking if unit should be killed");
                 await Task.Delay(TimeSpan.FromSeconds(1f));
 
                 var player = GetPlayer(message.PlayerId);
-                await CombatInteraction.KillUnitAsync(player, message.UnitId);
+                var isKilled = CombatInteraction.KillUnit(player, message.UnitId);
+                if (!isKilled)
+                {
+                    return;
+                }
+
+                if (Game.Combat.Turn != null && string.Equals(Game.Combat.Turn.UnitId, message.UnitId, StringComparison.OrdinalIgnoreCase))
+                {
+                    OnTurnEnded(message.UnitId);
+                    Game.Combat.Turn = null;
+                    Logger.LogWarning("Turn has been reset due to auto-killed rider unit. UnitId={UnitId}", message.UnitId);
+                }
             }
             finally
             {
                 lock (ActionLock)
                 {
-                    Game.Combat.Turn.LockCounter--;
+                    if (Game.Combat.Turn != null)
+                    {
+                        Game.Combat.Turn.LockCounter--;
+                    }
                 }
             }
         }
@@ -4082,6 +4119,8 @@ namespace WOTRMultiplayer.Services
 
         private void OnNotifyCombatTurnDelayed(long receivedFrom, NotifyCombatTurnDelayed message)
         {
+            PlayerNotification.AddCombatText(WellKnownKeys.GameNotifications.Combat.Turn.Delayed.Key, CombatTextSeverity.Common, new UnitLogParameter(message.UnitId));
+
             CombatInteraction.DelayCombatTurn(message.UnitId, message.TargetUnitId);
         }
 
@@ -4456,7 +4495,12 @@ namespace WOTRMultiplayer.Services
                 return;
             }
 
-            var group = Game.Combat.UntargetableUnits.GetOrAdd(groupId, []);
+            if (!Game.Combat.UntargetableUnits.TryGetValue(groupId, out var group))
+            {
+                Logger.LogWarning("Group has no untargetable units. GroupId={GroupId}", groupId);
+                return;
+            }
+
             if (group.Remove(unitId))
             {
                 var isLastGroupMember = group.Count == 0;

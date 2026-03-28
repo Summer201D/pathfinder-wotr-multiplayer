@@ -46,5 +46,7 @@ namespace WOTRMultiplayer.Entities.Combat
         public HashSet<NetworkAreaEffect> TriggeredAreaEffects { get; set; } = [];
 
         public DateTime StartedAt { get; set; }
+
+        public HashSet<string> RemotelyKilledUnits { get; set; } = [];
     }
 }
