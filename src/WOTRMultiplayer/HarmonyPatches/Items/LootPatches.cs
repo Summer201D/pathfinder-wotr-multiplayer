@@ -12,12 +12,14 @@ using Kingmaker.PubSubSystem;
 using Kingmaker.UI.MVVM._PCView.Loot;
 using Kingmaker.UI.MVVM._VM.Loot;
 using Kingmaker.UI.MVVM._VM.Slots;
+using Kingmaker.View;
 using Kingmaker.View.MapObjects;
 using Microsoft.Extensions.Logging;
 using Owlcat.Runtime.UI.MVVM;
 using WOTRMultiplayer.Entities.Equipment;
 using WOTRMultiplayer.Entities.Items;
 using WOTRMultiplayer.Extensions;
+using WOTRMultiplayer.HarmonyPatches.MapObjects;
 
 namespace WOTRMultiplayer.HarmonyPatches.Items
 {
@@ -112,15 +114,27 @@ namespace WOTRMultiplayer.HarmonyPatches.Items
 
         [HarmonyPatch(typeof(LootContextVM), nameof(LootContextVM.HandleLootInterraction))]
         [HarmonyPrefix]
-        public static bool LootContextVM_HandleLootInterraction_Prefix(UnitEntityData unit, LootContainerType containerType)
+        public static bool LootContextVM_HandleLootInterraction_Prefix(EntityViewBase[] objects, UnitEntityData unit, LootContainerType containerType)
         {
             if (!Main.Multiplayer.IsActive)
             {
                 return true;
             }
 
-            var showLootingWindow = containerType == LootContainerType.PlayerChest || containerType == LootContainerType.OneSlot || Main.Multiplayer.IsControlledByLocalPlayer(unit.UniqueId);
-            return showLootingWindow;
+            if (containerType == LootContainerType.PlayerChest)
+            {
+                return true;
+            }
+
+            var isLocalPlayer = Main.Multiplayer.IsControlledByLocalPlayer(unit.UniqueId);
+            if (containerType == LootContainerType.OneSlot)
+            {
+                var result = isLocalPlayer || OvertipsViewCombinePartBasePatches.IsCombinePartInsertItemInteraction.Value;
+                OvertipsViewCombinePartBasePatches.IsCombinePartInsertItemInteraction.Value = false;
+                return result;
+            }
+
+            return isLocalPlayer;
         }
 
         [HarmonyPatch(typeof(LootObjectVM), nameof(LootObjectVM.UseSkinning))]

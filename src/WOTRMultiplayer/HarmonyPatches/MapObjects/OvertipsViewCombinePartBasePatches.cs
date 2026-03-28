@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Reflection;
 using System.Reflection.Emit;
+using System.Threading;
 using HarmonyLib;
 using Kingmaker.EntitySystem.Entities;
 using Kingmaker.UI._ConsoleUI.Overtips;
@@ -15,6 +16,8 @@ namespace WOTRMultiplayer.HarmonyPatches.MapObjects
     [HarmonyPatch]
     public class OvertipsViewCombinePartBasePatches
     {
+        public static AsyncLocal<bool> IsCombinePartInsertItemInteraction { get; } = new();
+
         [HarmonyPatch(typeof(OvertipsViewCombinePartBase<OvertipsViewCombinePartEntity>), nameof(OvertipsViewCombinePartBase<OvertipsViewCombinePartEntity>.Show))]
         [HarmonyTranspiler]
         public static IEnumerable<CodeInstruction> OvertipsViewCombinePartBase_BindViewImplementation_Transpiler(IEnumerable<CodeInstruction> instructions)
@@ -49,8 +52,14 @@ namespace WOTRMultiplayer.HarmonyPatches.MapObjects
         {
             // index 0 is always insert 'item' (as of now)
             // will see if this needs more specific treatment
-            if (!Main.Multiplayer.IsActive || partIndex == 0)
+            if (!Main.Multiplayer.IsActive)
             {
+                return;
+            }
+
+            if (partIndex == 0)
+            {
+                overtipsViewCombinePartBase.m_Disposables.Add(entity.Button.OnLeftClickAsObservable().Subscribe(_ => IsCombinePartInsertItemInteraction.Value = true));
                 return;
             }
 
