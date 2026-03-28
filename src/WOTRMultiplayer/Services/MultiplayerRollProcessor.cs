@@ -69,7 +69,7 @@ namespace WOTRMultiplayer.Services
         {
             try
             {
-                if (!IsRolledDeterministically(ruleCalculateDamage) || diceFormula.Rolls == 0 && diceFormula.Dice == DiceType.Zero)
+                if (!IsMeaningfulRoll(ruleCalculateDamage) || diceFormula.Rolls == 0 && diceFormula.Dice == DiceType.Zero)
                 {
                     return null;
                 }
@@ -88,7 +88,7 @@ namespace WOTRMultiplayer.Services
         {
             try
             {
-                if (!IsRolledDeterministically(ruleHealDamage) || diceFormula.Rolls == 0 && diceFormula.Dice == DiceType.Zero)
+                if (!IsMeaningfulRoll(ruleHealDamage) || diceFormula.Rolls == 0 && diceFormula.Dice == DiceType.Zero)
                 {
                     return true;
                 }
@@ -108,7 +108,7 @@ namespace WOTRMultiplayer.Services
         {
             try
             {
-                if (!IsRolledDeterministically(ruleAttackRoll))
+                if (!IsMeaningfulRoll(ruleAttackRoll))
                 {
                     return true;
                 }
@@ -133,7 +133,7 @@ namespace WOTRMultiplayer.Services
         {
             try
             {
-                if (!IsRolledDeterministically(ruleAttackRoll))
+                if (!IsMeaningfulRoll(ruleAttackRoll))
                 {
                     return true;
                 }
@@ -158,7 +158,7 @@ namespace WOTRMultiplayer.Services
         {
             try
             {
-                if (!IsRolledDeterministically(ruleAttackRoll))
+                if (!IsMeaningfulRoll(ruleAttackRoll))
                 {
                     return true;
                 }
@@ -194,7 +194,7 @@ namespace WOTRMultiplayer.Services
         {
             try
             {
-                if (!IsRolledDeterministically(ruleSavingThrow))
+                if (!IsMeaningfulRoll(ruleSavingThrow))
                 {
                     return true;
                 }
@@ -219,7 +219,7 @@ namespace WOTRMultiplayer.Services
         {
             try
             {
-                if (!IsRolledDeterministically(ruleSpellResistanceCheck))
+                if (!IsMeaningfulRoll(ruleSpellResistanceCheck))
                 {
                     return true;
                 }
@@ -244,7 +244,7 @@ namespace WOTRMultiplayer.Services
         {
             try
             {
-                if (!IsRolledDeterministically(ruleCheckConcentration))
+                if (!IsMeaningfulRoll(ruleCheckConcentration))
                 {
                     return true;
                 }
@@ -265,7 +265,7 @@ namespace WOTRMultiplayer.Services
         {
             try
             {
-                if (!IsRolledDeterministically(ruleSkillCheck))
+                if (!IsMeaningfulRoll(ruleSkillCheck))
                 {
                     return true;
                 }
@@ -290,8 +290,7 @@ namespace WOTRMultiplayer.Services
         {
             try
             {
-                var isRolledDeterministically = IsRolledDeterministically(ruleInitiativeRoll);
-                if (!IsRolledDeterministically(ruleInitiativeRoll))
+                if (!IsMeaningfulRoll(ruleInitiativeRoll))
                 {
                     return true;
                 }
@@ -316,7 +315,7 @@ namespace WOTRMultiplayer.Services
         {
             try
             {
-                if (!IsRolledDeterministically(ruleConcealmentCheck))
+                if (!IsMeaningfulRoll(ruleConcealmentCheck))
                 {
                     return true;
                 }
@@ -341,7 +340,7 @@ namespace WOTRMultiplayer.Services
         {
             try
             {
-                if (!IsRolledDeterministically(parryData))
+                if (!IsMeaningfulRoll(parryData))
                 {
                     return true;
                 }
@@ -366,7 +365,7 @@ namespace WOTRMultiplayer.Services
         {
             try
             {
-                if (!IsRolledDeterministically(ruleDispelMagic))
+                if (!IsMeaningfulRoll(ruleDispelMagic))
                 {
                     return true;
                 }
@@ -391,7 +390,7 @@ namespace WOTRMultiplayer.Services
         {
             try
             {
-                if (!IsRolledDeterministically(ruleEnterStealth) || ruleEnterStealth.D20.ResultOverride == 20)
+                if (!IsMeaningfulRoll(ruleEnterStealth) || ruleEnterStealth.D20.ResultOverride == 20)
                 {
                     return true;
                 }
@@ -417,7 +416,7 @@ namespace WOTRMultiplayer.Services
         {
             try
             {
-                if (!IsRolledDeterministically(ruleRollChance))
+                if (!IsMeaningfulRoll(ruleRollChance))
                 {
                     return;
                 }
@@ -441,7 +440,7 @@ namespace WOTRMultiplayer.Services
         {
             try
             {
-                if (!IsRolledDeterministically(ruleDrainEnergy) || ruleRollDice.DiceFormula.Rolls == 0 && ruleRollDice.DiceFormula.Dice == DiceType.Zero)
+                if (!IsMeaningfulRoll(ruleDrainEnergy) || ruleRollDice.DiceFormula.Rolls == 0 && ruleRollDice.DiceFormula.Dice == DiceType.Zero)
                 {
                     return true;
                 }
@@ -468,7 +467,7 @@ namespace WOTRMultiplayer.Services
         {
             try
             {
-                if (!IsRolledDeterministically(ruleCombatManeuver))
+                if (!IsMeaningfulRoll(ruleCombatManeuver))
                 {
                     return true;
                 }
@@ -493,7 +492,7 @@ namespace WOTRMultiplayer.Services
         {
             try
             {
-                if (!IsRolledDeterministically(ruleDealStatDamage))
+                if (!IsMeaningfulRoll(ruleDealStatDamage))
                 {
                     return null;
                 }
@@ -518,7 +517,7 @@ namespace WOTRMultiplayer.Services
         {
             try
             {
-                if (!IsRolledDeterministically(ruleCastSpell))
+                if (!IsMeaningfulRoll(ruleCastSpell))
                 {
                     return true;
                 }
@@ -552,7 +551,7 @@ namespace WOTRMultiplayer.Services
         {
             try
             {
-                if (!IsRolledDeterministically(ruleCheckCastingDefensively))
+                if (!IsMeaningfulRoll(ruleCheckCastingDefensively))
                 {
                     return true;
                 }
@@ -571,12 +570,6 @@ namespace WOTRMultiplayer.Services
                 _logger.LogError(ex, "Unable to handle {MethodName}", MethodBase.GetCurrentMethod().Name);
                 throw;
             }
-        }
-
-        private bool IsRolledDeterministically(object rule)
-        {
-            var isMeaningful = IsMeaningfulRoll(rule);
-            return isMeaningful;
         }
 
         private bool IsMeaningfulRoll(object rule)
