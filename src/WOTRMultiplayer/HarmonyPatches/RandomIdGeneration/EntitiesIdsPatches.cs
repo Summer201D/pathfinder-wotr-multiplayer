@@ -8,6 +8,7 @@ using Kingmaker.Blueprints;
 using Kingmaker.Blueprints.Classes.Spells;
 using Kingmaker.Blueprints.Items;
 using Kingmaker.Controllers;
+using Kingmaker.Designers.EventConditionActionSystem.Actions;
 using Kingmaker.EntitySystem;
 using Kingmaker.EntitySystem.Entities;
 using Kingmaker.Items;
@@ -30,13 +31,39 @@ namespace WOTRMultiplayer.HarmonyPatches.RandomIdGeneration
     {
         private readonly static MethodInfo _getNewIdLookupMethod = AccessTools.Method(typeof(Player), nameof(Player.GetNewUniqueId));
 
+        [HarmonyPatch(typeof(SummonUnitCopy), nameof(SummonUnitCopy.CreateCopy))]
+        [HarmonyTranspiler]
+        public static IEnumerable<CodeInstruction> SummonUnitCopy_CreateCopy_Transpiler(IEnumerable<CodeInstruction> instructions)
+        {
+            var target = PatchesUtils.GetTranspilerTarget(MethodBase.GetCurrentMethod());
+            var lookFor = AccessTools.Method(typeof(Guid), nameof(Guid.NewGuid));
+            var replaceWith = AccessTools.Method(typeof(EntitiesIdsPatches), nameof(EntitiesIdsPatches.GetUnitCopyEntityId));
+            var matcher = new CodeMatcher(instructions);
+            var match = matcher.SearchForward(x => x.Calls(lookFor));
+            if (match.IsInvalid)
+            {
+                Main.GetLogger<EntitiesIdsPatches>().LogError("Unable to find Guid.NewGuid() call. Target={Target}", target);
+                return matcher.Instructions();
+            }
+
+            var newInstructions = new List<CodeInstruction>
+            {
+                new(OpCodes.Ldarg_1),
+                new(OpCodes.Call, replaceWith),
+            };
+            match = match.RemoveInstructions(5).Insert(newInstructions);
+
+            Main.GetLogger<EntitiesIdsPatches>().LogDebug("Transpiler has been applied. Target={Target}", target);
+            return matcher.Instructions();
+        }
+
         [HarmonyPatch(typeof(Player), nameof(Player.CreateCustomCompanion))]
         [HarmonyTranspiler]
         public static IEnumerable<CodeInstruction> Player_CreateCustomCompanion_Transpiler(IEnumerable<CodeInstruction> instructions)
         {
             var target = PatchesUtils.GetTranspilerTarget(MethodBase.GetCurrentMethod());
             var lookFor = AccessTools.Method(typeof(Game), nameof(Game.CreateUnitVacuum));
-            var replaceWith = AccessTools.Method(typeof(EntitiesIdsPatches), nameof(EntitiesIdsPatches.CreateCompanionUnit));
+            var replaceWith = AccessTools.Method(typeof(EntitiesIdsPatches), nameof(EntitiesIdsPatches.CreateUnitVacuum));
             var matcher = new CodeMatcher(instructions);
             var match = matcher.SearchForward(x => x.Calls(lookFor));
             if (match.IsInvalid)
@@ -317,7 +344,34 @@ namespace WOTRMultiplayer.HarmonyPatches.RandomIdGeneration
             return matcher.Instructions();
         }
 
-        private static UnitEntityData CreateCompanionUnit(BlueprintUnit blueprintUnit)
+        /// <summary>
+        /// Act5 - Greybor - assasin quest
+        /// not sure whether it's used elsewhere
+        /// </summary>
+        /// <param name="blueprintUnit"></param>
+        /// <returns></returns>
+        private static string GetUnitCopyEntityId(BlueprintUnit blueprintUnit)
+        {
+            if (!Main.Multiplayer.IsActive)
+            {
+                return Guid.NewGuid().ToString();
+            }
+
+            try
+            {
+                var seededContext = Main.Multiplayer.GetSeededContext();
+                var identifier = $"{CommonTranspilerReplacements.GetSharedIdentifierPart()}:{nameof(SummonUnitCopy)}:{blueprintUnit.name}:{blueprintUnit.AssetGuid}_{seededContext.Id}";
+                var id = Main.Multiplayer.ValueGenerator.CreateGuid(seededContext.Lifetime, identifier);
+                return id.ToString();
+            }
+            catch (Exception ex)
+            {
+                Main.GetLogger<EntitiesIdsPatches>().LogError(ex, "Error while generating unit copy id");
+                throw;
+            }
+        }
+
+        private static UnitEntityData CreateUnitVacuum(BlueprintUnit blueprintUnit)
         {
             if (!Main.Multiplayer.IsActive)
             {
