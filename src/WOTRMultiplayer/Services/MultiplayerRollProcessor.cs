@@ -22,7 +22,6 @@ namespace WOTRMultiplayer.Services
         private readonly ILogger<MultiplayerRollProcessor> _logger;
         private readonly IGameInteractionService _gameInteractionService;
         private readonly ICombatInteractionService _combatInteractionService;
-        private readonly IPlayerNotificationService _playerNotificationService;
         private readonly IHashService _hashService;
         private readonly IMultiplayerActorAccessor _multiplayerActorAccessor;
         private readonly IValueGenerator _valueGenerator;
@@ -61,7 +60,6 @@ namespace WOTRMultiplayer.Services
             _logger = logger;
             _gameInteractionService = gameInteractionService;
             _combatInteractionService = combatInteractionService;
-            _playerNotificationService = playerNotificationService;
             _hashService = hashService;
             _multiplayerActorAccessor = multiplayerActorAccessor;
             _valueGenerator = valueGenerator;
@@ -110,7 +108,7 @@ namespace WOTRMultiplayer.Services
         {
             try
             {
-                if (!IsRolledDeterministically(RuleAttackRollSubType.Concealment))
+                if (!IsRolledDeterministically(ruleAttackRoll))
                 {
                     return true;
                 }
@@ -135,7 +133,7 @@ namespace WOTRMultiplayer.Services
         {
             try
             {
-                if (!IsRolledDeterministically(RuleAttackRollSubType.Fortification))
+                if (!IsRolledDeterministically(ruleAttackRoll))
                 {
                     return true;
                 }
@@ -160,13 +158,13 @@ namespace WOTRMultiplayer.Services
         {
             try
             {
+                if (!IsRolledDeterministically(ruleAttackRoll))
+                {
+                    return true;
+                }
+
                 if (ruleAttackRoll.IsCriticalRoll)
                 {
-                    if (!IsRolledDeterministically(RuleAttackRollSubType.Critical))
-                    {
-                        return true;
-                    }
-
                     var criticalD20 = RollCriticalAttackRoll(ruleAttackRoll);
                     if (criticalD20 == null)
                     {
@@ -176,17 +174,12 @@ namespace WOTRMultiplayer.Services
                     return false;
                 }
 
-                var isRolledDeterministically = IsRolledDeterministically(RuleAttackRollSubType.None);
-                if (!isRolledDeterministically)
-                {
-                    return true;
-                }
-
                 var d20 = RollAttackRoll(ruleAttackRoll);
                 if (d20 == null)
                 {
                     return true;
                 }
+
                 ruleAttackRoll.D20 = d20;
                 return false;
             }
@@ -583,30 +576,7 @@ namespace WOTRMultiplayer.Services
         private bool IsRolledDeterministically(object rule)
         {
             var isMeaningful = IsMeaningfulRoll(rule);
-            var isEnabledForRule = rule switch
-            {
-                RuleAttackRoll => false,
-                _ => true,
-            };
-
-            var isRolled = isMeaningful && isEnabledForRule;
-            return isRolled;
-        }
-
-        private bool IsRolledDeterministically(RuleAttackRollSubType subType)
-        {
-            var isRolled = subType switch
-            {
-                RuleAttackRollSubType.Concealment => true,
-                RuleAttackRollSubType.Fortification => true,
-                RuleAttackRollSubType.Critical => true,
-
-                // default attack roll
-                RuleAttackRollSubType.None => true,
-                _ => false,
-            };
-
-            return isRolled;
+            return isMeaningful;
         }
 
         private bool IsMeaningfulRoll(object rule)
@@ -1078,6 +1048,7 @@ namespace WOTRMultiplayer.Services
             {
                 return null;
             }
+
             var deterministicRoll = RollDice(attackRoll, formula.Formula, formula.Rerolls);
 
             var d20 = RuleRollD20.FromInt(ruleAttackRoll.Initiator, deterministicRoll.Result);
@@ -1314,14 +1285,6 @@ namespace WOTRMultiplayer.Services
             }
 
             return (history, result);
-        }
-
-        private enum RuleAttackRollSubType
-        {
-            None,
-            Critical,
-            Concealment,
-            Fortification
         }
     }
 }

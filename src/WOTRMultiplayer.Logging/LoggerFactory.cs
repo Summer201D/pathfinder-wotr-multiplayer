@@ -1,9 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using Serilog;
+﻿using Serilog;
 using Serilog.Events;
 using WOTRMultiplayer.Logging.Enrichers;
-using WOTRMultiplayer.Logging.Object;
 using WOTRMultiplayer.Logging.Sinks;
 
 namespace WOTRMultiplayer.Logging

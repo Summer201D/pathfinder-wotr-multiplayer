@@ -12,7 +12,6 @@ using Kingmaker.PubSubSystem;
 using Kingmaker.UI.MVVM._PCView.Loot;
 using Kingmaker.UI.MVVM._VM.Loot;
 using Kingmaker.UI.MVVM._VM.Slots;
-using Kingmaker.View;
 using Kingmaker.View.MapObjects;
 using Microsoft.Extensions.Logging;
 using Owlcat.Runtime.UI.MVVM;
@@ -114,7 +113,7 @@ namespace WOTRMultiplayer.HarmonyPatches.Items
 
         [HarmonyPatch(typeof(LootContextVM), nameof(LootContextVM.HandleLootInterraction))]
         [HarmonyPrefix]
-        public static bool LootContextVM_HandleLootInterraction_Prefix(EntityViewBase[] objects, UnitEntityData unit, LootContainerType containerType)
+        public static bool LootContextVM_HandleLootInterraction_Prefix(UnitEntityData unit, LootContainerType containerType)
         {
             if (!Main.Multiplayer.IsActive)
             {

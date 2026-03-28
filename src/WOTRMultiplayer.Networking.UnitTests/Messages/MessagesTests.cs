@@ -22,7 +22,7 @@ namespace WOTRMultiplayer.Networking.UnitTests.Messages
                 .ToList();
 
             // Act
-            var duplicateIds = allMessages.GroupBy(x => (int)x.MessageType.Id).Where(x => x.Count() > 1).ToList();
+            var duplicateIds = allMessages.GroupBy(x => x.MessageType.Id).Where(x => x.Count() > 1).ToList();
 
             // Assert
             Assert.That(duplicateIds.Count, Is.EqualTo(0), "Duplicate Ids: " + string.Join(", ", duplicateIds.Select(x => $"{x.Key} ({string.Join(",", x.Select(a => a.Type.Name).ToList())})")));
@@ -43,7 +43,7 @@ namespace WOTRMultiplayer.Networking.UnitTests.Messages
                 .ToList();
 
             // Act
-            var restrictedIdsCount = allMessages.Count(x => (int)x.MessageType.Id == delimiter);
+            var restrictedIdsCount = allMessages.Count(x => x.MessageType.Id == delimiter);
 
             // Assert
             Assert.That(restrictedIdsCount, Is.EqualTo(0));
@@ -61,7 +61,7 @@ namespace WOTRMultiplayer.Networking.UnitTests.Messages
                 .GetTypes()
                 .Where(t => t.GetCustomAttribute<MessageTypeAttribute>() != null)
                 .Select(t => new { Type = t, MessageType = t.GetCustomAttribute<MessageTypeAttribute>() })
-                .Select(x => (int)x.MessageType.Id)
+                .Select(x => x.MessageType.Id)
                 .ToList();
 
             // element 1 is None
