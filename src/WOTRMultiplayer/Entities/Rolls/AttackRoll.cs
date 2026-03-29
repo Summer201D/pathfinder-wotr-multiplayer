@@ -12,6 +12,10 @@ namespace WOTRMultiplayer.Entities.Rolls
 
         public bool IsCriticalRoll { get; set; }
 
+        public int FortificationChance { get; set; }
+
+        public int MissChance { get; set; }
+
         public AttackRoll(string initiatorId, string ruleName, NetworkDiceRollType networkDiceRollType, int totalModifierBonus)
             : base(initiatorId, ruleName, networkDiceRollType, totalModifierBonus)
         {
@@ -26,7 +30,7 @@ namespace WOTRMultiplayer.Entities.Rolls
         {
             var attackWithWeaponIdentifier = AttackWithWeapon == null ? null : string.Join(IdSeparator, AttackWithWeapon.GetIdentifier());
 
-            return ["@", AttackType, TargetId, IsCriticalRoll.ToString(), "@", attackWithWeaponIdentifier];
+            return ["@", AttackType, TargetId, IsCriticalRoll.ToString(), FortificationChance.ToString(), MissChance.ToString(), "@", attackWithWeaponIdentifier];
         }
     }
 }

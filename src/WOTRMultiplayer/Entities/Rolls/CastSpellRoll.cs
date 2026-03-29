@@ -10,6 +10,8 @@ namespace WOTRMultiplayer.Entities.Rolls
 
         public bool IsSpellFailure { get; set; }
 
+        public string UseMagicDeviceType { get; set; }
+
         public CastSpellRoll(string initiatorId, string ruleName, NetworkDiceRollType networkDiceRollType, int totalModifierBonus)
             : base(initiatorId, ruleName, networkDiceRollType, totalModifierBonus)
         {
@@ -17,7 +19,7 @@ namespace WOTRMultiplayer.Entities.Rolls
 
         protected override IEnumerable<string> GetRollIdentifier()
         {
-            return [ArcaneSpellFailureChance.ToString(), SpellFailureChance.ToString(), IsSpellFailure.ToString()];
+            return [ArcaneSpellFailureChance.ToString(), SpellFailureChance.ToString(), IsSpellFailure.ToString(), UseMagicDeviceType];
         }
     }
 }

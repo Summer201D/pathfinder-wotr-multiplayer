@@ -9,7 +9,6 @@ using Kingmaker.RandomEncounters;
 using Kingmaker.RandomEncounters.Settings;
 using Kingmaker.Utility;
 using Microsoft.Extensions.Logging;
-using WOTRMultiplayer.HarmonyPatches.Rolls;
 
 namespace WOTRMultiplayer.HarmonyPatches.Rest
 {
@@ -407,7 +406,7 @@ namespace WOTRMultiplayer.HarmonyPatches.Rest
             const int ExpectedReplacementCounter = 2;
             if (replacementCounter != ExpectedReplacementCounter)
             {
-                Main.GetLogger<RuleAttackRollPatches>().LogError("Instructions have not been replaced expected number of times. Target={Target}, Expected={expected}, Current={current}", target, ExpectedReplacementCounter, replacementCounter);
+                Main.GetLogger<RestRandomEncounterContextPatches>().LogError("Instructions have not been replaced expected number of times. Target={Target}, Expected={expected}, Current={current}", target, ExpectedReplacementCounter, replacementCounter);
                 return false;
             }
             return true;

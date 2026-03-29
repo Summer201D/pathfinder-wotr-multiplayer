@@ -13,7 +13,6 @@ using WOTRMultiplayer.Abstractions.Hashing;
 using WOTRMultiplayer.Abstractions.Random;
 using WOTRMultiplayer.Entities.Rolls;
 using WOTRMultiplayer.Extensions;
-using WOTRMultiplayer.Services.Random;
 
 namespace WOTRMultiplayer.Services
 {
@@ -26,33 +25,13 @@ namespace WOTRMultiplayer.Services
         private readonly IMultiplayerActorAccessor _multiplayerActorAccessor;
         private readonly IValueGenerator _valueGenerator;
         private readonly HashSet<string> _importantCutsceneAreas = new([
-            "EstrodTower" // - using columns to damage enemies
+            "EstrodTower", // - using columns to damage enemies
             ], StringComparer.OrdinalIgnoreCase);
-        private readonly Dictionary<WellKnownDiceFormulaKind, WellKnownDiceFormula> _wellKnownDiceFormulas = new()
-        {
-            { WellKnownDiceFormulaKind.RuleCheckCastingDefensively, new WellKnownDiceFormula(new DiceFormula(1, DiceType.D20), 0) },
-            { WellKnownDiceFormulaKind.RuleInitiativeRoll, new WellKnownDiceFormula(new DiceFormula(1, DiceType.D20),  0) },
-            { WellKnownDiceFormulaKind.RuleSpellResistanceCheck, new WellKnownDiceFormula(new DiceFormula(1, DiceType.D20),  0) },
-            { WellKnownDiceFormulaKind.RuleAttackRoll, new WellKnownDiceFormula(new DiceFormula(1, DiceType.D20), 0) },
-            { WellKnownDiceFormulaKind.RuleCheckConcentration, new WellKnownDiceFormula(new DiceFormula(1, DiceType.D20), 0) },
-            { WellKnownDiceFormulaKind.RuleSkillCheck, new WellKnownDiceFormula(new DiceFormula(1, DiceType.D20), 0) },
-            { WellKnownDiceFormulaKind.RuleDispelMagic, new WellKnownDiceFormula(new DiceFormula(1, DiceType.D20), 0) },
-            { WellKnownDiceFormulaKind.CombatManeuver, new WellKnownDiceFormula(new DiceFormula(1, DiceType.D20), 0) },
-
-            { WellKnownDiceFormulaKind.SpellFailureRoll, new WellKnownDiceFormula(new DiceFormula(1, DiceType.D100), 0) },
-            { WellKnownDiceFormulaKind.ArcaneSpellFailureRoll, new WellKnownDiceFormula(new DiceFormula(1, DiceType.D100), 0) },
-
-            { WellKnownDiceFormulaKind.AttackParryData, new WellKnownDiceFormula(new DiceFormula(1, DiceType.D20), 0) },
-
-            { WellKnownDiceFormulaKind.CriticalAttackRoll, new WellKnownDiceFormula(new DiceFormula(1, DiceType.D20), 0) },
-            { WellKnownDiceFormulaKind.FortificationAttackRoll, new WellKnownDiceFormula(new DiceFormula(1, DiceType.D100), 0) },
-        };
 
         public MultiplayerRollProcessor(
             ILogger<MultiplayerRollProcessor> logger,
             IGameInteractionService gameInteractionService,
             ICombatInteractionService combatInteractionService,
-            IPlayerNotificationService playerNotificationService,
             IHashService hashService,
             IMultiplayerActorAccessor multiplayerActorAccessor,
             IValueGenerator valueGenerator)
@@ -104,390 +83,6 @@ namespace WOTRMultiplayer.Services
             }
         }
 
-        public bool OnBeforeRuleAttackOvercomeConcealmentRoll(RuleAttackRoll ruleAttackRoll)
-        {
-            try
-            {
-                if (!IsMeaningfulRoll(ruleAttackRoll))
-                {
-                    return true;
-                }
-
-                var d100 = RollAttackOvercomeConcealment(ruleAttackRoll);
-                if (d100 == null)
-                {
-                    return true;
-                }
-
-                ruleAttackRoll.MissChanceRoll = d100;
-                return false;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Unable to handle {MethodName}", MethodBase.GetCurrentMethod().Name);
-                throw;
-            }
-        }
-
-        public bool OnBeforeRuleAttackFortificationRoll(RuleAttackRoll ruleAttackRoll)
-        {
-            try
-            {
-                if (!IsMeaningfulRoll(ruleAttackRoll))
-                {
-                    return true;
-                }
-
-                var d100 = RollFortificationAttackRoll(ruleAttackRoll);
-                if (d100 == null)
-                {
-                    return true;
-                }
-
-                ruleAttackRoll.FortificationRoll = d100;
-                return false;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Unable to handle {MethodName}", MethodBase.GetCurrentMethod().Name);
-                throw;
-            }
-        }
-
-        public bool OnBeforeRuleAttackRoll(RuleAttackRoll ruleAttackRoll)
-        {
-            try
-            {
-                if (!IsMeaningfulRoll(ruleAttackRoll))
-                {
-                    return true;
-                }
-
-                if (ruleAttackRoll.IsCriticalRoll)
-                {
-                    var criticalD20 = RollCriticalAttackRoll(ruleAttackRoll);
-                    if (criticalD20 == null)
-                    {
-                        return true;
-                    }
-                    ruleAttackRoll.CriticalConfirmationD20 = criticalD20;
-                    return false;
-                }
-
-                var d20 = RollAttackRoll(ruleAttackRoll);
-                if (d20 == null)
-                {
-                    return true;
-                }
-
-                ruleAttackRoll.D20 = d20;
-                return false;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Unable to handle {MethodName}", MethodBase.GetCurrentMethod().Name);
-                throw;
-            }
-        }
-
-        public bool OnBeforeRuleSavingThrowRoll(RuleSavingThrow ruleSavingThrow)
-        {
-            try
-            {
-                if (!IsMeaningfulRoll(ruleSavingThrow))
-                {
-                    return true;
-                }
-
-                var d20 = RollSavingThrow(ruleSavingThrow);
-                if (d20 == null)
-                {
-                    return true;
-                }
-
-                ruleSavingThrow.D20 = d20;
-                return false;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Unable to handle {MethodName}", MethodBase.GetCurrentMethod().Name);
-                throw;
-            }
-        }
-
-        public bool OnBeforeRuleSpellResistanceCheckRoll(RuleSpellResistanceCheck ruleSpellResistanceCheck)
-        {
-            try
-            {
-                if (!IsMeaningfulRoll(ruleSpellResistanceCheck))
-                {
-                    return true;
-                }
-
-                var d20 = RollSpellResistance(ruleSpellResistanceCheck);
-                if (d20 == null)
-                {
-                    return true;
-                }
-
-                ruleSpellResistanceCheck.Roll = d20;
-                return false;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Unable to handle {MethodName}", MethodBase.GetCurrentMethod().Name);
-                throw;
-            }
-        }
-
-        public bool OnBeforeRuleCheckConcentrationRoll(RuleCheckConcentration ruleCheckConcentration)
-        {
-            try
-            {
-                if (!IsMeaningfulRoll(ruleCheckConcentration))
-                {
-                    return true;
-                }
-
-                var d20 = RollCheckConcentration(ruleCheckConcentration);
-
-                ruleCheckConcentration.ResultRollRaw = d20;
-                return false;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Unable to handle {MethodName}", MethodBase.GetCurrentMethod().Name);
-                throw;
-            }
-        }
-
-        public bool OnBeforeRuleSkillCheckRoll(RuleSkillCheck ruleSkillCheck)
-        {
-            try
-            {
-                if (!IsMeaningfulRoll(ruleSkillCheck))
-                {
-                    return true;
-                }
-
-                var d20 = RollSkillCheck(ruleSkillCheck);
-                if (d20 == null)
-                {
-                    return true;
-                }
-
-                ruleSkillCheck.D20 = d20;
-                return false;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Unable to handle {MethodName}. StackTrace={StackTrace}", MethodBase.GetCurrentMethod().Name, Environment.StackTrace);
-                throw;
-            }
-        }
-
-        public bool OnBeforeRuleInitiativeRoll(RuleInitiativeRoll ruleInitiativeRoll)
-        {
-            try
-            {
-                if (!IsMeaningfulRoll(ruleInitiativeRoll))
-                {
-                    return true;
-                }
-
-                var d20 = RollInitiative(ruleInitiativeRoll);
-                if (d20 == null)
-                {
-                    return true;
-                }
-
-                ruleInitiativeRoll.D20 = d20;
-                return false;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Unable to handle {MethodName}", MethodBase.GetCurrentMethod().Name);
-                throw;
-            }
-        }
-
-        public bool OnBeforeRuleConcealmentCheckTrigger(RuleConcealmentCheck ruleConcealmentCheck)
-        {
-            try
-            {
-                if (!IsMeaningfulRoll(ruleConcealmentCheck))
-                {
-                    return true;
-                }
-
-                var d100 = RollConcealmentCheck(ruleConcealmentCheck);
-                if (d100 == null)
-                {
-                    return true;
-                }
-
-                ruleConcealmentCheck.Roll.m_Result = d100;
-                return false;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Unable to handle {MethodName}", MethodBase.GetCurrentMethod().Name);
-                throw;
-            }
-        }
-
-        public bool OnBeforeParryDataTrigger(RuleAttackRoll.ParryData parryData)
-        {
-            try
-            {
-                if (!IsMeaningfulRoll(parryData))
-                {
-                    return true;
-                }
-
-                var d20 = RollAttackParryData(parryData);
-                if (d20 == null)
-                {
-                    return true;
-                }
-
-                parryData.Roll = d20;
-                return false;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Unable to handle {MethodName}", MethodBase.GetCurrentMethod().Name);
-                throw;
-            }
-        }
-
-        public bool OnBeforeRuleDispelMagicRoll(RuleDispelMagic ruleDispelMagic)
-        {
-            try
-            {
-                if (!IsMeaningfulRoll(ruleDispelMagic))
-                {
-                    return true;
-                }
-
-                var d20 = RollDispelMagic(ruleDispelMagic);
-                if (d20 == null)
-                {
-                    return true;
-                }
-
-                ruleDispelMagic.CheckRoll = d20;
-                return false;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Unable to handle {MethodName}", MethodBase.GetCurrentMethod().Name);
-                throw;
-            }
-        }
-
-        public bool OnBeforeRuleEnterStealthRoll(RuleEnterStealth ruleEnterStealth)
-        {
-            try
-            {
-                if (!IsMeaningfulRoll(ruleEnterStealth) || ruleEnterStealth.D20.ResultOverride == 20)
-                {
-                    return true;
-                }
-
-                var d20 = RollEnterStealth(ruleEnterStealth);
-                if (d20 == null)
-                {
-                    return true;
-                }
-
-                // need to preserve original D20.ResultOverride value (UnitStealthController.TickUnit)
-                ruleEnterStealth.D20.m_Result = d20;
-                return false;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Unable to handle {MethodName}", MethodBase.GetCurrentMethod().Name);
-                throw;
-            }
-        }
-
-        public void OnBeforeRuleRollChanceTrigger(RuleRollChance ruleRollChance)
-        {
-            try
-            {
-                if (!IsMeaningfulRoll(ruleRollChance))
-                {
-                    return;
-                }
-
-                var d100 = RollRuleChance(ruleRollChance);
-                if (d100 == null)
-                {
-                    return;
-                }
-
-                ruleRollChance.m_Result = d100;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Unable to handle {MethodName}", MethodBase.GetCurrentMethod().Name);
-                throw;
-            }
-        }
-
-        public bool OnBeforeRuleDrainEnergyRoll(RuleDrainEnergy ruleDrainEnergy, RuleRollDice ruleRollDice)
-        {
-            try
-            {
-                if (!IsMeaningfulRoll(ruleDrainEnergy) || ruleRollDice.DiceFormula.Rolls == 0 && ruleRollDice.DiceFormula.Dice == DiceType.Zero)
-                {
-                    return true;
-                }
-
-                var roll = CreateDrainEnergyRoll(NetworkDiceRollType.Damage, ruleDrainEnergy, ruleRollDice);
-                var d100 = RollDrainEnergy(ruleDrainEnergy, ruleRollDice);
-                if (d100 == null)
-                {
-                    return true;
-                }
-
-                ruleRollDice.RollHistory = d100.RollHistory;
-                ruleRollDice.m_Result = d100;
-                return false;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Unable to handle {MethodName}", MethodBase.GetCurrentMethod().Name);
-                throw;
-            }
-        }
-
-        public bool OnBeforeRuleCombatManeuverRoll(RuleCombatManeuver ruleCombatManeuver)
-        {
-            try
-            {
-                if (!IsMeaningfulRoll(ruleCombatManeuver))
-                {
-                    return true;
-                }
-
-                var d20 = RollCombatManeuver(ruleCombatManeuver);
-                if (d20 == null)
-                {
-                    return true;
-                }
-
-                ruleCombatManeuver.InitiatorRoll = d20;
-                return false;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Unable to handle {MethodName}", MethodBase.GetCurrentMethod().Name);
-                throw;
-            }
-        }
-
         public int? OnBeforeRuleDealStatDamageRoll(RuleDealStatDamage ruleDealStatDamage, DiceFormula damageFormula, int criticalModifier)
         {
             try
@@ -513,61 +108,59 @@ namespace WOTRMultiplayer.Services
             }
         }
 
-        public bool OnBeforeRuleCastSpellRoll(RuleCastSpell ruleCastSpell, bool isSpellFailure)
+        public int? OnRollDice(RuleRollDice ruleRollDice)
         {
             try
             {
-                if (!IsMeaningfulRoll(ruleCastSpell))
+                if (ruleRollDice.IsFake)
                 {
-                    return true;
+                    return null;
                 }
 
-                var d100 = isSpellFailure ? RollSpellFailureRoll(ruleCastSpell) : RollArcaneSpellFailureRoll(ruleCastSpell);
-
-                if (d100 == null)
+                if (ruleRollDice.DiceFormula.Dice == DiceType.Zero && ruleRollDice.DiceFormula.Rolls == 0)
                 {
-                    return true;
+                    return null;
                 }
 
-                if (isSpellFailure)
+                // current is always RuleRollDice instance
+                var previousEvent = Rulebook.CurrentContext?.PreviousEvent;
+                if (!IsMeaningfulRoll(previousEvent))
                 {
-                    ruleCastSpell.SpellFailureRoll = d100;
-                }
-                else
-                {
-                    ruleCastSpell.ArcaneSpellFailureRoll = d100;
+                    return null;
                 }
 
-                return false;
+                NetworkDiceRollBase diceRoll = previousEvent switch
+                {
+                    RuleAttackRoll parryRoll when parryRoll.Parry != null && parryRoll.IsHit => CreateParryRoll(NetworkDiceRollType.Hit, parryRoll.Parry),
+                    RuleAttackRoll attackRoll => CreateAttackRoll(attackRoll.IsCriticalRoll ? NetworkDiceRollType.Critical : NetworkDiceRollType.Hit, attackRoll, attackRoll.IsCriticalRoll),
+                    RuleSpellResistanceCheck ruleSpellResistanceCheck => CreateSpellResistanceCheckRoll(NetworkDiceRollType.Hit, ruleSpellResistanceCheck),
+                    RuleInitiativeRoll ruleInitiativeRoll => CreateInitiativeRoll(NetworkDiceRollType.Hit, ruleInitiativeRoll),
+                    RuleDispelMagic ruleDispelMagic => CreateDispelMagicRoll(NetworkDiceRollType.Hit, ruleDispelMagic),
+                    RuleCheckCastingDefensively ruleCheckCastingDefensively => CreateCastingDefensivelyRoll(NetworkDiceRollType.Hit, ruleCheckCastingDefensively),
+                    RuleSavingThrow ruleSavingThrow => CreateSavingThrowRoll(NetworkDiceRollType.Hit, ruleSavingThrow),
+                    RuleSkillCheck ruleSkillCheck => CreateSkillCheckRoll(NetworkDiceRollType.Hit, ruleSkillCheck),
+                    RuleCombatManeuver ruleCombatManeuver => CreateCombatManeuverRoll(NetworkDiceRollType.Hit, ruleCombatManeuver),
+                    RuleCastSpell ruleCastSpell => CreateCastSpellRoll(NetworkDiceRollType.Hit, ruleCastSpell, ruleCastSpell.SpellFailureChance > 0 && ruleCastSpell.ArcaneSpellFailureChance == 0),
+                    RuleEnterStealth ruleEnterStealth => CreateEnterStealthRoll(NetworkDiceRollType.Hit, ruleEnterStealth),
+                    RuleDrainEnergy ruleDrainEnergy => CreateDrainEnergyRoll(NetworkDiceRollType.Hit, ruleDrainEnergy, ruleRollDice),
+                    RuleConcealmentCheck ruleConcealmentCheck => CreateConcealmentRoll(NetworkDiceRollType.Hit, ruleConcealmentCheck),
+                    RuleCheckConcentration ruleCheckConcentration => CreateConcentrationRoll(NetworkDiceRollType.Hit, ruleCheckConcentration),
+                    RuleRollChance ruleRollChance => CreateChanceRoll(NetworkDiceRollType.Hit, ruleRollChance),
+                    _ => null
+                };
+
+                if (diceRoll == null)
+                {
+                    _logger.LogWarning("Roll event is not handled. Event={Event}", previousEvent?.GetType().Name);
+                    return null;
+                }
+
+                var value = RollDice(diceRoll, ruleRollDice.DiceFormula);
+                return value;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Unable to handle {MethodName}", MethodBase.GetCurrentMethod().Name);
-                throw;
-            }
-        }
-
-        public bool OnBeforeRuleCheckCastingDefensivelyRoll(RuleCheckCastingDefensively ruleCheckCastingDefensively)
-        {
-            try
-            {
-                if (!IsMeaningfulRoll(ruleCheckCastingDefensively))
-                {
-                    return true;
-                }
-
-                var d20 = RollCastingDefensively(ruleCheckCastingDefensively);
-                if (d20 == null)
-                {
-                    return true;
-                }
-
-                ruleCheckCastingDefensively.D20 = d20;
-                return false;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Unable to handle {MethodName}", MethodBase.GetCurrentMethod().Name);
+                _logger.LogError(ex, "Error while rolling dice");
                 throw;
             }
         }
@@ -593,7 +186,13 @@ namespace WOTRMultiplayer.Services
             {
                 // EstrodTower - using columns to damage enemies
                 var areaName = _multiplayerActorAccessor.Current.CurrentArea?.Name;
-                return rule is RuleCalculateDamage && _importantCutsceneAreas.Contains(areaName);
+                var isMeaningfulCutsceneRoll = rule switch
+                {
+                    RulebookTargetEvent rulebookTarget when rule is RuleSavingThrow or RuleSpellResistanceCheck => IsControlledCharacterTargeted(rulebookTarget),
+                    RuleCalculateDamage => _importantCutsceneAreas.Contains(areaName),
+                    _ => false
+                };
+                return isMeaningfulCutsceneRoll;
             }
 
             if (_combatInteractionService.IsInCrusadeTacticalCombat())
@@ -783,28 +382,6 @@ namespace WOTRMultiplayer.Services
             return roll;
         }
 
-        private AttackOvercomeConcealmentRoll CreateAttackOvercomeConcealmentRoll(NetworkDiceRollType diceRollType, RuleAttackRoll ruleAttackRoll)
-        {
-            var roll = new AttackOvercomeConcealmentRoll(ruleAttackRoll.Initiator.UniqueId, ruleAttackRoll.GetType().Name, diceRollType, ruleAttackRoll.AttackBonus)
-            {
-                MissChance = ruleAttackRoll.MissChanceValue,
-                AttackRoll = CreateAttackRoll(diceRollType, ruleAttackRoll, ruleAttackRoll.IsCriticalRoll)
-            };
-
-            return roll;
-        }
-
-        private FortificationAttackRoll CreateFortificationAttackRoll(NetworkDiceRollType diceRollType, RuleAttackRoll ruleAttackRoll)
-        {
-            var roll = new FortificationAttackRoll(ruleAttackRoll.Initiator.UniqueId, ruleAttackRoll.GetType().Name, diceRollType, ruleAttackRoll.AttackBonus)
-            {
-                FortificationChance = ruleAttackRoll.FortificationChance,
-                AttackRoll = CreateAttackRoll(diceRollType, ruleAttackRoll, ruleAttackRoll.IsCriticalRoll)
-            };
-
-            return roll;
-        }
-
         private AttackRoll CreateAttackRoll(NetworkDiceRollType diceRollType, RuleAttackRoll ruleAttackRoll, bool isCriticalRoll)
         {
             var roll = new AttackRoll(ruleAttackRoll.Initiator.UniqueId, ruleAttackRoll.GetType().Name, diceRollType, 0) // ruleAttackRoll.AttackBonus is not consistent due to flanking3
@@ -812,6 +389,8 @@ namespace WOTRMultiplayer.Services
                 AttackType = ruleAttackRoll.AttackType.ToString(),
                 TargetId = ruleAttackRoll.Target.UniqueId,
                 IsCriticalRoll = isCriticalRoll,
+                FortificationChance = ruleAttackRoll.FortificationChance,
+                MissChance = ruleAttackRoll.MissChanceValue,
                 AttackWithWeapon = ruleAttackRoll.RuleAttackWithWeapon == null ? null : CreateAttackWithWeaponRoll(diceRollType, ruleAttackRoll.RuleAttackWithWeapon)
             };
 
@@ -856,7 +435,8 @@ namespace WOTRMultiplayer.Services
             {
                 ArcaneSpellFailureChance = ruleCastSpell.ArcaneSpellFailureChance,
                 SpellFailureChance = ruleCastSpell.SpellFailureChance,
-                IsSpellFailure = isSpellFailure
+                IsSpellFailure = isSpellFailure,
+                UseMagicDeviceType = ruleCastSpell.UseMagicDeviceCheck?.UseMagicDeviceType?.ToString()
             };
 
             return roll;
@@ -932,21 +512,11 @@ namespace WOTRMultiplayer.Services
             return roll;
         }
 
-        private WellKnownDiceFormula GetDiceFormula(WellKnownDiceFormulaKind wellKnownDiceFormula)
-        {
-            if (!_wellKnownDiceFormulas.TryGetValue(wellKnownDiceFormula, out var formula))
-            {
-                _logger.LogError("Dice formula is missing. Kind={Kind}", wellKnownDiceFormula);
-            }
-
-            return formula;
-        }
-
         private int RollHealDamage(RuleHealDamage ruleHealDamage, bool isTacticalCombat, DiceFormula diceFormula)
         {
-            var healDamage = CreateHealDamageRoll(NetworkDiceRollType.Hit, ruleHealDamage, isTacticalCombat);
-            var deterministicRoll = RollDice(healDamage, diceFormula, 0);
-            return deterministicRoll.Result;
+            var healDamage = CreateHealDamageRoll(NetworkDiceRollType.Heal, ruleHealDamage, isTacticalCombat);
+            var deterministicRoll = RollDice(healDamage, diceFormula);
+            return deterministicRoll;
         }
 
         private int? RollDamage(RuleCalculateDamage ruleCalculateDamage, DiceFormula diceFormula)
@@ -957,285 +527,21 @@ namespace WOTRMultiplayer.Services
                 return null;
             }
 
-            var deterministicRoll = RollDice(dealDamage, diceFormula, 0);
-            return deterministicRoll.Result;
-        }
-
-        private RuleRollD20 RollInitiative(RuleInitiativeRoll ruleInitiativeRoll)
-        {
-            var initiative = CreateInitiativeRoll(NetworkDiceRollType.Hit, ruleInitiativeRoll);
-            var formula = GetDiceFormula(WellKnownDiceFormulaKind.RuleInitiativeRoll);
-            if (formula == null)
-            {
-                return null;
-            }
-
-            var deterministicRoll = RollDice(initiative, formula.Formula, formula.Rerolls);
-
-            var d20 = RuleRollD20.FromInt(ruleInitiativeRoll.Initiator, deterministicRoll.Result);
-            d20.RollHistory = deterministicRoll.History;
-            return d20;
-        }
-
-        private RuleRollD20 RollSpellResistance(RuleSpellResistanceCheck ruleSpellResistanceCheck)
-        {
-            var spellResistance = CreateSpellResistanceCheckRoll(NetworkDiceRollType.Hit, ruleSpellResistanceCheck);
-            var formula = GetDiceFormula(WellKnownDiceFormulaKind.RuleSpellResistanceCheck);
-            if (formula == null)
-            {
-                return null;
-            }
-
-            var deterministicRoll = RollDice(spellResistance, formula.Formula, formula.Rerolls);
-
-            var d20 = RuleRollD20.FromInt(ruleSpellResistanceCheck.Initiator, deterministicRoll.Result);
-            d20.RollHistory = deterministicRoll.History;
-            return d20;
-        }
-
-        private RuleRollD20 RollCastingDefensively(RuleCheckCastingDefensively ruleCheckCastingDefensively)
-        {
-            var castingDefensively = CreateCastingDefensivelyRoll(NetworkDiceRollType.Hit, ruleCheckCastingDefensively);
-            var formula = GetDiceFormula(WellKnownDiceFormulaKind.RuleCheckCastingDefensively);
-            if (formula == null)
-            {
-                return null;
-            }
-
-            var deterministicRoll = RollDice(castingDefensively, formula.Formula, formula.Rerolls);
-            var d20 = RuleRollD20.FromInt(ruleCheckCastingDefensively.Initiator, deterministicRoll.Result);
-            d20.RollHistory = deterministicRoll.History;
-            return d20;
-        }
-
-        private RuleRollD100 RollAttackOvercomeConcealment(RuleAttackRoll ruleAttackRoll)
-        {
-            var attackOvercomeConcealment = CreateAttackOvercomeConcealmentRoll(NetworkDiceRollType.Hit, ruleAttackRoll);
-            var deterministicRoll = RollDice(attackOvercomeConcealment, ruleAttackRoll.MissChanceRoll);
-
-            var d100 = RuleRollD100.FromInt(ruleAttackRoll.Initiator, deterministicRoll.Result);
-            d100.RollHistory = deterministicRoll.History;
-            return d100;
-        }
-
-        private RuleRollD100 RollFortificationAttackRoll(RuleAttackRoll ruleAttackRoll)
-        {
-            var fortificationAttackRoll = CreateFortificationAttackRoll(NetworkDiceRollType.Hit, ruleAttackRoll);
-            var formula = GetDiceFormula(WellKnownDiceFormulaKind.FortificationAttackRoll);
-            if (formula == null)
-            {
-                return null;
-            }
-            var deterministicRoll = RollDice(fortificationAttackRoll, formula.Formula, formula.Rerolls);
-
-            var d100 = RuleRollD100.FromInt(ruleAttackRoll.Initiator, deterministicRoll.Result);
-            d100.RollHistory = deterministicRoll.History;
-            return d100;
-        }
-
-        private RuleRollD20 RollAttackRoll(RuleAttackRoll ruleAttackRoll)
-        {
-            var attackRoll = CreateAttackRoll(NetworkDiceRollType.Hit, ruleAttackRoll, isCriticalRoll: false);
-            var formula = GetDiceFormula(WellKnownDiceFormulaKind.RuleAttackRoll);
-            if (formula == null)
-            {
-                return null;
-            }
-
-            var deterministicRoll = RollDice(attackRoll, formula.Formula, formula.Rerolls);
-
-            var d20 = RuleRollD20.FromInt(ruleAttackRoll.Initiator, deterministicRoll.Result);
-            d20.RollHistory = deterministicRoll.History;
-            return d20;
-        }
-
-        private RuleRollD20 RollCriticalAttackRoll(RuleAttackRoll ruleAttackRoll)
-        {
-            var criticalRoll = CreateAttackRoll(NetworkDiceRollType.Critical, ruleAttackRoll, isCriticalRoll: true);
-            var formula = GetDiceFormula(WellKnownDiceFormulaKind.CriticalAttackRoll);
-            if (formula == null)
-            {
-                return null;
-            }
-            var deterministicRoll = RollDice(criticalRoll, formula.Formula, formula.Rerolls);
-
-            var d20 = RuleRollD20.FromInt(ruleAttackRoll.Initiator, deterministicRoll.Result);
-            d20.RollHistory = deterministicRoll.History;
-            return d20;
-        }
-
-
-        private RuleRollD100 RollSpellFailureRoll(RuleCastSpell ruleCastSpell)
-        {
-            var spellFailureRoll = CreateCastSpellRoll(NetworkDiceRollType.Hit, ruleCastSpell, isSpellFailure: true);
-            var formula = GetDiceFormula(WellKnownDiceFormulaKind.SpellFailureRoll);
-            if (formula == null)
-            {
-                return null;
-            }
-            var deterministicRoll = RollDice(spellFailureRoll, formula.Formula, formula.Rerolls);
-
-            var d100 = RuleRollD100.FromInt(ruleCastSpell.Initiator, deterministicRoll.Result);
-            d100.RollHistory = deterministicRoll.History;
-            return d100;
-        }
-
-        private RuleRollD100 RollArcaneSpellFailureRoll(RuleCastSpell ruleCastSpell)
-        {
-            var spellFailureRoll = CreateCastSpellRoll(NetworkDiceRollType.Hit, ruleCastSpell, isSpellFailure: false);
-            var formula = GetDiceFormula(WellKnownDiceFormulaKind.ArcaneSpellFailureRoll);
-            if (formula == null)
-            {
-                return null;
-            }
-            var deterministicRoll = RollDice(spellFailureRoll, formula.Formula, formula.Rerolls);
-
-            var d100 = RuleRollD100.FromInt(ruleCastSpell.Initiator, deterministicRoll.Result);
-            d100.RollHistory = deterministicRoll.History;
-            return d100;
-        }
-
-        private RuleRollD20 RollSavingThrow(RuleSavingThrow ruleSavingThrow)
-        {
-            var savingThrow = CreateSavingThrowRoll(NetworkDiceRollType.Hit, ruleSavingThrow);
-            var deterministicRoll = RollDice(savingThrow, ruleSavingThrow.D20);
-
-            var d20 = RuleRollD20.FromInt(ruleSavingThrow.Initiator, deterministicRoll.Result);
-            d20.RollHistory = deterministicRoll.History;
-            return d20;
-        }
-
-        private RuleRollD20 RollSkillCheck(RuleSkillCheck ruleSkillCheck)
-        {
-            var skillCheck = CreateSkillCheckRoll(NetworkDiceRollType.Hit, ruleSkillCheck);
-            var formula = GetDiceFormula(WellKnownDiceFormulaKind.RuleSkillCheck);
-            if (formula == null)
-            {
-                return null;
-            }
-            var deterministicRoll = RollDice(skillCheck, formula.Formula, formula.Rerolls);
-
-            var d20 = RuleRollD20.FromInt(ruleSkillCheck.Initiator, deterministicRoll.Result);
-            d20.RollHistory = deterministicRoll.History;
-            return d20;
-        }
-
-        private RuleRollD20 RollDispelMagic(RuleDispelMagic ruleDispelMagic)
-        {
-            var dispelMagic = CreateDispelMagicRoll(NetworkDiceRollType.Hit, ruleDispelMagic);
-            var formula = GetDiceFormula(WellKnownDiceFormulaKind.RuleDispelMagic);
-            if (formula == null)
-            {
-                return null;
-            }
-            var deterministicRoll = RollDice(dispelMagic, formula.Formula, formula.Rerolls);
-
-            var d20 = RuleRollD20.FromInt(ruleDispelMagic.Initiator, deterministicRoll.Result);
-            d20.RollHistory = deterministicRoll.History;
-            return d20;
-        }
-
-        private RuleRollD20 RollEnterStealth(RuleEnterStealth ruleEnterStealth)
-        {
-            var enterStealth = CreateEnterStealthRoll(NetworkDiceRollType.Hit, ruleEnterStealth);
-            var deterministicRoll = RollDice(enterStealth, ruleEnterStealth.D20);
-
-            var d20 = RuleRollD20.FromInt(ruleEnterStealth.Initiator, deterministicRoll.Result);
-            d20.RollHistory = deterministicRoll.History;
-            return d20;
-        }
-
-        private RuleRollD20 RollCombatManeuver(RuleCombatManeuver ruleCombatManeuver)
-        {
-            var combatManeuver = CreateCombatManeuverRoll(NetworkDiceRollType.Hit, ruleCombatManeuver);
-            var formula = GetDiceFormula(WellKnownDiceFormulaKind.CombatManeuver);
-            if (formula == null)
-            {
-                return null;
-            }
-            var deterministicRoll = RollDice(combatManeuver, formula.Formula, formula.Rerolls);
-
-            var d20 = RuleRollD20.FromInt(ruleCombatManeuver.Initiator, deterministicRoll.Result);
-            d20.RollHistory = deterministicRoll.History;
-            return d20;
-        }
-
-        private RuleRollD100 RollConcealmentCheck(RuleConcealmentCheck ruleConcealmentCheck)
-        {
-            var concealment = CreateConcealmentRoll(NetworkDiceRollType.Hit, ruleConcealmentCheck);
-            var deterministicRoll = RollDice(concealment, ruleConcealmentCheck.Roll);
-
-            var d100 = RuleRollD100.FromInt(ruleConcealmentCheck.Initiator, deterministicRoll.Result);
-            d100.RollHistory = deterministicRoll.History;
-            return d100;
-        }
-
-        private RuleRollD100 RollRuleChance(RuleRollChance ruleRollChance)
-        {
-            var chance = CreateChanceRoll(NetworkDiceRollType.Hit, ruleRollChance);
-            var deterministicRoll = RollDice(chance, ruleRollChance.DiceFormula, ruleRollChance.m_RerollAmount);
-
-            var d100 = RuleRollD100.FromInt(ruleRollChance.Initiator, deterministicRoll.Result);
-            d100.RollHistory = deterministicRoll.History;
-            return d100;
-        }
-
-        private RuleRollD100 RollDrainEnergy(RuleDrainEnergy ruleDrainEnergy, RuleRollDice ruleRollDice)
-        {
-            var drainEnergy = CreateDrainEnergyRoll(NetworkDiceRollType.Damage, ruleDrainEnergy, ruleRollDice);
-            var deterministicRoll = RollDice(drainEnergy, ruleRollDice.DiceFormula, ruleRollDice.m_RerollAmount);
-
-            var d100 = RuleRollD100.FromInt(ruleDrainEnergy.Initiator, deterministicRoll.Result);
-            d100.RollHistory = deterministicRoll.History;
-            return d100;
+            var deterministicRoll = RollDice(dealDamage, diceFormula);
+            return deterministicRoll;
         }
 
         private RuleRollD100 RollDealStatDamage(RuleDealStatDamage ruleDealStatDamage, DiceFormula damageFormula, int criticalModifier)
         {
             var chance = CreateDealStatDamageRoll(NetworkDiceRollType.Damage, ruleDealStatDamage, criticalModifier);
-            var deterministicRoll = RollDice(chance, damageFormula, 0);
+            var deterministicRoll = RollDice(chance, damageFormula);
 
-            var d100 = RuleRollD100.FromInt(ruleDealStatDamage.Initiator, deterministicRoll.Result);
-            d100.RollHistory = deterministicRoll.History;
+            var d100 = RuleRollD100.FromInt(ruleDealStatDamage.Initiator, deterministicRoll);
+            d100.RollHistory = [deterministicRoll];
             return d100;
         }
 
-        private RuleRollD20 RollAttackParryData(RuleAttackRoll.ParryData parryData)
-        {
-            var concentration = CreateParryRoll(NetworkDiceRollType.Hit, parryData);
-            var formula = GetDiceFormula(WellKnownDiceFormulaKind.AttackParryData);
-            if (formula == null)
-            {
-                return null;
-            }
-            var deterministicRoll = RollDice(concentration, formula.Formula, formula.Rerolls);
-
-            var d20 = RuleRollD20.FromInt(parryData.Initiator, deterministicRoll.Result);
-            d20.RollHistory = deterministicRoll.History;
-            return d20;
-        }
-
-        private RuleRollD20 RollCheckConcentration(RuleCheckConcentration ruleCheckConcentration)
-        {
-            var concentration = CreateConcentrationRoll(NetworkDiceRollType.Hit, ruleCheckConcentration);
-            var formula = GetDiceFormula(WellKnownDiceFormulaKind.RuleCheckConcentration);
-            if (formula == null)
-            {
-                return null;
-            }
-            var deterministicRoll = RollDice(concentration, formula.Formula, formula.Rerolls);
-
-            var d20 = RuleRollD20.FromInt(ruleCheckConcentration.Initiator, deterministicRoll.Result);
-            d20.RollHistory = deterministicRoll.History;
-            return d20;
-        }
-
-        private DeterministicRollOutcome RollDice(NetworkDiceRollBase roll, RuleRollDice ruleRollDice)
-        {
-            return RollDice(roll, ruleRollDice.DiceFormula, ruleRollDice.m_RerollAmount);
-        }
-
-        private DeterministicRollOutcome RollDice(NetworkDiceRollBase roll, DiceFormula diceFormula, int rerollAmount)
+        private int RollDice(NetworkDiceRollBase roll, DiceFormula diceFormula)
         {
             try
             {
@@ -1243,41 +549,18 @@ namespace WOTRMultiplayer.Services
 
                 var seededContext = _multiplayerActorAccessor.Current.GetSeededContext();
                 var identifier = $"{rollIdentifier}_{seededContext.Id}";
-                var (history, result) = RollDice(seededContext.Lifetime, identifier, diceFormula, rerollAmount);
-                var outcome = new DeterministicRollOutcome
-                {
-                    History = history,
-                    Identifier = identifier,
-                    Result = result,
-                    RollId = _hashService.Murmur3(identifier)
-                };
+                var random = _valueGenerator.GetRandom(seededContext.Lifetime, identifier);
+                var result = diceFormula.Roll(random);
+                _logger.LogInformation("{RuleName} has been rolled deterministicaly. Type={Type}, UnitId={UnitId}, Result={Result}, Lifetime={Lifetime}, Identifier={Identifier}",
+                    roll.RuleName, roll.RollType, roll.InitiatorId, result, seededContext.Lifetime, identifier);
 
-                _logger.LogInformation("{RuleName} has been rolled deterministicaly. Type={Type}, UnitId={UnitId}, RollId={RollId}, Result={Result}, History={History}, Lifetime={Lifetime}, Identifier={Identifier}",
-                    roll.RuleName, roll.RollType, roll.InitiatorId, outcome.RollId, outcome.Result, outcome.History, seededContext.Lifetime, outcome.Identifier);
-
-                return outcome;
+                return result;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error rolling dice roll deterministically");
+                _logger.LogError(ex, "Error while rolling dice deterministically");
                 throw;
             }
-        }
-
-        private (List<int> history, int result) RollDice(IdentifierLifetime lifetime, string identifier, DiceFormula diceFormula, int rerollAmount)
-        {
-            var random = _valueGenerator.GetRandom(lifetime, identifier);
-            var history = new List<int>();
-            var result = 0;
-            var rerolls = rerollAmount;
-            while (rerolls >= 0)
-            {
-                result = diceFormula.Roll(random);
-                history.Add(result);
-                rerolls--;
-            }
-
-            return (history, result);
         }
     }
 }
