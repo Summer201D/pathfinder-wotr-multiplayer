@@ -92,10 +92,12 @@ public class NotifyDialogStarted
 {
     [ProtoMember(1)]
     public NetworkDialog Dialog { get; set; }
+
+    [ProtoMember(2)]
+    public int PlayerId { get; set; }
 }
 ```
 
-and if it uses any complex classes 
 ```csharp
 [ProtoContract]
 public class NetworkDialog

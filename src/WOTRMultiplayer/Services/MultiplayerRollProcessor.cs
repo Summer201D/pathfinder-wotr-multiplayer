@@ -9,7 +9,6 @@ using Kingmaker.RuleSystem.Rules.Damage;
 using Microsoft.Extensions.Logging;
 using WOTRMultiplayer.Abstractions;
 using WOTRMultiplayer.Abstractions.GameInteraction;
-using WOTRMultiplayer.Abstractions.Hashing;
 using WOTRMultiplayer.Abstractions.Random;
 using WOTRMultiplayer.Entities.Rolls;
 using WOTRMultiplayer.Extensions;
@@ -21,7 +20,6 @@ namespace WOTRMultiplayer.Services
         private readonly ILogger<MultiplayerRollProcessor> _logger;
         private readonly IGameInteractionService _gameInteractionService;
         private readonly ICombatInteractionService _combatInteractionService;
-        private readonly IHashService _hashService;
         private readonly IMultiplayerActorAccessor _multiplayerActorAccessor;
         private readonly IValueGenerator _valueGenerator;
         private readonly HashSet<string> _importantCutsceneAreas = new([
@@ -32,14 +30,12 @@ namespace WOTRMultiplayer.Services
             ILogger<MultiplayerRollProcessor> logger,
             IGameInteractionService gameInteractionService,
             ICombatInteractionService combatInteractionService,
-            IHashService hashService,
             IMultiplayerActorAccessor multiplayerActorAccessor,
             IValueGenerator valueGenerator)
         {
             _logger = logger;
             _gameInteractionService = gameInteractionService;
             _combatInteractionService = combatInteractionService;
-            _hashService = hashService;
             _multiplayerActorAccessor = multiplayerActorAccessor;
             _valueGenerator = valueGenerator;
         }
@@ -124,7 +120,7 @@ namespace WOTRMultiplayer.Services
 
                 // current is always RuleRollDice instance
                 var previousEvent = Rulebook.CurrentContext?.PreviousEvent;
-                if (!IsMeaningfulRoll(previousEvent))
+                if (previousEvent == null || !IsMeaningfulRoll(previousEvent))
                 {
                     return null;
                 }

@@ -5,7 +5,7 @@
 ## TL/DR:
 - Campaign is mostly playable. Although there are a few heavily bugged encounters (usually caused by completely desynced enemy spawns)
 - There are no changes to content or balance or how mythic paths/companions work.
-
+ 
 - Game Version/DLC/Mods/Content should match across players. 
 
   You can see a quick rundown of each player's DLCs/mods once they connect to the host, but it's just for a reference. **The mod does not lock or unlock discrepant content for you**. The most obvious case is extra preorder/DLC items sitting in your stash. If someone doesn't own that DLC or bonus, those items are hidden for them, so anything you try to do with them (equip, drop, etc.) will just fail. One simple workaround is to get rid of them by dropping the items on the global map in single-player.
@@ -27,7 +27,7 @@ See the [general information](/docs/dev/mods.md) about mod integration, as well 
   - global edit of `SaveLoadPcView` causes some minor side-effects for our own copy of that view
   - multiplayer settings are corrupted / not loaded correctly on Settings UI. Didn't look for a reason yet
 
-Here is the list of mods which were used during campaign playtrough in multiplayer:
+Here is the list of mods which were used during campaign playtrough (Angel path) in multiplayer:
 
 - 0ToyBox0 - no exta features enabled, just to alter game state when needed
 - BubbleBuffs
@@ -71,7 +71,7 @@ Some options can't be changed mid-game - you will see those grayed out in the se
 ## Basics
 Multiplayer window loads all available saves. You can use any save to host a multiplayer game.
 
-There is a special `New Campaign` save slot that can be used to start fresh campaign. It will start regular new game sequence, but for everyone in multiplayer session. Player assigned to control main character will be in control of leveling (Character generation) screen. 
+There is a special `New Campaign` save slot that can be used to start fresh campaign. It will start regular new game sequence, but for everyone in multiplayer session. Player assigned to control main character will be in control of Character generation screen. 
 
 Worth noting, such way to start game is very limited as of now:
 - no save import
@@ -84,7 +84,7 @@ The latest received save game (either when joining a lobby or when another playe
 
 Load/Quickload is available for **everyone** during multiplayer game. It will force other players in the lobby to load the same saved game. However, it skips all synchronization checks, so the game will load even if someone failed to receive or store the save file.
 
-A stable 60+ FPS is strongly recommended. Some game logic is FPS dependent. Abysmal performance in the late game makes it worse
+A stable 60+ FPS is strongly recommended. Some game logic is FPS dependent. Abysmal performance in the late game makes it worse.
 
 There is no hard player limit. Extra players can even join as spectators with 0 units, though the player list UI might look a bit weird. That said, most testing was done with 2 players (sometimes 3), so the more people you add, the more likely things are to break.
 
@@ -194,10 +194,16 @@ The base game uses “AI action score” calculations that are largely determini
 
 To reduce this desync, a simple workaround is used: on the client, the AI turn begins with a slight delay (configurable in settings). This allows the host to determine AI actions first and send them to clients. If a client's locally calculated actions don't match, they are overridden by the host's results.
 
+**Note:** This delay is highly dependent on game performance. If the host’s game frequently stutters (for example, during late-game stages), you may need to increase this delay or restart the game more frequently.
+
+
+### Buffs
+Buff timers (duration/tick time) are synced in combat only, but desynced buffs are never created apart from `Fighting defensively`. A lot of buffs do have an underlying `UnitPart` that holds buff state/logic, so simple recreation/removal will not work without syncing that state. This will be addressed sometime later.
+
 ### Crusade Army Battles
 Combat is fully controlled by the host.
 
-AI sync is not enabled for this combat as it seems impossible to choose different AI action in such limited zone.
+AI sync is not enabled for this combat as it seems impossible to make different AI action in such limited zone.
 
 ## Cutscenes
 Cutscene skip is synchronized, but, as of now, there are no additional checks to make sure it started/ended for everyone.
@@ -211,7 +217,7 @@ Inventory item positions are not synced, so you can sort or split items however 
 Copying recipe/scroll or reading a book (to recieve bonuses or trigger something) is synced.
 
 ## Loot
-Items are never created, but rather transferred from X to Y container which makes it impossible to recieve duplicate items. It's completely safe to loot same container/item, but item verification is very basic. It might produce false positive warnings about missing loot if you loot same item at the same time.
+Items are never created, but rather transferred from X to Y container which makes it impossible to recieve duplicate items. It's completely safe to loot same container/item, but item verification is very basic. It might produce false positive warnings about missing loot (since it's already looted) if you loot same item at the same time.
 
 ### Area Looting screen: 
 Same as regular looting. However, 'Collect All' / 'Leave' / 'Destroy Uncollected Loot' buttons are disabled for host until everyone is ready to leave the area.
@@ -286,6 +292,7 @@ More options are planned later, like pinging at different UI elements (should be
   - Act2 Drezen Siege - Giants - completely disabled as of now
   - Blackwater traps
   - Act5 Iz - Blood Rain
+  - Act5 The Enigma (Nenio final quest) - Exhaust statues / Undead respawner
 - **Triggered traps** - AoE spells may affect different characters.
 - **Working in Tandem (and similar effects)** - the attack roll bonus depends on who attacks first (mount or rider), but since this is frame-dependent, the attack order may vary.
 - **Spell DC inconsistencies** (e.g., dispel checks or saving throws) - DC occasionally differs for unclear reasons (maybe difficulty DC bonus is not applied sometimes).
@@ -301,6 +308,8 @@ Most of the issues above are mitigated by syncing HP / auto-killing units in com
 **Option #2** - kill all enemies via Toybox
 
 **Option #3** - quick save / quick load - everyone in a lobby will load same save
+
+**Option #4** - complete broken segment in single player and rehost game
 
 ## Long term plans
 
