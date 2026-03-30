@@ -4048,25 +4048,6 @@ namespace WOTRMultiplayer.Services
             }
         }
 
-        public bool CanLeaveCombat()
-        {
-            try
-            {
-                if (_multiplayerActorAccessor == null)
-                {
-                    return true;
-                }
-
-                var canLeave = _multiplayerActorAccessor.Current.CanLeaveCombat();
-                return canLeave;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error while leaving combat");
-                throw;
-            }
-        }
-
         public void OnUnitMoveTo(NetworkUnitMoveTo unitMoveTo)
         {
             try

@@ -1820,29 +1820,6 @@ namespace WOTRMultiplayer.Services
             Send(message);
         }
 
-        public bool CanLeaveCombat()
-        {
-            try
-            {
-                var groups = string.Join(", ", Game.Combat?.UntargetableUnits.Select(x => $"{x.Key}=[{string.Join(", ", x.Value)}]"));
-
-                if (!IsWaitingForUntargetableUnits())
-                {
-                    Logger.LogInformation("Local player is allowed to leave combat. UntargetableGroups={UntargetableGroups}", groups);
-                    CleanupUntargetableUnitsState();
-                    return true;
-                }
-
-                Logger.LogWarning("Local player cannot leave combat yet. UntargetableGroups={UntargetableGroups}", groups);
-                return false;
-            }
-            catch (Exception ex)
-            {
-                Logger.LogError(ex, "Error while checking if combat can be ended");
-                throw;
-            }
-        }
-
         public void CleanupUntargetableUnitsState()
         {
             var groups = Game.Combat.UntargetableUnits.ToList();
@@ -1854,28 +1831,6 @@ namespace WOTRMultiplayer.Services
                     MakeUnitTargetable(unit, group.Key);
                 }
             }
-        }
-
-        private bool IsWaitingForUntargetableUnits()
-        {
-            if (Game.Combat == null || Game.Combat.UntargetableUnits.Count == 0)
-            {
-                return false;
-            }
-
-            foreach (var group in Game.Combat.UntargetableUnits)
-            {
-                foreach (var unit in group.Value)
-                {
-                    var isNotPartOfCombat = GameInteraction.IsNotPartOfCombatAnymore(unit);
-                    if (!isNotPartOfCombat)
-                    {
-                        return true;
-                    }
-                }
-            }
-
-            return false;
         }
 
         public void OnItemDescriptionRead(NetworkItem networkItem)
@@ -4510,10 +4465,7 @@ namespace WOTRMultiplayer.Services
                     Game.Combat.UntargetableUnits.TryRemove(groupId, out _);
                     Logger.LogWarning("Unit was last in untargetable group. UnitId={UnitId}, GroupId={GroupId}", unitId, groupId);
                 }
-
-                var isLastGroup = Game.Combat.UntargetableUnits.Count == 0;
-
-                CombatInteraction.MakeUnitTargetable(unitId, isLastGroupMember, isLastGroup);
+                CombatInteraction.MakeUnitTargetable(unitId);
             }
         }
 
@@ -4524,12 +4476,10 @@ namespace WOTRMultiplayer.Services
                 return;
             }
 
-            var isFirstGroup = Game.Combat.UntargetableUnits.Keys.Count == 0;
             var group = Game.Combat.UntargetableUnits.GetOrAdd(groupId, []);
             if (group.Add(unitId))
             {
-                var isFirstGroupMember = group.Count == 1;
-                CombatInteraction.MakeUnitUntargetable(unitId, isFirstGroupMember, isFirstGroup);
+                CombatInteraction.MakeUnitUntargetable(unitId);
             }
         }
 

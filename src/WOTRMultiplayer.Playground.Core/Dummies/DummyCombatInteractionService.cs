@@ -155,11 +155,11 @@ namespace WOTRMultiplayer.Playground.Core.Dummies
         {
         }
 
-        public void MakeUnitTargetable(string unitId, bool isLastGroupMember, bool isLastGroup)
+        public void MakeUnitTargetable(string unitId)
         {
         }
 
-        public void MakeUnitUntargetable(string unitId, bool isFirstGroupMember, bool isFirstGroup)
+        public void MakeUnitUntargetable(string unitId)
         {
         }
 

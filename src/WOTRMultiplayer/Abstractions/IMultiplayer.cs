@@ -495,8 +495,6 @@ namespace WOTRMultiplayer.Abstractions
 
         void OnKingdomUnloaded();
 
-        bool CanLeaveCombat();
-
         void OnAreaLoaded();
 
         void OnKingdomEventSolutionSelected(NetworkKingdomEventSolution kingdomEventSolution);

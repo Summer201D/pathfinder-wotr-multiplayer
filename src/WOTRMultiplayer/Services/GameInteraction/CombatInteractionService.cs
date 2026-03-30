@@ -423,40 +423,18 @@ namespace WOTRMultiplayer.Services.GameInteraction
             return false;
         }
 
-        public void MakeUnitUntargetable(string unitId, bool isFirstGroupMember, bool isFirstGroup)
+        public void MakeUnitUntargetable(string unitId)
         {
             var unit = _gameStateLookupService.GetUnitEntity(unitId);
             unit?.Descriptor.State.Features.IsUntargetable.Retain();
-
-            if (isFirstGroupMember && unit != null)
-            {
-                //unit.Group.IsInCombat++;
-            }
-
-            if (isFirstGroup)
-            {
-                //Game.Instance.Player.Group.IsInCombat++;
-            }
-
-            _logger.LogInformation("Unit is not targetable anymore. UnitId={UnitId}, IsUntargetable={IsUntargetable}, PlayerCombatCounter={PlayerCombatCounter}, IsFirstGroupMember={IsFirstGroupMember}, IsFirstGroup={IsFirstGroup}", unitId, unit?.Descriptor.State.Features.IsUntargetable.Value, Game.Instance.Player.Group.IsInCombat.m_GuardCount, isFirstGroupMember, isFirstGroup);
+            _logger.LogInformation("Unit is not targetable anymore. UnitId={UnitId}, IsUntargetable={IsUntargetable}, PlayerCombatCounter={PlayerCombatCounter}", unitId, unit?.Descriptor.State.Features.IsUntargetable.Value, Game.Instance.Player.Group.IsInCombat.m_GuardCount);
         }
 
-        public void MakeUnitTargetable(string unitId, bool isLastGroupMember, bool isLastGroup)
+        public void MakeUnitTargetable(string unitId)
         {
             var unit = _gameStateLookupService.GetUnitEntity(unitId);
             unit?.Descriptor.State.Features.IsUntargetable.Release();
-
-            if (isLastGroupMember && unit != null)
-            {
-                //unit.Group.IsInCombat--;
-            }
-
-            if (isLastGroup)
-            {
-                //Game.Instance.Player.Group.IsInCombat--;
-            }
-
-            _logger.LogInformation("Unit is targetable. UnitId={UnitId}, IsUntargetable={IsUntargetable}, PlayerCombatCounter={PlayerCombatCounter}, IsLastGroupMember={IsLastGroupMember}, IsLastGroup={IsLastGroup}", unitId, unit?.Descriptor.State.Features.IsUntargetable.Value, Game.Instance.Player.Group.IsInCombat.m_GuardCount, isLastGroupMember, isLastGroup);
+            _logger.LogInformation("Unit is targetable. UnitId={UnitId}, IsUntargetable={IsUntargetable}, PlayerCombatCounter={PlayerCombatCounter}", unitId, unit?.Descriptor.State.Features.IsUntargetable.Value, Game.Instance.Player.Group.IsInCombat.m_GuardCount);
         }
 
         public void MoveUnit(NetworkUnitMoveTo unitMoveTo)
