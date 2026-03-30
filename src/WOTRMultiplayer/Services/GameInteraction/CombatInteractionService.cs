@@ -723,16 +723,11 @@ namespace WOTRMultiplayer.Services.GameInteraction
 
             var localUnits = await WaitForUnitsToBeAvailableLocally(units);
 
-            if (localUnits == null)
-            {
-                taskCompletion.SetResult(false);
-                return taskCompletion.Task.Result;
-            }
-
+            var result = localUnits.Count == units.Count;
             _mainThreadAccessor.Post(() =>
             {
                 AddUnitsToCombat(localUnits);
-                taskCompletion.SetResult(true);
+                taskCompletion.SetResult(result);
             });
 
             return await taskCompletion.Task;
@@ -740,7 +735,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
 
         private async Task<List<UnitEntityData>> WaitForUnitsToBeAvailableLocally(List<NetworkUnit> units)
         {
-            using var timeout = new CancellationTokenSource(TimeSpan.FromMinutes(1));
+            using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(30));
             var requiredUnits = units.ToList();
             var localUnits = new List<UnitEntityData>();
             while (requiredUnits.Count > 0 && !timeout.IsCancellationRequested)
@@ -757,11 +752,6 @@ namespace WOTRMultiplayer.Services.GameInteraction
                 }
 
                 await Task.Delay(10);
-            }
-
-            if (localUnits.Count != units.Count)
-            {
-                return null;
             }
 
             return localUnits;

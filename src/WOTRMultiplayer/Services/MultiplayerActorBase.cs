@@ -4412,7 +4412,8 @@ namespace WOTRMultiplayer.Services
                 PlayerNotification.AddCombatText(WellKnownKeys.GameNotifications.Combat.DesyncedCombatUnits.Key, CombatTextSeverity.Critical);
             }
 
-            return result;
+            // allow to continue combat anyway
+            return true;
         }
 
         private void UpdateConfirmedMidCombatUnits()
