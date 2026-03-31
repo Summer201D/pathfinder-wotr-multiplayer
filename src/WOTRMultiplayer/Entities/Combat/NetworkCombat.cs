@@ -2,36 +2,18 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using WOTRMultiplayer.Entities.AreaEffects;
-using WOTRMultiplayer.Entities.Units;
 
 namespace WOTRMultiplayer.Entities.Combat
 {
     public class NetworkCombat
     {
-        /// <summary>
-        /// new seed for each combat
-        /// </summary>
         public int Seed { get; set; }
 
         public NetworkCombatStage Stage { get; set; }
 
-        public bool IsInitialized { get; set; }
-
-        public bool IsPreparationStarted { get; set; }
-
-        public bool IsPrepared { get; set; }
-
-        public bool IsPlaying { get; set; }
-
-        public bool IsRecovering { get; set; }
-
         public int Round { get; set; }
 
         public NetworkCombatTurn Turn { get; set; }
-
-        public ConcurrentDictionary<long, bool> PlayersCombatInitialization { get; set; } = new();
-
-        public ConcurrentDictionary<long, List<NetworkUnit>> PlayersCombatPreparation { get; set; } = new();
 
         public ConcurrentDictionary<string, HashSet<long>> PlayersNextTurnInitialization { get; set; } = new();
 
@@ -48,5 +30,23 @@ namespace WOTRMultiplayer.Entities.Combat
         public DateTime StartedAt { get; set; }
 
         public HashSet<string> RemotelyKilledUnits { get; set; } = [];
+
+        public bool IsInitiated { get; set; }
+
+        public bool IsDataCollected { get; set; }
+
+        public bool IsDataCompared { get; set; }
+
+        public bool IsSynced { get; set; }
+
+        public bool IsStarted { get; set; }
+
+        public ConcurrentDictionary<long, bool> PlayersFinishedStartupSequence { get; set; } = [];
+
+        public ConcurrentDictionary<long, bool> PlayersInCombat { get; set; } = [];
+
+        public ConcurrentDictionary<long, HashSet<string>> InitialUnitsInCombat { get; set; } = [];
+
+        public ConcurrentDictionary<long, List<string>> UnavailableUnits { get; set; } = [];
     }
 }

@@ -1042,12 +1042,6 @@ public static class WellKnownKeys
                 public static string Key { get; set; }
             }
 
-            [Description("forcedToStart")]
-            public static class ForcedToStart
-            {
-                public static string Key { get; set; }
-            }
-
             [Description("buffs")]
             public static class Buffs
             {
@@ -1072,12 +1066,6 @@ public static class WellKnownKeys
                 {
                     public static string Key { get; set; }
                 }
-            }
-
-            [Description("desyncedCombatUnits")]
-            public static class DesyncedCombatUnits
-            {
-                public static string Key { get; set; }
             }
 
             [Description("turn")]

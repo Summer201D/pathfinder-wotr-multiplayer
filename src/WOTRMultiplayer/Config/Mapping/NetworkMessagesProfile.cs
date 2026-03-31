@@ -301,9 +301,6 @@ namespace WOTRMultiplayer.Config.Mapping
             CreateMap<NetworkAbilityParamSpellSlot, Networking.Messages.Contracts.NetworkAbilityParamSpellSlot>()
                 .ReverseMap();
 
-            CreateMap<NetworkCombatUnitDiscrepancy, Networking.Messages.Contracts.NetworkCombatUnitDiscrepancy>()
-                .ReverseMap();
-
             CreateMap<NetworkUnitProneState, Networking.Messages.Contracts.NetworkUnitProneState>()
                 .ReverseMap();
 

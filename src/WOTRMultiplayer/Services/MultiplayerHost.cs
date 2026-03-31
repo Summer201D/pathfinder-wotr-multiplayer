@@ -27,7 +27,6 @@ using WOTRMultiplayer.Entities.Items;
 using WOTRMultiplayer.Entities.Leveling;
 using WOTRMultiplayer.Entities.Rest;
 using WOTRMultiplayer.Entities.Settings;
-using WOTRMultiplayer.Entities.Units;
 using WOTRMultiplayer.Networking;
 using WOTRMultiplayer.Networking.Abstractions;
 using WOTRMultiplayer.Networking.Messages.Game;
@@ -338,59 +337,121 @@ namespace WOTRMultiplayer.Services
                     return false;
                 }
 
+                if (Game.CurrentArea == null || Game.CurrentArea.Seed == 0)
+                {
+                    return false;
+                }
+
                 switch (Game.Combat.Stage)
                 {
-                    case NetworkCombatStage.Idle:
-                        if (!Game.Combat.PlayersCombatPreparation.TryGetValue(Game.LocalPlayerId, out _))
+                    case NetworkCombatStage.Initiating:
+                        if (Game.Combat.IsInitiated)
                         {
-                            var unitsInCombat = CombatInteraction.GetUnitsInCombat();
-                            Game.Combat.PlayersCombatPreparation.TryAdd(Game.LocalPlayerId, unitsInCombat);
+                            var canAdvanceStage = Game.Combat.PlayersInCombat.Count >= GetSyncedPlayersCount();
+                            if (canAdvanceStage)
+                            {
+                                Game.Combat.PlayersInCombat.Clear();
+                                SetCombatStage(NetworkCombatStage.Collecting);
+                            }
+
+                            return false;
                         }
 
-                        var canStartPreparing = Game.Combat.PlayersCombatPreparation.Count >= GetSyncedPlayersCount();
-                        if (canStartPreparing)
+                        Game.Combat.PlayersInCombat.TryAdd(Game.LocalPlayerId, true);
+                        var initiatedMessage = new NotifyCombatInitiated
                         {
-                            SetCombatStage(NetworkCombatStage.Preparing);
-                        }
-                        else
-                        {
-                            if (!Game.Combat.IsRecovering && (DateTime.UtcNow - Game.Combat.StartedAt) > TimeSpan.FromSeconds(15))
-                            {
-                                var player = GetPlayer(Game.LocalPlayerId);
-                                InitiateCombatRecovering(player);
-                            }
-                        }
+                            PlayerId = Game.LocalPlayerId
+                        };
+                        Send(initiatedMessage);
+                        Game.Combat.IsInitiated = true;
                         return false;
-                    case NetworkCombatStage.Preparing:
-                        if (CombatInteraction.IsAnyProjectilesLaunchedByParty())
+                    case NetworkCombatStage.Collecting:
+                        if (CombatInteraction.AreThereAnyProjectilesLaunchedByParty())
                         {
                             return false;
                         }
 
-                        if (!Game.Combat.IsPreparationStarted)
+                        if (Game.Combat.IsDataCollected)
                         {
-                            Game.Combat.Seed = CreateRandomSeed();
-
-                            var discrepantUnits = GetDiscrepantCombatUnits();
-                            var preparationRequiredMessage = new NotifyCombatPreparationRequired
+                            var canEndCollectingStage = Game.Combat.InitialUnitsInCombat.Count >= GetSyncedPlayersCount();
+                            if (canEndCollectingStage)
                             {
-                                Discrepancy = Mapper.Map<Networking.Messages.Contracts.NetworkCombatUnitDiscrepancy>(discrepantUnits),
-                            };
-                            Send(preparationRequiredMessage);
-                            Game.Combat.IsPreparationStarted = true;
-                            Task.Run(() =>
-                                FixCombatUnitDiscrepancyAsync(discrepantUnits)
-                                .ContinueWith(_ => Game.Combat.IsPrepared = true));
+                                SetCombatStage(NetworkCombatStage.Reconciling);
+                            }
+                            return false;
                         }
 
-                        var isPrepared = Game.Combat.IsPrepared && Game.Combat.PlayersCombatPreparation.Count == 0;
-                        if (isPrepared && CombatInteraction.IsCombatInitialized())
-                        {
-                            SetCombatStage(NetworkCombatStage.Initialization);
-                        }
+                        var unitsInCombat = CombatInteraction.GetUnitsInCombat();
+                        Game.Combat.InitialUnitsInCombat.TryAdd(Game.LocalPlayerId, [.. unitsInCombat.Select(x => x.Id)]);
+                        Game.Combat.IsDataCollected = true;
+
                         return false;
-                    default:
+                    case NetworkCombatStage.Reconciling:
+                        if (Game.Combat.IsDataCompared)
+                        {
+                            var canEndComparingStage = Game.Combat.UnavailableUnits.Count >= GetSyncedPlayersCount();
+                            if (canEndComparingStage)
+                            {
+                                SetCombatStage(NetworkCombatStage.Resyncing);
+                            }
+
+                            return false;
+                        }
+
+                        var discrepantUnits = GeCombatUnitsDiscrepancy();
+                        foreach (var (player, units) in discrepantUnits)
+                        {
+                            if (units.Count == 0)
+                            {
+                                Game.Combat.UnavailableUnits.TryAdd(player, []);
+                                continue;
+                            }
+
+                            if (player == Game.LocalPlayerId)
+                            {
+                                CombatInteraction.EnsureUnitsInCombatAsync(units)
+                                    .ContinueWith(x => Game.Combat.UnavailableUnits.TryAdd(Game.LocalPlayerId, x.Result));
+                                continue;
+                            }
+
+                            var discrepancyDetected = new NotifyCombatDataDiscrepancyDetected
+                            {
+                                Units = units
+                            };
+                            Send(player, discrepancyDetected);
+                        }
+
+                        Game.Combat.IsDataCompared = true;
+                        return false;
+                    case NetworkCombatStage.Resyncing:
+                        if (Game.Combat.IsSynced)
+                        {
+                            var canEndSyncingStage = Game.Combat.UnavailableUnits.Count == 0;
+                            if (canEndSyncingStage)
+                            {
+                                Game.Combat.Seed = CreateRandomSeed();
+                                SetCombatStage(NetworkCombatStage.Finalizing);
+                            }
+
+                            return false;
+                        }
+
+                        var unitsToRemoveFromCombat = Game.Combat.UnavailableUnits.Values.SelectMany(x => x).Distinct().ToList();
+                        var message = new NotifyCombatUnitsExcluded
+                        {
+                            Units = unitsToRemoveFromCombat
+                        };
+                        Send(message);
+                        CombatInteraction.ExcludeUnitsFromCombatAsync(unitsToRemoveFromCombat)
+                            .ContinueWith(x => Game.Combat.UnavailableUnits.TryRemove(Game.LocalPlayerId, out _));
+
+                        Game.Combat.IsSynced = true;
+                        return false;
+                    case NetworkCombatStage.Finalizing:
+                    case NetworkCombatStage.Running:
                         return true;
+                    default:
+                        return false;
                 }
             }
             catch (Exception ex)
@@ -415,43 +476,40 @@ namespace WOTRMultiplayer.Services
 
                 switch (Game.Combat.Stage)
                 {
-                    case NetworkCombatStage.Idle:
-                    case NetworkCombatStage.Preparing:
-                        return false;
-                    case NetworkCombatStage.Initialization:
-                        if (!Game.Combat.IsInitialized)
+                    case NetworkCombatStage.Finalizing:
+                        if (!CombatInteraction.IsCombatInitialized())
                         {
-                            var combatState = CombatInteraction.GetCombatState();
-                            var message = new NotifyCombatInitializationRequired
+                            return false;
+                        }
+
+                        if (Game.Combat.IsStarted)
+                        {
+                            var canContinue = Game.Combat.PlayersFinishedStartupSequence.Count >= GetSyncedPlayersCount();
+                            if (canContinue)
                             {
-                                State = Mapper.Map<Networking.Messages.Contracts.NetworkCombatState>(combatState),
-                                CombatSeed = Game.Combat.Seed,
-                                TriggeredAreaEffects = Mapper.Map<List<Networking.Messages.Contracts.NetworkAreaEffect>>(Game.Combat.TriggeredAreaEffects)
-                            };
-                            Game.Combat.TriggeredAreaEffects.Clear();
-                            Send(message);
-
-                            Game.Combat.IsRecovering = false;
-                            Game.Combat.IsInitialized = true;
-                            Game.Combat.PlayersCombatInitialization.TryAdd(Game.LocalPlayerId, true);
+                                SetCombatStage(NetworkCombatStage.Running);
+                            }
+                            return false;
                         }
 
-                        var canContinue = Game.Combat.PlayersCombatInitialization.Count >= GetSyncedPlayersCount();
-                        if (canContinue)
+                        var combatState = CombatInteraction.GetCombatState();
+                        var message = new NotifyCombatInitializationRequired
                         {
-                            SetCombatStage(NetworkCombatStage.Playing);
-                        }
+                            State = Mapper.Map<Networking.Messages.Contracts.NetworkCombatState>(combatState),
+                            CombatSeed = Game.Combat.Seed,
+                            TriggeredAreaEffects = Mapper.Map<List<Networking.Messages.Contracts.NetworkAreaEffect>>(Game.Combat.TriggeredAreaEffects)
+                        };
+                        Game.Combat.TriggeredAreaEffects.Clear();
+                        Send(message);
+
+                        Game.Combat.IsStarted = true;
+                        Game.Combat.PlayersFinishedStartupSequence.TryAdd(Game.LocalPlayerId, true);
+
                         return false;
-                    case NetworkCombatStage.Playing:
-                        if (!Game.Combat.IsPlaying)
-                        {
-                            var message = new NotifyCombatInitializationCompleted();
-                            Send(message);
-                            Game.Combat.IsPlaying = true;
-                        }
+                    case NetworkCombatStage.Running:
                         return true;
                     default:
-                        return Game.Combat.IsPlaying;
+                        return false;
                 }
             }
             catch (Exception ex)
@@ -1482,7 +1540,7 @@ namespace WOTRMultiplayer.Services
                     var notSynchronizedPlayers = GetMissingPlayers(Game.Combat.Turn.UnitId, Game.Combat.PlayersNextTurnSynchronization);
                     if (notSynchronizedPlayers.Count > 0)
                     {
-                        Logger.LogInformation("Unable to start turn due to missing players turn synchronization. MissingPlayers={MissingPlayers}", string.Join(";", notSynchronizedPlayers.Select(p => p.Name)));
+                        Logger.LogWarning("Unable to start turn due to missing players turn synchronization. MissingPlayers={MissingPlayers}", string.Join(";", notSynchronizedPlayers.Select(p => p.Name)));
                         return;
                     }
 
@@ -1612,8 +1670,10 @@ namespace WOTRMultiplayer.Services
                .On<ClientCharacterLevelingRequested>(OnClientCharacterLevelingRequested)
 
                // combat
-               .On<ClientCombatPreparationStarted>(OnClientCombatPreparationStarted)
-               .On<ClientCombatPreparationCompleted>(OnClientCombatPreparationCompleted)
+               .On<NotifyCombatInitiated>(OnNotifyCombatInitiated)
+               .On<NotifyCombatDataCollected>(OnNotifyCombatDataCollected)
+               .On<NotifyCombatDataDiscrepancyConfirmed>(OnNotifyCombatDataDiscrepancyConfirmed)
+               .On<NotifyCombatUnitsExclusionConfirmed>(OnNotifyCombatUnitsExclusionConfirmed)
                .On<ClientCombatInitializationCompleted>(OnClientCombatInitializationCompleted)
                .On<ClientCombatTurnStarted>(OnClientCombatTurnStarted)
                .On<ClientCombatTurnStartSynchronized>(OnClientCombatTurnSynchronized)
@@ -1644,6 +1704,47 @@ namespace WOTRMultiplayer.Services
                // inventory
                .On<NotifyPolymorphicItemCreationRequested>(OnNotifyPolymorphicItemCreationRequested)
                ;
+        }
+
+        private async void OnNotifyCombatInitiated(long receivedFrom, NotifyCombatInitiated message)
+        {
+            var isInCombat = await WaitWhileTrue(() => Game.Combat == null, "Waiting for combat to be initiated", TimeSpan.FromSeconds(30)); // cutscenes etc
+            if (!isInCombat)
+            {
+                Logger.LogError("Combat has not been started on host");
+                return;
+            }
+
+            // client combat has been restarted for some reason (game does it sometimes seemingly for no reason)
+            // all we can do is to restart it locally as well
+            if (Game.Combat.Stage != NetworkCombatStage.Initiating)
+            {
+                Logger.LogWarning("Client combat has been restarted for some reason, but host already advanced further in startup sequence. PlayerId={PlayerId}", receivedFrom);
+                var player = GetPlayer(receivedFrom);
+                PlayerNotification.AddCombatText(WellKnownKeys.GameNotifications.Combat.Start.DesyncedStartup.Client.Key, CombatTextSeverity.Critical, player?.Name);
+
+                // this will also trigger restart for all clients in the lobby
+                RestartCombatStartupSequence();
+                return;
+            }
+
+            Game.Combat.PlayersInCombat.TryAdd(message.PlayerId, true);
+            Logger.LogInformation("Player is in combat. PlayerId={PlayerId}", message.PlayerId);
+        }
+
+        private void OnNotifyCombatDataCollected(long receivedFrom, NotifyCombatDataCollected message)
+        {
+            Game.Combat.InitialUnitsInCombat.TryAdd(message.PlayerId, [.. message.Units]);
+        }
+
+        private void OnNotifyCombatUnitsExclusionConfirmed(long receivedFrom, NotifyCombatUnitsExclusionConfirmed message)
+        {
+            Game.Combat.UnavailableUnits.TryRemove(receivedFrom, out _);
+        }
+
+        private void OnNotifyCombatDataDiscrepancyConfirmed(long receivedFrom, NotifyCombatDataDiscrepancyConfirmed message)
+        {
+            Game.Combat.UnavailableUnits.TryAdd(receivedFrom, message.UnavailableUnits);
         }
 
         private void OnNotifySaveGameChunkReceived(long receivedFrom, NotifySaveGameChunkReceived message)
@@ -1695,62 +1796,6 @@ namespace WOTRMultiplayer.Services
             AddPlayerToTracker(Game.PlayersInGlobalMapCommonPopup, message.PlayerId);
             var popup = Mapper.Map<NetworkGlobalMapCommonPopup>(message.Popup);
             UpdateGlobalMapCommonPopupUIState(popup);
-        }
-
-        private async void OnClientCombatPreparationStarted(long receivedFrom, ClientCombatPreparationStarted message)
-        {
-            var units = Mapper.Map<List<NetworkUnit>>(message.Units);
-
-            var isOk = await WaitWhileTrue(() => Game.Combat == null || Game.Combat.Stage != NetworkCombatStage.Idle, $"Waiting for combat to start to add preparation. PlayerId={receivedFrom}",
-                TimeSpan.FromSeconds(10));
-
-            if (isOk)
-            {
-                Game.Combat.PlayersCombatPreparation.TryAdd(receivedFrom, units);
-                return;
-            }
-
-            lock (ActionLock)
-            {
-                if (Game.Combat.IsRecovering)
-                {
-                    Logger.LogInformation("Combat is already in recovering state");
-                    return;
-                }
-
-                var receivedFromPlayer = GetPlayer(receivedFrom);
-                if (receivedFromPlayer == null)
-                {
-                    Logger.LogWarning("Combat startup desync has been detected, but player is missing. Ignoring...");
-                    return;
-                }
-
-                InitiateCombatRecovering(receivedFromPlayer);
-            }
-        }
-
-        private void InitiateCombatRecovering(NetworkPlayer initiator)
-        {
-            Logger.LogWarning("Initiating combat recovery");
-            Game.Combat.IsRecovering = true;
-            Game.Combat.IsPrepared = false;
-            Game.Combat.IsPreparationStarted = false;
-            Game.Combat.IsInitialized = false;
-            Game.Combat.IsPlaying = false;
-            Game.Combat.PlayersCombatPreparation.Clear();
-            Game.Combat.PlayersCombatInitialization.Clear();
-            Game.Combat.StartedAt = DateTime.UtcNow;
-            PlayerNotification.AddCombatText(WellKnownKeys.GameNotifications.Combat.Start.DesyncedStartup.Host.Key, CombatTextSeverity.Critical, initiator.Name);
-            SetCombatStage(NetworkCombatStage.Idle);
-
-            var recoveryMessage = new NotifyCombatRecoveryRequired();
-            Send(recoveryMessage);
-        }
-
-        private void OnClientCombatPreparationCompleted(long receivedFrom, ClientCombatPreparationCompleted message)
-        {
-            Game.Combat.PlayersCombatPreparation.TryRemove(message.PlayerId, out _);
-            Logger.LogInformation("Combat preparation updated. ConfirmedPlayer={ConfirmedPlayer}, PlayersLeft={PlayersLeft}", message.PlayerId, Game.Combat.PlayersCombatPreparation.Keys);
         }
 
         private void OnClientTogglePauseOff(long receivedFrom, ClientTogglePauseOff message)
@@ -1883,10 +1928,7 @@ namespace WOTRMultiplayer.Services
 
         private void OnClientCombatInitializationCompleted(long playerId, ClientCombatInitializationCompleted message)
         {
-            if (!Game.Combat.PlayersCombatInitialization.TryAdd(playerId, true))
-            {
-                Logger.LogWarning("Received duplicate client initialization. PlayerId={PlayerId}", playerId);
-            }
+            Game.Combat.PlayersFinishedStartupSequence.TryAdd(playerId, true);
         }
 
         private async void OnClientDialogStartRequested(long playerId, ClientDialogStartRequested message)
@@ -2402,24 +2444,51 @@ namespace WOTRMultiplayer.Services
             Send(message);
         }
 
-        private NetworkCombatUnitDiscrepancy GetDiscrepantCombatUnits()
+        private Dictionary<long, List<string>> GeCombatUnitsDiscrepancy()
         {
-            var discrepancy = new NetworkCombatUnitDiscrepancy();
+            var initial = Game.Combat.InitialUnitsInCombat;
 
-            foreach (var (playerId, units) in Game.Combat.PlayersCombatPreparation)
+            var unitsToAdd = new Dictionary<long, List<string>>();
+            foreach (var player in initial.Keys)
             {
-                var others = Game.Combat.PlayersCombatPreparation
-                    .Where(kvp => kvp.Key != playerId)
-                    .SelectMany(kvp => kvp.Value)
-                    .ToHashSet();
-
-                discrepancy.Units[playerId] = [.. units
-                    .Where(v => !others.Contains(v))
-                    .Distinct()];
+                unitsToAdd[player] = [];
             }
 
-            discrepancy.Units = discrepancy.Units.Where(x => x.Value.Count > 0).ToDictionary(x => x.Key, x => x.Value);
-            return discrepancy;
+            var unitPlayers = new Dictionary<string, HashSet<long>>();
+
+            foreach (var (playerId, units) in initial)
+            {
+                foreach (var unit in units)
+                {
+                    if (!unitPlayers.TryGetValue(unit, out var players))
+                    {
+                        players = [];
+                        unitPlayers[unit] = players;
+                    }
+
+                    players.Add(playerId);
+                }
+            }
+
+            var playerCount = initial.Count;
+
+            foreach (var (unit, players) in unitPlayers)
+            {
+                if (players.Count == playerCount)
+                {
+                    continue;
+                }
+
+                foreach (var playerId in initial.Keys)
+                {
+                    if (!players.Contains(playerId))
+                    {
+                        unitsToAdd[playerId].Add(unit);
+                    }
+                }
+            }
+
+            return unitsToAdd;
         }
     }
 }

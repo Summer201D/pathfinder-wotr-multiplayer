@@ -27,6 +27,6 @@ With the example above, you will end up with following key/value pairs:
 - `wotrmultiplayer.settings.general.playerName.title` : `test title`
 - `wotrmultiplayer.settings.general.playerName.tooltip` : `test tooltip`
 
-The key structure hints at where each key/value pair is used. For example, these keys are used to display text in the `Settings UI`. `Title` represents menu option name, while `Tooltip` is used to display extra information on hover. 
+The key structure hints at where each key/value pair is used. For example, these keys are used to display settings in the game's `Settings` window. `Title` represents the setting name, while `Tooltip` is used to display extra information on hover. 
 
 Partial localization is supported too. For example, you can create a `deDE.json` file with just one translated key - anything missing will automatically fall back to `enGB.json`.

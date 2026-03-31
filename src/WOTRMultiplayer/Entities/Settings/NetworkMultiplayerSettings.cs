@@ -30,8 +30,6 @@ namespace WOTRMultiplayer.Entities.Settings
 
         public float DialogBlockedAnswerAnimationDuration { get; set; }
 
-        public float EnforcedCombatStartDelay { get; set; }
-
         public TimeSpan CombatTurnDelayForAI { get; set; }
 
         public int SaveGameChunkSize { get; set; } = 1024 * 32;

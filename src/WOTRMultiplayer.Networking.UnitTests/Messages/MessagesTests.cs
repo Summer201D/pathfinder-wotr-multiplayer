@@ -1,6 +1,11 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Reflection;
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 using NUnit.Framework;
 using ProtoBuf;
 using WOTRMultiplayer.Networking.Messages;
@@ -109,6 +114,79 @@ namespace WOTRMultiplayer.Networking.UnitTests.Messages
             // Assert
             Assert.That(invalidMessages.Count, Is.EqualTo(0), "Missing ProtoContractAttribute: " + string.Join(", ", invalidMessages.Select(x => x.Name)));
             Assert.That(allMessages.Count, Is.GreaterThan(0));
+        }
+
+        [Test]
+        public void NetworkMessages_EveryMessageIsUsed()
+        {
+            // Arrange
+            var rootLocation = Path.GetFullPath(@"..\..\..\..\WOTRMultiplayer\Services");
+
+            var trees = new List<(CSharpCompilation, SemanticModel, ClassDeclarationSyntax)>
+            {
+               Create(Path.Combine(rootLocation, "MultiplayerClient.cs")),
+               Create(Path.Combine(rootLocation, "MultiplayerHost.cs")),
+               Create(Path.Combine(rootLocation, "MultiplayerActorBase.cs"))
+            };
+
+            var allMessages = Assembly
+                .GetAssembly(typeof(BeetleXMessageTypes.ProtobufServerPacket))
+                .GetTypes()
+                .Where(t => t.GetCustomAttribute<MessageTypeAttribute>() != null)
+                .ToList();
+            var notCreatedMessages = new List<Type>();
+
+            // Act
+            foreach (var message in allMessages)
+            {
+                if (!trees.Any(t =>
+                {
+                    var targetSymbol = t.Item1.GetTypeByMetadataName(message.FullName);
+                    if (targetSymbol == null)
+                    {
+                        Assert.Fail($"Unable to find message symbol. Type={message.Name}");
+                    }
+
+                    var methods = t.Item3.DescendantNodes().OfType<MethodDeclarationSyntax>().ToList();
+                    foreach (var method in methods)
+                    {
+                        var createsMessage = method.DescendantNodes().OfType<ObjectCreationExpressionSyntax>().Any(o =>
+                        {
+                            var type = t.Item2.GetTypeInfo(o).Type;
+                            return SymbolEqualityComparer.Default.Equals(type, targetSymbol);
+                        });
+
+                        if (createsMessage)
+                        {
+                            return true;
+                        }
+                    }
+
+                    return false;
+                }))
+                {
+                    notCreatedMessages.Add(message);
+                }
+            }
+
+            // Assert
+            Assert.That(notCreatedMessages, Is.Empty, $"Some messages are never created ({notCreatedMessages.Count})");
+        }
+
+        private (CSharpCompilation, SemanticModel, ClassDeclarationSyntax) Create(string path)
+        {
+            var code = File.ReadAllText(path);
+            var tree = CSharpSyntaxTree.ParseText(code);
+
+            var classDeclaration = tree.GetRoot().DescendantNodes().OfType<ClassDeclarationSyntax>().First();
+
+            var compilation = CSharpCompilation.Create("whatever", [tree], [
+                MetadataReference.CreateFromFile(typeof(WOTRMultiplayer.Main).Assembly.Location),
+                MetadataReference.CreateFromFile(typeof(Networking.Messages.BeetleXMessageTypes.ProtobufServerPacket).Assembly.Location),
+                MetadataReference.CreateFromFile(Assembly.GetExecutingAssembly().Location)
+                ]);
+            var semanticModel = compilation.GetSemanticModel(tree);
+            return (compilation, semanticModel, classDeclaration);
         }
     }
 }

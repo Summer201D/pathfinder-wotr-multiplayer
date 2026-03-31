@@ -108,9 +108,6 @@ namespace WOTRMultiplayer.Services.Settings
             [Description("rest-encounter-sync-timeout")]
             public static WellKnownSettingKey<TimeSpan> RestEncounterSyncTimeout { get; } = new(TimeSpan.FromSeconds(30));
 
-            [Description("enforced-combat-start-delay")]
-            public static WellKnownSettingKey<float> EnforcedCombatStartDelay { get; } = new(0.5f);
-
             [Description("combat-turn-delay-for-ai")]
             public static WellKnownSettingKey<TimeSpan> CombatTurnDelayForAI { get; } = new(TimeSpan.FromSeconds(0.5d));
 

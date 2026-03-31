@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 using AutoMapper;
 using Kingmaker;
@@ -61,6 +60,41 @@ namespace WOTRMultiplayer.Services.GameInteraction
             _playerNotificationService = playerNotificationService;
             _buffInteractionService = buffInteractionService;
             _mapper = mapper;
+        }
+
+        public Task<List<string>> EnsureUnitsInCombatAsync(List<string> units)
+        {
+            var tcs = new TaskCompletionSource<List<string>>();
+            var unavailableUnits = new List<string>();
+
+            _mainThreadAccessor.Post(() =>
+            {
+                try
+                {
+                    var unitsToAdd = new List<UnitEntityData>();
+
+                    foreach (var unit in units)
+                    {
+                        var unitToAdd = _gameStateLookupService.GetUnitEntity(unit);
+                        if (unitToAdd == null || unitToAdd.State.IsFinallyDead)
+                        {
+                            _logger.LogWarning("Unit is unavailable to join combat. UnitId={UnitId}, IsDead={IsDead}", unit, unitToAdd?.State.IsFinallyDead);
+                            unavailableUnits.Add(unit);
+                            continue;
+                        }
+
+                        unitsToAdd.Add(unitToAdd);
+                    }
+
+                    AddUnitsToCombat(unitsToAdd);
+                }
+                finally
+                {
+                    tcs.SetResult(unavailableUnits);
+                }
+            });
+
+            return tcs.Task;
         }
 
         public bool IsInCombat()
@@ -410,7 +444,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
             });
         }
 
-        public bool IsAnyProjectilesLaunchedByParty()
+        public bool AreThereAnyProjectilesLaunchedByParty()
         {
             foreach (var partyCharacter in Game.Instance.Player.PartyAndPets)
             {
@@ -476,6 +510,36 @@ namespace WOTRMultiplayer.Services.GameInteraction
         public bool IsCombatInitialized()
         {
             return Game.Instance.TurnBasedCombatController.Initialized;
+        }
+
+        public Task ExcludeUnitsFromCombatAsync(List<string> units)
+        {
+            var tcs = new TaskCompletionSource<bool>();
+
+            _mainThreadAccessor.Post(() =>
+            {
+                foreach (var unit in units)
+                {
+                    try
+                    {
+                        var excludedUnit = _gameStateLookupService.GetUnitEntity(unit);
+                        if (excludedUnit == null)
+                        {
+                            continue;
+                        }
+
+                        excludedUnit.LeaveCombat();
+                        _logger.LogWarning("Unit has been forced to leave combat. UnitId={UnitId}", unit);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "Error while excluding unit from combat. UnitId={UnitId}", unit);
+                    }
+                }
+                tcs.SetResult(true);
+            });
+
+            return tcs.Task;
         }
 
         public void LootUnit(NetworkUnitLootUnit networkUnitLootUnit)
@@ -693,46 +757,6 @@ namespace WOTRMultiplayer.Services.GameInteraction
                     AddUnitToCombat(unit);
                 }
             });
-        }
-
-        public async Task<bool> EnsureUnitsInCombatAsync(List<NetworkUnit> units)
-        {
-            var taskCompletion = new TaskCompletionSource<bool>();
-
-            var localUnits = await WaitForUnitsToBeAvailableLocally(units);
-
-            var result = localUnits.Count == units.Count;
-            _mainThreadAccessor.Post(() =>
-            {
-                AddUnitsToCombat(localUnits);
-                taskCompletion.SetResult(result);
-            });
-
-            return await taskCompletion.Task;
-        }
-
-        private async Task<List<UnitEntityData>> WaitForUnitsToBeAvailableLocally(List<NetworkUnit> units)
-        {
-            using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(30));
-            var requiredUnits = units.ToList();
-            var localUnits = new List<UnitEntityData>();
-            while (requiredUnits.Count > 0 && !timeout.IsCancellationRequested)
-            {
-                for (int i = requiredUnits.Count - 1; i >= 0; i--)
-                {
-                    var unitId = requiredUnits[i].Id;
-                    var unit = _gameStateLookupService.GetUnitEntity(unitId);
-                    if (unit != null)
-                    {
-                        localUnits.Add(unit);
-                        requiredUnits.RemoveAt(i);
-                    }
-                }
-
-                await Task.Delay(10);
-            }
-
-            return localUnits;
         }
 
         public List<NetworkUnit> GetParty()

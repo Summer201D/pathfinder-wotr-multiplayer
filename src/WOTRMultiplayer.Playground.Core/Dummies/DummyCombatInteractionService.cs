@@ -96,11 +96,6 @@ namespace WOTRMultiplayer.Playground.Core.Dummies
             return [];
         }
 
-        public Task<bool> EnsureUnitsInCombatAsync(List<NetworkUnit> units)
-        {
-            return Task.FromResult(false);
-        }
-
         public bool IsInCombat(string unitId)
         {
             return false;
@@ -134,7 +129,7 @@ namespace WOTRMultiplayer.Playground.Core.Dummies
             return Task.FromResult(false);
         }
 
-        public bool IsAnyProjectilesLaunchedByParty()
+        public bool AreThereAnyProjectilesLaunchedByParty()
         {
             return false;
         }
@@ -175,6 +170,16 @@ namespace WOTRMultiplayer.Playground.Core.Dummies
 
         public void StartTurnBasedCombatTurn(string unitId, Action onInvalidUnit = null)
         {
+        }
+
+        public Task ExcludeUnitsFromCombatAsync(List<string> units)
+        {
+            return Task.FromResult(false);
+        }
+
+        public Task<List<string>> EnsureUnitsInCombatAsync(List<string> units)
+        {
+            return Task.FromResult(units);
         }
     }
 }

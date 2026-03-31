@@ -59,7 +59,7 @@ namespace WOTRMultiplayer.Abstractions.GameInteraction
 
         Task<bool> StartCombatAsync(NetworkCombatState networkCombatState);
 
-        Task<bool> EnsureUnitsInCombatAsync(List<NetworkUnit> units);
+        Task<List<string>> EnsureUnitsInCombatAsync(List<string> units);
 
         void AddUnitsToCombat(List<string> units);
 
@@ -73,7 +73,7 @@ namespace WOTRMultiplayer.Abstractions.GameInteraction
 
         void MakeUnitUntargetable(string unitId);
 
-        bool IsAnyProjectilesLaunchedByParty();
+        bool AreThereAnyProjectilesLaunchedByParty();
 
         void InteractWithUnit(NetworkUnitInteractWithUnit networkUnitInteractWithUnit);
 
@@ -82,5 +82,7 @@ namespace WOTRMultiplayer.Abstractions.GameInteraction
         void ForceResetCombat();
 
         bool IsCombatInitialized();
+
+        Task ExcludeUnitsFromCombatAsync(List<string> units);
     }
 }

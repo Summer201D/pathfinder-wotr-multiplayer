@@ -1,6 +1,6 @@
 ## Load Order
 
-When defining new network messages, you must annotate them with attributes from the `multiplayer` assemblies. The .NET runtime (CLR) resolves attribute types while loading assembly metadata — before any of your assembly code executes. Because of this, your code never gets a chance to register custom assembly resolution logic
+When defining new network messages, you must annotate them with attributes from the `multiplayer` assemblies. The .NET runtime (CLR) resolves attribute types while loading assembly metadata - before any of your assembly code executes. Because of this, your code never gets a chance to register custom assembly resolution logic
 
 As a result, the multiplayer assemblies must already be loaded. Otherwise, a `TypeLoadException` will occur.
 
@@ -30,7 +30,7 @@ Keep in mind:
 
 All random values must be consistent across all players to avoid desynchronizing the game state. The multiplayer mod provides a way to generate deterministic values without requiring additional network messages.
 
-`IMultiplayerActorAccessor` provides access to `MultiplayerClient` and `MultiplayerServer`, which hold the multiplayer state.
+`IMultiplayerActorAccessor` provides access to `MultiplayerClient` and `MultiplayerHost`, which hold the multiplayer state.
 
 Use the `GetSeededContext` method to retrieve information about the current deterministic context. The `Id` property contains the final value that should be included in the identifier when generating random values.
 
@@ -65,7 +65,7 @@ You can override the lifetime if necessary, but in most cases it should be taken
 
 ## Network Messages
 
-In most cases, you will work with `INetworkServer` or `INetworkClient`. These provide direct access to network messages, allowing you to listen to existing messages or send custom ones.
+In most cases, you will work with `INetworkServer` or `INetworkClient`. These provide direct access to network layer, allowing you to listen to existing messages or send custom ones.
 
 ### Reacting to existing messages
 Both `INetworkServer`/`INetworkClient` implement `INetworkReceiver` which has a method that can be used to subscribe to incoming messages
@@ -110,4 +110,4 @@ public class NetworkDialog
 }
 ```
 
-`MessageTypeAttribute.Id` value should be unique across all registered messages, so ideally it must be tracked in [one place](https://github.com/fl01/pathfinder-wotr-multiplayer/blob/main/src/WOTRMultiplayer.Networking/Messages/MessageTypes.cs), but you are free to use any `int` number, just be aware of consequences :)
+`MessageTypeAttribute.Id` value should be unique across all registered messages, so ideally it must be tracked in [one place](https://github.com/fl01/pathfinder-wotr-multiplayer/blob/main/src/WOTRMultiplayer.Networking/Messages/MessageTypes.cs), but you are free to use any `int` number, just be aware of consequences

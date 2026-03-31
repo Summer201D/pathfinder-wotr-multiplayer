@@ -201,32 +201,59 @@ namespace WOTRMultiplayer.Services
                 return false;
             }
 
-            try
+            if (Game.CurrentArea == null || Game.CurrentArea.Seed == 0)
             {
-                if (!Game.Combat.IsPrepared)
-                {
-                    var units = CombatInteraction.GetUnitsInCombat();
-                    var message = new ClientCombatPreparationStarted
-                    {
-                        Units = Mapper.Map<List<Networking.Messages.Contracts.NetworkUnit>>(units),
-                    };
-                    Send(message);
-                    Game.Combat.IsPrepared = true;
-                }
-
-                return Game.Combat.IsInitialized;
+                return false;
             }
-            catch (Exception ex)
+
+            switch (Game.Combat.Stage)
             {
-                Logger.LogError(ex, "Error while initializing combat");
-                throw;
+                case NetworkCombatStage.Initiating:
+                    if (!Game.Combat.IsInitiated)
+                    {
+                        var message = new NotifyCombatInitiated
+                        {
+                            PlayerId = Game.LocalPlayerId
+                        };
+                        Send(message);
+                        Game.Combat.IsInitiated = true;
+                    }
+
+                    return false;
+                case NetworkCombatStage.Collecting:
+                    if (!Game.Combat.IsDataCollected)
+                    {
+                        var unitsInCombat = CombatInteraction.GetUnitsInCombat();
+                        var message = new NotifyCombatDataCollected
+                        {
+                            PlayerId = Game.LocalPlayerId,
+                            Units = [.. unitsInCombat.Select(x => x.Id)]
+                        };
+                        Send(message);
+                        Game.Combat.IsDataCollected = true;
+                    }
+
+                    return false;
+                case NetworkCombatStage.Reconciling:
+                case NetworkCombatStage.Resyncing:
+                case NetworkCombatStage.Finalizing:
+                    return false;
+                case NetworkCombatStage.Running:
+                    return true;
+                default:
+                    return false;
             }
         }
 
         public bool CanContinueCombat()
         {
-            var canContinueCombat = Game.Combat != null && Game.Combat.IsPlaying;
-            return canContinueCombat;
+            if (Game.Combat == null)
+            {
+                return false;
+            }
+
+            var canContinue = Game.Combat.Stage == NetworkCombatStage.Running;
+            return canContinue;
         }
 
         public void OnBeforeTryRollRestRandomEncounter()
@@ -236,7 +263,11 @@ namespace WOTRMultiplayer.Services
                 Logger.LogInformation("Retrieving rest random encounter context. SleepPhase={SleepPhase}", Game.Rest.SleepPhase);
 
                 var settings = SettingsService.GetSettings();
-                var message = new RandomEncounterContextRequest { SleepPhase = Game.Rest.SleepPhase, Timeout = settings.RestEncounterSyncTimeout };
+                var message = new RandomEncounterContextRequest
+                {
+                    SleepPhase = Game.Rest.SleepPhase,
+                    Timeout = settings.RestEncounterSyncTimeout
+                };
                 var response = _networkClient.SendAndWaitForAsync<RandomEncounterContextResponse>(message).Result;
 
                 if (response?.Encounter == null)
@@ -522,15 +553,16 @@ namespace WOTRMultiplayer.Services
                .On<NotifyCampingUnitsRoleChanged>(OnNotifyCampingUnitsRoleChanged)
 
                // combat
-               .On<NotifyCombatPreparationRequired>(OnNotifyCombatPreparationRequired)
+               .On<NotifyCombatInitiated>(OnNotifyCombatInitiated)
+               .On<NotifyCombatStageChanged>(OnNotifyCombatStageChanged)
+               .On<NotifyCombatDataDiscrepancyDetected>(OnNotifyCombatDataDiscrepancyDetected)
+               .On<NotifyCombatUnitsExcluded>(OnNotifyCombatUnitsExcluded)
                .On<NotifyCombatInitializationRequired>(OnNotifyCombatInitializationRequired)
-               .On<NotifyCombatInitializationCompleted>(OnNotifyCombatInitializationCompleted)
                .On<NotifyInvalidCombatTurnStarted>(OnNotifyInvalidCombatTurnStarted)
                .On<NotifyCombatTurnStartSynchronizationRequired>(OnNotifyCombatTurnStartSynchronizationRequired)
                .On<NotifyCombatTurnEndSynchronizationRequired>(OnNotifyCombatTurnEndSynchronizationRequired)
                .On<NotifyCombatTurnStarted>(OnNotifyCombatTurnStarted)
                .On<NotifyAIActionSelected>(OnNotifyAIActionExecuted)
-               .On<NotifyCombatRecoveryRequired>(OnNotifyCombatRecoveryRequired)
                .On<NotifyCombatLocalTurnEnded>(OnNotifyCombatLocalTurnEnded)
                .On<NotifyCombatTurnEnded>(OnNotifyCombatTurnEnded)
 
@@ -648,6 +680,58 @@ namespace WOTRMultiplayer.Services
                // alushenyrra
                .On<NotifyAlyshenyrraCameraDirectionChanged>(OnNotifyAlyshenyrraCameraDirectionChanged)
                ;
+        }
+
+        private async void OnNotifyCombatInitiated(long receivedFrom, NotifyCombatInitiated message)
+        {
+            var isInCombat = await WaitWhileTrue(() => Game.Combat == null, "Waiting for combat to be initiated", TimeSpan.FromSeconds(30));
+            if (!isInCombat)
+            {
+                // host will be locked in combat startup sequence forever until every other client has entered combat locally
+                Logger.LogError("Local combat has never been started");
+                return;
+            }
+
+            // host combat has been restarted for some reason (game does it sometimes seemingly for no reason)
+            // all we can do is to restart it locally as well
+            if (Game.Combat.Stage != NetworkCombatStage.Initiating)
+            {
+                Logger.LogWarning("Host combat has been restarted for some reason, but client already advanced further in startup sequence");
+                var player = GetHost();
+                PlayerNotification.AddCombatText(WellKnownKeys.GameNotifications.Combat.Start.DesyncedStartup.Host.Key, CombatTextSeverity.Critical, player?.Name);
+
+                RestartCombatStartupSequence();
+                return;
+            }
+        }
+
+        private async void OnNotifyCombatUnitsExcluded(long receivedFrom, NotifyCombatUnitsExcluded message)
+        {
+            await CombatInteraction.ExcludeUnitsFromCombatAsync(message.Units);
+            var confirmation = new NotifyCombatUnitsExclusionConfirmed();
+            Send(confirmation);
+        }
+
+        private async void OnNotifyCombatDataDiscrepancyDetected(long receivedFrom, NotifyCombatDataDiscrepancyDetected message)
+        {
+            var unavailableUnits = await CombatInteraction.EnsureUnitsInCombatAsync(message.Units);
+            var confirmation = new NotifyCombatDataDiscrepancyConfirmed
+            {
+                UnavailableUnits = unavailableUnits
+            };
+            Send(confirmation);
+        }
+
+        private void OnNotifyCombatStageChanged(long receivedFrom, NotifyCombatStageChanged message)
+        {
+            if (Game.Combat == null)
+            {
+                Logger.LogError("Combat is not started locally");
+                return;
+            }
+
+            var stage = Mapper.Map<NetworkCombatStage>(message.Stage);
+            SetCombatStage(stage, isSilent: true);
         }
 
         private void OnNotifySaveGameTransferProgressChanged(long receivedFrom, NotifySaveGameTransferProgressChanged message)
@@ -782,16 +866,6 @@ namespace WOTRMultiplayer.Services
             CombatInteraction.EndTurnBasedCombatTurn();
         }
 
-        private void OnNotifyCombatRecoveryRequired(long receivedFrom, NotifyCombatRecoveryRequired message)
-        {
-            PlayerNotification.AddCombatText(WellKnownKeys.GameNotifications.Combat.Start.DesyncedStartup.Client.Key, CombatTextSeverity.Critical);
-
-            Game.Combat.IsPreparationStarted = false;
-            Game.Combat.IsPrepared = false;
-            Game.Combat.IsInitialized = false;
-            SetCombatStage(NetworkCombatStage.Idle);
-        }
-
         private async void OnNotifyAIActionExecuted(long receivedFrom, NotifyAIActionSelected message)
         {
             if (Game.ArmyCombat != null)
@@ -819,37 +893,6 @@ namespace WOTRMultiplayer.Services
             }
 
             UpdateGlobalMapCommonPopupUIState(popup);
-        }
-
-        private async void OnNotifyCombatPreparationRequired(long receivedFrom, NotifyCombatPreparationRequired message)
-        {
-            try
-            {
-                SetCombatStage(NetworkCombatStage.Preparing);
-
-                var discrepancy = Mapper.Map<NetworkCombatUnitDiscrepancy>(message.Discrepancy);
-                var isFixed = await FixCombatUnitDiscrepancyAsync(discrepancy);
-                if (!isFixed)
-                {
-                    Logger.LogError("Discrepancy in combat start has not been fixed. DiscrepantUnits={DiscrepantUnits}", message.Discrepancy.Units);
-                    return;
-                }
-
-                var units = CombatInteraction.GetUnitsInCombat();
-                var confirmation = new ClientCombatPreparationCompleted
-                {
-                    PlayerId = Game.LocalPlayerId,
-                    Units = Mapper.Map<List<Networking.Messages.Contracts.NetworkUnit>>(units)
-                };
-                Send(confirmation);
-
-                SetCombatStage(NetworkCombatStage.Initialization);
-            }
-            catch (Exception ex)
-            {
-                Logger.LogError(ex, "Error while preparing for the combat");
-                throw;
-            }
         }
 
         private void OnNotifyGlobalMapCrusadeArmyLeaderLevelingSkillSelected(long receivedFrom, NotifyGlobalMapCrusadeArmyLeaderLevelingSkillSelected message)
@@ -1501,14 +1544,6 @@ namespace WOTRMultiplayer.Services
 
             var confirmation = new ClientCombatInitializationCompleted();
             Send(confirmation);
-        }
-
-        private void OnNotifyCombatInitializationCompleted(long playerId, NotifyCombatInitializationCompleted message)
-        {
-            SetCombatStage(NetworkCombatStage.Playing);
-            Game.Combat.IsInitialized = true;
-            Game.Combat.IsPlaying = true;
-            Logger.LogInformation("Combat is ready to be continued");
         }
 
         private async void OnNotifyDialogStarted(long playerId, NotifyDialogStarted started)

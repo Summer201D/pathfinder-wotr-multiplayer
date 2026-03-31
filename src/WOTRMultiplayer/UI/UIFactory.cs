@@ -81,7 +81,6 @@ namespace WOTRMultiplayer.UI
             WellKnownSettings.Miscellaneous.MaxConnectionHistoryRecords.Key,
             WellKnownSettings.Networking.HostPortRangeStart.Key,
             WellKnownSettings.Networking.HostPortRangeEnd.Key,
-            WellKnownSettings.DangerZone.EnforcedCombatStartDelay.Key,
             ], StringComparer.OrdinalIgnoreCase);
 
         public UIFactory(
@@ -750,9 +749,6 @@ namespace WOTRMultiplayer.UI
                 WellKnownSettings.DangerZone.NetworkAwaiterTimeout,
                 new TimeSpanValidator(),
                 TimeSpanValidator.MaxLength);
-            yield return CreateSliderSetting(WellKnownKeys.Settings.DangerZone.EnforcedCombatStartDelay.Title.Key,
-                WellKnownKeys.Settings.DangerZone.EnforcedCombatStartDelay.Tooltip.Key,
-                WellKnownSettings.DangerZone.EnforcedCombatStartDelay, 0f, 5f);
             yield return CreateStringInputSetting(
                 WellKnownKeys.Settings.DangerZone.CombatTurnDelayForAI.Title.Key,
                 WellKnownKeys.Settings.DangerZone.CombatTurnDelayForAI.Tooltip.Key,

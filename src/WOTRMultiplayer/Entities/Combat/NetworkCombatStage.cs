@@ -2,9 +2,11 @@
 {
     public enum NetworkCombatStage
     {
-        Idle,
-        Preparing,
-        Initialization,
-        Playing,
+        Initiating,
+        Collecting,
+        Reconciling,
+        Resyncing,
+        Finalizing,
+        Running
     }
 }

@@ -1,13 +1,12 @@
 ﻿using System.Collections.Generic;
 using ProtoBuf;
 using WOTRMultiplayer.Logging.Attributes;
-using WOTRMultiplayer.Networking.Messages.Contracts;
 
 namespace WOTRMultiplayer.Networking.Messages.Game
 {
     [ProtoContract]
-    [MessageType((int)MessageTypes.Game.ClientCombatPreparationCompleted)]
-    public class ClientCombatPreparationCompleted
+    [MessageType((int)MessageTypes.Game.NotifyCombatDataCollected)]
+    public class NotifyCombatDataCollected
     {
         [ProtoMember(1)]
         [LogMe]
@@ -15,6 +14,6 @@ namespace WOTRMultiplayer.Networking.Messages.Game
 
         [ProtoMember(2)]
         [LogMe]
-        public List<NetworkUnit> Units { get; set; } = [];
+        public List<string> Units { get; set; } = [];
     }
 }

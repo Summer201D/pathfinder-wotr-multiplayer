@@ -230,21 +230,15 @@
             NotifyRestWindowClosed,
             NotifyGlobalMapGroupChangerOpened,
             NotifyCapitalModeRestInitiated,
-            NotifyCombatStarted,
             NotifyZoneLootLeft,
             NotifyUnitKilled,
             NotifyTrapDisarmRolled,
             ClientTogglePauseOff,
             NotifyUnitAutoUseAbilityChanged,
             NotifyInventoryItemCopied,
-            NotifyCombatPreparationRequired,
-            ClientCombatPreparationCompleted,
-            ClientCombatPreparationStarted,
-            NotifyCombatInitializationCompleted,
             NotifyGlobalMapCrusadeArmyLeaderLevelingStarted,
             NotifyGlobalMapLocationMessageAccepted,
             NotifyAIActionSelected,
-            NotifyCombatRecoveryInitiated,
             NotifyUnitMovedTo,
             NotifyDialogPopupAccepted,
             NotifyKingdomExited,
@@ -280,7 +274,14 @@
             NotifyMapObjectCombinePartInteracted,
             NotifySpellSlotsSwapped,
             NotifyAreaLoadingCompleted,
-            NotifyAlyshenyrraCameraDirectionChanged
+            NotifyAlyshenyrraCameraDirectionChanged,
+            NotifyCombatInitiated,
+            NotifyCombatStageChanged,
+            NotifyCombatDataCollected,
+            NotifyCombatDataDiscrepancyDetected,
+            NotifyCombatDataDiscrepancyConfirmed,
+            NotifyCombatUnitsExcluded,
+            NotifyCombatUnitsExclusionConfirmed
         }
 
         public static class Mods

@@ -504,21 +504,15 @@ namespace WOTRMultiplayer.Services
                 }
             }
 
-            Game.Combat = new NetworkCombat { StartedAt = DateTime.UtcNow };
-            Game.LastCombatTurn = null;
-
-            var combatState = CombatInteraction.GetCombatState();
-            var message = new NotifyCombatStarted
+            Game.Combat = new NetworkCombat
             {
-                PlayerId = Game.LocalPlayerId,
-                State = Mapper.Map<Networking.Messages.Contracts.NetworkCombatState>(combatState),
+                StartedAt = DateTime.UtcNow
             };
-            Send(message);
+            Game.LastCombatTurn = null;
         }
 
         public void ForceCombatEnd()
         {
-            CleanupUntargetableUnitsState();
             CombatInteraction.ForceResetCombat();
         }
 
@@ -526,15 +520,18 @@ namespace WOTRMultiplayer.Services
         {
             try
             {
-                Logger.LogInformation("Combat ended");
                 if (Game.Combat == null)
                 {
                     Logger.LogWarning("Combat has not been started correctly");
                 }
 
+                Logger.LogInformation("Combat ended");
+
                 SaveLastCombatTurn();
 
                 Game.Combat = null;
+
+                CleanupUntargetableUnitsState();
                 ValueGenerator.ResetSeededGenerators(IdentifierLifetime.Combat, IdentifierLifetime.CombatTurn);
             }
             catch (Exception ex)
@@ -655,7 +652,10 @@ namespace WOTRMultiplayer.Services
         {
             try
             {
-                if (Game.Combat == null || Game.Combat.Stage == NetworkCombatStage.Preparing || GameInteraction.IsUnitInParty(unitId))
+                if (Game.Combat == null
+                    || Game.Combat.Stage == NetworkCombatStage.Initiating
+                    || Game.Combat.Stage == NetworkCombatStage.Reconciling
+                    || GameInteraction.IsUnitInParty(unitId))
                 {
                     Logger.LogInformation("Unit is allowed to join combat at current stage. UnitId={UnitId}, Stage={Stage}", unitId, Game.Combat?.Stage);
                     return true;
@@ -2745,6 +2745,26 @@ namespace WOTRMultiplayer.Services
             PlayerNotification.ShowModalMessage(WellKnownKeys.GameNotifications.Session.PlayerLeft.Key, networkPlayer.Name);
         }
 
+        protected void RestartCombatStartupSequence()
+        {
+            if (Game.Combat == null)
+            {
+                return;
+            }
+
+            Game.Combat.IsSynced = false;
+            Game.Combat.IsDataCollected = false;
+            Game.Combat.IsDataCompared = false;
+            Game.Combat.IsInitiated = false;
+            Game.Combat.PlayersInCombat.Clear();
+            Game.Combat.PlayersFinishedStartupSequence.Clear();
+            Game.Combat.RemotelyKilledUnits.Clear();
+            Game.Combat.PlayersNextTurnInitialization.Clear();
+            Game.Combat.PlayersNextTurnSynchronization.Clear();
+            SetCombatStage(NetworkCombatStage.Initiating);
+            Logger.LogWarning("Combat startup sequence has been restarted");
+        }
+
         protected NetworkPlayer CleanupPlayer(long playerId)
         {
             var existingPlayer = GetPlayer(playerId);
@@ -2983,12 +3003,21 @@ namespace WOTRMultiplayer.Services
             ResetPlayersTracker(Game.PlayersInGlobalMapCrusadeArmyLeaderLeveling);
         }
 
-        protected void SetCombatStage(NetworkCombatStage combatStage)
+        protected void SetCombatStage(NetworkCombatStage combatStage, bool isSilent = false)
         {
             var current = Game.Combat.Stage;
             Game.Combat.Stage = combatStage;
             Logger.LogInformation("Combat stage has been changed. From={From}, To={To}", current, combatStage);
             PlayerNotification.AddCombatText(WellKnownKeys.GameNotifications.Combat.StageChanged.Key, CombatTextSeverity.Debug, current, combatStage);
+
+            if (!isSilent)
+            {
+                var message = new NotifyCombatStageChanged
+                {
+                    Stage = Game.Combat.Stage.ToString()
+                };
+                Send(message);
+            }
         }
 
         protected void SetCombatTurnStage(NetworkCombatTurnStage combatTurnStage)
@@ -3014,17 +3043,6 @@ namespace WOTRMultiplayer.Services
             }
 
             return savePath;
-        }
-
-        protected async Task<bool> FixCombatUnitDiscrepancyAsync(NetworkCombatUnitDiscrepancy unitDiscrepancy)
-        {
-            var isFixed = await TryFixCombatUnitDiscrepancyAsync(unitDiscrepancy).ConfigureAwait(false);
-            if (isFixed)
-            {
-                Game.Combat.PlayersCombatPreparation.TryRemove(Game.LocalPlayerId, out _);
-            }
-
-            return isFixed;
         }
 
         protected bool ShouldNotifyAboutAbility(string sourceUnitId)
@@ -3340,9 +3358,6 @@ namespace WOTRMultiplayer.Services
                 .On<NotifySaveGameChunkCreated>(OnNotifySaveGameChunkCreated)
                 .On<NotifySaveGameInfoChanged>(OnNotifySaveGameInfoChanged)
                 .On<NotifyPlayerReadyStatusChanged>(OnNotifyPlayerReadyStatusChanged)
-
-                // combat
-                .On<NotifyCombatStarted>(OnNotifyCombatStarted)
 
                 // leveling
                 .On<NotifyLevelingClassArchetypeSelected>(OnNotifyLevelingClassArchetypeSelected)
@@ -3740,39 +3755,6 @@ namespace WOTRMultiplayer.Services
                         Game.Combat.Turn.LockCounter--;
                     }
                 }
-            }
-        }
-
-        private async void OnNotifyCombatStarted(long receivedFrom, NotifyCombatStarted message)
-        {
-            if (Game.Combat != null)
-            {
-                return;
-            }
-
-            var player = GetPlayer(message.PlayerId);
-            if (player == null)
-            {
-                Logger.LogWarning("Combat has been started by missing player. PlayerId={PlayerId}", message.PlayerId);
-                return;
-            }
-
-            var settings = SettingsService.GetSettings();
-            var delay = Task.Delay(TimeSpan.FromSeconds(settings.EnforcedCombatStartDelay));
-            var startedLocally = WaitWhileTrue(() => Game.Combat == null, $"Waiting for combat to start or forcing it after {settings.EnforcedCombatStartDelay}");
-            await Task.WhenAny(delay, startedLocally);
-
-            var combatState = Mapper.Map<NetworkCombatState>(message.State);
-            if (Game.Combat == null)
-            {
-                var hasBeenForcedToStart = await CombatInteraction.StartCombatAsync(combatState);
-                if (hasBeenForcedToStart)
-                {
-                    GameInteraction.SetPause(false);
-                    PlayerNotification.ShowWarningNotification(WellKnownKeys.GameNotifications.Combat.ForcedToStart.Key, args: player.Name);
-                }
-
-                Logger.LogWarning("Combat has been started by another player. Forced={Forced}", hasBeenForcedToStart);
             }
         }
 
@@ -4348,27 +4330,6 @@ namespace WOTRMultiplayer.Services
             };
 
             return tracker;
-        }
-
-        private async Task<bool> TryFixCombatUnitDiscrepancyAsync(NetworkCombatUnitDiscrepancy combatUnitDiscrepancy)
-        {
-            var localPlayerDiscrepancy = combatUnitDiscrepancy.Units.Where(x => x.Key != Game.LocalPlayerId).SelectMany(x => x.Value).ToList();
-            if (localPlayerDiscrepancy.Count == 0)
-            {
-                Logger.LogInformation("Local player doesn't require any combat unit discrepancy fixes");
-                return true;
-            }
-
-            Logger.LogInformation("Discrepant units will be added to combat. Units={Units}", localPlayerDiscrepancy.Select(x => x.Id));
-            var result = await CombatInteraction.EnsureUnitsInCombatAsync(localPlayerDiscrepancy).ConfigureAwait(false);
-            if (!result)
-            {
-                Logger.LogError("Combat unit discrepancy has not been fixed");
-                PlayerNotification.AddCombatText(WellKnownKeys.GameNotifications.Combat.DesyncedCombatUnits.Key, CombatTextSeverity.Critical);
-            }
-
-            // allow to continue combat anyway
-            return true;
         }
 
         private void UpdateConfirmedMidCombatUnits()
