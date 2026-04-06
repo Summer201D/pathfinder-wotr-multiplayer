@@ -358,9 +358,11 @@ namespace WOTRMultiplayer.Services
                         }
 
                         Game.Combat.PlayersInCombat.TryAdd(Game.LocalPlayerId, true);
+                        var units = CombatInteraction.GetUnitsInCombat();
                         var initiatedMessage = new NotifyCombatInitiated
                         {
-                            PlayerId = Game.LocalPlayerId
+                            PlayerId = Game.LocalPlayerId,
+                            InitialUnits = [.. units.Select(x => x.Id)]
                         };
                         Send(initiatedMessage);
                         Game.Combat.IsInitiated = true;

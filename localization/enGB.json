@@ -258,7 +258,7 @@
                 "start": {
                     "desyncedStartup": {
                         "host": "Combat recovery has been initiated due to desynced combat startup sequence.\nReason: {0}",
-                        "client": "Combat recovery has been initiated by host"
+                        "client": "Combat recovery has been initiated by host.\nReason: {0}"
                     },
                     "surpriseOverride": "Surprise round state has been overriden by host from {0} to {1}"
                 },

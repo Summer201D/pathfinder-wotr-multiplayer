@@ -211,9 +211,11 @@ namespace WOTRMultiplayer.Services
                 case NetworkCombatStage.Initiating:
                     if (!Game.Combat.IsInitiated)
                     {
+                        var units = CombatInteraction.GetUnitsInCombat();
                         var message = new NotifyCombatInitiated
                         {
-                            PlayerId = Game.LocalPlayerId
+                            PlayerId = Game.LocalPlayerId,
+                            InitialUnits = [.. units.Select(x => x.Id)]
                         };
                         Send(message);
                         Game.Combat.IsInitiated = true;

@@ -529,9 +529,9 @@ namespace WOTRMultiplayer.Services
 
                 SaveLastCombatTurn();
 
+                CleanupUntargetableUnitsState();
                 Game.Combat = null;
 
-                CleanupUntargetableUnitsState();
                 ValueGenerator.ResetSeededGenerators(IdentifierLifetime.Combat, IdentifierLifetime.CombatTurn);
             }
             catch (Exception ex)
@@ -1822,7 +1822,7 @@ namespace WOTRMultiplayer.Services
 
         public void CleanupUntargetableUnitsState()
         {
-            var groups = Game.Combat.UntargetableUnits.ToList();
+            var groups = Game.Combat?.UntargetableUnits.ToList() ?? [];
             foreach (var group in groups)
             {
                 var units = group.Value.ToList();

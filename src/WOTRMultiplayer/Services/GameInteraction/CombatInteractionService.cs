@@ -807,7 +807,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
         {
             try
             {
-                Dictionary<string, UnitEntityData> unitsInCombat = Game.Instance.State.Units.InCombat().ToDictionary(x => x.UniqueId, x => x);
+                var unitsInCombat = Game.Instance.State.Units.InCombat().ToDictionary(x => x.UniqueId, x => x);
 
                 switch (Game.Instance.CurrentlyLoadedArea.name)
                 {

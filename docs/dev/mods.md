@@ -41,6 +41,7 @@ For example, the following excludes `AreaSeed` (generated on each area load) fro
 ```csharp
 MultiplayerClient.GetSeededContext(SeedKind.All & ~SeedKind.AreaSeed);
 ```
+Feel free to inspect `SeedKind` enum to see all possible seeds, but be careful with exclusions.
 
 Basic example of generating a deterministic random number between `0` and `100`:
 
@@ -79,6 +80,8 @@ When registering a handler, a simple priority system is used. You can specify wh
 In general, use `High` when you want your handler to run **before** the base multiplayer handler, and `Default` if it should run **after** it.
 
 Messages are processed **one by one**, and there is no parallel execution by default. However, if your handler is `async`, other messages can still be processed while it runs, because the internal **message queue never awaits your handler**.
+
+On other hand, using something like `Thread.Sleep(-1)` will halt processing **ALL** new messages indefinitely, so just make sure you know what you are doing.
 
 ### Sending custom messages
 

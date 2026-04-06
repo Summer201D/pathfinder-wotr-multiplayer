@@ -1,4 +1,5 @@
-﻿using ProtoBuf;
+﻿using System.Collections.Generic;
+using ProtoBuf;
 using WOTRMultiplayer.Logging.Attributes;
 
 namespace WOTRMultiplayer.Networking.Messages.Game
@@ -10,5 +11,9 @@ namespace WOTRMultiplayer.Networking.Messages.Game
         [ProtoMember(1)]
         [LogMe]
         public long PlayerId { get; set; }
+
+        [ProtoMember(2)]
+        [LogMe]
+        public List<string> InitialUnits { get; set; } = [];
     }
 }
