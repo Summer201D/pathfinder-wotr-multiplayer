@@ -209,7 +209,12 @@ namespace WOTRMultiplayer.Services
             switch (Game.Combat.Stage)
             {
                 case NetworkCombatStage.Initiating:
-                    if (!Game.Combat.IsInitiated)
+                    if (Game.Combat.IsInitiated == null)
+                    {
+                        return false;
+                    }
+
+                    if (!Game.Combat.IsInitiated.Value)
                     {
                         var units = CombatInteraction.GetUnitsInCombat();
                         var message = new NotifyCombatInitiated
@@ -705,6 +710,8 @@ namespace WOTRMultiplayer.Services
                 RestartCombatStartupSequence();
                 return;
             }
+
+            Game.Combat.IsInitiated = false;
         }
 
         private async void OnNotifyCombatUnitsExcluded(long receivedFrom, NotifyCombatUnitsExcluded message)

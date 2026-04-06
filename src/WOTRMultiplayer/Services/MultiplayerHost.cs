@@ -345,7 +345,7 @@ namespace WOTRMultiplayer.Services
                 switch (Game.Combat.Stage)
                 {
                     case NetworkCombatStage.Initiating:
-                        if (Game.Combat.IsInitiated)
+                        if (Game.Combat.IsInitiated.GetValueOrDefault())
                         {
                             var canAdvanceStage = Game.Combat.PlayersInCombat.Count >= GetSyncedPlayersCount();
                             if (canAdvanceStage)
