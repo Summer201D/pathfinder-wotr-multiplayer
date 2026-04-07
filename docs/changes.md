@@ -152,7 +152,7 @@ Although the base game has no support for pausing while you are in the global ma
 Crusade is fully controlled by the host (army movement/recruiting/battles/etc...)
 
 #### Crusade automode
-Although this difficutly setting is not disabled, it has not been checked and there are no plans to support it if anything
+Never checked if it contains any randomness. Also, there are no plans to support it
 
 ## Alushenyrra Isles (Act 4)
 Dynamic parts (isles/houses/platforms/etc) are controlled by the host camera direction. It might be a bit clunky, but make sure characters don't get stuck as there is no additional position or isle state sync.

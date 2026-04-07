@@ -110,7 +110,7 @@ namespace WOTRMultiplayer.HarmonyPatches.Combat.Crusades
                 var seededContext = Main.Multiplayer.GetSeededContext();
                 var turnNumber = Game.Instance.TacticalCombat?.Data?.Turn?.Number ?? -1;
                 var unit = unitPartTacticalMorale.Owner;
-                var identifier = $"{nameof(UnitPartTacticalMorale)}:{nameof(RollSuccess)}:{unit.UniqueId}:{turnNumber}:{unitPartTacticalMorale.Morale}:{unitPartTacticalMorale.m_PositiveMod}:{unitPartTacticalMorale.m_PositiveChanceBonus}_{seededContext.Lifetime}";
+                var identifier = $"{nameof(UnitPartTacticalMorale)}:{nameof(RollSuccess)}:{unit.UniqueId}:{turnNumber}:{unitPartTacticalMorale.Morale}:{unitPartTacticalMorale.m_PositiveMod}:{unitPartTacticalMorale.m_PositiveChanceBonus}_{seededContext.Id}";
                 var roll = Main.Multiplayer.ValueGenerator.Range(seededContext.Lifetime, identifier, minInclusive, maxExclusive);
                 Main.GetLogger<TacticalCombatControllerPatches>().LogInformation("Tactical combat morale has been rolled. UnitId={UnitId}, Roll={Roll}, Identifier={Identifier}, MinInclusive={MinInclusive}, MaxExclusive={MaxExclusive}", unitPartTacticalMorale.Owner.UniqueId, roll, identifier, minInclusive, maxExclusive);
                 return roll;

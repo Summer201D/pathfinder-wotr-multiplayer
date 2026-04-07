@@ -169,17 +169,13 @@
                     "title": "Rest encounter 'Forced pause' timeout",
                     "tooltip": "Delay to lift forced pause once random rest encounter is synchronized for everyone.\nBasic format is 00:00:00 (but not limited to) which means Hours:Minutes:Seconds"
                 },
-                "remoteRollRetrievalTimeout": {
-                    "title": "Remote Roll retrieval timeout",
-                    "tooltip": "How long to wait for a roll from the remote source. The game stays frozen until it gets a response or hits the timeout. If it times out, we use the local roll = this leads to desync.\nMake sure this value is less than or equal 'Network Awaiter Timeout'"
+                "restEncounterSyncTimeout": {
+                    "title": "Rest Encounter synchronization timeout",
+                    "tooltip": "Client must wait for host to generate random rest encounter data (if any).\nBanter skips are synchronized for everyone, so this (generation on host, retrieval on client) should happen around the same time"
                 },
                 "networkAwaiterTimeout": {
                     "title": "Network Awaiter timeout",
                     "tooltip": "Sometimes we need to make requests rather than passively listen for incoming messages. This is a generic timeout for such cases where those requests are considered failed"
-                },
-                "restEncounterSyncTimeout": {
-                    "title": "Rest Encounter synchronization timeout",
-                    "tooltip": "Client must wait for host to generate random rest encounter data (if any).\nBanter skips are synchronized for everyone, so this (generation on host, retrieval on client) should happen around the same time"
                 },
                 "enforcedCombatStartDelay": {
                     "title": "Enforced combat start delay",

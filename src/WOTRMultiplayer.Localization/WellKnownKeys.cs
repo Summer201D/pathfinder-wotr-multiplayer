@@ -646,8 +646,8 @@ public static class WellKnownKeys
                 }
             }
 
-            [Description("remoteRollRetrievalTimeout")]
-            public static class RemoteRollRetrievalTimeout
+            [Description("restEncounterSyncTimeout")]
+            public static class RestEncounterSyncTimeout
             {
                 [Description("title")]
                 public static class Title
@@ -664,22 +664,6 @@ public static class WellKnownKeys
 
             [Description("networkAwaiterTimeout")]
             public static class NetworkAwaiterTimeout
-            {
-                [Description("title")]
-                public static class Title
-                {
-                    public static string Key { get; set; }
-                }
-
-                [Description("tooltip")]
-                public static class Tooltip
-                {
-                    public static string Key { get; set; }
-                }
-            }
-
-            [Description("restEncounterSyncTimeout")]
-            public static class RestEncounterSyncTimeout
             {
                 [Description("title")]
                 public static class Title

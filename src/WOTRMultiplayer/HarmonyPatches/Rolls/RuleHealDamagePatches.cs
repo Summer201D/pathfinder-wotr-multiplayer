@@ -2,7 +2,6 @@
 using System.Reflection;
 using System.Reflection.Emit;
 using HarmonyLib;
-using Kingmaker.Armies.TacticalCombat;
 using Kingmaker.RuleSystem;
 using Kingmaker.RuleSystem.Rules.Damage;
 using Microsoft.Extensions.Logging;
@@ -19,73 +18,40 @@ namespace WOTRMultiplayer.HarmonyPatches.Rolls
         {
             var target = PatchesUtils.GetTranspilerTarget(MethodBase.GetCurrentMethod());
             var matcher = new CodeMatcher(instructions);
-            if (!ReplaceNonTacticalCombat(matcher, target) || !ReplaceTacticalCombat(matcher, target))
-            {
-                Main.GetLogger<RuleHealDamagePatches>().LogError("Transpiler has not been applied. Target={Target}", target);
-                matcher.Instructions();
-            }
-
-            return matcher.Instructions();
-        }
-
-        private static bool ReplaceNonTacticalCombat(CodeMatcher matcher, string target)
-        {
             var lookFor = AccessTools.Method(typeof(Dice), nameof(Dice.D), [typeof(DiceFormula)]);
             var replaceWith = AccessTools.Method(typeof(RuleHealDamagePatches), nameof(RuleHealDamagePatches.HealDamageRoll));
             var match = matcher.SearchForward(x => x.Calls(lookFor));
             if (match.IsInvalid)
             {
                 Main.GetLogger<RuleHealDamagePatches>().LogError("Transpiler has not been applied. Target={Target}", target);
-                return false;
-            }
-            match.RemoveInstruction();
-            var newInstructions = new List<CodeInstruction>()
-            {
-                new(OpCodes.Ldc_I4_0),
-                new(OpCodes.Ldarg_0),
-                new(OpCodes.Call, replaceWith)
-            };
-            match.Insert(newInstructions);
-            Main.GetLogger<RuleHealDamagePatches>().LogDebug("Transpiler has been applied. Target={Target}", target);
-            return true;
-        }
-
-        private static bool ReplaceTacticalCombat(CodeMatcher matcher, string target)
-        {
-            var lookFor = AccessTools.Method(typeof(TacticalCombatHelper), nameof(TacticalCombatHelper.GetDiceResult));
-            var replaceWith = AccessTools.Method(typeof(RuleHealDamagePatches), nameof(RuleHealDamagePatches.HealDamageRoll));
-            var match = matcher.SearchForward(x => x.Calls(lookFor));
-            if (match.IsInvalid)
-            {
-                Main.GetLogger<RuleHealDamagePatches>().LogError("Transpiler has not been applied. Target={Target}", target);
-                return false;
+                return instructions;
             }
 
             var newInstructions = new List<CodeInstruction>()
             {
-                new(OpCodes.Ldc_I4_1),
                 new(OpCodes.Ldarg_0),
                 new(OpCodes.Call, replaceWith)
             };
             match = match.RemoveInstruction().Insert(newInstructions);
             Main.GetLogger<RuleHealDamagePatches>().LogDebug("Transpiler has been applied. Target={Target}", target);
-            return true;
+
+            return matcher.Instructions();
         }
 
-        private static int HealDamageRoll(DiceFormula diceFormula, bool isTacticalCombat, RuleHealDamage ruleHealDamage)
+        private static int HealDamageRoll(DiceFormula diceFormula, RuleHealDamage ruleHealDamage)
         {
             if (!Main.Multiplayer.IsActive)
             {
-                return isTacticalCombat ? TacticalCombatHelper.GetDiceResult(diceFormula) : Dice.D(diceFormula);
+                return Dice.D(diceFormula);
             }
 
-            var shouldRunOriginalLogic = Main.Rolls.OnBeforeRollRuleHealDamage(ruleHealDamage, isTacticalCombat, diceFormula);
+            var shouldRunOriginalLogic = Main.Rolls.OnBeforeRollRuleHealDamage(ruleHealDamage, diceFormula);
             if (!shouldRunOriginalLogic)
             {
                 return ruleHealDamage.RollResult;
             }
 
-            return isTacticalCombat ? TacticalCombatHelper.GetDiceResult(diceFormula) : Dice.D(diceFormula);
+            return Dice.D(diceFormula);
         }
     }
 }

@@ -59,7 +59,7 @@ namespace WOTRMultiplayer.Services
             }
         }
 
-        public bool OnBeforeRollRuleHealDamage(RuleHealDamage ruleHealDamage, bool isTacticalCombat, DiceFormula diceFormula)
+        public bool OnBeforeRollRuleHealDamage(RuleHealDamage ruleHealDamage, DiceFormula diceFormula)
         {
             try
             {
@@ -68,7 +68,7 @@ namespace WOTRMultiplayer.Services
                     return true;
                 }
 
-                var result = RollHealDamage(ruleHealDamage, isTacticalCombat, diceFormula);
+                var result = RollHealDamage(ruleHealDamage, diceFormula);
                 ruleHealDamage.RollResult = result;
                 return false;
             }
@@ -327,7 +327,7 @@ namespace WOTRMultiplayer.Services
             return roll;
         }
 
-        private HealDamageRoll CreateHealDamageRoll(NetworkDiceRollType diceRollType, RuleHealDamage ruleHealDamage, bool isTacticalCombat)
+        private HealDamageRoll CreateHealDamageRoll(NetworkDiceRollType diceRollType, RuleHealDamage ruleHealDamage)
         {
             var roll = new HealDamageRoll(ruleHealDamage.Initiator?.UniqueId, ruleHealDamage.GetType().Name, diceRollType, 0)
             {
@@ -335,7 +335,6 @@ namespace WOTRMultiplayer.Services
                 AbilitySchoolId = ruleHealDamage.Reason.Ability?.Spellbook?.Blueprint.name,
                 TargetId = ruleHealDamage.Target?.UniqueId,
                 EmpowerModifier = ruleHealDamage.EmpowerModifier,
-                IsTacticalCombat = isTacticalCombat,
                 AdditionalBonus = ruleHealDamage.AdditionalBonus,
                 HealResistance = ruleHealDamage.HealResistance
             };
@@ -508,9 +507,9 @@ namespace WOTRMultiplayer.Services
             return roll;
         }
 
-        private int RollHealDamage(RuleHealDamage ruleHealDamage, bool isTacticalCombat, DiceFormula diceFormula)
+        private int RollHealDamage(RuleHealDamage ruleHealDamage, DiceFormula diceFormula)
         {
-            var healDamage = CreateHealDamageRoll(NetworkDiceRollType.Heal, ruleHealDamage, isTacticalCombat);
+            var healDamage = CreateHealDamageRoll(NetworkDiceRollType.Heal, ruleHealDamage);
             var deterministicRoll = RollDice(healDamage, diceFormula);
             return deterministicRoll;
         }

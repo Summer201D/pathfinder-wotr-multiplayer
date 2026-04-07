@@ -12,8 +12,6 @@ namespace WOTRMultiplayer.Entities.Rolls
 
         public float EmpowerModifier { get; set; }
 
-        public bool IsTacticalCombat { get; set; }
-
         public int AdditionalBonus { get; set; }
 
         public float HealResistance { get; set; }
@@ -25,7 +23,7 @@ namespace WOTRMultiplayer.Entities.Rolls
 
         protected override IEnumerable<string> GetRollIdentifier()
         {
-            return [TargetId, AbilityName, AbilitySchoolId, EmpowerModifier.ToString(), IsTacticalCombat.ToString(), AdditionalBonus.ToString(), HealResistance.ToString()];
+            return [TargetId, AbilityName, AbilitySchoolId, EmpowerModifier.ToString(), AdditionalBonus.ToString(), HealResistance.ToString()];
         }
     }
 }

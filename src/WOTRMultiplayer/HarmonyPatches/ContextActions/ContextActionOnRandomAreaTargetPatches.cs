@@ -58,7 +58,7 @@ namespace WOTRMultiplayer.HarmonyPatches.ContextActions
                 var abilityName = contextActionOnRandom.AbilityContext.NameForAcronym;
                 var attackNumber = contextActionOnRandom.AbilityContext.AttackRoll?.RuleAttackWithWeapon?.AttackNumber ?? -1;
                 var units = string.Join(",", targets.Select(x => x.UniqueId));
-                var identifier = $"{nameof(ContextActionOnRandomAreaTarget)}:{nameof(SelectRandomTarget)}:{units}:{unitId}:{targetId}:{abilityName}:{attackNumber}_{seededContext.Lifetime}";
+                var identifier = $"{nameof(ContextActionOnRandomAreaTarget)}:{nameof(SelectRandomTarget)}:{units}:{unitId}:{targetId}:{abilityName}:{attackNumber}_{seededContext.Id}";
                 var index = Main.Multiplayer.ValueGenerator.Range(seededContext.Lifetime, identifier, 0, targets.Count);
                 var unit = targets[index];
                 Main.GetLogger<ContextActionOnRandomAreaTargetPatches>().LogInformation("ContextActionOnRandomAreaTarget has been rolled. UnitId={UnitId}, Identifier={Identifier}", unitId, identifier);
