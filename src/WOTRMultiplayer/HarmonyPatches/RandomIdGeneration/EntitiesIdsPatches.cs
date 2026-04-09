@@ -395,6 +395,11 @@ namespace WOTRMultiplayer.HarmonyPatches.RandomIdGeneration
 
         private static string GetNewAreaEffectUniqueId(AreaEffectView areaEffectView)
         {
+            if (!Main.Multiplayer.IsActive)
+            {
+                return Game.Instance.Player.GetNewUniqueId();
+            }
+
             try
             {
                 var identifier = $"{CommonTranspilerReplacements.GetSharedIdentifierPart()}:{areaEffectView.GetType().Name}:{areaEffectView.name}";
@@ -410,6 +415,11 @@ namespace WOTRMultiplayer.HarmonyPatches.RandomIdGeneration
 
         private static string GetNewEntityUniqueId(EntityViewBase prefab)
         {
+            if (!Main.Multiplayer.IsActive)
+            {
+                return Game.Instance.Player.GetNewUniqueId();
+            }
+
             try
             {
                 var identifier = $"{CommonTranspilerReplacements.GetSharedIdentifierPart()}:{prefab.GetType().Name}:{prefab.name}";
@@ -426,11 +436,16 @@ namespace WOTRMultiplayer.HarmonyPatches.RandomIdGeneration
 
         private static string GetNewUnitUniqueId(BlueprintUnit unit, UnitEntityView prefab)
         {
+            if (!Main.Multiplayer.IsActive)
+            {
+                return Game.Instance.Player.GetNewUniqueId();
+            }
+
             try
             {
                 var rawIdentifier = $"{CommonTranspilerReplacements.GetSharedIdentifierPart()}:{unit.AssetGuid}:{prefab.name}:{unit?.CharacterName}";
                 var id = Main.Multiplayer.ValueGenerator.GenerateUniqueId(IdType.Unit, Game.Instance.Player.GameId, rawIdentifier);
-                Main.GetLogger<EntitiesIdsPatches>().LogDebug("UnitId has been generated. GameId={GameId}, RawIdentifier={RawIdentifier}, Id={Id}", Game.Instance.Player.GameId, rawIdentifier, id);
+                Main.GetLogger<EntitiesIdsPatches>().LogDebug("UnitId has been generated. RawIdentifier={RawIdentifier}, Id={Id}", rawIdentifier, id);
                 return id;
             }
             catch (Exception ex)
@@ -442,6 +457,11 @@ namespace WOTRMultiplayer.HarmonyPatches.RandomIdGeneration
 
         private static string GetNewEntityFactUniqueId(EntityFact fact)
         {
+            if (!Main.Multiplayer.IsActive)
+            {
+                return Game.Instance.Player.GetNewUniqueId();
+            }
+
             try
             {
                 var identifier = $"{CommonTranspilerReplacements.GetSharedIdentifierPart()}:{fact.GetType().Name}:{fact.NameForAcronym}:{fact.Owner?.UniqueId}";
@@ -457,6 +477,11 @@ namespace WOTRMultiplayer.HarmonyPatches.RandomIdGeneration
 
         private static string GetNewChangeBlueprintUniqueId(UnitEntityData unitEntityData, BlueprintUnit blueprintUnit)
         {
+            if (!Main.Multiplayer.IsActive)
+            {
+                return Game.Instance.Player.GetNewUniqueId();
+            }
+
             try
             {
                 var identifier = $"{CommonTranspilerReplacements.GetSharedIdentifierPart()}:{unitEntityData.CharacterName}:{blueprintUnit?.name}";
@@ -472,6 +497,11 @@ namespace WOTRMultiplayer.HarmonyPatches.RandomIdGeneration
 
         private static string GetNewItemEntityId(BlueprintItem blueprintItem)
         {
+            if (!Main.Multiplayer.IsActive)
+            {
+                return Game.Instance.Player.GetNewUniqueId();
+            }
+
             try
             {
                 var identifier = $"{CommonTranspilerReplacements.GetSharedIdentifierPart()}:{blueprintItem?.name ?? "null-item"}:{blueprintItem?.ItemType}:{blueprintItem?.MiscellaneousType}";
@@ -487,6 +517,11 @@ namespace WOTRMultiplayer.HarmonyPatches.RandomIdGeneration
 
         private static string GetAbilityDataEntityId(BlueprintAbility blueprint, UnitDescriptor caster, Ability fact, BlueprintSpellbook blueprintSpellbook)
         {
+            if (!Main.Multiplayer.IsActive)
+            {
+                return Game.Instance.Player.GetNewUniqueId();
+            }
+
             try
             {
                 var identifier = $"{CommonTranspilerReplacements.GetSharedIdentifierPart()}:{blueprint.NameForAcronym}:{caster?.Unit?.UniqueId}:{fact?.UniqueId}:{blueprintSpellbook?.name}";
