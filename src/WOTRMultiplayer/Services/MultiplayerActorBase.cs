@@ -483,6 +483,8 @@ namespace WOTRMultiplayer.Services
             }
 
             ResetGameIdGenerator();
+            ResetGlobalMapCounters();
+
             Game.LoadedSaveSeed = CreateRandomSeed();
 
             TransferSaveGame(requiresProgress: false);

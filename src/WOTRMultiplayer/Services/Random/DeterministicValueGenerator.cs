@@ -156,7 +156,7 @@ namespace WOTRMultiplayer.Services.Random
             }
             catch (System.Exception ex)
             {
-                _logger.LogError(ex, "Unable to generate unique id. UniqueIdType={UniqueIdType}, Identifier={Identifier}", idType, identifier);
+                _logger.LogError(ex, "Unable to generate unique id. IdType={IdType}, Identifier={Identifier}", idType, identifier);
                 throw;
             }
         }

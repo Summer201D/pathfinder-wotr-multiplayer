@@ -12,6 +12,8 @@ using WOTRMultiplayer.Abstractions.Random;
 using WOTRMultiplayer.Abstractions.Settings;
 using WOTRMultiplayer.Config.Mapping;
 using WOTRMultiplayer.Entities;
+using WOTRMultiplayer.Entities.Combat;
+using WOTRMultiplayer.Entities.Combat.Crusades;
 using WOTRMultiplayer.Entities.Content;
 using WOTRMultiplayer.Entities.Items;
 using WOTRMultiplayer.Entities.Settings;
@@ -20,6 +22,7 @@ using WOTRMultiplayer.Networking.Abstractions;
 using WOTRMultiplayer.Networking.Messages.Game;
 using WOTRMultiplayer.Networking.Messages.Lobby;
 using WOTRMultiplayer.Services;
+using WOTRMultiplayer.Services.Random;
 using WOTRMultiplayer.UnitTests.FakeRules;
 
 namespace WOTRMultiplayer.UnitTests.Services
@@ -325,6 +328,60 @@ namespace WOTRMultiplayer.UnitTests.Services
             // Assert
             _multiplayerHost.Game.PlayersInGameMode.TryGetValue(gameMode, out var players);
             A.CallTo(() => _gameInteractionService.UpdateRestUI(false, players.Count, _multiplayerHost.Game.Players.Count)).MustHaveHappened();
+        }
+
+        [TestCase(SeedKind.Session | SeedKind.LoadedSaveSeed, "Session=1,LoadedSaveSeed=2,AreaSeed=excluded,CombatSeed=excluded,CombatTurnSeed=excluded,CrusadeArmyCombatAreaSeed=excluded,CrusadeArmyCombatSeed=excluded")]
+        [TestCase(SeedKind.Session, "Session=1,LoadedSaveSeed=excluded,AreaSeed=excluded,CombatSeed=excluded,CombatTurnSeed=excluded,CrusadeArmyCombatAreaSeed=excluded,CrusadeArmyCombatSeed=excluded")]
+        [TestCase(SeedKind.All, "Session=1,LoadedSaveSeed=2,AreaSeed=3,CombatSeed=4,CombatTurnSeed=0,CrusadeArmyCombatAreaSeed=5,CrusadeArmyCombatSeed=6")]
+        [TestCase(SeedKind.All & ~SeedKind.AreaSeed, "Session=1,LoadedSaveSeed=2,AreaSeed=excluded,CombatSeed=4,CombatTurnSeed=0,CrusadeArmyCombatAreaSeed=5,CrusadeArmyCombatSeed=6")]
+        public void GetSeededContext_CombatTurnIsNull_ReturnsCorrectIdAndLifetime(SeedKind seedKind, string expected)
+        {
+            // Arrange
+            var gameMode = GameModeType.All.First(x => x.Index == (int)GameModeType.Enum.Rest);
+            _multiplayerHost.Game = new NetworkGame(new NetworkGameStartUp())
+            {
+                LocalPlayerId = NetworkingConsts.HostPlayerId,
+                Players = [new NetworkPlayer { Id = NetworkingConsts.HostPlayerId, LobbySyncStatus = NetworkLobbySyncStatus.Succeed }],
+                SessionSeed = 1,
+                LoadedSaveSeed = 2,
+                CurrentArea = new Entities.Area.NetworkArea { Seed = 3 },
+                Combat = new NetworkCombat { Seed = 4 },
+                ArmyCombat = new NetworkArmyCombat { Seed = 6, AreaSeed = 5 },
+            };
+
+            // Act
+            var context = _multiplayerHost.GetSeededContext(seedKind);
+
+            // Assert
+            Assert.That(context, Is.Not.Null);
+            Assert.That(context.Id, Is.EqualTo(expected));
+            Assert.That(context.Lifetime, Is.EqualTo(IdentifierLifetime.Area));
+        }
+
+        [TestCase(SeedKind.Session, "Session=1,LoadedSaveSeed=excluded,AreaSeed=excluded,CombatSeed=excluded,CombatTurnSeed=excluded,CrusadeArmyCombatAreaSeed=excluded,CrusadeArmyCombatSeed=excluded")]
+        [TestCase(SeedKind.All, "Session=1,LoadedSaveSeed=2,AreaSeed=3,CombatSeed=4,CombatTurnSeed=99,CrusadeArmyCombatAreaSeed=5,CrusadeArmyCombatSeed=6")]
+        public void GetSeededContext_CombatTurnIsSet_ReturnsCorrectIdAndLifetime(SeedKind seedKind, string expected)
+        {
+            // Arrange
+            var gameMode = GameModeType.All.First(x => x.Index == (int)GameModeType.Enum.Rest);
+            _multiplayerHost.Game = new NetworkGame(new NetworkGameStartUp())
+            {
+                LocalPlayerId = NetworkingConsts.HostPlayerId,
+                Players = [new NetworkPlayer { Id = NetworkingConsts.HostPlayerId, LobbySyncStatus = NetworkLobbySyncStatus.Succeed }],
+                SessionSeed = 1,
+                LoadedSaveSeed = 2,
+                CurrentArea = new Entities.Area.NetworkArea { Seed = 3 },
+                Combat = new NetworkCombat { Seed = 4, Turn = new NetworkCombatTurn { Seed = 99 } },
+                ArmyCombat = new NetworkArmyCombat { Seed = 6, AreaSeed = 5 },
+            };
+
+            // Act
+            var context = _multiplayerHost.GetSeededContext(seedKind);
+
+            // Assert
+            Assert.That(context, Is.Not.Null);
+            Assert.That(context.Id, Is.EqualTo(expected));
+            Assert.That(context.Lifetime, Is.EqualTo(IdentifierLifetime.CombatTurn));
         }
 
         private static IEnumerable<ContentStateTestCase> DlcDifferencesTestCases()
