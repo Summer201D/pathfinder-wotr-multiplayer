@@ -1,6 +1,6 @@
 # Multiplayer changes
 
-#### Disclaimer: All of the changes below only work when you are in a multiplayer session (started or joined game through the Multiplayer Window). Single-player isn't affected at all, so you can keep playing normally. But if you are curious about what the mod adds, you can always host a solo game to check it out.
+#### Disclaimer: All of the changes below only work when you are in a multiplayer session. Single-player isn't affected at all, so you can keep playing normally. But if you are curious about what the mod adds, you can always host a solo game to check it out.
 
 ## TL/DR:
 - Campaign is mostly playable, but there are a few heavily bugged encounters
@@ -26,12 +26,12 @@ See the [general information](/docs/dev/mods.md) about mod integration, as well 
   - global edit of `SaveLoadPcView` causes some minor side-effects for our own copy of that view
   - multiplayer settings are corrupted / not loaded correctly on Settings UI. Didn't look for a reason yet
 
-Here is the list of mods which were used during campaign playthrough (Angel path) in multiplayer:
+Here is the list of mods which were used during full campaign playthrough (Angel path) in multiplayer:
 
 - 0ToyBox0 - no exta features enabled, just to alter game state when needed
 - BubbleBuffs
 - BubbleBuffs.Multiplayer
-- Download_This_RespecWrath
+- RespecWrath
 - Visual Adjustments
 
 ## UnityModManager settings
@@ -40,7 +40,7 @@ Purely dev/logging configuration. Gameplay related things are located in in-game
 ## Basics
 Multiplayer window loads all available saves. You can use any save to host a multiplayer game.
 
-There is a special `New Campaign` save slot that can be used to start fresh campaign. It will start regular new game sequence, but for everyone in multiplayer session. Player assigned to control main character will be in control of Character generation screen. 
+There is a special `New Campaign` save slot that can be used to start fresh campaign. Player assigned to control main character will be in control of Character generation screen. 
 
 Worth noting, such way to start game is very limited as of now:
 - no save import
@@ -62,8 +62,6 @@ It is possible to join when the game has already started, you just need to ask s
 ## Networking
 
 - Direct IP Connect – works fine with local network emulators or a public/static ('white') IP from your ISP.
-
-**There are no plans to support anything like dedicated server or "joining by Game Code".**
 
 ## Interface
 

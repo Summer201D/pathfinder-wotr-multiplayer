@@ -4,8 +4,6 @@ When defining new network messages, you must annotate them with attributes from 
 
 As a result, the multiplayer assemblies must already be loaded. Otherwise, a `TypeLoadException` will occur.
 
-Unfortunately, UnityModManager does not provide explicit control over load order, so the only reliable workaround is **folder naming**.
-
 ---
 ### Disclaimer: any contracts/api is not final and may change without further notice.
 ---

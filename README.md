@@ -17,6 +17,6 @@ Look at [changes](/docs/changes.md) for more details
 
 ### TL/DR:
 - Campaign is mostly playable, but there are a few heavily bugged encounters
-- There are no changes to content or balance or how mythic paths/companions work.
+- There are no changes to content, balance or how mythic paths/companions work.
 - Game Version/DLC/Mods should match across players.
 
