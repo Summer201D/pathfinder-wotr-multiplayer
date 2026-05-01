@@ -346,7 +346,7 @@ namespace WOTRMultiplayer.Services
                 switch (Game.Combat.Stage)
                 {
                     case NetworkCombatStage.Initiating:
-                        if (Game.Combat.IsInitiated.GetValueOrDefault())
+                        if (Game.Combat.IsInitiated)
                         {
                             var canAdvanceStage = Game.Combat.PlayersInCombat.Count >= GetSyncedPlayersCount();
                             if (canAdvanceStage)
@@ -1457,6 +1457,15 @@ namespace WOTRMultiplayer.Services
             _networkServer.Send(playerId, message);
         }
 
+        protected override void OnCombatStageChanged(NetworkCombatStage combatStage)
+        {
+            var message = new NotifyCombatStageChanged
+            {
+                Stage = combatStage.ToString()
+            };
+            Send(message);
+        }
+
         protected override void OnLocalPlayerTurnStart()
         {
             SetCombatTurnStage(NetworkCombatTurnStage.Starting);
@@ -1727,13 +1736,21 @@ namespace WOTRMultiplayer.Services
                 var player = GetPlayer(receivedFrom);
                 PlayerNotification.AddCombatText(WellKnownKeys.GameNotifications.Combat.Start.DesyncedStartup.Client.Key, CombatTextSeverity.Critical, player?.Name);
 
+                await WaitWhileTrue(() => CombatInteraction.IsRiderActive(), "Waiting for current turn to end before reseting combat");
+
                 // this will also trigger restart for all clients in the lobby
-                RestartCombatStartupSequence();
+                CleanupUntargetableUnitsState();
+                Game.Combat = null;
+                await CombatInteraction.ForceResetCombatAsync();
+
+                await WaitWhileTrue(() => Game.Combat == null || !Game.Combat.IsInitiated, "Waiting for combat to restart");
+                Game.Combat.PlayersInCombat.TryAdd(message.PlayerId, true);
+                Logger.LogInformation("Corrupted player has been re-added after combat restart. PlayerId={PlayerId}", message.PlayerId);
                 return;
             }
 
             Game.Combat.PlayersInCombat.TryAdd(message.PlayerId, true);
-            Logger.LogInformation("Player is in combat. PlayerId={PlayerId}", message.PlayerId);
+            Logger.LogInformation("IsInCombat state has been registered. PlayerId={PlayerId}", message.PlayerId);
         }
 
         private void OnNotifyCombatDataCollected(long receivedFrom, NotifyCombatDataCollected message)

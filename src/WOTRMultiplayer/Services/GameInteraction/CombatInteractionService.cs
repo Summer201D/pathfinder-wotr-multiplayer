@@ -507,6 +507,23 @@ namespace WOTRMultiplayer.Services.GameInteraction
             Game.Instance.Player.Group.IsInCombat.Reset();
         }
 
+        public Task ForceResetCombatAsync()
+        {
+            var tcs = new TaskCompletionSource<bool>();
+            _mainThreadAccessor.Post(() =>
+            {
+                try
+                {
+                    ForceResetCombat();
+                }
+                finally
+                {
+                    tcs.SetResult(true);
+                }
+            });
+            return tcs.Task;
+        }
+
         public bool IsCombatInitialized()
         {
             return Game.Instance.TurnBasedCombatController.Initialized;

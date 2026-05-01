@@ -208,12 +208,6 @@ namespace WOTRMultiplayer.Services
         public void CombatRoundStarted(int round)
         {
             Logger.LogInformation("Combat round started. Round={Round}", round);
-            if (Game.Combat == null)
-            {
-                Logger.LogWarning("Combat has not started yet");
-                return;
-            }
-
             Game.Combat.Round = round;
         }
 
@@ -2730,26 +2724,6 @@ namespace WOTRMultiplayer.Services
             PlayerNotification.ShowModalMessage(WellKnownKeys.GameNotifications.Session.PlayerLeft.Key, networkPlayer.Name);
         }
 
-        protected void RestartCombatStartupSequence()
-        {
-            if (Game.Combat == null)
-            {
-                return;
-            }
-
-            Game.Combat.IsSynced = false;
-            Game.Combat.IsDataCollected = false;
-            Game.Combat.IsDataCompared = false;
-            Game.Combat.IsInitiated = false;
-            Game.Combat.PlayersInCombat.Clear();
-            Game.Combat.PlayersFinishedStartupSequence.Clear();
-            Game.Combat.RemotelyKilledUnits.Clear();
-            Game.Combat.PlayersNextTurnInitialization.Clear();
-            Game.Combat.PlayersNextTurnSynchronization.Clear();
-            SetCombatStage(NetworkCombatStage.Initiating);
-            Logger.LogWarning("Combat startup sequence has been restarted");
-        }
-
         protected NetworkPlayer CleanupPlayer(long playerId)
         {
             var existingPlayer = GetPlayer(playerId);
@@ -2998,12 +2972,12 @@ namespace WOTRMultiplayer.Services
 
             if (!isSilent)
             {
-                var message = new NotifyCombatStageChanged
-                {
-                    Stage = Game.Combat.Stage.ToString()
-                };
-                Send(message);
+                OnCombatStageChanged(combatStage);
             }
+        }
+
+        protected virtual void OnCombatStageChanged(NetworkCombatStage combatStage)
+        {
         }
 
         protected void SetCombatTurnStage(NetworkCombatTurnStage combatTurnStage)

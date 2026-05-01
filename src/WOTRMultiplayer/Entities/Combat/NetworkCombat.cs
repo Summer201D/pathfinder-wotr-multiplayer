@@ -31,7 +31,7 @@ namespace WOTRMultiplayer.Entities.Combat
 
         public HashSet<string> RemotelyKilledUnits { get; set; } = [];
 
-        public bool? IsInitiated { get; set; }
+        public bool IsInitiated { get; set; }
 
         public bool IsDataCollected { get; set; }
 

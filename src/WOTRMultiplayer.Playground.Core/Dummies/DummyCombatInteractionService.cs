@@ -181,5 +181,10 @@ namespace WOTRMultiplayer.Playground.Core.Dummies
         {
             return Task.FromResult(units);
         }
+
+        public Task ForceResetCombatAsync()
+        {
+            return Task.FromResult(true);
+        }
     }
 }

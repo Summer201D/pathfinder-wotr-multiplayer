@@ -81,6 +81,8 @@ namespace WOTRMultiplayer.Abstractions.GameInteraction
 
         void ForceResetCombat();
 
+        Task ForceResetCombatAsync();
+
         bool IsCombatInitialized();
 
         Task ExcludeUnitsFromCombatAsync(List<string> units);
