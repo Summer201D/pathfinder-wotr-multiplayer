@@ -153,6 +153,20 @@ namespace WOTRMultiplayer.HarmonyPatches.GameInstance
             return matcher.Instructions();
         }
 
+        [HarmonyPatch(typeof(Game), nameof(Game.UnpauseBindOn))]
+        [HarmonyPrefix]
+        public static bool Game_UnpauseBindOn_Prefix()
+        {
+            return !Main.Multiplayer.IsActive;
+        }
+
+        [HarmonyPatch(typeof(Game), nameof(Game.UnpauseBindOff))]
+        [HarmonyPrefix]
+        public static bool Game_UnpauseBindOff_Prefix()
+        {
+            return !Main.Multiplayer.IsActive;
+        }
+
         [HarmonyPatch(typeof(Game), nameof(Game.LoadNewGame), [typeof(BlueprintAreaPreset), typeof(SaveInfo)])]
         [HarmonyTranspiler]
         public static IEnumerable<CodeInstruction> Game_LoadNewGame_Transpiler(IEnumerable<CodeInstruction> instructions)
