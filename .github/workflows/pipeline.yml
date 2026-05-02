@@ -59,6 +59,15 @@ jobs:
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 8.x
+      - name: Checkout libs
+        uses: actions/checkout@v4
+        with:
+          repository: fl01/pathfinder-wotr-libs
+          token: ${{ secrets.PRIVATE_TOKEN }}
+          path: wotr-libs
+      - name: Copy libs
+        run: |
+          xcopy /E /I /Y "wotr-libs\libs" "libs\"
       - name: Generate Localization
         run: dotnet build ./src/WOTRMultiplayer.Localization.Generator --configuration Release
       - name: Build
