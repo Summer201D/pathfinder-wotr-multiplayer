@@ -201,7 +201,6 @@ namespace WOTRMultiplayer.UI
         {
             if (view == null || _saveLoadPCView != null)
             {
-                _logger.LogWarning("SaveLoadPCView is null");
                 return;
             }
 
@@ -267,8 +266,12 @@ namespace WOTRMultiplayer.UI
             readyButton.name = HostMenuItemController.ReadyButtonObjectName;
             var startButton = UnityEngine.Object.Instantiate(baseButton, buttons);
             startButton.name = HostMenuItemController.StartButtonObjectName;
-            buttons.gameObject.CleanupAllChildren(
-                x => x.name != "DlcRequiredLabel" && x.name != hostButton.name && x.name != readyButton.name && x.name != startButton.name);
+
+            foreach (var button in buttons.Children())
+            {
+                var isActive = button.gameObject == hostButton;
+                button.gameObject.SetActive(isActive);
+            }
 
             return saveLoadView;
         }

@@ -23,7 +23,6 @@ See the [general information](/docs/dev/mods.md) about mod integration, as well 
   - animation speed changes are not synced
 
 - ModMenu - not compatible
-  - global edit of `SaveLoadPcView` causes some minor side-effects for our own copy of that view
   - multiplayer settings are corrupted / not loaded correctly on Settings UI. Didn't look for a reason yet
 
 Here is the list of mods which were used during full campaign playthrough (Angel path) in multiplayer:

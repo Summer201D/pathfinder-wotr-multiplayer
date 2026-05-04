@@ -20,7 +20,8 @@ namespace WOTRMultiplayer.UI.Settings
                 // this interface doesn't expose temp value for some reason
                 if (m_UISettingsEntity.SettingsEntity is not SettingsEntityString stringSettting)
                 {
-                    return m_UISettingsEntity.SettingsEntity.GetStringValue();
+                    var stringValue = m_UISettingsEntity.SettingsEntity.GetStringValue();
+                    return stringValue;
                 }
 
                 var value = stringSettting.TempValueIsConfirmed ? stringSettting.GetValue() : stringSettting.GetTempValue();

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Kingmaker;
 using Kingmaker.Localization;
+using Kingmaker.UI;
 using Kingmaker.UI.Common;
 using Kingmaker.UI.MVVM;
 using Kingmaker.UI.MVVM._PCView.SaveLoad;
@@ -43,9 +44,12 @@ namespace WOTRMultiplayer.UI.Controllers
         public const string ReadyButtonObjectName = "ReadyButton";
         public const string StartButtonObjectName = "StartButton";
 
+
+        public const string ModMenuRecordViewObjectName = "ModMenuModRecordView";
+        public const string ModMenuContainerObjectName = "ModMenuContainerForModRecordView";
+
         private readonly ILogger<HostMenuItemController> _logger;
         private readonly IMultiplayerHost _multiplayerHost;
-
         private GameObject _menuContent;
 
         private SaveLoadVM _saveLoadViewModel;
@@ -72,7 +76,16 @@ namespace WOTRMultiplayer.UI.Controllers
             .Find(SaveLoadScreen)
             .Find(SaveLoadDetails)
             .Find(SaveLoadDetailsInfo)
-            .Find(SaveLoadDetailsInfoButtons);
+            .Find(SaveLoadDetailsInfoButtons)
+            ?? ModMenuViewButtons;
+
+        private Transform ModMenuViewButtons => _menuContent
+            .transform
+            .Find(SaveLoadView)
+            .Find(SaveLoadScreen)
+            .Find(SaveLoadDetails)
+            .Find(ModMenuContainerObjectName)
+            ?.Find(SaveLoadDetailsInfoButtons);
 
         private GameObject HostButtonObject => Buttons.Find(HostButtonObjectName)?.gameObject;
         private OwlcatButton HostButton => HostButtonObject.GetComponent<OwlcatButton>();
@@ -387,6 +400,22 @@ namespace WOTRMultiplayer.UI.Controllers
         {
             _saveLoadView = Main.Multiplayer.UIFactory.CreateSaveLoadPCView(_menuContent.transform);
             _saveLoadView.Initialize();
+
+            // ModMenu compatibility must be applied after 'Initialize' call
+            if (ModMenuViewButtons != null)
+            {
+                Buttons.parent.gameObject.CleanupAllChildren(x => x.name == ModMenuRecordViewObjectName);
+                var vertical = Buttons.GetComponent<VerticalLayoutGroupWorkaround>();
+                if (vertical != null)
+                {
+                    UnityEngine.Object.DestroyImmediate(vertical);
+                    var horizontal = Buttons.gameObject.AddComponent<HorizontalLayoutGroupWorkaround>();
+                    horizontal.spacing = 40;
+                    var rect = Buttons.GetComponent<RectTransform>();
+                    rect.anchorMax = new Vector2(0.5f, 0.5f);
+                    rect.anchorMin = new Vector2(0.5f, 0.5f);
+                }
+            }
         }
 
         private void DisposeSaveLoadVM()
