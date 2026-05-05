@@ -22,9 +22,6 @@ See the [general information](/docs/dev/mods.md) about mod integration, as well 
   - additional interactive UI elements ('Jump to siege' button / Dismiss army / etc) are not synced
   - animation speed changes are not synced
 
-- ModMenu - not compatible
-  - multiplayer settings are corrupted / not loaded correctly on Settings UI. Didn't look for a reason yet
-
 Here is the list of mods which were used during full campaign playthrough (Angel path) in multiplayer:
 
 - 0ToyBox0 - no exta features enabled, just to alter game state when needed
