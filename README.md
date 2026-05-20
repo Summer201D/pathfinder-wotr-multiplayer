@@ -13,7 +13,7 @@ Showcase:
 
 ## Changes
 
-Look at [changes](/docs/changes.md) for more details
+Look [here](/docs/about.md) for more details
 
 ### TL/DR:
 - Campaign is mostly playable, but there are a few heavily bugged encounters
