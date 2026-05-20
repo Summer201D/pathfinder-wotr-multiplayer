@@ -3543,7 +3543,9 @@ namespace WOTRMultiplayer.Services
                 return;
             }
 
-            Game.StartUp.SavePath = StoreSaveGameContent(Game.StartUp.SaveGameTransfer.Content);
+            var saveGameTransfer = Game.StartUp.SaveGameTransfer;
+            Logger.LogInformation("Latest save game chunk has been received. TotalChunks={TotalChunks}, ContentSize={ContentSize}", saveGameTransfer.TotalChunks, saveGameTransfer.Content?.Length);
+            Game.StartUp.SavePath = StoreSaveGameContent(saveGameTransfer.Content);
 
             if (Game.StartUp.AutoStart)
             {

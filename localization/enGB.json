@@ -1,7 +1,8 @@
 {
     "wotrmultiplayer": {
         "sysMessages": {
-            "failedToStoreSave": "Failed to write save game file to disk.\nMake sure the game is allowed to write to the following location:\n{0}"
+            "failedToStoreSave": "Failed to write save game file to disk.\nMake sure the game is allowed to write to the following location:\n{0}",
+            "failedToTransferSave": "Failed to transfer save game file.\nError:{0}"
         },
         "mainMenu": {
             "multiplayer": {

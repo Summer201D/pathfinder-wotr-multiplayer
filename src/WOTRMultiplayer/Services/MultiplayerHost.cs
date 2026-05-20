@@ -102,7 +102,7 @@ namespace WOTRMultiplayer.Services
             _networkServer.Start(settings.HostPortRangeStart, settings.HostPortRangeEnd, settings.NetworkAwaiterTimeout);
 
             OnCharactersChanged?.Invoke(Game.StartUp.Title, Game.Characters);
-            Logger.LogInformation("Host has been created. GameId={GameId}, IsNewGameSequence={IsNewGameSequence}, SavePath={SavePath}, Portraits={Portraits}", Game.Id, gameStartUp.IsNewGameSequence, gameStartUp.SavePath, string.Join(";", Game.Characters.Select(c => c.Portrait)));
+            Logger.LogInformation("Host has been created. GameId={GameId}, IsNewGameSequence={IsNewGameSequence}, SavePath={SavePath}", Game.Id, gameStartUp.IsNewGameSequence, gameStartUp.SavePath);
         }
 
         public void ChangeHostedStartingPoint(string gameId, NetworkGameStartUp gameStartUp)
@@ -121,7 +121,7 @@ namespace WOTRMultiplayer.Services
             Send(charactersChanged);
 
             OnCharactersChanged?.Invoke(Game.StartUp.Title, Game.Characters);
-            Logger.LogInformation("Game starting point has been updated. GameId={GameId}, IsNewGameSequence={IsNewGameSequence}, SavePath={SavePath}, Portraits={Portraits}", Game.Id, Game.StartUp.IsNewGameSequence, Game.StartUp.SavePath, string.Join(";", Game.Characters.Select(c => c.Portrait)));
+            Logger.LogInformation("Game starting point has been updated. GameId={GameId}, IsNewGameSequence={IsNewGameSequence}, SavePath={SavePath}", Game.Id, Game.StartUp.IsNewGameSequence, Game.StartUp.SavePath);
         }
 
         public void ChangeCharacterOwner(NetworkCharacter character, NetworkPlayer player)
@@ -184,7 +184,16 @@ namespace WOTRMultiplayer.Services
             };
             Send(saveSyncStatusChanged);
 
-            TransferSaveGame(requiresProgress: true);
+            try
+            {
+                TransferSaveGame(requiresProgress: true);
+            }
+            catch (Exception ex)
+            {
+                PlayerNotification.ShowModalMessage(WellKnownKeys.SysMessages.FailedToTransferSave.Key, ex.Message);
+                Logger.LogError(ex, "Error while transferring save file");
+                throw;
+            }
 
             TryStartSavedGame();
 

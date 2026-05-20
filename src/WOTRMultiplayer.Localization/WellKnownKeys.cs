@@ -14,6 +14,12 @@ public static class WellKnownKeys
         {
             public static string Key { get; set; }
         }
+
+        [Description("failedToTransferSave")]
+        public static class FailedToTransferSave
+        {
+            public static string Key { get; set; }
+        }
     }
 
     [Description("mainMenu")]

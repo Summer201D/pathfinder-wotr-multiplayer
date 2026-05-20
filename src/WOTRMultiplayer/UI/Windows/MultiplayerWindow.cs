@@ -96,7 +96,7 @@ namespace WOTRMultiplayer.UI.Windows
 
         public override void Show(bool state)
         {
-            _logger.LogInformation("Show/Hide MultiplayerWindow. State={State}", nameof(MultiplayerWindow), state);
+            _logger.LogInformation("Show/Hide MultiplayerWindow. State={State}", state);
             if (!state)
             {
                 IMultiplayerMenuItemController controllerToAsk = _hostMenuController.IsActive ?
