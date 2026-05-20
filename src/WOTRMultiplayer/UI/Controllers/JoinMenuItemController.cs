@@ -26,6 +26,7 @@ using WOTRMultiplayer.Entities;
 using WOTRMultiplayer.Extensions;
 using WOTRMultiplayer.Networking.Abstractions;
 using WOTRMultiplayer.UI.Windows;
+
 namespace WOTRMultiplayer.UI.Controllers
 {
     public class JoinMenuItemController : MenuItemControllerBase, IJoinMenuItemController

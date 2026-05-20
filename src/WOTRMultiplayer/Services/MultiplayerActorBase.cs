@@ -2792,6 +2792,13 @@ namespace WOTRMultiplayer.Services
 
             var settings = SettingsService.GetSettings();
             var content = FileSystem.GetRawFileContent(Game.StartUp.SavePath);
+            if (content == null)
+            {
+                PlayerNotification.ShowModalMessage(WellKnownKeys.SysMessages.FailedToReadSave.Key, Game.StartUp.SavePath);
+                Logger.LogError("Unable to read save game file. Path={Path}", Game.StartUp.SavePath);
+                return;
+            }
+
             var chunks = (content.Length + settings.SaveGameChunkSize - 1) / settings.SaveGameChunkSize;
             initialMessage.ExpectedChunks = chunks;
             initialMessage.ContentSize = content.Length;

@@ -16,13 +16,13 @@ namespace WOTRMultiplayer.Services.IO
 
         public byte[] GetRawFileContent(string path)
         {
-            _logger.LogDebug("Retrieving file as byte[]. Path={Path}", path);
+            _logger.LogInformation("Retrieving file as byte[]. Path={Path}", path);
             return File.Exists(path) ? File.ReadAllBytes(path) : null;
         }
 
         public string GetFileContent(string path)
         {
-            _logger.LogDebug("Retrieving file as string. Path={Path}", path);
+            _logger.LogInformation("Retrieving file as string. Path={Path}", path);
             return File.Exists(path) ? File.ReadAllText(path) : null;
         }
 

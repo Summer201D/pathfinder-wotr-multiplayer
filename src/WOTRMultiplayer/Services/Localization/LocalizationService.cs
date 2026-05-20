@@ -37,7 +37,7 @@ namespace WOTRMultiplayer.Services.Localization
             var pack = GetLocalePack(FallbackLocale, localeFolder);
             if (pack == null)
             {
-                _logger.LogError("Base locale pack is not available. Locale={Locale} LocalePath={LocalePath}", FallbackLocale, localeFolder);
+                _logger.LogError("Base locale pack is not available. Locale={Locale}, FallbackLocale={FallbackLocale}, LocaleFolder={LocaleFolder}", locale, FallbackLocale, localeFolder);
                 return;
             }
 
@@ -46,7 +46,7 @@ namespace WOTRMultiplayer.Services.Localization
                 var targetPack = GetLocalePack(locale, localeFolder);
                 if (targetPack == null)
                 {
-                    _logger.LogWarning("Requested locale pack is not available. Locale={Locale} LocalePath={LocalePath}", FallbackLocale, localeFolder);
+                    _logger.LogWarning("Requested locale pack is not available. FallbackLocale={Locale} LocalePath={LocalePath}", FallbackLocale, localeFolder);
                 }
                 else
                 {
@@ -85,7 +85,6 @@ namespace WOTRMultiplayer.Services.Localization
             var rawPack = GetLocaleContent(localeName, localeFolder);
             if (rawPack == null)
             {
-                _logger.LogError("Locale pack is missing. Locale={Locale} LocalePath={LocalePath}", localeName, localeFolder);
                 return null;
             }
 

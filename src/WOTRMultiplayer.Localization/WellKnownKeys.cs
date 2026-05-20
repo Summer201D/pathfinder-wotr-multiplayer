@@ -20,6 +20,12 @@ public static class WellKnownKeys
         {
             public static string Key { get; set; }
         }
+
+        [Description("failedToReadSave")]
+        public static class FailedToReadSave
+        {
+            public static string Key { get; set; }
+        }
     }
 
     [Description("mainMenu")]
