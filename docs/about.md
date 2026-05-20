@@ -35,7 +35,7 @@
 
 
 ## Basics
-You are safe to use this mod for a dedicated multiplayer save. It doesn't affect other save games neither it writes additional information to the save game. Also, all multiplayer changes are completely disabled in a single-player game.
+It's safe to use this mod for a dedicated multiplayer save. Mod doesn't affect other save games, nor does it write additional information to the current save. Also, all multiplayer changes are disabled in single-player mode.
 
 Multiplayer window loads all available saves. You can use any save to host a multiplayer game.
 
