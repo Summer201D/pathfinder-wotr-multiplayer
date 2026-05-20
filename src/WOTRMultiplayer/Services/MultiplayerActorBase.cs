@@ -2846,7 +2846,7 @@ namespace WOTRMultiplayer.Services
                 var chunkMessage = new NotifySaveGameChunkCreated
                 {
                     ChunkNumber = chunkNumber,
-                    Content = new ReadOnlyMemory<byte>(content, transferData.CurrentOffset, size),
+                    Content = content.AsSpan(transferData.CurrentOffset, size).ToArray(),
                 };
 
                 Send(playerId, chunkMessage);
@@ -3539,7 +3539,7 @@ namespace WOTRMultiplayer.Services
         private void OnNotifySaveGameChunkCreated(long receivedFrom, NotifySaveGameChunkCreated message)
         {
             var transfer = GetSaveGameTransferData(Game.LocalPlayerId);
-            message.Content.Span.CopyTo(Game.StartUp.SaveGameTransfer.Content.AsSpan(transfer.CurrentOffset));
+            message.Content.AsSpan().CopyTo(Game.StartUp.SaveGameTransfer.Content.AsSpan(transfer.CurrentOffset));
             transfer.CurrentOffset += message.Content.Length;
             transfer.ConfirmedChunk = message.ChunkNumber;
 
