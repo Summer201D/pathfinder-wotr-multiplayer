@@ -30,9 +30,9 @@ If applicable, add screenshots to help explain your problem.
 if any
 
 **Save File**
-Add a save file to help reproduce the issue
+attach a save file to help reproduce the issue
 
 **Logs**
-add logs if any
+attach logs if any
 - Mod Logs - `Pathfinder Second Adventure\Mods\WOTRMultiplayer\logs`
 - Game Logs - `AppData\LocalLow\Owlcat Games\Pathfinder Wrath Of The Righteous` - `GameLog.txt` and `Player.log`
