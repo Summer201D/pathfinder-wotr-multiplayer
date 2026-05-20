@@ -31,3 +31,8 @@ if any
 
 **Save File**
 Add a save file to help reproduce the issue
+
+**Logs**
+add logs if any
+- Mod Logs - `Pathfinder Second Adventure\Mods\WOTRMultiplayer\logs`
+- Game Logs - `AppData\LocalLow\Owlcat Games\Pathfinder Wrath Of The Righteous` - `GameLog.txt` and `Player.log`
