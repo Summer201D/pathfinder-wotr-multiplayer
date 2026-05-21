@@ -700,6 +700,12 @@ namespace WOTRMultiplayer.UI
 
             // networking
             yield return new SettingsEntityHeaderVM(new LocalizedString { Key = WellKnownKeys.Settings.Networking.Title.Key });
+            yield return CreateStringInputSetting(
+                WellKnownKeys.Settings.Networking.Host.Title.Key,
+                WellKnownKeys.Settings.Networking.Host.Tooltip.Key,
+                WellKnownSettings.Networking.Host,
+                new HostValidator(),
+                int.MaxValue);
             yield return CreateIntInputSetting(
                 WellKnownKeys.Settings.Networking.HostPortRangeStart.Title.Key,
                 WellKnownKeys.Settings.Networking.HostPortRangeStart.Tooltip.Key,

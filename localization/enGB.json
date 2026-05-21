@@ -118,6 +118,10 @@
             },
             "networking": {
                 "title": "Networking",
+                "host": {
+                    "title": "Host",
+                    "tooltip": "Network interface to bind the TCP port to. Leave empty to bind to all interfaces"
+                },
                 "hostPortRangeStart": {
                     "title": "Host Port Start",
                     "tooltip": "The first available port within the configured range is selected to host a multiplayer game. Keep this value equal to 'Host Port End' to always host on a specific port only.\nValid values are 1024-65535"

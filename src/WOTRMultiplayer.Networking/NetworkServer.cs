@@ -47,7 +47,7 @@ namespace WOTRMultiplayer.Networking
             return this;
         }
 
-        public void Start(int hostPortRangeStart, int hostPortRangeEnd, TimeSpan awaiterTimeout)
+        public void Start(string host, int hostPortRangeStart, int hostPortRangeEnd, TimeSpan awaiterTimeout)
         {
             _defaultAwaiterTimeout = awaiterTimeout;
 
@@ -57,6 +57,7 @@ namespace WOTRMultiplayer.Networking
             }
 
             _server = new();
+            _server.ServerOptions.DefaultListen.Host = host;
             _server.ServerOptions.DefaultListen.StartRegionPort = hostPortRangeStart;
             _server.ServerOptions.DefaultListen.EndRegionPort = hostPortRangeEnd;
             _server.ServerOptions.BufferSize = 1024 * 32;

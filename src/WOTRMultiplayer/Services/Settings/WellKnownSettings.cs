@@ -62,6 +62,9 @@ namespace WOTRMultiplayer.Services.Settings
 
             [Description("host-port-range-end")]
             public static WellKnownSettingKey<int> HostPortRangeEnd { get; } = new(ushort.MaxValue);
+
+            [Description("host")]
+            public static WellKnownSettingKey<string> Host { get; } = new(string.Empty);
         }
 
         [Description("miscellaneous")]

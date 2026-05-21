@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using AutoMapper;
 using FakeItEasy;
 using Kingmaker.GameModes;
@@ -92,14 +93,14 @@ namespace WOTRMultiplayer.UnitTests.Services
             // Arrange
             var startUp = new NetworkGameStartUp() { SavePath = Guid.NewGuid().ToString(), IsNewGameSequence = false };
             var gameId = Guid.NewGuid().ToString();
-            var settings = new NetworkMultiplayerSettings { HostPortRangeStart = 123, HostPortRangeEnd = 1234, NetworkAwaiterTimeout = TimeSpan.FromMinutes(1) };
+            var settings = new NetworkMultiplayerSettings { Host = "*", HostPortRangeStart = 123, HostPortRangeEnd = 1234, NetworkAwaiterTimeout = TimeSpan.FromMinutes(1) };
             A.CallTo(() => _multiplayerSettingsProvider.GetSettings()).Returns(settings);
 
             // Act
             _multiplayerHost.Create(gameId, startUp);
 
             // Assert
-            A.CallTo(() => _networkServer.Start(settings.HostPortRangeStart, settings.HostPortRangeEnd, settings.NetworkAwaiterTimeout)).MustHaveHappenedOnceExactly();
+            A.CallTo(() => _networkServer.Start(settings.Host, settings.HostPortRangeStart, settings.HostPortRangeEnd, settings.NetworkAwaiterTimeout)).MustHaveHappenedOnceExactly();
         }
 
         [Test]

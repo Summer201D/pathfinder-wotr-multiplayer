@@ -6,6 +6,8 @@ namespace WOTRMultiplayer.Entities.Settings
     {
         public string PlayerName { get; set; }
 
+        public string Host { get; set; }
+
         public int HostPortRangeStart { get; set; }
 
         public int HostPortRangeEnd { get; set; }

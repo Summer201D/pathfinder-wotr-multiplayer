@@ -23,6 +23,7 @@ namespace WOTRMultiplayer.Services.Settings
             _settingsControllerAccessor.CreateDefaultValue(WellKnownSettings.Dialogs.BlockedAnswerAnimationDuration);
 
             // networking
+            _settingsControllerAccessor.CreateDefaultValue(WellKnownSettings.Networking.Host);
             _settingsControllerAccessor.CreateDefaultValue(WellKnownSettings.Networking.HostPortRangeStart);
             _settingsControllerAccessor.CreateDefaultValue(WellKnownSettings.Networking.HostPortRangeEnd);
 
@@ -61,6 +62,7 @@ namespace WOTRMultiplayer.Services.Settings
                 // networking
                 HostPortRangeStart = _settingsControllerAccessor.GetValue(WellKnownSettings.Networking.HostPortRangeStart),
                 HostPortRangeEnd = _settingsControllerAccessor.GetValue(WellKnownSettings.Networking.HostPortRangeEnd),
+                Host = _settingsControllerAccessor.GetValue(WellKnownSettings.Networking.Host),
 
                 // misc
                 HideServerAddress = _settingsControllerAccessor.GetValue(WellKnownSettings.Miscellaneous.HideServerAddress),
