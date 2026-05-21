@@ -120,11 +120,11 @@
                 "title": "Networking",
                 "host": {
                     "title": "Host",
-                    "tooltip": "Network interface to bind the TCP port to. Leave empty to bind to all interfaces"
+                    "tooltip": "IP address to bind the TCP port to (e.g. 127.0.0.1, 0.0.0.0). Leave empty to bind to all interfaces"
                 },
                 "useIPv6": {
                     "title": "Use IPv6",
-                    "tooltip": "Controls whether IPv6 interfaces are included when binding to all available interfaces"
+                    "tooltip": "Controls whether IPv6 addresses are included when binding to all interfaces."
                 },
                 "hostPortRangeStart": {
                     "title": "Host Port Start",
