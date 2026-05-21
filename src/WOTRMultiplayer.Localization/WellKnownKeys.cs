@@ -468,6 +468,22 @@ public static class WellKnownKeys
                 }
             }
 
+            [Description("useIPv6")]
+            public static class UseIPv6
+            {
+                [Description("title")]
+                public static class Title
+                {
+                    public static string Key { get; set; }
+                }
+
+                [Description("tooltip")]
+                public static class Tooltip
+                {
+                    public static string Key { get; set; }
+                }
+            }
+
             [Description("hostPortRangeStart")]
             public static class HostPortRangeStart
             {

@@ -22,7 +22,7 @@ namespace WOTRMultiplayer.Networking.Abstractions
 
         void SendAllExcept(long clientId, object message);
 
-        void Start(string host, int hostPortRangeStart, int hostPortRangeEnd, TimeSpan awaiterTimeout);
+        void Start(string host, bool useIPv6, int hostPortRangeStart, int hostPortRangeEnd, TimeSpan awaiterTimeout);
 
         void Reset();
     }

@@ -706,6 +706,10 @@ namespace WOTRMultiplayer.UI
                 WellKnownSettings.Networking.Host,
                 new HostValidator(),
                 int.MaxValue);
+            yield return CreateBoolSetting(
+                WellKnownKeys.Settings.Networking.UseIPv6.Title.Key,
+                WellKnownKeys.Settings.Networking.UseIPv6.Tooltip.Key,
+                WellKnownSettings.Networking.UseIPv6);
             yield return CreateIntInputSetting(
                 WellKnownKeys.Settings.Networking.HostPortRangeStart.Title.Key,
                 WellKnownKeys.Settings.Networking.HostPortRangeStart.Tooltip.Key,

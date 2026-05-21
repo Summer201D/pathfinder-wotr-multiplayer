@@ -65,6 +65,9 @@ namespace WOTRMultiplayer.Services.Settings
 
             [Description("host")]
             public static WellKnownSettingKey<string> Host { get; } = new(string.Empty);
+
+            [Description("enable-ipv6")]
+            public static WellKnownSettingKey<bool> UseIPv6 { get; } = new(true);
         }
 
         [Description("miscellaneous")]

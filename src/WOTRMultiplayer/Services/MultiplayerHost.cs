@@ -99,7 +99,7 @@ namespace WOTRMultiplayer.Services
             Game.Characters.AddRange(gameStartUp.Characters);
 
             var settings = SettingsService.GetSettings();
-            _networkServer.Start(settings.Host, settings.HostPortRangeStart, settings.HostPortRangeEnd, settings.NetworkAwaiterTimeout);
+            _networkServer.Start(settings.Host, settings.UseIPv6, settings.HostPortRangeStart, settings.HostPortRangeEnd, settings.NetworkAwaiterTimeout);
 
             OnCharactersChanged?.Invoke(Game.StartUp.Title, Game.Characters);
             Logger.LogInformation("Host has been created. GameId={GameId}, IsNewGameSequence={IsNewGameSequence}, SavePath={SavePath}", Game.Id, gameStartUp.IsNewGameSequence, gameStartUp.SavePath);

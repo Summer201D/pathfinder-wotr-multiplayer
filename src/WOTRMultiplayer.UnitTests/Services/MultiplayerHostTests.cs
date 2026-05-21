@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net;
 using AutoMapper;
 using FakeItEasy;
 using Kingmaker.GameModes;
@@ -100,7 +99,7 @@ namespace WOTRMultiplayer.UnitTests.Services
             _multiplayerHost.Create(gameId, startUp);
 
             // Assert
-            A.CallTo(() => _networkServer.Start(settings.Host, settings.HostPortRangeStart, settings.HostPortRangeEnd, settings.NetworkAwaiterTimeout)).MustHaveHappenedOnceExactly();
+            A.CallTo(() => _networkServer.Start(settings.Host, true, settings.HostPortRangeStart, settings.HostPortRangeEnd, settings.NetworkAwaiterTimeout)).MustHaveHappenedOnceExactly();
         }
 
         [Test]

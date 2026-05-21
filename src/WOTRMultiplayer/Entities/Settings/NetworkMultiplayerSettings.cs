@@ -8,6 +8,8 @@ namespace WOTRMultiplayer.Entities.Settings
 
         public string Host { get; set; }
 
+        public bool UseIPv6 { get; set; }
+
         public int HostPortRangeStart { get; set; }
 
         public int HostPortRangeEnd { get; set; }
