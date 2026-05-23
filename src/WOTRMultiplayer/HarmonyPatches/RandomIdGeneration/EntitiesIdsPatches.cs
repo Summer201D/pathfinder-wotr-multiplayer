@@ -445,9 +445,9 @@ namespace WOTRMultiplayer.HarmonyPatches.RandomIdGeneration
             try
             {
                 var seededContext = Main.Multiplayer.GetSeededContext(SeedKind.Session | SeedKind.LoadedSaveSeed);
-                var rawIdentifier = $"{CommonTranspilerReplacements.GetSharedIdentifierPart()}:{unit.AssetGuid}:{prefab.name}:{unit?.CharacterName}_{seededContext.Id}";
+                var rawIdentifier = $"{CommonTranspilerReplacements.GetSharedIdentifierPart()}:{unit.AssetGuid}:{prefab.name}:_{seededContext.Id}";
                 var id = Main.Multiplayer.ValueGenerator.GenerateUniqueId(IdType.Unit, Game.Instance.Player.GameId, rawIdentifier);
-                Main.GetLogger<EntitiesIdsPatches>().LogDebug("Unit id has been generated. RawIdentifier={RawIdentifier}, Id={Id}", rawIdentifier, id);
+                Main.GetLogger<EntitiesIdsPatches>().LogInformation("Unit id has been generated. RawIdentifier={RawIdentifier}, Id={Id}", rawIdentifier, id);
                 return id;
             }
             catch (Exception ex)
