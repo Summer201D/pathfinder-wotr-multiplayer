@@ -425,7 +425,7 @@ namespace WOTRMultiplayer.HarmonyPatches.RandomIdGeneration
                 var rawIdentifier = $"{CommonTranspilerReplacements.GetSharedIdentifierPart()}:{prefab.GetType().Name}:{prefab.name}";
                 var type = prefab is DroppedLoot ? IdType.DroppedLoot : IdType.EntityView;
                 var id = Main.Multiplayer.ValueGenerator.GenerateUniqueId(type, Game.Instance.Player.GameId, rawIdentifier);
-                Main.GetLogger<EntitiesIdsPatches>().LogDebug("EntityView id has been generated. RawIdentifier={RawIdentifier}, Id={Id}", rawIdentifier, id);
+                Main.GetLogger<EntitiesIdsPatches>().LogInformation("EntityView id has been generated. RawIdentifier={RawIdentifier}, Id={Id}", rawIdentifier, id);
                 return id;
             }
             catch (Exception ex)
@@ -487,9 +487,10 @@ namespace WOTRMultiplayer.HarmonyPatches.RandomIdGeneration
 
             try
             {
-                var rawIdentifier = $"{CommonTranspilerReplacements.GetSharedIdentifierPart()}:{unitEntityData.CharacterName}:{blueprintUnit?.name}";
+                var seededContext = Main.Multiplayer.GetSeededContext(SeedKind.Session | SeedKind.LoadedSaveSeed);
+                var rawIdentifier = $"{CommonTranspilerReplacements.GetSharedIdentifierPart()}:{blueprintUnit?.name}_{seededContext.Id}";
                 var id = Main.Multiplayer.ValueGenerator.GenerateUniqueId(IdType.ChangeBlueprintUnit, Game.Instance.Player.GameId, rawIdentifier);
-                Main.GetLogger<EntitiesIdsPatches>().LogDebug("ChangeBlueprintUnit id has been generated. RawIdentifier={RawIdentifier}, Id={Id}", rawIdentifier, id);
+                Main.GetLogger<EntitiesIdsPatches>().LogInformation("ChangeBlueprintUnit id has been generated. RawIdentifier={RawIdentifier}, Id={Id}", rawIdentifier, id);
                 return id;
             }
             catch (Exception ex)
