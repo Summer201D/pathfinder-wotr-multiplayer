@@ -498,7 +498,7 @@ namespace WOTRMultiplayer.Services
             {
                 StartedAt = DateTime.UtcNow
             };
-            Game.LastCombatTurn = null;
+            ResetLastCombatTurn();
         }
 
         public void ForceCombatEnd()
@@ -2949,9 +2949,9 @@ namespace WOTRMultiplayer.Services
             Logger.LogInformation("Doing soft reset");
             Game.StartUp = null;
             Game.Combat = null;
-            Game.LastCombatTurn = null;
             Game.ArmyCombat = null;
             Game.Leveling = null;
+            ResetLastCombatTurn();
             ValueGenerator.ResetSeededGenerators(IdentifierLifetime.Area, IdentifierLifetime.Combat, IdentifierLifetime.CombatTurn);
 
             ResetPlayersTracker(Game.PlayersInGroupChanger);
@@ -2968,6 +2968,12 @@ namespace WOTRMultiplayer.Services
             ResetPlayersTracker(Game.PlayersInGlobalMapCrusadeArmyBuyLeader);
             ResetPlayersTracker(Game.PlayersInGlobalMapRecruitment);
             ResetPlayersTracker(Game.PlayersInGlobalMapCrusadeArmyLeaderLeveling);
+        }
+
+        protected void ResetLastCombatTurn()
+        {
+            Game.LastCombatTurn = null;
+            Logger.LogInformation("Last combat turn has been reset");
         }
 
         protected void SetCombatStage(NetworkCombatStage combatStage, bool isSilent = false)

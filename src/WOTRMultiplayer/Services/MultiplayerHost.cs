@@ -212,6 +212,9 @@ namespace WOTRMultiplayer.Services
 
         public void OnAreaTransition(NetworkAreaTransition areaTransition)
         {
+            // make sure next area load is not affected by last combat turn seed
+            ResetLastCombatTurn();
+
             var message = new NotifyPartyAreaTransitioned
             {
                 Transition = Mapper.Map<Networking.Messages.Contracts.NetworkAreaTransition>(areaTransition)
@@ -326,7 +329,7 @@ namespace WOTRMultiplayer.Services
 
             if (Game.Combat == null)
             {
-                Game.LastCombatTurn = null;
+                ResetLastCombatTurn();
             }
 
             Logger.LogInformation("Dialog has been started. DialogId={DialogId}, DialogName={Name}, IsScripted={IsScripted}", Game.DialogState.Dialog.Id, Game.DialogState.Dialog.Name, Game.DialogState.Dialog.IsScripted);

@@ -173,7 +173,7 @@ namespace WOTRMultiplayer.Services
 
                 if (Game.Combat == null)
                 {
-                    Game.LastCombatTurn = null;
+                    ResetLastCombatTurn();
                 }
 
                 ResetManualPause();
@@ -1606,6 +1606,9 @@ namespace WOTRMultiplayer.Services
 
         private void OnNotifyPartyAreaTransitioned(long playerId, NotifyPartyAreaTransitioned partyLeftArea)
         {
+            // make sure next area load is not affected by last combat turn seed
+            ResetLastCombatTurn();
+
             var transition = Mapper.Map<NetworkAreaTransition>(partyLeftArea.Transition);
             GameInteraction.LeaveArea(transition);
         }

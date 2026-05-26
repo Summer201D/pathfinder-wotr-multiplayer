@@ -9,9 +9,12 @@ using Kingmaker.Blueprints.Classes.Spells;
 using Kingmaker.Blueprints.Items;
 using Kingmaker.Controllers;
 using Kingmaker.Designers.EventConditionActionSystem.Actions;
+using Kingmaker.ElementsSystem;
 using Kingmaker.EntitySystem;
 using Kingmaker.EntitySystem.Entities;
 using Kingmaker.Items;
+using Kingmaker.RuleSystem;
+using Kingmaker.RuleSystem.Rules;
 using Kingmaker.UnitLogic;
 using Kingmaker.UnitLogic.Abilities;
 using Kingmaker.UnitLogic.Abilities.Blueprints;
@@ -20,6 +23,7 @@ using Kingmaker.UnitLogic.Mechanics;
 using Kingmaker.Utility;
 using Kingmaker.View;
 using Kingmaker.View.MapObjects;
+using Kingmaker.View.Spawners;
 using Kingmaker.Visual.Sound;
 using Microsoft.Extensions.Logging;
 using WOTRMultiplayer.Services.Random;
@@ -444,8 +448,14 @@ namespace WOTRMultiplayer.HarmonyPatches.RandomIdGeneration
 
             try
             {
-                var seededContext = Main.Multiplayer.GetSeededContext(SeedKind.Session | SeedKind.LoadedSaveSeed);
-                var rawIdentifier = $"{CommonTranspilerReplacements.GetSharedIdentifierPart()}:{unit.AssetGuid}:{prefab.name}:_{seededContext.Id}";
+                var seededContext = Main.Multiplayer.GetSeededContext(SeedKind.Session | SeedKind.LoadedSaveSeed | SeedKind.CombatTurnSeed);
+                var baseIdentifier = $"{CommonTranspilerReplacements.GetSharedIdentifierPart()}:{unit.AssetGuid}:{unit.name}:{unit.Faction}:{prefab.name}";
+                if (Rulebook.CurrentContext?.CurrentEvent is RuleSummonUnit ruleSummonUnit)
+                {
+                    baseIdentifier += $":{ruleSummonUnit.Initiator?.UniqueId}";
+                }
+
+                var rawIdentifier = $"{baseIdentifier}_{seededContext.Id}";
                 var id = Main.Multiplayer.ValueGenerator.GenerateUniqueId(IdType.Unit, Game.Instance.Player.GameId, rawIdentifier);
                 Main.GetLogger<EntitiesIdsPatches>().LogInformation("Unit id has been generated. RawIdentifier={RawIdentifier}, Id={Id}", rawIdentifier, id);
                 return id;
