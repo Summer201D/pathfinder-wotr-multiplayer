@@ -56,6 +56,8 @@ namespace WOTRMultiplayer.Config.DI
                 cfg.AddProfile<GameProfile>();
             });
 
+            serviceCollection.AddSingleton(settings);
+
             serviceCollection.AddSingleton<IMainThreadAccessor, MainThreadAccessor>();
             serviceCollection.AddSingleton<IValueGenerator, DeterministicValueGenerator>();
 

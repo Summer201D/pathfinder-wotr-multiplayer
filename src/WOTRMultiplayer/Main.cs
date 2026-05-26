@@ -61,6 +61,8 @@ namespace WOTRMultiplayer
             {
                 ModManagerSettings = UnityModManager.ModSettings.Load<UnityModManagerSettings>(entry);
                 ModManagerSettings.ModFolder = entry.Path;
+                ModManagerSettings.ModId = entry.Info.Id;
+
                 ServiceProvider = DIFactory.Create(ModManagerSettings);
 
                 _logger = ServiceProvider.GetService<ILogger<Main>>();

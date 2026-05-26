@@ -19,6 +19,7 @@ using WOTRMultiplayer.Abstractions.UI.Windows;
 using WOTRMultiplayer.Abstractions.Unity;
 using WOTRMultiplayer.Entities;
 using WOTRMultiplayer.Extensions;
+using WOTRMultiplayer.Services.Settings;
 using WOTRMultiplayer.UI.Tooltips;
 using WOTRMultiplayer.UI.Windows;
 using WOTRMultiplayer.UnityBehaviours;
@@ -58,6 +59,8 @@ namespace WOTRMultiplayer.UI.Controllers
         private readonly IResourceProvider _resourceProvider;
         private readonly IMultiplayerSettingsService _multiplayerSettingsService;
         private readonly IMultiplayerActorAccessor _multiplayerActorAccessor;
+        private readonly UnityModManagerSettings _unityModManagerSettings;
+
         private readonly ConcurrentDictionary<LobbyWindowOwner, GameObject> _contents = new();
         private LobbyWindowOwner _activeOwner;
 
@@ -88,7 +91,8 @@ namespace WOTRMultiplayer.UI.Controllers
             IResourceProvider resourceProvider,
             IMultiplayerSettingsService multiplayerSettingsService,
             IMultiplayerActorAccessor multiplayerActorAccessor,
-            IUIFactory uiFactory)
+            IUIFactory uiFactory,
+            UnityModManagerSettings unityModManagerSettings)
         {
             _logger = logger;
             _uiFactory = uiFactory;
@@ -96,6 +100,7 @@ namespace WOTRMultiplayer.UI.Controllers
             _resourceProvider = resourceProvider;
             _multiplayerSettingsService = multiplayerSettingsService;
             _multiplayerActorAccessor = multiplayerActorAccessor;
+            _unityModManagerSettings = unityModManagerSettings;
         }
 
         public void CloseWindow()
@@ -346,14 +351,7 @@ namespace WOTRMultiplayer.UI.Controllers
 
             CreateProgressBar(player, playerContainerObject.transform, PreferredHeight, withBackround: false);
 
-            var gameVersionObject = _uiFactory.CreateDefaultGameObject(playerContainerObject.transform);
-            var gameVersionElement = gameVersionObject.AddComponent<LayoutElement>();
-            gameVersionElement.preferredHeight = PreferredHeight;
-            var gameVersionBox = gameVersionObject.AddComponent<TextMeshProUGUI>();
-            gameVersionBox.alignment = TextAlignmentOptions.Center;
-            gameVersionBox.material = defaultMesh.Material;
-            gameVersionBox.color = defaultMesh.Color;
-            gameVersionBox.SetText($"[{player.ContentState.GameVersion}]");
+            CreateLabel(playerContainerObject.transform, PreferredHeight, defaultMesh, $"[{player.ContentState.GameVersion}]");
 
             var playerObject = _uiFactory.CreateDefaultGameObject(playerContainerObject.transform);
             var playerElement = playerObject.AddComponent<LayoutElement>();
@@ -373,8 +371,22 @@ namespace WOTRMultiplayer.UI.Controllers
 
             if (player.ContentState.DiscrepantMods.Any() || player.ContentState.DiscrepantDLCs.Any())
             {
-                CreatePlayerIcon("UI_QuestNotification_StampYellow", playerContainerObject, PreferredHeight, new ContentDiscrepancyTooltipTemplate(player));
+                var isMultiplayerModDifferent = player.ContentState.DiscrepantMods.Any(x => string.Equals(x.Id, _unityModManagerSettings.ModId, StringComparison.OrdinalIgnoreCase));
+                var icon = isMultiplayerModDifferent ? "UI_QuestNotification_StampRed" : "UI_QuestNotification_StampYellow";
+                CreatePlayerIcon(icon, playerContainerObject, PreferredHeight, new ContentDiscrepancyTooltipTemplate(player));
             }
+        }
+
+        private void CreateLabel(Transform parent, int preferredHeight, Mesh mesh, string text)
+        {
+            var labelObject = _uiFactory.CreateDefaultGameObject(parent);
+            var labelLayoutElement = labelObject.AddComponent<LayoutElement>();
+            labelLayoutElement.preferredHeight = preferredHeight;
+            var textBox = labelObject.AddComponent<TextMeshProUGUI>();
+            textBox.alignment = TextAlignmentOptions.Center;
+            textBox.material = mesh.Material;
+            textBox.color = mesh.Color;
+            textBox.SetText(text);
         }
 
         private void CreateProgressBar(NetworkPlayer networkPlayer, Transform parent, int size, bool withBackround = false)
