@@ -250,7 +250,8 @@
                 "forgottenSpell": "{0} has been forgotten by {1}",
                 "removedCustomSpell": "Custom spell {0} has been removed from {1} spellbook",
                 "removedDuplicateMetamagicSpell": "Duplicate metamagic spell {0} has been removed from {1} spellbook.",
-                "newMetamagicSpell": "Metamagic spell {0} has been created in {1} spellbook.\nApplied metamagic: {2}"
+                "newMetamagicSpell": "Metamagic spell {0} has been created in {1} spellbook.\nApplied metamagic: {2}",
+                "missingSpell": "Spell memorization for {0} failed due to the missing {1} spell"
             },
             "forcedPause": {
                 "areaLoading": "Please wait for other players to finish loading the area",

@@ -993,6 +993,12 @@ public static class WellKnownKeys
             {
                 public static string Key { get; set; }
             }
+
+            [Description("missingSpell")]
+            public static class MissingSpell
+            {
+                public static string Key { get; set; }
+            }
         }
 
         [Description("forcedPause")]

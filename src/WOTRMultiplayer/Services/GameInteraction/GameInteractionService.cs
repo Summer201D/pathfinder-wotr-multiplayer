@@ -1728,13 +1728,29 @@ namespace WOTRMultiplayer.Services.GameInteraction
                     return;
                 }
 
-                var spellSlot = _gameStateLookupService.GetSpellSlot(spellbook, networkSpellSlot, networkAbility.SpellLevel);
-                var spell = networkAbility.Metamagic.HasValue ?
-                    _gameStateLookupService.GetCustomSpell(spellbook, networkAbility)
-                : _gameStateLookupService.GetKnownSpell(spellbook, networkAbility) ?? _gameStateLookupService.GetSpecialSpell(spellbook, networkAbility);
-                spellbook.Memorize(spell, spellSlot);
-                _playerNotificationService.AddCombatText(WellKnownKeys.GameNotifications.SpellBook.MemorizedSpell.Key, CombatTextSeverity.Common, new AbilityTooltipLog(spell), new AbilityLogParameter(spell.Name), new UnitLogParameter(unit.UniqueId));
-                RefreshSpellbookUI();
+                try
+                {
+                    var spellSlot = _gameStateLookupService.GetSpellSlot(spellbook, networkSpellSlot, networkAbility.SpellLevel);
+                    var spell = networkAbility.Metamagic.HasValue ?
+                        _gameStateLookupService.GetCustomSpell(spellbook, networkAbility)
+                    : _gameStateLookupService.GetKnownSpell(spellbook, networkAbility) ?? _gameStateLookupService.GetSpecialSpell(spellbook, networkAbility);
+
+                    if (spell == null)
+                    {
+                        _logger.LogError("Unable to find spell for memorization. UnitId={UnitId}, SpellbookId={SpellbookId}, SpellId={SpellId}, SpellName={SpellName}", unitId, networkAbility.SpellbookId, networkAbility.Id, networkAbility.Name);
+                        _playerNotificationService.AddCombatText(WellKnownKeys.GameNotifications.SpellBook.MissingSpell.Key, CombatTextSeverity.Critical, new UnitLogParameter(unitId), networkAbility.Name);
+                        return;
+                    }
+
+                    spellbook.Memorize(spell, spellSlot);
+                    _playerNotificationService.AddCombatText(WellKnownKeys.GameNotifications.SpellBook.MemorizedSpell.Key, CombatTextSeverity.Common, new AbilityTooltipLog(spell), new AbilityLogParameter(spell.Name), new UnitLogParameter(unit.UniqueId));
+                    RefreshSpellbookUI();
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error while memorizing spell");
+                    throw;
+                }
             });
         }
 
