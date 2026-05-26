@@ -1255,6 +1255,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
 
             abilityData.ParamSpellbook = _gameStateLookupService.GetSpellbook(executorUnit, networkAbilityUse.Ability.ParamSpellBookId);
             abilityData.ParamSpellLevel = networkAbilityUse.Ability.ParamSpellLevel;
+            abilityData.PotionForOther = networkAbilityUse.Ability.PotionForOther;
 
             if (networkAbilityUse.Ability.ParamSpellSlot != null)
             {
@@ -1288,7 +1289,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
             SetCommandPath(vectorPath, command);
             SetTurnMovementLimit(rawMovementLimit, executorUnit);
 
-            _logger.LogInformation("Unit UseAbility command has been initiated. UnitId={UnitId},  TargetPoint={TargetPoint}, TargetUnitId={TargetUnitId}, AbilityId={AbilityId}, AbilityName={AbilityName}, Path={Path}, MovementLimit={MovementLimit}",
+            _logger.LogInformation("Unit UseAbility command has been initiated. UnitId={UnitId}, TargetPoint={TargetPoint}, TargetUnitId={TargetUnitId}, AbilityId={AbilityId}, AbilityName={AbilityName}, Path={Path}, MovementLimit={MovementLimit}",
                 executorUnit.UniqueId, targetWrapper.Point, targetWrapper.Unit?.UniqueId, abilityData.UniqueId, abilityData.NameForAcronym, vectorPath, rawMovementLimit);
             executorUnit.Commands.Run(command);
         }

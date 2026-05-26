@@ -45,5 +45,8 @@ namespace WOTRMultiplayer.Networking.Messages.Contracts
 
         [ProtoMember(11)]
         public NetworkItem SourceItem { get; set; }
+
+        [ProtoMember(12)]
+        public bool PotionForOther { get; set; }
     }
 }

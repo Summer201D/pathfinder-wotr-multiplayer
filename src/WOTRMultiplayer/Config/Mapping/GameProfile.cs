@@ -394,7 +394,8 @@ namespace WOTRMultiplayer.Config.Mapping
                 ParamSpellLevel = sourceAbility.ParamSpellLevel,
                 ParamSpellBookId = sourceAbility.ParamSpellbook?.Blueprint.AssetGuid.ToString(),
                 ParamSpellSlot = context.Mapper.Map<NetworkAbilityParamSpellSlot>(sourceAbility.ParamSpellSlot),
-                SourceItem = context.Mapper.Map<NetworkItem>(sourceAbility.SourceItem)
+                SourceItem = context.Mapper.Map<NetworkItem>(sourceAbility.SourceItem),
+                PotionForOther = sourceAbility.PotionForOther
             };
 
             return ability;

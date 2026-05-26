@@ -263,8 +263,8 @@ namespace WOTRMultiplayer.Services
                 ManualUnitSelectionId = manualUnitSelectionId
             };
 
-            /// game will do it's 'dialog stat check' rolls logic a bit later on
-            /// so answer couldn't be sent right away unless it's the last one
+            /// the game performs its "dialog stat check" roll logic a bit later,
+            /// so the answer can't be sent right away unless it's the last one
             if (isExitAnswer)
             {
                 SendSelectedAnswer();

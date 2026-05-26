@@ -25,5 +25,7 @@ namespace WOTRMultiplayer.Entities.Combat
         public NetworkAbilityParamSpellSlot ParamSpellSlot { get; set; }
 
         public NetworkItem SourceItem { get; set; }
+
+        public bool PotionForOther { get; set; }
     }
 }

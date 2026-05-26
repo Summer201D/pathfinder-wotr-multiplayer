@@ -24,7 +24,7 @@ namespace WOTRMultiplayer.Networking.Messages.Contracts
 
         public override string ToString()
         {
-            return Id;
+            return $"{Id}-{Version}";
         }
     }
 }
