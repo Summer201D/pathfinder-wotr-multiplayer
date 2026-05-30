@@ -448,13 +448,15 @@ namespace WOTRMultiplayer.HarmonyPatches.RandomIdGeneration
 
             try
             {
-                var seededContext = Main.Multiplayer.GetSeededContext(SeedKind.Session | SeedKind.LoadedSaveSeed | SeedKind.CombatTurnSeed);
+                var seedKind = SeedKind.Session | SeedKind.LoadedSaveSeed;
                 var baseIdentifier = $"{CommonTranspilerReplacements.GetSharedIdentifierPart()}:{unit.AssetGuid}:{unit.name}:{unit.Faction}:{prefab.name}";
                 if (Rulebook.CurrentContext?.CurrentEvent is RuleSummonUnit ruleSummonUnit)
                 {
                     baseIdentifier += $":{ruleSummonUnit.Initiator?.UniqueId}";
+                    seedKind |= SeedKind.CombatTurnSeed;
                 }
 
+                var seededContext = Main.Multiplayer.GetSeededContext(seedKind);
                 var rawIdentifier = $"{baseIdentifier}_{seededContext.Id}";
                 var id = Main.Multiplayer.ValueGenerator.GenerateUniqueId(IdType.Unit, Game.Instance.Player.GameId, rawIdentifier);
                 Main.GetLogger<EntitiesIdsPatches>().LogInformation("Unit id has been generated. RawIdentifier={RawIdentifier}, Id={Id}", rawIdentifier, id);
