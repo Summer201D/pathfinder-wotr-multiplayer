@@ -20,3 +20,6 @@ Look [here](/docs/about.md) for more details
 - There are no changes to content, balance or how mythic paths/companions work.
 - Game Version/DLC/Mods should match across players.
 
+
+### Troubleshooting
+Refer to [troubleshooting](/docs/troubleshooting.md) if you are having any problems launching the mod
