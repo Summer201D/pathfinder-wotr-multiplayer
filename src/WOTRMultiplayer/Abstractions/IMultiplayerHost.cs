@@ -111,6 +111,8 @@ namespace WOTRMultiplayer.Abstractions
 
         void OnGlobalMapCombatResultsClosed();
 
+        void OnTacticalCombatAccelerationChanged(bool isAccelerated);
+
         void OnTacticalCombatUnitUseAbilityCommand(NetworkTacticalUnitUseAbilityCommand tacticalUnitUseAbilityCommand);
 
         void OnTacticalCombatUnitAttackCommand(NetworkTacticalUnitAttackCommand tacticalUnitAttackCommand);

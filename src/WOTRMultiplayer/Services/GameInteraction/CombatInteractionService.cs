@@ -559,6 +559,22 @@ namespace WOTRMultiplayer.Services.GameInteraction
             return tcs.Task;
         }
 
+        public void SetTacticalCombatAcceleration(bool isAccelerated)
+        {
+            _mainThreadAccessor.Post(() =>
+            {
+                var viewModel = Main.UIAccessor.TacticalCombatPCView?.ViewModel;
+                if (viewModel == null)
+                {
+                    _logger.LogWarning("Tactical combat viewmodel is not availabel yet");
+                    return;
+                }
+
+                viewModel.IsAccelerated.Value = isAccelerated;
+                _logger.LogInformation("Tactical combat acceleration has been set. IsAccelerated={IsAccelerated}", isAccelerated);
+            });
+        }
+
         public void LootUnit(NetworkUnitLootUnit networkUnitLootUnit)
         {
             _mainThreadAccessor.Post(() =>

@@ -281,7 +281,8 @@
             NotifyCombatDataDiscrepancyDetected,
             NotifyCombatDataDiscrepancyConfirmed,
             NotifyCombatUnitsExcluded,
-            NotifyCombatUnitsExclusionConfirmed
+            NotifyCombatUnitsExclusionConfirmed,
+            NotifyTacticalCombatAccelerationChanged
         }
 
         public static class Mods

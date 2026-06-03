@@ -353,6 +353,8 @@ namespace WOTRMultiplayer.Abstractions
 
         void OnAreaTransition(NetworkAreaTransition areaTransition);
 
+        void OnTacticalCombatAccelerationChanged(bool value);
+
         bool OnTacticalCombatInitialization();
 
         void OnTacticalCombatEnded();

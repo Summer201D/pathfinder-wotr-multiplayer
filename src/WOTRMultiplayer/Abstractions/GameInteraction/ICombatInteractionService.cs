@@ -86,5 +86,7 @@ namespace WOTRMultiplayer.Abstractions.GameInteraction
         bool IsCombatInitialized();
 
         Task ExcludeUnitsFromCombatAsync(List<string> units);
+
+        void SetTacticalCombatAcceleration(bool isAccelerated);
     }
 }

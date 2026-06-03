@@ -7,7 +7,7 @@ using Kingmaker.PubSubSystem;
 using Kingmaker.UI.MVVM._PCView.TacticalCombat;
 using Kingmaker.UI.MVVM._PCView.TacticalCombat.ActionBar;
 using Kingmaker.UI.MVVM._VM.TacticalCombat.ActionBar;
-
+using UniRx;
 namespace WOTRMultiplayer.HarmonyPatches.Combat.Crusades
 {
     [HarmonyPatch]
@@ -23,7 +23,14 @@ namespace WOTRMultiplayer.HarmonyPatches.Combat.Crusades
             }
 
             __instance.m_AutoCombatButton.Interactable = false;
-            __instance.m_FleeButton.Interactable = Main.Multiplayer.CanControlTacticalCombat();
+            var canControl = __instance.m_AccelerateButton.Interactable = Main.Multiplayer.CanControlTacticalCombat();
+            __instance.m_FleeButton.Interactable = canControl;
+            __instance.m_AccelerateButton.Interactable = canControl;
+
+            __instance.AddDisposable(__instance.ViewModel.IsAccelerated.Subscribe(value =>
+            {
+                Main.Multiplayer.OnTacticalCombatAccelerationChanged(value);
+            }));
         }
 
         [HarmonyPatch(typeof(TacticalCombatController), nameof(TacticalCombatController.RetreatFromBattle))]

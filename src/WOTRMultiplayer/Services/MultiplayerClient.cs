@@ -432,6 +432,7 @@ namespace WOTRMultiplayer.Services
                     // try to use another action (preferrably ability)
                     Logger.LogWarning("Requested AI action has not been found within existing actions. UnitId={UnitId}, ActionId={ActionId}, ActionName={ActionName}, ActionType={ActionType}, FallbackActionId={FallbackActionId}, FallbackActionName={FallbackActionName}, FallbackActionType={FallbackActionType}",
                         networkAIAction.UnitId, networkAIAction.Id, networkAIAction.Name, networkAIAction.ActionType, firstDifferentAction?.Id, firstDifferentAction?.Name, firstDifferentAction?.ActionType);
+
                     action = firstDifferentAction;
                 }
 
@@ -596,6 +597,7 @@ namespace WOTRMultiplayer.Services
                .On<NotifyTacticalCombatTurnPostponed>(OnNotifyTacticalCombatTurnPostponed)
                .On<NotifyTacticalCombatTotalDefenseUsed>(OnNotifyTacticalCombatTotalDefenseUsed)
                .On<NotifyTacticalCombatRetreated>(OnNotifyTacticalCombatRetreated)
+               .On<NotifyTacticalCombatAccelerationChanged>(OnNotifyTacticalCombatAccelerationChanged)
                .On<NotifyGlobalMapCrusadeArmySquadSplitted>(OnNotifyGlobalMapCrusadeArmySquadSplitted)
                .On<NotifyGlobalMapCrusadeArmySquadsMerged>(OnNotifyGlobalMapCrusadeArmySquadsMerged)
                .On<NotifyGlobalMapCrusadeArmySquadsSwitched>(OnNotifyGlobalMapCrusadeArmySquadsSwitched)
@@ -1129,6 +1131,11 @@ namespace WOTRMultiplayer.Services
             var squadSlot = Mapper.Map<NetworkGlobalMapArmySquadSlot>(crusadeArmySquadSplitted.SquadSlot);
 
             GlobalMapInteraction.SplitCrusadeArmySquad(squadSlot, crusadeArmySquadSplitted.Count);
+        }
+
+        private void OnNotifyTacticalCombatAccelerationChanged(long receivedFrom, NotifyTacticalCombatAccelerationChanged message)
+        {
+            CombatInteraction.SetTacticalCombatAcceleration(message.IsAccelerated);
         }
 
         private void OnNotifyTacticalCombatRetreated(long receivedFrom, NotifyTacticalCombatRetreated tacticalCombatRetreated)

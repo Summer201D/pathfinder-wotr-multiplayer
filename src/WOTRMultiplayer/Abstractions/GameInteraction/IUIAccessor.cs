@@ -28,6 +28,7 @@ using Kingmaker.UI.MVVM._PCView.Rest;
 using Kingmaker.UI.MVVM._PCView.ServiceWindows.Spellbook;
 using Kingmaker.UI.MVVM._PCView.ServiceWindows.Spellbook.MemorizingPanel;
 using Kingmaker.UI.MVVM._PCView.ServiceWindows.Spellbook.Metamagic;
+using Kingmaker.UI.MVVM._PCView.TacticalCombat;
 using Kingmaker.UI.MVVM._PCView.TacticalCombat.Result;
 using Kingmaker.UI.MVVM._PCView.Transition;
 using Kingmaker.UI.MVVM._VM.ServiceWindows;
@@ -39,6 +40,8 @@ namespace WOTRMultiplayer.Abstractions.GameInteraction
     public interface IUIAccessor
     {
         InGamePCView InGamePCView { get; }
+
+        TacticalCombatPCView TacticalCombatPCView { get; }
 
         EscMenuPCView EscMenu { get; }
 

@@ -1027,6 +1027,15 @@ namespace WOTRMultiplayer.Services
             Send(message);
         }
 
+        public void OnTacticalCombatAccelerationChanged(bool isAccelerated)
+        {
+            var message = new NotifyTacticalCombatAccelerationChanged
+            {
+                IsAccelerated = isAccelerated
+            };
+            Send(message);
+        }
+
         public void OnTacticalCombatUnitAttackCommand(NetworkTacticalUnitAttackCommand tacticalUnitAttackCommand)
         {
             var message = new NotifyTacticalUnitAttackCommandExecuted

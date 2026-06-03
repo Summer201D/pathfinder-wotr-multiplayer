@@ -186,5 +186,9 @@ namespace WOTRMultiplayer.Playground.Core.Dummies
         {
             return Task.FromResult(true);
         }
+
+        public void SetTacticalCombatAcceleration(bool isAccelerated)
+        {
+        }
     }
 }

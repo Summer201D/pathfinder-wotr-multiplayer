@@ -2849,6 +2849,25 @@ namespace WOTRMultiplayer.Services
             }
         }
 
+
+        public void OnTacticalCombatAccelerationChanged(bool isAccelerated)
+        {
+            try
+            {
+                if (_multiplayerActorAccessor.Current == null || _multiplayerActorAccessor.Client.IsActive)
+                {
+                    return;
+                }
+
+                _multiplayerActorAccessor.Host.OnTacticalCombatAccelerationChanged(isAccelerated);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while processing tactical combat acceleration change. IsAccelerated={IsAccelerated}", isAccelerated);
+                throw;
+            }
+        }
+
         public bool OnTacticalCombatInitialization()
         {
             try
