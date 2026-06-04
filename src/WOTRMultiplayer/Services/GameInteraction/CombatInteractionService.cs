@@ -571,6 +571,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
                 }
 
                 viewModel.IsAccelerated.Value = isAccelerated;
+                Game.Instance.TacticalCombat.Data.SetAcceleration(isAccelerated);
                 _logger.LogInformation("Tactical combat acceleration has been set. IsAccelerated={IsAccelerated}", isAccelerated);
             });
         }
