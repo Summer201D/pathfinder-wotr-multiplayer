@@ -566,7 +566,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
                 var viewModel = Main.UIAccessor.TacticalCombatPCView?.ViewModel;
                 if (viewModel == null)
                 {
-                    _logger.LogWarning("Tactical combat viewmodel is not availabel yet");
+                    _logger.LogWarning("Tactical combat viewmodel is not available yet");
                     return;
                 }
 
