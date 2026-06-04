@@ -475,5 +475,9 @@ namespace WOTRMultiplayer.Playground.Core.Dummies
         {
             return Task.CompletedTask;
         }
+
+        public void TriggerLootClosedActions(NetworkMapObject mapObject)
+        {
+        }
     }
 }

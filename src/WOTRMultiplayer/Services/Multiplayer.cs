@@ -4451,6 +4451,30 @@ namespace WOTRMultiplayer.Services
             }
         }
 
+        public void OnLootClosed(NetworkMapObject mapObject)
+        {
+            try
+            {
+                if (_multiplayerActorAccessor == null)
+                {
+                    return;
+                }
+
+                var context = RemoteContext?.LootClosed;
+                if (context != null && string.Equals(context.MapObjectId, mapObject.Id, StringComparison.OrdinalIgnoreCase))
+                {
+                    return;
+                }
+
+                _multiplayerActorAccessor.Current.OnLootClosed(mapObject);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while closing loot. MapObjectId={MapObjectId}", mapObject.Id);
+                throw;
+            }
+        }
+
         public void OnGlobalMapTeleport(NetworkGlobalMapLocation globalMapLocation)
         {
             try

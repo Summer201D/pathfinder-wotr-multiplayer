@@ -621,8 +621,6 @@ namespace WOTRMultiplayer.Services.GameInteraction
                         });
                     }
 
-                    TryTriggerLootClosedActions(sourceCollection.OwnerRef.Entity, destinationCollection.OwnerRef.Entity);
-
                     RefreshLootUI();
                     RefreshInventoryWindow();
                 }
@@ -2366,6 +2364,30 @@ namespace WOTRMultiplayer.Services.GameInteraction
             });
         }
 
+        public void TriggerLootClosedActions(NetworkMapObject networkMapObject)
+        {
+            _mainThreadAccessor.Post(() =>
+            {
+                var mapObject = _gameStateLookupService.GetMapObject(networkMapObject.Id);
+                if (mapObject == null)
+                {
+                    _logger.LogError("Unable to trigger loot closed actions due to missing map object. MapObjectId={MapObjectId}", networkMapObject.Id);
+                    return;
+                }
+
+                var interactionPart = mapObject.Get<InteractionLootPart>();
+                if (interactionPart == null)
+                {
+                    _logger.LogError("Map object has no InteractionLootPart. MapObjectId={MapObjectId}", networkMapObject.Id);
+                    return;
+                }
+
+                _networkExecutionContext.Value = RemoteExecutionContext.CreateLootClosed(networkMapObject.Id);
+                interactionPart.OnLootClosed();
+                _logger.LogInformation("Loot Closed actions have been triggered. MapObjectId={MapObjectId}", networkMapObject.Id);
+            });
+        }
+
         public void InteractWithMapObjectCombinePart(NetworkMapObject networkMapObject, string interactedUnitId, int partIndex)
         {
             _mainThreadAccessor.Post(() =>
@@ -3330,20 +3352,6 @@ namespace WOTRMultiplayer.Services.GameInteraction
                 && AreSameEnchantments(itemEntity.Enchantments, networkLootItem.Enchantments);
 
             return sameItemType;
-        }
-
-        private void TryTriggerLootClosedActions(params EntityDataBase[] entities)
-        {
-            foreach (var entity in entities)
-            {
-                if (entity is not MapObjectEntityData mapObjectEntityData)
-                {
-                    continue;
-                }
-
-                var lootPart = mapObjectEntityData.Get<InteractionLootPart>();
-                lootPart?.OnLootClosed();
-            }
         }
 
         private bool AreSameEnchantments(List<ItemEnchantment> itemEnchantments, List<string> enchantments)

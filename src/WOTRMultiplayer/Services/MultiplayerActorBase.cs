@@ -324,6 +324,15 @@ namespace WOTRMultiplayer.Services
             Send(message);
         }
 
+        public void OnLootClosed(NetworkMapObject mapObject)
+        {
+            var message = new NotifyLootClosed
+            {
+                MapObject = Mapper.Map<Networking.Messages.Contracts.NetworkMapObject>(mapObject)
+            };
+            Send(message);
+        }
+
         public void OnEquipmentSlotChanged(NetworkEquipmentSlot equipmentSlot)
         {
             if (!IsControlledByPlayers(equipmentSlot.OwnerId) && !GameInteraction.IsUnitInParty(equipmentSlot.OwnerId))
@@ -3436,6 +3445,7 @@ namespace WOTRMultiplayer.Services
                 .On<NotifyOvertipInteracted>(OnNotifyOvertipInteracted)
                 .On<NotifyTrapDisarmRolled>(OnNotifyTrapDisarmRolled)
                 .On<NotifyTransitionMapShown>(OnNotifyTransitionMapShown)
+                .On<NotifyLootClosed>(OnNotifyLootClosed)
 
                 // items&inventory
                 .On<NotifyLootableEntitySkinned>(OnNotifyContainerSkinned)
@@ -3498,6 +3508,12 @@ namespace WOTRMultiplayer.Services
                 .On<NotifyTrapActivated>(OnNotifyTrapActivated)
                 .On<NotifyMapObjectCombinePartInteracted>(OnNotifyMapObjectCombinePartInteracted)
                 ;
+        }
+
+        private void OnNotifyLootClosed(long receivedFrom, NotifyLootClosed message)
+        {
+            var mapObject = Mapper.Map<NetworkMapObject>(message.MapObject);
+            GameInteraction.TriggerLootClosedActions(mapObject);
         }
 
         private async void OnNotifyGlobalMapTravelerModeChanged(long receivedFrom, NotifyGlobalMapTravelerModeChanged message)

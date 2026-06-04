@@ -31,6 +31,8 @@ namespace WOTRMultiplayer.Services.GameInteraction.Contexts
 
         public PolymorphicItemContext PolymorphicItem { get; set; }
 
+        public LootClosedContext LootClosed { get; set; }
+
         public void Dispose()
         {
             SelectedUnits = null;
@@ -44,6 +46,18 @@ namespace WOTRMultiplayer.Services.GameInteraction.Contexts
             Lockpick = null;
             PolymorphicItem = null;
             MetamagicSpell = null;
+            LootClosed = null;
+        }
+
+        public static RemoteExecutionContext CreateLootClosed(string mapObjectId)
+        {
+            return new RemoteExecutionContext
+            {
+                LootClosed = new LootClosedContext
+                {
+                    MapObjectId = mapObjectId
+                }
+            };
         }
 
         public static RemoteExecutionContext CreateDropItem(string itemId, string unitId)
