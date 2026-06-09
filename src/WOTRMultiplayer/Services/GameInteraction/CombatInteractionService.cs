@@ -205,7 +205,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
             });
         }
 
-        public void EndTurnBasedCombatTurn()
+        public void EndCombatTurn()
         {
             _mainThreadAccessor.Post(() =>
             {
@@ -693,14 +693,14 @@ namespace WOTRMultiplayer.Services.GameInteraction
 
                 var rider = Game.Instance.TurnBasedCombatController.CurrentTurn.Rider;
                 var mount = Game.Instance.TurnBasedCombatController.CurrentTurn.Mount;
-                var isRiderActing = Game.Instance.TurnBasedCombatController.CurrentTurn.m_RunningCommands.Count > 0
+                var isRiderActive = Game.Instance.TurnBasedCombatController.CurrentTurn.m_RunningCommands.Count > 0
                     || Game.Instance.ProjectileController.HasLaunchedProjectile(rider, mount)
                     || Game.Instance.TurnBasedCombatController.CurrentTurn.IsMoving
                     || rider.Commands.HasAiCommand()
                     || rider.AreHandsBusyWithAnimation
                     || mount != null && mount.Commands.HasAiCommand();
 
-                return isRiderActing;
+                return isRiderActive;
             }
             catch (Exception ex)
             {

@@ -18,5 +18,9 @@ namespace WOTRMultiplayer.Networking.Messages.Contracts
         [ProtoMember(3)]
         [LogMe]
         public TimeSpan CombatTurnDelayForAI { get; set; }
+
+        [ProtoMember(4)]
+        [LogMe]
+        public TimeSpan PlayerTurnEndDelay { get; set; }
     }
 }

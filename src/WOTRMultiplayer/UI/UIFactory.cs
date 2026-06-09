@@ -706,10 +706,6 @@ namespace WOTRMultiplayer.UI
                 WellKnownSettings.Networking.Host,
                 new HostValidator(),
                 int.MaxValue);
-            yield return CreateBoolSetting(
-                WellKnownKeys.Settings.Networking.UseIPv6.Title.Key,
-                WellKnownKeys.Settings.Networking.UseIPv6.Tooltip.Key,
-                WellKnownSettings.Networking.UseIPv6);
             yield return CreateIntInputSetting(
                 WellKnownKeys.Settings.Networking.HostPortRangeStart.Title.Key,
                 WellKnownKeys.Settings.Networking.HostPortRangeStart.Tooltip.Key,
@@ -722,6 +718,10 @@ namespace WOTRMultiplayer.UI
                 WellKnownSettings.Networking.HostPortRangeEnd,
                 new NetworkPortValidator(),
                 NetworkPortValidator.MaxCharacters);
+            yield return CreateBoolSetting(
+                WellKnownKeys.Settings.Networking.UseIPv6.Title.Key,
+                WellKnownKeys.Settings.Networking.UseIPv6.Tooltip.Key,
+                WellKnownSettings.Networking.UseIPv6);
 
             // misc
             yield return new SettingsEntityHeaderVM(new LocalizedString { Key = WellKnownKeys.Settings.Miscellaneous.Title.Key });
@@ -766,6 +766,12 @@ namespace WOTRMultiplayer.UI
                 WellKnownKeys.Settings.DangerZone.CombatTurnDelayForAI.Title.Key,
                 WellKnownKeys.Settings.DangerZone.CombatTurnDelayForAI.Tooltip.Key,
                 WellKnownSettings.DangerZone.CombatTurnDelayForAI,
+                new TimeSpanValidator(),
+                TimeSpanValidator.MaxLength);
+            yield return CreateStringInputSetting(
+                WellKnownKeys.Settings.DangerZone.PlayerTurnEndDelay.Title.Key,
+                WellKnownKeys.Settings.DangerZone.PlayerTurnEndDelay.Tooltip.Key,
+                WellKnownSettings.DangerZone.PlayerTurnEndDelay,
                 new TimeSpanValidator(),
                 TimeSpanValidator.MaxLength);
             yield return CreateIntInputSetting(

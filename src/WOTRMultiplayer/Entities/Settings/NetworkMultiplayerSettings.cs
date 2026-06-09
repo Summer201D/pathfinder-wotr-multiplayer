@@ -37,5 +37,7 @@ namespace WOTRMultiplayer.Entities.Settings
         public TimeSpan CombatTurnDelayForAI { get; set; }
 
         public int SaveGameChunkSize { get; set; } = 1024 * 32;
+
+        public TimeSpan PlayerTurnEndDelay { get; set; }
     }
 }

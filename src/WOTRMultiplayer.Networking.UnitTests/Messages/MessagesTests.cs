@@ -91,11 +91,39 @@ namespace WOTRMultiplayer.Networking.UnitTests.Messages
                 .ToList();
 
             // Act
-            var invalidProtoContracts = allProtoContracts.Where(x => x.GetProperties(BindingFlags.Public | BindingFlags.Instance).Any(x => x.GetCustomAttribute<ProtoMemberAttribute>() == null)).ToList();
+            var invalidProtoContracts = allProtoContracts.Where(x =>
+                x.GetProperties(BindingFlags.Public | BindingFlags.Instance)
+                .Any(x => x.GetCustomAttribute<ProtoMemberAttribute>() == null)).ToList();
 
             // Assert
             Assert.That(invalidProtoContracts.Count, Is.EqualTo(0), "Missing ProtoMember: " + string.Join(", ", invalidProtoContracts.Select(x => x.Name)));
             Assert.That(allProtoContracts.Count, Is.GreaterThan(0));
+        }
+
+        [Test]
+        public void NetworkMessages_HaveNoDuplicateProtoMemberIndexes()
+        {
+            // Arrange
+            var allProtoContracts = Assembly
+                .GetAssembly(typeof(BeetleXMessageTypes.ProtobufServerPacket))
+                .GetTypes()
+                .Where(t => t.GetCustomAttribute<ProtoContractAttribute>() != null)
+                .ToList();
+            var invalidContracts = new List<Type>();
+
+            // Act
+            foreach (var message in allProtoContracts)
+            {
+                var properties = message.GetProperties(BindingFlags.Public | BindingFlags.Instance).Where(x => x.GetCustomAttribute<ProtoMemberAttribute>() != null).ToList();
+                var allIndexes = properties.Select(x => x.GetCustomAttribute<ProtoMemberAttribute>().Tag).Distinct().ToList();
+                if (allIndexes.Count != properties.Count)
+                {
+                    invalidContracts.Add(message);
+                }
+            }
+
+            // Assert
+            Assert.That(invalidContracts.Count, Is.EqualTo(0), "Corrupted ProtoContract: " + string.Join(", ", invalidContracts.Select(x => x.Name)));
         }
 
         [Test]

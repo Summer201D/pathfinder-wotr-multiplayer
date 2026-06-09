@@ -1182,6 +1182,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
                     SettingsController.GeneralSettingsProvider.SetValue(WellKnownSettings.DangerZone.NetworkAwaiterTimeout.Key, networkGameSettings.Multiplayer.NetworkAwaiterTimeout.ToString());
                     SettingsController.GeneralSettingsProvider.SetValue(WellKnownSettings.DangerZone.RestEncounterSyncTimeout.Key, networkGameSettings.Multiplayer.RestEncounterSyncTimeout.ToString());
                     SettingsController.GeneralSettingsProvider.SetValue(WellKnownSettings.DangerZone.CombatTurnDelayForAI.Key, networkGameSettings.Multiplayer.CombatTurnDelayForAI.ToString());
+                    SettingsController.GeneralSettingsProvider.SetValue(WellKnownSettings.DangerZone.PlayerTurnEndDelay.Key, networkGameSettings.Multiplayer.PlayerTurnEndDelay.ToString());
                 }
             });
         }

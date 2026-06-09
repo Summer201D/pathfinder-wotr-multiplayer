@@ -29,7 +29,7 @@ namespace WOTRMultiplayer.Abstractions.GameInteraction
 
         void StartTurnBasedCombatTurn(string unitId, Action onInvalidUnit = null);
 
-        void EndTurnBasedCombatTurn();
+        void EndCombatTurn();
 
         bool IsCombatTurnFinished();
 

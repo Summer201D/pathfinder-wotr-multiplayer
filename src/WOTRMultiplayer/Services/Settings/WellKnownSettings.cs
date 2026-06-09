@@ -115,7 +115,10 @@ namespace WOTRMultiplayer.Services.Settings
             public static WellKnownSettingKey<TimeSpan> RestEncounterSyncTimeout { get; } = new(TimeSpan.FromSeconds(30));
 
             [Description("combat-turn-delay-for-ai")]
-            public static WellKnownSettingKey<TimeSpan> CombatTurnDelayForAI { get; } = new(TimeSpan.FromSeconds(0.5d));
+            public static WellKnownSettingKey<TimeSpan> CombatTurnDelayForAI { get; } = new(TimeSpan.FromSeconds(0.5));
+
+            [Description("combat-turn-end-delay-for-player")]
+            public static WellKnownSettingKey<TimeSpan> PlayerTurnEndDelay { get; } = new(TimeSpan.FromSeconds(0.3));
 
             [Description("save-game-chunk-size")]
             public static WellKnownSettingKey<int> SaveGameChunkSize { get; } = new(32768);

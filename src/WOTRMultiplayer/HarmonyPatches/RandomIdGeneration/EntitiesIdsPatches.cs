@@ -459,7 +459,7 @@ namespace WOTRMultiplayer.HarmonyPatches.RandomIdGeneration
                 var seededContext = Main.Multiplayer.GetSeededContext(seedKind);
                 var rawIdentifier = $"{baseIdentifier}_{seededContext.Id}";
                 var id = Main.Multiplayer.ValueGenerator.GenerateUniqueId(IdType.Unit, Game.Instance.Player.GameId, rawIdentifier);
-                Main.GetLogger<EntitiesIdsPatches>().LogInformation("Unit id has been generated. RawIdentifier={RawIdentifier}, Id={Id}", rawIdentifier, id);
+                Main.GetLogger<EntitiesIdsPatches>().LogInformation("UnitId has been generated. RawIdentifier={RawIdentifier}, Id={Id}", rawIdentifier, id);
                 return id;
             }
             catch (Exception ex)

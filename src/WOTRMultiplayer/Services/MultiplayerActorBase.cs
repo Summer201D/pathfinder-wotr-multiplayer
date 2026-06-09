@@ -2305,6 +2305,18 @@ namespace WOTRMultiplayer.Services
             Game.Leveling = new NetworkLeveling(unitId, levelingType);
         }
 
+        protected async Task WaitForTurnToBeFinishableAsync()
+        {
+            // making sure all previous actions are finished
+            await WaitWhileTrue(() => CombatInteraction.IsRiderActive() || Game.Combat.Turn.LockCounter > 0, "Waiting for all combat commands to finish before ending turn");
+            var settings = SettingsService.GetSettings();
+            if (settings.PlayerTurnEndDelay > TimeSpan.Zero)
+            {
+                Logger.LogInformation("Waiting for artificial delay before ending player turn. Delay={Delay}", settings.PlayerTurnEndDelay);
+                await Task.Delay(settings.PlayerTurnEndDelay);
+            }
+        }
+
         protected void UpdateGroupManagerUIState()
         {
             lock (ActionLock)

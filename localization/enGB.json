@@ -195,6 +195,10 @@
                     "title": "AI Turn delay",
                     "tooltip": "AI turn for clients starts a bit later so AI actions can be synced/overridden from host if needed.\nKeep this value slightly higher than your network ping, but adjust it depending on how much the game starts to stutter during longer play sessions"
                 },
+                "playerTurnEndDelay": {
+                    "title": "Remote Player Turn-End Delay",
+                    "tooltip": "How long to wait after a remote player ends their turn before advancing the game"
+                },
                 "saveGameChunkSize": {
                     "title": "Save Game chunk size",
                     "tooltip": "Controls chunk size (bytes) when transferring save game over the network. Smaller chunks can improve stability on slower or unstable connections, while larger chunks may increase transfer speed on fast networks.\nChanging this value can affect connection reliability and compatibility. Only modify it if you understand how networking and data transfer work. Incorrect values may cause slow transfers, connection issues, or failed uploads/downloads."
@@ -239,7 +243,7 @@
                 "featureMismatch": "Selected {0} feature is missing.\nMake sure game content (DLCs/mods) is the same"
             },
             "session": {
-                "playerJoined": "Player {0} has joined the game",
+                "playerJoined": "Player {0} has joined the game. Load a save to play together",
                 "playerLeft": "Player {0} has left the game",
                 "characterOwnerChanged": "Player {0} is in charge of {1} now",
                 "loadingSave": "Save game load has been initiated by {0}"

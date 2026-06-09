@@ -45,6 +45,7 @@ namespace WOTRMultiplayer.Services.Settings
             _settingsControllerAccessor.CreateDefaultValue<string>(WellKnownSettings.DangerZone.NetworkAwaiterTimeout);
             _settingsControllerAccessor.CreateDefaultValue<string>(WellKnownSettings.DangerZone.RestEncounterSyncTimeout);
             _settingsControllerAccessor.CreateDefaultValue<string>(WellKnownSettings.DangerZone.CombatTurnDelayForAI);
+            _settingsControllerAccessor.CreateDefaultValue<string>(WellKnownSettings.DangerZone.PlayerTurnEndDelay);
             _settingsControllerAccessor.CreateDefaultValue(WellKnownSettings.DangerZone.SaveGameChunkSize);
         }
 
@@ -77,6 +78,7 @@ namespace WOTRMultiplayer.Services.Settings
                 NetworkAwaiterTimeout = _settingsControllerAccessor.GetTimeSpanValue(WellKnownSettings.DangerZone.NetworkAwaiterTimeout),
                 RestEncounterSyncTimeout = _settingsControllerAccessor.GetTimeSpanValue(WellKnownSettings.DangerZone.RestEncounterSyncTimeout),
                 CombatTurnDelayForAI = _settingsControllerAccessor.GetTimeSpanValue(WellKnownSettings.DangerZone.CombatTurnDelayForAI),
+                PlayerTurnEndDelay = _settingsControllerAccessor.GetTimeSpanValue(WellKnownSettings.DangerZone.PlayerTurnEndDelay),
                 SaveGameChunkSize = _settingsControllerAccessor.GetValue(WellKnownSettings.DangerZone.SaveGameChunkSize),
             };
 

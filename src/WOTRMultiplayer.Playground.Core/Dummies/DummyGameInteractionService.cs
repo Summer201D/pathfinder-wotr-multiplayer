@@ -121,16 +121,7 @@ namespace WOTRMultiplayer.Playground.Core.Dummies
         {
         }
 
-        public void EndTurnBasedCombatTurn()
-        {
-        }
-
         public NetworkCampingState GetCampigState()
-        {
-            return null;
-        }
-
-        public NetworkCombatState GetCombatState()
         {
             return null;
         }

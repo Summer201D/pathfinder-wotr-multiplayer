@@ -1825,10 +1825,15 @@ namespace WOTRMultiplayer.Services
 
         private async void OnNotifyCombatLocalTurnEnded(long receivedFrom, NotifyCombatLocalTurnEnded message)
         {
-            await WaitWhileTrue(() => CombatInteraction.IsRiderActive() || Game.Combat.Turn.LockCounter > 0, "Waiting for all combat commands to finish before ending turn");
+            await WaitForTurnToBeFinishableAsync();
 
             Game.Combat.Turn.PlayersEndTurnInitialization.Add(message.PlayerId);
-            CombatInteraction.EndTurnBasedCombatTurn();
+
+            // AI turn is ended automatically
+            if (!Game.Combat.Turn.IsAI)
+            {
+                CombatInteraction.EndCombatTurn();
+            }
 
             TryEndTurn();
         }

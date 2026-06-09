@@ -868,8 +868,8 @@ namespace WOTRMultiplayer.Services
                 return;
             }
 
-            await WaitWhileTrue(() => CombatInteraction.IsRiderActive() || Game.Combat.Turn.LockCounter > 0, "Waiting for all combat commands to finish before ending turn");
-            CombatInteraction.EndTurnBasedCombatTurn();
+            await WaitForTurnToBeFinishableAsync();
+            CombatInteraction.EndCombatTurn();
         }
 
         private async void OnNotifyAIActionExecuted(long receivedFrom, NotifyAIActionSelected message)
