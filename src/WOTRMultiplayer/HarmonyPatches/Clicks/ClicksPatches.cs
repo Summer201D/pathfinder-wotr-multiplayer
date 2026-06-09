@@ -43,7 +43,7 @@ namespace WOTRMultiplayer.HarmonyPatches.Clicks
                 return;
             }
 
-            var movementLimit = Game.Instance.TurnBasedCombatController.CurrentTurn?.CurrentMovementLimit;
+            var movementLimit = Game.Instance.TurnBasedCombatController.CurrentTurn.GetMovementLimit(unit);
             var path = PathVisualizer.Instance?.m_CurrentPath?.vectorPath;
             var attackMode = Game.Instance.TurnBasedCombatController.CurrentTurn?.m_AttackMode;
             var unitMoveTo = new NetworkUnitMoveTo
@@ -101,7 +101,7 @@ namespace WOTRMultiplayer.HarmonyPatches.Clicks
                 WorldPosition = worldPosition.ToNetworkVector3(),
                 MuteEvents = muteEvents,
                 VectorPath = [.. path?.vectorPath?.Select(v => v.ToNetworkVector3()) ?? []],
-                MovementLimit = Game.Instance.TurnBasedCombatController.CurrentTurn?.CurrentMovementLimit.ToString()
+                MovementLimit = Game.Instance.TurnBasedCombatController.CurrentTurn.GetMovementLimit(selectedUnit?.Data)?.ToString()
             };
         }
     }
