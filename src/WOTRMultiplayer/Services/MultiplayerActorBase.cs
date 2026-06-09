@@ -2732,7 +2732,8 @@ namespace WOTRMultiplayer.Services
                 return;
             }
 
-            PlayerNotification.ShowWarningNotification(WellKnownKeys.GameNotifications.Session.PlayerJoined.Key, args: networkPlayer.Name);
+            PlayerNotification.ShowWarningNotification(WellKnownKeys.GameNotifications.Session.PlayerJoinedShort.Key, addToLog: false, args: networkPlayer.Name);
+            PlayerNotification.AddCombatText(WellKnownKeys.GameNotifications.Session.PlayerJoinedFull.Key, CombatTextSeverity.Common, args: networkPlayer.Name);
         }
 
         protected void ShowPlayerDisconnectedMessage(NetworkPlayer networkPlayer)
@@ -2742,7 +2743,7 @@ namespace WOTRMultiplayer.Services
                 return;
             }
 
-            PlayerNotification.ShowModalMessage(WellKnownKeys.GameNotifications.Session.PlayerLeft.Key, networkPlayer.Name);
+            PlayerNotification.ShowWarningNotification(WellKnownKeys.GameNotifications.Session.PlayerLeft.Key, warningDuration: 2f, args: networkPlayer.Name);
         }
 
         protected NetworkPlayer CleanupPlayer(long playerId)

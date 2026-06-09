@@ -243,9 +243,10 @@
                 "featureMismatch": "Selected {0} feature is missing.\nMake sure game content (DLCs/mods) is the same"
             },
             "session": {
-                "playerJoined": "Player {0} has joined the game. Load a save to play together",
-                "playerLeft": "Player {0} has left the game",
-                "characterOwnerChanged": "Player {0} is in charge of {1} now",
+                "playerJoinedShort": "{0} has joined the game",
+                "playerJoinedFull": "New player {0} has joined the game. Load a save to play together",
+                "playerLeft": "{0} has left the game",
+                "characterOwnerChanged": "{0} is in charge of {1} now",
                 "loadingSave": "Save game load has been initiated by {0}"
             },
             "spellBook": {

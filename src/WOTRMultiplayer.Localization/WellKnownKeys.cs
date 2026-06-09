@@ -946,8 +946,14 @@ public static class WellKnownKeys
         [Description("session")]
         public static class Session
         {
-            [Description("playerJoined")]
-            public static class PlayerJoined
+            [Description("playerJoinedShort")]
+            public static class PlayerJoinedShort
+            {
+                public static string Key { get; set; }
+            }
+
+            [Description("playerJoinedFull")]
+            public static class PlayerJoinedFull
             {
                 public static string Key { get; set; }
             }
