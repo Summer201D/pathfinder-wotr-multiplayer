@@ -869,7 +869,7 @@ namespace WOTRMultiplayer.Services
             }
 
             await WaitForTurnToBeFinishableAsync();
-            CombatInteraction.EndCombatTurn();
+            CombatInteraction.EndCombatTurn(message.UnitId);
         }
 
         private async void OnNotifyAIActionExecuted(long receivedFrom, NotifyAIActionSelected message)

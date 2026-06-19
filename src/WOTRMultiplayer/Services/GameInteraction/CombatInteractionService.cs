@@ -205,22 +205,36 @@ namespace WOTRMultiplayer.Services.GameInteraction
             });
         }
 
-        public void EndCombatTurn()
+        public void EndCombatTurn(string unitId)
         {
             _mainThreadAccessor.Post(() =>
             {
                 try
                 {
-                    var turnStatus = Game.Instance.TurnBasedCombatController.CurrentTurn?.Status ?? null;
-                    if ((turnStatus == TurnController.TurnStatus.Ending)
-                        || turnStatus == TurnController.TurnStatus.Ended
-                        || turnStatus == TurnController.TurnStatus.None)
+
+                    var turn = Game.Instance.TurnBasedCombatController.CurrentTurn;
+                    if (turn == null)
                     {
+                        _logger.LogWarning("There is no active turn to end");
                         return;
                     }
 
-                    _logger.LogInformation("Ending turn. TurnStatus={TurnStatus}", turnStatus);
-                    Game.Instance.TurnBasedCombatController.CurrentTurn?.ToEnd();
+                    if ((turn.Status == TurnController.TurnStatus.Ending)
+                        || turn.Status == TurnController.TurnStatus.Ended
+                        || turn.Status == TurnController.TurnStatus.None)
+                    {
+                        _logger.LogInformation("Turn is already ending, no need to end");
+                        return;
+                    }
+
+                    if (string.Equals(turn.Rider?.UniqueId, unitId, StringComparison.OrdinalIgnoreCase))
+                    {
+                        _logger.LogWarning("Trying to end turn for an invalid unit. TurnUnitId={TurnUnitId}, UnitId={UnitId}", turn.Rider?.UniqueId, unitId);
+                        return;
+                    }
+
+                    _logger.LogInformation("Ending turn. TurnStatus={TurnStatus}", turn.Status);
+                    Game.Instance.TurnBasedCombatController.CurrentTurn.ToEnd();
                 }
                 catch (Exception ex)
                 {

@@ -1829,10 +1829,10 @@ namespace WOTRMultiplayer.Services
 
             Game.Combat.Turn.PlayersEndTurnInitialization.Add(message.PlayerId);
 
-            // AI turn is ended automatically
+            // AI turn is ended automatically by the game
             if (!Game.Combat.Turn.IsAI)
             {
-                CombatInteraction.EndCombatTurn();
+                CombatInteraction.EndCombatTurn(message.UnitId);
             }
 
             TryEndTurn();

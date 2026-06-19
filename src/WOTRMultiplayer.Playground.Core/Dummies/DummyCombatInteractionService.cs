@@ -21,7 +21,7 @@ namespace WOTRMultiplayer.Playground.Core.Dummies
         {
         }
 
-        public void EndCombatTurn()
+        public void EndCombatTurn(string unitId)
         {
         }
 
