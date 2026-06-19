@@ -844,6 +844,8 @@ namespace WOTRMultiplayer.Services
 
         private async void OnNotifyCombatTurnEndSynchronizationRequired(long receivedFrom, NotifyCombatTurnEndSynchronizationRequired message)
         {
+            await WaitWhileTrue(() => !CombatInteraction.IsCombatTurnFinished(), "Waiting for an active turn to end before proceeding with synchronizaiton");
+
             var units = Mapper.Map<List<NetworkUnit>>(message.Units);
             var isSynced = await CombatInteraction.UpdateUnitsAsync(units, updatePosition: true);
             if (!isSynced)

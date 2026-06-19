@@ -227,7 +227,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
                         return;
                     }
 
-                    if (string.Equals(turn.Rider?.UniqueId, unitId, StringComparison.OrdinalIgnoreCase))
+                    if (!string.Equals(turn.Rider?.UniqueId, unitId, StringComparison.OrdinalIgnoreCase))
                     {
                         _logger.LogWarning("Trying to end turn for an invalid unit. TurnUnitId={TurnUnitId}, UnitId={UnitId}", turn.Rider?.UniqueId, unitId);
                         return;
