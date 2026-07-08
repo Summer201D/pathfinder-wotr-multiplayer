@@ -152,9 +152,11 @@ jobs:
 
           xcopy /q /y "${{ env.LOCALIZATION_PATH }}\*.json" "${{ env.RELEASE_OUTPUT_PATH }}\localization\*"
       - name: Create release zip
+        shell: pwsh
         run: |
-          cd "${{ github.workspace }}/__releases"
-          zip -r "wotr-multiplayer-${{ env.CURRENT_VERSION }}.zip" 00_WOTRMultiplayer
+          Compress-Archive `
+          -Path "${{ github.workspace }}\__releases\00_WOTRMultiplayer" `
+          -DestinationPath "${{ github.workspace }}\__releases\wotr-multiplayer-${{ env.CURRENT_VERSION }}.zip"
       - name: Upload Release
         uses: actions/upload-artifact@v4
         with:

@@ -11,6 +11,7 @@ on:
         type: string
 jobs:
   nexusmods:
+    if: ${{ !github.event.release.prerelease }}
     runs-on: ubuntu-latest
     env:
       TAG: ${{ github.event_name == 'release' && github.event.release.tag_name || inputs.tag }}
