@@ -202,7 +202,7 @@ jobs:
     needs: [build, get-version]
     timeout-minutes: 10
     env:
-      CURRENT_VERSION: ${{needs.get-version.outputs.version}}
+      CURRENT_VERSION: ${{needs.get-version.outputs.releaseVersion}}
     permissions:
       contents: write
     runs-on: ubuntu-latest
