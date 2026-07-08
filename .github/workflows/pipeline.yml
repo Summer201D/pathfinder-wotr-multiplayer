@@ -224,7 +224,7 @@ jobs:
     permissions:
       contents: write
     env:
-      CURRENT_VERSION: ${{ needs.get-version.outputs.version }}
+      CURRENT_VERSION: ${{ needs.get-version.outputs.releaseVersion }}
 
     steps:
       - name: Download artifact
