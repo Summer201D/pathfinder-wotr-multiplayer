@@ -151,17 +151,11 @@ jobs:
           xcopy /q /y "${{ env.BUILD_PATH }}\FluentValidation.dll" "${{ env.RELEASE_OUTPUT_PATH }}\*"
 
           xcopy /q /y "${{ env.LOCALIZATION_PATH }}\*.json" "${{ env.RELEASE_OUTPUT_PATH }}\localization\*"
-      - name: Create release zip
-        shell: pwsh
-        run: |
-          Compress-Archive `
-          -Path "${{ github.workspace }}\__releases\00_WOTRMultiplayer" `
-          -DestinationPath "${{ github.workspace }}\__releases\wotr-multiplayer-${{ env.CURRENT_VERSION }}.zip"
       - name: Upload Release
         uses: actions/upload-artifact@v4
         with:
           name: wotr-multiplayer-${{ env.CURRENT_VERSION }}
-          path: "${{ github.workspace }}/__releases/wotr-multiplayer-${{ env.CURRENT_VERSION }}.zip"
+          path: "${{ github.workspace }}/__releases/"
           retention-days: 3
       - name: Prepare Refs
         shell: cmd
@@ -238,6 +232,11 @@ jobs:
         with:
           name: wotr-multiplayer-${{ env.CURRENT_VERSION }}
           path: artifacts
+      - name: Repack
+        run: |
+          mkdir -p artifacts/__repack
+          cd artifacts
+          zip -r "__repack/wotr-multiplayer-${{ env.CURRENT_VERSION }}.zip" 00_WOTRMultiplayer
       - name: Create draft release
         uses: softprops/action-gh-release@v3
         with:
@@ -245,7 +244,7 @@ jobs:
           name: ${{ env.CURRENT_VERSION }}
           draft: true
           generate_release_notes: false
-          files: artifacts/*.zip
+          files: artifacts/__repack/*.zip
 
   test-reporter:
     needs: [build]
