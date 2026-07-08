@@ -30,6 +30,7 @@ jobs:
       #   uses: Nexus-Mods/upload-action@v1
       #   with:
       #     api_key: ${{ secrets.NEXUSMODS_API_KEY }}
-      #     file_id: TBD
+      #     file_id: ${{ vars.NEXUSMODS_FILE_ID }}
       #     filename: ${{ env.FILE_NAME }}
       #     version: ${{ env.TAG }}
+      #     primary_mod_manager_download: true
