@@ -1,8 +1,8 @@
 ﻿using BeetleX;
 
-namespace WOTRMultiplayer.Networking
+namespace WOTRMultiplayer.Networking.Channels.TCP
 {
-    public class NetworkConnectionToken : ISessionToken
+    public class TcpSessionToken : ISessionToken
     {
         public long Id { get; set; }
 

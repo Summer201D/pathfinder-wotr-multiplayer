@@ -4,8 +4,8 @@ using BeetleX.Clients;
 using FakeItEasy;
 using Microsoft.Extensions.Logging;
 using NUnit.Framework;
-using WOTRMultiplayer.Networking.Abstractions;
-using WOTRMultiplayer.Networking.Consuming;
+using WOTRMultiplayer.Networking.Abstractions.TCP;
+using WOTRMultiplayer.Networking.Channels.TCP;
 
 namespace WOTRMultiplayer.Networking.UnitTests
 {
@@ -15,17 +15,15 @@ namespace WOTRMultiplayer.Networking.UnitTests
         private NetworkClient _client;
 
         private ILogger<NetworkClient> _logger;
-        private ITcpClientFactory _tcpClientFactory;
-        private IMessageConsumer _messageConsumer;
+        private ITcpFactory _tcpClientFactory;
 
         [SetUp]
         public void SetUp()
         {
             _logger = A.Fake<ILogger<NetworkClient>>();
-            _tcpClientFactory = A.Fake<ITcpClientFactory>();
-            _messageConsumer = A.Fake<IMessageConsumer>();
+            _tcpClientFactory = A.Fake<ITcpFactory>();
 
-            _client = new NetworkClient(_logger, _tcpClientFactory, _messageConsumer);
+            _client = new NetworkClient(_logger, _tcpClientFactory);
         }
 
         [Test]
@@ -36,10 +34,10 @@ namespace WOTRMultiplayer.Networking.UnitTests
             var port = new Random().Next(1, short.MaxValue);
 
             // Act
-            await _client.ConnectAsync(host, port, TimeSpan.FromMinutes(1));
+            await _client.ConnectAsync(host, port);
 
             // Assert
-            A.CallTo(() => _tcpClientFactory.Create(host, port)).MustHaveHappenedOnceExactly();
+            A.CallTo(() => _tcpClientFactory.CreateClient(host, port)).MustHaveHappenedOnceExactly();
         }
 
         [Test]
@@ -50,7 +48,7 @@ namespace WOTRMultiplayer.Networking.UnitTests
             var port = new Random().Next(1, short.MaxValue);
 
             // Act
-            await _client.ConnectAsync(host, port, TimeSpan.FromMinutes(1));
+            await _client.ConnectAsync(host, port);
 
             // Assert
             Assert.That(_client.IsConnecting, Is.True);
@@ -63,10 +61,10 @@ namespace WOTRMultiplayer.Networking.UnitTests
             var host = Guid.NewGuid().ToString();
             var port = new Random().Next(1, short.MaxValue);
             var fakeClient = A.Fake<ITcpClient>();
-            A.CallTo(() => _tcpClientFactory.Create(host, port)).Returns(fakeClient);
+            A.CallTo(() => _tcpClientFactory.CreateClient(host, port)).Returns(fakeClient);
 
             // Act
-            await _client.ConnectAsync(host, port, TimeSpan.FromMinutes(1));
+            await _client.ConnectAsync(host, port);
 
             // Assert
             A.CallToSet(() => fakeClient.ClientError).MustHaveHappenedOnceExactly();
@@ -82,8 +80,8 @@ namespace WOTRMultiplayer.Networking.UnitTests
             var host = Guid.NewGuid().ToString();
             var port = new Random().Next(1, short.MaxValue);
             var fakeTcpClient = A.Fake<ITcpClient>();
-            A.CallTo(() => _tcpClientFactory.Create(host, port)).Returns(fakeTcpClient);
-            await _client.ConnectAsync(host, port, TimeSpan.FromMinutes(1));
+            A.CallTo(() => _tcpClientFactory.CreateClient(host, port)).Returns(fakeTcpClient);
+            await _client.ConnectAsync(host, port);
             var fakeClient = A.Fake<IClient>();
             var isOnConnectedInvoked = false;
             _client.OnConnected = _ => isOnConnectedInvoked = true;
@@ -103,8 +101,8 @@ namespace WOTRMultiplayer.Networking.UnitTests
             var host = Guid.NewGuid().ToString();
             var port = new Random().Next(1, short.MaxValue);
             var fakeTcpClient = A.Fake<ITcpClient>();
-            A.CallTo(() => _tcpClientFactory.Create(host, port)).Returns(fakeTcpClient);
-            await _client.ConnectAsync(host, port, TimeSpan.FromMinutes(1));
+            A.CallTo(() => _tcpClientFactory.CreateClient(host, port)).Returns(fakeTcpClient);
+            await _client.ConnectAsync(host, port);
             var fakeClient = A.Fake<IClient>();
             var isOnErrorInvoked = false;
             _client.OnError = _ => isOnErrorInvoked = true;
@@ -125,17 +123,19 @@ namespace WOTRMultiplayer.Networking.UnitTests
             var host = Guid.NewGuid().ToString();
             var port = new Random().Next(1, short.MaxValue);
             var fakeTcpClient = A.Fake<ITcpClient>();
-            A.CallTo(() => _tcpClientFactory.Create(host, port)).Returns(fakeTcpClient);
-            await _client.ConnectAsync(host, port, TimeSpan.FromMinutes(1));
+            A.CallTo(() => _tcpClientFactory.CreateClient(host, port)).Returns(fakeTcpClient);
+            var isCalled = false;
+            _client.OnMessageReceived = _ => isCalled = true;
+            await _client.ConnectAsync(host, port);
             var fakeClient = A.Fake<IClient>();
-            fakeClient.Token = new NetworkConnectionToken { Id = 1234 };
+            fakeClient.Token = new TcpSessionToken { Id = 1234 };
             var message = new object();
 
             // Act
             fakeTcpClient.PacketReceive.Invoke(fakeClient, message);
 
             // Assert
-            A.CallTo(() => _messageConsumer.Enqueue(A<NetworkMessageMetadata>.That.Matches(x => x.Message == message))).MustHaveHappenedOnceExactly();
+            Assert.That(isCalled, Is.True);
         }
     }
 }

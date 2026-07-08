@@ -2,7 +2,6 @@ name: "CI"
 
 on:
   workflow_dispatch:
-  pull_request:
   push:
    branches:
      - 'main'
@@ -17,7 +16,8 @@ jobs:
     timeout-minutes: 10
     runs-on: ubuntu-latest
     outputs:
-      version: ${{ steps.json-version-parser.outputs.version }}
+      releaseVersion: ${{ steps.json-version-parser.outputs.releaseVersion }}
+      assemblyVersion: ${{ steps.json-version-parser.outputs.assemblyVersion }}
     env:
       INFO_PATH: ./src/WOTRMultiplayer/Info.json
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -27,13 +27,28 @@ jobs:
       - name: Read current version
         id: json-version-parser
         run: |
-          baseFullVersion=$(jq '.version' ${{ env.INFO_PATH }} | tr -d '"')
-          echo 'Info Json Version: ' $baseFullVersion
-          majorMinor=$(echo "${baseFullVersion%.*}")
-          echo 'MajorMinorVersion: ' $majorMinor
-          releaseVersion=$(echo $majorMinor.${{ github.run_number }})
-          echo 'Release Version: ' $releaseVersion
-          echo "version=$releaseVersion" >> $GITHUB_OUTPUT
+          baseFullVersion=$(jq -r '.version' "${{ env.INFO_PATH }}")
+          echo "Info Json Version: $baseFullVersion"
+          majorMinor="${baseFullVersion%.*}"
+          echo "MajorMinorVersion: $majorMinor"
+          
+          # github run offset so the next run becomes version 1
+          baseRun=757
+          echo "GitHub Run: ${{ github.run_number }}"
+          versionRunNumber=$(( ${{ github.run_number }} - baseRun ))
+          versionRunNumber=$(( versionRunNumber < 0 ? 0 : versionRunNumber ))
+          echo "Version Run: $versionRunNumber"
+          
+          assemblyVersion="${majorMinor}.${versionRunNumber}"
+          releaseVersion="$assemblyVersion"
+          if [[ "${{ github.ref_name }}" == features/* ]]; then
+            releaseVersion="${releaseVersion}-alpha"
+          fi
+
+          echo "Release Version: $releaseVersion"
+          echo "releaseVersion=$releaseVersion" >> "$GITHUB_OUTPUT"
+          echo "Assembly Version: $assemblyVersion"
+          echo "assemblyVersion=$assemblyVersion" >> "$GITHUB_OUTPUT"
 
   build:
     needs: [get-version]
@@ -44,7 +59,8 @@ jobs:
       BUILD_PATH: ".\\src\\WOTRMultiplayer\\bin\\Release\\net481"
       RELEASE_OUTPUT_PATH: ".\\__releases\\00_WOTRMultiplayer"
       REFS_OUTPUT_PATH: ".\\__refs"
-      CURRENT_VERSION: ${{needs.get-version.outputs.version}}
+      CURRENT_VERSION: ${{needs.get-version.outputs.releaseVersion}}
+      ASSEMBLY_VERSION: ${{needs.get-version.outputs.assemblyVersion}}
     runs-on: windows-latest
 
     steps:
@@ -71,7 +87,7 @@ jobs:
       - name: Generate Localization
         run: dotnet build ./src/WOTRMultiplayer.Localization.Generator --configuration Release
       - name: Build
-        run: dotnet build ./src /p:AssemblyVersion=${{ env.CURRENT_VERSION }} --configuration Release /p:ProduceReferenceAssembly=true
+        run: dotnet build ./src /p:AssemblyVersion=${{ env.ASSEMBLY_VERSION }} --configuration Release /p:ProduceReferenceAssembly=true
       - name: Run unit tests
         run: dotnet test ./src --configuration Release --no-build --verbosity normal --logger trx --collect:"XPlat Code Coverage"
       - name: Update Info.json
@@ -106,6 +122,20 @@ jobs:
           xcopy /q /y "${{ env.BUILD_PATH }}\Microsoft.Bcl.AsyncInterfaces.dll" "${{ env.RELEASE_OUTPUT_PATH }}\*"
           xcopy /q /y "${{ env.BUILD_PATH }}\Microsoft.Extensions.DependencyInjection.Abstractions.dll" "${{ env.RELEASE_OUTPUT_PATH }}\*"
           xcopy /q /y "${{ env.BUILD_PATH }}\Microsoft.Extensions.DependencyInjection.dll" "${{ env.RELEASE_OUTPUT_PATH }}\*"
+
+          xcopy /q /y "${{ env.BUILD_PATH }}\Microsoft.Extensions.Features.dll" "${{ env.RELEASE_OUTPUT_PATH }}\*"
+          xcopy /q /y "${{ env.BUILD_PATH }}\System.Text.Json.dll" "${{ env.RELEASE_OUTPUT_PATH }}\*"
+          xcopy /q /y "${{ env.BUILD_PATH }}\System.Text.Encodings.Web.dll" "${{ env.RELEASE_OUTPUT_PATH }}\*"
+          xcopy /q /y "${{ env.BUILD_PATH }}\System.IO.Pipelines.dll" "${{ env.RELEASE_OUTPUT_PATH }}\*"
+          xcopy /q /y "${{ env.BUILD_PATH }}\Microsoft.AspNetCore.Connections.Abstractions.dll" "${{ env.RELEASE_OUTPUT_PATH }}\*"
+          xcopy /q /y "${{ env.BUILD_PATH }}\Microsoft.AspNetCore.Http.Connections.Client.dll" "${{ env.RELEASE_OUTPUT_PATH }}\*"
+          xcopy /q /y "${{ env.BUILD_PATH }}\Microsoft.AspNetCore.Http.Connections.Common.dll" "${{ env.RELEASE_OUTPUT_PATH }}\*"
+          xcopy /q /y "${{ env.BUILD_PATH }}\Microsoft.AspNetCore.SignalR.Client.Core.dll" "${{ env.RELEASE_OUTPUT_PATH }}\*"
+          xcopy /q /y "${{ env.BUILD_PATH }}\Microsoft.AspNetCore.SignalR.Client.dll" "${{ env.RELEASE_OUTPUT_PATH }}\*"
+          xcopy /q /y "${{ env.BUILD_PATH }}\Microsoft.AspNetCore.SignalR.Common.dll" "${{ env.RELEASE_OUTPUT_PATH }}\*"
+          xcopy /q /y "${{ env.BUILD_PATH }}\Microsoft.AspNetCore.SignalR.Protocols.Json.dll" "${{ env.RELEASE_OUTPUT_PATH }}\*"
+
+          xcopy /q /y "${{ env.BUILD_PATH }}\LiteNetLib.dll" "${{ env.RELEASE_OUTPUT_PATH }}\*"
 
           xcopy /q /y "${{ env.BUILD_PATH }}\Microsoft.Extensions.Logging.dll" "${{ env.RELEASE_OUTPUT_PATH }}\*"
           xcopy /q /y "${{ env.BUILD_PATH }}\Microsoft.Extensions.Logging.Abstractions.dll" "${{ env.RELEASE_OUTPUT_PATH }}\*"
@@ -185,6 +215,31 @@ jobs:
         with:
           tag: "${{ env.CURRENT_VERSION }}"
           message: "Release ${{ env.CURRENT_VERSION }}"
+
+  create-draft-release:
+    if: ${{ startsWith(github.ref, 'refs/heads/releases/') }}
+    needs: [build, get-version, tag-release]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    env:
+      CURRENT_VERSION: ${{ needs.get-version.outputs.version }}
+
+    steps:
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: wotr-multiplayer-${{ env.CURRENT_VERSION }}
+          path: artifacts
+      - name: Create draft release
+        uses: softprops/action-gh-release@v3
+        with:
+          tag_name: ${{ env.CURRENT_VERSION }}
+          name: ${{ env.CURRENT_VERSION }}
+          draft: true
+          generate_release_notes: false
+          files: artifacts/**
 
   test-reporter:
     needs: [build]

@@ -9,6 +9,7 @@ using Kingmaker.UI.MVVM;
 using Kingmaker.UI.MVVM._PCView.SaveLoad;
 using Kingmaker.UI.MVVM._VM.SaveLoad;
 using Kingmaker.UI.MVVM._VM.ServiceWindows.CharacterInfo.Sections.Abilities;
+using Kingmaker.Utility;
 using Microsoft.Extensions.Logging;
 using Owlcat.Runtime.UI.Controls.Button;
 using Owlcat.Runtime.UI.SelectionGroup;
@@ -17,7 +18,10 @@ using TMPro;
 using UniRx;
 using UnityEngine;
 using UnityEngine.Events;
+using UnityEngine.UI;
 using WOTRMultiplayer.Abstractions;
+using WOTRMultiplayer.Abstractions.GameInteraction;
+using WOTRMultiplayer.Abstractions.IO;
 using WOTRMultiplayer.Abstractions.UI;
 using WOTRMultiplayer.Abstractions.UI.Controllers;
 using WOTRMultiplayer.Abstractions.UI.Controllers.Menu;
@@ -44,6 +48,11 @@ namespace WOTRMultiplayer.UI.Controllers
         public const string ReadyButtonObjectName = "ReadyButton";
         public const string StartButtonObjectName = "StartButton";
 
+        public const string MultiplayerLobbyObjectName = "MultiplayerLobby";
+        public const string LobbyContentObjectName = "LobbyContent";
+        public const string HostingContainerObjectName = "HostingConfiguration";
+        public const string GamePasswordObjectName = "GamePasswordInputObject";
+        public const string HostingServerInfoObjectName = "HostingServerInfoObject";
 
         public const string ModMenuRecordViewObjectName = "ModMenuModRecordView";
         public const string ModMenuContainerObjectName = "ModMenuContainerForModRecordView";
@@ -79,6 +88,17 @@ namespace WOTRMultiplayer.UI.Controllers
             .Find(SaveLoadDetailsInfoButtons)
             ?? ModMenuViewButtons;
 
+        private Transform HostingConfiguration => _menuContent
+            .transform
+            .Find(SaveLoadView)
+            .Find(SaveLoadScreen)
+            .Find(SaveLoadDetails)
+            .Find(MultiplayerLobbyObjectName)
+            .Find(HostingContainerObjectName);
+
+        private Transform GamePasswordObject => HostingConfiguration
+            .Find(GamePasswordObjectName);
+
         private Transform ModMenuViewButtons => _menuContent
             .transform
             .Find(SaveLoadView)
@@ -100,8 +120,11 @@ namespace WOTRMultiplayer.UI.Controllers
             IMultiplayerHost multiplayerHost,
             IMainThreadAccessor mainThreadAccessor,
             ILobbyWindowController lobbyWindowController,
+            IFileSystemService fileSystemService,
+            IUIFactory uiFactory,
+            IGameInteractionService gameInteractionService,
             IResourceProvider resourceProvider)
-            : base(logger, lobbyWindowController, mainThreadAccessor, resourceProvider, multiplayerHost)
+            : base(logger, lobbyWindowController, mainThreadAccessor, resourceProvider, fileSystemService, uiFactory, gameInteractionService, multiplayerHost)
         {
             _logger = logger;
             _multiplayerHost = multiplayerHost;
@@ -139,8 +162,8 @@ namespace WOTRMultiplayer.UI.Controllers
             }
 
             SetupButtons();
-
-            SetupHandlers(true);
+            SetupHandlers(enable: true);
+            HostingConfiguration.gameObject.SetActive(true);
 
             saveLoadView.Bind(_saveLoadViewModel);
             saveLoadView.AddDisposable(_saveLoadViewModel.SelectedSaveSlot.Subscribe(slot =>
@@ -148,7 +171,7 @@ namespace WOTRMultiplayer.UI.Controllers
                 HostButton.Interactable = slot != null;
             }));
             Game.Instance.UI.EscManager.Unsubscribe(_saveLoadViewModel.OnClose);
-
+            ResetGamePasswordField();
             saveLoadView.Show();
             base.Activate();
         }
@@ -191,9 +214,34 @@ namespace WOTRMultiplayer.UI.Controllers
             Title.SetText(string.Empty);
         }
 
+        protected override void DisposeInternal()
+        {
+            SetupHandlers(false);
+
+            base.DisposeInternal();
+        }
+        protected override ModalActionConfirmation GetDeactivationConfirmationInternal()
+        {
+            if (_multiplayerHost.IsInLobby)
+            {
+                return new ModalActionConfirmation
+                {
+                    MessageKey = WellKnownKeys.MultiplayerWindow.HostMenu.Deactivation.Hosting.Key
+                };
+            }
+
+            return null;
+        }
+
+        private void ResetGamePasswordField()
+        {
+            GamePasswordObject.GetComponentInChildren<TMP_InputField>().text = string.Empty;
+        }
+
         private void SetupHandlers(bool enable)
         {
-            _multiplayerHost.OnConnected = enable ? OnMultiplayerConnected : null;
+            _multiplayerHost.OnConnected = enable ? OnMultiplayerConnectivityUpdated : null;
+            _multiplayerHost.OnGameConnectivityUpdated = enable ? OnMultiplayerConnectivityUpdated : null;
             _multiplayerHost.OnPlayersChanged = enable ? OnMultiplayerPlayersChanged : null;
             _multiplayerHost.OnNewGameSequenceStarted = enable ? OnMultiplayerNewGameSequenceStarted : null;
             _multiplayerHost.OnCharactersChanged = enable ? OnMultiplayerCharactersChanged : null;
@@ -201,13 +249,6 @@ namespace WOTRMultiplayer.UI.Controllers
             _multiplayerHost.OnGameStarted = enable ? OnMultiplayerOnGameStarted : null;
 
             Lobby.OnCharacterOwnerChanged = enable ? OnLobbyCharacterOwnerChanged : null;
-        }
-
-        protected override void DisposeInternal()
-        {
-            SetupHandlers(false);
-
-            base.DisposeInternal();
         }
 
         private void AddNewGameSaveSlot(SaveLoadVM saveLoadVM)
@@ -263,10 +304,14 @@ namespace WOTRMultiplayer.UI.Controllers
             var (gameId, startup) = CreateGameStartUp(selectedSave);
             if (!_multiplayerHost.IsActive)
             {
+                HostingConfiguration.gameObject.SetActive(false);
                 StartButtonObject.SetActive(true);
                 ReadyButtonObject.SetActive(true);
                 ReadyButton.Interactable = true;
-                _multiplayerHost.Create(gameId, startup);
+                var selectedServer = GetSelectedExternalServer();
+                var password = GamePasswordObject.GetComponentInChildren<TMP_InputField>().text;
+                _multiplayerHost.Create(gameId, password, selectedServer, startup);
+
                 SetButtonLabel(HostButtonObject, new LocalizedString { Key = WellKnownKeys.MultiplayerWindow.HostMenu.HostButton.SelectSaveText.Key });
                 _logger.LogInformation("Hosted new game");
                 return;
@@ -346,6 +391,93 @@ namespace WOTRMultiplayer.UI.Controllers
             button.OnLeftClick.AddListener(new UnityAction(handler));
         }
 
+        private void SetupHostingInfo(Transform parent)
+        {
+            var hostingContainer = UIFactory.CreateDefaultGameObject(parent);
+            hostingContainer.name = HostingContainerObjectName;
+            hostingContainer.AddComponent<VerticalLayoutGroup>().spacing = 35f;
+            var hostingContainerRect = hostingContainer.GetComponent<RectTransform>();
+            hostingContainerRect.Centered();
+            hostingContainer.AddComponent<ContentSizeFitter>().verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+            hostingContainer.AddComponent<ContentSizeFitter>().horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
+
+            var labelObject = UIFactory.CreateDefaultGameObject(hostingContainer.transform);
+            labelObject.name = HostingServerInfoObjectName;
+            labelObject.AddComponent<VerticalLayoutGroup>();
+            labelObject.AddComponent<ContentSizeFitter>().verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+
+            var textBoxObject = UIFactory.CreateDefaultGameObject(labelObject.transform);
+            var textBox = textBoxObject.AddComponent<TextMeshProUGUI>();
+            textBox.verticalAlignment = VerticalAlignmentOptions.Middle;
+            textBox.alignment = TextAlignmentOptions.Center;
+            textBox.horizontalAlignment = HorizontalAlignmentOptions.Center;
+            var text = new LocalizedString { Key = WellKnownKeys.MultiplayerWindow.ExternalServers.ServerDropdownTitle.Key };
+            textBox.SetText(text);
+            textBox.margin = new Vector4(0f, 0f, 0f, 25f);
+            textBox.material = UIFactory.DefaultTextMesh.Material;
+            textBox.color = UIFactory.DefaultTextMesh.Color;
+            var width = parent.GetComponent<RectTransform>().sizeDelta.x * 0.45f;
+            var dropdownContainerObject = Main.Multiplayer.UIFactory.CreateDropdown(width, labelObject.transform);
+            var dropdownObject = dropdownContainerObject.transform.Find(UI.UIFactory.DropdownGameObjectName);
+            dropdownObject.GetComponent<RectTransform>().Centered();
+            var tmpDropdown = dropdownObject.GetComponent<TMP_Dropdown>();
+            tmpDropdown.ClearOptions();
+            var servers = GetExternalServers();
+            var emptyServer = new ExternalServer
+            {
+                Name = new LocalizedString { Key = WellKnownKeys.MultiplayerWindow.ExternalServers.NoneServerName.Key },
+                IsFake = true
+            };
+            List<ExternalServer> allServers = [emptyServer, .. servers];
+            var options = allServers.Select(x => new ExternalServerOptionData(x)).ToList<TMP_Dropdown.OptionData>();
+            tmpDropdown.AddOptions(options);
+            tmpDropdown.value = 0;
+
+            var passwordInputObject = UIFactory.CreateInput(hostingContainer.transform);
+            var passwordInputObjectRect = passwordInputObject.GetComponent<RectTransform>();
+            passwordInputObject.name = GamePasswordObjectName;
+            var passwordInputObjectLayout = passwordInputObject.AddComponent<LayoutElement>();
+            passwordInputObjectLayout.preferredHeight = 35;
+            passwordInputObjectLayout.preferredWidth = width;
+            var passwordPlaceholder = passwordInputObject.transform.Find(UI.UIFactory.InputPlaceholderObjectName);
+            var passwordPlaceholderInput = passwordPlaceholder.GetComponent<TextMeshProUGUI>();
+            passwordPlaceholderInput.SetText(new LocalizedString { Key = WellKnownKeys.MultiplayerWindow.ExternalServers.Password.Placeholder.Key });
+            passwordPlaceholderInput.alignment = TextAlignmentOptions.Center;
+            var passwordInputLabelObject = passwordInputObject.transform.Find(UI.UIFactory.InputLabelObjectName);
+            var passwordInput = passwordInputLabelObject.GetComponent<TextMeshProUGUI>();
+            passwordInput.overflowMode = TextOverflowModes.Truncate;
+            passwordInput.alignment = TextAlignmentOptions.Center;
+            var password = passwordInputObject.GetComponent<TMP_InputField>();
+            password.text = string.Empty;
+            password.characterLimit = 24;
+            password.contentType = TMP_InputField.ContentType.Password;
+        }
+
+        private ExternalServer GetSelectedExternalServer()
+        {
+            try
+            {
+                var dropdown = HostingConfiguration.gameObject.GetComponentInChildren<TMP_Dropdown>();
+                if (dropdown == null)
+                {
+                    _logger.LogWarning("Unable to get selected server due to missing dropdown");
+                    return null;
+                }
+
+                if (dropdown.options[dropdown.value] is not ExternalServerOptionData selectedServerOption || selectedServerOption.Server.IsFake)
+                {
+                    return null;
+                }
+
+                return selectedServerOption.Server;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while getting selected server");
+                return null;
+            }
+        }
+
         private void SetupLobbyInfo(GameObject baseLayout)
         {
             var saveLoadView = _menuContent.transform.GetChild(0);
@@ -360,16 +492,19 @@ namespace WOTRMultiplayer.UI.Controllers
             container.gameObject.SetActive(false);
 
             replacedContainer.gameObject.SetActive(true);
-            var parentContainerRect = replacedContainer.GetComponent<RectTransform>();
+            var replacedContainerRect = replacedContainer.GetComponent<RectTransform>();
 
             var lobbyWindowObject = UnityEngine.Object.Instantiate(baseLayout, replacedContainer.transform);
-            lobbyWindowObject.name = "MultiplayerLobby";
+            lobbyWindowObject.name = MultiplayerLobbyObjectName;
             lobbyWindowObject.CleanupAllChildren();
             var title = replacedContainer.Find(SaveLoadDetailsTitle);
             var lobbyWindowObjectPosition = new Vector3(title.transform.position.x, lobbyWindowObject.transform.position.y * 1.1f, lobbyWindowObject.transform.position.z);
             lobbyWindowObject.transform.SetPositionAndRotation(lobbyWindowObjectPosition, lobbyWindowObject.transform.rotation);
             var lobbyWindowObjectRect = lobbyWindowObject.GetComponent<RectTransform>();
-            lobbyWindowObjectRect.sizeDelta = new Vector2(parentContainerRect.sizeDelta.x * 0.9f, parentContainerRect.sizeDelta.y * 0.72f);
+            lobbyWindowObjectRect.sizeDelta = new Vector2(replacedContainerRect.sizeDelta.x * 0.9f, replacedContainerRect.sizeDelta.y * 0.72f);
+
+            var lobbyWindowVertical = lobbyWindowObject.AddComponent<VerticalLayoutGroup>();
+            SetupHostingInfo(lobbyWindowObject.transform);
 
             Lobby.InitializeContent(LobbyWindowOwner.HostMenu, lobbyWindowObject.transform);
         }
@@ -380,9 +515,12 @@ namespace WOTRMultiplayer.UI.Controllers
             _multiplayerHost.ChangeCharacterOwner(character, player);
         }
 
-        private void OnMultiplayerConnected(NetworkGameConnectivity connectivity)
+        private void OnMultiplayerConnectivityUpdated(GameConnectivity connectivity)
         {
-            Lobby.UpdateServerInfo(connectivity);
+            MainThreadAccessor.Post(() =>
+            {
+                Lobby.UpdateServerInfo(connectivity);
+            });
         }
 
         private void OnMultiplayerPlayersChanged(NetworkLobbyStage lobbyStage, List<NetworkPlayer> players)
@@ -391,7 +529,7 @@ namespace WOTRMultiplayer.UI.Controllers
             var canStart = lobbyStage == NetworkLobbyStage.Lobby && players.All(p => p.IsReady);
             MainThreadAccessor.Post(() =>
             {
-                if (canStart && !StartButton.Interactable && canStart)
+                if (canStart && !StartButton.Interactable)
                 {
                     OnEveryoneIsReady();
                 }
@@ -438,17 +576,15 @@ namespace WOTRMultiplayer.UI.Controllers
             _saveLoadViewModel = null;
         }
 
-        protected override ModalActionConfirmation GetDeactivationConfirmationInternal()
+        private class ExternalServerOptionData : TMP_Dropdown.OptionData
         {
-            if (_multiplayerHost.IsInLobby)
-            {
-                return new ModalActionConfirmation
-                {
-                    MessageKey = WellKnownKeys.MultiplayerWindow.HostMenu.Deactivation.Hosting.Key
-                };
-            }
+            public ExternalServer Server { get; private set; }
 
-            return null;
+            public ExternalServerOptionData(ExternalServer server)
+            {
+                Server = server;
+                base.text = server.Name;
+            }
         }
     }
 }

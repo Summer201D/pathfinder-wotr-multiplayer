@@ -52,6 +52,7 @@ namespace WOTRMultiplayer.Config.DI
 
             serviceCollection.AddAutoMapper(cfg =>
             {
+                cfg.AddProfile<NetworkingProfile>();
                 cfg.AddProfile<NetworkMessagesProfile>();
                 cfg.AddProfile<GameProfile>();
             });

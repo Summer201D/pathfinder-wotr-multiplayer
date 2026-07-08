@@ -41,14 +41,14 @@ namespace WOTRMultiplayer.Playground.Host
                 new DummyCombatInteractionService(),
                 new MultiplayerSettingsProvider(new DummySettingsControllerAccessor()),
                 serviceProvider.GetService<IFileSystemService>(),
-                serviceProvider.GetService<INetworkServer>(),
+                serviceProvider.GetService<INetworkHostConnection>(),
                 serviceProvider.GetService<IValueGenerator>(),
                 serviceProvider.GetService<IMapper>());
 
             var saveGamePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
                 "AppData\\LocalLow\\Owlcat Games\\Pathfinder Wrath Of The Righteous\\Saved Games\\Manual_34_FIRST_COMBAT.zks");
             var startUp = new NetworkGameStartUp { SavePath = saveGamePath, Characters = [], Title = "Playground Host Game Title" };
-            host.Create(Guid.NewGuid().ToString(), startUp);
+            host.Create(Guid.NewGuid().ToString(), null, null, startUp);
 
             var verbs = CommandLineHelper.LoadVerbs();
             Parser.Default.ParseArguments(["--help"], verbs);

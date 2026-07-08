@@ -29,6 +29,7 @@ using WOTRMultiplayer.Entities.Rest;
 using WOTRMultiplayer.Entities.Settings;
 using WOTRMultiplayer.Networking;
 using WOTRMultiplayer.Networking.Abstractions;
+using WOTRMultiplayer.Networking.Configuration;
 using WOTRMultiplayer.Networking.Messages.Game;
 using WOTRMultiplayer.Networking.Messages.Lobby;
 using WOTRMultiplayer.Networking.Messages.Requests;
@@ -39,11 +40,11 @@ namespace WOTRMultiplayer.Services
 {
     public class MultiplayerHost : MultiplayerActorBase, IMultiplayerHost
     {
-        private readonly INetworkServer _networkServer;
+        private readonly INetworkHostConnection _networkHost;
 
         private NetworkLobbyStage Status => Game?.Stage ?? NetworkLobbyStage.None;
 
-        public bool IsActive => _networkServer.IsActive;
+        public bool IsActive => _networkHost.IsActive;
 
         public bool IsInLobby => IsActive && Status == NetworkLobbyStage.Lobby;
 
@@ -60,7 +61,7 @@ namespace WOTRMultiplayer.Services
             ICombatInteractionService combatInteractionService,
             IMultiplayerSettingsService multiplayerSettingsProvider,
             IFileSystemService fileSystemService,
-            INetworkServer networkServer,
+            INetworkHostConnection networkHost,
             IValueGenerator valueGenerator,
             IMapper mapper)
             : base(logger,
@@ -75,23 +76,23 @@ namespace WOTRMultiplayer.Services
                   combatInteractionService,
                   fileSystemService,
                   valueGenerator,
-                  networkServer)
+                  networkHost)
         {
-            _networkServer = networkServer;
+            _networkHost = networkHost;
 
             SetupNetworkMessageHandlers();
         }
 
-        public void Create(string gameId, NetworkGameStartUp gameStartUp)
+        public void Create(string gameId, string gamePassword, Entities.ExternalServer externalServer, NetworkGameStartUp gameStartUp)
         {
-            if (_networkServer.IsActive)
+            if (_networkHost.IsActive)
             {
-                _networkServer.Reset();
+                _networkHost.Reset();
             }
 
             Game = new NetworkGame(gameStartUp)
             {
-                LocalPlayerId = NetworkingConsts.HostPlayerId,
+                LocalPlayerId = NetworkConstants.HostPlayerId,
                 Id = gameId,
                 SessionSeed = CreateRandomSeed()
             };
@@ -99,7 +100,21 @@ namespace WOTRMultiplayer.Services
             Game.Characters.AddRange(gameStartUp.Characters);
 
             var settings = SettingsService.GetSettings();
-            _networkServer.Start(settings.Host, settings.UseIPv6, settings.HostPortRangeStart, settings.HostPortRangeEnd, settings.NetworkAwaiterTimeout);
+
+            var serverConfiguration = Mapper.Map<NetworkServerConfiguration>(settings);
+            _networkHost.HostTcpServer(serverConfiguration);
+
+            if (externalServer != null)
+            {
+                var externalServerConfiguration = new ExternalServerConfiguration
+                {
+                    Password = gamePassword,
+                    AutoCreateGame = true,
+                    Port = settings.PeerToPeerPort,
+                    Server = Mapper.Map<Networking.Configuration.ExternalServer>(externalServer)
+                };
+                _networkHost.EnableExternalConnections(externalServerConfiguration);
+            }
 
             OnCharactersChanged?.Invoke(Game.StartUp.Title, Game.Characters);
             Logger.LogInformation("Host has been created. GameId={GameId}, IsNewGameSequence={IsNewGameSequence}, SavePath={SavePath}", Game.Id, gameStartUp.IsNewGameSequence, gameStartUp.SavePath);
@@ -165,7 +180,7 @@ namespace WOTRMultiplayer.Services
             Logger.LogInformation("Resetting");
             Game = null;
 
-            _networkServer.Reset();
+            _networkHost.Reset();
         }
 
         public bool Start()
@@ -232,7 +247,7 @@ namespace WOTRMultiplayer.Services
 
             if (Game.DialogState == null)
             {
-                Logger.LogWarning("Showing dialog cue for not initialized dialog. Most likely it is an autosave load with autostarted dialog after rest. Reinitializing dialog...");
+                Logger.LogWarning("Showing dialog cue for not initialized dialog. Most likely it is an autosave load with auto-started dialog after rest. Reinitializing dialog...");
                 Game.DialogState = new NetworkDialogState(networkDialog);
             }
 
@@ -309,7 +324,7 @@ namespace WOTRMultiplayer.Services
                 Game.DialogState = new NetworkDialogState(networkDialog);
                 lock (ActionLock)
                 {
-                    // workaround for scripted sequential dialogs (e.g. Act4 shamira -> nocticula message dialog)
+                    // workaround for scripted sequential dialogs (e.g. Act4 Shamira -> Nocticula message dialog)
                     if (networkDialog.IsScripted && previousDialog != null)
                     {
                         Logger.LogWarning("Previous cue views have been preserved. PreviousDialogName={PreviousDialogName}, NewDialogName={NewDialogName}", previousDialog.Dialog.Name, Game.DialogState.Dialog.Name);
@@ -1263,7 +1278,7 @@ namespace WOTRMultiplayer.Services
             Send(message);
         }
 
-        public void OnKingdomSettlementBuldingSold(NetworkKingdomSettlementBuilding kingdomSettlementBuilding)
+        public void OnKingdomSettlementBuildingSold(NetworkKingdomSettlementBuilding kingdomSettlementBuilding)
         {
             var message = new NotifyKingdomSettlementBuildingSold
             {
@@ -1367,9 +1382,9 @@ namespace WOTRMultiplayer.Services
             return true;
         }
 
-        public bool OnGlobalMapCrusadeArmySquadSplitted(NetworkGlobalMapArmySquadSlot globalMapArmySquadSlot, int count)
+        public bool OnGlobalMapCrusadeArmySquadSplit(NetworkGlobalMapArmySquadSlot globalMapArmySquadSlot, int count)
         {
-            var message = new NotifyGlobalMapCrusadeArmySquadSplitted
+            var message = new NotifyGlobalMapCrusadeArmySquadSplit
             {
                 SquadSlot = Mapper.Map<Networking.Messages.Contracts.NetworkGlobalMapArmySquadSlot>(globalMapArmySquadSlot),
                 Count = count
@@ -1470,12 +1485,12 @@ namespace WOTRMultiplayer.Services
 
         protected override void Send(object message)
         {
-            _networkServer.SendAll(message);
+            _networkHost.Broadcast(message);
         }
 
         protected override void Send(long playerId, object message)
         {
-            _networkServer.Send(playerId, message);
+            _networkHost.Send(playerId, message);
         }
 
         protected override void OnCombatStageChanged(NetworkCombatStage combatStage)
@@ -1679,14 +1694,15 @@ namespace WOTRMultiplayer.Services
 
         protected override void SetupNetworkMessageHandlers()
         {
-            _networkServer.OnClientConnected = OnPlayerConnected;
-            _networkServer.OnClientDisconnected = OnPlayerDisconnected;
-            _networkServer.OnServerStarted = OnServerStarted;
+            _networkHost.OnPlayerConnected = OnPlayerConnected;
+            _networkHost.OnPlayerDisconnected = OnPlayerDisconnected;
+            _networkHost.OnLocalServerStarted = OnLocalServerStarted;
+            _networkHost.OnExternalConnectivityUpdated = OnExternalConnectivityUpdated;
 
             base.SetupNetworkMessageHandlers();
 
-            _networkServer
-               // requests - this is kinda special because requester is blocking the thread (most likely main game loop) until corresponded response is received
+            _networkHost
+               // requests - this is somewhat special because requester is blocking the thread (most likely main game loop) until response is received
                .On<RandomEncounterContextRequest>(OnRandomEncounterContextRequest)
 
                // pausing
@@ -1757,7 +1773,7 @@ namespace WOTRMultiplayer.Services
                 var player = GetPlayer(receivedFrom);
                 PlayerNotification.AddCombatText(WellKnownKeys.GameNotifications.Combat.Start.DesyncedStartup.Client.Key, CombatTextSeverity.Critical, player?.Name);
 
-                await WaitWhileTrue(() => CombatInteraction.IsRiderActive(), "Waiting for current turn to end before reseting combat");
+                await WaitWhileTrue(() => CombatInteraction.IsRiderActive(), "Waiting for current turn to end before resetting combat");
 
                 // this will also trigger restart for all clients in the lobby
                 CleanupUntargetableUnitsState();
@@ -1851,7 +1867,7 @@ namespace WOTRMultiplayer.Services
             {
                 if (Game.ForcedPause != null && (Game.ForcedPause.Reason == NetworkForcedPauseReason.AreaLoading || Game.ForcedPause.IsLifting))
                 {
-                    Logger.LogWarning("Skipping unpause request for AreaLoading pause");
+                    Logger.LogWarning("Skipping un-pause request for AreaLoading pause");
                     return;
                 }
             }
@@ -2045,37 +2061,59 @@ namespace WOTRMultiplayer.Services
 
         private void OnPlayerConnected(long playerId)
         {
-            lock (ActionLock)
+            try
             {
-                var existingPlayer = GetPlayer(playerId);
-                if (existingPlayer != null)
+                Logger.LogInformation("New player connection. PlayerId={PlayerId}", playerId);
+
+                lock (ActionLock)
                 {
-                    Logger.LogWarning("Player already exists. PlayerId={PlayerId}", playerId);
-                    return;
+                    var existingPlayer = GetPlayer(playerId);
+                    if (existingPlayer != null)
+                    {
+                        Logger.LogError("Player already exists. PlayerId={PlayerId}", playerId);
+                        return;
+                    }
+
+                    var player = new NetworkPlayer(playerId);
+                    Game.Players.Add(player);
+                    var settings = GameInteraction.GetGameSettings();
+                    if (settings != null)
+                    {
+                        settings.Multiplayer = SettingsService.GetSettings();
+                    }
+
+                    var message = new GameServerConnectionSucceeded
+                    {
+                        ClientPlayerId = playerId,
+                        GameSettings = Mapper.Map<Networking.Messages.Contracts.NetworkGameSettings>(settings),
+                        SessionSeed = Game.SessionSeed
+                    };
+                    Send(playerId, message);
                 }
-
-                var player = new NetworkPlayer(playerId);
-                Game.Players.Add(player);
-
-                var settings = GameInteraction.GetGameSettings();
-                if (settings != null)
-                {
-                    settings.Multiplayer = SettingsService.GetSettings();
-                }
-
-                var message = new GameServerConnectionSucceeded
-                {
-                    ClientPlayerId = playerId,
-                    GameSettings = Mapper.Map<Networking.Messages.Contracts.NetworkGameSettings>(settings),
-                    SessionSeed = Game.SessionSeed
-                };
-                Send(playerId, message);
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, "Failed to process new player connection");
             }
         }
 
-        private void OnServerStarted(EndPoint endpoint)
+        private void OnExternalConnectivityUpdated(bool? isConnected, string code)
         {
-            var hostPlayer = new NetworkPlayer(NetworkingConsts.HostPlayerId)
+            Game.Connectivity.External = new ExternalConnectivity
+            {
+                Code = code,
+                Status = isConnected == null ? ExternalConnectivityStatus.Connecting
+                    : isConnected.Value ? ExternalConnectivityStatus.Connected
+                    : ExternalConnectivityStatus.Error
+            };
+
+            Logger.LogInformation("External connectivity updated. Code={Code}, Status={Status}", Game.Connectivity.External.Code, Game.Connectivity.External.Status);
+            OnGameConnectivityUpdated?.Invoke(Game.Connectivity);
+        }
+
+        private void OnLocalServerStarted(EndPoint endpoint)
+        {
+            var hostPlayer = new NetworkPlayer(NetworkConstants.HostPlayerId)
             {
                 Name = SettingsService.GetSettings().PlayerName,
                 ContentState = GameInteraction.GetInstalledContent(),
@@ -2084,7 +2122,7 @@ namespace WOTRMultiplayer.Services
 
             Game.Players.Add(hostPlayer);
 
-            Game.Connectivity = new NetworkGameConnectivity
+            Game.Connectivity = new GameConnectivity
             {
                 Endpoint = endpoint
             };
@@ -2114,7 +2152,7 @@ namespace WOTRMultiplayer.Services
 
                 InvokeOnPlayersChanged();
                 var playersChanged = CreateNotifyLobbyPlayersChanged();
-                _networkServer.SendAllExcept(playerId, playersChanged);
+                _networkHost.BroadcastExcept(playerId, playersChanged);
 
                 RefreshUIOnPlayerDisconnect(removedPlayer.Id);
 
@@ -2135,7 +2173,7 @@ namespace WOTRMultiplayer.Services
                     var existingPlayer = GetPlayer(playerId);
                     if (existingPlayer == null)
                     {
-                        Logger.LogError("Can't process player name update because player doesn't exist. PlayerId={playPlayerIderId}, Name={Name}", playerId, message.PlayerName);
+                        Logger.LogError("Can't process player name update because player doesn't exist. PlayerId={PlayerId}, Name={Name}", playerId, message.PlayerName);
                         return;
                     }
 
@@ -2178,10 +2216,10 @@ namespace WOTRMultiplayer.Services
         private List<NetworkDiscrepantDLC> CompareDLCs(NetworkContentState hostState, NetworkContentState clientState)
         {
             var discrepantDLCs = new List<NetworkDiscrepantDLC>();
-            var clientDlcs = clientState.DLCs.ToList();
+            var clientDLCs = clientState.DLCs.ToList();
             foreach (var hostDlc in hostState.DLCs)
             {
-                var clientDlc = clientDlcs.FirstOrDefault(d => string.Equals(d.Id, hostDlc.Id, StringComparison.OrdinalIgnoreCase));
+                var clientDlc = clientDLCs.FirstOrDefault(d => string.Equals(d.Id, hostDlc.Id, StringComparison.OrdinalIgnoreCase));
                 NetworkDiscrepancyReason? reason = null;
                 if (clientDlc == null || hostDlc.IsAvailable && !clientDlc.IsAvailable)
                 {
@@ -2199,11 +2237,11 @@ namespace WOTRMultiplayer.Services
 
                 if (clientDlc != null)
                 {
-                    clientDlcs.Remove(clientDlc);
+                    clientDLCs.Remove(clientDlc);
                 }
             }
 
-            var availableLeftovers = clientDlcs.Where(x => x.IsAvailable).Select(x => new NetworkDiscrepantDLC(x, NetworkDiscrepancyReason.Extra));
+            var availableLeftovers = clientDLCs.Where(x => x.IsAvailable).Select(x => new NetworkDiscrepantDLC(x, NetworkDiscrepancyReason.Extra));
             discrepantDLCs.AddRange(availableLeftovers);
 
             return discrepantDLCs;
@@ -2283,7 +2321,7 @@ namespace WOTRMultiplayer.Services
                     PauseOnTrapDetected = true,
                     PauseOnSpellcastInterrupted = Kingmaker.Settings.EntitiesType.None,
                     PauseOnSpellcastStarted = Kingmaker.Settings.EntitiesType.None,
-                    // everything else is false for autopause
+                    // everything else is false for auto-pause
                 },
                 // tutorial is disabled because most of tutorial popups pause the game
                 Tutorial = new NetworkTutorialSettings()
@@ -2320,7 +2358,7 @@ namespace WOTRMultiplayer.Services
             }
 
             var everyoneIsReady = Game.ArmyCombat.PlayersCombatInitialization.Count(x => x.Value) >= GetSyncedPlayersCount();
-            Logger.LogInformation("Checking crusade army combat initialziation. IsReady={IsReady}", everyoneIsReady);
+            Logger.LogInformation("Checking crusade army combat initialization. IsReady={IsReady}", everyoneIsReady);
             return everyoneIsReady;
         }
 
@@ -2362,7 +2400,7 @@ namespace WOTRMultiplayer.Services
             DialogInteraction.SetDialogContinueButtonState(true);
         }
 
-        private List<NetworkPlayer> GetPlayersNotReadyToUnpause(long requestedByPlayerId)
+        private List<NetworkPlayer> GetPlayersNotReadyToResume(long requestedByPlayerId)
         {
             var result = new List<NetworkPlayer>();
             var players = GetSyncedPlayers();
@@ -2399,7 +2437,7 @@ namespace WOTRMultiplayer.Services
 
                 lock (ActionLock)
                 {
-                    var missingPlayer = GetPlayersNotReadyToUnpause(requestedByPlayerId);
+                    var missingPlayer = GetPlayersNotReadyToResume(requestedByPlayerId);
                     if (missingPlayer.Any())
                     {
                         Logger.LogInformation("Not everyone is ready, forced pause will remain. MissingPlayers={MissingPlayers}", missingPlayer.Select(x => x.Name));
@@ -2425,7 +2463,7 @@ namespace WOTRMultiplayer.Services
                         {
                             if (Game.ForcedPause == null)
                             {
-                                Logger.LogWarning("Previous forced pause lifter has been skipped due to null forcedpause. Most likely game was quickloaded");
+                                Logger.LogWarning("Previous forced pause lifter has been skipped due to null forced pause. Most likely game was quick loaded");
                                 return;
                             }
 

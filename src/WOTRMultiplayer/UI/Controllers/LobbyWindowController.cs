@@ -3,9 +3,13 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using DG.Tweening;
 using Kingmaker.Blueprints;
+using Kingmaker.Localization;
+using Kingmaker.UI.MVVM._VM.Tooltip.Templates;
 using Kingmaker.UI.MVVM._VM.Tooltip.Utils;
 using Microsoft.Extensions.Logging;
+using Owlcat.Runtime.UI.Controls.Button;
 using Owlcat.Runtime.UI.Tooltips;
 using TMPro;
 using UniRx;
@@ -180,35 +184,86 @@ namespace WOTRMultiplayer.UI.Controllers
             });
         }
 
-        public void UpdateServerInfo(NetworkGameConnectivity connectivity)
+        public void UpdateServerInfo(GameConnectivity connectivity)
         {
-            if (GetContentOwnedObject() == null)
+            var owner = GetContentOwnedObject();
+            if (owner == null)
             {
                 return;
             }
 
-            GetContentOwnedObject().SetActive(true);
+            owner.SetActive(true);
 
             ServerInfoSectionContent.CleanupAllChildren();
 
             var serverInfoContainerObject = _uiFactory.CreateDefaultGameObject(ServerInfoSectionContent.transform);
             serverInfoContainerObject.name = PlayerContainerObjectName;
-            serverInfoContainerObject.AddComponent<HorizontalLayoutGroup>();
+            serverInfoContainerObject.AddComponent<VerticalLayoutGroup>();
             var serverInfoContainerSizeFitter = serverInfoContainerObject.AddComponent<ContentSizeFitter>();
             serverInfoContainerSizeFitter.horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
             serverInfoContainerSizeFitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
 
-            var serverAddressObject = _uiFactory.CreateDefaultGameObject(serverInfoContainerObject.transform);
-            var serverAddressElement = serverAddressObject.AddComponent<LayoutElement>();
-            serverAddressElement.preferredHeight = 40;
-            var serverAddressBox = serverAddressObject.AddComponent<TextMeshProUGUI>();
-            serverAddressBox.alignment = TextAlignmentOptions.Center;
-            serverAddressBox.material = _uiFactory.DefaultTextMesh.Material;
-            serverAddressBox.color = _uiFactory.DefaultTextMesh.Color;
+            if (connectivity.Endpoint != null)
+            {
+                var settings = _multiplayerSettingsService.GetSettings();
+                var endpointText = settings.HideServerAddress ? "***.***.***.***:****" : connectivity.Endpoint.ToString();
+                AddServerInfo(serverInfoContainerObject.transform, endpointText);
+            }
 
-            var settings = _multiplayerSettingsService.GetSettings();
-            var endpointText = settings.HideServerAddress ? "***.***.***.***:****" : connectivity.Endpoint.ToString();
-            serverAddressBox.SetText(endpointText);
+            if (connectivity.External == null)
+            {
+                return;
+            }
+
+            var externalConnectivityInfo = _uiFactory.CreateDefaultGameObject(serverInfoContainerObject.transform);
+            var externalConnectivityHorizontalLayout = externalConnectivityInfo.AddComponent<HorizontalLayoutGroup>();
+            externalConnectivityHorizontalLayout.spacing = 10f;
+
+            var gameCodeTitle = new LocalizedString { Key = WellKnownKeys.LobbyWindow.Server.External.GameCode.Title.Key };
+            AddServerInfo(externalConnectivityInfo.transform, $"{gameCodeTitle} -");
+
+            Color? color = null;
+            bool addInProgressAnimation = false;
+            LocalizedString statusText = null;
+
+            switch (connectivity.External.Status)
+            {
+                case ExternalConnectivityStatus.Connecting:
+                    statusText = new LocalizedString { Key = WellKnownKeys.LobbyWindow.Server.External.State.Connecting.Key };
+                    addInProgressAnimation = true;
+                    break;
+                case ExternalConnectivityStatus.Connected when string.IsNullOrEmpty(connectivity.External.Code):
+                    statusText = new LocalizedString { Key = WellKnownKeys.LobbyWindow.Server.External.State.GettingCode.Key };
+                    addInProgressAnimation = true;
+                    break;
+                case ExternalConnectivityStatus.Error:
+                    statusText = new LocalizedString { Key = WellKnownKeys.LobbyWindow.Server.External.Errors.Generic.Key };
+                    color = Color.red;
+                    break;
+            }
+
+            if (statusText != null)
+            {
+                AddServerInfo(externalConnectivityInfo.transform, statusText, color, addInProgressAnimation);
+                return;
+            }
+
+            AddServerInfo(externalConnectivityInfo.transform, connectivity.External.Code);
+            var defaultCopySprite = _resourceProvider.GetSprite(WellKnownResourceBundles.UI, "UI_HUDIconNoAi_Default");
+            var hoverCopySprite = _resourceProvider.GetSprite(WellKnownResourceBundles.UI, "UI_HUDIconNoAi_Hover");
+            var pressedCopySprite = _resourceProvider.GetSprite(WellKnownResourceBundles.UI, "UI_HUDIconAi_Hover");
+            var copyButtonObject = _uiFactory.CreateIconButton(externalConnectivityInfo.transform, defaultCopySprite, hoverCopySprite, pressedCopySprite);
+            var copyButton = copyButtonObject.GetComponent<OwlcatButton>();
+            copyButton.OnLeftClick.AddListener(() => GUIUtility.systemCopyBuffer = connectivity.External.Code);
+            copyButton.OnRightClick.AddListener(() => GUIUtility.systemCopyBuffer = connectivity.External.Code);
+            var copyButtonRect = copyButtonObject.GetComponent<RectTransform>();
+
+            // TODO: seems like references are corrupted and usual TooltipHelper.SetTooltip can't trigger OnHover enter/exit events
+            var tooltipText = new LocalizedString { Key = WellKnownKeys.LobbyWindow.Tooltips.CopyCode.Title.Key };
+            var template = new TooltipTemplateSimple(tooltipText) { ContentSpacing = 0f };
+            // sadly, there is no auto-width in place. Calculating it manually based on the font/length is an option, but lazy approach with 6x of the button size should be enough, right?
+            var config = new TooltipConfig { Width = (int)copyButtonRect.sizeDelta.x * 6, PreferredHeight = 60 };
+            copyButton.OnHover.AddListener(x => ShowTooltip(copyButton, x, template, config));
         }
 
         public void UpdateCharacterOwnerDropdown(NetworkCharacter character, bool silent = false)
@@ -218,7 +273,7 @@ namespace WOTRMultiplayer.UI.Controllers
                 var characterContainer = FindCharacterContainer(character);
                 if (characterContainer == null)
                 {
-                    _logger.LogWarning("Unable to update character owner dropdow due to missing character container. CharacterName={CharacterName}, CharacterId={CharacterId}", character.Name, character.UnitId);
+                    _logger.LogWarning("Unable to update character owner dropdown due to missing character container. CharacterName={CharacterName}, CharacterId={CharacterId}", character.Name, character.UnitId);
                     return;
                 }
 
@@ -321,6 +376,44 @@ namespace WOTRMultiplayer.UI.Controllers
             });
         }
 
+        private void ShowTooltip(MonoBehaviour component, bool isVisible, TooltipBaseTemplate tooltipBaseTemplate, TooltipConfig tooltipConfig)
+        {
+            if (isVisible)
+            {
+                TooltipHelper.ShowTooltip(component, tooltipBaseTemplate, tooltipConfig);
+            }
+            else
+            {
+                TooltipHelper.HideTooltip();
+            }
+        }
+
+        private void AddServerInfo(Transform parent, string text, Color? color = null, bool addInProgressAnimation = false)
+        {
+            var serverInfoObject = _uiFactory.CreateDefaultGameObject(parent.transform);
+            var serverInfoElement = serverInfoObject.AddComponent<LayoutElement>();
+            serverInfoElement.preferredHeight = 40;
+            var serverInfoBox = serverInfoObject.AddComponent<TextMeshProUGUI>();
+            serverInfoBox.alignment = TextAlignmentOptions.Center;
+            serverInfoBox.verticalAlignment = VerticalAlignmentOptions.Middle;
+            serverInfoBox.horizontalAlignment = HorizontalAlignmentOptions.Center;
+            serverInfoBox.material = _uiFactory.DefaultTextMesh.Material;
+            serverInfoBox.color = color ?? _uiFactory.DefaultTextMesh.Color;
+            // not sure why, but it's not actually centered for some reason
+            serverInfoBox.margin = new Vector4(0f, 5f, 0f, 0f);
+            if (addInProgressAnimation)
+            {
+                serverInfoBox.SetText(string.Empty);
+                serverInfoBox.fontStyle = FontStyles.Italic;
+                serverInfoBox.DOText(text, 2f)
+                    .SetEase(Ease.Linear)
+                    .SetLoops(-1, LoopType.Restart);
+                return;
+            }
+
+            serverInfoBox.SetText(text);
+        }
+
         private Transform FindCharacterContainer(NetworkCharacter character)
         {
             foreach (Transform child in CharactersInfoContainer.transform)
@@ -349,7 +442,7 @@ namespace WOTRMultiplayer.UI.Controllers
 
             const int PreferredHeight = 28;
 
-            CreateProgressBar(player, playerContainerObject.transform, PreferredHeight, withBackround: false);
+            CreateProgressBar(player, playerContainerObject.transform, PreferredHeight, withBackground: false);
 
             CreateLabel(playerContainerObject.transform, PreferredHeight, defaultMesh, $"[{player.ContentState.GameVersion}]");
 
@@ -366,14 +459,14 @@ namespace WOTRMultiplayer.UI.Controllers
 
             if (player.IsReady)
             {
-                CreatePlayerIcon("UI_journal_iconok_new2", playerContainerObject, PreferredHeight, null);
+                CreatePlayerIcon("UI_journal_iconok_new2", playerContainerObject.transform, PreferredHeight, null);
             }
 
             if (player.ContentState.DiscrepantMods.Any() || player.ContentState.DiscrepantDLCs.Any())
             {
                 var isMultiplayerModDifferent = player.ContentState.DiscrepantMods.Any(x => string.Equals(x.Id, _unityModManagerSettings.ModId, StringComparison.OrdinalIgnoreCase));
                 var icon = isMultiplayerModDifferent ? "UI_QuestNotification_StampRed" : "UI_QuestNotification_StampYellow";
-                CreatePlayerIcon(icon, playerContainerObject, PreferredHeight, new ContentDiscrepancyTooltipTemplate(player));
+                CreatePlayerIcon(icon, playerContainerObject.transform, PreferredHeight, new ContentDiscrepancyTooltipTemplate(player));
             }
         }
 
@@ -389,20 +482,25 @@ namespace WOTRMultiplayer.UI.Controllers
             textBox.SetText(text);
         }
 
-        private void CreateProgressBar(NetworkPlayer networkPlayer, Transform parent, int size, bool withBackround = false)
+        private void CreateProgressBar(NetworkPlayer networkPlayer, Transform parent, int size, bool withBackground = false)
         {
-            var progressBar = _uiFactory.CreateProgressBar(parent, size, 0.45f, withBackround);
+            var progressBar = _uiFactory.CreateProgressBar(parent, size, 0.45f, withBackground);
             progressBar.AddComponent<PlayerHandle>().Owner = networkPlayer;
         }
 
-        private void CreatePlayerIcon(string iconName, GameObject parent, int size, TooltipBaseTemplate template = null)
+        private void CreatePlayerIcon(string iconName, Transform parent, int size, TooltipBaseTemplate template = null)
         {
-            var iconObject = _uiFactory.CreateDefaultGameObject(parent.transform);
+            CreateIcon(parent, WellKnownResourceBundles.UI, iconName, size, template);
+        }
+
+        private void CreateIcon(Transform parent, string bundle, string iconName, int size, TooltipBaseTemplate template = null)
+        {
+            var iconObject = _uiFactory.CreateDefaultGameObject(parent);
             var layoutElement = iconObject.AddComponent<LayoutElement>();
             layoutElement.preferredHeight = size;
             layoutElement.preferredWidth = size;
             var image = iconObject.AddComponent<Image>();
-            var sprite = _resourceProvider.GetSprite(WellKnownResourceBundles.UI, iconName);
+            var sprite = _resourceProvider.GetSprite(bundle, iconName);
             image.sprite = sprite;
             if (template != null)
             {
@@ -430,7 +528,7 @@ namespace WOTRMultiplayer.UI.Controllers
                 var characterContainer = CharactersInfoContainer.transform.GetChild(characterIndex);
                 if (characterContainer == null)
                 {
-                    _logger.LogInformation("Unable to update character owner dropdow due to missing character container. Index={Index}", characterIndex);
+                    _logger.LogInformation("Unable to update character owner dropdown due to missing character container. Index={Index}", characterIndex);
                     return;
                 }
 
