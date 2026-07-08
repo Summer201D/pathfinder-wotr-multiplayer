@@ -232,6 +232,7 @@ jobs:
         with:
           name: wotr-multiplayer-${{ env.CURRENT_VERSION }}
           path: artifacts
+      # unfortunately, download-artifact automatically extracts the artifact, even when it's already a ZIP, and there is no way to disable this :(
       - name: Repack
         run: |
           mkdir -p artifacts/__repack
