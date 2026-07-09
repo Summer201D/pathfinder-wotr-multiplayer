@@ -70,9 +70,9 @@ It works fine with local network emulators or a public/static ('white') IP from 
 ### Game Codes
 P2P connection via selected server on the Host tab
 
-`AppData\LocalLow\Owlcat Games\Pathfinder Wrath Of The Righteous\Multiplayer\servers.json` contains servers configuration. Deleting this file force mod to recreate it with a default config.
+`AppData\LocalLow\Owlcat Games\Pathfinder Wrath Of The Righteous\Multiplayer\servers.json` contains the multiplayer server configuration. Deleting this file will cause the mod to recreate it with the default configuration.
 
-You can always host/configure your own P2P server in case of any issues. Sources/Container image is available [here](https://github.com/fl01/pathfinder-wotr-multiplayer-beacon)
+If you encounter any issues, you can always host and configure your own P2P server. The source code and container image are available [here](https://github.com/fl01/pathfinder-wotr-multiplayer-beacon)
 
 
 ## Interface
