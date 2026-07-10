@@ -1638,6 +1638,11 @@ namespace WOTRMultiplayer.Services
 
         private void OnNotifyGamePauseEnded(long playerId, NotifyGamePauseEnded message)
         {
+            if (Game.ForcedPause != null && Game.ForcedPause.Reason == NetworkForcedPauseReason.AreaLoading)
+            {
+                GlobalMapInteraction.EnableInteractions();
+            }
+
             Game.ForcedPause = null;
             GameInteraction.SetPause(false);
         }
@@ -1760,6 +1765,7 @@ namespace WOTRMultiplayer.Services
                     {
                         // TODO: make a proper cleanup to unblock all possible UI elements as client is in single-player now
                         Game.Players.Clear();
+                        GameInteraction.MakeModalMessageInteractable();
                         UpdateRespecWindowStateOnPlayerLeave(Game.LocalPlayerId);
                     }
                     InvokeOnNetworkError(WellKnownKeys.MultiplayerClient.Errors.Disconnected.Key);
@@ -1803,7 +1809,7 @@ namespace WOTRMultiplayer.Services
         private void InvokeOnNetworkError(string error, SocketError? socketError = null)
         {
             OnNetworkError?.Invoke();
-            PlayerNotification.ShowModalMessage(error, socketError);
+            PlayerNotification.ShowModalMessage(error, args: socketError);
         }
 
         private TimeSpan GetTurnStartDelay()

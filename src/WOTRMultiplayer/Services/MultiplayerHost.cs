@@ -205,7 +205,7 @@ namespace WOTRMultiplayer.Services
             }
             catch (Exception ex)
             {
-                PlayerNotification.ShowModalMessage(WellKnownKeys.SysMessages.FailedToTransferSave.Key, ex.Message);
+                PlayerNotification.ShowModalMessage(WellKnownKeys.SysMessages.FailedToTransferSave.Key, args: ex.Message);
                 Logger.LogError(ex, "Error while transferring save file");
                 throw;
             }
@@ -2461,6 +2461,8 @@ namespace WOTRMultiplayer.Services
                     {
                         try
                         {
+                            GlobalMapInteraction.EnableInteractions();
+
                             if (Game.ForcedPause == null)
                             {
                                 Logger.LogWarning("Previous forced pause lifter has been skipped due to null forced pause. Most likely game was quick loaded");

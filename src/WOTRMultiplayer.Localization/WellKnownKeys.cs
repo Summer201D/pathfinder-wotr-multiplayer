@@ -1435,6 +1435,12 @@ public static class WellKnownKeys
             {
                 public static string Key { get; set; }
             }
+
+            [Description("loading")]
+            public static class Loading
+            {
+                public static string Key { get; set; }
+            }
         }
     }
 }

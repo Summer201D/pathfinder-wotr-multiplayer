@@ -470,5 +470,9 @@ namespace WOTRMultiplayer.Playground.Core.Dummies
         public void TriggerLootClosedActions(NetworkMapObject mapObject)
         {
         }
+
+        public void MakeModalMessageInteractable()
+        {
+        }
     }
 }

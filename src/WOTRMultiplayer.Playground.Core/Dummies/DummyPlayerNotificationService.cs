@@ -19,7 +19,7 @@ namespace WOTRMultiplayer.Playground.Core.Dummies
         {
         }
 
-        public void ShowModalMessage(string messageKey, params object[] args)
+        public void ShowModalMessage(string messageKey, bool canBeClosed = true, params object[] args)
         {
         }
 

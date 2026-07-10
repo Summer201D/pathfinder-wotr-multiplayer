@@ -271,8 +271,8 @@
                 "networkError": "Network error occurred.\nError code: {0}",
                 "unreachableSignalingServer": "Unable to connect to the matchmaking server",
                 "unreachableGameHost": "The game is unavailable",
-                "gameNotFound":"Game not found or password is invalid",
-                "peerToPeerTimeout":"Connection to the host timed out"
+                "gameNotFound": "Game not found or password is invalid",
+                "peerToPeerTimeout": "Connection to the host timed out"
             }
         },
         "gameNotifications": {
@@ -365,7 +365,8 @@
                 "skipped": "Cutscene has been skipped by {0}"
             },
             "globalMap": {
-                "disabledActionBar": "Global map spells are restricted to the host"
+                "disabledActionBar": "Global map spells are restricted to the host",
+                "loading": "Waiting for everyone to finish loading"
             }
         }
     }

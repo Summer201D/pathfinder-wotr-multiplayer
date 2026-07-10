@@ -345,5 +345,13 @@ namespace WOTRMultiplayer.Playground.Core.Dummies
         public void ShowCurrentEnterCurrentLocationMessage()
         {
         }
+
+        public void DisableInteractions()
+        {
+        }
+
+        public void EnableInteractions()
+        {
+        }
     }
 }

@@ -390,6 +390,11 @@ namespace WOTRMultiplayer.Services
             {
                 EnsureForcePaused(NetworkForcedPauseReason.AreaLoading);
                 GameInteraction.SetPause(true);
+
+                if (Game.CurrentArea.IsGlobalMap && GetSyncedPlayersCount() > 1)
+                {
+                    GlobalMapInteraction.DisableInteractions();
+                }
             }
         }
 
@@ -489,6 +494,7 @@ namespace WOTRMultiplayer.Services
 
             ResetGameIdGenerator();
             ResetGlobalMapCounters();
+            GlobalMapInteraction.EnableInteractions();
 
             Game.LoadedSaveSeed = CreateRandomSeed();
 
@@ -2818,7 +2824,7 @@ namespace WOTRMultiplayer.Services
             var content = FileSystem.GetRawFileContent(Game.StartUp.SavePath);
             if (content == null)
             {
-                PlayerNotification.ShowModalMessage(WellKnownKeys.SysMessages.FailedToReadSave.Key, Game.StartUp.SavePath);
+                PlayerNotification.ShowModalMessage(WellKnownKeys.SysMessages.FailedToReadSave.Key, args: Game.StartUp.SavePath);
                 Logger.LogError("Unable to read save game file. Path={Path}", Game.StartUp.SavePath);
                 return;
             }
@@ -2932,6 +2938,7 @@ namespace WOTRMultiplayer.Services
 
             Game.ForcedPause = null;
             GameInteraction.SetPause(false);
+            GlobalMapInteraction.EnableInteractions();
             Game.DialogState = null;
             // it's important to use different loading method for players who joined mid-game
             if (Game.Stage == NetworkLobbyStage.Playing)
@@ -3035,7 +3042,7 @@ namespace WOTRMultiplayer.Services
             var savePath = Path.Combine(persistentDataPath, "Saved Games", "latest received save.zks");
             if (!FileSystem.WriteFile(savePath, content))
             {
-                PlayerNotification.ShowModalMessage(WellKnownKeys.SysMessages.FailedToStoreSave.Key, savePath);
+                PlayerNotification.ShowModalMessage(WellKnownKeys.SysMessages.FailedToStoreSave.Key, args: savePath);
                 return null;
             }
 

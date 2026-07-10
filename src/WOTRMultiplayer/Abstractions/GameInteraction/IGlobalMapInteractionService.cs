@@ -9,9 +9,9 @@ namespace WOTRMultiplayer.Abstractions.GameInteraction
     {
         bool IsAtLocation(NetworkGlobalMapLocation globalMapLocation);
 
-        void ContinueTravel(NetworkGlobalMapTraveler travaler);
+        void ContinueTravel(NetworkGlobalMapTraveler traveler);
 
-        void StopTravel(NetworkGlobalMapTraveler travaler);
+        void StopTravel(NetworkGlobalMapTraveler traveler);
 
         void UpdateLocationMessageBoxUI(bool isInteractable, int readyPlayersCount, int totalPlayersCount);
 
@@ -174,5 +174,9 @@ namespace WOTRMultiplayer.Abstractions.GameInteraction
         void UpgradeSettlement(NetworkKingdomSettlement kingdomSettlement);
 
         void ShowCurrentEnterCurrentLocationMessage();
+
+        void DisableInteractions();
+
+        void EnableInteractions();
     }
 }

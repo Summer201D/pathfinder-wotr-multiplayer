@@ -74,7 +74,6 @@ P2P connection via selected server on the Host tab
 
 If you encounter any issues, you can always host and configure your own P2P server. The source code and container image are available [here](https://github.com/fl01/pathfinder-wotr-multiplayer-beacon)
 
-
 ## Interface
 
 - Photo Mode is disabled for now since it pauses the game and doesn’t add much in multiplayer.

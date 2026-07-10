@@ -963,7 +963,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
                 localAreaEffect.m_Position = position;
 
                 localAreaEffect.UpdateViewAndUnits();
-                _logger.LogDebug("Area effect has been updated. Id={Id}, Name={Name}, Position={Position}, UnitsUnside={UnitsUnside}", localAreaEffect.UniqueId, localAreaEffect.Blueprint.name, localAreaEffect.Position, localAreaEffect.m_UnitsInside.Select(x => x.Reference.UniqueId));
+                _logger.LogDebug("Area effect has been updated. Id={Id}, Name={Name}, Position={Position}, UnitsInside={UnitsInside}", localAreaEffect.UniqueId, localAreaEffect.Blueprint.name, localAreaEffect.Position, localAreaEffect.m_UnitsInside.Select(x => x.Reference.UniqueId));
             }
         }
 
@@ -1376,9 +1376,9 @@ namespace WOTRMultiplayer.Services.GameInteraction
             var engagedUnits = new Dictionary<string, UnitEntityData>();
             foreach (var (networkUnit, unit) in unitsToUpdate)
             {
-                AddUnitForEngagementClearence([unit.UniqueId], engagedUnits);
-                AddUnitForEngagementClearence(networkUnit.CombatState?.EngagedBy.Select(x => x.UnitId).ToList() ?? [], engagedUnits);
-                AddUnitForEngagementClearence(networkUnit.CombatState?.EngagedUnits.Select(x => x.UnitId).ToList() ?? [], engagedUnits);
+                AddUnitToEngagementReset([unit.UniqueId], engagedUnits);
+                AddUnitToEngagementReset(networkUnit.CombatState?.EngagedBy.Select(x => x.UnitId).ToList() ?? [], engagedUnits);
+                AddUnitToEngagementReset(networkUnit.CombatState?.EngagedUnits.Select(x => x.UnitId).ToList() ?? [], engagedUnits);
             }
 
             foreach (var (_, unitToClear) in engagedUnits)
@@ -1410,7 +1410,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
             }
         }
 
-        private void AddUnitForEngagementClearence(List<string> units, Dictionary<string, UnitEntityData> unitsToClear)
+        private void AddUnitToEngagementReset(List<string> units, Dictionary<string, UnitEntityData> unitsToClear)
         {
             foreach (var unitId in units)
             {

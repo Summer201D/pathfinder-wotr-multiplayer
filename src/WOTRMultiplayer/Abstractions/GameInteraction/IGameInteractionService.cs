@@ -225,5 +225,7 @@ namespace WOTRMultiplayer.Abstractions.GameInteraction
         void ChangeAlushenyrraIslesState(string cameraDirection);
 
         void TriggerLootClosedActions(NetworkMapObject mapObject);
+
+        void MakeModalMessageInteractable();
     }
 }

@@ -546,7 +546,7 @@ namespace WOTRMultiplayer.Services
                 var identifier = $"{rollIdentifier}_{seededContext.Id}";
                 var random = _valueGenerator.GetRandom(seededContext.Lifetime, identifier);
                 var result = diceFormula.Roll(random);
-                _logger.LogInformation("{RuleName} has been rolled deterministicaly. Type={Type}, UnitId={UnitId}, Result={Result}, Lifetime={Lifetime}, Identifier={Identifier}",
+                _logger.LogInformation("{RuleName} has been rolled deterministically. Type={Type}, UnitId={UnitId}, Result={Result}, Lifetime={Lifetime}, Identifier={Identifier}",
                     roll.RuleName, roll.RollType, roll.InitiatorId, result, seededContext.Lifetime, identifier);
 
                 return result;

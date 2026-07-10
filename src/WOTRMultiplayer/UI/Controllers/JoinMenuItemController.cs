@@ -666,7 +666,7 @@ namespace WOTRMultiplayer.UI.Controllers
             var server = servers.FirstOrDefault(s => prefix == s.Prefix);
             if (server == null)
             {
-                _playerNotificationService.ShowModalMessage(WellKnownKeys.MultiplayerWindow.JoinMenu.GameCodeConnection.Errors.UnroutedCode.Key, ServersFilePath);
+                _playerNotificationService.ShowModalMessage(WellKnownKeys.MultiplayerWindow.JoinMenu.GameCodeConnection.Errors.UnroutedCode.Key, args: ServersFilePath);
                 return;
             }
 

@@ -39,12 +39,15 @@ namespace WOTRMultiplayer.Services.GameInteraction
             _uiAccessor = uiAccessor;
         }
 
-        public void ShowModalMessage(string messageKey, params object[] args)
+        public void ShowModalMessage(string messageKey, bool canBeClosed = true, params object[] args)
         {
             _mainThreadAccessor.Post(() =>
             {
                 var message = GetLocalizedText(messageKey, args);
                 EventBus.RaiseEvent<IMessageModalUIHandler>(x => x.HandleOpen(message, MessageModalBase.ModalType.Message, null));
+
+                _uiAccessor.CommonPCView.m_MessageModalPCView.m_AcceptButton.Interactable = canBeClosed;
+                _uiAccessor.CommonPCView.m_MessageModalPCView.m_DeclineButton.Interactable = canBeClosed;
             });
         }
 
@@ -106,7 +109,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
             var combatLogVM = _uiAccessor.CombatLogPCView?.ViewModel;
             if (combatLogVM == null)
             {
-                _logger.LogWarning("Missing combatlogVM");
+                _logger.LogWarning("Missing CombatLog VM");
                 return;
             }
 

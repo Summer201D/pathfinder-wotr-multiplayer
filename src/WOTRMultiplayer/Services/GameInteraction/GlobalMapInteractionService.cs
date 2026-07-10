@@ -17,6 +17,7 @@ using Kingmaker.Kingdom;
 using Kingmaker.Kingdom.Armies;
 using Kingmaker.Kingdom.Settlements;
 using Kingmaker.Kingdom.UI;
+using Kingmaker.Localization;
 using Kingmaker.PubSubSystem;
 using Kingmaker.RandomEncounters;
 using Kingmaker.RandomEncounters.Settings;
@@ -48,6 +49,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
         private readonly ILogger<GlobalMapInteractionService> _logger;
         private readonly IMainThreadAccessor _mainThreadAccessor;
         private readonly IGameStateLookupService _gameStateLookupService;
+        private readonly IPlayerNotificationService _playerNotificationService;
         private readonly IUIAccessor _uiAccessor;
         private readonly IUISyncCountersService _uiSyncCountersService;
 
@@ -55,14 +57,48 @@ namespace WOTRMultiplayer.Services.GameInteraction
             ILogger<GlobalMapInteractionService> logger,
             IMainThreadAccessor mainThreadAccessor,
             IGameStateLookupService gameStateLookupService,
+            IPlayerNotificationService playerNotificationService,
             IUIAccessor uiAccessor,
             IUISyncCountersService uiSyncCountersService)
         {
             _logger = logger;
             _mainThreadAccessor = mainThreadAccessor;
             _gameStateLookupService = gameStateLookupService;
+            _playerNotificationService = playerNotificationService;
             _uiAccessor = uiAccessor;
             _uiSyncCountersService = uiSyncCountersService;
+        }
+
+        public void DisableInteractions()
+        {
+            _playerNotificationService.ShowModalMessage(WellKnownKeys.GameNotifications.GlobalMap.Loading.Key, canBeClosed: false);
+            _logger.LogInformation("Global map interactions have been disabled");
+        }
+
+        public void EnableInteractions()
+        {
+            _mainThreadAccessor.Post(() =>
+            {
+                var modalMessage = _uiAccessor.CommonPCView.m_MessageModalPCView;
+                if (modalMessage?.ViewModel == null)
+                {
+                    return;
+                }
+
+                var expectedMessage = new LocalizedString { Key = WellKnownKeys.GameNotifications.GlobalMap.Loading.Key };
+                if (!string.Equals(modalMessage.ViewModel.MessageText, expectedMessage))
+                {
+                    return;
+                }
+
+                modalMessage.m_AcceptButton.Interactable = true;
+                modalMessage.m_DeclineButton.Interactable = true;
+                modalMessage.ViewModel.OnAcceptPressed();
+
+                // block keyboard hotkeys as well? just need to come up with some kind of timed safeguard
+                //Game.Instance.Keyboard.Disabled.SetValue(false);
+                _logger.LogInformation("Global map interactions have been enabled");
+            });
         }
 
         public void OpenGroupChanger()
@@ -903,7 +939,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
             {
                 if (!Game.Instance.Player.SpendMoney(globalMapResourceOrder.FinalCost))
                 {
-                    _logger.LogError("Failed to spend money on resoures.");
+                    _logger.LogError("Failed to spend money on resources.");
                     return;
                 }
 
@@ -1222,7 +1258,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
                 var overtipVM = _uiAccessor.GlobalMapPCView?.ViewModel?.GlobalMapArmyOvertipsVM ?? _uiAccessor.KingdomPCView?.ViewModel?.GlobalMapArmyOvertipsVM;
                 if (overtipVM == null)
                 {
-                    _logger.LogWarning("Unable to open merge screen due to missing overtip viewmodel");
+                    _logger.LogWarning("Unable to open merge screen due to missing overtip view model");
                     return;
                 }
 

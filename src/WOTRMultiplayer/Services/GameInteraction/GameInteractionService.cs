@@ -3444,5 +3444,19 @@ namespace WOTRMultiplayer.Services.GameInteraction
                 }
             });
         }
+
+        public void MakeModalMessageInteractable()
+        {
+            _mainThreadAccessor.Post(() =>
+            {
+                var modal = _uiAccessor.CommonPCView.m_MessageModalPCView;
+                if (modal?.ViewModel == null)
+                {
+                    return;
+                }
+
+                modal.m_AcceptButton.Interactable = true;
+            });
+        }
     }
 }
