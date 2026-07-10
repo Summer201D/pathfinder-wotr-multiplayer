@@ -2,6 +2,8 @@
 
 Showcase: https://www.youtube.com/watch?v=_YZSPrPy9XI
 
+[NexusMods](https://www.nexusmods.com/pathfinderwrathoftherighteous/mods/1116)
+
 ## How to
 1. Download latest `wotr-multiplayer-x.x.x.zip` from releases
 2. Install via [UnityModManager](https://www.nexusmods.com/site/mods/21). The latest 0.32.5 version has some issues, use 0.32.4a or lower
