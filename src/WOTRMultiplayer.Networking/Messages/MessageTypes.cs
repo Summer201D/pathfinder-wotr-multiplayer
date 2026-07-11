@@ -283,7 +283,9 @@
             NotifyCombatUnitsExcluded,
             NotifyCombatUnitsExclusionConfirmed,
             NotifyTacticalCombatAccelerationChanged,
-            NotifyLootClosed
+            NotifyLootClosed,
+            NotifyNewGameSequenceCampaignChanged,
+            NotifyNewGameSequenceLastAzlantiChanged
         }
 
         public static class Mods

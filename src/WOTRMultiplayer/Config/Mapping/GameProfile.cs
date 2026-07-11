@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using AutoMapper;
 using Kingmaker.Blueprints.Area;
+using Kingmaker.Blueprints.Root;
 using Kingmaker.Dungeon;
 using Kingmaker.EntitySystem;
 using Kingmaker.EntitySystem.Entities;
@@ -23,6 +24,7 @@ using WOTRMultiplayer.Entities.Combat;
 using WOTRMultiplayer.Entities.Equipment;
 using WOTRMultiplayer.Entities.GlobalMap.Kingdom;
 using WOTRMultiplayer.Entities.MapObjects;
+using WOTRMultiplayer.Entities.NewGame;
 using WOTRMultiplayer.Entities.Spells;
 using WOTRMultiplayer.Entities.Units;
 using WOTRMultiplayer.Extensions;
@@ -85,6 +87,25 @@ namespace WOTRMultiplayer.Config.Mapping
 
             CreateMap<BlueprintAreaEnterPoint, NetworkArea>().ConstructUsing(x => Create(x))
                 .ForAllMembers(x => x.Ignore());
+
+            CreateMap<BlueprintCampaign, NetworkCampaign>().ConstructUsing(x => Create(x))
+                .ForAllMembers(x => x.Ignore());
+        }
+
+        private NetworkCampaign Create(BlueprintCampaign blueprintCampaign)
+        {
+            if (blueprintCampaign == null)
+            {
+                return null;
+            }
+
+            var campaign = new NetworkCampaign
+            {
+                Id = blueprintCampaign.AssetGuid.ToString(),
+                Name = blueprintCampaign.name
+            };
+
+            return campaign;
         }
 
         private NetworkArea Create(BlueprintArea blueprintArea)

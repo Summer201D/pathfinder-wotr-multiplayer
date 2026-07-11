@@ -108,6 +108,11 @@ namespace WOTRMultiplayer.Services.GameInteraction
         private readonly IPlayerNotificationService _playerNotificationService;
         private readonly IUISyncCountersService _uiSyncCountersService;
         private readonly IGameStateLookupService _gameStateLookupService;
+        private readonly Dictionary<string, bool> _newGameStoryConfiguration = new(StringComparer.OrdinalIgnoreCase)
+        {
+            { "fd2e11ebb8a14d6599450fc27f03486a", true  }, // MainCampaign
+            { "e1bde745d6ad47c0bc9fb8e479b29153", true  }, // islands
+        };
 
         public RemoteExecutionContext RemoteContext => _networkExecutionContext.Value;
 
@@ -1995,13 +2000,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
                     switch (newGameSequencePhaseType)
                     {
                         case NetworkNewGameSequencePhaseType.Story:
-                            foreach (var widgetEntry in _uiAccessor.NewGamePCView.m_StoryPCView.m_SelectorPCView.m_WidgetList.Entries)
-                            {
-                                if (widgetEntry is NewGamePhaseStoryScenarioEntityPCView story)
-                                {
-                                    story.m_Button.Interactable = isEnabled && string.Equals(story.ViewModel.m_StoryCampaign.name, "MainCampaign", StringComparison.OrdinalIgnoreCase);
-                                }
-                            }
+                            UpdateNewGameStoryControls(isEnabled);
                             break;
                         case NetworkNewGameSequencePhaseType.Difficulty:
                             foreach (var entry in _uiAccessor.NewGamePCView.m_DifficultyPCView.m_VirtualList.Elements)
@@ -2768,6 +2767,69 @@ namespace WOTRMultiplayer.Services.GameInteraction
             });
         }
 
+        public void MakeModalMessageInteractable()
+        {
+            _mainThreadAccessor.Post(() =>
+            {
+                var modal = _uiAccessor.CommonPCView.m_MessageModalPCView;
+                if (modal?.ViewModel == null)
+                {
+                    return;
+                }
+
+                modal.m_AcceptButton.Interactable = true;
+            });
+        }
+
+        public void SetNewGameCampaign(NetworkCampaign campaign)
+        {
+            _mainThreadAccessor.Post(() =>
+            {
+                var storyView = _uiAccessor.NewGamePCView.m_StoryPCView;
+                if (storyView?.ViewModel == null)
+                {
+                    _logger.LogError("Unable to set campaign due to null story viewmodel");
+                    return;
+                }
+
+                var selectedStory = storyView.ViewModel.SelectionGroup.EntitiesCollection.FirstOrDefault(e => string.Equals(e.m_StoryCampaign?.AssetGuid.ToString(), campaign.Id, StringComparison.OrdinalIgnoreCase));
+                if (selectedStory == null)
+                {
+                    _logger.LogError("Selected campaign is missing. Name={Name}, Id={Id}", campaign.Name, campaign.Id);
+                    return;
+                }
+
+                storyView.ViewModel.SetSelectedEntity(selectedStory);
+                var actualSelected = storyView.ViewModel.m_SelectedEntity.Value;
+
+                UpdateNewGameStoryControls(isEnabled: false);
+
+                _logger.LogInformation("New Game Campaign has been changed. Name={Name}, Id={Id}", actualSelected.m_StoryCampaign.name, actualSelected.m_StoryCampaign.AssetGuid);
+            });
+        }
+
+        public void SetNewGameLastAzlanti(bool isEnabled)
+        {
+            _mainThreadAccessor.Post(() =>
+            {
+                var storyView = _uiAccessor.NewGamePCView.m_StoryPCView;
+                if (storyView?.ViewModel == null)
+                {
+                    _logger.LogError("Unable to set Last Azlanti due to null story viewmodel");
+                    return;
+                }
+
+                storyView.ViewModel.LastAzlantiIsOn.Value = isEnabled;
+
+                SettingsRoot.Difficulty.OnlyOneSave.SetTempValue(isEnabled);
+                SettingsController.SaveAll();
+
+                UpdateNewGameStoryControls(isEnabled: false);
+
+                _logger.LogInformation("Last Azlanti mode has been changed. Value={Value}", storyView.ViewModel.LastAzlantiIsOn.Value);
+            });
+        }
+
         private void UpdateIslandsTransitionMap(MapIslandsPCView view, bool isInteractable, int readyPlayersCount, int totalPlayersCount)
         {
             view.m_CloseButton.Interactable = isInteractable;
@@ -3028,6 +3090,17 @@ namespace WOTRMultiplayer.Services.GameInteraction
             allMods.AddRange(owlcatModifications);
 
             return allMods;
+        }
+
+        private void UpdateNewGameStoryControls(bool isEnabled)
+        {
+            foreach (var widgetEntry in _uiAccessor.NewGamePCView.m_StoryPCView.m_SelectorPCView.m_WidgetList.Entries)
+            {
+                if (widgetEntry is NewGamePhaseStoryScenarioEntityPCView story)
+                {
+                    story.m_Button.Interactable = isEnabled && _newGameStoryConfiguration.TryGetValue(story.ViewModel.m_StoryCampaign.AssetGuid.ToString(), out var isStoryEnabled) && isStoryEnabled;
+                }
+            }
         }
 
         private void UpdateRestPortraits(RestRolesPortraitsPCView view, bool isInteractable)
@@ -3442,20 +3515,6 @@ namespace WOTRMultiplayer.Services.GameInteraction
                     _logger.LogError(ex, "Unable to execute click handler. HandlerType={HandlerType}", clickEventHandler.GetType().Name);
                     throw;
                 }
-            });
-        }
-
-        public void MakeModalMessageInteractable()
-        {
-            _mainThreadAccessor.Post(() =>
-            {
-                var modal = _uiAccessor.CommonPCView.m_MessageModalPCView;
-                if (modal?.ViewModel == null)
-                {
-                    return;
-                }
-
-                modal.m_AcceptButton.Interactable = true;
             });
         }
     }

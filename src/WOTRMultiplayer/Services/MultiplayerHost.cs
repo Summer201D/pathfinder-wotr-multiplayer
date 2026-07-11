@@ -25,6 +25,7 @@ using WOTRMultiplayer.Entities.GlobalMap.Kingdom;
 using WOTRMultiplayer.Entities.Inspect;
 using WOTRMultiplayer.Entities.Items;
 using WOTRMultiplayer.Entities.Leveling;
+using WOTRMultiplayer.Entities.NewGame;
 using WOTRMultiplayer.Entities.Rest;
 using WOTRMultiplayer.Entities.Settings;
 using WOTRMultiplayer.Networking;
@@ -1257,6 +1258,24 @@ namespace WOTRMultiplayer.Services
             var message = new NotifyAlyshenyrraCameraDirectionChanged
             {
                 Direction = cameraDirection
+            };
+            Send(message);
+        }
+
+        public void OnNewGameSequenceCampaignChanged(NetworkCampaign campaign)
+        {
+            var message = new NotifyNewGameSequenceCampaignChanged
+            {
+                Campaign = Mapper.Map<Networking.Messages.Contracts.NetworkCampaign>(campaign)
+            };
+            Send(message);
+        }
+
+        public void OnNewGameSequenceLastAzlantiChanged(bool isEnabled)
+        {
+            var message = new NotifyNewGameSequenceLastAzlantiChanged
+            {
+                IsEnabled = isEnabled
             };
             Send(message);
         }

@@ -6,6 +6,7 @@ using WOTRMultiplayer.Entities.Dialogs;
 using WOTRMultiplayer.Entities.GlobalMap;
 using WOTRMultiplayer.Entities.GlobalMap.Kingdom;
 using WOTRMultiplayer.Entities.Inspect;
+using WOTRMultiplayer.Entities.NewGame;
 using WOTRMultiplayer.Entities.Rest;
 using WOTRMultiplayer.Services.GameInteraction.Contexts;
 
@@ -212,5 +213,9 @@ namespace WOTRMultiplayer.Abstractions
         void OnKingdomUpgradeSettlement(NetworkKingdomSettlement kingdomSettlement);
 
         void OnAlushenyrraCameraDirectionChanged(string cameraDirection);
+
+        void OnNewGameSequenceCampaignChanged(NetworkCampaign campaign);
+
+        void OnNewGameSequenceLastAzlantiChanged(bool isEnabled);
     }
 }

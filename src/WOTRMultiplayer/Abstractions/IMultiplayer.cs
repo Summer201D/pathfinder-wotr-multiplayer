@@ -536,5 +536,9 @@ namespace WOTRMultiplayer.Abstractions
         void OnMapObjectCombinePartInteraction(NetworkMapObject mapObject, string interactedUnitId, int partIndex);
 
         void OnLootClosed(NetworkMapObject mapObject);
+
+        void OnNewGameSequenceCampaignChanged(NetworkCampaign campaign);
+
+        void OnNewGameSequenceLastAzlantiChanged(bool isEnabled);
     }
 }

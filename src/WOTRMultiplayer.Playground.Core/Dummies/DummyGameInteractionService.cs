@@ -474,5 +474,13 @@ namespace WOTRMultiplayer.Playground.Core.Dummies
         public void MakeModalMessageInteractable()
         {
         }
+
+        public void SetNewGameCampaign(NetworkCampaign campaign)
+        {
+        }
+
+        public void SetNewGameLastAzlanti(bool isEnabled)
+        {
+        }
     }
 }

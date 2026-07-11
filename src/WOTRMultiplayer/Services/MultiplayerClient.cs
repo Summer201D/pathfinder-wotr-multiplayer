@@ -545,6 +545,8 @@ namespace WOTRMultiplayer.Services
                .On<NotifyNewGameSequencePhaseChanged>(OnNotifyNewGameSequencePhaseChanged)
                .On<NotifyNewGameSequenceLevelingStarted>(OnNotifyNewGameSequenceLevelingStarted)
                .On<NotifyNewGameSequenceTerminated>(OnNotifyNewGameSequenceTerminated)
+               .On<NotifyNewGameSequenceCampaignChanged>(OnNotifyNewGameSequenceCampaignChanged)
+               .On<NotifyNewGameSequenceLastAzlantiChanged>(OnNotifyNewGameSequenceLastAzlantiChanged)
 
                // pausing
                .On<NotifyGamePauseEnded>(OnNotifyGamePauseEnded)
@@ -701,6 +703,17 @@ namespace WOTRMultiplayer.Services
                // alushenyrra
                .On<NotifyAlyshenyrraCameraDirectionChanged>(OnNotifyAlyshenyrraCameraDirectionChanged)
                ;
+        }
+
+        private void OnNotifyNewGameSequenceLastAzlantiChanged(long receivedFrom, NotifyNewGameSequenceLastAzlantiChanged message)
+        {
+            GameInteraction.SetNewGameLastAzlanti(message.IsEnabled);
+        }
+
+        private void OnNotifyNewGameSequenceCampaignChanged(long receivedFrom, NotifyNewGameSequenceCampaignChanged message)
+        {
+            var campaign = Mapper.Map<NetworkCampaign>(message.Campaign);
+            GameInteraction.SetNewGameCampaign(campaign);
         }
 
         private async void OnNotifyCombatInitiated(long receivedFrom, NotifyCombatInitiated message)

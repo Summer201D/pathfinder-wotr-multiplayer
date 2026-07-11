@@ -4510,5 +4510,41 @@ namespace WOTRMultiplayer.Services
                 throw;
             }
         }
+
+        public void OnNewGameSequenceCampaignChanged(NetworkCampaign campaign)
+        {
+            try
+            {
+                if (_multiplayerActorAccessor == null || _multiplayerActorAccessor.Client.IsActive)
+                {
+                    return;
+                }
+
+                _multiplayerActorAccessor.Host.OnNewGameSequenceCampaignChanged(campaign);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while changing campaign. Name={Name}", campaign?.Name);
+                throw;
+            }
+        }
+
+        public void OnNewGameSequenceLastAzlantiChanged(bool isEnabled)
+        {
+            try
+            {
+                if (_multiplayerActorAccessor == null || _multiplayerActorAccessor.Client.IsActive)
+                {
+                    return;
+                }
+
+                _multiplayerActorAccessor.Host.OnNewGameSequenceLastAzlantiChanged(isEnabled);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while changing LastAzlanti. IsEnabled={IsEnabled}", isEnabled);
+                throw;
+            }
+        }
     }
 }

@@ -227,5 +227,9 @@ namespace WOTRMultiplayer.Abstractions.GameInteraction
         void TriggerLootClosedActions(NetworkMapObject mapObject);
 
         void MakeModalMessageInteractable();
+
+        void SetNewGameCampaign(NetworkCampaign campaign);
+
+        void SetNewGameLastAzlanti(bool isEnabled);
     }
 }
