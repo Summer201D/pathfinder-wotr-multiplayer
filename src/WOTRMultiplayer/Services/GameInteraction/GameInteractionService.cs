@@ -21,6 +21,7 @@ using Kingmaker.Controllers.Units;
 using Kingmaker.Craft;
 using Kingmaker.Designers.EventConditionActionSystem.ContextData;
 using Kingmaker.DLC;
+using Kingmaker.Dungeon;
 using Kingmaker.ElementsSystem;
 using Kingmaker.EntitySystem;
 using Kingmaker.EntitySystem.Entities;
@@ -314,7 +315,26 @@ namespace WOTRMultiplayer.Services.GameInteraction
 
         public List<NetworkCharacter> GetPartyPlayers()
         {
-            var partyCharacters = Game.Instance.Player.Party
+            // Dungeon restart
+            if (Game.Instance.Player.IsClearMainCharacterData && DungeonController.IsDungeonCampaign)
+            {
+                var main = Game.Instance.Player.AllCharacters.FirstOrDefault();
+                if (main == null)
+                {
+                    return [];
+                }
+
+                var character = ToNetworkCharacters([main]);
+                return character;
+            }
+
+            var partyCharacters = ToNetworkCharacters(Game.Instance.Player.Party);
+            return partyCharacters;
+        }
+
+        private List<NetworkCharacter> ToNetworkCharacters(IEnumerable<UnitEntityData> units)
+        {
+            var networkUnits = units
                 .Select((x, i) => new NetworkCharacter
                 {
                     Name = x.CharacterName,
@@ -325,7 +345,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
                 })
                 .ToList();
 
-            return partyCharacters;
+            return networkUnits;
         }
 
         public bool IsUnitInParty(string unitId)
@@ -2350,6 +2370,82 @@ namespace WOTRMultiplayer.Services.GameInteraction
                 }
 
                 _logger.LogError("Unable to update transition due to missing maps");
+            });
+        }
+
+        public void UpdateDungeonGameOverUIState(bool isInteractable, int readyPlayersCount, int totalPlayersCount)
+        {
+            _mainThreadAccessor.Post(() =>
+            {
+                var view = _uiAccessor.DungeonGameOverPCView;
+                if (view?.ViewModel == null)
+                {
+                    _logger.LogError("Unable to update dungeon game over screen due to null view model");
+                    return;
+                }
+
+                view.m_StartNewGameButton.Interactable = isInteractable;
+                view.m_LoadLatestSaveButton.Interactable = isInteractable && Game.Instance.SaveManager.GetLatestSave() != null;
+                view.m_MainMenuButton.Interactable = isInteractable;
+
+                var startNewGameButtonText = view.m_StartNewGameButton.GetComponentInChildren<TextMeshProUGUI>();
+                _uiSyncCountersService.UpdateButtonTextCounter(startNewGameButtonText, readyPlayersCount, totalPlayersCount);
+
+                var loadLatestSaveButtonText = view.m_LoadLatestSaveButton.GetComponentInChildren<TextMeshProUGUI>();
+                _uiSyncCountersService.UpdateButtonTextCounter(loadLatestSaveButtonText, readyPlayersCount, totalPlayersCount);
+
+                var mainMenuButtonText = view.m_MainMenuButton.GetComponentInChildren<TextMeshProUGUI>();
+                _uiSyncCountersService.UpdateButtonTextCounter(mainMenuButtonText, readyPlayersCount, totalPlayersCount);
+
+                _logger.LogInformation("Dungeon GameOver UI has been updated. IsInteractable={IsInteractable}, ReadyPlayers={ReadyPlayers}, TotalPlayers={TotalPlayers}", isInteractable, readyPlayersCount, totalPlayersCount);
+            });
+        }
+
+        public void StartNewDungeonGame()
+        {
+            _mainThreadAccessor.Post(() =>
+            {
+                var view = _uiAccessor.DungeonGameOverPCView;
+                if (view?.ViewModel == null)
+                {
+                    _logger.LogError("Unable to start new dungeon game due to null view model");
+                    return;
+                }
+
+                view.ViewModel.OnStartNewGame();
+                _logger.LogInformation("New Dungeon game has been started");
+            });
+        }
+
+        public void LoadLatestDungeonSaveGame()
+        {
+            _mainThreadAccessor.Post(() =>
+            {
+                var view = _uiAccessor.DungeonGameOverPCView;
+                if (view?.ViewModel == null)
+                {
+                    _logger.LogError("Unable to load latest dungeon save game due to null view model");
+                    return;
+                }
+
+                view.ViewModel.OnLoadLatestSave();
+                _logger.LogInformation("Latest dungeon save game has started to load");
+            });
+        }
+
+        public void ExitDungeonToMainMenu()
+        {
+            _mainThreadAccessor.Post(() =>
+            {
+                var view = _uiAccessor.DungeonGameOverPCView;
+                if (view?.ViewModel == null)
+                {
+                    _logger.LogError("Unable to load latest dungeon save game due to null view model");
+                    return;
+                }
+
+                view.ViewModel.GoToMainMenu(MessageModalBase.ButtonType.Yes);
+                _logger.LogInformation("Dungeon journey has been terminated");
             });
         }
 

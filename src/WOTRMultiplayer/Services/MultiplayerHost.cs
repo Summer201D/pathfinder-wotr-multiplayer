@@ -1280,6 +1280,24 @@ namespace WOTRMultiplayer.Services
             Send(message);
         }
 
+        public void OnDungeonGameOverGoToMainMenu()
+        {
+            var message = new NotifyDungeonGameOverTerminated();
+            Send(message);
+        }
+
+        public void OnDungeonGameOverLoadLatestSave()
+        {
+            var message = new NotifyDungeonGameOverLastSaveLoaded();
+            Send(message);
+        }
+
+        public void OnDungeonGameOverStartNewGame()
+        {
+            var message = new NotifyDungeonGameOverNewGameStarted();
+            Send(message);
+        }
+
         public void OnKingdomEnterSettlement(NetworkKingdomSettlement kingdomSettlement, bool requiresUnloadEvent, bool exitSettlementToGlobalMap)
         {
             var message = new NotifyKingdomSettlementEntered

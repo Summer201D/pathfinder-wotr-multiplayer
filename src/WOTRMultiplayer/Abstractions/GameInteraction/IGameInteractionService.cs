@@ -231,5 +231,13 @@ namespace WOTRMultiplayer.Abstractions.GameInteraction
         void SetNewGameCampaign(NetworkCampaign campaign);
 
         void SetNewGameLastAzlanti(bool isEnabled);
+
+        void UpdateDungeonGameOverUIState(bool isInteractable, int readyPlayersCount, int totalPlayersCount);
+
+        void StartNewDungeonGame();
+
+        void LoadLatestDungeonSaveGame();
+
+        void ExitDungeonToMainMenu();
     }
 }

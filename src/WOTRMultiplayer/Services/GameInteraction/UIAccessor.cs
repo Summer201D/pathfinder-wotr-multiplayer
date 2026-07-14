@@ -12,6 +12,7 @@ using Kingmaker.UI.MVVM._PCView.Crusade.LeaderLevelUp;
 using Kingmaker.UI.MVVM._PCView.Crusade.PointerMarker;
 using Kingmaker.UI.MVVM._PCView.Crusade.Recruit;
 using Kingmaker.UI.MVVM._PCView.Dialog;
+using Kingmaker.UI.MVVM._PCView.Dungeon;
 using Kingmaker.UI.MVVM._PCView.EscMenu;
 using Kingmaker.UI.MVVM._PCView.GlobalMap;
 using Kingmaker.UI.MVVM._PCView.GlobalMap.Menu;
@@ -111,6 +112,8 @@ namespace WOTRMultiplayer.Services.GameInteraction
         public MapIslandsPCView MapIslandsPCView => InGamePCView?.m_StaticPartPCView?.m_CreatedMapIslandsPCView;
 
         public MainMenuSideBarPCView MainMenuSideBarPCView => MainMenuPCView?.m_MainMenuSideBarPCView;
+
+        public DungeonGameOverPCView DungeonGameOverPCView => InGamePCView?.m_StaticPartPCView?.m_CreatedDungeonGameOverPCView;
 
         public void CloseAllWindows()
         {

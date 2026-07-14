@@ -702,7 +702,27 @@ namespace WOTRMultiplayer.Services
 
                // alushenyrra
                .On<NotifyAlyshenyrraCameraDirectionChanged>(OnNotifyAlyshenyrraCameraDirectionChanged)
+
+               // dungeon
+               .On<NotifyDungeonGameOverNewGameStarted>(OnNotifyDungeonGameOverNewGameStarted)
+               .On<NotifyDungeonGameOverLastSaveLoaded>(OnNotifyDungeonGameOverLastSaveLoaded)
+               .On<NotifyDungeonGameOverTerminated>(OnNotifyDungeonGameOverTerminated)
                ;
+        }
+
+        private void OnNotifyDungeonGameOverNewGameStarted(long receivedFrom, NotifyDungeonGameOverNewGameStarted message)
+        {
+            GameInteraction.StartNewDungeonGame();
+        }
+
+        private void OnNotifyDungeonGameOverLastSaveLoaded(long receivedFrom, NotifyDungeonGameOverLastSaveLoaded message)
+        {
+            GameInteraction.LoadLatestDungeonSaveGame();
+        }
+
+        private void OnNotifyDungeonGameOverTerminated(long receivedFrom, NotifyDungeonGameOverTerminated message)
+        {
+            GameInteraction.ExitDungeonToMainMenu();
         }
 
         private void OnNotifyNewGameSequenceLastAzlantiChanged(long receivedFrom, NotifyNewGameSequenceLastAzlantiChanged message)

@@ -217,5 +217,11 @@ namespace WOTRMultiplayer.Abstractions
         void OnNewGameSequenceCampaignChanged(NetworkCampaign campaign);
 
         void OnNewGameSequenceLastAzlantiChanged(bool isEnabled);
+
+        void OnDungeonGameOverGoToMainMenu();
+
+        void OnDungeonGameOverLoadLatestSave();
+
+        void OnDungeonGameOverStartNewGame();
     }
 }

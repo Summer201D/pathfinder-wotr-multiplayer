@@ -482,5 +482,21 @@ namespace WOTRMultiplayer.Playground.Core.Dummies
         public void SetNewGameLastAzlanti(bool isEnabled)
         {
         }
+
+        public void UpdateDungeonGameOverUIState(bool isInteractable, int readyPlayersCount, int totalPlayersCount)
+        {
+        }
+
+        public void StartNewDungeonGame()
+        {
+        }
+
+        public void LoadLatestDungeonSaveGame()
+        {
+        }
+
+        public void ExitDungeonToMainMenu()
+        {
+        }
     }
 }

@@ -1,9 +1,12 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Reflection;
 using System.Reflection.Emit;
 using HarmonyLib;
 using Kingmaker;
+using Kingmaker.Blueprints;
 using Kingmaker.Designers.EventConditionActionSystem.Actions;
+using Kingmaker.Dungeon;
 using Kingmaker.EntitySystem.Entities;
 using Kingmaker.UI.MVVM._VM.CharGen;
 using Kingmaker.UI.MVVM._VM.Party;
@@ -11,12 +14,25 @@ using Kingmaker.UI.MVVM._VM.ServiceWindows.CharacterInfo.Sections.LevelClassScor
 using Kingmaker.UnitLogic.Class.LevelUp;
 using Microsoft.Extensions.Logging;
 using WOTRMultiplayer.Entities.Leveling;
+using WOTRMultiplayer.HarmonyPatches.RandomIdGeneration;
 
 namespace WOTRMultiplayer.HarmonyPatches.Leveling
 {
     [HarmonyPatch]
     public class StartLevelingPatches
     {
+        //[HarmonyPatch(typeof(LevelUpController), nameof(LevelUpController.Start))]
+        //[HarmonyPrefix]
+        //public static void LevelUpController_Start_Prefix(LevelUpController __instance)
+        //{
+        //    if (!Main.Multiplayer.IsActive)
+        //    {
+        //        return;
+        //    }
+
+        //    Main.GetLogger<LevelUpController>().LogInformation("Start leveling. StackTrace={StackTrace}", Environment.StackTrace);
+        //}
+
         [HarmonyPatch(typeof(CharInfoExperienceVM), nameof(CharInfoExperienceVM.LevelUp))]
         [HarmonyPrefix]
         public static bool CharInfoExperienceVM_LevelUp_Prefix(CharInfoExperienceVM __instance)
@@ -95,6 +111,58 @@ namespace WOTRMultiplayer.HarmonyPatches.Leveling
             Main.Multiplayer.ForceLevelingUI(unitId, NetworkLevelingType.MythicLeveling);
         }
 
+        [HarmonyPatch(typeof(DungeonController), nameof(DungeonController.CreateMainCharacter))]
+        [HarmonyTranspiler]
+        public static IEnumerable<CodeInstruction> DungeonController_CreateMainCharacter_Transpiler(IEnumerable<CodeInstruction> codeInstructions)
+        {
+            var target = PatchesUtils.GetTranspilerTarget(MethodBase.GetCurrentMethod());
+            var extraCall = AccessTools.Method(typeof(StartLevelingPatches), nameof(StartLevelingPatches.CreateDungeonMainCharacter));
+            var lookFor = AccessTools.Method(typeof(Game), nameof(Game.CreateUnitVacuum));
+            var matcher = new CodeMatcher(codeInstructions);
+            var match = matcher.SearchForward(x => x.Calls(lookFor));
+            if (match.IsInvalid)
+            {
+                Main.GetLogger<StartLevelingPatches>().LogError("Transpiler has not been applied. Target={Target}", target);
+                matcher.Instructions();
+            }
+
+            var newInstructions = new List<CodeInstruction>()
+            {
+                new(OpCodes.Call, extraCall)
+            };
+
+            match = matcher.RemoveInstruction().Insert(newInstructions);
+            Main.GetLogger<StartLevelingPatches>().LogDebug("Transpiler has been applied. Target={Target}", target);
+            return matcher.Instructions();
+        }
+
+#pragma warning disable IDE0060 // Game is still in the stack, but it's not used because of instance method replacement. This looks cleaner than removing extra instruction at different index
+        private static UnitEntityData CreateDungeonMainCharacter(Game game, BlueprintUnit blueprintUnit)
+#pragma warning restore IDE0060
+        {
+            if (!Main.Multiplayer.IsActive)
+            {
+                return Game.Instance.CreateUnitVacuum(blueprintUnit);
+            }
+
+            try
+            {
+                var seededContext = Main.Multiplayer.GetSeededContext();
+                var identifier = $"{CommonTranspilerReplacements.GetSharedIdentifierPart()}:{nameof(CreateDungeonMainCharacter)}:{blueprintUnit.name}:{blueprintUnit.AssetGuid}_{seededContext.Id}";
+                var id = Main.Multiplayer.ValueGenerator.CreateGuid(seededContext.Lifetime, identifier).ToString();
+                var unit = new UnitEntityData(id, isInGame: true, blueprintUnit);
+                Main.GetLogger<EntitiesIdsPatches>().LogInformation("Dungeon Main Character has been generated. Id={Id}, DungeonSeed={DungeonSeed}", id, Game.Instance.Player.DungeonState.Seed);
+
+                Main.Multiplayer.ForceLevelingUI(id, NetworkLevelingType.DungeonRestart);
+                return unit;
+            }
+            catch (Exception ex)
+            {
+                Main.GetLogger<EntitiesIdsPatches>().LogError(ex, "Error while generating dungeon main character");
+                throw;
+            }
+        }
+
         [HarmonyPatch(typeof(Player), nameof(Player.CreateCustomCompanion))]
         [HarmonyTranspiler]
         public static IEnumerable<CodeInstruction> Player_CreateCustomCompanion_Transpiler(IEnumerable<CodeInstruction> codeInstructions)
@@ -128,7 +196,7 @@ namespace WOTRMultiplayer.HarmonyPatches.Leveling
             return matcher.Instructions();
         }
 
-        public static void OnCreateCompanion(UnitEntityData unitEntityData)
+        private static void OnCreateCompanion(UnitEntityData unitEntityData)
         {
             if (!Main.Multiplayer.IsActive)
             {

@@ -101,6 +101,8 @@ namespace WOTRMultiplayer.Entities
 
         public HashSet<long> PlayersInRespecWindow { get; set; } = [];
 
+        public HashSet<long> PlayersInDungeonGameOver { get; set; } = [];
+
         public NetworkGame(NetworkGameStartUp gameStartup)
         {
             StartUp = gameStartup;

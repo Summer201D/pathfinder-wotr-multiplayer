@@ -335,6 +335,18 @@ namespace WOTRMultiplayer.Services
             Send(message);
         }
 
+        public void OnDungeonGameOverShown()
+        {
+            AddPlayerToTracker(Game.PlayersInDungeonGameOver, Game.LocalPlayerId);
+            var message = new NotifyDungeonGameOverShown
+            {
+                PlayerId = Game.LocalPlayerId
+            };
+            Send(message);
+
+            UpdateDungeonGameOverUIState();
+        }
+
         public void OnEquipmentSlotChanged(NetworkEquipmentSlot equipmentSlot)
         {
             if (!IsControlledByPlayers(equipmentSlot.OwnerId) && !GameInteraction.IsUnitInParty(equipmentSlot.OwnerId))
@@ -1521,13 +1533,19 @@ namespace WOTRMultiplayer.Services
             {
                 NetworkLevelingType.MythicLeveling => WellKnownKeys.GameNotifications.Leveling.MythicLeveling.Completed.Key,
                 NetworkLevelingType.Mercenary => WellKnownKeys.GameNotifications.Leveling.Mercenary.Completed.Key,
-                NetworkLevelingType.NewGameSequence => null,
+                NetworkLevelingType.NewGameSequence or NetworkLevelingType.DungeonRestart => null,
                 NetworkLevelingType.Leveling or _ => WellKnownKeys.GameNotifications.Leveling.Completed.Key,
             };
 
             if (!string.IsNullOrEmpty(messageKey))
             {
                 PlayerNotification.AddCombatText(messageKey, CombatTextSeverity.Common, new UnitLogParameter(Game.Leveling.UnitId));
+            }
+
+            // dead -> new journey -> create new character
+            if (Game.Leveling.Type == NetworkLevelingType.DungeonRestart)
+            {
+                UpdateCharactersOwnership();
             }
 
             Game.Leveling = null;
@@ -2611,6 +2629,17 @@ namespace WOTRMultiplayer.Services
             }
         }
 
+        protected void UpdateDungeonGameOverUIState()
+        {
+            lock (ActionLock)
+            {
+                var readyPlayers = Game.PlayersInDungeonGameOver.Count;
+                var totalPlayers = GetSyncedPlayersCount();
+                var canUse = HasControlOverUI && readyPlayers >= totalPlayers;
+                GameInteraction.UpdateDungeonGameOverUIState(canUse, readyPlayers, totalPlayers);
+            }
+        }
+
         protected void UpdateSettlementUIState()
         {
             lock (ActionLock)
@@ -2992,6 +3021,7 @@ namespace WOTRMultiplayer.Services
             ResetPlayersTracker(Game.PlayersInDialogPopup);
             ResetPlayersTracker(Game.PlayersInCharacterSelectionWindow);
             ResetPlayersTracker(Game.PlayersInRespecWindow);
+            ResetPlayersTracker(Game.PlayersInDungeonGameOver);
 
             ResetPlayersTracker(Game.PlayersInGlobalMapCrusadeArmyInfo);
             ResetPlayersTracker(Game.PlayersInGlobalMapCrusadeArmyInfoMerge);
@@ -3529,7 +3559,17 @@ namespace WOTRMultiplayer.Services
                 // map objects
                 .On<NotifyTrapActivated>(OnNotifyTrapActivated)
                 .On<NotifyMapObjectCombinePartInteracted>(OnNotifyMapObjectCombinePartInteracted)
+
+                // dungeon
+                .On<NotifyDungeonGameOverShown>(OnNotifyDungeonGameOverShown)
                 ;
+        }
+
+        private void OnNotifyDungeonGameOverShown(long receivedFrom, NotifyDungeonGameOverShown message)
+        {
+            AddPlayerToTracker(Game.PlayersInDungeonGameOver, message.PlayerId);
+
+            UpdateDungeonGameOverUIState();
         }
 
         private void OnNotifyLootClosed(long receivedFrom, NotifyLootClosed message)
