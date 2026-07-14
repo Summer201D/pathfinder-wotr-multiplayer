@@ -3,6 +3,7 @@ using WOTRMultiplayer.Entities;
 using WOTRMultiplayer.Entities.Area;
 using WOTRMultiplayer.Entities.Combat.Crusades;
 using WOTRMultiplayer.Entities.Dialogs;
+using WOTRMultiplayer.Entities.Dungeon;
 using WOTRMultiplayer.Entities.GlobalMap;
 using WOTRMultiplayer.Entities.GlobalMap.Kingdom;
 using WOTRMultiplayer.Entities.Inspect;
@@ -223,5 +224,9 @@ namespace WOTRMultiplayer.Abstractions
         void OnDungeonGameOverLoadLatestSave();
 
         void OnDungeonGameOverStartNewGame();
+
+        void OnDungeonBoonSelected(NetworkBoon networkBoon);
+
+        void OnDungeonBoonConfirmed();
     }
 }

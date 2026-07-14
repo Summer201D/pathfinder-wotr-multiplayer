@@ -289,7 +289,10 @@
             NotifyDungeonGameOverShown,
             NotifyDungeonGameOverTerminated,
             NotifyDungeonGameOverLastSaveLoaded,
-            NotifyDungeonGameOverNewGameStarted
+            NotifyDungeonGameOverNewGameStarted,
+            NotifyDungeonBoonSelectorShown,
+            NotifyDungeonBoonSelected,
+            NotifyDungeonBoonConfirmed
         }
 
         public static class Mods

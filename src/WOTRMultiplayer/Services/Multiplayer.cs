@@ -17,6 +17,7 @@ using WOTRMultiplayer.Entities.AreaEffects;
 using WOTRMultiplayer.Entities.Combat;
 using WOTRMultiplayer.Entities.Combat.Crusades;
 using WOTRMultiplayer.Entities.Dialogs;
+using WOTRMultiplayer.Entities.Dungeon;
 using WOTRMultiplayer.Entities.Equipment;
 using WOTRMultiplayer.Entities.GlobalMap;
 using WOTRMultiplayer.Entities.GlobalMap.Kingdom;
@@ -4618,5 +4619,60 @@ namespace WOTRMultiplayer.Services
                 throw;
             }
         }
+
+        public void OnDungeonBoonSelectorShown()
+        {
+            try
+            {
+                if (_multiplayerActorAccessor == null)
+                {
+                    return;
+                }
+
+                _multiplayerActorAccessor.Current.OnDungeonBoonSelectorShown();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while showing dungeon boons");
+                throw;
+            }
+        }
+
+        public void OnDungeonBoonSelected(NetworkBoon networkBoon)
+        {
+            try
+            {
+                if (_multiplayerActorAccessor == null || _multiplayerActorAccessor.Client.IsActive)
+                {
+                    return;
+                }
+
+                _multiplayerActorAccessor.Host.OnDungeonBoonSelected(networkBoon);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while selecting dungeon boon");
+                throw;
+            }
+        }
+
+        public void OnDungeonBoonConfirmed()
+        {
+            try
+            {
+                if (_multiplayerActorAccessor == null || _multiplayerActorAccessor.Client.IsActive)
+                {
+                    return;
+                }
+
+                _multiplayerActorAccessor.Host.OnDungeonBoonConfirmed();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while confirming dungeon boon");
+                throw;
+            }
+        }
+
     }
 }

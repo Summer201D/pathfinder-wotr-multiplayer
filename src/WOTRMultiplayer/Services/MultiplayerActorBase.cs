@@ -347,6 +347,18 @@ namespace WOTRMultiplayer.Services
             UpdateDungeonGameOverUIState();
         }
 
+        public void OnDungeonBoonSelectorShown()
+        {
+            AddPlayerToTracker(Game.PlayersInDungeonBoonSelector, Game.LocalPlayerId);
+            var message = new NotifyDungeonBoonSelectorShown
+            {
+                PlayerId = Game.LocalPlayerId
+            };
+            Send(message);
+
+            UpdateDungeonBoonSelectorUIState();
+        }
+
         public void OnEquipmentSlotChanged(NetworkEquipmentSlot equipmentSlot)
         {
             if (!IsControlledByPlayers(equipmentSlot.OwnerId) && !GameInteraction.IsUnitInParty(equipmentSlot.OwnerId))
@@ -2629,6 +2641,18 @@ namespace WOTRMultiplayer.Services
             }
         }
 
+
+        protected void UpdateDungeonBoonSelectorUIState()
+        {
+            lock (ActionLock)
+            {
+                var readyPlayers = Game.PlayersInDungeonBoonSelector.Count;
+                var totalPlayers = GetSyncedPlayersCount();
+                var canUse = HasControlOverUI && readyPlayers >= totalPlayers;
+                GameInteraction.UpdateDungeonBoonUIState(canUse, readyPlayers, totalPlayers);
+            }
+        }
+
         protected void UpdateDungeonGameOverUIState()
         {
             lock (ActionLock)
@@ -3562,7 +3586,15 @@ namespace WOTRMultiplayer.Services
 
                 // dungeon
                 .On<NotifyDungeonGameOverShown>(OnNotifyDungeonGameOverShown)
+                .On<NotifyDungeonBoonSelectorShown>(OnNotifyDungeonBoonSelectorShown)
                 ;
+        }
+
+        private void OnNotifyDungeonBoonSelectorShown(long receivedFrom, NotifyDungeonBoonSelectorShown message)
+        {
+            AddPlayerToTracker(Game.PlayersInDungeonBoonSelector, message.PlayerId);
+
+            UpdateDungeonBoonSelectorUIState();
         }
 
         private void OnNotifyDungeonGameOverShown(long receivedFrom, NotifyDungeonGameOverShown message)

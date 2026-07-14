@@ -11,6 +11,7 @@ using WOTRMultiplayer.Entities.ActionBar;
 using WOTRMultiplayer.Entities.Area;
 using WOTRMultiplayer.Entities.Combat;
 using WOTRMultiplayer.Entities.Content;
+using WOTRMultiplayer.Entities.Dungeon;
 using WOTRMultiplayer.Entities.Equipment;
 using WOTRMultiplayer.Entities.Inspect;
 using WOTRMultiplayer.Entities.Items;
@@ -496,6 +497,18 @@ namespace WOTRMultiplayer.Playground.Core.Dummies
         }
 
         public void ExitDungeonToMainMenu()
+        {
+        }
+
+        public void UpdateDungeonBoonUIState(bool isInteractable, int readyPlayersCount, int totalPlayersCount)
+        {
+        }
+
+        public void SelectDungeonBoon(NetworkBoon networkBoon)
+        {
+        }
+
+        public void ConfirmDungeonBoon()
         {
         }
     }

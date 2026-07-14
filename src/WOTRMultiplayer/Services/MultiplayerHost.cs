@@ -20,6 +20,7 @@ using WOTRMultiplayer.Entities.Combat;
 using WOTRMultiplayer.Entities.Combat.Crusades;
 using WOTRMultiplayer.Entities.Content;
 using WOTRMultiplayer.Entities.Dialogs;
+using WOTRMultiplayer.Entities.Dungeon;
 using WOTRMultiplayer.Entities.GlobalMap;
 using WOTRMultiplayer.Entities.GlobalMap.Kingdom;
 using WOTRMultiplayer.Entities.Inspect;
@@ -1295,6 +1296,23 @@ namespace WOTRMultiplayer.Services
         public void OnDungeonGameOverStartNewGame()
         {
             var message = new NotifyDungeonGameOverNewGameStarted();
+            Send(message);
+        }
+
+        public void OnDungeonBoonSelected(NetworkBoon networkBoon)
+        {
+            var message = new NotifyDungeonBoonSelected
+            {
+                Boon = Mapper.Map<Networking.Messages.Contracts.NetworkBoon>(networkBoon)
+            };
+            Send(message);
+        }
+
+        public void OnDungeonBoonConfirmed()
+        {
+            ResetPlayersTracker(Game.PlayersInDungeonBoonSelector);
+
+            var message = new NotifyDungeonBoonConfirmed();
             Send(message);
         }
 

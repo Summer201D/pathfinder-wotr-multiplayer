@@ -103,6 +103,8 @@ namespace WOTRMultiplayer.Entities
 
         public HashSet<long> PlayersInDungeonGameOver { get; set; } = [];
 
+        public HashSet<long> PlayersInDungeonBoonSelector { get; set; } = [];
+
         public NetworkGame(NetworkGameStartUp gameStartup)
         {
             StartUp = gameStartup;

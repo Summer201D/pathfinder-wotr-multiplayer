@@ -81,6 +81,7 @@ using WOTRMultiplayer.Entities.ActionBar;
 using WOTRMultiplayer.Entities.Area;
 using WOTRMultiplayer.Entities.Combat;
 using WOTRMultiplayer.Entities.Content;
+using WOTRMultiplayer.Entities.Dungeon;
 using WOTRMultiplayer.Entities.Equipment;
 using WOTRMultiplayer.Entities.Inspect;
 using WOTRMultiplayer.Entities.Items;
@@ -2373,6 +2374,77 @@ namespace WOTRMultiplayer.Services.GameInteraction
             });
         }
 
+        public void UpdateDungeonBoonUIState(bool isInteractable, int readyPlayersCount, int totalPlayersCount)
+        {
+            _mainThreadAccessor.Post(() =>
+            {
+                var view = _uiAccessor.DungeonChooseBoonPCView;
+                if (view?.ViewModel == null)
+                {
+                    _logger.LogWarning("Unable to update dungeon boon selector due to null view model");
+                    return;
+                }
+
+                view.m_ConfirmButton.Interactable = isInteractable;
+                _uiSyncCountersService.UpdateButtonTextCounter(view.m_ComfirmButtonText, readyPlayersCount, totalPlayersCount);
+
+                foreach (var entry in view.m_DungeonBoonSelectorPCView?.m_WidgetListMvvm?.m_Entries ?? [])
+                {
+                    if (entry is Kingmaker.UI.MVVM._PCView.Dungeon.ChooseBoon.DungeonBoonSelectionItemPCView boonItem)
+                    {
+                        boonItem.m_Button.Interactable = isInteractable;
+                    }
+                }
+
+                _logger.LogInformation("Dungeon Boon Selector UI has been updated. IsInteractable={IsInteractable}, ReadyPlayers={ReadyPlayers}, TotalPlayers={TotalPlayers}", isInteractable, readyPlayersCount, totalPlayersCount);
+            });
+        }
+
+        public void SelectDungeonBoon(NetworkBoon networkBoon)
+        {
+            _mainThreadAccessor.Post(() =>
+            {
+                var view = _uiAccessor.DungeonChooseBoonPCView;
+                if (view?.ViewModel == null)
+                {
+                    _logger.LogWarning("Unable to select dungeon boon due to null view model");
+                    return;
+                }
+
+                // strict match -> try select at the same index -> select first
+                // fallbacks are only needed to avoid blocking the screen if boons are desynced for some reason, giving a chance to save/load without alt-f4
+                var selectedEntity = view.ViewModel.BoonSelector.EntitiesCollection
+                    .FirstOrDefault(x => string.Equals(x.Boon.AssetGuid.ToString(), networkBoon.Id, StringComparison.OrdinalIgnoreCase))
+                    ?? (view.ViewModel.BoonSelector.EntitiesCollection.Count > networkBoon.Index ? view.ViewModel.BoonSelector.EntitiesCollection[networkBoon.Index] : null)
+                    ?? view.ViewModel.BoonSelector.EntitiesCollection.FirstOrDefault();
+
+                if (selectedEntity == null)
+                {
+                    _logger.LogError("Selected boon is missing. Id={Id}, Name={Name}, Index={Index}", networkBoon.Id, networkBoon.Name, networkBoon.Index);
+                    return;
+                }
+
+                view.ViewModel.BoonSelector.SelectedEntity.Value = selectedEntity;
+                _logger.LogInformation("Dungeon Boon has been selected. Id={Id}, Name={Name}", selectedEntity.Boon.AssetGuid.ToString(), selectedEntity.Boon.name);
+            });
+        }
+
+        public void ConfirmDungeonBoon()
+        {
+            _mainThreadAccessor.Post(() =>
+            {
+                var view = _uiAccessor.DungeonChooseBoonPCView;
+                if (view?.ViewModel == null)
+                {
+                    _logger.LogWarning("Unable to confirm dungeon boon due to null view model");
+                    return;
+                }
+
+                view.ViewModel.Close();
+                _logger.LogInformation("Dungeon Boon has been confirmed");
+            });
+        }
+
         public void UpdateDungeonGameOverUIState(bool isInteractable, int readyPlayersCount, int totalPlayersCount)
         {
             _mainThreadAccessor.Post(() =>
@@ -2380,7 +2452,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
                 var view = _uiAccessor.DungeonGameOverPCView;
                 if (view?.ViewModel == null)
                 {
-                    _logger.LogError("Unable to update dungeon game over screen due to null view model");
+                    _logger.LogWarning("Unable to update dungeon game over screen due to null view model");
                     return;
                 }
 
