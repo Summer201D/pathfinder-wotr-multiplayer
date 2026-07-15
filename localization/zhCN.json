@@ -277,7 +277,7 @@
         },
         "gameNotifications": {
             "dialogs": {
-                "waitingForOtherPlayers": "正在等待其他玩家见证对话文本"
+                "waitingForOtherPlayers": "有些玩家还没收到提示"
             },
             "rolls": {
                 "missingDamageRoll": "获取 {0} 单位的伤害掷骰时出错。\n这必然会导致游戏不同步",
