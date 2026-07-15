@@ -5,12 +5,10 @@ using System.Threading.Tasks;
 using Kingmaker;
 using Kingmaker.Blueprints;
 using Kingmaker.DialogSystem.Blueprints;
-using Kingmaker.EntitySystem.Entities;
 using Kingmaker.Localization;
 using Kingmaker.UI;
 using Kingmaker.UI.MVVM._PCView.Dialog.Dialog;
 using Kingmaker.UI.MVVM._PCView.InGame;
-using Kingmaker.View.MapObjects;
 using Microsoft.Extensions.Logging;
 using Owlcat.Runtime.Core.Utils;
 using Owlcat.Runtime.UI.Controls.Button;
@@ -190,29 +188,54 @@ namespace WOTRMultiplayer.Services.GameInteraction
 
         public Task<bool> StartDialogAsync(NetworkDialog networkDialog)
         {
-            // this is kinda sketchy, but we need to really know if dialog is already in progress
-            // starting dialog is really important as it's required to send `NotifyDialogStarted` to clients
-            // unfortunately blueprints can be loaded in mainthread only which means we can't get result right away
-            // so it's kinda a workaround so caller (MultiplayerHost) could wait to see if `NotifyDialogStarted` needs to be manually triggered
+            // trying to start a dialog if one is not already in progress
+            // clients can't start dialogs on their own unless it's scripted, so this only happens once the dialog has been confirmed by the host
             var hasStartedDialogTask = new TaskCompletionSource<bool>();
             _mainThreadAccessor.Post(() =>
             {
-                _logger.LogInformation("Start dialog. Id={Id}, Name={Name}, TargetUnitId={TargetUnitId}, InitiatorUnitId={InitiatorUnitId}, MapObjectId={MapObjectId}, SpeakerKey={SpeakerKey}",
+                _logger.LogInformation("Trying to start dialog. Id={Id}, Name={Name}, TargetUnitId={TargetUnitId}, InitiatorUnitId={InitiatorUnitId}, MapObjectId={MapObjectId}, SpeakerKey={SpeakerKey}",
                     networkDialog.Id, networkDialog.Name, networkDialog.TargetUnitId, networkDialog.InitiatorUnitId, networkDialog.MapObjectId, networkDialog.SpeakerKey);
 
-                var dialogBlueprint = ResourcesLibrary.TryGetBlueprint<BlueprintDialog>(networkDialog.Id);
-                if (dialogBlueprint == null)
+                try
                 {
-                    _logger.LogError("Unable to find dialog. DialogName={DialogName}", networkDialog.Id);
-                    return;
+                    var dialogBlueprint = ResourcesLibrary.TryGetBlueprint<BlueprintDialog>(networkDialog.Id);
+                    if (dialogBlueprint == null)
+                    {
+                        _logger.LogError("Unable to find dialog. DialogName={DialogName}, DialogId={DialogId}", networkDialog.Name, networkDialog.Id);
+                        return;
+                    }
+
+                    var target = _gameStateLookupService.GetUnitEntity(networkDialog.TargetUnitId);
+                    var initiator = _gameStateLookupService.GetUnitEntity(networkDialog.InitiatorUnitId);
+                    var mapObject = _gameStateLookupService.GetMapObject(networkDialog.MapObjectId);
+                    var speaker = networkDialog.SpeakerKey == null ? null : new LocalizedString { Key = networkDialog.SpeakerKey };
+
+                    var currentDialog = Game.Instance.DialogController.Dialog;
+                    if (currentDialog == null)
+                    {
+                        _logger.LogInformation("New dialog has been started. DialogName={DialogName}, DialogId={DialogId}", dialogBlueprint.name, dialogBlueprint.AssetGuid.ToString());
+                        Game.Instance.DialogController.StartDialog(dialogBlueprint, initiator, target, mapObject?.View, speaker);
+                        hasStartedDialogTask.SetResult(true);
+                        return;
+                    }
+
+                    if (string.Equals(currentDialog.AssetGuid.ToString(), dialogBlueprint.AssetGuid.ToString(), StringComparison.OrdinalIgnoreCase))
+                    {
+                        _logger.LogInformation("Requested dialog already started (most likely due to scripted zone), nothing to do here. DialogName={DialogName}, DialogId={DialogId}", currentDialog.name, currentDialog.AssetGuid.ToString());
+                        hasStartedDialogTask.SetResult(false);
+                        return;
+                    }
+
+                    _logger.LogWarning("Another dialog is already in progress. CurrentDialogName={CurrentDialogName}, CurrentDialogId={CurrentDialogId}, RequestedDialogName={RequestedDialogName}, RequestedDialogId={RequestedDialogId}",
+                        currentDialog.name, currentDialog.AssetGuid.ToString(), dialogBlueprint.name, dialogBlueprint.AssetGuid.ToString());
+                    hasStartedDialogTask.SetResult(false);
                 }
-
-                var target = _gameStateLookupService.GetUnitEntity(networkDialog.TargetUnitId);
-                var initiator = _gameStateLookupService.GetUnitEntity(networkDialog.InitiatorUnitId);
-                var mapObject = _gameStateLookupService.GetMapObject(networkDialog.MapObjectId);
-                var speaker = networkDialog.SpeakerKey == null ? null : new LocalizedString { Key = networkDialog.SpeakerKey };
-
-                StartDialog(hasStartedDialogTask, dialogBlueprint, initiator, target, mapObject?.View, speaker);
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error while starting a dialog");
+                    hasStartedDialogTask.SetResult(false);
+                    throw;
+                }
             });
 
             return hasStartedDialogTask.Task;
@@ -356,19 +379,6 @@ namespace WOTRMultiplayer.Services.GameInteraction
                     image.sprite = portrait;
                 }
             }
-        }
-
-        private void StartDialog(TaskCompletionSource<bool> hasStartedDialogTask, BlueprintDialog dialog, UnitEntityData initiator, UnitEntityData target, MapObjectView mapObjectView, LocalizedString customSpeakerName)
-        {
-            if (string.Equals(Game.Instance.DialogController.Dialog?.name, dialog.name, StringComparison.OrdinalIgnoreCase))
-            {
-                _logger.LogInformation("Requested dialog already started (most likely due to scripted zone), nothing to do here. DialogName={DialogName}", dialog.name);
-                hasStartedDialogTask.SetResult(false);
-                return;
-            }
-
-            Game.Instance.DialogController.StartDialog(dialog, initiator, target, mapObjectView, customSpeakerName);
-            hasStartedDialogTask.SetResult(true);
         }
     }
 }

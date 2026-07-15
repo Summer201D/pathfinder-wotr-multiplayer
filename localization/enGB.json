@@ -277,7 +277,7 @@
         },
         "gameNotifications": {
             "dialogs": {
-                "waitingForOtherPlayers": "Waiting for other players to witness cue"
+                "waitingForOtherPlayers": "Some players have not seen the cue yet"
             },
             "rolls": {
                 "missingDamageRoll": "Error retrieving damage roll for {0} unit.\nThis guarantees desync in the game",
