@@ -10,6 +10,8 @@ using Kingmaker.UI.MVVM._PCView.Crusade.LeaderLevelUp;
 using Kingmaker.UI.MVVM._PCView.Crusade.PointerMarker;
 using Kingmaker.UI.MVVM._PCView.Crusade.Recruit;
 using Kingmaker.UI.MVVM._PCView.Dialog;
+using Kingmaker.UI.MVVM._PCView.Dungeon;
+using Kingmaker.UI.MVVM._PCView.Dungeon.ChooseBoon;
 using Kingmaker.UI.MVVM._PCView.EscMenu;
 using Kingmaker.UI.MVVM._PCView.GlobalMap;
 using Kingmaker.UI.MVVM._PCView.GlobalMap.Menu;
@@ -118,6 +120,10 @@ namespace WOTRMultiplayer.Abstractions.GameInteraction
         MapIslandsPCView MapIslandsPCView { get; }
 
         MainMenuSideBarPCView MainMenuSideBarPCView { get; }
+
+        DungeonGameOverPCView DungeonGameOverPCView { get; }
+
+        DungeonChooseBoonPCView DungeonChooseBoonPCView { get; }
 
         void CloseAllWindows();
     }

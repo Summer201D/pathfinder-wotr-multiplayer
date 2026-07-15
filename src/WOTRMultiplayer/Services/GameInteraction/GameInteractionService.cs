@@ -21,6 +21,7 @@ using Kingmaker.Controllers.Units;
 using Kingmaker.Craft;
 using Kingmaker.Designers.EventConditionActionSystem.ContextData;
 using Kingmaker.DLC;
+using Kingmaker.Dungeon;
 using Kingmaker.ElementsSystem;
 using Kingmaker.EntitySystem;
 using Kingmaker.EntitySystem.Entities;
@@ -80,6 +81,7 @@ using WOTRMultiplayer.Entities.ActionBar;
 using WOTRMultiplayer.Entities.Area;
 using WOTRMultiplayer.Entities.Combat;
 using WOTRMultiplayer.Entities.Content;
+using WOTRMultiplayer.Entities.Dungeon;
 using WOTRMultiplayer.Entities.Equipment;
 using WOTRMultiplayer.Entities.Inspect;
 using WOTRMultiplayer.Entities.Items;
@@ -314,7 +316,26 @@ namespace WOTRMultiplayer.Services.GameInteraction
 
         public List<NetworkCharacter> GetPartyPlayers()
         {
-            var partyCharacters = Game.Instance.Player.Party
+            // Dungeon restart
+            if (Game.Instance.Player.IsClearMainCharacterData && DungeonController.IsDungeonCampaign)
+            {
+                var main = Game.Instance.Player.AllCharacters.FirstOrDefault();
+                if (main == null)
+                {
+                    return [];
+                }
+
+                var character = ToNetworkCharacters([main]);
+                return character;
+            }
+
+            var partyCharacters = ToNetworkCharacters(Game.Instance.Player.Party);
+            return partyCharacters;
+        }
+
+        private List<NetworkCharacter> ToNetworkCharacters(IEnumerable<UnitEntityData> units)
+        {
+            var networkUnits = units
                 .Select((x, i) => new NetworkCharacter
                 {
                     Name = x.CharacterName,
@@ -325,7 +346,7 @@ namespace WOTRMultiplayer.Services.GameInteraction
                 })
                 .ToList();
 
-            return partyCharacters;
+            return networkUnits;
         }
 
         public bool IsUnitInParty(string unitId)
@@ -2350,6 +2371,153 @@ namespace WOTRMultiplayer.Services.GameInteraction
                 }
 
                 _logger.LogError("Unable to update transition due to missing maps");
+            });
+        }
+
+        public void UpdateDungeonBoonUIState(bool isInteractable, int readyPlayersCount, int totalPlayersCount)
+        {
+            _mainThreadAccessor.Post(() =>
+            {
+                var view = _uiAccessor.DungeonChooseBoonPCView;
+                if (view?.ViewModel == null)
+                {
+                    _logger.LogWarning("Unable to update dungeon boon selector due to null view model");
+                    return;
+                }
+
+                view.m_ConfirmButton.Interactable = isInteractable;
+                _uiSyncCountersService.UpdateButtonTextCounter(view.m_ComfirmButtonText, readyPlayersCount, totalPlayersCount);
+
+                foreach (var entry in view.m_DungeonBoonSelectorPCView?.m_WidgetListMvvm?.m_Entries ?? [])
+                {
+                    if (entry is Kingmaker.UI.MVVM._PCView.Dungeon.ChooseBoon.DungeonBoonSelectionItemPCView boonItem)
+                    {
+                        boonItem.m_Button.Interactable = isInteractable;
+                    }
+                }
+
+                _logger.LogInformation("Dungeon Boon Selector UI has been updated. IsInteractable={IsInteractable}, ReadyPlayers={ReadyPlayers}, TotalPlayers={TotalPlayers}", isInteractable, readyPlayersCount, totalPlayersCount);
+            });
+        }
+
+        public void SelectDungeonBoon(NetworkBoon networkBoon)
+        {
+            _mainThreadAccessor.Post(() =>
+            {
+                var view = _uiAccessor.DungeonChooseBoonPCView;
+                if (view?.ViewModel == null)
+                {
+                    _logger.LogWarning("Unable to select dungeon boon due to null view model");
+                    return;
+                }
+
+                // strict match -> try select at the same index -> select first
+                // fallbacks are only needed to avoid blocking the screen if boons are desynced for some reason, giving a chance to save/load without alt-f4
+                var selectedEntity = view.ViewModel.BoonSelector.EntitiesCollection
+                    .FirstOrDefault(x => string.Equals(x.Boon.AssetGuid.ToString(), networkBoon.Id, StringComparison.OrdinalIgnoreCase))
+                    ?? (view.ViewModel.BoonSelector.EntitiesCollection.Count > networkBoon.Index ? view.ViewModel.BoonSelector.EntitiesCollection[networkBoon.Index] : null)
+                    ?? view.ViewModel.BoonSelector.EntitiesCollection.FirstOrDefault();
+
+                if (selectedEntity == null)
+                {
+                    _logger.LogError("Selected boon is missing. Id={Id}, Name={Name}, Index={Index}", networkBoon.Id, networkBoon.Name, networkBoon.Index);
+                    return;
+                }
+
+                view.ViewModel.BoonSelector.SelectedEntity.Value = selectedEntity;
+                _logger.LogInformation("Dungeon Boon has been selected. Id={Id}, Name={Name}", selectedEntity.Boon.AssetGuid.ToString(), selectedEntity.Boon.name);
+            });
+        }
+
+        public void ConfirmDungeonBoon()
+        {
+            _mainThreadAccessor.Post(() =>
+            {
+                var view = _uiAccessor.DungeonChooseBoonPCView;
+                if (view?.ViewModel == null)
+                {
+                    _logger.LogWarning("Unable to confirm dungeon boon due to null view model");
+                    return;
+                }
+
+                view.ViewModel.Close();
+                _logger.LogInformation("Dungeon Boon has been confirmed");
+            });
+        }
+
+        public void UpdateDungeonGameOverUIState(bool isInteractable, int readyPlayersCount, int totalPlayersCount)
+        {
+            _mainThreadAccessor.Post(() =>
+            {
+                var view = _uiAccessor.DungeonGameOverPCView;
+                if (view?.ViewModel == null)
+                {
+                    _logger.LogWarning("Unable to update dungeon game over screen due to null view model");
+                    return;
+                }
+
+                view.m_StartNewGameButton.Interactable = isInteractable;
+                view.m_LoadLatestSaveButton.Interactable = isInteractable && Game.Instance.SaveManager.GetLatestSave() != null;
+                view.m_MainMenuButton.Interactable = isInteractable;
+
+                var startNewGameButtonText = view.m_StartNewGameButton.GetComponentInChildren<TextMeshProUGUI>();
+                _uiSyncCountersService.UpdateButtonTextCounter(startNewGameButtonText, readyPlayersCount, totalPlayersCount);
+
+                var loadLatestSaveButtonText = view.m_LoadLatestSaveButton.GetComponentInChildren<TextMeshProUGUI>();
+                _uiSyncCountersService.UpdateButtonTextCounter(loadLatestSaveButtonText, readyPlayersCount, totalPlayersCount);
+
+                var mainMenuButtonText = view.m_MainMenuButton.GetComponentInChildren<TextMeshProUGUI>();
+                _uiSyncCountersService.UpdateButtonTextCounter(mainMenuButtonText, readyPlayersCount, totalPlayersCount);
+
+                _logger.LogInformation("Dungeon GameOver UI has been updated. IsInteractable={IsInteractable}, ReadyPlayers={ReadyPlayers}, TotalPlayers={TotalPlayers}", isInteractable, readyPlayersCount, totalPlayersCount);
+            });
+        }
+
+        public void StartNewDungeonGame()
+        {
+            _mainThreadAccessor.Post(() =>
+            {
+                var view = _uiAccessor.DungeonGameOverPCView;
+                if (view?.ViewModel == null)
+                {
+                    _logger.LogError("Unable to start new dungeon game due to null view model");
+                    return;
+                }
+
+                view.ViewModel.OnStartNewGame();
+                _logger.LogInformation("New Dungeon game has been started");
+            });
+        }
+
+        public void LoadLatestDungeonSaveGame()
+        {
+            _mainThreadAccessor.Post(() =>
+            {
+                var view = _uiAccessor.DungeonGameOverPCView;
+                if (view?.ViewModel == null)
+                {
+                    _logger.LogError("Unable to load latest dungeon save game due to null view model");
+                    return;
+                }
+
+                view.ViewModel.OnLoadLatestSave();
+                _logger.LogInformation("Latest dungeon save game has started to load");
+            });
+        }
+
+        public void ExitDungeonToMainMenu()
+        {
+            _mainThreadAccessor.Post(() =>
+            {
+                var view = _uiAccessor.DungeonGameOverPCView;
+                if (view?.ViewModel == null)
+                {
+                    _logger.LogError("Unable to load latest dungeon save game due to null view model");
+                    return;
+                }
+
+                view.ViewModel.GoToMainMenu(MessageModalBase.ButtonType.Yes);
+                _logger.LogInformation("Dungeon journey has been terminated");
             });
         }
 

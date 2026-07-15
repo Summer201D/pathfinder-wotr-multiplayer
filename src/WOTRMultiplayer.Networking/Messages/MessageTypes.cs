@@ -285,7 +285,14 @@
             NotifyTacticalCombatAccelerationChanged,
             NotifyLootClosed,
             NotifyNewGameSequenceCampaignChanged,
-            NotifyNewGameSequenceLastAzlantiChanged
+            NotifyNewGameSequenceLastAzlantiChanged,
+            NotifyDungeonGameOverShown,
+            NotifyDungeonGameOverTerminated,
+            NotifyDungeonGameOverLastSaveLoaded,
+            NotifyDungeonGameOverNewGameStarted,
+            NotifyDungeonBoonSelectorShown,
+            NotifyDungeonBoonSelected,
+            NotifyDungeonBoonConfirmed
         }
 
         public static class Mods

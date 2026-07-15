@@ -82,6 +82,7 @@ namespace WOTRMultiplayer.UI
             WellKnownSettings.Networking.HostPortRangeStart.Key,
             WellKnownSettings.Networking.HostPortRangeEnd.Key,
             WellKnownSettings.Networking.PeerToPeerPort.Key,
+            WellKnownSettings.DangerZone.DefaultForcedPauseTimeout.Key,
             ], StringComparer.OrdinalIgnoreCase);
 
         public UIFactory(

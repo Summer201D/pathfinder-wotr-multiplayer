@@ -65,7 +65,7 @@ namespace WOTRMultiplayer.HarmonyPatches.RandomIdGeneration
         {
             var target = PatchesUtils.GetTranspilerTarget(MethodBase.GetCurrentMethod());
             var lookFor = AccessTools.Method(typeof(Game), nameof(Game.CreateUnitVacuum));
-            var replaceWith = AccessTools.Method(typeof(EntitiesIdsPatches), nameof(EntitiesIdsPatches.CreateUnitVacuum));
+            var replaceWith = AccessTools.Method(typeof(EntitiesIdsPatches), nameof(EntitiesIdsPatches.CreateCustomCompanion));
             var matcher = new CodeMatcher(instructions);
             var match = matcher.SearchForward(x => x.Calls(lookFor));
             if (match.IsInvalid)
@@ -279,7 +279,6 @@ namespace WOTRMultiplayer.HarmonyPatches.RandomIdGeneration
             var replaceWith = AccessTools.Method(typeof(EntitiesIdsPatches), nameof(EntitiesIdsPatches.GetNewChangeBlueprintUniqueId));
             var newInstructions = new List<CodeInstruction>()
             {
-                new(OpCodes.Ldarg_1),
                 new(OpCodes.Ldarg_2),
                 new(OpCodes.Call, replaceWith),
             };
@@ -373,7 +372,7 @@ namespace WOTRMultiplayer.HarmonyPatches.RandomIdGeneration
             }
         }
 
-        private static UnitEntityData CreateUnitVacuum(BlueprintUnit blueprintUnit)
+        private static UnitEntityData CreateCustomCompanion(BlueprintUnit blueprintUnit)
         {
             if (!Main.Multiplayer.IsActive)
             {
@@ -390,7 +389,7 @@ namespace WOTRMultiplayer.HarmonyPatches.RandomIdGeneration
             }
             catch (Exception ex)
             {
-                Main.GetLogger<EntitiesIdsPatches>().LogError(ex, "Error while generating custom companion unit Id. Type={Type}", IdType.CustomCompanionUnit);
+                Main.GetLogger<EntitiesIdsPatches>().LogError(ex, "Error while generating custom companion. Type={Type}", IdType.CustomCompanionUnit);
                 throw;
             }
         }
@@ -488,7 +487,7 @@ namespace WOTRMultiplayer.HarmonyPatches.RandomIdGeneration
             }
         }
 
-        private static string GetNewChangeBlueprintUniqueId(UnitEntityData unitEntityData, BlueprintUnit blueprintUnit)
+        private static string GetNewChangeBlueprintUniqueId(BlueprintUnit blueprintUnit)
         {
             if (!Main.Multiplayer.IsActive)
             {

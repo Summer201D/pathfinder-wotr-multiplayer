@@ -375,5 +375,9 @@ namespace WOTRMultiplayer.Abstractions
         void ForceCombatEnd();
 
         void OnLootClosed(NetworkMapObject mapObject);
+
+        void OnDungeonGameOverShown();
+
+        void OnDungeonBoonSelectorShown();
     }
 }

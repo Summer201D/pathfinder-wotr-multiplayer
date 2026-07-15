@@ -5,6 +5,7 @@
         Leveling,
         MythicLeveling,
         Mercenary,
-        NewGameSequence
+        NewGameSequence,
+        DungeonRestart
     }
 }

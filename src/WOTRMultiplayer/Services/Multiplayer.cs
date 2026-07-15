@@ -17,6 +17,7 @@ using WOTRMultiplayer.Entities.AreaEffects;
 using WOTRMultiplayer.Entities.Combat;
 using WOTRMultiplayer.Entities.Combat.Crusades;
 using WOTRMultiplayer.Entities.Dialogs;
+using WOTRMultiplayer.Entities.Dungeon;
 using WOTRMultiplayer.Entities.Equipment;
 using WOTRMultiplayer.Entities.GlobalMap;
 using WOTRMultiplayer.Entities.GlobalMap.Kingdom;
@@ -4546,5 +4547,132 @@ namespace WOTRMultiplayer.Services
                 throw;
             }
         }
+
+        public void OnDungeonGameOverShown()
+        {
+            try
+            {
+                if (_multiplayerActorAccessor == null)
+                {
+                    return;
+                }
+
+                _multiplayerActorAccessor.Current.OnDungeonGameOverShown();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while showing dungeon game over screen");
+                throw;
+            }
+        }
+
+        public void OnDungeonGameOverGoToMainMenu()
+        {
+            try
+            {
+                if (_multiplayerActorAccessor == null || _multiplayerActorAccessor.Client.IsActive)
+                {
+                    return;
+                }
+
+                _multiplayerActorAccessor.Host.OnDungeonGameOverGoToMainMenu();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while ending dungeon journey");
+                throw;
+            }
+        }
+
+        public void OnDungeonGameOverLoadLatestSave()
+        {
+            try
+            {
+                if (_multiplayerActorAccessor == null || _multiplayerActorAccessor.Client.IsActive)
+                {
+                    return;
+                }
+
+                _multiplayerActorAccessor.Host.OnDungeonGameOverLoadLatestSave();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while loading latest dungeon save game");
+                throw;
+            }
+        }
+
+        public void OnDungeonGameOverStartNewGame()
+        {
+            try
+            {
+                if (_multiplayerActorAccessor == null || _multiplayerActorAccessor.Client.IsActive)
+                {
+                    return;
+                }
+
+                _multiplayerActorAccessor.Host.OnDungeonGameOverStartNewGame();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while restarting dungeon journey");
+                throw;
+            }
+        }
+
+        public void OnDungeonBoonSelectorShown()
+        {
+            try
+            {
+                if (_multiplayerActorAccessor == null)
+                {
+                    return;
+                }
+
+                _multiplayerActorAccessor.Current.OnDungeonBoonSelectorShown();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while showing dungeon boons");
+                throw;
+            }
+        }
+
+        public void OnDungeonBoonSelected(NetworkBoon networkBoon)
+        {
+            try
+            {
+                if (_multiplayerActorAccessor == null || _multiplayerActorAccessor.Client.IsActive)
+                {
+                    return;
+                }
+
+                _multiplayerActorAccessor.Host.OnDungeonBoonSelected(networkBoon);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while selecting dungeon boon");
+                throw;
+            }
+        }
+
+        public void OnDungeonBoonConfirmed()
+        {
+            try
+            {
+                if (_multiplayerActorAccessor == null || _multiplayerActorAccessor.Client.IsActive)
+                {
+                    return;
+                }
+
+                _multiplayerActorAccessor.Host.OnDungeonBoonConfirmed();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while confirming dungeon boon");
+                throw;
+            }
+        }
+
     }
 }

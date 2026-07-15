@@ -7,6 +7,7 @@ using WOTRMultiplayer.Entities.Combat;
 using WOTRMultiplayer.Entities.Combat.Crusades;
 using WOTRMultiplayer.Entities.Content;
 using WOTRMultiplayer.Entities.Dialogs;
+using WOTRMultiplayer.Entities.Dungeon;
 using WOTRMultiplayer.Entities.Equipment;
 using WOTRMultiplayer.Entities.GlobalMap;
 using WOTRMultiplayer.Entities.GlobalMap.Kingdom;
@@ -365,6 +366,9 @@ namespace WOTRMultiplayer.Config.Mapping
                 .ReverseMap();
 
             CreateMap<NetworkCampaign, Networking.Messages.Contracts.NetworkCampaign>()
+                .ReverseMap();
+
+            CreateMap<NetworkBoon, Networking.Messages.Contracts.NetworkBoon>()
                 .ReverseMap();
         }
     }
