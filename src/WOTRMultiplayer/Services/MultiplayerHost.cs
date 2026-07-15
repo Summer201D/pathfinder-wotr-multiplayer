@@ -267,7 +267,8 @@ namespace WOTRMultiplayer.Services
             var missingPlayers = GetPlayersWhoHaveNotSeenCueYet(cueName);
             if (missingPlayers.Count > 0)
             {
-                Logger.LogWarning("Some players haven't seen the dialog yet. Players={Players}", string.Join(";", missingPlayers.Select(p => p.Name)));
+                var names = string.Join(";", missingPlayers.Select(p => p.Name));
+                Logger.LogWarning("Some players haven't seen the dialog yet. Players={Players}", names);
                 DialogInteraction.PlayUnableToSelectCueAnimation(answerName);
                 PlayerNotification.ShowWarningNotification(WellKnownKeys.GameNotifications.Dialogs.WaitingForOtherPlayers.Key, addToLog: false);
                 return false;
@@ -2058,7 +2059,7 @@ namespace WOTRMultiplayer.Services
                 return;
             }
 
-            Logger.LogInformation("Host dialog is already in progress. Sending dialog confirmation");
+            Logger.LogInformation("Host dialog is already in progress");
             var dialogStarted = new NotifyDialogStarted
             {
                 Dialog = Mapper.Map<Networking.Messages.Contracts.NetworkDialog>(Game.DialogState.Dialog)

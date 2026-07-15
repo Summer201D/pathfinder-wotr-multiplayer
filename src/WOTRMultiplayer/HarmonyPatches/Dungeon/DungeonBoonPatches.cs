@@ -30,7 +30,6 @@ namespace WOTRMultiplayer.HarmonyPatches.Dungeon
                 Main.Multiplayer.OnDungeonBoonSelected(networkBoon);
             }));
 
-
             __instance.AddDisposable(__instance.m_ConfirmButton.OnLeftClickAsObservable().Subscribe(_ =>
             {
                 Main.Multiplayer.OnDungeonBoonConfirmed();
