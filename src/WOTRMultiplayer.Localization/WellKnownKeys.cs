@@ -1045,6 +1045,12 @@ public static class WellKnownKeys
             {
                 public static string Key { get; set; }
             }
+
+            [Description("modConflict")]
+            public static class ModConflict
+            {
+                public static string Key { get; set; }
+            }
         }
     }
 

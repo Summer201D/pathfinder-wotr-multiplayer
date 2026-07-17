@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
-using System.Net.Sockets;
 using System.Threading.Tasks;
 using AutoMapper;
 using Kingmaker.UI.Kingdom;
@@ -1805,8 +1804,8 @@ namespace WOTRMultiplayer.Services
         {
             switch (networkError.Type)
             {
-                case NetworkErrorType.SocketError when networkError.SocketError != null:
-                    InvokeOnNetworkError(WellKnownKeys.MultiplayerClient.Errors.NetworkError.Key, networkError.SocketError.Value);
+                case NetworkErrorType.SocketError when !string.IsNullOrEmpty(networkError.Reason):
+                    InvokeOnNetworkError(WellKnownKeys.MultiplayerClient.Errors.NetworkError.Key, networkError.Reason);
                     break;
                 case NetworkErrorType.Disconnected:
                     if (Game?.Players != null)
@@ -1816,7 +1815,7 @@ namespace WOTRMultiplayer.Services
                         GameInteraction.MakeModalMessageInteractable();
                         UpdateRespecWindowStateOnPlayerLeave(Game.LocalPlayerId);
                     }
-                    InvokeOnNetworkError(WellKnownKeys.MultiplayerClient.Errors.Disconnected.Key);
+                    InvokeOnNetworkError(WellKnownKeys.MultiplayerClient.Errors.Disconnected.Key, networkError.Reason);
                     break;
                 case NetworkErrorType.UnreachableSignalingServer:
                     InvokeOnNetworkError(WellKnownKeys.MultiplayerClient.Errors.UnreachableSignalingServer.Key);
@@ -1829,6 +1828,9 @@ namespace WOTRMultiplayer.Services
                     break;
                 case NetworkErrorType.P2PTimeout:
                     InvokeOnNetworkError(WellKnownKeys.MultiplayerClient.Errors.PeerToPeerTimeout.Key);
+                    break;
+                case NetworkErrorType.ModConflict:
+                    InvokeOnNetworkError(WellKnownKeys.MultiplayerClient.Errors.ModConflict.Key);
                     break;
                 case NetworkErrorType.Generic:
                 default:
@@ -1854,10 +1856,10 @@ namespace WOTRMultiplayer.Services
             Send(message);
         }
 
-        private void InvokeOnNetworkError(string error, SocketError? socketError = null)
+        private void InvokeOnNetworkError(string error, string reason = null)
         {
             OnNetworkError?.Invoke();
-            PlayerNotification.ShowModalMessage(error, args: socketError);
+            PlayerNotification.ShowModalMessage(error, args: reason);
         }
 
         private TimeSpan GetTurnStartDelay()

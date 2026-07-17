@@ -29,7 +29,7 @@ namespace WOTRMultiplayer.Networking.Channels.P2P
 
         public Action<int> OnPeerConnectedEvent { get; set; }
 
-        public Action<int> OnPeerDisconnectedEvent { get; set; }
+        public Action<int, string> OnPeerDisconnectedEvent { get; set; }
 
         public Action<NetworkMessageMetadata> OnMessageReceived { get; set; }
 
@@ -129,8 +129,16 @@ namespace WOTRMultiplayer.Networking.Channels.P2P
 
         public void OnPeerDisconnected(NetPeer peer, DisconnectInfo disconnectInfo)
         {
-            _logger.LogInformation("Peer has been disconnected. Id={Id}, Reason={Reason}", peer.Id, disconnectInfo.Reason);
-            OnPeerDisconnectedEvent?.Invoke(peer.Id);
+            // there is a race condition when both (LAN/WAN) connections succeed.
+            // LiteNetLib is limited to the old 1.3.5 version due to .net runtime, so it still calls OnPeerDisconnected for other connections when deciding which one to keep
+            if (disconnectInfo.Reason == DisconnectReason.PeerToPeerConnection)
+            {
+                _logger.LogInformation("Another p2p connection has been selected instead of the current one. Id={Id}", peer.Id);
+                return;
+            }
+
+            _logger.LogInformation("Peer has been disconnected. Id={Id}, ConnectedPeers={ConnectedPeers}, Reason={Reason}", peer.Id, _net.ConnectedPeersCount, disconnectInfo.Reason);
+            OnPeerDisconnectedEvent?.Invoke(peer.Id, disconnectInfo.Reason.ToString());
         }
 
         public void OnNetworkReceive(NetPeer peer, NetPacketReader reader, byte channel, DeliveryMethod method)

@@ -156,7 +156,7 @@ namespace WOTRMultiplayer.Networking
             _networkServer.OnClientDisconnected = clientId => OnClientDisconnected(NetworkChannelType.TCP, clientId);
 
             ExternalConnectionService.OnPeerConnected = (clientId, _) => OnClientConnected(NetworkChannelType.P2P, clientId);
-            ExternalConnectionService.OnPeerDisconnected = clientId => OnClientDisconnected(NetworkChannelType.P2P, clientId);
+            ExternalConnectionService.OnPeerDisconnected = (clientId, _) => OnClientDisconnected(NetworkChannelType.P2P, clientId);
 
             ExternalConnectionService.OnConnected = OnConnected;
             ExternalConnectionService.OnError = OnError;
