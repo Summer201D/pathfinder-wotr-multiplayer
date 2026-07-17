@@ -84,7 +84,7 @@ namespace WOTRMultiplayer.Networking
 
         protected override void OnMessageReceived(NetworkMessageMetadata networkMessageMetadata)
         {
-            // star topology = no direct connections between clients = single connection to host 
+            // star topology = no direct connections between clients = single connection to host
             networkMessageMetadata.PlayerId = NetworkConstants.HostPlayerId;
 
             // no need to deal with channels here, as clients only ever have a single connection
@@ -115,9 +115,12 @@ namespace WOTRMultiplayer.Networking
             ExternalConnectionService.OnPeerDisconnected = OnPeerDisconnected;
         }
 
-        private void OnPeerDisconnected(int peerId)
+        private void OnPeerDisconnected(int peerId, string reason)
         {
-            var error = new NetworkError(NetworkErrorType.Disconnected);
+            var error = new NetworkError(NetworkErrorType.Disconnected)
+            {
+                Reason = reason
+            };
             OnError?.Invoke(error);
         }
 
@@ -157,7 +160,7 @@ namespace WOTRMultiplayer.Networking
                 default:
                     var socketError = new NetworkError(NetworkErrorType.SocketError)
                     {
-                        SocketError = socketException.SocketErrorCode
+                        Reason = socketException.SocketErrorCode.ToString()
                     };
                     OnError?.Invoke(socketError);
                     return;

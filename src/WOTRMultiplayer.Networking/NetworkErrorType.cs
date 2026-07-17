@@ -6,6 +6,7 @@
         Disconnected,
         SocketError,
 
+        ModConflict,
         UnreachableSignalingServer,
         GameHostUnavailable,
         GameNotFound,

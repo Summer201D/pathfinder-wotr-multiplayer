@@ -36,7 +36,7 @@ namespace WOTRMultiplayer.Networking.ExternalConnectivity
 
         public Action<int, string> OnPeerConnected { get; set; }
 
-        public Action<int> OnPeerDisconnected { get; set; }
+        public Action<int, string> OnPeerDisconnected { get; set; }
 
         public Action<NetworkMessageMetadata> OnMessageReceived { get; set; }
 
@@ -95,8 +95,11 @@ namespace WOTRMultiplayer.Networking.ExternalConnectivity
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error while connecting to P2P coordinator");
-                var unableToConnectError = new NetworkError(NetworkErrorType.UnreachableSignalingServer);
-                OnError?.Invoke(unableToConnectError);
+
+                // some other mod loaded different version of networking DLLs
+                var errorType = ex is MissingMethodException ? NetworkErrorType.ModConflict : NetworkErrorType.UnreachableSignalingServer;
+                var error = new NetworkError(errorType);
+                OnError?.Invoke(error);
                 IsConnecting = false;
             }
         }
@@ -134,9 +137,9 @@ namespace WOTRMultiplayer.Networking.ExternalConnectivity
             _joiningTimeout = null;
         }
 
-        private void OnPeerDisconnectedEvent(int peerId)
+        private void OnPeerDisconnectedEvent(int peerId, string reason)
         {
-            OnPeerDisconnected?.Invoke(peerId);
+            OnPeerDisconnected?.Invoke(peerId, reason);
         }
 
         public void Broadcast(object message)

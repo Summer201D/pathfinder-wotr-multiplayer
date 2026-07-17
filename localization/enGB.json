@@ -272,7 +272,8 @@
                 "unreachableSignalingServer": "Unable to connect to the matchmaking server",
                 "unreachableGameHost": "The game is unavailable",
                 "gameNotFound": "Game not found or password is invalid",
-                "peerToPeerTimeout": "Connection to the host timed out"
+                "peerToPeerTimeout": "Connection to the host timed out",
+                "modConflict":"Can't connect because of an unexpected compatibility issue.\nDisable other mods and try again"
             }
         },
         "gameNotifications": {
