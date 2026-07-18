@@ -28,7 +28,9 @@
                 },
                 "errors": {
                     "unableToLoad": "外部服务器配置已损坏，无法加载。\n请确保以下文件已被删除或格式正确：\n{0}",
-                    "unableToSave": "无法保存外部服务器配置。\n请确保游戏有权写入以下文件：\n{0}"
+                    "unableToSave": "无法保存外部服务器配置。\n请确保游戏有权写入以下文件：\n{0}",
+                    "unreachableSignalingServer": "无法连接到信令/匹配服务器\n{0}",
+                    "modConflict":"因兼容性问题无法连接。\n请禁用其他模组后重试。"
                 }
             },
             "hostMenu": {
@@ -269,11 +271,9 @@
                 "disconnected": "你已断开连接",
                 "genericError": "发生未知错误",
                 "networkError": "发生网络错误。\n错误代码：{0}",
-                "unreachableSignalingServer": "无法连接到信令/匹配服务器",
                 "unreachableGameHost": "游戏无法连接",
                 "gameNotFound": "未找到游戏或密码错误",
-                "peerToPeerTimeout": "与主机的连接超时",
-                "modConflict":"因兼容性问题无法连接。\n请禁用其他模组后重试。"
+                "peerToPeerTimeout": "与主机的连接超时"
             }
         },
         "gameNotifications": {
