@@ -23,6 +23,7 @@ using WOTRMultiplayer.Entities.ActionBar;
 using WOTRMultiplayer.Entities.Area;
 using WOTRMultiplayer.Entities.Combat;
 using WOTRMultiplayer.Entities.Combat.Crusades;
+using WOTRMultiplayer.Entities.Connectivity;
 using WOTRMultiplayer.Entities.Content;
 using WOTRMultiplayer.Entities.Dialogs;
 using WOTRMultiplayer.Entities.Equipment;
@@ -562,9 +563,10 @@ namespace WOTRMultiplayer.Services
                 ResetManualPause();
 
                 CleanupUntargetableUnitsState();
-                Game.Combat = null;
 
                 ValueGenerator.ResetSeededGenerators(IdentifierLifetime.Combat, IdentifierLifetime.CombatTurn);
+
+                Game.Combat = null;
             }
             catch (Exception ex)
             {
@@ -613,7 +615,7 @@ namespace WOTRMultiplayer.Services
 
                         UpdateConfirmedMidCombatUnits();
                         PlayerNotification.AddCombatText(WellKnownKeys.GameNotifications.Combat.Turn.Started.Key, CombatTextSeverity.Common, new UnitLogParameter(unitId));
-                        Logger.LogInformation("Turn start is allowed. UnitId={UnitId}, IsActingInSurpiseRound={IsActingInSurpiseRound}, TurnUnitId={TurnUnitId}, TurnSeed={TurnSeed}", unitId, actingInSurpriseRound, Game.Combat.Turn.UnitId, Game.Combat.Turn.Seed);
+                        Logger.LogInformation("Turn start is allowed. UnitId={UnitId}, IsActingInSurpriseRound={IsActingInSurpriseRound}, TurnUnitId={TurnUnitId}, TurnSeed={TurnSeed}", unitId, actingInSurpriseRound, Game.Combat.Turn.UnitId, Game.Combat.Turn.Seed);
                         return true;
                     default:
                         return false;
@@ -816,7 +818,7 @@ namespace WOTRMultiplayer.Services
             Send(message);
         }
 
-        public void OnInterrupRestBanterBark(NetworkRestBanter networkBanter)
+        public void OnRestBanterBarkInterrupted(NetworkRestBanter networkBanter)
         {
             var message = new NotifyRestBanterInterrupted
             {
@@ -2343,7 +2345,7 @@ namespace WOTRMultiplayer.Services
             Game.Leveling = new NetworkLeveling(unitId, levelingType);
         }
 
-        protected async Task WaitForTurnToBeFinishableAsync()
+        protected async Task WaitForTurnToBeCompletedAsync()
         {
             // making sure all previous actions are finished
             await WaitWhileTrue(() => CombatInteraction.IsRiderActive() || Game.Combat.Turn.LockCounter > 0, "Waiting for all combat commands to finish before ending turn");
@@ -3257,7 +3259,7 @@ namespace WOTRMultiplayer.Services
             }
 
             Game.CharactersOwnershipHistory[ownership.UnitId] = ownership.Owner.Id;
-            Logger.LogInformation("Character ownership hisory has been updated. CharacterUnitId={CharacterUnitId}, PlayerId={PlayerId}", ownership.UnitId, ownership.Owner.Id);
+            Logger.LogInformation("Character ownership history has been updated. CharacterUnitId={CharacterUnitId}, PlayerId={PlayerId}", ownership.UnitId, ownership.Owner.Id);
         }
 
         protected int CreateRandomSeed()
@@ -3517,7 +3519,7 @@ namespace WOTRMultiplayer.Services
                 // kingdom
                 .On<NotifyKingdomSettlementLoaded>(OnNotifyKingdomSettlementLoaded)
 
-                // mapobjects
+                // map objects
                 .On<NotifyOvertipInteracted>(OnNotifyOvertipInteracted)
                 .On<NotifyTrapDisarmRolled>(OnNotifyTrapDisarmRolled)
                 .On<NotifyTransitionMapShown>(OnNotifyTransitionMapShown)

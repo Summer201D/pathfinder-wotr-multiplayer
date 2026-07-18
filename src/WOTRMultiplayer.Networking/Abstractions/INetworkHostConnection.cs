@@ -14,6 +14,8 @@ namespace WOTRMultiplayer.Networking.Abstractions
 
         Action<bool?, string> OnExternalConnectivityUpdated { get; set; }
 
+        Action<NetworkError> OnError { get; set; }
+
         void EnableExternalConnections(ExternalServerConfiguration externalServerConfiguration);
 
         void HostTcpServer(NetworkServerConfiguration serverConfiguration);

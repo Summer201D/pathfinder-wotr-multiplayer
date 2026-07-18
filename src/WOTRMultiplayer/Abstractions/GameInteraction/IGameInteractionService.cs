@@ -246,5 +246,7 @@ namespace WOTRMultiplayer.Abstractions.GameInteraction
         void SelectDungeonBoon(NetworkBoon networkBoon);
 
         void ConfirmDungeonBoon();
+
+        void DestroyUnits(List<string> units);
     }
 }

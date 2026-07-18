@@ -114,6 +114,18 @@ public static class WellKnownKeys
                 {
                     public static string Key { get; set; }
                 }
+
+                [Description("unreachableSignalingServer")]
+                public static class UnreachableSignalingServer
+                {
+                    public static string Key { get; set; }
+                }
+
+                [Description("modConflict")]
+                public static class ModConflict
+                {
+                    public static string Key { get; set; }
+                }
             }
         }
 
@@ -1022,12 +1034,6 @@ public static class WellKnownKeys
                 public static string Key { get; set; }
             }
 
-            [Description("unreachableSignalingServer")]
-            public static class UnreachableSignalingServer
-            {
-                public static string Key { get; set; }
-            }
-
             [Description("unreachableGameHost")]
             public static class UnreachableGameHost
             {
@@ -1042,12 +1048,6 @@ public static class WellKnownKeys
 
             [Description("peerToPeerTimeout")]
             public static class PeerToPeerTimeout
-            {
-                public static string Key { get; set; }
-            }
-
-            [Description("modConflict")]
-            public static class ModConflict
             {
                 public static string Key { get; set; }
             }

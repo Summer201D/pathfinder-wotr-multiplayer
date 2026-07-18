@@ -1,10 +1,13 @@
 ﻿using System;
+using System.Net;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using WOTRMultiplayer.Networking.Abstractions.ExternalConnections;
 using WOTRMultiplayer.Networking.Configuration;
 using WOTRMultiplayer.Networking.Consuming;
+using WOTRMultiplayer.Networking.Extensions;
 using WOTRMultiplayer.Networking.ExternalConnectivity.Messages;
 
 namespace WOTRMultiplayer.Networking.ExternalConnectivity
@@ -72,7 +75,7 @@ namespace WOTRMultiplayer.Networking.ExternalConnectivity
                 _peerToPeerCoordinator.OnReconnected = () => AutoCreateGameAsync(externalServerConfiguration);
                 _peerToPeerCoordinator.OnReconnecting = OnReconnectingCoordinatorAsync;
 
-                await _peerToPeerCoordinator.ConnectAsync();
+                await _peerToPeerCoordinator.ConnectAsync().ConfigureAwait(false);
                 _logger.LogInformation("Connection to P2P coordinator has been established. Url={Url}, AutoCreateGame={AutoCreateGame}", fullUrl, externalServerConfiguration.AutoCreateGame);
 
                 _peerToPeerClient.OnPeerConnectedEvent = OnPeerConnectedEvent;
@@ -88,7 +91,7 @@ namespace WOTRMultiplayer.Networking.ExternalConnectivity
 
                 _logger.LogInformation("P2P client has been started. Port={Port}", _peerToPeerClient.LocalPort);
                 IsActive = true;
-                await AutoCreateGameAsync(externalServerConfiguration);
+                await AutoCreateGameAsync(externalServerConfiguration).ConfigureAwait(false);
 
                 OnConnected?.Invoke();
             }
@@ -96,9 +99,17 @@ namespace WOTRMultiplayer.Networking.ExternalConnectivity
             {
                 _logger.LogError(ex, "Error while connecting to P2P coordinator");
 
-                // some other mod loaded different version of networking DLLs
-                var errorType = ex is MissingMethodException ? NetworkErrorType.ModConflict : NetworkErrorType.UnreachableSignalingServer;
-                var error = new NetworkError(errorType);
+                (NetworkErrorType type, string reason) = ex switch
+                {
+                    _ when ex.HasInner<WebException>(out var web) => (NetworkErrorType.UnreachableSignalingServer, web.Status.ToString()),
+                    _ when ex.HasInner<MissingMethodException>(out _) || ex.HasInner<ReflectionTypeLoadException>(out _) => (NetworkErrorType.ModConflict, null),
+                    _ => (NetworkErrorType.UnreachableSignalingServer, ex.GetType().Name),
+                };
+
+                var error = new NetworkError(type)
+                {
+                    Reason = reason
+                };
                 OnError?.Invoke(error);
                 IsConnecting = false;
             }
@@ -160,6 +171,7 @@ namespace WOTRMultiplayer.Networking.ExternalConnectivity
         public void Reset()
         {
             _logger.LogInformation("Reset");
+            IsConnecting = false;
             IsActive = false;
             _peerToPeerCoordinator?.StopAsync(_latestGameCode);
             _peerToPeerClient.Reset();

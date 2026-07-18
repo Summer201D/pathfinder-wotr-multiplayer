@@ -120,7 +120,7 @@ namespace WOTRMultiplayer.Abstractions
 
         void OnAfterTryRollRestRandomEncounter();
 
-        void OnInterruptRestBanterBark(NetworkRestBanter networkRestBanter);
+        void OnRestBanterBarkInterrupted(NetworkRestBanter networkRestBanter);
 
         void OnTransferVendorItem(NetworkVendorItemTransfer networkVendorItemTransfer);
 

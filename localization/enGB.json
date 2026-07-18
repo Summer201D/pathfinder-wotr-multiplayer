@@ -28,7 +28,9 @@
                 },
                 "errors": {
                     "unableToLoad": "External servers configuration is corrupted and cannot be loaded.\nMake sure the following file is either deleted or in the correct format:\n{0}",
-                    "unableToSave": "External servers configuration cannot be saved.\nMake sure the game is allowed to write to the following file:\n{0}"
+                    "unableToSave": "External servers configuration cannot be saved.\nMake sure the game is allowed to write to the following file:\n{0}",
+                    "unreachableSignalingServer": "Unable to connect to the matchmaking server\n{0}",
+                    "modConflict": "Can't connect because of an unexpected compatibility issue.\nDisable other mods and try again"
                 }
             },
             "hostMenu": {
@@ -269,11 +271,9 @@
                 "disconnected": "You have been disconnected",
                 "genericError": "Generic error occurred",
                 "networkError": "Network error occurred.\nError code: {0}",
-                "unreachableSignalingServer": "Unable to connect to the matchmaking server",
                 "unreachableGameHost": "The game is unavailable",
                 "gameNotFound": "Game not found or password is invalid",
-                "peerToPeerTimeout": "Connection to the host timed out",
-                "modConflict":"Can't connect because of an unexpected compatibility issue.\nDisable other mods and try again"
+                "peerToPeerTimeout": "Connection to the host timed out"
             }
         },
         "gameNotifications": {

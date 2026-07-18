@@ -1,4 +1,4 @@
-﻿namespace WOTRMultiplayer.Entities
+﻿namespace WOTRMultiplayer.Entities.Connectivity
 {
     public class ExternalConnectivity
     {

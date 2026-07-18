@@ -28,7 +28,7 @@ namespace WOTRMultiplayer.Services.Settings
                     var settingName = setting.GetCustomAttribute<DescriptionAttribute>().Description;
                     var key = string.Join(KeyPathSeparator, RootKey, sectionName, settingName);
                     var actualValue = setting.GetValue(null);
-                    var keyProperty = actualValue.GetType().GetProperty(nameof(WellKnownSettingKey<string>.Key));
+                    var keyProperty = actualValue.GetType().GetProperty(nameof(WellKnownSettingKey<>.Key));
                     keyProperty.SetValue(actualValue, key);
                 }
             }
@@ -121,7 +121,7 @@ namespace WOTRMultiplayer.Services.Settings
             public static WellKnownSettingKey<TimeSpan> CombatTurnDelayForAI { get; } = new(TimeSpan.FromSeconds(0.5));
 
             [Description("combat-turn-end-delay-for-player")]
-            public static WellKnownSettingKey<TimeSpan> PlayerTurnEndDelay { get; } = new(TimeSpan.FromSeconds(0.3));
+            public static WellKnownSettingKey<TimeSpan> PlayerTurnEndDelay { get; } = new(TimeSpan.FromSeconds(0.250));
 
             [Description("save-game-chunk-size")]
             public static WellKnownSettingKey<int> SaveGameChunkSize { get; } = new(32768);

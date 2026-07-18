@@ -6,6 +6,7 @@ using Microsoft.Extensions.Logging;
 using WOTRMultiplayer.Abstractions.UI.Controllers;
 using WOTRMultiplayer.Abstractions.UI.Windows;
 using WOTRMultiplayer.Entities;
+using WOTRMultiplayer.Entities.Connectivity;
 
 namespace WOTRMultiplayer.UI.Windows
 {

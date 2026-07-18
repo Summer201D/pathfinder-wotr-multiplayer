@@ -1,6 +1,6 @@
 ﻿using System.Net;
 
-namespace WOTRMultiplayer.Entities
+namespace WOTRMultiplayer.Entities.Connectivity
 {
     public class GameConnectivity
     {

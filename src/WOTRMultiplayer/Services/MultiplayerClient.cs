@@ -18,6 +18,7 @@ using WOTRMultiplayer.Entities.Area;
 using WOTRMultiplayer.Entities.AreaEffects;
 using WOTRMultiplayer.Entities.Combat;
 using WOTRMultiplayer.Entities.Combat.Crusades;
+using WOTRMultiplayer.Entities.Connectivity;
 using WOTRMultiplayer.Entities.Dialogs;
 using WOTRMultiplayer.Entities.Dungeon;
 using WOTRMultiplayer.Entities.GlobalMap;
@@ -96,7 +97,7 @@ namespace WOTRMultiplayer.Services
             _networkClient.ConnectAsync(address, port, settings.NetworkAwaiterTimeout).ConfigureAwait(false);
         }
 
-        public void Connect(string code, string password, Entities.ExternalServer externalServer)
+        public void Connect(string code, string password, Entities.Connectivity.ExternalServer externalServer)
         {
             var settings = SettingsService.GetSettings();
             var externalServerConfiguration = new ExternalServerConfiguration
@@ -932,7 +933,7 @@ namespace WOTRMultiplayer.Services
                 return;
             }
 
-            await WaitForTurnToBeFinishableAsync();
+            await WaitForTurnToBeCompletedAsync();
             CombatInteraction.EndCombatTurn(message.UnitId);
         }
 
@@ -1818,7 +1819,7 @@ namespace WOTRMultiplayer.Services
                     InvokeOnNetworkError(WellKnownKeys.MultiplayerClient.Errors.Disconnected.Key, networkError.Reason);
                     break;
                 case NetworkErrorType.UnreachableSignalingServer:
-                    InvokeOnNetworkError(WellKnownKeys.MultiplayerClient.Errors.UnreachableSignalingServer.Key);
+                    InvokeOnNetworkError(WellKnownKeys.MultiplayerWindow.ExternalServers.Errors.UnreachableSignalingServer.Key, networkError.Reason);
                     break;
                 case NetworkErrorType.GameHostUnavailable:
                     InvokeOnNetworkError(WellKnownKeys.MultiplayerClient.Errors.UnreachableGameHost.Key);
@@ -1830,7 +1831,7 @@ namespace WOTRMultiplayer.Services
                     InvokeOnNetworkError(WellKnownKeys.MultiplayerClient.Errors.PeerToPeerTimeout.Key);
                     break;
                 case NetworkErrorType.ModConflict:
-                    InvokeOnNetworkError(WellKnownKeys.MultiplayerClient.Errors.ModConflict.Key);
+                    InvokeOnNetworkError(WellKnownKeys.MultiplayerWindow.ExternalServers.Errors.ModConflict.Key);
                     break;
                 case NetworkErrorType.Generic:
                 default:
