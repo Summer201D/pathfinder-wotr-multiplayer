@@ -16,7 +16,7 @@ using WOTRMultiplayer.Abstractions.UI;
 using WOTRMultiplayer.Abstractions.UI.Controllers;
 using WOTRMultiplayer.Abstractions.UI.Controllers.Menu;
 using WOTRMultiplayer.Abstractions.Unity;
-using WOTRMultiplayer.Entities;
+using WOTRMultiplayer.Entities.Connectivity;
 using WOTRMultiplayer.UI.Windows;
 
 namespace WOTRMultiplayer.UI.Controllers

@@ -27,6 +27,8 @@ namespace WOTRMultiplayer.Networking
 
         public Action<EndPoint> OnLocalServerStarted { get; set; }
 
+        public Action<NetworkError> OnError { get; set; }
+
         public Action<bool?, string> OnExternalConnectivityUpdated { get; set; }
 
         public NetworkHostConnection(
@@ -159,7 +161,7 @@ namespace WOTRMultiplayer.Networking
             ExternalConnectionService.OnPeerDisconnected = (clientId, _) => OnClientDisconnected(NetworkChannelType.P2P, clientId);
 
             ExternalConnectionService.OnConnected = OnConnected;
-            ExternalConnectionService.OnError = OnError;
+            ExternalConnectionService.OnError = OnExternalConnectionError;
             ExternalConnectionService.OnGameCodeChanged = OnGameCodeChanged;
         }
 
@@ -168,9 +170,10 @@ namespace WOTRMultiplayer.Networking
             OnExternalConnectivityUpdated?.Invoke(true, code);
         }
 
-        private void OnError(NetworkError networkError)
+        private void OnExternalConnectionError(NetworkError networkError)
         {
             OnExternalConnectivityUpdated?.Invoke(false, null);
+            OnError?.Invoke(networkError);
         }
 
         private void OnConnected()

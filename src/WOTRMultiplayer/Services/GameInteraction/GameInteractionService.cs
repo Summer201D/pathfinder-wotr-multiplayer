@@ -19,6 +19,7 @@ using Kingmaker.Controllers.Rest;
 using Kingmaker.Controllers.Rest.State;
 using Kingmaker.Controllers.Units;
 using Kingmaker.Craft;
+using Kingmaker.Designers;
 using Kingmaker.Designers.EventConditionActionSystem.ContextData;
 using Kingmaker.DLC;
 using Kingmaker.Dungeon;
@@ -2442,6 +2443,25 @@ namespace WOTRMultiplayer.Services.GameInteraction
 
                 view.ViewModel.Close();
                 _logger.LogInformation("Dungeon Boon has been confirmed");
+            });
+        }
+
+        public void DestroyUnits(List<string> units)
+        {
+            _mainThreadAccessor.Post(() =>
+            {
+                foreach (var unitId in units)
+                {
+                    var unit = _gameStateLookupService.GetUnitEntity(unitId);
+                    if (unit == null)
+                    {
+                        _logger.LogWarning("Unable to destroy missing unit. UnitId={UnitId}", unitId);
+                        continue;
+                    }
+
+                    GameHelper.DestroyUnit(unit);
+                    _logger.LogInformation("Unit has been marked for destruction. UnitId={UnitId}, CharacterName={CharacterName}", unitId, unit.CharacterName);
+                }
             });
         }
 

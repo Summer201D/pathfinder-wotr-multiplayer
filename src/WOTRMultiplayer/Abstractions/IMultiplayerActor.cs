@@ -9,6 +9,7 @@ using WOTRMultiplayer.Entities.Area;
 using WOTRMultiplayer.Entities.AreaEffects;
 using WOTRMultiplayer.Entities.Combat;
 using WOTRMultiplayer.Entities.Combat.Crusades;
+using WOTRMultiplayer.Entities.Connectivity;
 using WOTRMultiplayer.Entities.Dialogs;
 using WOTRMultiplayer.Entities.Equipment;
 using WOTRMultiplayer.Entities.GlobalMap;
@@ -128,7 +129,7 @@ namespace WOTRMultiplayer.Abstractions
 
         void OnShowRestView(RestPhase phase);
 
-        void OnInterrupRestBanterBark(NetworkRestBanter networkBanter);
+        void OnRestBanterBarkInterrupted(NetworkRestBanter networkBanter);
 
         void OnTransferVendorItem(NetworkVendorItemTransfer transfer);
 

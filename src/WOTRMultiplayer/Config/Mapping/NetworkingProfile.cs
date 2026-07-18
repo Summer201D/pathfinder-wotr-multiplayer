@@ -1,5 +1,5 @@
 ﻿using AutoMapper;
-using WOTRMultiplayer.Entities;
+using WOTRMultiplayer.Entities.Connectivity;
 using WOTRMultiplayer.Entities.Settings;
 
 namespace WOTRMultiplayer.Config.Mapping

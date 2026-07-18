@@ -903,7 +903,7 @@ namespace WOTRMultiplayer.Services
             }
         }
 
-        public void OnInterruptRestBanterBark(NetworkRestBanter networkRestBanter)
+        public void OnRestBanterBarkInterrupted(NetworkRestBanter networkRestBanter)
         {
             try
             {
@@ -912,7 +912,7 @@ namespace WOTRMultiplayer.Services
                     return;
                 }
 
-                _multiplayerActorAccessor.Current.OnInterrupRestBanterBark(networkRestBanter);
+                _multiplayerActorAccessor.Current.OnRestBanterBarkInterrupted(networkRestBanter);
             }
             catch (Exception ex)
             {

@@ -511,5 +511,9 @@ namespace WOTRMultiplayer.Playground.Core.Dummies
         public void ConfirmDungeonBoon()
         {
         }
+
+        public void DestroyUnits(List<string> units)
+        {
+        }
     }
 }

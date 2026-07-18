@@ -1,5 +1,6 @@
 ﻿using System;
 using WOTRMultiplayer.Entities;
+using WOTRMultiplayer.Entities.Connectivity;
 
 namespace WOTRMultiplayer.Abstractions
 {

@@ -18,6 +18,7 @@ using WOTRMultiplayer.Entities.Area;
 using WOTRMultiplayer.Entities.AreaEffects;
 using WOTRMultiplayer.Entities.Combat;
 using WOTRMultiplayer.Entities.Combat.Crusades;
+using WOTRMultiplayer.Entities.Connectivity;
 using WOTRMultiplayer.Entities.Content;
 using WOTRMultiplayer.Entities.Dialogs;
 using WOTRMultiplayer.Entities.Dungeon;
@@ -85,7 +86,7 @@ namespace WOTRMultiplayer.Services
             SetupNetworkMessageHandlers();
         }
 
-        public void Create(string gameId, string gamePassword, Entities.ExternalServer externalServer, NetworkGameStartUp gameStartUp)
+        public void Create(string gameId, string gamePassword, Entities.Connectivity.ExternalServer externalServer, NetworkGameStartUp gameStartUp)
         {
             if (_networkHost.IsActive)
             {
@@ -1754,6 +1755,7 @@ namespace WOTRMultiplayer.Services
             _networkHost.OnPlayerDisconnected = OnPlayerDisconnected;
             _networkHost.OnLocalServerStarted = OnLocalServerStarted;
             _networkHost.OnExternalConnectivityUpdated = OnExternalConnectivityUpdated;
+            _networkHost.OnError = OnError;
 
             base.SetupNetworkMessageHandlers();
 
@@ -1897,7 +1899,7 @@ namespace WOTRMultiplayer.Services
 
         private async void OnNotifyCombatLocalTurnEnded(long receivedFrom, NotifyCombatLocalTurnEnded message)
         {
-            await WaitForTurnToBeFinishableAsync();
+            await WaitForTurnToBeCompletedAsync();
 
             Game.Combat.Turn.PlayersEndTurnInitialization.Add(message.PlayerId);
 
@@ -2150,6 +2152,19 @@ namespace WOTRMultiplayer.Services
             catch (Exception ex)
             {
                 Logger.LogError(ex, "Failed to process new player connection");
+            }
+        }
+
+        private void OnError(NetworkError error)
+        {
+            switch (error.Type)
+            {
+                case NetworkErrorType.UnreachableSignalingServer:
+                    PlayerNotification.ShowModalMessage(WellKnownKeys.MultiplayerWindow.ExternalServers.Errors.UnreachableSignalingServer.Key, args: error.Reason);
+                    break;
+                case NetworkErrorType.ModConflict:
+                    PlayerNotification.ShowModalMessage(WellKnownKeys.MultiplayerWindow.ExternalServers.Errors.ModConflict.Key);
+                    break;
             }
         }
 

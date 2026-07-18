@@ -22,6 +22,7 @@ using WOTRMultiplayer.Abstractions.UI.Controllers;
 using WOTRMultiplayer.Abstractions.UI.Windows;
 using WOTRMultiplayer.Abstractions.Unity;
 using WOTRMultiplayer.Entities;
+using WOTRMultiplayer.Entities.Connectivity;
 using WOTRMultiplayer.Extensions;
 using WOTRMultiplayer.Services.Settings;
 using WOTRMultiplayer.UI.Tooltips;

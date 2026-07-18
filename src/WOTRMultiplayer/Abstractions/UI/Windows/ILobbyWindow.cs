@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using WOTRMultiplayer.Abstractions.UI.Controllers;
 using WOTRMultiplayer.Entities;
+using WOTRMultiplayer.Entities.Connectivity;
 using WOTRMultiplayer.UI.Windows;
 
 namespace WOTRMultiplayer.Abstractions.UI.Windows

@@ -5,6 +5,7 @@ using Kingmaker.UI.Kingdom;
 using WOTRMultiplayer.Entities.Area;
 using WOTRMultiplayer.Entities.Combat;
 using WOTRMultiplayer.Entities.Combat.Crusades;
+using WOTRMultiplayer.Entities.Connectivity;
 using WOTRMultiplayer.Entities.Dialogs;
 using WOTRMultiplayer.Entities.GlobalMap;
 using WOTRMultiplayer.Entities.Leveling;
